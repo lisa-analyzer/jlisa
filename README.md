@@ -1,1 +1,1 @@
-#Jlisa: Java Frontend for LiSA
+# jlisa: Java Frontend for LiSA
