@@ -1,0 +1,48 @@
+package it.unive.jlisa.frontend.visitors;
+
+import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.types.JavaArrayType;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.annotations.Annotations;
+import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.type.ArrayType;
+import it.unive.lisa.type.Type;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
+public class VariableDeclarationASTVisitor extends JavaASTVisitor{
+    Parameter parameter;
+    public VariableDeclarationASTVisitor(Program program, String source, int apiLevel, CompilationUnit compilationUnit) {
+        super(program, source, apiLevel, compilationUnit);
+    }
+
+    public boolean visit(SingleVariableDeclaration node) {
+        TypeASTVisitor visitor = new TypeASTVisitor(program, source, apiLevel, compilationUnit);
+        node.getType().accept(visitor);
+        Type type = visitor.getType();
+        if (type == null) {
+            throw new RuntimeException(new UnsupportedStatementException("variable should have a type"));
+        }
+
+        if (node.getExtraDimensions() != 0) {
+            if (type instanceof ArrayType) {
+                ArrayType arrayType = (ArrayType) type;
+                int dim = arrayType.getDimensions();
+                type = JavaArrayType.lookup(arrayType.getBaseType(), dim + node.getExtraDimensions());
+            } else {
+                type = JavaArrayType.lookup(type, node.getExtraDimensions());
+            }
+            String identifier = node.getName().getIdentifier();
+            //TODO annotations
+            Annotations annotations = new Annotations();
+            this.parameter = new Parameter(getSourceCodeLocation(node), identifier, type, null, annotations);
+        }
+
+        return false;
+    }
+
+    public Parameter getParameter() {
+        return this.parameter;
+    }
+}
