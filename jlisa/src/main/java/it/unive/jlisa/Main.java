@@ -14,6 +14,7 @@ import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.program.Program;
+import org.apache.commons.cli.*;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.IOException;
@@ -27,16 +28,78 @@ public class Main {
         //parser.setSource(source.toCharArray());
         //parser.setKind(ASTParser.K_COMPILATION_UNIT);
 
+// Define options
+        Options options = new Options();
+
+        Option helpOption = new Option("h", "help", false, "Print this help message");
+        Option sourceOption = Option.builder("s")
+                .longOpt("source")
+                .hasArgs()
+                .desc("Source files (e.g. -s file1 file2 file3)")
+                .required(false) // Will validate manually if help is not used
+                .build();
+
+        Option outdirOption = Option.builder("o")
+                .longOpt("outdir")
+                .hasArg()
+                .desc("Output directory")
+                .required(false)
+                .build();
+
+        options.addOption(helpOption);
+        options.addOption(sourceOption);
+        options.addOption(outdirOption);
+
+        // Create parser and formatter
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        String[] sources = new String[0];
+        String outdir = "";
+        try {
+            CommandLine cmd = parser.parse(options, args);
+
+            // Handle help
+            if (cmd.hasOption("h") || args.length == 0) {
+                formatter.printHelp("jlisa", options, true);
+                System.exit(0);
+            }
+
+            // Check required manually if help was not triggered
+            if (!cmd.hasOption("s") || !cmd.hasOption("o")) {
+                throw new ParseException("Missing required options: --source and/or --outdir");
+            }
+
+            sources = cmd.getOptionValues("s");
+            outdir = cmd.getOptionValue("o");
+
+            // Output
+            System.out.println("Source files:");
+            for (String file : sources) {
+                System.out.println(" - " + file);
+            }
+
+            System.out.println("Output directory: " + outdir);
+
+        } catch (ParseException e) {
+            System.err.println("Error: " + e.getMessage());
+            formatter.printHelp("jlisa", options, true);
+            System.exit(1);
+        }
+
         JavaFrontend frontend = new JavaFrontend();
+        for (String source : sources) {
+            frontend.parseFromFile(source);
+        }
+        Program p = frontend.getProgram();
         //frontend.parseFromFile("inputs/java-ranger-regression/alarm/prop8/Main.java");
-        frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/AlarmFunctional.java");
+        //frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/AlarmFunctional.java");
         //frontend.parseFromFile("inputs/module-info.java");
         //frontend.parseFromFile("inputs/Test.java");
         //Program p = JavaFrontend.parseFromFile("src/main/java/it/unive/jlisa/frontend/JavaFrontend.java");
-        Program p = frontend.getProgram();
+        //Program p = frontend.getProgram();
         System.out.println(p);
         LiSAConfiguration conf = new LiSAConfiguration();
-        conf.workdir = "output";
+        conf.workdir = outdir;
         conf.serializeResults = false;
         conf.jsonOutput = false;
         conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;

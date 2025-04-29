@@ -43,6 +43,9 @@ public class JavaFrontend {
     }
 
     public JavaFrontend(Program program) {
+        if (program == null) {
+            this.program = createProgram();
+        }
         this.program = program;
     }
 

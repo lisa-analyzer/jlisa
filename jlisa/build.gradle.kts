@@ -1,9 +1,14 @@
 plugins {
     id("java")
+    id("application")
 }
 
 group = "it.unive.jlisa"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("it.unive.jlisa.Main") // Replace with your actual class if different
+}
 
 repositories {
     mavenCentral()
@@ -14,12 +19,63 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
-    implementation("io.github.lisa-analyzer:lisa-sdk:0.1")
+    implementation("commons-cli:commons-cli:1.4")
 
+    implementation("io.github.lisa-analyzer:lisa-sdk:0.1")
     implementation("io.github.lisa-analyzer:lisa-analyses:0.1")
     implementation("io.github.lisa-analyzer:lisa-program:0.1")
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+
+    // Include classes and resources from all dependencies (fat jar)
+    from({
+        configurations.runtimeClasspath.get().map { file ->
+            if (file.isDirectory) file
+            else zipTree(file).matching {
+                // Exclude signature files from META-INF
+                exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+            }
+        }
+    })
+
+    // Exclude duplicates and avoid merging signed metadata
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+val jpackage by tasks.registering(Exec::class) {
+    dependsOn(tasks.named("jar"))
+
+    val outputDir = "${buildDir}/jpackage"
+    val appName = "jlisa"
+    val mainJar = "${project.buildDir}/libs/${appName}-${version}.jar"
+    val mainClassName = application.mainClass.get() // Dynamically getting Main-Class
+
+    doFirst {
+        mkdir(outputDir)
+        val appBundle = file("$outputDir/$appName.app")
+        if (appBundle.exists()) {
+            println("Deleting existing app bundle: $appBundle")
+            appBundle.deleteRecursively()
+        }
+    }
+
+    // Base jpackage command
+    commandLine(
+        "jpackage",
+        "--input", "${buildDir}/libs",
+        "--name", appName,
+        "--main-jar", "${appName}-${version}.jar",
+        "--main-class", mainClassName,
+        "--dest", outputDir,
+        "--type", if (System.getProperty("os.name").startsWith("Windows")) "exe" else "app-image",
+        "--java-options", "-Xmx512m"
+    )
 }
