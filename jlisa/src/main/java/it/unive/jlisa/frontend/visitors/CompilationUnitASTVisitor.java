@@ -1,5 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.jlisa.types.JavaInterfaceType;
@@ -11,16 +13,20 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class CompilationUnitASTVisitor extends JavaASTVisitor {
-    public CompilationUnitASTVisitor(Program program, String source, int apiLevel, CompilationUnit unit) {
-        super(program, source, apiLevel, unit);
+    Boolean visitUnit;
+    public CompilationUnitASTVisitor(ParserContext parserContext, String source, CompilationUnit unit, Boolean visitUnit) {
+        super(parserContext, source, unit);
+        this.visitUnit = visitUnit;
     }
-
 
     @Override
     public boolean visit(CompilationUnit node) {
-        addUnits(node);
-        visitUnits(node);
 
+        if (visitUnit) {
+            visitUnits(node);
+        } else {
+            addUnits(node);
+        }
         return false;
     }
 
@@ -30,18 +36,18 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
             if (type instanceof TypeDeclaration) {
                 TypeDeclaration typeDecl = (TypeDeclaration) type;
                 if ((typeDecl.isInterface())) {
-                    InterfaceUnit iUnit = buildInterfaceUnit(source, unit, program, typeDecl);
+                    InterfaceUnit iUnit = buildInterfaceUnit(source, unit, getProgram(), typeDecl);
                     JavaInterfaceType.lookup(iUnit.getName(), iUnit);
                 } else {
-                    ClassUnit cUnit = buildClassUnit(source, unit, program, typeDecl);
+                    ClassUnit cUnit = buildClassUnit(source, unit, getProgram(), typeDecl);
                     JavaClassType.lookup(cUnit.getName(), cUnit);
                 }
             }
             if (type instanceof EnumDeclaration) {
-                throw new UnsupportedStatementException("EnumDeclaration not supported yet");
+                parserContext.addException(new ParsingException("enum-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Enum Declarations are not supported.", getSourceCodeLocation((EnumDeclaration)type)));
             }
             if (type instanceof AnnotationTypeDeclaration) {
-                throw new UnsupportedStatementException("AnnotationTypeDeclaration not supported yet");
+                parserContext.addException(new ParsingException("annotation-type-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Annotation Type Declarations are not supported.", getSourceCodeLocation((AnnotationTypeDeclaration)type)));
             }
         }
     }
@@ -52,18 +58,18 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
             if (type instanceof TypeDeclaration) {
                 TypeDeclaration typeDecl = (TypeDeclaration) type;
                 if ((typeDecl.isInterface())) {
-                    InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(program, source, apiLevel, unit);
+                    InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, unit);
                     typeDecl.accept(interfaceVisitor);
                 } else {
-                    ClassASTVisitor classVisitor = new ClassASTVisitor(program, source, apiLevel, unit);
+                    ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit);
                     typeDecl.accept(classVisitor);
                 }
             }
             if (type instanceof EnumDeclaration) {
-                throw new UnsupportedStatementException("EnumDeclaration not supported yet");
+                parserContext.addException(new ParsingException("enum-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Enum Declarations are not supported.", getSourceCodeLocation((EnumDeclaration)type)));
             }
             if (type instanceof AnnotationTypeDeclaration) {
-                throw new UnsupportedStatementException("AnnotationTypeDeclaration not supported yet");
+                parserContext.addException(new ParsingException("annotation-type-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Annotation Type Declarations are not supported.", getSourceCodeLocation((AnnotationTypeDeclaration)type)));
             }
         }
 

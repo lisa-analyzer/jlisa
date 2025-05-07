@@ -1,6 +1,8 @@
 .gradle
 .idea
+.jlisa
 build/
+outputs
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -14,6 +16,8 @@ artifacts
 *.iws
 *.iml
 *.ipr
+*.zip
+*.py
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/

@@ -1,12 +1,16 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
+import it.unive.jlisa.program.JavaProgram;
 import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.jlisa.types.JavaArrayType;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.jlisa.types.JavaInterfaceType;
 import it.unive.lisa.program.Program;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.program.type.Float32Type;
 import it.unive.lisa.program.type.Int32Type;
@@ -25,8 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 public class JavaFrontend {
-    private Program program;
-
+    private ParserContext parserContext;
     private int API_LEVEL = AST.getJLSLatest();
 
 
@@ -34,48 +37,56 @@ public class JavaFrontend {
         // We are creating a new Program. We need to start from a blank state.
         clearAll();
 
-        this.program = createProgram();
+        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
     }
 
     public JavaFrontend(int apiLevel) {
-        this();
+        clearAll();
+
         this.API_LEVEL = apiLevel;
+        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
     }
 
-    public JavaFrontend(Program program) {
+    public JavaFrontend(JavaProgram program) {
+        Program p;
         if (program == null) {
-            this.program = createProgram();
+             p = createProgram();
         }
-        this.program = program;
+        p  = program;
+        this.parserContext = new ParserContext(p, this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
     }
 
-    public JavaFrontend(Program program, int apiLevel) {
-        this.program = program;
+    public JavaFrontend(JavaProgram program, int apiLevel) {
+        this.API_LEVEL = apiLevel;
+        this.parserContext = new ParserContext(program, apiLevel, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
     }
 
     public Program getProgram() {
-        return this.program;
+        return this.parserContext.getProgram();
     }
 
+    public ParserContext getParserContext() {
+        return this.parserContext;
+    }
     public void clearAll() {
         JavaClassType.clearAll();
         JavaInterfaceType.clearAll();
     }
 
     public void registerTypes() {
-        TypeSystem typeSystem = this.program.getTypes();
+        TypeSystem typeSystem = this.parserContext.getProgram().getTypes();
         typeSystem.registerType(BoolType.INSTANCE);
         typeSystem.registerType(Float32Type.INSTANCE);
         typeSystem.registerType(Int32Type.INSTANCE);
         typeSystem.registerType(StringType.INSTANCE);
         JavaClassType.all().forEach(typeSystem::registerType);
-        //ArrayType.all().forEach(t -> typeSystem.registerType(t));
+        JavaArrayType.all().forEach(typeSystem::registerType);
         JavaInterfaceType.all().forEach(typeSystem::registerType);
     }
-    public static Program createProgram() {
+    public static JavaProgram createProgram() {
         JavaLanguageFeatures features = new JavaLanguageFeatures();
         JavaTypeSystem typeSystem = new JavaTypeSystem();
-        return new Program(features, typeSystem);
+        return new JavaProgram(features, typeSystem);
     }
 
     public ASTParser getParser(String source, int parseAs) {
@@ -101,6 +112,28 @@ public class JavaFrontend {
         ASTParser parser = getParser(source, ASTParser.K_COMPILATION_UNIT);
         return (CompilationUnit) parser.createAST(null);
     }
+
+    public Program parseFromListOfFile(List<String> filePaths) throws IOException {
+        populateUnits (filePaths);
+        registerTypes();
+        for (String filePath : filePaths) {
+            Path path = Paths.get(filePath);
+            String source = Files.readString(path);
+            boolean module = path.getFileName().toString().equals("module-info.java");
+            parse(source, path.getFileName().toString(), module);
+        }
+        return getProgram();
+    }
+
+    public void populateUnits(List<String> filePaths) throws IOException {
+        for (String filePath : filePaths) {
+            Path path = Paths.get(filePath);
+            String source = Files.readString(path);
+            CompilationUnit cu = getCompilationUnit(source);
+            cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu, false));
+        }
+    }
+
     public Program parseFromFile(String filePath) throws IOException {
         Path path = Paths.get(filePath);
         String source = Files.readString(path);
@@ -114,10 +147,10 @@ public class JavaFrontend {
 
     private Program parse(String source, String fileName, boolean module) {
         CompilationUnit cu = getCompilationUnit(source);
-        CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(this.program, fileName, this.API_LEVEL, cu);
+        CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(parserContext, fileName, cu, true);
 
         if (module) {
-            throw new UnsupportedStatementException("Java modules are not supported.");
+            parserContext.addException(new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT, "Java modules are not supported.", new SourceCodeLocation(source, -1, -1)));
         }
         IProblem[] problems = cu.getProblems();
         for (IProblem problem : problems) {
@@ -131,7 +164,7 @@ public class JavaFrontend {
         cu.accept(visitor);
 
         registerTypes();
-        return this.program;
+        return this.parserContext.getProgram();
     }
 
 }

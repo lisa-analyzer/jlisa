@@ -1,6 +1,7 @@
 package it.unive.jlisa;
 
 import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractState;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
@@ -18,6 +19,7 @@ import org.apache.commons.cli.*;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 
 public class Main {
@@ -28,7 +30,7 @@ public class Main {
         //parser.setSource(source.toCharArray());
         //parser.setKind(ASTParser.K_COMPILATION_UNIT);
 
-// Define options
+        // Define options
         Options options = new Options();
 
         Option helpOption = new Option("h", "help", false, "Print this help message");
@@ -71,7 +73,9 @@ public class Main {
 
             sources = cmd.getOptionValues("s");
             outdir = cmd.getOptionValue("o");
-
+            if (!outdir.endsWith("/")) {
+                outdir += "/";
+            }
             // Output
             System.out.println("Source files:");
             for (String file : sources) {
@@ -87,16 +91,13 @@ public class Main {
         }
 
         JavaFrontend frontend = new JavaFrontend();
-        for (String source : sources) {
-            frontend.parseFromFile(source);
+        frontend.parseFromListOfFile(Arrays.stream(sources).toList());
+        if (!frontend.getParserContext().getExceptions().isEmpty()) {
+            CSVExceptionWriter.writeCSV(outdir + "errors.csv", frontend.getParserContext().getExceptions());
+            throw new RuntimeException("Some errors occurred. Check " + outdir + "errors.csv file.");
         }
         Program p = frontend.getProgram();
-        //frontend.parseFromFile("inputs/java-ranger-regression/alarm/prop8/Main.java");
-        //frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/AlarmFunctional.java");
-        //frontend.parseFromFile("inputs/module-info.java");
-        //frontend.parseFromFile("inputs/Test.java");
-        //Program p = JavaFrontend.parseFromFile("src/main/java/it/unive/jlisa/frontend/JavaFrontend.java");
-        //Program p = frontend.getProgram();
+
         System.out.println(p);
         LiSAConfiguration conf = new LiSAConfiguration();
         conf.workdir = outdir;
@@ -107,24 +108,15 @@ public class Main {
         conf.callGraph = new RTACallGraph();
         conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
         conf.optimize = false;
-        //conf.semanticChecks.add(rosGraphDumper);
+
         FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
         TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
         ValueEnvironment<IntegerConstantPropagation> domain = new ValueEnvironment<>(new IntegerConstantPropagation());
         conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
-        //Program maru = MaruFrontend.processFile("fastapi.mr");
 
-        //PyFrontend translator = new PyFrontend("tests/fastapi/microserviceA.py", false);
-        //Program program = translator.toLiSAProgram();
 
         LiSA lisa = new LiSA(conf);
         lisa.run(p);
-        //CompilationUnit cu = (CompilationUnit) parser.createAST(null);
-        /*cu.accept(new ASTVisitor() {
-            public boolean visit(MethodDeclaration node) {
-                System.out.println("Method: " + node.getName());
-                return super.visit(node);
-            }
-        });*/
+
     }
 }

@@ -1,8 +1,13 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.types.JavaArrayType;
+import it.unive.jlisa.types.JavaClassType;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.type.*;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -11,8 +16,8 @@ import org.eclipse.jdt.core.dom.*;
 
 public class TypeASTVisitor extends JavaASTVisitor{
     private Type type;
-    public TypeASTVisitor(Program program, String source, int apiLevel, CompilationUnit compilationUnit) {
-        super(program, source, apiLevel, compilationUnit);
+    public TypeASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
+        super(parserContext, source, compilationUnit);
     }
 
 
@@ -40,52 +45,94 @@ public class TypeASTVisitor extends JavaASTVisitor{
             type = BoolType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.CHAR) {
-            throw new RuntimeException(new UnsupportedStatementException("char type not supported"));
+            parserContext.addException(new ParsingException(
+                    "primitive-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                    "char type not supported",
+                    getSourceCodeLocation(node)));
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BYTE) {
-            throw new RuntimeException(new UnsupportedStatementException("byte type not supported"));
+            parserContext.addException(new ParsingException(
+                    "primitive-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                    "byte type not supported",
+                    getSourceCodeLocation(node)));
         }
         return false;
     }
 
     @Override
     public boolean visit(ArrayType node) {
-        TypeASTVisitor visitor = new TypeASTVisitor(program, source, apiLevel, compilationUnit);
-        node.accept(visitor);
-        Type type = visitor.getType();
-        if (type == null) {
+        TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+        node.getElementType().accept(visitor);
+        Type _type = visitor.getType();
+        if (_type == null) {
             throw new RuntimeException(new UnsupportedStatementException("array should have a type"));
         }
         if (node.getDimensions() == 0) {
             throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
         }
-        JavaArrayType javaArrayType = JavaArrayType.lookup(type, node.getDimensions());
+        _type = JavaArrayType.lookup(_type, node.getDimensions());
+        type = _type;
         return false;
 
     }
 
-    public boolean visit(WildcardType node) {
-        throw new RuntimeException(new UnsupportedStatementException("wildcard type not supported"));
-    }
-
+    @Override
     public boolean visit(UnionType node) {
-        throw new RuntimeException(new UnsupportedStatementException("union type not supported"));
+        parserContext.addException(new ParsingException(
+                "union-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                "Union type not supported",
+                getSourceCodeLocation(node)));
+        return false;
     }
 
+    @Override
     public boolean visit(IntersectionType node) {
-        throw new RuntimeException(new UnsupportedStatementException("intersection type not supported"));
+        parserContext.addException(new ParsingException(
+                "intersection-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                "Intersection type not supported",
+                getSourceCodeLocation(node)));
+        return false;
     }
 
+    @Override
     public boolean visit(QualifiedType node) {
-        throw new RuntimeException(new UnsupportedStatementException("qualified type not supported"));
+        parserContext.addException(new ParsingException(
+                "qualified-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                "Qualified type not supported",
+                getSourceCodeLocation(node)));
+        return false;
     }
 
+    @Override
     public boolean visit(NameQualifiedType node) {
-        throw new RuntimeException(new UnsupportedStatementException("qualified type not supported"));
+        parserContext.addException(new ParsingException(
+                "qualified-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                "Name-qualified type not supported",
+                getSourceCodeLocation(node)));
+        return false;
     }
 
+    public boolean visit(QualifiedName node) {
+        parserContext.addException(new ParsingException(
+                "qualified-name", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                "Qualified-type-name type not supported",
+                getSourceCodeLocation(node)));
+        return false;
+    }
     public boolean visit(SimpleName node) {
-        type = Untyped.INSTANCE;
+        Unit u = getProgram().getUnit(node.getFullyQualifiedName());
+        if (u == null) {
+            throw new UnsupportedStatementException(node.getFullyQualifiedName() + " not exists in program.");
+        }
+        if (!(u instanceof ClassUnit)) {
+            throw new UnsupportedStatementException(node.getFullyQualifiedName() + " is not a class unit.");
+        }
+        JavaClassType javaClassType = JavaClassType.lookup(node.getFullyQualifiedName(), (ClassUnit)u);
+        if (javaClassType == null) {
+            type = Untyped.INSTANCE;
+        } else {
+            type = javaClassType;
+        }
         return false;
     }
     public Type getType() {

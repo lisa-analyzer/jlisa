@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.types.JavaArrayType;
 import it.unive.lisa.program.Program;
@@ -13,12 +14,12 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class VariableDeclarationASTVisitor extends JavaASTVisitor{
     Parameter parameter;
-    public VariableDeclarationASTVisitor(Program program, String source, int apiLevel, CompilationUnit compilationUnit) {
-        super(program, source, apiLevel, compilationUnit);
+    public VariableDeclarationASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
+        super(parserContext, source, compilationUnit);
     }
 
     public boolean visit(SingleVariableDeclaration node) {
-        TypeASTVisitor visitor = new TypeASTVisitor(program, source, apiLevel, compilationUnit);
+        TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
         node.getType().accept(visitor);
         Type type = visitor.getType();
         if (type == null) {
@@ -33,12 +34,11 @@ public class VariableDeclarationASTVisitor extends JavaASTVisitor{
             } else {
                 type = JavaArrayType.lookup(type, node.getExtraDimensions());
             }
-            String identifier = node.getName().getIdentifier();
-            //TODO annotations
-            Annotations annotations = new Annotations();
-            this.parameter = new Parameter(getSourceCodeLocation(node), identifier, type, null, annotations);
         }
-
+        String identifier = node.getName().getIdentifier();
+        //TODO annotations
+        Annotations annotations = new Annotations();
+        this.parameter = new Parameter(getSourceCodeLocation(node), identifier, type, null, annotations);
         return false;
     }
 
