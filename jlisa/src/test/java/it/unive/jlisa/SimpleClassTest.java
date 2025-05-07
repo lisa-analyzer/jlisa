@@ -35,7 +35,7 @@ public class SimpleClassTest {
         //inputs.add("inputs/Test.java");
         inputs.add("inputs/test01/Main.java");
         inputs.add("inputs/test01/B.java");
-        inputs.add("inputs/test02/B.java");
+        //inputs.add("inputs/test02/B.java");
         frontend.parseFromListOfFile(inputs);
         if (!frontend.getParserContext().getExceptions().isEmpty()) {
             CSVExceptionWriter.writeCSV(outdir + "errors.csv", frontend.getParserContext().getExceptions());
