@@ -17,7 +17,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
         if (node.getSuperclassType() != null) {
             TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
-            node.getSuperclassType().accept(this);
+            node.getSuperclassType().accept(visitor);
             it.unive.lisa.type.Type superType = visitor.getType();
             if (superType != null) {
                 it.unive.lisa.program.Unit superUnit = getProgram().getUnit(superType.toString());

@@ -13,6 +13,7 @@ import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
 import org.junit.jupiter.api.Test;
 
@@ -42,33 +43,14 @@ public class ExtendsTest {
             System.out.println("Some errors occurred. Check " + outdir + "errors.csv file.");
             return;
         }
+
         //frontend.parseFromFile("inputs/module-info.java");
         //frontend.parseFromFile("inputs/Test.java");
         //Program p = JavaFrontend.parseFromFile("src/main/java/it/unive/jlisa/frontend/JavaFrontend.java");
         Program p = frontend.getProgram();
-        LiSAConfiguration conf = new LiSAConfiguration();
-        conf.workdir = outdir;
-        conf.serializeResults = false;
-        conf.jsonOutput = false;
-        conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
-        conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
-        conf.callGraph = new RTACallGraph();
-        conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-        conf.optimize = false;
+        assert p.getUnit("B") instanceof ClassUnit : "B must be a ClassUnit";
+        assert p.getUnit("A") instanceof ClassUnit : "A must be a ClassUnit";
+        assert ((ClassUnit) p.getUnit("B")).getImmediateAncestors().contains(((ClassUnit) p.getUnit("A"))) : "B ancestor not set.";
 
-        FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
-        TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
-        ValueEnvironment<IntegerConstantPropagation> domain = new ValueEnvironment<>(new IntegerConstantPropagation());
-        conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
-
-        LiSA lisa = new LiSA(conf);
-        lisa.run(p);
-        //CompilationUnit cu = (CompilationUnit) parser.createAST(null);
-        /*cu.accept(new ASTVisitor() {
-            public boolean visit(MethodDeclaration node) {
-                System.out.println("Method: " + node.getName());
-                return super.visit(node);
-            }
-        });*/
     }
 }
