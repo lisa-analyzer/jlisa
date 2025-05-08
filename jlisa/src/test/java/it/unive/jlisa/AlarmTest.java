@@ -48,7 +48,7 @@ public class AlarmTest {
         inputs.add("inputs/java-ranger-regression/alarm/impl/SystemStatusOutputs.java");
         inputs.add("inputs/java-ranger-regression/alarm/impl/TopLevelModeOutputs.java");
         frontend.parseFromListOfFile(inputs);
-        if (frontend.getParserContext().getExceptions().size() > 0) {
+        if (!frontend.getParserContext().getExceptions().isEmpty()) {
             CSVExceptionWriter.writeCSV(outdir + "errors.csv", frontend.getParserContext().getExceptions());
             System.out.println("Some errors occurred. Check " + outdir + "errors.csv file.");
             return;

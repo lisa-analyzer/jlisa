@@ -2,7 +2,6 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -14,6 +13,8 @@ import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.literal.Int32Literal;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.type.Int32Type;
@@ -21,15 +22,14 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import org.eclipse.jdt.core.dom.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class StatementASTVisitor extends JavaASTVisitor {
     private CFG cfg;
     private it.unive.lisa.program.cfg.statement.Statement first;
     private it.unive.lisa.program.cfg.statement.Statement last;
     private NodeList<CFG, it.unive.lisa.program.cfg.statement.Statement, Edge> block = new NodeList<>(new SequentialEdge());
-
-    public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
-        super(parserContext, source, compilationUnit);
-    }
 
     public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg) {
         super(parserContext, source, compilationUnit);
@@ -94,11 +94,36 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ConstructorInvocation node) {
-        parserContext.addException(
-                new ParsingException("constructor-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Constructor invocation statements are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        if (!node.typeArguments().isEmpty()) {
+            parserContext.addException(
+                    new ParsingException("constructor-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
+                            "Constructor invocation statements with type arguments are not supported.",
+                            getSourceCodeLocation(node))
+            );
+        }
+
+
+        // get the type from the descriptor
+        Expression thisExpression = new VariableRef(cfg, getSourceCodeLocation(node), "this");
+        List<Expression> parameters = new ArrayList<>();
+        parameters.add(thisExpression);
+
+        if (!node.arguments().isEmpty()) {
+            for (Object args : node.arguments()) {
+                ASTNode e  = (ASTNode) args;
+                ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+                e.accept(argumentsVisitor);
+                Expression expr = argumentsVisitor.getExpression();
+                if (expr != null) {
+                    // This parsing error should be logged in ExpressionVisitor.
+                    parameters.add(expr);
+                }
+            }
+        }
+        first = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
+        last = first;
+        block.addNode(first);
+
         return false;
     }
 
@@ -226,7 +251,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         }
         node.getExpression().accept(visitor);
         Expression e = visitor.getExpression();
-        Statement ret = null;
+        Statement ret;
         if (e == null) {
             ret = new Ret(cfg, getSourceCodeLocation(node));
         } else {
