@@ -10,7 +10,7 @@ public class B {
 
     public B(int x) {
         this();
-        C c1 = new C();
+        C c1 = new C(x);
         this.c = c1;
         this.x = x;
     }

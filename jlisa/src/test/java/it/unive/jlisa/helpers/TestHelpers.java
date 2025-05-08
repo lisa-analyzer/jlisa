@@ -6,6 +6,7 @@ import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.IntegerConstantPropagation;
+import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
@@ -27,7 +28,7 @@ public class TestHelpers {
 
         FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
         TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
-        ValueEnvironment<IntegerConstantPropagation> domain = new ValueEnvironment<>(new IntegerConstantPropagation());
+        ValueEnvironment<Interval> domain = new ValueEnvironment<>(new Interval());
         conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
 
         return new LiSA(conf);
