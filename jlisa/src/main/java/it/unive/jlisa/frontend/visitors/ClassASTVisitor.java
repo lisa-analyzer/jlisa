@@ -1,7 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.lisa.program.ClassUnit;
 import org.eclipse.jdt.core.dom.*;
 
@@ -25,11 +25,9 @@ public class ClassASTVisitor extends JavaASTVisitor{
                     cUnit.addAncestor((it.unive.lisa.program.CompilationUnit)superUnit);
                 }
             }
-            node.getSuperclassType().accept(this);
-            //throw new RuntimeException(new UnsupportedStatementException("extends is not supported yet."));
         }
         if (!node.permittedTypes().isEmpty()) {
-            throw new RuntimeException(new UnsupportedStatementException("permits is not supported yet."));
+            parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT, "Permits is not supported.", getSourceCodeLocation(node)));
         }
 
         for (FieldDeclaration fd : node.getFields()) {
