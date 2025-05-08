@@ -249,7 +249,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
         if (node.getExpression() != null) {
             node.getExpression().accept(visitor);
         }
-        node.getExpression().accept(visitor);
         Expression e = visitor.getExpression();
         Statement ret;
         if (e == null) {
