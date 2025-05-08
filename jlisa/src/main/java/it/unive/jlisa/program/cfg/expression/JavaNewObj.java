@@ -60,7 +60,7 @@ public class JavaNewObj extends NaryExpression {
         HeapReference ref = new HeapReference(reftype, created, getLocation());
 
         // we need to add the receiver to the parameters
-        VariableRef paramThis = new VariableRef(getCFG(), getLocation(), "this", reftype);
+        VariableRef paramThis = new VariableRef(getCFG(), getLocation(), "this@" + getLocation(), reftype);
         Expression[] fullExpressions = ArrayUtils.insert(0, getSubExpressions(), paramThis);
 
         // we also have to add the receiver inside the state
