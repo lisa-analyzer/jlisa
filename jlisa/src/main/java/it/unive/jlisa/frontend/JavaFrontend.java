@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class JavaFrontend {
     private ParserContext parserContext;
@@ -113,10 +115,28 @@ public class JavaFrontend {
         return (CompilationUnit) parser.createAST(null);
     }
 
+    public List<String> expandFilePaths(List<String> paths) throws IOException {
+        List<String> expandedPaths = new ArrayList<>();
+        for (String pathStr : paths) {
+            Path path = Paths.get(pathStr);
+            if (Files.isDirectory(path)) {
+                try (Stream<Path> stream = Files.walk(path)) {
+                    stream.filter(Files::isRegularFile)
+                            .filter(p -> p.toString().endsWith(".java"))
+                            .forEach(p -> expandedPaths.add(p.toString()));
+                }
+            } else if (Files.isRegularFile(path) && path.toString().endsWith(".java")) {
+                expandedPaths.add(path.toString());
+            }
+        }
+        return expandedPaths;
+    }
+
     public Program parseFromListOfFile(List<String> filePaths) throws IOException {
-        populateUnits (filePaths);
+        List<String> expandedPaths = expandFilePaths(filePaths);
+        populateUnits (expandedPaths);
         registerTypes();
-        for (String filePath : filePaths) {
+        for (String filePath : expandedPaths) {
             Path path = Paths.get(filePath);
             String source = Files.readString(path);
             boolean module = path.getFileName().toString().equals("module-info.java");

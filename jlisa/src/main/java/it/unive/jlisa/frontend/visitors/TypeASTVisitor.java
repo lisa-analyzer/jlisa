@@ -122,7 +122,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
     public boolean visit(SimpleName node) {
         Unit u = getProgram().getUnit(node.getFullyQualifiedName());
         if (u == null) {
-            throw new UnsupportedStatementException(node.getFullyQualifiedName() + " not exists in program.");
+            throw new UnsupportedStatementException(node.getFullyQualifiedName() + " not exists in program, location: ." + getSourceCodeLocation(node));
         }
         if (!(u instanceof ClassUnit)) {
             throw new UnsupportedStatementException(node.getFullyQualifiedName() + " is not a class unit.");

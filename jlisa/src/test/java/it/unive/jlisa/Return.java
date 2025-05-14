@@ -17,12 +17,11 @@ public class Return {
         LiSAConfiguration conf = new LiSAConfiguration();
         JavaFrontend frontend = new JavaFrontend();
         List<String> inputs = new ArrayList<>();
-        inputs.add("tests/return-stmt/void-return/Main.java");
-        inputs.add("tests/return-stmt/void-return/A.java");
+        inputs.add("src/main");
+        //inputs.add("tests/return-stmt/void-return/A.java");
         frontend.parseFromListOfFile(inputs);
         LiSA lisa = TestHelpers.getLiSA("tests-output/return-stmt/void-return");
         lisa.run(frontend.getProgram());
-
     }
 
     @Test
