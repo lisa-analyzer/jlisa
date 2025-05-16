@@ -3,8 +3,10 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.statement.Expression;
 import org.eclipse.jdt.core.dom.*;
 
 import static org.eclipse.jdt.core.dom.Assignment.Operator.ASSIGN;
@@ -40,25 +42,7 @@ public class StatementExpressionVisitor extends JavaASTVisitor {
         return false;
     }
 
-    @Override
-    public boolean visit(PostfixExpression node) {
-        parserContext.addException(
-                new ParsingException("postfix-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Postfix expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
-        return false;
-    }
 
-    @Override
-    public boolean visit(PrefixExpression node) {
-        parserContext.addException(
-                new ParsingException("prefix-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Prefix expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
-        return false;
-    }
 
     @Override
     public boolean visit(SuperMethodInvocation node) {
