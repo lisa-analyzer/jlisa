@@ -19,6 +19,10 @@ public class JavaTest {
         System.out.println(x);
         System.out.println(y);
         boolean t = true;
+        int A = 3;
+        int B = A++ + A--;
+        System.out.println(B);
+        System.out.println(A);
     }
     @Test
     void javaTest2()  {

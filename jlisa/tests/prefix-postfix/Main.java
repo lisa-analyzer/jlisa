@@ -9,5 +9,9 @@ public class Main {
         f = !f;
         a = +a;
         a = ~a;
+        a = 10;
+        b = a--;
+        int x = y;
+        x = a++;
     }
 }

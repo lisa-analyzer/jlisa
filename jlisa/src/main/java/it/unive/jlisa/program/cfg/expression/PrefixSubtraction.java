@@ -21,11 +21,12 @@ import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
 import it.unive.lisa.type.Type;
 import org.apache.commons.lang3.StringUtils;
 
-public class PrefixSubtraction extends UnaryExpression {
+public class PrefixSubtraction extends UnaryExpression implements MetaVariableCreator{
     public PrefixSubtraction(CFG cfg, CodeLocation location, Expression subExpression) {
         super(cfg, location, "--", subExpression);
     }
 
+    @Override
     public Identifier getMetaVariable() {
         Expression e = getSubExpression();
         String name = "ret_value@" + this.getLocation();

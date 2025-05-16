@@ -42,15 +42,7 @@ public class StatementExpressionVisitor extends JavaASTVisitor {
         return false;
     }
 
-    @Override
-    public boolean visit(PostfixExpression node) {
-        parserContext.addException(
-                new ParsingException("postfix-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Postfix expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
-        return false;
-    }
+
 
     @Override
     public boolean visit(SuperMethodInvocation node) {

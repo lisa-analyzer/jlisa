@@ -26,13 +26,6 @@ public class PrefixPlus extends UnaryExpression {
         super(cfg, location, "+", subExpression);
     }
 
-    public Identifier getMetaVariable() {
-        Expression e = getSubExpression();
-        String name = "ret_value@" + this.getLocation();
-        Variable var = new Variable(e.getStaticType(), name, getLocation());
-        return var;
-    }
-
     @Override
     public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
         return state;

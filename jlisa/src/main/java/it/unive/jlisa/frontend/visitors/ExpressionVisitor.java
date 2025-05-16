@@ -437,11 +437,18 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(PostfixExpression node) {
-        parserContext.addException(
-                new ParsingException("postfix-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Postfix Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        ExpressionVisitor sev = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getOperand().accept(sev);
+        Expression expr = sev.getExpression();
+        if (expr == null) {
+            return false;
+        }
+        if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
+            expression = new PostfixAddition(cfg, getSourceCodeLocation(node), expr);
+        }
+        if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
+            expression = new PostfixSubtraction(cfg, getSourceCodeLocation(node), expr);
+        }
         return false;
     }
 

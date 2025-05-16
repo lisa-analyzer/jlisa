@@ -10,15 +10,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrefixAdd {
+public class PrefixPostfix {
 
     @Test
-    public void testPrefixAdd() throws IOException {
+    public void testPrefixPostfix() throws IOException {
         JavaFrontend frontend = new JavaFrontend();
         List<String> inputs = new ArrayList<>();
-        inputs.add("tests/prefix/add/Main.java");
+        inputs.add("tests/prefix-postfix/Main.java");
         frontend.parseFromListOfFile(inputs);
-        LiSA lisa = TestHelpers.getLiSA("tests-output/prefix/add");
+        LiSA lisa = TestHelpers.getLiSA("tests-output/prefix-postfix");
         lisa.run(frontend.getProgram());
     }
 
