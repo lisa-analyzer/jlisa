@@ -3,7 +3,7 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
@@ -20,10 +20,12 @@ import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
+import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.*;
 import it.unive.lisa.symbolic.value.operator.BitwiseOperator;
 import it.unive.lisa.symbolic.value.operator.LogicalOperator;
+import it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd;
 import org.eclipse.jdt.core.dom.*;
 
 import javax.lang.model.type.TypeVisitor;
@@ -445,13 +447,35 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(PrefixExpression node) {
-        parserContext.addException(
-                new ParsingException("prefix-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Prefix Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        ExpressionVisitor sev = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getOperand().accept(sev);
+        Expression expr = sev.getExpression();
+        if (expr == null) {
+            return false;
+        }
+
+        if (node.getOperator() == PrefixExpression.Operator.INCREMENT) {
+            expression = new PrefixAddition(cfg, getSourceCodeLocation(node), expr);
+        }
+        if (node.getOperator() == PrefixExpression.Operator.DECREMENT) {
+            expression = new PrefixSubtraction(cfg, getSourceCodeLocation(node), expr);
+        }
+        if (node.getOperator() == PrefixExpression.Operator.MINUS) {
+            expression = new Negation(cfg, getSourceCodeLocation(node), expr);
+        }
+
+        if (node.getOperator() == PrefixExpression.Operator.PLUS) {
+            expression = new PrefixPlus(cfg, getSourceCodeLocation(node), expr);
+        }
+        if (node.getOperator() == PrefixExpression.Operator.NOT) {
+            expression = new Not(cfg, getSourceCodeLocation(node), expr);
+        }
+        if (node.getOperator() == PrefixExpression.Operator.COMPLEMENT) {
+            expression = new BitwiseNot(cfg, getSourceCodeLocation(node), expr);
+        }
         return false;
     }
+
     @Override
     public boolean visit(StringLiteral node) {
         String literal = node.getEscapedValue();
