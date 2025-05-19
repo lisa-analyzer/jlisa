@@ -2,6 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import org.eclipse.jdt.core.dom.*;
 
@@ -25,6 +26,8 @@ public class ClassASTVisitor extends JavaASTVisitor{
                     cUnit.addAncestor((it.unive.lisa.program.CompilationUnit)superUnit);
                 }
             }
+        } else {
+            cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
         }
         if (!node.permittedTypes().isEmpty()) {
             parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT, "Permits is not supported.", getSourceCodeLocation(node)));
