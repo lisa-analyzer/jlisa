@@ -46,7 +46,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
         block = new NodeList<>(new SequentialEdge());
         if (node.statements().isEmpty()) {
             first = new NoOp(cfg, getSourceCodeLocation(node));
-            last = new NoOp(cfg, getSourceCodeLocation(node));
+            last = first;
             block.addNode(first);
         }
         for (Object o : node.statements()) {
