@@ -79,7 +79,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
             last = statementASTVisitor.getLast();
         }
         return false;
-        //return false;
     }
 
     @Override
@@ -180,7 +179,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
         first = expressionVisitor.getExpression();
         last = first;
         block.addNode(first);
-        //throw new RuntimeException(new UnsupportedStatementException("Expression statement not supported"));
         return false;
     }
 
@@ -230,7 +228,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
         }
         last = noop;
         return false;
-        //throw new RuntimeException(new UnsupportedStatementException("If statement not supported"));
     }
 
     @Override
@@ -383,14 +380,33 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(WhileStatement node) {
-        parserContext.addException(
-                new ParsingException("while-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "While loops are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
+
+        ExpressionVisitor condition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        node.getExpression().accept(condition);
+        Expression expression = condition.getExpression();
+
+        this.first = expression;
+        block.addNode(expression);
+
+        StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        node.getBody().accept(loopBody);
+
+        if (loopBody.first == null || loopBody.last == null) {
+            // Parsing error. Skipping...
+            return false;
+        }
+
+        block.mergeWith(loopBody.getBlock());
+        block.addEdge(new TrueEdge(expression, loopBody.getFirst()));
+        block.addEdge(new SequentialEdge(loopBody.getLast(), expression));
+
+        Statement noop = new NoOp(this.cfg, expression.getLocation());
+        block.addNode(noop);
+        block.addEdge(new FalseEdge(expression, noop));
+
+        this.last = noop;
+        this.block = block;
         return false;
     }
-
-
-
 }
