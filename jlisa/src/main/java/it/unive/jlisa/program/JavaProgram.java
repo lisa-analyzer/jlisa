@@ -1,6 +1,8 @@
 package it.unive.jlisa.program;
 
+import it.unive.jlisa.program.java.constructs.object.ObjectConstructor;
 import it.unive.jlisa.program.java.constructs.string.*;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -8,6 +10,7 @@ import it.unive.lisa.program.language.LanguageFeatures;
 import it.unive.lisa.type.TypeSystem;
 
 public class JavaProgram extends Program {
+    private ClassUnit rootClassUnit;
     /**
      * Builds an empty program.
      *
@@ -18,9 +21,20 @@ public class JavaProgram extends Program {
      */
     public JavaProgram(LanguageFeatures features, TypeSystem types) {
         super(features, types);
+        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
+        rootClassUnit = new ClassUnit(unknownLocation, this, "Object", false);
+        JavaClassType.lookup("Object", rootClassUnit);
+        rootClassUnit.addInstanceCodeMember(new ObjectConstructor(unknownLocation, rootClassUnit));
+        this.addUnit(rootClassUnit);
+        this.addUnit(getStringClassUnit());
 
+    }
+
+    public ClassUnit getStringClassUnit() {
         SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
         ClassUnit str = new ClassUnit(unknownLocation, this, "String", true);
+        str.addAncestor(rootClassUnit);
+
         str.addInstanceCodeMember(new StringContains(unknownLocation, str));
         str.addInstanceCodeMember(new StringEndsWith(unknownLocation, str));
         str.addInstanceCodeMember(new StringEquals(unknownLocation, str));
@@ -29,7 +43,9 @@ public class JavaProgram extends Program {
         str.addInstanceCodeMember(new StringReplace(unknownLocation, str));
         str.addInstanceCodeMember(new StringStartsWith(unknownLocation, str));
         str.addInstanceCodeMember(new StringSubstring(unknownLocation, str));
-        this.addUnit(str);
+
+        JavaClassType.lookup("String", str);
+        return str;
     }
 
 }
