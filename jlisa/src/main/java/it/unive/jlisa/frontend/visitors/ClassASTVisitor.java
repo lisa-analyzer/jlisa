@@ -15,11 +15,9 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.ReferenceType;
-import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
@@ -31,7 +29,6 @@ public class ClassASTVisitor extends JavaASTVisitor{
     @Override
     public boolean visit(TypeDeclaration node) {
         ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
-
         if (node.getSuperclassType() != null) {
             TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
             node.getSuperclassType().accept(visitor);
@@ -56,15 +53,41 @@ public class ClassASTVisitor extends JavaASTVisitor{
             FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit);
             fd.accept(visitor);
         }
+        boolean createDefaultConstructor = true;
         for (MethodDeclaration md : node.getMethods()) {
             MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit);
             md.accept(visitor);
             if (md.isConstructor()) {
+                createDefaultConstructor = false;
                 fixConstructorCFG(visitor.getCFG(), node.getFields());
             }
         }
+        if (createDefaultConstructor) {
+            CFG defaultConstructor = createDefaultConstructor(cUnit);
+            fixConstructorCFG(defaultConstructor, node.getFields());
+        }
 
         return false;
+    }
+
+    private CFG createDefaultConstructor(ClassUnit classUnit) {
+
+        it.unive.lisa.type.Type type = getProgram().getTypes().getType(classUnit.getName());
+
+        List<Parameter> parameters = new ArrayList<>();
+        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
+        parameters.add(new Parameter(unknownLocation, "this", new ReferenceType(type), null, new Annotations()));
+
+        Annotations annotations = new Annotations();
+        Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), type, annotations, paramArray);
+        CFG cfg = new CFG(codeMemberDescriptor);
+
+        Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
+        cfg.addNode(ret);
+        cfg.getEntrypoints().add(ret);
+        classUnit.addInstanceCodeMember(cfg);
+        return cfg;
     }
 
     public void fixConstructorCFG(CFG cfg, FieldDeclaration[] fields) {

@@ -31,4 +31,23 @@ public class Constructors {
         }
         lisa.run(frontend.getProgram());
     }
+
+    @Test
+    public void testDefaultConstructor1() throws IOException {
+        String outdir = "tests-outputs/default-constructor/1/";
+        LiSA lisa = TestHelpers.getLiSA(outdir);
+        JavaFrontend frontend = new JavaFrontend();
+
+        List<String> inputs = new ArrayList<>();
+        inputs.add("tests/constructors/default-constructor/Main.java");
+        inputs.add("tests/constructors/default-constructor/B.java");
+        frontend.parseFromListOfFile(inputs);
+
+        if (!frontend.getParserContext().getExceptions().isEmpty()) {
+            CSVExceptionWriter.writeCSV(outdir + "errors.csv", frontend.getParserContext().getExceptions());
+            System.out.println("Some errors occurred. Check " + outdir + "errors.csv file.");
+            return;
+        }
+        lisa.run(frontend.getProgram());
+    }
 }
