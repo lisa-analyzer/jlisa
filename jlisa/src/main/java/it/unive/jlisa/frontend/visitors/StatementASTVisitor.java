@@ -138,11 +138,40 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(DoStatement node) {
-        parserContext.addException(
-                new ParsingException("do-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Do-while statements are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
+
+        StatementASTVisitor doBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        node.getBody().accept(doBody);
+        this.first = doBody.getFirst();
+        this.last = doBody.getLast();
+
+        if (doBody.first == null || doBody.last == null) {
+            // Parsing error. Skipping...
+            return false;
+        }
+
+        ExpressionVisitor whileCondition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        node.getExpression().accept(whileCondition);
+        Expression expression = whileCondition.getExpression();
+
+        if (expression == null) {
+            // Parsing error. Skipping...
+            return false;
+        }
+
+        block.addNode(expression);
+
+        block.mergeWith(doBody.getBlock());
+        block.addEdge(new SequentialEdge(this.last, expression));
+
+        block.addEdge(new TrueEdge(expression, this.first));
+
+        Statement noop = new NoOp(this.cfg, expression.getLocation());
+        block.addNode(noop);
+        block.addEdge(new FalseEdge(expression, noop));
+
+        this.last = noop;
+        this.block = block;
         return false;
     }
 
@@ -385,6 +414,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
         ExpressionVisitor condition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
         node.getExpression().accept(condition);
         Expression expression = condition.getExpression();
+
+        if (expression == null) {
+            // Parsing error. Skipping...
+            return false;
+        }
 
         this.first = expression;
         block.addNode(expression);
