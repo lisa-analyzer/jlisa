@@ -21,7 +21,7 @@ artifacts
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-
+tests-outputs/
 ### Eclipse ###
 .apt_generated
 .classpath
