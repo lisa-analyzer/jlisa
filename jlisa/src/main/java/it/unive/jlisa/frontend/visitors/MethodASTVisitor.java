@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -8,8 +9,14 @@ import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import org.eclipse.jdt.core.dom.*;
@@ -18,7 +25,7 @@ import java.util.*;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
-
+    CFG cfg;
     public MethodASTVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
         super(parserContext, source, astCompilationUnit);
         this.lisacompilationUnit = lisacompilationUnit;
@@ -35,10 +42,14 @@ public class MethodASTVisitor extends JavaASTVisitor {
         boolean isMain = isMain(node);
 
         int modifiers = node.getModifiers();
-        CFG cfg = new CFG(codeMemberDescriptor);
+        this.cfg = new CFG(codeMemberDescriptor);
+        Statement initFieldsStatement = null;
         BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
         node.getBody().accept(blockStatementASTVisitor);
         cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock());
+        if (initFieldsStatement != null) {
+            cfg.addEdge(new SequentialEdge(initFieldsStatement, blockStatementASTVisitor.getFirst()));
+        }
         if (blockStatementASTVisitor.getBlock().getNodes().isEmpty()) {
             return false;
         }
@@ -54,8 +65,8 @@ public class MethodASTVisitor extends JavaASTVisitor {
             } else {
                 // every non-throwing instruction that does not have a follower
                 // is ending the method
-                Collection<it.unive.lisa.program.cfg.statement.Statement> preExits = new LinkedList<>();
-                for (it.unive.lisa.program.cfg.statement.Statement st : list.getNodes())
+                Collection<Statement> preExits = new LinkedList<>();
+                for (Statement st : list.getNodes())
                     if (!st.stopsExecution() && list.followersOf(st).isEmpty())
                         preExits.add(st);
                 list.addNode(ret);
@@ -167,5 +178,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
         }
 
         return false;
+    }
+
+    public CFG getCFG() {
+        return this.cfg;
     }
 }
