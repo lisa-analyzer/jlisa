@@ -25,7 +25,7 @@ import java.util.*;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
-
+    CFG cfg;
     public MethodASTVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
         super(parserContext, source, astCompilationUnit);
         this.lisacompilationUnit = lisacompilationUnit;
@@ -42,18 +42,8 @@ public class MethodASTVisitor extends JavaASTVisitor {
         boolean isMain = isMain(node);
 
         int modifiers = node.getModifiers();
-        CFG cfg = new CFG(codeMemberDescriptor);
+        this.cfg = new CFG(codeMemberDescriptor);
         Statement initFieldsStatement = null;
-        if (node.isConstructor()) {
-            it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
-            ReferenceType reftype = new ReferenceType(type);
-
-            // we need to add the receiver to the parameters
-            VariableRef paramThis = new VariableRef(cfg, getSourceCodeLocation(node), "this", reftype);
-            initFieldsStatement = new UnresolvedCall(cfg,getSourceCodeLocation(node), Call.CallType.INSTANCE, null, "$init_attributes", paramThis);
-            cfg.getNodeList().addNode(initFieldsStatement);
-            cfg.getEntrypoints().add(initFieldsStatement);
-        }
         BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
         node.getBody().accept(blockStatementASTVisitor);
         cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock());
@@ -188,5 +178,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
         }
 
         return false;
+    }
+
+    public CFG getCFG() {
+        return this.cfg;
     }
 }
