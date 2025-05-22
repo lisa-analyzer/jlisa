@@ -6,18 +6,24 @@ import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.program.cfg.statement.call.CFGCall;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.call.NativeCall;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
+import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
 import it.unive.lisa.type.ReferenceType;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
@@ -45,9 +51,6 @@ public class ClassASTVisitor extends JavaASTVisitor{
         if (!node.permittedTypes().isEmpty()) {
             parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT, "Permits is not supported.", getSourceCodeLocation(node)));
         }
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        it.unive.lisa.program.cfg.statement.Statement first = null;
-        it.unive.lisa.program.cfg.statement.Statement last = null;
 
         for (FieldDeclaration fd : node.getFields()) {
             FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit);
@@ -83,9 +86,15 @@ public class ClassASTVisitor extends JavaASTVisitor{
         CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), type, annotations, paramArray);
         CFG cfg = new CFG(codeMemberDescriptor);
 
+        String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
+
+        Statement call = new UnresolvedCall(cfg, unknownLocation, Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, unknownLocation, "this"));
+
         Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
         cfg.addNode(ret);
-        cfg.getEntrypoints().add(ret);
+        cfg.addNode(call);
+        cfg.getEntrypoints().add(call);
+        cfg.addEdge(new SequentialEdge(call, ret));
         classUnit.addInstanceCodeMember(cfg);
         return cfg;
     }

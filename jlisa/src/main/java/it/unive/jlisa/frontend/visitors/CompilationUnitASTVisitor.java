@@ -102,7 +102,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
             }
             cUnit = new AbstractClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
         } else {
-            cUnit = new ClassUnit(loc, program, typeDecl.getName().toString(), true);
+            cUnit = new ClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
         }
         program.addUnit(cUnit);
         return cUnit;
