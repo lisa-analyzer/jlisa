@@ -25,10 +25,10 @@ git clone https://github.com/lisa-analyzer/jlisa.git
 cd jlisa
 ```
 
-Build with Maven:
+Build with Gradle:
 
 ```bash
-mvn clean install
+./gradlew clean build
 ```
 
 ## Usage
@@ -73,10 +73,10 @@ Make sure to have the following prerequisites:
 - Java 17 or later
 - Maven 3.6+
 
-To run locally:
+To run locally using Gradle:
 
 ```bash
-mvn exec:java -Dexec.mainClass="it.unive.jlisa.Main" -Dexec.args="-s path/to/File.java -o out/"
+./gradlew run --args="-s path/to/File.java -o out/"
 ```
 
 ## License
