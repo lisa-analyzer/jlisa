@@ -6,12 +6,8 @@ import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.types.JavaClassType;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
@@ -23,17 +19,11 @@ import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.*;
-import it.unive.lisa.symbolic.value.operator.BitwiseOperator;
-import it.unive.lisa.symbolic.value.operator.LogicalOperator;
-import it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd;
 import org.eclipse.jdt.core.dom.*;
-
-import javax.lang.model.type.TypeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.eclipse.jdt.core.dom.Assignment.Operator.*;
+import java.util.function.BiFunction;
 
 public class ExpressionVisitor extends JavaASTVisitor {
     private CFG cfg;
@@ -251,21 +241,36 @@ public class ExpressionVisitor extends JavaASTVisitor {
             // SKIP. There is an error.
             return false;
         }
+        List<Expression> operands = new ArrayList<>();
+        operands.add(left);
+        operands.add(right);
+        for (Object n : node.extendedOperands()) {
+            ExpressionVisitor extendedOperandVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+            ((ASTNode) n).accept(extendedOperandVisitor);
+            if (extendedOperandVisitor.getExpression() != null) {
+                operands.add(extendedOperandVisitor.getExpression());
+            }
+        }
         switch (operator.toString()) {
             case "*":
-                expression = new Multiplication(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Multiplication(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "/":
-                expression = new Division(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Division(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "%":
-                expression = new Modulo(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Modulo(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "+":
-                expression = new Addition(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Addition(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "-":
-                expression = new Subtraction(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Subtraction(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "<<":
             case ">>":
@@ -289,10 +294,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 expression = new GreaterThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
                 break;
             case "==":
-                expression = new Equal(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Equal(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "!=":
-                expression = new NotEqual(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new NotEqual(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "^":
             case "&":
@@ -304,15 +311,31 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 );
                 break;
             case "&&":
-                expression = new And(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                    new And(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "||":
-                expression = new Or(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+                expression = buildExpression(operands, (first, second) ->
+                        new Or(cfg, getSourceCodeLocation(node), first, second));
                 break;
             default:
                 throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
         }
         return false;
+    }
+
+    private Expression buildExpression(
+            List<Expression> operands,
+            BiFunction<Expression, Expression, Expression> opBuilder) {
+
+        if (operands.isEmpty())
+            throw new IllegalArgumentException("No operands for expression");
+
+        Expression result = operands.getFirst();
+        for (int i = 1; i < operands.size(); i++) {
+            result = opBuilder.apply(result, operands.get(i));
+        }
+        return result;
     }
 
     @Override
@@ -425,11 +448,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ParenthesizedExpression node) {
-        parserContext.addException(
-                new ParsingException("parenthesized-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Parenthesized Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+        node.getExpression().accept(visitor);
+        expression = visitor.getExpression();
         return false;
     }
 
