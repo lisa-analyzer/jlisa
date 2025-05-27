@@ -368,9 +368,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
         }
         //TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
         if (instance) {
-            expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null,node.getName().toString(), parameters.toArray(new Expression[0]));
-        } else {
-            expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.STATIC, null,node.getName().toString(), parameters.toArray(new Expression[0]));
+            expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
         }
         return false;
     }
@@ -409,7 +407,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
     @Override
     public boolean visit(SimpleName node) {
         String identifier = node.getIdentifier();
-        expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier);
+        expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(cfg, identifier));
         return false;
     }
 
@@ -532,6 +530,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(SuperMethodInvocation node) {
+
         parserContext.addException(
                 new ParsingException("super-method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
                         "Super Method Invocation expressions are not supported.",

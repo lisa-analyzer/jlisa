@@ -3,7 +3,9 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.FalseEdge;
@@ -74,7 +76,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
                 first = statementASTVisitor.getFirst();
             }
             if (last != null) {
-                block.addEdge(new SequentialEdge(last, statementASTVisitor.getLast()));
+                block.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
             }
             last = statementASTVisitor.getLast();
         }
@@ -295,11 +297,39 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(SuperConstructorInvocation node) {
-        parserContext.addException(
+        Unit unit = cfg.getDescriptor().getUnit();
+        if (!(unit instanceof ClassUnit)) {
+            throw new RuntimeException("The Unit must be a ClassUnit when dealing with SuperConstructorInvocation");
+        }
+        ClassUnit classUnit = (ClassUnit) unit;
+        String superclassName = classUnit.getImmediateAncestors().iterator().next().getName();
+
+        Expression thisExpression = new VariableRef(cfg, getSourceCodeLocation(node), "this", parserContext.getVariableStaticType(cfg, "this"));
+        List<Expression> parameters = new ArrayList<>();
+        parameters.add(thisExpression);
+
+        if (!node.arguments().isEmpty()) {
+            for (Object args : node.arguments()) {
+                ASTNode e  = (ASTNode) args;
+                ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+                e.accept(argumentsVisitor);
+                Expression expr = argumentsVisitor.getExpression();
+                if (expr != null) {
+                    // This parsing error should be logged in ExpressionVisitor.
+                    parameters.add(expr);
+                }
+            }
+        }
+
+        Statement call = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+        first = call;
+        last = call;
+        block.addNode(call);
+        /*parserContext.addException(
                 new ParsingException("super-constructor-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
                         "Super constructor invocations are not supported.",
                         getSourceCodeLocation(node))
-        );
+        );*/
         return false;
     }
 
@@ -402,6 +432,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
             //cfg.getNodeList().mergeWith(block);
             //cfg.addNode(ref);
             last = assignment;
+            parserContext.addVariableType(cfg,variableName, variableType);
             //fragment.getInitializer()
         }
         return false;

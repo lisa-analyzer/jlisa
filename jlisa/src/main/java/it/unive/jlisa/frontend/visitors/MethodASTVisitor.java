@@ -43,6 +43,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
 
         int modifiers = node.getModifiers();
         this.cfg = new CFG(codeMemberDescriptor);
+        for (Parameter p : codeMemberDescriptor.getFormals()) {
+            parserContext.addVariableType(cfg, p.getName(), p.getStaticType());
+        }
         Statement initFieldsStatement = null;
         BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
         node.getBody().accept(blockStatementASTVisitor);

@@ -25,13 +25,14 @@ public class AlarmTest {
     void simpleClassTest() throws IOException {
         JavaFrontend frontend = new JavaFrontend();
         String outdir = "outputs/test/";
-        //frontend.parseFromFile("inputs/java-ranger-regression/alarm/prop8/Main.java");
+
         //
         //frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/DW.java");
         //frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/Divs32.java");
         //frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/AlarmFunctional.java");
         //frontend.parseFromFile("inputs/java-ranger-regression/alarm/impl/B.java");
         List<String> inputs = new ArrayList<>();
+        inputs.add("inputs/java-ranger-regression/alarm/prop8/Main.java");
         inputs.add("inputs/java-ranger-regression/alarm/impl/B.java");
         inputs.add("inputs/java-ranger-regression/alarm/impl/AlarmFunctional.java");
         inputs.add("inputs/java-ranger-regression/alarm/impl/AlarmOutputs.java");
@@ -51,7 +52,7 @@ public class AlarmTest {
         if (!frontend.getParserContext().getExceptions().isEmpty()) {
             CSVExceptionWriter.writeCSV(outdir + "errors.csv", frontend.getParserContext().getExceptions());
             System.out.println("Some errors occurred. Check " + outdir + "errors.csv file.");
-            return;
+            //return;
         }
         //frontend.parseFromFile("inputs/module-info.java");
         //frontend.parseFromFile("inputs/Test.java");
