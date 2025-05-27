@@ -16,6 +16,9 @@ import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.program.Program;
 import org.apache.commons.cli.*;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.*;
+import org.apache.logging.log4j.core.config.*;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.IOException;
@@ -48,10 +51,16 @@ public class Main {
                 .required(false)
                 .build();
 
+        Option logLevel = Option.builder("l")
+                .longOpt("log-level")
+                .hasArg()
+                .desc("Log level: (INFO, DEBUG, WARNING, ERROR, FATAL, TRACE, ALL, OFF)")
+                .required(false)
+                .build();
         options.addOption(helpOption);
         options.addOption(sourceOption);
         options.addOption(outdirOption);
-
+        options.addOption(logLevel);
         // Create parser and formatter
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -69,6 +78,14 @@ public class Main {
             // Check required manually if help was not triggered
             if (!cmd.hasOption("s") || !cmd.hasOption("o")) {
                 throw new ParseException("Missing required options: --source and/or --outdir");
+            }
+            if (cmd.hasOption("l")) {
+                String log4jLevelName = cmd.getOptionValue("l").toUpperCase();
+                Level level = Level.getLevel(log4jLevelName);
+                if (level == null) {
+                    throw new ParseException("Invalid log level: " + log4jLevelName);
+                }
+                LogManager.setLogLevel(level);
             }
 
             sources = cmd.getOptionValues("s");
