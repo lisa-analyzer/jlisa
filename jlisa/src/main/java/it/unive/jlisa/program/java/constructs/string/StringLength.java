@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.type.IntType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.*;
@@ -7,7 +8,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.string.Length;
-import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.program.type.StringType;
 
 /**
@@ -27,7 +27,7 @@ public class StringLength extends NativeCFG {
 	public StringLength(
 			CodeLocation location,
 			ClassUnit stringUnit) {
-		super(new CodeMemberDescriptor(location, stringUnit, true, "len", Int32Type.INSTANCE,
+		super(new CodeMemberDescriptor(location, stringUnit, true, "len", IntType.INSTANCE,
 				new Parameter(location, "this", StringType.INSTANCE)),
 				IMPStringLength.class);
 	}
@@ -35,7 +35,7 @@ public class StringLength extends NativeCFG {
 	/**
 	 * An expression modeling the string length operation. The type of the
 	 * operand must be {@link StringType}. The type of this expression is the
-	 * {@link Int32Type}.
+	 * {@link IntType}.
 	 * 
 	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
 	 */

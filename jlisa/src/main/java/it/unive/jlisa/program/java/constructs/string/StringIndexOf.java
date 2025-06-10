@@ -7,9 +7,8 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.string.IndexOf;
-import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.program.type.StringType;
-
+import it.unive.jlisa.program.type.IntType;
 /**
  * The native construct representing the indexOf operation. This construct can
  * be invoked on a string variable {@code x} with {@code x.indexOf(other)},
@@ -37,7 +36,7 @@ public class StringIndexOf extends NativeCFG {
 	/**
 	 * An expression modeling the string indexOf operation. The type of both
 	 * operands must be {@link StringType}. The type of this expression is the
-	 * {@link Int32Type}.
+	 * {@link IntType}.
 	 * 
 	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
 	 */
