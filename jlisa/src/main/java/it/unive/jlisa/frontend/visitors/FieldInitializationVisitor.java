@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.jlisa.types.JavaArrayType;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -62,7 +63,7 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
                 initializer = JavaTypeSystem.getDefaultLiteral(type, cfg, unknownLocation);
             }
             String identifier = fragment.getName().getIdentifier();
-            it.unive.lisa.program.cfg.statement.Assignment assignment = new it.unive.lisa.program.cfg.statement.Assignment(cfg, unknownLocation, new AccessInstanceGlobal(cfg, unknownLocation, thisExpr, identifier), initializer);
+            JavaAssignment assignment = new JavaAssignment(cfg, unknownLocation, new AccessInstanceGlobal(cfg, unknownLocation, thisExpr, identifier), initializer);
             block.addNode(assignment);
             if (first == null) {
                 first = assignment;

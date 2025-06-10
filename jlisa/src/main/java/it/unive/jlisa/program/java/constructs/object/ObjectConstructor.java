@@ -1,20 +1,14 @@
 package it.unive.jlisa.program.java.constructs.object;
 
-import it.unive.jlisa.program.java.constructs.string.StringConcat;
-import it.unive.jlisa.program.java.constructs.string.StringEndsWith;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.statement.*;
-import it.unive.lisa.program.cfg.statement.string.EndsWith;
-import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
 public class ObjectConstructor extends NativeCFG {
@@ -22,7 +16,6 @@ public class ObjectConstructor extends NativeCFG {
     public ObjectConstructor(
             CodeLocation location,
             ClassUnit stringUnit) {
-        //JavaClassType object = JavaClassType.lookup("Object", null);
         super(new CodeMemberDescriptor(location, stringUnit, true, "Object", JavaClassType.lookup("Object", null),
                         new Parameter(location, "this", JavaClassType.lookup("Object", null))),
                 ObjectConstructor.JavaObjectConstructor.class);

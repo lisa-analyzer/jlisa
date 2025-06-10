@@ -27,19 +27,19 @@ public class TypeASTVisitor extends JavaASTVisitor{
             type = VoidType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.INT) {
-            type = Int32Type.INSTANCE;
+            type = IntType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.LONG) {
-            type = Int64Type.INSTANCE;
+            type = LongType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.SHORT) {
-            type = Int16Type.INSTANCE;
+            type = ShortType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.FLOAT) {
-            type = Float32Type.INSTANCE;
+            type = FloatType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.DOUBLE) {
-            type = Float64Type.INSTANCE;
+            type = DoubleType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BOOLEAN) {
             type = BoolType.INSTANCE;
@@ -51,10 +51,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
                     getSourceCodeLocation(node)));
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BYTE) {
-            parserContext.addException(new ParsingException(
-                    "primitive-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                    "byte type not supported",
-                    getSourceCodeLocation(node)));
+            type = ByteType.INSTANCE;
         }
         return false;
     }
