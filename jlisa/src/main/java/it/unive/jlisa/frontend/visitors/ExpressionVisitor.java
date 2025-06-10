@@ -4,7 +4,10 @@ import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.expression.*;
+import it.unive.jlisa.program.cfg.statement.JavaAddition;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
+import it.unive.jlisa.program.cfg.statement.literal.*;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -34,12 +37,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
         this.cfg = cfg;
     }
 
-    /*@Override
-    public boolean visit(Annotation node) {
-        throw new RuntimeException(new UnsupportedStatementException("Annotation expression not supported"));
-        //return false;
-    }*/
-
     @Override
     public boolean visit(ArrayAccess node) {
         parserContext.addException(new ParsingException("array-access", ParsingException.Type.UNSUPPORTED_STATEMENT, "Array Accesses are not supported.", getSourceCodeLocation(node)));
@@ -49,13 +46,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
     @Override
     public boolean visit(ArrayCreation node) {
         throw new RuntimeException(new UnsupportedStatementException("Array Creation expressions are not supported"));
-        //return false;
     }
 
     @Override
     public boolean visit(ArrayInitializer node) {
         throw new RuntimeException(new UnsupportedStatementException("Array Initializer expressions are not supported"));
-        //return false;
     }
 
     @Override
@@ -73,7 +68,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
         }
         switch (operator.toString()) {
             case "=":
-                expression = new it.unive.lisa.program.cfg.statement.Assignment(cfg, getSourceCodeLocation(node), left, right);
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
                 break;
             case "+=":
             case "-=":
@@ -220,11 +215,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
         if (expr != null) {
             expression = new AccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
         }
-        /*parserContext.addException(
-                new ParsingException("field-access", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Field Access expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );*/
         return false;
     }
 
@@ -266,7 +256,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 break;
             case "+":
                 expression = buildExpression(operands, (first, second) ->
-                        new Addition(cfg, getSourceCodeLocation(node), first, second));
+                        new JavaAddition(cfg, getSourceCodeLocation(node), first, second));
                 break;
             case "-":
                 expression = buildExpression(operands, (first, second) ->
@@ -396,12 +386,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
         return false;
     }
 
-    /*@Override
-    public boolean visit(MethodReference node) {
-        throw new RuntimeException(new UnsupportedStatementException("Method Reference expression not supported"));
-        //return false;
-    }*/
-
     @Override
     public boolean visit(QualifiedName node) {
         String target = node.getName().getIdentifier(); // you may still want this
@@ -419,11 +403,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
             return false;
         }
         expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node),receiver, target);
-        /*parserContext.addException(
-                new ParsingException("qualified-name", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Qualified Name expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );*/
         return false;
     }
 
@@ -439,12 +418,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
         expression = new it.unive.lisa.program.cfg.statement.literal.NullLiteral(cfg, getSourceCodeLocation(node));
         return false;
     }
-
-    /*@Override
-    public boolean visit(Pattern node) {
-        throw new RuntimeException(new UnsupportedStatementException("Pattern expression not supported"));
-        //return false;
-    }*/
 
     @Override
     public boolean visit(ParenthesizedExpression node) {
@@ -513,24 +486,28 @@ public class ExpressionVisitor extends JavaASTVisitor {
         String token = node.getToken();
         if ((token.endsWith("f") || token.endsWith("F")) && !token.startsWith("0x")) {
             // FlOAT
-            expression = new it.unive.lisa.program.cfg.statement.literal.Float32Literal(this.cfg, getSourceCodeLocation(node), Float.parseFloat(token));
+            expression = new FloatLiteral(this.cfg, getSourceCodeLocation(node), Float.parseFloat(token));
             return false;
         }
         if (token.contains(".") || ((token.contains("e") || token.contains("E") || token.endsWith("d") || token.endsWith("D")) && !token.startsWith("0x"))) {
             // DOUBLE
-            expression = new it.unive.lisa.program.cfg.statement.literal.Float64Literal(this.cfg, getSourceCodeLocation(node), Double.parseDouble(token));
+            expression = new DoubleLiteral(this.cfg, getSourceCodeLocation(node), Double.parseDouble(token));
             return false;
         }
         if (token.endsWith("l") || token.endsWith("L")) {
-            expression = new it.unive.lisa.program.cfg.statement.literal.Int64Literal(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
+            expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
             return false;
         }
         try {
             long value = Long.decode(token); // handles 0x, 0b, octal, decimal
-            if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                expression = new it.unive.lisa.program.cfg.statement.literal.Int32Literal(this.cfg, getSourceCodeLocation(node),(int)value);
+            if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {
+                expression = new ByteLiteral(this.cfg, getSourceCodeLocation(node), (byte)value);
+            } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
+                expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(short)value);
+            } else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node),(int)value);
             } else {
-                expression = new it.unive.lisa.program.cfg.statement.literal.Int64Literal(this.cfg, getSourceCodeLocation(node), value);
+                expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
             }
         } catch (NumberFormatException e) {
             throw new RuntimeException("Could not parse " + token + ": not a valid Number Literal", e );

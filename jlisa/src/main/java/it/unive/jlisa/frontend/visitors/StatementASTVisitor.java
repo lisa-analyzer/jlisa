@@ -2,6 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -407,12 +408,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
                     getSourceCodeLocation(fragment),
                     variableName, variableType);
             Expression initializer;
+            parserContext.addVariableType(cfg,variableName, variableType);
             if(fragment.getInitializer() == null) {
-                if (variableType == Int32Type.INSTANCE) {
-                    initializer = new Int32Literal(cfg, loc, (int)JavaTypeSystem.getDefaultValue(variableType));
-                } else {
-                    initializer = new NullLiteral(cfg, loc);
-                }
+                    initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, loc);
             } else {
                 org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
                 ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
@@ -422,7 +420,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
                     initializer = new NullLiteral(cfg, loc);
                 }
             }
-            Assignment assignment = new Assignment(cfg, loc, ref, initializer);
+            JavaAssignment assignment = new JavaAssignment(cfg, loc, ref, initializer);
             block.addNode(assignment);
             if (first == null) {
                 first = assignment;
@@ -432,7 +430,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
             //cfg.getNodeList().mergeWith(block);
             //cfg.addNode(ref);
             last = assignment;
-            parserContext.addVariableType(cfg,variableName, variableType);
+
             //fragment.getInitializer()
         }
         return false;

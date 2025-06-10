@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.IntType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -8,18 +9,13 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.*;
-import it.unive.lisa.program.cfg.statement.literal.Int32Literal;
-import it.unive.lisa.program.cfg.statement.numeric.Addition;
-import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.Variable;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
 import it.unive.lisa.type.Type;
-import org.apache.commons.lang3.StringUtils;
 
 public class PostfixSubtraction extends UnaryExpression {
     public PostfixSubtraction(CFG cfg, CodeLocation location, Expression subExpression) {
@@ -43,7 +39,7 @@ public class PostfixSubtraction extends UnaryExpression {
                 new BinaryExpression(
                         getStaticType(),
                         expr,
-                        new Constant(Int32Type.INSTANCE, 1, getLocation()),
+                        new Constant(IntType.INSTANCE, 1, getLocation()),
                         NumericNonOverflowingSub.INSTANCE,
                         getLocation()),
                 this);

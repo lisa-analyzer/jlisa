@@ -4,6 +4,7 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
 import it.unive.jlisa.program.JavaProgram;
+import it.unive.jlisa.program.type.*;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.jlisa.types.JavaArrayType;
 import it.unive.jlisa.types.JavaClassType;
@@ -12,14 +13,11 @@ import it.unive.lisa.program.Program;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.Float32Type;
-import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.internal.core.JavaProject;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -78,8 +76,14 @@ public class JavaFrontend {
     public void registerTypes() {
         TypeSystem typeSystem = this.parserContext.getProgram().getTypes();
         typeSystem.registerType(BoolType.INSTANCE);
-        typeSystem.registerType(Float32Type.INSTANCE);
-        typeSystem.registerType(Int32Type.INSTANCE);
+        typeSystem.registerType(ByteType.INSTANCE);
+        typeSystem.registerType(ShortType.INSTANCE);
+        typeSystem.registerType(IntType.INSTANCE);
+        typeSystem.registerType(LongType.INSTANCE);
+        typeSystem.registerType(FloatType.INSTANCE);
+        typeSystem.registerType(DoubleType.INSTANCE);
+
+
         typeSystem.registerType(StringType.INSTANCE);
         JavaClassType.all().forEach(typeSystem::registerType);
         JavaArrayType.all().forEach(typeSystem::registerType);
