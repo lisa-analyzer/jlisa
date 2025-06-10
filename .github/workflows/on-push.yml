@@ -1,0 +1,33 @@
+name: Commit Message Validation
+
+on:
+  push:
+    branches:
+      - '**'  # Trigger on push to any branch
+
+jobs:
+  validate-commit-messages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Validate commit message format
+        run: |
+          echo "Starting commit message format validation..."
+          commits=$(git log -10 --pretty=format:%s)
+          echo "Recent commit messages:"
+          echo "$commits"
+          
+          if echo "$commits" | grep -v -E '^#[0-9]+ .+' > /dev/null; then
+            echo "ERROR: One or more commit messages do not conform to the required format."
+            echo "The commit message title must begin with a '#' followed immediately by the issue number,"
+            echo "a space, and then a concise summary of the change."
+            echo
+            echo "Example of a valid commit message title:"
+            echo "  #123 Fix authentication flow"
+            exit 1
+          fi
+
+          echo "Commit message format validation passed."
