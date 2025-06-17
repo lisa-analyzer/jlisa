@@ -9,6 +9,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.*;
 import it.unive.jlisa.types.JavaClassType;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
@@ -592,11 +593,24 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(VariableDeclarationExpression node) {
-        parserContext.addException(
-                new ParsingException("variable-declaration-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Variable Declaration Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+        node.getType().accept(visitor);
+        it.unive.lisa.type.Type variableType = visitor.getType();
+        for (Object f : node.fragments()) {
+            VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
+            String variableName = fragment.getName().getIdentifier();
+            SourceCodeLocation loc = getSourceCodeLocation(fragment);
+            VariableRef ref = new VariableRef(cfg,
+                    getSourceCodeLocation(fragment),
+                    variableName, variableType);
+            parserContext.addVariableType(cfg,variableName, variableType);
+
+            org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
+            ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+            expr.accept(exprVisitor);
+            Expression initializer = exprVisitor.getExpression();
+            expression= new JavaAssignment(cfg, loc, ref, initializer);
+        }
         return false;
     }
 

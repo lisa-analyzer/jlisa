@@ -32,4 +32,15 @@ public class LoopTests {
         LiSA lisa = TestHelpers.getLiSA("outputs/loops/do-while/do-while-1");
         lisa.run(frontend.getProgram());
     }
+    
+    @Test
+    public void testForLoops() throws IOException {
+        JavaFrontend frontend = new JavaFrontend();
+        List<String> inputs = new ArrayList<>();
+        inputs.add("inputs/loops/for/forloops.java");
+        frontend.parseFromListOfFile(inputs);
+
+        LiSA lisa = TestHelpers.getLiSA("outputs/loops/for/forloops");
+        lisa.run(frontend.getProgram());
+    }
 }
