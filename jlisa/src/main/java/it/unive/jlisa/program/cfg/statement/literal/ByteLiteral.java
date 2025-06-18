@@ -6,11 +6,11 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 
 
-public class ByteLiteral extends Literal<Byte> {
+public class ByteLiteral extends Literal<Integer> {
     public ByteLiteral(
             CFG cfg,
             CodeLocation location,
-            byte value) {
+            int value) {
         super(cfg, location, value, ByteType.INSTANCE);
     }
 }
