@@ -7,6 +7,8 @@ import it.unive.jlisa.program.cfg.expression.forloops.ForLoop;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
+import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
@@ -67,11 +69,34 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(AssertStatement node) {
-        parserContext.addException(
-                new ParsingException("assert-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Assert statements are not supported.",
-                        getSourceCodeLocation(node))
-        );
+    	
+    	org.eclipse.jdt.core.dom.Expression expr = node.getExpression();
+    	org.eclipse.jdt.core.dom.Expression msg = node.getMessage();
+    	
+        ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        expr.accept(exprVisitor);
+        Expression expression1 = exprVisitor.getExpression(); 
+        
+        Statement assrt = null;
+        if(msg != null) {
+	        ExpressionVisitor messageVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+	        msg.accept(messageVisitor);
+	        Expression expression2 = messageVisitor.getExpression(); 
+	        assrt = new AssertionStatement(cfg, getSourceCodeLocation(node), expression1,expression2);
+	       
+        } else {
+        	assrt = new SimpleAssert(cfg, getSourceCodeLocation(node), expression1);
+    	}
+        
+        block.addNode(assrt);
+        if (first == null) {
+            first = assrt;
+        } else {
+            block.addEdge(new SequentialEdge(first, assrt));
+        }
+        
+        last = assrt;
+    	
         return false;
     }
 
