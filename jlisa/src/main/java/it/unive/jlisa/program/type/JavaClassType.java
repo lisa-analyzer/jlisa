@@ -1,16 +1,4 @@
 package it.unive.jlisa.program.type;
-
-import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.program.Unit;
-import it.unive.lisa.type.InMemoryType;
-import it.unive.lisa.type.PointerType;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.TypeSystem;
-import it.unive.lisa.type.UnitType;
-import it.unive.lisa.type.Untyped;
-import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
-import it.unive.lisa.util.collections.workset.WorkingSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +6,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.Unit;
+import it.unive.lisa.type.InMemoryType;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeSystem;
+import it.unive.lisa.type.UnitType;
+import it.unive.lisa.type.Untyped;
+import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
+import it.unive.lisa.util.collections.workset.WorkingSet;
 
 public final class JavaClassType implements InMemoryType, UnitType {
 
