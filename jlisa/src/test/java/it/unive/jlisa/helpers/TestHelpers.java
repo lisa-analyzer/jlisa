@@ -31,7 +31,7 @@ public class TestHelpers {
 		conf.programFiles = new ArrayList<>();
 		for (String pf : programFiles)
 			conf.programFiles.add(pf);
-		conf.serializeResults = false;
+		conf.serializeResults = true;
 		conf.jsonOutput = false;
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
