@@ -23,6 +23,8 @@ import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.*;
+import it.unive.lisa.type.Type;
+
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -345,11 +347,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(InstanceofExpression node) {
-        parserContext.addException(
-                new ParsingException("instanceof-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Instanceof expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        TypeASTVisitor rightVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+        node.getLeftOperand().accept(leftVisitor);
+        node.getRightOperand().accept(rightVisitor);
+        Expression left = leftVisitor.getExpression();
+        Type right = rightVisitor.getType();
+        
+        expression = new InstanceOf(cfg, getSourceCodeLocation(node), left, right);
+        
         return false;
     }
 
