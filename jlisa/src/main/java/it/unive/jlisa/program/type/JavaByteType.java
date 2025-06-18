@@ -1,34 +1,24 @@
 package it.unive.jlisa.program.type;
-
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
 import java.util.Set;
 
-public class ShortType implements JavaNumericType {
-    public static final ShortType INSTANCE = new ShortType();
-
-    protected ShortType() {}
-
+public class JavaByteType implements JavaNumericType {
+    public static final JavaByteType INSTANCE = new JavaByteType();
     @Override
     public String toString() {
-        return "short";
-    }
-
-
-    @Override
-    public Set<Type> allInstances(TypeSystem types) {
-        return Set.of();
+        return "byte";
     }
 
     @Override
     public boolean is8Bits() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean is16Bits() {
-        return true;
+        return false;
     }
 
     @Override
@@ -51,4 +41,8 @@ public class ShortType implements JavaNumericType {
         return true;
     }
 
+    @Override
+    public Set<Type> allInstances(TypeSystem types) {
+        return Set.of();
+    }
 }

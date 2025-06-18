@@ -2,7 +2,7 @@ package it.unive.jlisa.program;
 
 import it.unive.jlisa.program.java.constructs.object.ObjectConstructor;
 import it.unive.jlisa.program.java.constructs.string.*;
-import it.unive.jlisa.types.JavaClassType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;

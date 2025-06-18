@@ -1,6 +1,6 @@
-package it.unive.jlisa.types;
+package it.unive.jlisa.program.type;
 
-import it.unive.jlisa.types.JavaClassType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;

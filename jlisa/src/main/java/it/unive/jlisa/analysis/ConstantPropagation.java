@@ -1,7 +1,6 @@
 package it.unive.jlisa.analysis;
 
 import it.unive.jlisa.program.type.*;
-import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.analysis.Lattice;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -218,22 +217,22 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
         if (left.constant.getStaticType().canBeAssignedTo(destType)) {
             if (left.constant.getValue() instanceof Number) {
                 Number leftValue = (Number) left.constant.getValue();
-                if (destType instanceof ByteType) {
+                if (destType instanceof JavaByteType) {
                     return new ConstantPropagation(new Constant(destType, leftValue.byteValue(), pp.getLocation()));
                 }
-                if (destType instanceof ShortType) {
+                if (destType instanceof JavaShortType) {
                     return new ConstantPropagation(new Constant(destType, leftValue.shortValue(), pp.getLocation()));
                 }
-                if (destType instanceof IntType) {
+                if (destType instanceof JavaIntType) {
                     return new ConstantPropagation(new Constant(destType, leftValue.intValue(), pp.getLocation()));
                 }
-                if (destType instanceof LongType) {
+                if (destType instanceof JavaLongType) {
                     return new ConstantPropagation(new Constant(destType, leftValue.longValue(), pp.getLocation()));
                 }
-                if (destType instanceof FloatType) {
+                if (destType instanceof JavaFloatType) {
                     return new ConstantPropagation(new Constant(destType, leftValue.floatValue(), pp.getLocation()));
                 }
-                if (destType instanceof DoubleType) {
+                if (destType instanceof JavaDoubleType) {
                     return new ConstantPropagation(new Constant(destType, leftValue.doubleValue(), pp.getLocation()));
                 }
             }
@@ -256,22 +255,22 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
         if (operator instanceof AdditionOperator) {
             if (left.isTop() || right.isTop() || !left.constant.getStaticType().isNumericType() || !right.constant.getStaticType().isNumericType())
                 return top();
-            if ((left.constant.getStaticType() instanceof ByteType || left.constant.getStaticType() instanceof ShortType)) {
+            if ((left.constant.getStaticType() instanceof JavaByteType || left.constant.getStaticType() instanceof JavaShortType)) {
                 return bottom();
             }
             Type superType = left.constant.getStaticType().commonSupertype(right.constant.getStaticType());
             Number leftValue = (Number) left.constant.getValue();
             Number rightValue = (Number) right.constant.getValue();
-            if (superType instanceof IntType) {
+            if (superType instanceof JavaIntType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.intValue() + rightValue.intValue(), pp.getLocation()));
             }
-            if (superType instanceof LongType) {
+            if (superType instanceof JavaLongType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.longValue() + rightValue.longValue(), pp.getLocation()));
             }
-            if (superType instanceof FloatType) {
+            if (superType instanceof JavaFloatType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.floatValue() + rightValue.floatValue(), pp.getLocation()));
             }
-            if (superType instanceof DoubleType) {
+            if (superType instanceof JavaDoubleType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.doubleValue() + rightValue.doubleValue(), pp.getLocation()));
             }
             //new IntegerConstantPropagation(left.as + right.value);
@@ -279,22 +278,22 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
         if (operator instanceof SubtractionOperator) {
             if (left.isTop() || right.isTop() || !left.constant.getStaticType().isNumericType() || !right.constant.getStaticType().isNumericType())
                 return top();
-            if ((left.constant.getStaticType() instanceof ByteType || left.constant.getStaticType() instanceof ShortType)) {
+            if ((left.constant.getStaticType() instanceof JavaByteType || left.constant.getStaticType() instanceof JavaShortType)) {
                 return bottom();
             }
             Type superType = left.constant.getStaticType().commonSupertype(right.constant.getStaticType());
             Number leftValue = (Number) left.constant.getValue();
             Number rightValue = (Number) right.constant.getValue();
-            if (superType instanceof IntType) {
+            if (superType instanceof JavaIntType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.intValue() + rightValue.intValue(), pp.getLocation()));
             }
-            if (superType instanceof LongType) {
+            if (superType instanceof JavaLongType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.longValue() + rightValue.longValue(), pp.getLocation()));
             }
-            if (superType instanceof FloatType) {
+            if (superType instanceof JavaFloatType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.floatValue() + rightValue.floatValue(), pp.getLocation()));
             }
-            if (superType instanceof DoubleType) {
+            if (superType instanceof JavaDoubleType) {
                 return new ConstantPropagation(new Constant(superType, leftValue.doubleValue() + rightValue.doubleValue(), pp.getLocation()));
             }
 

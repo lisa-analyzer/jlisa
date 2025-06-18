@@ -5,28 +5,27 @@ import it.unive.lisa.type.TypeSystem;
 
 import java.util.Set;
 
-public class LongType implements JavaNumericType {
-    public static final LongType INSTANCE = new LongType();
+public class JavaFloatType implements JavaNumericType {
+    public static final JavaFloatType INSTANCE = new JavaFloatType();
 
-    protected LongType() {}
+    protected JavaFloatType() {}
 
     @Override
     public String toString() {
-        return "long";
+        return "float";
     }
-
 
     @Override
     public boolean canBeAssignedTo(
             Type other) {
-        return (other.isUntyped() || other instanceof LongType || other instanceof DoubleType || other instanceof FloatType);
+        return (other.isUntyped() || other instanceof JavaFloatType || other instanceof JavaDoubleType);
     }
 
     @Override
     public Type commonSupertype(
             Type other) {
-        if (other instanceof FloatType) {
-            return other;
+        if (other instanceof JavaLongType) {
+            return this;
         }
         return JavaNumericType.super.commonSupertype(other);
     }
@@ -48,12 +47,12 @@ public class LongType implements JavaNumericType {
 
     @Override
     public boolean is32Bits() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean is64Bits() {
-        return true;
+        return false;
     }
 
     @Override
@@ -63,7 +62,7 @@ public class LongType implements JavaNumericType {
 
     @Override
     public boolean isIntegral() {
-        return true;
+        return false;
     }
 
 }

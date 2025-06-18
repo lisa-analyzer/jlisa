@@ -5,14 +5,14 @@ import it.unive.lisa.type.TypeSystem;
 
 import java.util.Set;
 
-public class IntType implements JavaNumericType {
-    public static final IntType INSTANCE = new IntType();
+public class JavaDoubleType implements JavaNumericType {
+    public static final JavaDoubleType INSTANCE = new JavaDoubleType();
 
-    protected IntType() {}
+    protected JavaDoubleType() {}
 
     @Override
     public String toString() {
-        return "int";
+        return "double";
     }
 
     @Override
@@ -32,12 +32,12 @@ public class IntType implements JavaNumericType {
 
     @Override
     public boolean is32Bits() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean is64Bits() {
-        return false;
+        return true;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class IntType implements JavaNumericType {
 
     @Override
     public boolean isIntegral() {
-        return true;
+        return false;
     }
 
 }

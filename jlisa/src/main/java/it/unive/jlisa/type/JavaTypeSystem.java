@@ -26,7 +26,7 @@ public class JavaTypeSystem extends TypeSystem {
 
     @Override
     public NumericType getIntegerType() {
-        return IntType.INSTANCE;
+        return JavaIntType.INSTANCE;
     }
 
     @Override
@@ -35,19 +35,19 @@ public class JavaTypeSystem extends TypeSystem {
     }
 
     public static Literal<?> getDefaultLiteral(Type type, CFG currentCFG, CodeLocation location) {
-        if (type == IntType.INSTANCE) {
+        if (type == JavaIntType.INSTANCE) {
             return new IntLiteral(currentCFG, location, 0);
         } else if (type == BoolType.INSTANCE) {
             return new FalseLiteral(currentCFG, location);
-        } else if (type == ByteType.INSTANCE) {
+        } else if (type == JavaByteType.INSTANCE) {
             return new ByteLiteral(currentCFG, location, (byte) 0);
-        } else if (type == ShortType.INSTANCE) {
+        } else if (type == JavaShortType.INSTANCE) {
             return new ShortLiteral(currentCFG, location, (short) 0);
-        } else if (type == LongType.INSTANCE) {
+        } else if (type == JavaLongType.INSTANCE) {
             return new LongLiteral(currentCFG, location, 0L);
-        } else if (type == FloatType.INSTANCE) {
+        } else if (type == JavaFloatType.INSTANCE) {
             return new FloatLiteral(currentCFG, location, 0.0f);
-        } else if (type == DoubleType.INSTANCE) {
+        } else if (type == JavaDoubleType.INSTANCE) {
             return new DoubleLiteral(currentCFG, location, 0.0);
         }
         return new NullLiteral(currentCFG, location);

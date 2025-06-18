@@ -5,15 +5,16 @@ import it.unive.lisa.type.TypeSystem;
 
 import java.util.Set;
 
-public class DoubleType implements JavaNumericType {
-    public static final DoubleType INSTANCE = new DoubleType();
+public class JavaShortType implements JavaNumericType {
+    public static final JavaShortType INSTANCE = new JavaShortType();
 
-    protected DoubleType() {}
+    protected JavaShortType() {}
 
     @Override
     public String toString() {
-        return "double";
+        return "short";
     }
+
 
     @Override
     public Set<Type> allInstances(TypeSystem types) {
@@ -27,7 +28,7 @@ public class DoubleType implements JavaNumericType {
 
     @Override
     public boolean is16Bits() {
-        return false;
+        return true;
     }
 
     @Override
@@ -37,7 +38,7 @@ public class DoubleType implements JavaNumericType {
 
     @Override
     public boolean is64Bits() {
-        return true;
+        return false;
     }
 
     @Override
@@ -47,7 +48,7 @@ public class DoubleType implements JavaNumericType {
 
     @Override
     public boolean isIntegral() {
-        return false;
+        return true;
     }
 
 }

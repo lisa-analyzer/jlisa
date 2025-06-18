@@ -1,8 +1,8 @@
 package it.unive.jlisa.program.cfg.statement;
 
-import it.unive.jlisa.program.type.ByteType;
-import it.unive.jlisa.program.type.IntType;
-import it.unive.jlisa.program.type.ShortType;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -48,11 +48,11 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
         }
         if (leftType.isNumericType() && rightType.isNumericType()) {
             // small types promoted to int for addition operation
-            if (leftType instanceof ByteType || leftType instanceof ShortType) {
-                leftType = IntType.INSTANCE;
+            if (leftType instanceof JavaByteType || leftType instanceof JavaShortType) {
+                leftType = JavaIntType.INSTANCE;
             }
-            if (rightType instanceof ByteType || rightType instanceof ShortType) {
-                rightType = IntType.INSTANCE;
+            if (rightType instanceof JavaByteType || rightType instanceof JavaShortType) {
+                rightType = JavaIntType.INSTANCE;
             }
             return leftType.commonSupertype(rightType);
         }

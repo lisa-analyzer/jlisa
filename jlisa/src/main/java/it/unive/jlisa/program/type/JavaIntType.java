@@ -5,29 +5,14 @@ import it.unive.lisa.type.TypeSystem;
 
 import java.util.Set;
 
-public class FloatType implements JavaNumericType {
-    public static final FloatType INSTANCE = new FloatType();
+public class JavaIntType implements JavaNumericType {
+    public static final JavaIntType INSTANCE = new JavaIntType();
 
-    protected FloatType() {}
+    protected JavaIntType() {}
 
     @Override
     public String toString() {
-        return "float";
-    }
-
-    @Override
-    public boolean canBeAssignedTo(
-            Type other) {
-        return (other.isUntyped() || other instanceof FloatType || other instanceof DoubleType);
-    }
-
-    @Override
-    public Type commonSupertype(
-            Type other) {
-        if (other instanceof LongType) {
-            return this;
-        }
-        return JavaNumericType.super.commonSupertype(other);
+        return "int";
     }
 
     @Override
@@ -62,7 +47,7 @@ public class FloatType implements JavaNumericType {
 
     @Override
     public boolean isIntegral() {
-        return false;
+        return true;
     }
 
 }
