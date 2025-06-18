@@ -71,23 +71,23 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
                 break;
             case "+=":
-                expression = new it.unive.lisa.program.cfg.statement.Assignment(cfg, getSourceCodeLocation(node), left, 
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
                 		new Addition(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "-=":
-                expression = new it.unive.lisa.program.cfg.statement.Assignment(cfg, getSourceCodeLocation(node), left, 
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
                 		new Subtraction(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "*=":
-                expression = new it.unive.lisa.program.cfg.statement.Assignment(cfg, getSourceCodeLocation(node), left, 
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
                 		new Multiplication(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "/=":
-                expression = new it.unive.lisa.program.cfg.statement.Assignment(cfg, getSourceCodeLocation(node), left, 
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
                 		new Division(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "%=":
-            	expression = new it.unive.lisa.program.cfg.statement.Assignment(cfg, getSourceCodeLocation(node), left, 
+            	expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
                 		new Modulo(cfg, getSourceCodeLocation(node), left, right));
             case "|=":
             case "&=":
