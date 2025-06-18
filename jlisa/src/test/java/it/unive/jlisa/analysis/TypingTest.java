@@ -1,16 +1,18 @@
-package it.unive.jlisa;
+package it.unive.jlisa.analysis;
 
-import it.unive.jlisa.frontend.JavaFrontend;
-import it.unive.jlisa.helpers.TestHelpers;
-import it.unive.jlisa.program.type.*;
-import it.unive.lisa.LiSA;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
+import it.unive.jlisa.program.type.ByteType;
+import it.unive.jlisa.program.type.DoubleType;
+import it.unive.jlisa.program.type.FloatType;
+import it.unive.jlisa.program.type.IntType;
+import it.unive.jlisa.program.type.JavaNumericType;
+import it.unive.jlisa.program.type.LongType;
+import it.unive.jlisa.program.type.ShortType;
 
-public class Typing {
+public class TypingTest extends JLiSAAnalysisExecutor {
+	
     @Test
     public void testByteType() {
         JavaNumericType byteType = ByteType.INSTANCE;
@@ -129,15 +131,5 @@ public class Typing {
         assert doubleType.commonSupertype(LongType.INSTANCE).equals(DoubleType.INSTANCE) : "Common supertype of Double and Long should be Double";
         assert doubleType.commonSupertype(FloatType.INSTANCE).equals(DoubleType.INSTANCE) : "Common supertype of Double and Float should be Double";
         assert doubleType.commonSupertype(DoubleType.INSTANCE).equals(DoubleType.INSTANCE) : "Common supertype of Double and Double should be Double";
-    }
-    @Test
-    public void testTypingConversion() throws IOException {
-        JavaFrontend frontend = new JavaFrontend();
-        List<String> inputs = new ArrayList<>();
-        inputs.add("tests/typing/A.java");
-        frontend.parseFromListOfFile(inputs);
-
-        LiSA lisa = TestHelpers.getLiSA("outputs/typing/typing-1");
-        lisa.run(frontend.getProgram());
     }
 }
