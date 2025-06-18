@@ -1,20 +1,16 @@
 package it.unive.jlisa.type;
 
+import it.unive.jlisa.program.cfg.statement.literal.*;
+import it.unive.jlisa.program.type.*;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
-import it.unive.lisa.program.cfg.statement.literal.Int32Literal;
-import it.unive.lisa.program.cfg.statement.literal.Literal;
-import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
-import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.Int64Type;
+import it.unive.lisa.program.cfg.statement.literal.*;
+import it.unive.lisa.program.type.*;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.BooleanType;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.NumericType;
-import it.unive.lisa.program.type.Int32Type;
-import it.unive.lisa.program.type.StringType;
 
 public class JavaTypeSystem extends TypeSystem {
 
@@ -30,7 +26,7 @@ public class JavaTypeSystem extends TypeSystem {
 
     @Override
     public NumericType getIntegerType() {
-        return Int32Type.INSTANCE;
+        return IntType.INSTANCE;
     }
 
     @Override
@@ -38,30 +34,22 @@ public class JavaTypeSystem extends TypeSystem {
         return type.isInMemoryType();
     }
 
-    public boolean booleanDefaultValue() { return false; }
-
-    public int intDefaultValue() { return 0; }
-
-    public static Object getDefaultValue(Type type) {
-        if (type == Int32Type.INSTANCE) {
-            return 0;
-        }
-        if (type == BoolType.INSTANCE) {
-            return false;
-        }
-        if (type == Int64Type.INSTANCE) {
-            return 0L;
-        }
-        return null;
-    }
-
     public static Literal<?> getDefaultLiteral(Type type, CFG currentCFG, CodeLocation location) {
-        if (type == Int32Type.INSTANCE) {
-            return new Int32Literal(currentCFG, location, 0);
+        if (type == IntType.INSTANCE) {
+            return new IntLiteral(currentCFG, location, 0);
         } else if (type == BoolType.INSTANCE) {
             return new FalseLiteral(currentCFG, location);
-        } else {
-            return new NullLiteral(currentCFG, location);
+        } else if (type == ByteType.INSTANCE) {
+            return new ByteLiteral(currentCFG, location, (byte) 0);
+        } else if (type == ShortType.INSTANCE) {
+            return new ShortLiteral(currentCFG, location, (short) 0);
+        } else if (type == LongType.INSTANCE) {
+            return new LongLiteral(currentCFG, location, 0L);
+        } else if (type == FloatType.INSTANCE) {
+            return new FloatLiteral(currentCFG, location, 0.0f);
+        } else if (type == DoubleType.INSTANCE) {
+            return new DoubleLiteral(currentCFG, location, 0.0);
         }
+        return new NullLiteral(currentCFG, location);
     }
 }

@@ -1,5 +1,6 @@
 package it.unive.jlisa.types;
 
+import it.unive.jlisa.program.type.IntType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -10,7 +11,6 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.DefaultParamInitialization;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
@@ -187,14 +187,14 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
                 AnalysisState<A> initSt = entryState.bottom();
                 for (SymbolicExpression allocExp : allocExps) {
                     AccessChild len = new AccessChild(
-                            Int32Type.INSTANCE,
+                            IntType.INSTANCE,
                             allocExp,
                             new Variable(Untyped.INSTANCE, "len", getLocation()),
                             getLocation());
 
                     AnalysisState<A> lenSt = entryState.bottom();
                     // TODO fix when we'll support multidimensional arrays
-                    lenSt = lenSt.lub(allocSt.assign(len, new PushAny(Int32Type.INSTANCE, getLocation()), this));
+                    lenSt = lenSt.lub(allocSt.assign(len, new PushAny(IntType.INSTANCE, getLocation()), this));
                     initSt = initSt.lub(lenSt);
                 }
 

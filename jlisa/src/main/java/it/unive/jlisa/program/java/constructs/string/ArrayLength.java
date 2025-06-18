@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.type.IntType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -12,7 +13,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -41,7 +41,7 @@ public class ArrayLength extends NativeCFG {
 	public ArrayLength(
 			CodeLocation location,
 			Program program) {
-		super(new CodeMemberDescriptor(location, program, false, "arraylen", Int32Type.INSTANCE,
+		super(new CodeMemberDescriptor(location, program, false, "arraylen", IntType.INSTANCE,
 				new Parameter(location, "a", Untyped.INSTANCE)),
 				IMPArrayLength.class);
 	}
@@ -49,7 +49,7 @@ public class ArrayLength extends NativeCFG {
 	/**
 	 * An expression modeling the array length operation. The type of the
 	 * operand must be {@link ArrayType}. The type of this expression is the
-	 * {@link Int32Type}.
+	 * {@link IntType}.
 	 * 
 	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
 	 */
@@ -141,7 +141,7 @@ public class ArrayLength extends NativeCFG {
 			ArrayType arraytype = Type.commonSupertype(arraytypes, getStaticType()).asArrayType();
 			HeapDereference container = new HeapDereference(arraytype, expr, getLocation());
 			AccessChild len = new AccessChild(
-					Int32Type.INSTANCE,
+					IntType.INSTANCE,
 					container,
 					new Variable(Untyped.INSTANCE, "len", getLocation()),
 					getLocation());
