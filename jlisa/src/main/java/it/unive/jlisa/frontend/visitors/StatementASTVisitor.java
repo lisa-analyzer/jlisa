@@ -2,12 +2,21 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.expression.forloops.ForEachLoop;
+import it.unive.jlisa.program.cfg.expression.forloops.ForLoop;
+import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
+import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.FalseEdge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
@@ -18,14 +27,19 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.literal.Int32Literal;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
+import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 public class StatementASTVisitor extends JavaASTVisitor {
@@ -190,12 +204,56 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(EnhancedForStatement node) {
-        parserContext.addException(
-                new ParsingException("enhanced-for-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Enhanced for-each loops are not supported.",
-                        getSourceCodeLocation(node))
-        );
-        return false;
+
+       NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
+        
+       
+       ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+       node.getParameter().accept(itemVisitor);
+       Expression item = itemVisitor.getExpression();
+       
+       ExpressionVisitor collectionVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+       node.getExpression().accept(collectionVisitor);
+       Expression collection = collectionVisitor.getExpression();
+       
+       Expression condition = new Equal(cfg, item.getLocation(), new TrueLiteral(cfg, item.getLocation()), new HasNextForEach(cfg,item.getLocation(),collection));
+	   block.addNode(condition);
+	   this.first = condition;
+	   
+       JavaAssignment assignment = new JavaAssignment(cfg, item.getLocation(), item, new GetNextForEach(cfg,item.getLocation(),collection));
+       block.addNode(assignment);
+       block.addEdge(new TrueEdge(condition, assignment));
+       
+       StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+       if(node.getBody() == null)
+       	return false; // parsing error
+       
+       node.getBody().accept(loopBody);
+       Statement noBody = new NoOp(this.cfg, condition.getLocation());
+       
+       boolean hasBody = loopBody.first != null && loopBody.last != null;
+       if(hasBody)
+    	   block.mergeWith(loopBody.getBlock());
+       else
+    	   block.addNode(noBody);
+       
+       block.addEdge( new SequentialEdge(assignment, hasBody ? loopBody.first : noBody));
+       
+       block.addEdge(new SequentialEdge(hasBody ? loopBody.last : noBody, condition));
+       
+       Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
+       block.addNode(noop);
+       
+       block.addEdge(new FalseEdge(condition, noop));
+  
+       this.last = noop;
+       this.block = block;
+        
+       ForEachLoop forEachLoop = new ForEachLoop(block, item, condition, collection, noop, loopBody.getBlock().getNodes());
+        
+       this.cfg.addControlFlowStructure(forEachLoop);
+
+       return false;
     }
 
     @Override
@@ -216,15 +274,109 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ForStatement node) {
-        parserContext.addException(
-                new ParsingException("for-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "For loops are not supported.",
-                        getSourceCodeLocation(node))
-        );
+
+        NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
+        
+        Triple<Statement, NodeList<CFG, Statement, Edge>, Statement> initializers = visitSequentialExpressions(node.initializers());
+        
+        boolean hasInitalizers = initializers.getLeft() != null && initializers.getRight() != null;
+        NoOp noInit = new NoOp(cfg, getSourceCodeLocation(node));
+        if(hasInitalizers) {
+        	block.mergeWith(initializers.getMiddle());
+        	this.first = initializers.getLeft();
+        } else {
+        	block.addNode(noInit);
+        	this.first = noInit;
+        }
+        
+        ExpressionVisitor conditionExpr = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        if(node.getExpression() != null)
+        	node.getExpression().accept(conditionExpr);
+        Expression condition = conditionExpr.getExpression();
+        Statement alwaysTrue = new Equal(cfg, getSourceCodeLocation(node), new TrueLiteral(cfg, getSourceCodeLocation(node)), new TrueLiteral(cfg, getSourceCodeLocation(node)));
+        
+        boolean hasCondition = condition != null;
+        
+        if(hasCondition) {
+        	block.addNode(condition);
+        	block.addEdge(new SequentialEdge(hasInitalizers? initializers.getRight() : noInit, condition));
+        } else {
+        	block.addNode(alwaysTrue);
+        	block.addEdge(new SequentialEdge(hasInitalizers? initializers.getRight() : noInit, alwaysTrue));
+        }
+
+        StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        if(node.getBody() == null)
+        	return false; // parsing error
+        
+        node.getBody().accept(loopBody);
+        
+
+        Statement noBody = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
+        
+        boolean hasBody = loopBody.first != null && loopBody.last != null;
+        if(hasBody)
+        	block.mergeWith(loopBody.getBlock());
+        else
+        	block.addNode(noBody);
+        
+        if(hasCondition)
+        	block.addEdge( new TrueEdge(condition, hasBody ? loopBody.first : noBody));
+        else
+        	block.addEdge( new TrueEdge(alwaysTrue, hasBody ? loopBody.first : noBody));
+        
+        Triple<Statement, NodeList<CFG, Statement, Edge>, Statement> updaters = visitSequentialExpressions(node.updaters());
+        block.mergeWith(updaters.getMiddle());
+        
+        boolean hasUpdaters= updaters.getLeft() != null && updaters.getRight() != null;
+        
+        Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col +2 to avoid conflict with the other noop
+        block.addNode(noop);
+                
+        block.addEdge(new SequentialEdge(hasBody ? loopBody.last : noBody, hasUpdaters ? updaters.getLeft() : hasCondition ? condition : alwaysTrue));
+        
+        if(hasCondition)
+        	block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.last : noBody, condition));
+        else
+        	block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.last : noBody, alwaysTrue));
+        
+        if(hasCondition)
+        	block.addEdge(new FalseEdge(condition, noop));  
+        else
+        	block.addEdge(new FalseEdge(alwaysTrue, noop));  
+       
+        this.last = noop;
+        this.block = block;
+        
+        ForLoop forloop = new ForLoop(block, hasInitalizers ? initializers.getMiddle().getNodes() : null, hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getMiddle().getNodes() : null, noop, loopBody.getBlock().getNodes());
+        
+        this.cfg.addControlFlowStructure(forloop);
+ 
         return false;
     }
 
-    @Override
+	private Triple<Statement, NodeList<CFG, Statement, Edge>, Statement> visitSequentialExpressions(List<ASTNode> statements) {
+    	block = new NodeList<>(new SequentialEdge());
+    	ASTNode[] stmts = statements.toArray(new ASTNode[statements.size()]);
+    	Statement prev = null;
+    	Statement first = null;
+		for(int i= 0; i < stmts.length; i++) {
+			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+			stmts[i].accept(visitor);
+			Expression expr = visitor.getExpression();
+			block.addNode(expr);
+			if(i != 0)
+				block.addEdge(new SequentialEdge(prev,expr));
+			else {
+				block.getEntries().add(expr);
+				first = expr;
+			}
+			prev = expr;
+		}
+		return Triple.of(first, block, prev);
+	}
+
+	@Override
     public boolean visit(IfStatement node) {
         block = new NodeList<>(new SequentialEdge());
         ExpressionVisitor conditionVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
@@ -383,8 +535,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
         );
         return false;
     }
-
-    @Override
+    
+   
+	@Override
     public boolean visit(TypeDeclarationStatement node) {
         parserContext.addException(
                 new ParsingException("type-declaration-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
