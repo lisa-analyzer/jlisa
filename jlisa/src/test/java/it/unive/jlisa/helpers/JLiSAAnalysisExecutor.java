@@ -42,7 +42,7 @@ public abstract class JLiSAAnalysisExecutor {
 	/**
 	 * Performs a test, running an analysis. The test will fail if:
 	 * <ul>
-	 * <li>The imp file cannot be parsed (i.e. a {@link ParsingException} is
+	 * <li>The Java file cannot be parsed (i.e. a {@link ParsingException} is
 	 * thrown)</li>
 	 * <li>The previous working directory using for the test execution cannot be
 	 * deleted</li>
@@ -68,7 +68,7 @@ public abstract class JLiSAAnalysisExecutor {
 	/**
 	 * Performs a test, running an analysis. The test will fail if:
 	 * <ul>
-	 * <li>The imp file cannot be parsed (i.e. a {@link ParsingException} is
+	 * <li>The Java file cannot be parsed (i.e. a {@link ParsingException} is
 	 * thrown)</li>
 	 * <li>The previous working directory using for the test execution cannot be
 	 * deleted</li>

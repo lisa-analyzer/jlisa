@@ -10,17 +10,6 @@ import it.unive.jlisa.helpers.TestHelpers;
 
 public class Parenthesized extends JLiSAAnalysisExecutor {
 	
-//    @Test
-//    public void parenthesizedTest1() throws IOException {
-//        JavaFrontend frontend = new JavaFrontend();
-//        List<String> inputs = new ArrayList<>();
-//        inputs.add("tests/parenthesized-expr/Main.java");
-//        frontend.parseFromListOfFile(inputs);
-//
-//        LiSA lisa = TestHelpers.getLiSA("tests-outputs/parenthesized-expr/parenthesized-expr-1");
-//        lisa.run(frontend.getProgram());
-//    }
-    
 	@Test
 	public void parenthesizedTest1()  throws IOException {
 		// FIXME: need to compare the dots and update the ground truth

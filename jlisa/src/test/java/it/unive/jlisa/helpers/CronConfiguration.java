@@ -9,7 +9,7 @@ import it.unive.lisa.conf.LiSAConfiguration;
  * keys. This configuration disables optimizations
  * ({@link LiSAConfiguration#optimize}) by default.
  * 
- * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
+ * @author <a href="mailto:vincenzo.arceri@unipr.it">Vincenzo Arceri</a>
  */
 public class CronConfiguration extends LiSAConfiguration {
 
@@ -28,7 +28,7 @@ public class CronConfiguration extends LiSAConfiguration {
 	public String testSubDir;
 
 	/**
-	 * The name of the imp source file to be searched in {@link #testDir}.
+	 * The list of names of the Java source file to be searched in {@link #testDir}.
 	 */
 	public List<String> programFiles;
 

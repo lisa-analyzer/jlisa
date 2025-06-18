@@ -16,14 +16,4 @@ public class PrefixPostfix extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.createConfiguration("prefix-postfix", "", "Main.java");
 		perform(conf);
 	}
-	
-//    @Test
-//    public void testPrefixPostfix() throws IOException {
-//        JavaFrontend frontend = new JavaFrontend();
-//        List<String> inputs = new ArrayList<>();
-//        inputs.add("tests/prefix-postfix/Main.java");
-//        frontend.parseFromListOfFile(inputs);
-//        LiSA lisa = TestHelpers.getLiSA("tests-output/prefix-postfix");
-//        lisa.run(frontend.getProgram());
-//    }
 }

@@ -14,25 +14,6 @@ import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 
 public class TestHelpers {
-
-//    public static LiSA getLiSA(String outdir) {
-//        LiSAConfiguration conf = new LiSAConfiguration();
-//        conf.workdir = outdir;
-//        conf.serializeResults = false;
-//        conf.jsonOutput = false;
-//        conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
-//        conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
-//        conf.callGraph = new RTACallGraph();
-//        conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-//        conf.optimize = false;
-//
-//        FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
-//        TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
-//        ValueEnvironment<Interval> domain = new ValueEnvironment<>(new Interval());
-//        conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
-//
-//        return new LiSA(conf);
-//    }
     
 	/**
 	 * Creates and returns a {@link CronConfiguration} instance for running JLiSA cron tests.

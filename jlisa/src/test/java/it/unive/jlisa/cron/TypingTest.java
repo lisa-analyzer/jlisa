@@ -16,15 +16,4 @@ public class TypingTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.createConfiguration("typing", "", "A.java");
 		perform(conf);
 	}
-    
-//    @Test
-//    public void testTypingConversion() throws IOException {
-//        JavaFrontend frontend = new JavaFrontend();
-//        List<String> inputs = new ArrayList<>();
-//        inputs.add("tests/typing/A.java");
-//        frontend.parseFromListOfFile(inputs);
-//
-//        LiSA lisa = TestHelpers.getLiSA("outputs/typing/typing-1");
-//        lisa.run(frontend.getProgram());
-//    }
 }
