@@ -200,7 +200,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
         Expression conditionExpr = conditionVisitor.getExpression();
         if (conditionExpr == null) {
             parserContext.addException(
-                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPRESSION,
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
                             "The condition is missing.",
                             getSourceCodeLocation(node)));
         }
@@ -210,7 +210,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
         Expression thenExpr = thenExprVisitor.getExpression();
         if (thenExpr == null) {
             parserContext.addException(
-                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPRESSION,
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
                             "The then expression is missing.",
                             getSourceCodeLocation(node)));
         }
@@ -220,7 +220,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
         Expression elseExpr = elseExprVisitor.getExpression();
         if (elseExpr == null) {
             parserContext.addException(
-                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPRESSION,
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
                             "The else expression is missing.",
                             getSourceCodeLocation(node)));
         }
