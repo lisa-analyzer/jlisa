@@ -12,7 +12,7 @@ import java.util.List;
 public class ConditionalExprTest {
 
     @Test
-    public void testAsserts() throws IOException {
+    public void testConditionalExpr() throws IOException {
         JavaFrontend frontend = new JavaFrontend();
         List<String> inputs = new ArrayList<>();
         inputs.add("tests/conditional-expr/conditionalExpr.java");

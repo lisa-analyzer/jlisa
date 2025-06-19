@@ -1,5 +1,6 @@
 package it.unive.jlisa;
 
+import it.unive.jlisa.analysis.ConstantPropagation;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.lisa.LiSA;
@@ -128,7 +129,7 @@ public class Main {
 
         FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
         TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
-        ValueEnvironment<IntegerConstantPropagation> domain = new ValueEnvironment<>(new IntegerConstantPropagation());
+        ValueEnvironment<ConstantPropagation> domain = new ValueEnvironment<>(new ConstantPropagation());
         conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
 
 

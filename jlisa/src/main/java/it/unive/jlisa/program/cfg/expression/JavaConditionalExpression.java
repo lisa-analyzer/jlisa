@@ -1,20 +1,16 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.analysis.ConstantPropagation;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.SimpleAbstractState;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.nonrelational.value.NonRelationalValueDomain;
-import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
+import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.ValueExpression;
 
 /**
  * Conditional operator/expression
@@ -52,39 +48,20 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 		
 		AnalysisState<A> result = state.smallStepSemantics(left, this);
 		
-		if (state.getState() instanceof SimpleAbstractState<?, ?, ?>) {
-			SimpleAbstractState<?, ?, ?> simpleState = (SimpleAbstractState<?, ?, ?>) state.getState();
-			if (simpleState.getValueState() instanceof ValueEnvironment<?>) {
-				ValueEnvironment<?> valueEnv = (ValueEnvironment<?>) simpleState.getValueState();
-				boolean found = false;
-				for (SymbolicExpression stack : simpleState.rewrite(left, this, simpleState)) {
-					NonRelationalValueDomain<?> stackValue = valueEnv.eval((ValueExpression) stack, this, simpleState);
-					if (stackValue instanceof ConstantPropagation) { // TODO: probably to change in favor to a more precise domain or better solution
-						ConstantPropagation abstractValue = ((ConstantPropagation) stackValue).eval((ValueExpression) stack, (ValueEnvironment<ConstantPropagation>) valueEnv, this, simpleState);
-						if (!abstractValue.isBottom()) {
-							if (!abstractValue.isTop()) {
-								Object cnst = abstractValue.getConstant();
-								if (cnst != null && cnst instanceof Boolean) {
-									Boolean hold = (Boolean) cnst;
-									found = true;
-									if (hold.booleanValue()) {
-										result = result.lub(result.smallStepSemantics(middle, this));
-									} else {
-										result = result.lub(result.smallStepSemantics(right, this));
-									}
-								}
-							} else {
-								return result.smallStepSemantics(middle, this).lub(result.smallStepSemantics(right, this));
-							}
-						}
-					}
-				}
-				if(found)
-					return result;
-			}
+		Satisfiability sat = result.satisfies(left, this);
+		
+		switch(sat) {
+			case SATISFIED:
+				return result.lub(result.smallStepSemantics(middle, this));
+			case NOT_SATISFIED:
+				result.lub(result.smallStepSemantics(right, this));
+			case BOTTOM:
+				return result.bottom();
+			case UNKNOWN:
+			default:
+				return result.smallStepSemantics(middle, this).lub(result.smallStepSemantics(right, this));
 		}
 		
-		return result.smallStepSemantics(middle, this).lub(result.smallStepSemantics(right, this));
 	}
 
 
