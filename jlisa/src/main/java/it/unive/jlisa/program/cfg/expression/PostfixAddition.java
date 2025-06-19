@@ -34,6 +34,8 @@ public class PostfixAddition extends UnaryExpression {
         if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isNumericType))
             return state.bottom();
 
+        Identifier meta = getMetaVariable();
+        state = state.assign(meta, expr, this);
         state = state.assign(
                 expr,
                 new BinaryExpression(
@@ -43,8 +45,7 @@ public class PostfixAddition extends UnaryExpression {
                         NumericNonOverflowingAdd.INSTANCE,
                         getLocation()),
                 this);
-        //state = state.assign(meta, expr, this);
-        return state.smallStepSemantics(expr, this);
+        return state.smallStepSemantics(meta, this);
 
     }
 
