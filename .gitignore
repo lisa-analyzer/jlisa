@@ -1,3 +1,4 @@
 /.idea
 # Ignore output directories that contain generated results
 java-outputs/
+.metadata/
