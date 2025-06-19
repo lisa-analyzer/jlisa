@@ -52,9 +52,9 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 		
 		switch(sat) {
 			case SATISFIED:
-				return result.lub(result.smallStepSemantics(middle, this));
+				return result.smallStepSemantics(middle, this);
 			case NOT_SATISFIED:
-				result.lub(result.smallStepSemantics(right, this));
+				return result.smallStepSemantics(right, this);
 			case BOTTOM:
 				return result.bottom();
 			case UNKNOWN:
