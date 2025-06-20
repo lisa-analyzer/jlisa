@@ -16,6 +16,7 @@ import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
@@ -73,6 +74,61 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
         Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(getStaticType())), getStaticType(), this.getLocation());
         SymbolicExpression actualLeft = left;
         SymbolicExpression actualRight = right;
+        AnalysisState<A> result = state.bottom();
+        BinaryOperator op;
+        Type type;
+        for (Type lType : leftTypes) {
+        	for( Type rType : rightTypes) {
+        		if(lType.isStringType() && rType.isStringType()) {
+        			op = StringConcat.INSTANCE;
+        			type = StringType.INSTANCE;
+        		} else if (lType.isStringType()) {
+        			op = StringConcat.INSTANCE;
+        	        typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)), StringType.INSTANCE, this.getLocation());
+        			actualRight =  new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE, this.getLocation());
+        			type = StringType.INSTANCE;
+        		} else if (rType.isStringType()) {
+        			op = StringConcat.INSTANCE;
+        	        typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)), StringType.INSTANCE, this.getLocation());
+        			actualLeft =  new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE, this.getLocation());
+        			type = StringType.INSTANCE;
+        		} 
+        		///
+        		else if( !leftTypes.stream().noneMatch(Type::isNumericType) || rightTypes.stream().noneMatch(Type::isNumericType) ) { 
+        			if (!left.getStaticType().equals(getStaticType())) {
+	        			actualLeft =  new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE, this.getLocation());
+        			} 
+        			if (!right.getStaticType().equals(getStaticType())) {
+	                    actualRight =  new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE, this.getLocation());
+        			}
+                	op = NumericNonOverflowingAdd.INSTANCE;
+                    type = getStaticType();
+                    System.out.println("Numbers!! lType = " + actualLeft + " rType = " + actualRight);
+                } else if (lType.isNumericType() && rType.isNumericType()) {
+        			op = NumericNonOverflowingAdd.INSTANCE;
+        			type = lType.commonSupertype(rType);
+        		}
+        		
+        		else {
+        			continue;
+        		}
+        		
+        		result = result.lub(state.smallStepSemantics(
+        				new BinaryExpression(
+        						type, 
+        						actualLeft, 
+        						actualRight, 
+        						op, 
+        						getLocation()), 
+        				this));
+        	}
+        }
+        
+        if (! result.isBottom()) {
+        	return result;
+        }
+        
+        
         if (leftTypes.stream().anyMatch(Type::isStringType) || rightTypes.stream().anyMatch(Type::isStringType)) {
             if (!left.getStaticType().equals(getStaticType())) {
                 actualLeft =  new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE, this.getLocation());
@@ -99,6 +155,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
         if (!right.getStaticType().equals(getStaticType())) {
             actualRight =  new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE, this.getLocation());
         }
+        //////
         return state.smallStepSemantics(
                 new BinaryExpression(
                         getStaticType(),
