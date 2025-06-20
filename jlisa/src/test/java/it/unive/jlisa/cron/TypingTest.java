@@ -12,7 +12,6 @@ public class TypingTest extends JLiSAAnalysisExecutor {
 	 
 	@Test
 	public void testTypingConversion()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("typing", "", "A.java");
 		perform(conf);
 	}

@@ -12,14 +12,12 @@ public class LoopTests extends JLiSAAnalysisExecutor {
     
 	@Test
 	public void testWhile1()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("loops", "while", "while-1.java");
 		perform(conf);
 	}
 	
 	@Test
 	public void testDoWhile1()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("loops", "do-while", "do-while-1.java");
 		perform(conf);
 	}

@@ -12,7 +12,6 @@ public class Parenthesized extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void parenthesizedTest1()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("parenthesized-expr", "", "Main.java");
 		perform(conf);
 	}
