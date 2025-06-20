@@ -1,18 +1,18 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_A.main(String[]_args).json" ],
+  "files" : [ "A_A.A(A__this)_1707430528.json", "int_A.getX(A__this)_1707432481.json", "report.json", "void_A.setX(A__this,_int_x)_1707424824.json", "void_Main.main(String[]_args).json" ],
   "info" : {
-    "cfgs" : "2",
-    "duration" : "82ms",
-    "end" : "2025-06-20T22:33:13.685+02:00",
-    "expressions" : "19",
-    "files" : "1",
-    "globals" : "0",
-    "members" : "11",
+    "cfgs" : "5",
+    "duration" : "105ms",
+    "end" : "2025-06-20T22:39:53.160+02:00",
+    "expressions" : "21",
+    "files" : "4",
+    "globals" : "1",
+    "members" : "14",
     "programs" : "1",
-    "start" : "2025-06-20T22:33:13.603+02:00",
-    "statements" : "8",
-    "units" : "3",
+    "start" : "2025-06-20T22:39:53.055+02:00",
+    "statements" : "13",
+    "units" : "4",
     "version" : "0.1",
     "warnings" : "0"
   },
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/typing"
+    "workdir" : "java-outputs/return"
   }
 }

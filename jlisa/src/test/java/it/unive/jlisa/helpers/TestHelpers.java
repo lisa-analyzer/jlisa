@@ -35,7 +35,6 @@ public class TestHelpers {
 		conf.jsonOutput = false;
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		conf.analysisGraphs = LiSAConfiguration.GraphType.DOT;
 
 		// FIXME: why bottom?
 		// the abstract domain
