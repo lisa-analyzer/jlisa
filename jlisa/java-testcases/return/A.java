@@ -1,4 +1,6 @@
 public class A {
+	int x;
+	
     public A() {
         this.x = 10;
     }
