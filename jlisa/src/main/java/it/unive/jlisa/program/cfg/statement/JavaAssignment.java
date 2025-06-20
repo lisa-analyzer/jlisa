@@ -38,12 +38,14 @@ public class JavaAssignment extends Assignment {
             throws SemanticException {
         CodeLocation loc = getLocation();
         if (!right.getStaticType().equals(left.getStaticType())) {
-            if (right.getStaticType().canBeAssignedTo(left.getStaticType())) {
-                Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
+        	if (right.getStaticType().isUntyped()) {
+                return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
+            } else if (right.getStaticType().canBeAssignedTo(left.getStaticType())) {
+                 Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
 
-                BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeCast, TypeConv.INSTANCE, loc);
-                return super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions);
-            } else {
+                 BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeCast, TypeConv.INSTANCE, loc);
+                 return super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions);
+             } else {
                 return state.bottom();
             }
         }
