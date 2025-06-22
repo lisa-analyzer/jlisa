@@ -35,6 +35,7 @@ import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 
 import org.apache.commons.lang3.tuple.Triple;
@@ -152,7 +153,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         if (!node.arguments().isEmpty()) {
             for (Object args : node.arguments()) {
                 ASTNode e  = (ASTNode) args;
-                ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+                ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, Untyped.INSTANCE);
                 e.accept(argumentsVisitor);
                 Expression expr = argumentsVisitor.getExpression();
                 if (expr != null) {
@@ -286,6 +287,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         block = new NodeList<>(new SequentialEdge());
         ExpressionVisitor expressionVisitor = new ExpressionVisitor(parserContext, this.source, this.compilationUnit, this.cfg);
         node.getExpression().accept(expressionVisitor);
+
         first = expressionVisitor.getExpression();
         if (first == null) {
             // PARSING ERROR. IGNORE
@@ -451,7 +453,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ReturnStatement node) {
-        ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, cfg.getDescriptor().getReturnType());
         if (node.getExpression() != null) {
             node.getExpression().accept(visitor);
         }
@@ -591,7 +593,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
                     initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, loc);
             } else {
                 org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
-                ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+                ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, variableType);
                 expr.accept(exprVisitor);
                 initializer = exprVisitor.getExpression();
                 if (initializer == null) {
