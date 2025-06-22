@@ -6,16 +6,14 @@ import it.unive.lisa.type.Untyped;
 
 public interface JavaNumericType extends NumericType {
 
-    default Type commonSupertype(
-            Type other) {
+    default Type commonSupertype(Type other) {
         if (!(other instanceof JavaNumericType)) {
             return Untyped.INSTANCE;
         }
         return supertype(other.asNumericType());
     }
 
-    default boolean canBeAssignedTo(
-            Type other) {
+    default boolean canBeAssignedTo(Type other) {
         if (other.isUntyped()) {
             return true;
         }

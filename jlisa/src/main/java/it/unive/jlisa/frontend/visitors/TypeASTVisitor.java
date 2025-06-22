@@ -4,8 +4,6 @@ import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.type.*;
-import it.unive.jlisa.types.JavaArrayType;
-import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
@@ -28,19 +26,19 @@ public class TypeASTVisitor extends JavaASTVisitor{
             type = VoidType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.INT) {
-            type = IntType.INSTANCE;
+            type = JavaIntType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.LONG) {
-            type = LongType.INSTANCE;
+            type = JavaLongType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.SHORT) {
-            type = ShortType.INSTANCE;
+            type = JavaShortType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.FLOAT) {
-            type = FloatType.INSTANCE;
+            type = JavaFloatType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.DOUBLE) {
-            type = DoubleType.INSTANCE;
+            type = JavaDoubleType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BOOLEAN) {
             type = BoolType.INSTANCE;
@@ -52,7 +50,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
                     getSourceCodeLocation(node)));
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BYTE) {
-            type = ByteType.INSTANCE;
+            type = JavaByteType.INSTANCE;
         }
         return false;
     }

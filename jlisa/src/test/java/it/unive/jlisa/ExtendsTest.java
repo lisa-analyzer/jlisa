@@ -1,25 +1,15 @@
 package it.unive.jlisa;
 
-import it.unive.jlisa.frontend.JavaFrontend;
-import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
-import it.unive.lisa.LiSA;
-import it.unive.lisa.analysis.SimpleAbstractState;
-import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
-import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
-import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
-import it.unive.lisa.analysis.numeric.IntegerConstantPropagation;
-import it.unive.lisa.analysis.types.InferredTypes;
-import it.unive.lisa.conf.LiSAConfiguration;
-import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
-import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Program;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Program;
 
 public class ExtendsTest {
     @Test
