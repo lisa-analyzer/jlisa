@@ -8,7 +8,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class PrefixPostfix extends JLiSAAnalysisExecutor {
+public class PrefixPostfixTest extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void testPrefixPostfix()  throws IOException {

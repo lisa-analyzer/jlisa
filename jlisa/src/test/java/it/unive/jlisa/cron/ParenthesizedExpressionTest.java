@@ -8,7 +8,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class Parenthesized extends JLiSAAnalysisExecutor {
+public class ParenthesizedExpressionTest extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void parenthesizedTest1()  throws IOException {

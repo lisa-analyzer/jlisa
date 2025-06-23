@@ -8,7 +8,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class Constructors extends JLiSAAnalysisExecutor {
+public class ConstructorsTest extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testThisConstructor()  throws IOException {

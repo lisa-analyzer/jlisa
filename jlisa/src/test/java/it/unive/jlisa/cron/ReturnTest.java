@@ -8,12 +8,11 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class AssignmentOperators extends JLiSAAnalysisExecutor {
+public class ReturnTest extends JLiSAAnalysisExecutor {
 
 	@Test
-	public void testAssignmentOperators()  throws IOException {
-		CronConfiguration conf = TestHelpers.createConfiguration("asg-operators", "", "Main.java");
+	public void testReturn()  throws IOException {
+		CronConfiguration conf = TestHelpers.createConfiguration("return", "", "A.java", "Main.java");
 		perform(conf);
 	}
-
 }

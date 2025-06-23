@@ -8,12 +8,12 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class Return extends JLiSAAnalysisExecutor {
+public class AssignmentOperatorsTest extends JLiSAAnalysisExecutor {
 
 	@Test
-	public void testReturn()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
-		CronConfiguration conf = TestHelpers.createConfiguration("return", "", "A.java", "Main.java");
+	public void testAssignmentOperators()  throws IOException {
+		CronConfiguration conf = TestHelpers.createConfiguration("asg-operators", "", "Main.java");
 		perform(conf);
 	}
+
 }

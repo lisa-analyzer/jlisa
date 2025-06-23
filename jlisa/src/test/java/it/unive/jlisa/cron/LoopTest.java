@@ -8,7 +8,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class LoopTests extends JLiSAAnalysisExecutor {
+public class LoopTest extends JLiSAAnalysisExecutor {
     
 	@Test
 	public void testWhile1()  throws IOException {
