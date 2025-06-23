@@ -19,7 +19,6 @@ public class Constructors extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testSuperConstructor1()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("constructors", "super-constructor/test-1", "Main.java", "B.java");
 		perform(conf);
 	}
