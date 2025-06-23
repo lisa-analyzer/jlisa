@@ -1,16 +1,28 @@
 package it.unive.jlisa.type;
 
-import it.unive.jlisa.program.cfg.statement.literal.*;
-import it.unive.jlisa.program.type.*;
-import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.literal.*;
-import it.unive.lisa.program.type.*;
-import it.unive.lisa.type.Type;
+import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
+import it.unive.lisa.program.cfg.statement.literal.Literal;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
+import it.unive.lisa.program.type.BoolType;
+import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.BooleanType;
-import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.NumericType;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeSystem;
 
 public class JavaTypeSystem extends TypeSystem {
 
@@ -26,7 +38,7 @@ public class JavaTypeSystem extends TypeSystem {
 
     @Override
     public NumericType getIntegerType() {
-        return IntType.INSTANCE;
+        return JavaIntType.INSTANCE;
     }
 
     @Override
@@ -35,19 +47,19 @@ public class JavaTypeSystem extends TypeSystem {
     }
 
     public static Literal<?> getDefaultLiteral(Type type, CFG currentCFG, CodeLocation location) {
-        if (type == IntType.INSTANCE) {
+        if (type == JavaIntType.INSTANCE) {
             return new IntLiteral(currentCFG, location, 0);
         } else if (type == BoolType.INSTANCE) {
             return new FalseLiteral(currentCFG, location);
-        } else if (type == ByteType.INSTANCE) {
+        } else if (type == JavaByteType.INSTANCE) {
             return new ByteLiteral(currentCFG, location, (byte) 0);
-        } else if (type == ShortType.INSTANCE) {
+        } else if (type == JavaShortType.INSTANCE) {
             return new ShortLiteral(currentCFG, location, (short) 0);
-        } else if (type == LongType.INSTANCE) {
+        } else if (type == JavaLongType.INSTANCE) {
             return new LongLiteral(currentCFG, location, 0L);
-        } else if (type == FloatType.INSTANCE) {
+        } else if (type == JavaFloatType.INSTANCE) {
             return new FloatLiteral(currentCFG, location, 0.0f);
-        } else if (type == DoubleType.INSTANCE) {
+        } else if (type == JavaDoubleType.INSTANCE) {
             return new DoubleLiteral(currentCFG, location, 0.0);
         }
         return new NullLiteral(currentCFG, location);

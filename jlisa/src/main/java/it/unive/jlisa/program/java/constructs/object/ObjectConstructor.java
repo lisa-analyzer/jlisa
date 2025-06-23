@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.object;
 
-import it.unive.jlisa.types.JavaClassType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;

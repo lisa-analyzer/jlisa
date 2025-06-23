@@ -3,8 +3,8 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.types.JavaClassType;
-import it.unive.jlisa.types.JavaInterfaceType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.*;
 import org.eclipse.jdt.core.dom.*;
 

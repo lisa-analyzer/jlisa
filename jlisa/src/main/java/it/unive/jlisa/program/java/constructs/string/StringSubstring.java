@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.type.IntType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.*;
@@ -33,15 +33,15 @@ public class StringSubstring extends NativeCFG {
 			ClassUnit stringUnit) {
 		super(new CodeMemberDescriptor(location, stringUnit, true, "substring", BoolType.INSTANCE,
 				new Parameter(location, "this", StringType.INSTANCE),
-				new Parameter(location, "start", IntType.INSTANCE),
-				new Parameter(location, "end", IntType.INSTANCE)),
+				new Parameter(location, "start", JavaIntType.INSTANCE),
+				new Parameter(location, "end", JavaIntType.INSTANCE)),
 				IMPStringSubstring.class);
 	}
 
 	/**
 	 * An expression modeling the string substring operation. The type of the
 	 * first operand must be {@link StringType}, while the other two operands'
-	 * types must be {@link IntType}. The type of this expression is the
+	 * types must be {@link JavaIntType}. The type of this expression is the
 	 * {@link StringType}.
 	 * 
 	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>

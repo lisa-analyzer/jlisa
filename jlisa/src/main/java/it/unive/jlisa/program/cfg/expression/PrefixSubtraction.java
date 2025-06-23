@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.type.IntType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -36,18 +36,17 @@ public class PrefixSubtraction extends UnaryExpression implements MetaVariableCr
         if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isNumericType))
             return state.bottom();
 
-        Identifier meta = getMetaVariable();
-        state = state.assign(meta, expr, this);
         state = state.assign(
                 expr,
                 new BinaryExpression(
                         getStaticType(),
                         expr,
-                        new Constant(IntType.INSTANCE, 1, getLocation()),
+                        new Constant(JavaIntType.INSTANCE, 1, getLocation()),
                         NumericNonOverflowingSub.INSTANCE,
                         getLocation()),
                 this);
-        return state.smallStepSemantics(meta, this);
+        //state = state.assign(meta, expr, this);
+        return state.smallStepSemantics(expr, this);
 
     }
 

@@ -1,7 +1,7 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.types.JavaClassType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
