@@ -194,11 +194,39 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ConditionalExpression node) {
-        parserContext.addException(
-                new ParsingException("conditional-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Conditional Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        
+        ExpressionVisitor conditionVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getExpression().accept(conditionVisitor);
+        Expression conditionExpr = conditionVisitor.getExpression();
+        if (conditionExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The condition is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getThenExpression().accept(thenExprVisitor);
+        Expression thenExpr = thenExprVisitor.getExpression();
+        if (thenExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The then expression is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getElseExpression().accept(elseExprVisitor);
+        Expression elseExpr = elseExprVisitor.getExpression();
+        if (elseExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The else expression is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        expression = new JavaConditionalExpression(cfg,getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
+        
         return false;
     }
 
