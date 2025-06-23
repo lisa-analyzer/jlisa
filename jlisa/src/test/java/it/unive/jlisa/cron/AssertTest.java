@@ -12,7 +12,6 @@ public class AssertTest extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void assertTest()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("assert", "", "Assert.java");
 		perform(conf);
 	}
