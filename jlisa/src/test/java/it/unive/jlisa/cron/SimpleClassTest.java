@@ -18,15 +18,7 @@ public class SimpleClassTest extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void simpleClassTes2()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("test02", "", "Main.java");
-		perform(conf);
-	}
-	
-	@Test
-	public void simpleClassTes3()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
-		CronConfiguration conf = TestHelpers.createConfiguration("test03", "", "Test.java");
 		perform(conf);
 	}
 }

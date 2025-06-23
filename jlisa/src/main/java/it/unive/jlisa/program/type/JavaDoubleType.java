@@ -3,36 +3,22 @@ package it.unive.jlisa.program.type;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
+import java.util.Collections;
 import java.util.Set;
 
-public class FloatType implements JavaNumericType {
-    public static final FloatType INSTANCE = new FloatType();
+public class JavaDoubleType implements JavaNumericType {
+    public static final JavaDoubleType INSTANCE = new JavaDoubleType();
 
-    protected FloatType() {}
+    protected JavaDoubleType() {}
 
     @Override
     public String toString() {
-        return "float";
-    }
-
-    @Override
-    public boolean canBeAssignedTo(
-            Type other) {
-        return (other.isUntyped() || other instanceof FloatType || other instanceof DoubleType);
-    }
-
-    @Override
-    public Type commonSupertype(
-            Type other) {
-        if (other instanceof LongType) {
-            return this;
-        }
-        return JavaNumericType.super.commonSupertype(other);
+        return "double";
     }
 
     @Override
     public Set<Type> allInstances(TypeSystem types) {
-        return Set.of();
+        return Collections.singleton(this);
     }
 
     @Override
@@ -47,12 +33,12 @@ public class FloatType implements JavaNumericType {
 
     @Override
     public boolean is32Bits() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean is64Bits() {
-        return false;
+        return true;
     }
 
     @Override

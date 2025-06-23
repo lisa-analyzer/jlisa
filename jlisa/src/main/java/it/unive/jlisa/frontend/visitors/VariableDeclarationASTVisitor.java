@@ -2,7 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.types.JavaArrayType;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;

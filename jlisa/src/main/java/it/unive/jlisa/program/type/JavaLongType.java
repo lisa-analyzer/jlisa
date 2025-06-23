@@ -3,12 +3,13 @@ package it.unive.jlisa.program.type;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
+import java.util.Collections;
 import java.util.Set;
 
-public class LongType implements JavaNumericType {
-    public static final LongType INSTANCE = new LongType();
+public class JavaLongType implements JavaNumericType {
+    public static final JavaLongType INSTANCE = new JavaLongType();
 
-    protected LongType() {}
+    protected JavaLongType() {}
 
     @Override
     public String toString() {
@@ -19,13 +20,13 @@ public class LongType implements JavaNumericType {
     @Override
     public boolean canBeAssignedTo(
             Type other) {
-        return (other.isUntyped() || other instanceof LongType || other instanceof DoubleType || other instanceof FloatType);
+        return (other.isUntyped() || other instanceof JavaLongType || other instanceof JavaDoubleType || other instanceof JavaFloatType);
     }
 
     @Override
     public Type commonSupertype(
             Type other) {
-        if (other instanceof FloatType) {
+        if (other instanceof JavaFloatType) {
             return other;
         }
         return JavaNumericType.super.commonSupertype(other);
@@ -33,7 +34,7 @@ public class LongType implements JavaNumericType {
 
     @Override
     public Set<Type> allInstances(TypeSystem types) {
-        return Set.of();
+        return Collections.singleton(this);
     }
 
     @Override

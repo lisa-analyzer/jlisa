@@ -8,7 +8,8 @@ import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.*;
-import it.unive.jlisa.types.JavaClassType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
@@ -71,13 +72,27 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
                 break;
             case "+=":
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
+                		new Addition(cfg, getSourceCodeLocation(node), left, right));
+                break;
             case "-=":
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
+                		new Subtraction(cfg, getSourceCodeLocation(node), left, right));
+                break;
             case "*=":
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
+                		new Multiplication(cfg, getSourceCodeLocation(node), left, right));
+                break;
             case "/=":
-            case "&=":
-            case "|=":
-            case "^=":
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
+                		new Division(cfg, getSourceCodeLocation(node), left, right));
+                break;
             case "%=":
+            	expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
+                		new Modulo(cfg, getSourceCodeLocation(node), left, right));
+            case "|=":
+            case "&=":
+            case "^=":
             case "<<=":
             case ">>=":
             case ">>>=":
@@ -179,11 +194,39 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ConditionalExpression node) {
-        parserContext.addException(
-                new ParsingException("conditional-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Conditional Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        
+        ExpressionVisitor conditionVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getExpression().accept(conditionVisitor);
+        Expression conditionExpr = conditionVisitor.getExpression();
+        if (conditionExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The condition is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getThenExpression().accept(thenExprVisitor);
+        Expression thenExpr = thenExprVisitor.getExpression();
+        if (thenExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The then expression is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getElseExpression().accept(elseExprVisitor);
+        Expression elseExpr = elseExprVisitor.getExpression();
+        if (elseExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The else expression is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        expression = new JavaConditionalExpression(cfg,getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
+        
         return false;
     }
 
@@ -505,7 +548,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
             } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
                 expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(int) value);
             } else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node),(int) value);
+                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
             } else {
                 expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
             }
@@ -592,11 +635,24 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(VariableDeclarationExpression node) {
-        parserContext.addException(
-                new ParsingException("variable-declaration-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Variable Declaration Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+        node.getType().accept(visitor);
+        it.unive.lisa.type.Type variableType = visitor.getType();
+        for (Object f : node.fragments()) {
+            VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
+            String variableName = fragment.getName().getIdentifier();
+            SourceCodeLocation loc = getSourceCodeLocation(fragment);
+            VariableRef ref = new VariableRef(cfg,
+                    getSourceCodeLocation(fragment),
+                    variableName, variableType);
+            parserContext.addVariableType(cfg,variableName, variableType);
+
+            org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
+            ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+            expr.accept(exprVisitor);
+            Expression initializer = exprVisitor.getExpression();
+            expression= new JavaAssignment(cfg, loc, ref, initializer);
+        }
         return false;
     }
 

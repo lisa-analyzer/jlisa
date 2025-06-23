@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.type.IntType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -40,7 +40,7 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
                 new BinaryExpression(
                         getStaticType(),
                         expr,
-                        new Constant(IntType.INSTANCE, 1, getLocation()),
+                        new Constant(JavaIntType.INSTANCE, 1, getLocation()),
                         NumericNonOverflowingAdd.INSTANCE,
                         getLocation()),
                 this);
