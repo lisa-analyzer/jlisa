@@ -12,7 +12,6 @@ public class AssignmentOperators extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testAssignmentOperators()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("asg-operators", "", "Main.java");
 		perform(conf);
 	}
