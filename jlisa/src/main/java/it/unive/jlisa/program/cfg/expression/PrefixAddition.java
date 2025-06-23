@@ -44,7 +44,7 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
                         NumericNonOverflowingAdd.INSTANCE,
                         getLocation()),
                 this);
-        //state = state.assign(meta, expr, this);
+
         return state.smallStepSemantics(expr, this);
 
     }
