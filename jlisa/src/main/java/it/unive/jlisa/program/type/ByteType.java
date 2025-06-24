@@ -1,29 +1,21 @@
 package it.unive.jlisa.program.type;
-
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaIntType implements JavaNumericType {
-    public static final JavaIntType INSTANCE = new JavaIntType();
-
-    protected JavaIntType() {}
-
+public class ByteType implements JavaNumericType {
+    public static final ByteType INSTANCE = new ByteType();
+    
     @Override
     public String toString() {
-        return "int";
-    }
-
-    @Override
-    public Set<Type> allInstances(TypeSystem types) {
-        return Collections.singleton(this);
+        return "byte";
     }
 
     @Override
     public boolean is8Bits() {
-        return false;
+        return true;
     }
 
     @Override
@@ -33,7 +25,7 @@ public class JavaIntType implements JavaNumericType {
 
     @Override
     public boolean is32Bits() {
-        return true;
+        return false;
     }
 
     @Override
@@ -51,4 +43,8 @@ public class JavaIntType implements JavaNumericType {
         return true;
     }
 
+    @Override
+    public Set<Type> allInstances(TypeSystem types) {
+        return Collections.singleton(this);
+    }
 }

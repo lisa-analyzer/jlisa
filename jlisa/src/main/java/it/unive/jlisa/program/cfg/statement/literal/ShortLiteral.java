@@ -5,11 +5,11 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 
-public class ShortLiteral extends Literal<Short> {
+public class ShortLiteral extends Literal<Integer> {
     public ShortLiteral(
             CFG cfg,
             CodeLocation location,
-            short value) {
+            int value) {
         super(cfg, location, value, JavaShortType.INSTANCE);
     }
 }

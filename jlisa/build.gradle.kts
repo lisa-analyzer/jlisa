@@ -17,6 +17,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("junit:junit:4.13")
 
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
     implementation("commons-cli:commons-cli:1.4")

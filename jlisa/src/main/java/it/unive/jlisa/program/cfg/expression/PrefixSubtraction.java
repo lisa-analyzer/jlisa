@@ -36,8 +36,6 @@ public class PrefixSubtraction extends UnaryExpression implements MetaVariableCr
         if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isNumericType))
             return state.bottom();
 
-        Identifier meta = getMetaVariable();
-        state = state.assign(meta, expr, this);
         state = state.assign(
                 expr,
                 new BinaryExpression(
@@ -47,7 +45,8 @@ public class PrefixSubtraction extends UnaryExpression implements MetaVariableCr
                         NumericNonOverflowingSub.INSTANCE,
                         getLocation()),
                 this);
-        return state.smallStepSemantics(meta, this);
+        //state = state.assign(meta, expr, this);
+        return state.smallStepSemantics(expr, this);
 
     }
 

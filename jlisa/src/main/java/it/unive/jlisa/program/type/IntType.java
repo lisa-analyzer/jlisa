@@ -6,10 +6,10 @@ import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaIntType implements JavaNumericType {
-    public static final JavaIntType INSTANCE = new JavaIntType();
+public class IntType implements JavaNumericType {
+    public static final IntType INSTANCE = new IntType();
 
-    protected JavaIntType() {}
+    protected IntType() {}
 
     @Override
     public String toString() {
@@ -18,7 +18,7 @@ public class JavaIntType implements JavaNumericType {
 
     @Override
     public Set<Type> allInstances(TypeSystem types) {
-        return Collections.singleton(this);
+    	return Collections.singleton(this);
     }
 
     @Override

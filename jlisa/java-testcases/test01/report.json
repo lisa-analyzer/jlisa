@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "B_B.B(B__this,_int_x)_1707430528.json", "int_B.increment10(B__this,_int_g)_1707432481.json", "report.json", "void_Main.main(String[]_args).json" ],
+  "info" : {
+    "cfgs" : "5",
+    "duration" : "97ms",
+    "end" : "2025-06-21T12:44:25.884+02:00",
+    "expressions" : "32",
+    "files" : "3",
+    "globals" : "1",
+    "members" : "14",
+    "programs" : "1",
+    "start" : "2025-06-21T12:44:25.787+02:00",
+    "statements" : "15",
+    "units" : "4",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "DuplicateFreeFIFOWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/test01"
+  }
+}

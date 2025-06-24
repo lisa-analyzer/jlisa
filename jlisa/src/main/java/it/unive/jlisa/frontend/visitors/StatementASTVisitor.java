@@ -34,6 +34,7 @@ import it.unive.lisa.program.cfg.statement.literal.Int32Literal;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.type.Int32Type;
+import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 
@@ -578,6 +579,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
         TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
         node.getType().accept(visitor);
         Type variableType = visitor.getType();
+        if (variableType.isInMemoryType()) {
+        	variableType = new ReferenceType(variableType);
+        }
         for (Object f : node.fragments()) {
             VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
             String variableName = fragment.getName().getIdentifier();
