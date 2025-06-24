@@ -6,5 +6,15 @@ public class Main {
             int beta = 3;
         }
         int omega = 10;
+		
     }
+	
+	public static void emptyStructures() {
+		while(false) {
+		
+		}
+		
+		while(true)
+			;
+	}
 }
