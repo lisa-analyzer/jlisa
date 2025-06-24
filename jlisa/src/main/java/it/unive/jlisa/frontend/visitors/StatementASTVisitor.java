@@ -79,9 +79,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
     	org.eclipse.jdt.core.dom.Expression expr = node.getExpression();
     	org.eclipse.jdt.core.dom.Expression msg = node.getMessage();
     	
+    	
         ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
         expr.accept(exprVisitor);
         Expression expression1 = exprVisitor.getExpression(); 
+        
         
         Statement assrt = null;
         if(msg != null) {
@@ -96,6 +98,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         
         block.addNode(assrt);
         
+        first = assrt;
         last = assrt;
     	
         return false;
