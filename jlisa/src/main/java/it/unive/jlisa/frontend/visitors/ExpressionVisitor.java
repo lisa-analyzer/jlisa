@@ -465,6 +465,40 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		return false;
 	}
 
+    @Override
+    public boolean visit(NumberLiteral node) {
+        String token = node.getToken();
+        if ((token.endsWith("f") || token.endsWith("F")) && !token.startsWith("0x")) {
+            // FlOAT
+            expression = new FloatLiteral(this.cfg, getSourceCodeLocation(node), Float.parseFloat(token));
+            return false;
+        }
+        if (token.contains(".") || ((token.contains("e") || token.contains("E") || token.endsWith("d") || token.endsWith("D")) && !token.startsWith("0x"))) {
+            // DOUBLE
+            expression = new DoubleLiteral(this.cfg, getSourceCodeLocation(node), Double.parseDouble(token));
+            return false;
+        }
+        if (token.endsWith("l") || token.endsWith("L")) {
+            expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
+            return false;
+        }
+        try {
+            long value = Long.decode(token); // handles 0x, 0b, octal, decimal
+            if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {
+                expression = new ByteLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
+            } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
+                expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(int) value);
+            } else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
+            } else {
+                expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
+            }
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Could not parse " + token + ": not a valid Number Literal", e );
+        }
+        return false;
+    }
+
 	@Override
 	public boolean visit(NullLiteral node) {
 		expression = new it.unive.lisa.program.cfg.statement.literal.NullLiteral(cfg, getSourceCodeLocation(node));
@@ -533,40 +567,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		expression = new it.unive.lisa.program.cfg.statement.literal.StringLiteral(this.cfg, getSourceCodeLocation(node.getParent()), literal);
 		return false;
 	}
-	@Override
-	public boolean visit(NumberLiteral node) {
-		String token = node.getToken();
-		if ((token.endsWith("f") || token.endsWith("F")) && !token.startsWith("0x")) {
-			// FlOAT
-			expression = new FloatLiteral(this.cfg, getSourceCodeLocation(node), Float.parseFloat(token));
-			return false;
-		}
-		if (token.contains(".") || ((token.contains("e") || token.contains("E") || token.endsWith("d") || token.endsWith("D")) && !token.startsWith("0x"))) {
-			// DOUBLE
-			expression = new DoubleLiteral(this.cfg, getSourceCodeLocation(node), Double.parseDouble(token));
-			return false;
-		}
-		if (token.endsWith("l") || token.endsWith("L")) {
-			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
-			return false;
-		}
-		try {
-			long value = Long.decode(token); // handles 0x, 0b, octal, decimal
-			if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {
-				expression = new ByteLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
-			} else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
-				expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(int) value);
-			} else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-				expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
-			} else {
-				expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
-			}
-		} catch (NumberFormatException e) {
-			throw new RuntimeException("Could not parse " + token + ": not a valid Number Literal", e );
-		}
-		return false;
-	}
-
+	
 	@Override
 	public boolean visit(SuperFieldAccess node) {
 
