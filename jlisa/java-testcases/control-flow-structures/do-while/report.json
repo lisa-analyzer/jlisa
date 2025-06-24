@@ -2,16 +2,16 @@
   "warnings" : [ ],
   "files" : [ "report.json", "void_Main.main(String[]_args).json" ],
   "info" : {
-    "cfgs" : "2",
-    "duration" : "87ms",
-    "end" : "2025-06-20T22:41:35.867+02:00",
+    "cfgs" : "3",
+    "duration" : "13ms",
+    "end" : "2025-06-24T15:14:06.213+02:00",
     "expressions" : "13",
     "files" : "1",
     "globals" : "0",
-    "members" : "11",
+    "members" : "12",
     "programs" : "1",
-    "start" : "2025-06-20T22:41:35.780+02:00",
-    "statements" : "8",
+    "start" : "2025-06-24T15:14:06.200+02:00",
+    "statements" : "11",
     "units" : "3",
     "version" : "0.1",
     "warnings" : "0"
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/loops/do-while"
+    "workdir" : "java-outputs/control-flow-structures/do-while"
   }
 }

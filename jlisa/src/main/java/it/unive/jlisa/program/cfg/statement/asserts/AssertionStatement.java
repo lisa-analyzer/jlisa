@@ -21,9 +21,9 @@ import it.unive.lisa.type.VoidType;
 /**
  * Simple assert statement
  * 
- * {@code assert Expression1 : Expression2
+ * {@code assert Expression1 : Expression2}
  * 
- * where Expression1 is a boolean expression; Expression2 is an expression that has a value. (It cannot be an invocation of a method that is declared void.)
+ * where {@code Expression1} is a boolean expression; {@code Expression2} is an expression that has a value. (It cannot be an invocation of a method that is declared void.)
  * 
  * @link
  * https://docs.oracle.com/javase/8/docs/technotes/guides/language/assert.html
