@@ -9,4 +9,10 @@ public class Main {
 
         int omega = 10;
     }
+	
+	public static void emptyStructure() {
+		do {
+
+		} while(true);
+	}
 }
