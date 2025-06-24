@@ -4,6 +4,7 @@ import it.unive.jlisa.program.type.*;
 import it.unive.lisa.analysis.Lattice;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
+import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -13,6 +14,8 @@ import it.unive.lisa.symbolic.value.PushInv;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
+import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.representation.StringRepresentation;
@@ -300,4 +303,48 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
         }
         return top();
     }
+
+	@Override
+	public Satisfiability satisfiesAbstractValue(ConstantPropagation value, ProgramPoint pp, SemanticOracle oracle)
+			throws SemanticException {
+		// TODO Auto-generated method stub
+		return BaseNonRelationalValueDomain.super.satisfiesAbstractValue(value, pp, oracle);
+	}
+
+	@Override
+	public Satisfiability satisfiesNullConstant(ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+		// TODO Auto-generated method stub
+		return BaseNonRelationalValueDomain.super.satisfiesNullConstant(pp, oracle);
+	}
+
+	@Override
+	public Satisfiability satisfiesUnaryExpression(UnaryOperator operator, ConstantPropagation arg, ProgramPoint pp,
+			SemanticOracle oracle) throws SemanticException {
+		// TODO Auto-generated method stub
+		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(operator, arg, pp, oracle);
+	}
+
+	@Override
+	public Satisfiability satisfiesBinaryExpression(BinaryOperator operator, ConstantPropagation left,
+			ConstantPropagation right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+		// TODO Auto-generated method stub
+		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(operator, left, right, pp, oracle);
+	}
+
+	@Override
+	public Satisfiability satisfiesTernaryExpression(TernaryOperator operator, ConstantPropagation left,
+			ConstantPropagation middle, ConstantPropagation right, ProgramPoint pp, SemanticOracle oracle)
+			throws SemanticException {
+		// TODO Auto-generated method stub
+		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(operator, left, middle, right, pp, oracle);
+	}
+
+	@Override
+	public Satisfiability satisfiesNonNullConstant(Constant constant, ProgramPoint pp, SemanticOracle oracle)
+			throws SemanticException {
+		// TODO Auto-generated method stub
+		return BaseNonRelationalValueDomain.super.satisfiesNonNullConstant(constant, pp, oracle);
+	}
+    
+    
 }

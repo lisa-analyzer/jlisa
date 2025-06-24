@@ -35,8 +35,6 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
         if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isNumericType))
             return state.bottom();
 
-        Identifier meta = getMetaVariable();
-        state = state.assign(meta, expr, this);
         state = state.assign(
                 expr,
                 new BinaryExpression(
@@ -46,7 +44,8 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
                         NumericNonOverflowingAdd.INSTANCE,
                         getLocation()),
                 this);
-        return state.smallStepSemantics(meta, this);
+
+        return state.smallStepSemantics(expr, this);
 
     }
 

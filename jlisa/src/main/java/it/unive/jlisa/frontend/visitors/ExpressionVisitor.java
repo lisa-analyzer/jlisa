@@ -210,11 +210,39 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ConditionalExpression node) {
-        parserContext.addException(
-                new ParsingException("conditional-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Conditional Expressions are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        
+        ExpressionVisitor conditionVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getExpression().accept(conditionVisitor);
+        Expression conditionExpr = conditionVisitor.getExpression();
+        if (conditionExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The condition is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getThenExpression().accept(thenExprVisitor);
+        Expression thenExpr = thenExprVisitor.getExpression();
+        if (thenExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The then expression is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getElseExpression().accept(elseExprVisitor);
+        Expression elseExpr = elseExprVisitor.getExpression();
+        if (elseExpr == null) {
+            parserContext.addException(
+                    new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+                            "The else expression is missing.",
+                            getSourceCodeLocation(node)));
+        }
+        
+        expression = new JavaConditionalExpression(cfg,getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
+        
         return false;
     }
 
@@ -556,11 +584,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
         try {
             long value = Long.decode(token); // handles 0x, 0b, octal, decimal
             if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {
-                expression = new ByteLiteral(this.cfg, getSourceCodeLocation(node), (byte)value);
+                expression = new ByteLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
             } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
-                expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(short)value);
+                expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(int) value);
             } else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node),(int)value);
+                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
             } else {
                 expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
             }

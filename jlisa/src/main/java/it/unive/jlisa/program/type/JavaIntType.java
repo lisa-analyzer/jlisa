@@ -3,6 +3,7 @@ package it.unive.jlisa.program.type;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class JavaIntType implements JavaNumericType {
@@ -17,7 +18,7 @@ public class JavaIntType implements JavaNumericType {
 
     @Override
     public Set<Type> allInstances(TypeSystem types) {
-        return Set.of();
+        return Collections.singleton(this);
     }
 
     @Override
