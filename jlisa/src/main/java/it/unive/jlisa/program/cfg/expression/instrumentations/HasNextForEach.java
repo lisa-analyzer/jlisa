@@ -9,6 +9,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
 /**
@@ -26,7 +27,7 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 	 * @param collection the collection/array to get the next element
 	 */
 	public HasNextForEach(CFG cfg, CodeLocation location, Expression collection) {
-		super(cfg, location, "hasNextElementForEach", collection); // TODO: add java boolean type when implemented
+		super(cfg, location, "hasNextElementForEach", BoolType.INSTANCE, collection); 
 	}
 
 	@Override
