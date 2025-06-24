@@ -48,7 +48,17 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ArrayCreation node) {
-		throw new RuntimeException(new UnsupportedStatementException("Array Creation expressions are not supported"));
+		// TODO: currently initializer are not supported
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+
+		node.getType().accept(typeVisitor);
+		// TODO: currently we handle single-dim arrays
+		((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
+		Type type = typeVisitor.getType();
+		Expression length = lengthVisitor.getExpression();
+		expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, type);
+		return false;		
 	}
 
 	@Override
