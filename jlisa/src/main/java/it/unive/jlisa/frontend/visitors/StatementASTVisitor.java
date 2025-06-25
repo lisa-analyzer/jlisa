@@ -154,7 +154,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         if (!node.arguments().isEmpty()) {
             for (Object args : node.arguments()) {
                 ASTNode e  = (ASTNode) args;
-                ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, Untyped.INSTANCE);
+                ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
                 e.accept(argumentsVisitor);
                 Expression expr = argumentsVisitor.getExpression();
                 if (expr != null) {
@@ -454,7 +454,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ReturnStatement node) {
-        ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, cfg.getDescriptor().getReturnType());
+        ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
         if (node.getExpression() != null) {
             node.getExpression().accept(visitor);
         }
@@ -597,7 +597,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
                     initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, loc);
             } else {
                 org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
-                ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, variableType);
+                ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
                 expr.accept(exprVisitor);
                 initializer = exprVisitor.getExpression();
                 if (initializer == null) {
