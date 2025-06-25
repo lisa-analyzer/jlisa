@@ -23,7 +23,6 @@ import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.*;
-import it.unive.lisa.type.Untyped;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -58,25 +57,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
     public boolean visit(Assignment node) {
         Assignment.Operator operator = node.getOperator();
         ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-
-        node.getLeftHandSide().accept(leftVisitor);
-        Expression left = leftVisitor.getExpression();
-        if (left == null) {
-            return false;
-        }
-
-        it.unive.lisa.type.Type targetType = Untyped.INSTANCE;
-        if (!(left instanceof VariableRef)) {
-            parserContext.addException(new ParsingException("assignment", ParsingException.Type.UNSUPPORTED_STATEMENT, "Assignment are supported only for VariableRef", getSourceCodeLocation(node)));
-        }
-        if (left.getStaticType() != null) {
-            targetType = left.getStaticType();
-        }
         ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+        node.getLeftHandSide().accept(leftVisitor);
         node.getRightHandSide().accept(rightVisitor);
-
+        Expression left = leftVisitor.getExpression();
         Expression right = rightVisitor.getExpression();
-        if (right == null) {
+        if (left == null || right == null) {
             // SKIP. There is an error.
             return false;
         }
@@ -85,24 +71,24 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
                 break;
             case "+=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new JavaAddition(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Addition(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "-=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Subtraction(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Subtraction(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "*=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Multiplication(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Multiplication(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "/=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Division(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Division(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "%=":
-            	expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Modulo(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Modulo(cfg, getSourceCodeLocation(node), left, right));
             case "|=":
             case "&=":
             case "^=":
