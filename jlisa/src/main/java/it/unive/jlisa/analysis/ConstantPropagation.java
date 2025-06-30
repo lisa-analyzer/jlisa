@@ -1,6 +1,15 @@
 package it.unive.jlisa.analysis;
 
-import it.unive.jlisa.program.type.*;
+import java.util.Objects;
+import java.util.Set;
+
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.Lattice;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -11,18 +20,15 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushInv;
+import it.unive.lisa.symbolic.value.TernaryExpression;
+import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
-import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
-import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
-
-import java.util.Objects;
-import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantPropagation> {
     private static final ConstantPropagation TOP = new ConstantPropagation(null, false);
@@ -250,11 +256,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
     @Override
     public ConstantPropagation evalBinaryExpression(
-            BinaryOperator operator,
+            BinaryExpression expression,
             ConstantPropagation left,
             ConstantPropagation right,
             ProgramPoint pp,
             SemanticOracle oracle) {
+        BinaryOperator operator = expression.getOperator();
         if (operator instanceof AdditionOperator) {
             if (left.isTop() || right.isTop() || !left.constant.getStaticType().isNumericType() || !right.constant.getStaticType().isNumericType())
                 return top();
@@ -318,25 +325,25 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public Satisfiability satisfiesUnaryExpression(UnaryOperator operator, ConstantPropagation arg, ProgramPoint pp,
+	public Satisfiability satisfiesUnaryExpression(UnaryExpression expression, ConstantPropagation arg, ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
 		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(operator, arg, pp, oracle);
+		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}
 
 	@Override
-	public Satisfiability satisfiesBinaryExpression(BinaryOperator operator, ConstantPropagation left,
+	public Satisfiability satisfiesBinaryExpression(BinaryExpression expression, ConstantPropagation left,
 			ConstantPropagation right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
 		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(operator, left, right, pp, oracle);
+		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 
 	@Override
-	public Satisfiability satisfiesTernaryExpression(TernaryOperator operator, ConstantPropagation left,
+	public Satisfiability satisfiesTernaryExpression(TernaryExpression expression, ConstantPropagation left,
 			ConstantPropagation middle, ConstantPropagation right, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
 		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(operator, left, middle, right, pp, oracle);
+		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp, oracle);
 	}
 
 	@Override

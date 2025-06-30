@@ -1,5 +1,8 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -13,17 +16,14 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.program.language.hierarchytraversal.HierarcyTraversalStrategy;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class JavaAccessGlobal extends UnaryExpression {
 
@@ -124,7 +124,7 @@ public class JavaAccessGlobal extends UnaryExpression {
                     if (seen.add(unit)) {
                         Global global = cu.getInstanceGlobal(target, false);
                         if (global != null) {
-                            Variable var = global.toSymbolicVariable(loc);
+                            GlobalVariable var = global.toSymbolicVariable(loc);
                             AccessChild access = new AccessChild(var.getStaticType(), container, var, loc);
                             result = result.lub(state.smallStepSemantics(access, this));
                             atLeastOne = true;
