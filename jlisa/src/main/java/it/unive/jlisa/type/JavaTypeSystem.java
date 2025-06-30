@@ -1,17 +1,7 @@
 package it.unive.jlisa.type;
 
-import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaDoubleType;
-import it.unive.jlisa.program.type.JavaFloatType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaLongType;
-import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.jlisa.program.cfg.statement.literal.*;
+import it.unive.jlisa.program.type.*;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
@@ -61,6 +51,8 @@ public class JavaTypeSystem extends TypeSystem {
             return new FloatLiteral(currentCFG, location, 0.0f);
         } else if (type == JavaDoubleType.INSTANCE) {
             return new DoubleLiteral(currentCFG, location, 0.0);
+        } else if (type == JavaCharType.INSTANCE) {
+            return new CharLiteral(currentCFG, location, (char) 0);
         }
         return new NullLiteral(currentCFG, location);
     }

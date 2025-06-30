@@ -40,6 +40,7 @@ import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.type.Int32Type;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 
 import org.apache.commons.lang3.tuple.Triple;
@@ -296,6 +297,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         block = new NodeList<>(new SequentialEdge());
         ExpressionVisitor expressionVisitor = new ExpressionVisitor(parserContext, this.source, this.compilationUnit, this.cfg);
         node.getExpression().accept(expressionVisitor);
+
         first = expressionVisitor.getExpression();
         if (first == null) {
             // PARSING ERROR. IGNORE
