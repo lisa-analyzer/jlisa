@@ -3,6 +3,6 @@ public class ByteTest {
         byte x;
         x = 123;
         byte y = 127;
-        byte z = (byte) 123;
+        byte z = 123;
     }
 }

@@ -4,9 +4,8 @@ import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
-import it.unive.lisa.type.Type;
 
-public class CharLiteral extends Literal<Character> {
+public class CharLiteral extends Literal<Integer> {
     /**
      * Builds a char literal, consisting of a char constant value, happening at the
      * given location in the program.
@@ -16,7 +15,12 @@ public class CharLiteral extends Literal<Character> {
      *                   program
      * @param value      the value of this literal
      */
-    public CharLiteral(CFG cfg, CodeLocation location, char value) {
+    public CharLiteral(CFG cfg, CodeLocation location, int value) {
         super(cfg, location, value, JavaCharType.INSTANCE);
+    }
+    
+    @Override
+    public String toString() {
+    	return "'" + Character.toString(getValue()) + "'";
     }
 }
