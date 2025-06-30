@@ -44,10 +44,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
             type = BoolType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.CHAR) {
-            parserContext.addException(new ParsingException(
-                    "primitive-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                    "char type not supported",
-                    getSourceCodeLocation(node)));
+            type = JavaCharType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BYTE) {
             type = JavaByteType.INSTANCE;

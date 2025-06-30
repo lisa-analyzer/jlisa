@@ -8,7 +8,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.*;
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.*;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -32,7 +32,6 @@ import java.util.function.BiFunction;
 public class ExpressionVisitor extends JavaASTVisitor {
     private CFG cfg;
     private Expression expression;
-
     public ExpressionVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg) {
         super(parserContext, source, compilationUnit);
         this.cfg = cfg;
@@ -72,24 +71,24 @@ public class ExpressionVisitor extends JavaASTVisitor {
                 expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
                 break;
             case "+=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Addition(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Addition(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "-=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Subtraction(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Subtraction(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "*=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Multiplication(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Multiplication(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "/=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Division(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Division(cfg, getSourceCodeLocation(node), left, right));
                 break;
             case "%=":
-            	expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, 
-                		new Modulo(cfg, getSourceCodeLocation(node), left, right));
+                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+                        new Modulo(cfg, getSourceCodeLocation(node), left, right));
             case "|=":
             case "&=":
             case "^=":
@@ -140,11 +139,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(CharacterLiteral node) {
-        parserContext.addException(
-                new ParsingException("character-literal", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Character Literals are not supported.",
-                        getSourceCodeLocation(node))
-        );
+        expression = new CharLiteral(this.cfg, getSourceCodeLocation(node), node.charValue());
         return false;
     }
 
