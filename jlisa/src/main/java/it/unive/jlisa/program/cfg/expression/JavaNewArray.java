@@ -25,6 +25,7 @@ public class JavaNewArray extends UnaryExpression {
 	@Override
 	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+		// FIXME: todo (Filippo Bianchi)
 		return state.top();
 	}
 
