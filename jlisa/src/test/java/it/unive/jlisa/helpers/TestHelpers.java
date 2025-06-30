@@ -35,7 +35,7 @@ public class TestHelpers {
 		conf.jsonOutput = false;
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
+//		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
