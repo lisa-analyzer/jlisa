@@ -43,7 +43,7 @@ public class JavaAssignment extends Assignment {
 		Set<Type> rightTypes = state.getState().getRuntimeTypesOf(right, this, state.getState());
 
 		for (Type rType : rightTypes) {
-			if (rType.equals(left.getStaticType()))
+			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped())
 				result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, right, expressions));
 			else if (rType.canBeAssignedTo(left.getStaticType())) {
 				Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
