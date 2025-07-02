@@ -482,11 +482,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
         }
         try {
             long value = Long.decode(token); // handles 0x, 0b, octal, decimal
-            if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {
-                expression = new ByteLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
-            } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
-                expression = new ShortLiteral(this.cfg, getSourceCodeLocation(node),(int) value);
-            } else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+            if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
                 expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
             } else {
                 expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
