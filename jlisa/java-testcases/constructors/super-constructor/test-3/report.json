@@ -1,18 +1,18 @@
 {
   "warnings" : [ ],
-  "files" : [ "B_B.B(B__this,_int_x)_1707430528.json", "report.json", "void_Main.main(String[]_args).json" ],
+  "files" : [ "A_A.A(A__this)_17141675.json", "B_B.B(B__this)_1707430528.json", "report.json", "void_Main.main(String[]_args).json" ],
   "info" : {
-    "cfgs" : "3",
-    "duration" : "307ms",
-    "end" : "2025-07-02T19:30:39.543+02:00",
-    "expressions" : "11",
-    "files" : "2",
+    "cfgs" : "4",
+    "duration" : "293ms",
+    "end" : "2025-07-02T19:32:01.542+02:00",
+    "expressions" : "14",
+    "files" : "3",
     "globals" : "1",
-    "members" : "12",
+    "members" : "13",
     "programs" : "1",
-    "start" : "2025-07-02T19:30:39.236+02:00",
-    "statements" : "8",
-    "units" : "4",
+    "start" : "2025-07-02T19:32:01.249+02:00",
+    "statements" : "11",
+    "units" : "5",
     "version" : "0.1",
     "warnings" : "0"
   },
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/constructors/super-constructor/test-2"
+    "workdir" : "java-outputs/constructors/super-constructor/test-3"
   }
 }

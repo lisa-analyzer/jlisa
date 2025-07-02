@@ -31,14 +31,12 @@ public class ConstructorsTest extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testSuperConstructor3()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("constructors", "super-constructor/test-3", "Main.java", "B.java", "A.java");
 		perform(conf);
 	}
 	
 	@Test
 	public void testSuperConstructor4()  throws IOException {
-		// FIXME: need to compare the dots and update the ground truth
 		CronConfiguration conf = TestHelpers.createConfiguration("constructors", "super-constructor/test-4", "Main.java", "B.java", "A.java");
 		perform(conf);
 	}
