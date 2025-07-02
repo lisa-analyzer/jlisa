@@ -1,5 +1,11 @@
 package it.unive.jlisa.program.cfg.statement;
 
+import java.util.Collections;
+import java.util.Set;
+
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -16,9 +22,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
-
-import java.util.Collections;
-import java.util.Set;
 
 public class JavaAssignment extends Assignment {
 
@@ -40,7 +43,19 @@ public class JavaAssignment extends Assignment {
 					throws SemanticException {
 		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state.bottom();
+		Type targetType = left.getStaticType();
 		Set<Type> rightTypes = state.getState().getRuntimeTypesOf(right, this, state.getState());
+
+		// int constants, if they fit the target type, can be assigned
+		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType || targetType instanceof JavaCharType)
+				&& right instanceof Constant c && c.getValue() instanceof Integer intVal) {
+
+			if (isIntegerFittableInType(targetType, intVal)) {
+				Constant newConst = new Constant(targetType, intVal, loc);
+				return super.fwdBinarySemantics(interprocedural, state, left, newConst, expressions);
+			} else 
+				return state.bottom(); // cannot assign: int constant doesn't fit target type
+		}
 
 		for (Type rType : rightTypes) {
 			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped())
@@ -52,5 +67,18 @@ public class JavaAssignment extends Assignment {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Checks if an integer fits in a given Java type (byte, short, or char).
+	 */
+	private boolean isIntegerFittableInType(Type type, int value) {
+		if (type instanceof JavaShortType)
+			return JavaShortType.fitsInType(value);
+		if (type instanceof JavaCharType)
+			return JavaCharType.fitsInType(value);
+		if (type instanceof JavaByteType)
+			return JavaByteType.fitsInType(value);
+		return false;
 	}
 }

@@ -7,6 +7,20 @@ import java.util.Set;
 
 public class JavaByteType implements JavaNumericType {
     public static final JavaByteType INSTANCE = new JavaByteType();
+    
+    protected JavaByteType() {}
+    
+	/**
+	 * Checks whether {@code value} fits the Java's {@code byte} type.
+	 * 
+	 * @param value the long value to check
+	 * @return {@code true} if {@code value} is within the range of a {@code byte},
+	 *         {@code false} otherwise
+	 */
+    public static boolean fitsInType(long value) {
+        return value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE;
+    }
+    
     @Override
     public String toString() {
         return "byte";
