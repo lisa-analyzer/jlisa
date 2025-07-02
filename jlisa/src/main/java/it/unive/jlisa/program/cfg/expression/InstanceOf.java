@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import java.util.Set;
+import java.util.Collections;
 
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
@@ -12,35 +12,30 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.type.Untyped;
 
 public class InstanceOf extends UnaryExpression {
 
 	private final Type type;
-	
-    public InstanceOf(CFG cfg, CodeLocation location, Expression subExpression, Type type) {
-        super(cfg, location, "instanceof", subExpression);
-        this.type = new ReferenceType(type);
-    }
-    
+
+	public InstanceOf(CFG cfg, CodeLocation location, Expression subExpression, Type type) {
+		super(cfg, location, "instanceof", subExpression);
+		this.type = new ReferenceType(type);
+	}
+
 	@Override
 	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-		Set<Type> leftTypes = state.getState().getRuntimeTypesOf(expr, this, state.getState());
-
-		AnalysisState<A> result = state.bottom();
-		
-		for (Type lType : leftTypes)
-			if (lType.canBeAssignedTo(type))
-				result = result.lub(state.smallStepSemantics(new Constant(BoolType.INSTANCE, true, getLocation()), this));
-			else
-				result = result.lub(state.smallStepSemantics(new Constant(BoolType.INSTANCE, false, getLocation()), this));
-
-		return result;
+		TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
+		BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr, new Constant(typeToken, 0, getLocation()), TypeCheck.INSTANCE, getLocation());
+		return state.smallStepSemantics(tc, this);
 	}
 
 	@Override
