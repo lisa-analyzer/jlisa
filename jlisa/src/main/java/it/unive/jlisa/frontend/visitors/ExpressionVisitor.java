@@ -187,11 +187,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				((JavaClassType) type).getUnit().getName(),
 				type,
 				parameters.toArray(new Expression[0]));
-		/*parserContext.addException(
-                new ParsingException("class-instance-creation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Classes Instance Creation are not supported.",
-                        getSourceCodeLocation(node))
-        );*/
 		return false;
 	}
 
