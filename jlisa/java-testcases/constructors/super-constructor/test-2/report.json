@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "B__B.B(B__this,_int_x)_1707430528.json", "report.json", "void_Main.main(String[]_args).json" ],
+  "info" : {
+    "cfgs" : "3",
+    "duration" : "4ms",
+    "end" : "2025-07-05T10:10:26.224+02:00",
+    "expressions" : "11",
+    "files" : "2",
+    "globals" : "1",
+    "members" : "12",
+    "programs" : "1",
+    "start" : "2025-07-05T10:10:26.220+02:00",
+    "statements" : "8",
+    "units" : "4",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/constructors/super-constructor/test-2"
+  }
+}

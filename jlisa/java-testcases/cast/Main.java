@@ -1,11 +1,8 @@
 public class Main {
 	
     public static void main(String[] args) {
-    	Object o = new Object();
-    	o = (Object) new String();
-    	
-    	boolean b1 = o instanceof Object; 
-    	boolean b2 = o instanceof String; 
-    	
+    	Object o1 = (Object) new Object();  
+    	Object o2 = new Object();    	
+    	Object o3 = (String) new Object();    	
     }
 }

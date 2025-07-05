@@ -120,7 +120,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        codeMemberDescriptor = new CodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), returnType, annotations, paramArray);
+        codeMemberDescriptor = new CodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), returnType.isInMemoryType() ? new ReferenceType(returnType) : returnType, annotations, paramArray);
         if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
             codeMemberDescriptor.setOverridable(false);
         } else {
@@ -148,7 +148,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        codeMemberDescriptor = new CodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), type, annotations, paramArray);
+        codeMemberDescriptor = new CodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), new ReferenceType(type), annotations, paramArray);
         if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
             codeMemberDescriptor.setOverridable(false);
         } else {

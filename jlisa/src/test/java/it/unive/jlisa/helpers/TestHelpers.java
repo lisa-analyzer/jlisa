@@ -12,6 +12,7 @@ import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
+import it.unive.lisa.interprocedural.context.FullStackToken;
 
 public class TestHelpers {
     
@@ -35,6 +36,7 @@ public class TestHelpers {
 		conf.jsonOutput = false;
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
+//		conf.forceUpdate = true;
 //		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
@@ -46,7 +48,7 @@ public class TestHelpers {
 		
 		// for interprocedural analysis
 		conf.callGraph = new RTACallGraph();
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
+		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		return conf;
 	}
 }
