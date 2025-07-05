@@ -1,11 +1,11 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
 import it.unive.jlisa.program.JavaProgram;
 import it.unive.jlisa.program.type.*;
 import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.Program;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
 import it.unive.lisa.program.SourceCodeLocation;

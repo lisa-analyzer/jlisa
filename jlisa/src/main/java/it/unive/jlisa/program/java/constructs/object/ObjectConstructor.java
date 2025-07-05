@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.object;
 
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -10,14 +10,15 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.type.ReferenceType;
 
 public class ObjectConstructor extends NativeCFG {
 
     public ObjectConstructor(
             CodeLocation location,
-            ClassUnit stringUnit) {
-        super(new CodeMemberDescriptor(location, stringUnit, true, "Object", JavaClassType.lookup("Object", null),
-                        new Parameter(location, "this", JavaClassType.lookup("Object", null))),
+            ClassUnit classUnit) {
+        super(new CodeMemberDescriptor(location, classUnit, true, "Object", JavaClassType.lookup("Object", null),
+                        new Parameter(location, "this", new ReferenceType(JavaClassType.lookup("Object", null)))),
                 ObjectConstructor.JavaObjectConstructor.class);
     }
 

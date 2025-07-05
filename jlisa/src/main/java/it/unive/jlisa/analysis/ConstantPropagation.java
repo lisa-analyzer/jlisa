@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;

@@ -1,11 +1,7 @@
-package it.unive.jlisa.program.type;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+package it.unive.jlisa.types;
+import java.util.*;
 
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.InMemoryType;
@@ -51,6 +47,10 @@ public final class JavaClassType implements InMemoryType, UnitType {
             String name,
             CompilationUnit unit) {
         return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
+    }
+
+    public static Optional<JavaClassType> lookup(String name) {
+        return Optional.ofNullable(types.get(name));
     }
 
     private final String name;
