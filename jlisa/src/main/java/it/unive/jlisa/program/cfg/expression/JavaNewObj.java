@@ -19,7 +19,6 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.type.ReferenceType;
-import it.unive.lisa.type.Type;
 import org.apache.commons.lang3.ArrayUtils;
 
 
@@ -36,7 +35,7 @@ public class JavaNewObj extends NaryExpression {
             CFG cfg,
             SourceCodeLocation location,
             String constructName,
-            Type type,
+            ReferenceType type,
             Expression... parameters) {
         super(cfg, location, constructName, type, parameters);
     }
@@ -54,9 +53,8 @@ public class JavaNewObj extends NaryExpression {
             ExpressionSet[] params,
             StatementStore<A> expressions)
             throws SemanticException {
-        Type type = getStaticType();
-        ReferenceType reftype = new ReferenceType(type);
-        MemoryAllocation created = new MemoryAllocation(type, getLocation(), false);
+    	ReferenceType reftype = (ReferenceType) getStaticType();
+        MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
         HeapReference ref = new HeapReference(reftype, created, getLocation());
 
         // we need to add the receiver to the parameters
@@ -64,14 +62,17 @@ public class JavaNewObj extends NaryExpression {
         Expression[] fullExpressions = ArrayUtils.insert(0, getSubExpressions(), paramThis);
 
         // we also have to add the receiver inside the state
-        AnalysisState<A> callstate = paramThis.forwardSemantics(state, interprocedural, expressions);
+        AnalysisState<A> callstate = state.smallStepSemantics(created, paramThis);
+        callstate = paramThis.forwardSemantics(callstate, interprocedural, expressions);
+
+        
         AnalysisState<A> tmp = state.bottom();
         for (SymbolicExpression v : callstate.getComputedExpressions())
             tmp = tmp.lub(callstate.assign(v, ref, paramThis));
         ExpressionSet[] fullParams = ArrayUtils.insert(0, params, callstate.getComputedExpressions());
         expressions.put(paramThis, tmp);
 
-        UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE, type.toString(),
+        UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE, reftype.getInnerType().toString(),
                 getConstructName(), fullExpressions);
         AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
 
