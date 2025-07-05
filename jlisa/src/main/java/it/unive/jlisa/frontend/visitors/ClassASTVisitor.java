@@ -83,7 +83,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), type, annotations, paramArray);
+        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), new ReferenceType(type), annotations, paramArray);
         CFG cfg = new CFG(codeMemberDescriptor);
         parserContext.addVariableType(cfg, "this", new ReferenceType(type));
         String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();

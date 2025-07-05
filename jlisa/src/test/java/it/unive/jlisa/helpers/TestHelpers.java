@@ -8,9 +8,11 @@ import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
+import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
+import it.unive.lisa.interprocedural.context.FullStackToken;
 
 public class TestHelpers {
     
@@ -34,11 +36,11 @@ public class TestHelpers {
 		conf.jsonOutput = false;
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
+//		conf.forceUpdate = true;
 //		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
-		// FIXME: why bottom?
 		// the abstract domain
-		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
+		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
 		TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
 		ValueEnvironment<Interval> domain = new ValueEnvironment<>(new Interval());
 
@@ -46,7 +48,7 @@ public class TestHelpers {
 		
 		// for interprocedural analysis
 		conf.callGraph = new RTACallGraph();
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
+		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		return conf;
 	}
 }

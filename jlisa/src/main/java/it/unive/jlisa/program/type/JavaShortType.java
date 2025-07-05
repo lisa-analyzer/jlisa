@@ -11,6 +11,17 @@ public class JavaShortType implements JavaNumericType {
 
     protected JavaShortType() {}
 
+	/**
+	 * Checks whether {@code value} fits the Java's {@code short} type.
+	 * 
+	 * @param value the long value to check
+	 * @return {@code true} if {@code value} is within the range of a {@code short},
+	 *         {@code false} otherwise
+	 */
+    public static boolean fitsInType(long value) {
+        return value >= Short.MIN_VALUE && value <= Short.MAX_VALUE;
+    }
+    
     @Override
     public String toString() {
         return "short";
