@@ -75,7 +75,6 @@ import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
 import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
-import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
@@ -323,7 +322,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		if (expr != null) {
-			expression = new AccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+			expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
 		}
 		return false;
 	}
