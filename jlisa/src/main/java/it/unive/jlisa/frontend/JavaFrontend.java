@@ -10,7 +10,6 @@ import it.unive.lisa.program.Program;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -45,7 +44,7 @@ public class JavaFrontend {
     }
 
     public JavaFrontend(JavaProgram program) {
-        Program p;
+        JavaProgram p;
         if (program == null) {
              p = createProgram();
         }
@@ -81,7 +80,7 @@ public class JavaFrontend {
         typeSystem.registerType(JavaDoubleType.INSTANCE);
 
 
-        typeSystem.registerType(StringType.INSTANCE);
+        typeSystem.registerType(JavaInstrumentedStringType.INSTANCE);
         JavaClassType.all().forEach(typeSystem::registerType);
         JavaArrayType.all().forEach(typeSystem::registerType);
         JavaInterfaceType.all().forEach(typeSystem::registerType);

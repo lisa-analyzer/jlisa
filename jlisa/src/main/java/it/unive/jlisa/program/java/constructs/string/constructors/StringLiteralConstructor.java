@@ -3,6 +3,7 @@ package it.unive.jlisa.program.java.constructs.string.constructors;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.type.JavaInstrumentedStringType;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -12,7 +13,6 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.program.cfg.statement.literal.StringLiteral;
-import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.ReferenceType;
 
@@ -25,7 +25,7 @@ public class StringLiteralConstructor extends NativeCFG {
             ReferenceType referenceType) {
         super(new CodeMemberDescriptor(location, classUnit, true, "String", referenceType,
                         new Parameter(location, "this", referenceType),
-                        new Parameter(location, "value", StringType.INSTANCE)),
+                        new Parameter(location, "value", JavaInstrumentedStringType.INSTANCE)),
                 StringLiteralConstructor.StringConstructorStmt.class);
     }
 

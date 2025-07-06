@@ -7,10 +7,11 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.ReferenceTypeManager;
+import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.ArrayType;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class FieldDeclarationVisitor extends JavaASTVisitor {
@@ -26,9 +27,9 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
-		if (type.isInMemoryType())
-			type = new ReferenceType(type);
-
+		if (type.isInMemoryType()) {
+			type = ReferenceTypeManager.get((JavaClassType)type);
+		}
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			if (fragment.getExtraDimensions() != 0) {

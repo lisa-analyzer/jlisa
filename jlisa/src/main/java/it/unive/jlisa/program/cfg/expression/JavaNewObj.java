@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.ReferenceTypeManager;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -89,7 +90,12 @@ public class JavaNewObj extends NaryExpression {
 
         AnalysisState<A> result = state.bottom();
         for (SymbolicExpression loc : sem.getComputedExpressions()) {
-            ReferenceType staticType = new ReferenceType(loc.getStaticType());
+            ReferenceType staticType;
+            try {
+                staticType = ReferenceTypeManager.get(loc.getStaticType());
+            } catch (Exception e) {
+                return result.bottom();
+            }
             HeapReference locref = new HeapReference(staticType, loc, getLocation());
             result = result.lub(sem.smallStepSemantics(locref, call));
         }

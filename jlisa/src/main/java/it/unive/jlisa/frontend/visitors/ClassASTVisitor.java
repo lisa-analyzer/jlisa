@@ -2,28 +2,23 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.location.JavaRuntimeLocation;
+import it.unive.jlisa.program.type.ReferenceTypeManager;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.*;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
-import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.call.CFGCall;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.NativeCall;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
-import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
-import it.unive.lisa.type.ReferenceType;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
@@ -34,7 +29,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
     @Override
     public boolean visit(TypeDeclaration node) {
-        ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
+        ClassUnit cUnit = JavaClassType.lookup(node.getName().toString()).orElseThrow().getUnit();
         if (node.getSuperclassType() != null) {
             TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
             node.getSuperclassType().accept(visitor);
@@ -46,7 +41,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
                 }
             }
         } else {
-            cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
+            cUnit.addAncestor(JavaClassType.lookup("Object").orElseThrow().getUnit());
         }
         if (!node.permittedTypes().isEmpty()) {
             parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT, "Permits is not supported.", getSourceCodeLocation(node)));
@@ -74,21 +69,19 @@ public class ClassASTVisitor extends JavaASTVisitor{
     }
 
     private CFG createDefaultConstructor(ClassUnit classUnit) {
-
+        JavaClassType classType = JavaClassType.lookup(classUnit.getName()).orElseThrow();
         it.unive.lisa.type.Type type = getProgram().getTypes().getType(classUnit.getName());
-
         List<Parameter> parameters = new ArrayList<>();
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        parameters.add(new Parameter(unknownLocation, "this", new ReferenceType(type), null, new Annotations()));
+        parameters.add(new Parameter(JavaRuntimeLocation.INSTANCE, "this", ReferenceTypeManager.get(classType), null, new Annotations()));
 
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), new ReferenceType(type), annotations, paramArray);
+        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(JavaRuntimeLocation.INSTANCE, classUnit, true, classUnit.getName(), ReferenceTypeManager.get(classType), annotations, paramArray);
         CFG cfg = new CFG(codeMemberDescriptor);
-        parserContext.addVariableType(cfg, "this", new ReferenceType(type));
+        parserContext.addVariableType(cfg, "this", ReferenceTypeManager.get(classType));
         String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
 
-        Statement call = new UnresolvedCall(cfg, unknownLocation, Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, unknownLocation, "this"));
+        Statement call = new UnresolvedCall(cfg, JavaRuntimeLocation.INSTANCE, Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, JavaRuntimeLocation.INSTANCE, "this"));
 
         Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
         cfg.addNode(ret);
@@ -125,8 +118,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
         }
         if (implicitlyCallSuper) {
             // add a super() call to this constructor, as a first statement, before the field initializator.
-            SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-            Statement call = new UnresolvedCall(cfg, unknownLocation, Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, unknownLocation, "this"));
+            Statement call = new UnresolvedCall(cfg, JavaRuntimeLocation.INSTANCE, Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, JavaRuntimeLocation.INSTANCE, "this"));
             cfg.addNode(call);
             cfg.addEdge(new SequentialEdge(call, injectionPoint));
             cfg.getEntrypoints().clear();

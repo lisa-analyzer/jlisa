@@ -1,8 +1,12 @@
 package it.unive.jlisa.types;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import it.unive.jlisa.program.JavaProgram;
 import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.lisa.program.CompilationUnit;
+import it.unive.jlisa.program.unit.ObjectClassUnit;
+import it.unive.jlisa.program.unit.StringClassUnit;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.InMemoryType;
 import it.unive.lisa.type.Type;
@@ -13,14 +17,20 @@ import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
 import it.unive.lisa.util.collections.workset.WorkingSet;
 
 public final class JavaClassType implements InMemoryType, UnitType {
-
-    private static final Map<String, JavaClassType> types = new HashMap<>();
+    private static Map<String, JavaClassType> types = new HashMap<>();
+    private static ObjectClassUnit objectClassUnit = null;
 
     /**
      * Clears the cache of {@link JavaClassType}s created up to now.
      */
     public static void clearAll() {
         types.clear();
+    }
+
+    public static void init(JavaProgram program) {
+        types = new HashMap<>();
+        objectClassUnit = new ObjectClassUnit(program);
+        new StringClassUnit(program);
     }
 
     /**
@@ -32,6 +42,23 @@ public final class JavaClassType implements InMemoryType, UnitType {
         return types.values();
     }
 
+    public static List<ClassUnit> getClassUnits() {
+        return types.values().stream()
+            .map(JavaClassType::getUnit)
+            .collect(Collectors.toList());
+    }
+
+    public static ObjectClassUnit getObjectClassUnit() {
+        return objectClassUnit;
+    }
+
+    public static JavaClassType put(JavaClassType classType) {
+        return types.put(classType.name, classType);
+    }
+
+    public static void registerClassType(JavaClassType classType) {
+        types.put(classType.name, classType);
+    }
     /**
      * Yields a unique instance (either an existing one or a fresh one) of
      * {@link JavaClassType} representing a class with the given {@code name},
@@ -45,8 +72,11 @@ public final class JavaClassType implements InMemoryType, UnitType {
      */
     public static JavaClassType lookup(
             String name,
-            CompilationUnit unit) {
-        return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
+            ClassUnit unit) {
+                if (!types.containsKey(name)) {
+                    return new JavaClassType(name, unit);
+                } 
+        return types.get(name);
     }
 
     public static Optional<JavaClassType> lookup(String name) {
@@ -55,19 +85,20 @@ public final class JavaClassType implements InMemoryType, UnitType {
 
     private final String name;
 
-    private final CompilationUnit unit;
+    private final ClassUnit unit;
 
     private JavaClassType(
             String name,
-            CompilationUnit unit) {
+            ClassUnit unit) {
         Objects.requireNonNull(name, "The name of a class type cannot be null");
         Objects.requireNonNull(unit, "The unit of a class type cannot be null");
         this.name = name;
         this.unit = unit;
+        types.put(name, this);
     }
 
     @Override
-    public CompilationUnit getUnit() {
+    public ClassUnit getUnit() {
         return unit;
     }
 

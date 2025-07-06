@@ -1,20 +1,17 @@
 package it.unive.jlisa.program;
 
-import it.unive.jlisa.program.java.constructs.object.ObjectConstructor;
-import it.unive.jlisa.program.java.constructs.string.constructors.StringCopyConstructor;
-import it.unive.jlisa.program.java.constructs.string.constructors.StringEmptyConstructor;
-import it.unive.jlisa.program.java.constructs.string.constructors.StringLiteralConstructor;
+import java.util.ArrayList;
+import java.util.List;
+
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
-import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.language.LanguageFeatures;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.TypeSystem;
 
 public class JavaProgram extends Program {
-    private ClassUnit rootClassUnit;
     /**
      * Builds an empty program.
      *
@@ -25,36 +22,24 @@ public class JavaProgram extends Program {
      */
     public JavaProgram(LanguageFeatures features, TypeSystem types) {
         super(features, types);
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        rootClassUnit = new ClassUnit(unknownLocation, this, "Object", false);
-        JavaClassType.lookup("Object", rootClassUnit);
-        rootClassUnit.addInstanceCodeMember(new ObjectConstructor(unknownLocation, rootClassUnit));
-        this.addUnit(rootClassUnit);
-        this.addUnit(getStringClassUnit());
-
+        JavaClassType.init(this);
+        this.addClassUnits(JavaClassType.getClassUnits());
+        this.addInterfaceUnits(new ArrayList<InterfaceUnit>());
     }
 
-    public ClassUnit getStringClassUnit() {
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        ClassUnit str = new ClassUnit(unknownLocation, this, "String", true);
-        JavaClassType stringClassType = JavaClassType.lookup("String", str);
-        str.addAncestor(rootClassUnit);
-        str.addInstanceGlobal(new Global(unknownLocation, str, "value", true));
-        str.addInstanceGlobal(new Global(unknownLocation, str, "length", true));
-        str.addInstanceCodeMember(new StringEmptyConstructor(unknownLocation, str, new ReferenceType(stringClassType)));
-        str.addInstanceCodeMember(new StringLiteralConstructor(unknownLocation, str, new ReferenceType(stringClassType)));
-        str.addInstanceCodeMember(new StringCopyConstructor(unknownLocation, str, new ReferenceType(stringClassType)));
-        //str.addInstanceCodeMember(new StringContains(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringEndsWith(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringEquals(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringIndexOf(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringLength(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringReplace(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringStartsWith(unknownLocation, str));
-        //str.addInstanceCodeMember(new StringSubstring(unknownLocation, str));
-
-
-        return str;
+    public void addClassUnits(List<ClassUnit> classUnits) {
+        classUnits.forEach(this::addUnit);
     }
+
+    public void addInterfaceUnits(List<InterfaceUnit> interfaceUnits) {
+        interfaceUnits.forEach(this::addUnit);
+    }
+    public ClassUnit getClassUnit(String name) throws Exception {
+		Unit unit =  getUnit(name);
+        if (unit instanceof ClassUnit cUnit) {
+            return cUnit;
+        }
+        throw new Exception("The ClassUnit " + name + " does not exists in the JavaProgram.");
+	}
 
 }

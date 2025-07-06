@@ -2,6 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.SourceCodeLocation;

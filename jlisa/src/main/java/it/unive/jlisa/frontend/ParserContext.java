@@ -1,10 +1,10 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.JavaProgram;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.type.Type;
@@ -22,14 +22,14 @@ public class ParserContext {
         COLLECT
     }
 
-    private Program program;
+    private JavaProgram program;
     private int apiLevel;
     private List<ParsingException> exceptions;
 
     private EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy;
 
     Map<CFG, Map<String, Type>> variableTypes = new HashMap<>();
-    public ParserContext(Program program, int apiLevel, EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy) {
+    public ParserContext(JavaProgram program, int apiLevel, EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy) {
         this.program = program;
         this.apiLevel = apiLevel;
         this.exceptions = new ArrayList<>();
@@ -82,16 +82,12 @@ public class ParserContext {
                 }
 
             }
-            Unit u = program.getUnit(name);
-            if (u instanceof CompilationUnit) {
-                return JavaClassType.lookup(name, (CompilationUnit) u);
-            }
-            return Untyped.INSTANCE;
+            return  JavaClassType.lookup(name).isPresent() ? JavaClassType.lookup(name).get() : Untyped.INSTANCE;
         }
         return type;
     }
 
-    public Program getProgram() {
+    public JavaProgram getProgram() {
         return program;
     }
 

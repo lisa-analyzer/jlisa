@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.expression;
 
 import java.util.Collections;
 
+import it.unive.jlisa.program.type.ReferenceTypeManager;
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -16,7 +17,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
@@ -25,9 +25,9 @@ public class InstanceOf extends UnaryExpression {
 
 	private final Type type;
 
-	public InstanceOf(CFG cfg, CodeLocation location, Expression subExpression, Type type) {
+	public InstanceOf(CFG cfg, CodeLocation location, Expression subExpression, Type type) throws Exception {
 		super(cfg, location, "instanceof", subExpression);
-		this.type = new ReferenceType(type);
+		this.type = ReferenceTypeManager.get(type);
 	}
 
 	@Override

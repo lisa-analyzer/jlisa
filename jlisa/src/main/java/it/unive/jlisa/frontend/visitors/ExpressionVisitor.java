@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import it.unive.jlisa.program.type.StringReferenceType;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -62,6 +63,7 @@ import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.type.ReferenceTypeManager;
 import it.unive.jlisa.types.JavaClassType;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -74,7 +76,6 @@ import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
 import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
-import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
@@ -86,7 +87,6 @@ import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class ExpressionVisitor extends JavaASTVisitor {
@@ -198,7 +198,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(rightVisitor);
 		Expression left = rightVisitor.getExpression();
 		Type right = leftVisitor.getType();
-		expression = new JavaCastExpression(cfg, getSourceCodeLocation(node), left, right);
+		try {
+			expression = new JavaCastExpression(cfg, getSourceCodeLocation(node), left, right);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
 		return false;
 	}
 	
@@ -243,7 +247,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				cfg,
 				getSourceCodeLocation(node),
 				((JavaClassType) type).getUnit().getName(),
-				new ReferenceType(type),
+				ReferenceTypeManager.get((JavaClassType) type),
 				parameters.toArray(new Expression[0]));
 		return false;
 	}
@@ -312,7 +316,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		if (expr != null) {
-			expression = new AccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+			expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
 		}
 		return false;
 	}
@@ -436,7 +440,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Expression left = leftVisitor.getExpression();
 		Type right = rightVisitor.getType();
 
-		expression = new InstanceOf(cfg, getSourceCodeLocation(node), left, right);
+		try {
+			expression = new InstanceOf(cfg, getSourceCodeLocation(node), left, right);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
 
 		return false;
 	}
@@ -612,7 +620,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(StringLiteral node) {
 		String literal = node.getEscapedValue();
 		var stringLiteral = new it.unive.lisa.program.cfg.statement.literal.StringLiteral(this.cfg, getSourceCodeLocation(node.getParent()), literal);
-		expression = new JavaNewObj(this.cfg, getSourceCodeLocation(node), "String", new ReferenceType(JavaClassType.lookup("String").get()), stringLiteral);
+		expression = new JavaNewObj(this.cfg, getSourceCodeLocation(node), "String", StringReferenceType.get(), stringLiteral);
 		return false;
 	}
 	

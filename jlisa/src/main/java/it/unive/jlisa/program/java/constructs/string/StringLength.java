@@ -1,20 +1,30 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.type.IntType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.types.JavaClassType;
+import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.string.Length;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.program.type.StringType;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.type.ReferenceType;
 
 /**
  * The native construct representing the length operation. This construct can be
  * invoked on a string variable {@code x} with {@code x.len()}.
- * 
- * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
+ *
  */
 public class StringLength extends NativeCFG {
 
@@ -26,10 +36,11 @@ public class StringLength extends NativeCFG {
 	 */
 	public StringLength(
 			CodeLocation location,
-			ClassUnit stringUnit) {
-		super(new CodeMemberDescriptor(location, stringUnit, true, "len", JavaIntType.INSTANCE,
-				new Parameter(location, "this", StringType.INSTANCE)),
-				IMPStringLength.class);
+			ClassUnit stringUnit,
+			ReferenceType referenceType) {
+		super(new CodeMemberDescriptor(location, stringUnit, true, "length", JavaIntType.INSTANCE,
+				new Parameter(location, "this", referenceType)),
+				StringLengthStmt.class);
 	}
 
 	/**
@@ -37,9 +48,14 @@ public class StringLength extends NativeCFG {
 	 * operand must be {@link StringType}. The type of this expression is the
 	 * {@link JavaIntType}.
 	 * 
-	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
 	 */
-	public static class IMPStringLength extends Length implements PluggableStatement {
+	public static class StringLengthStmt extends UnaryExpression implements PluggableStatement {
+		Statement statement;
+
+		protected StringLengthStmt(CFG cfg, CodeLocation location, Expression expression) {
+			super(cfg, location, "length", expression);
+		}
+
 
 		/**
 		 * Builds a new instance of this native call, according to the
@@ -51,50 +67,37 @@ public class StringLength extends NativeCFG {
 		 * 
 		 * @return the newly-built call
 		 */
-		public static IMPStringLength build(
+		public static StringLength.StringLengthStmt build(
 				CFG cfg,
 				CodeLocation location,
 				Expression... params) {
-			return new IMPStringLength(cfg, location, params[0]);
+			return new StringLength.StringLengthStmt(cfg, location, params[0]);
 		}
 
 		@Override
 		public void setOriginatingStatement(
 				Statement st) {
-			originating = st;
+			this.statement = st;
 		}
 
-		/**
-		 * Builds the length.
-		 * 
-		 * @param cfg        the {@link CFG} where this operation lies
-		 * @param sourceFile the source file name where this operation is
-		 *                       defined
-		 * @param line       the line number where this operation is defined
-		 * @param col        the column where this operation is defined
-		 * @param parameter  the operand of this operation
-		 */
-		public IMPStringLength(
-				CFG cfg,
-				String sourceFile,
-				int line,
-				int col,
-				Expression parameter) {
-			this(cfg, new SourceCodeLocation(sourceFile, line, col), parameter);
+
+		@Override
+		public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+
+			HeapDereference container = new HeapDereference(JavaClassType.lookup("String").get(), expr, getLocation());
+
+			AccessChild length = new AccessChild(
+					IntType.INSTANCE,
+					container,
+					new Variable(IntType.INSTANCE, "length", getLocation()),
+					getLocation());
+
+			return state.smallStepSemantics(length, this);
 		}
 
-		/**
-		 * Builds the length.
-		 * 
-		 * @param cfg       the {@link CFG} where this operation lies
-		 * @param location  the code location where this operation is defined
-		 * @param parameter the operand of this operation
-		 */
-		public IMPStringLength(
-				CFG cfg,
-				CodeLocation location,
-				Expression parameter) {
-			super(cfg, location, parameter);
+		@Override
+		protected int compareSameClassAndParams(Statement o) {
+			return 0;
 		}
 	}
 }

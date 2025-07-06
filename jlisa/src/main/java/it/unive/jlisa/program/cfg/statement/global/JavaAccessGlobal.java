@@ -145,7 +145,7 @@ public class JavaAccessGlobal extends UnaryExpression {
             return state.bottom();
 
         Type rectype = Type.commonSupertype(rectypes, Untyped.INSTANCE);
-        Variable var = new Variable(Untyped.INSTANCE, target, new Annotations(), getLocation());
+        GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, target, new Annotations(), getLocation());
         HeapDereference container = new HeapDereference(rectype, expr, getLocation());
         AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
         return state.smallStepSemantics(access, this);

@@ -1,7 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
-import it.unive.lisa.program.Program;
+import it.unive.jlisa.program.JavaProgram;
 import it.unive.lisa.program.SourceCodeLocation;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -22,7 +22,7 @@ public abstract class JavaASTVisitor extends ASTVisitor {
         return new SourceCodeLocation(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos));
     }
 
-    public Program getProgram() {
+    public JavaProgram getProgram() {
         return parserContext.getProgram();
     }
 
