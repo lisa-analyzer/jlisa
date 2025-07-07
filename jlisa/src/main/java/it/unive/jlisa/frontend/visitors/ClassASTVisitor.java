@@ -1,30 +1,31 @@
 package it.unive.jlisa.frontend.visitors;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.program.*;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
-import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.call.CFGCall;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.NativeCall;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
-import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
 import it.unive.lisa.type.ReferenceType;
-import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
 
@@ -78,7 +79,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
         it.unive.lisa.type.Type type = getProgram().getTypes().getType(classUnit.getName());
 
         List<Parameter> parameters = new ArrayList<>();
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
+        CodeLocation unknownLocation = classUnit.getLocation();
         parameters.add(new Parameter(unknownLocation, "this", new ReferenceType(type), null, new Annotations()));
 
         Annotations annotations = new Annotations();
@@ -107,7 +108,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
             throw new RuntimeException("The unit of a constructor must be a class unit");
         }
         ClassUnit classUnit = (ClassUnit) u;
-        Unit ancestor = classUnit.getImmediateAncestors().stream().toList().getFirst();
+        Unit ancestor = classUnit.getImmediateAncestors().iterator().next();
         boolean implicitlyCallSuper = true;
         if (injectionPoint instanceof UnresolvedCall call) {
             if (ancestor.getName().equals(call.getConstructName())) {
@@ -125,7 +126,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
         }
         if (implicitlyCallSuper) {
             // add a super() call to this constructor, as a first statement, before the field initializator.
-            SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
+            CodeLocation unknownLocation = cfg.getDescriptor().getLocation();
             Statement call = new UnresolvedCall(cfg, unknownLocation, Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, unknownLocation, "this"));
             cfg.addNode(call);
             cfg.addEdge(new SequentialEdge(call, injectionPoint));
