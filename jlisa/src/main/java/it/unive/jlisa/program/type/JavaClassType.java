@@ -9,6 +9,7 @@ import java.util.Set;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.InMemoryType;
+import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
@@ -16,9 +17,9 @@ import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
 import it.unive.lisa.util.collections.workset.WorkingSet;
 
-public final class JavaClassType implements InMemoryType, UnitType {
+public class JavaClassType implements InMemoryType, UnitType {
 
-    private static final Map<String, JavaClassType> types = new HashMap<>();
+    protected static final Map<String, JavaClassType> types = new HashMap<>();
 
     /**
      * Clears the cache of {@link JavaClassType}s created up to now.
@@ -57,7 +58,7 @@ public final class JavaClassType implements InMemoryType, UnitType {
 
     private final CompilationUnit unit;
 
-    private JavaClassType(
+    protected JavaClassType(
             String name,
             CompilationUnit unit) {
         Objects.requireNonNull(name, "The name of a class type cannot be null");
@@ -177,4 +178,8 @@ public final class JavaClassType implements InMemoryType, UnitType {
             instances.add(lookup(in.getName(), null));
         return instances;
     }
+
+	public Type getReference() {
+		return new ReferenceType(this);
+	}
 }

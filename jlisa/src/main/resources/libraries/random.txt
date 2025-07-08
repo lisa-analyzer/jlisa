@@ -1,0 +1,23 @@
+class Random:
+	instance method nextDouble: it.unive.jlisa.program.java.constructs.random.NextDouble
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param self libtype Random*
+		
+	instance method nextBoolean: it.unive.jlisa.program.java.constructs.random.NextBoolean
+		type  it.unive.lisa.program.type.BoolType::INSTANCE
+		param self libtype Random*
+		
+	instance method nextInt: it.unive.jlisa.program.java.constructs.random.NextInt
+		type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param self libtype Random*
+	
+	instance method nextFloat: it.unive.jlisa.program.java.constructs.random.NextFloat
+		type  it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		param self libtype Random*
+		
+	instance method nextLong: it.unive.jlisa.program.java.constructs.random.NextLong
+		type  it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param self libtype Random*
+			
+	method Random: it.unive.jlisa.program.java.constructs.random.RandomEmptyConstructor
+		libtype Random*
