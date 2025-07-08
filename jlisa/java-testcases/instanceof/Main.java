@@ -13,5 +13,12 @@ public class Main {
 			y = 1;
 		else
 			y = -1;
+		
+		Random r = new Random();
+		int z = 0;
+		if (o instanceof Object)
+			z = 1;
+		else
+			z = -1;
 	}
 }
