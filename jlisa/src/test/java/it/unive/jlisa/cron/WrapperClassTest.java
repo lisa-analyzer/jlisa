@@ -8,11 +8,11 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 
-public class CharacterTest extends JLiSAAnalysisExecutor {
+public class WrapperClassTest extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void characterTest()  throws IOException {
-		CronConfiguration conf = TestHelpers.createConfiguration("character", "", "Main.java");
+		CronConfiguration conf = TestHelpers.createConfiguration("wrapper", "", "Main.java");
 		perform(conf);
 	}
 }

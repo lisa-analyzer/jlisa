@@ -3,16 +3,16 @@
   "files" : [ "report.json", "void_Main.main(String[]_args).json" ],
   "info" : {
     "cfgs" : "2",
-    "duration" : "2ms",
-    "end" : "2025-07-08T17:00:04.720+02:00",
-    "expressions" : "7",
+    "duration" : "92ms",
+    "end" : "2025-07-08T19:10:22.257+02:00",
+    "expressions" : "13",
     "files" : "1",
-    "globals" : "1",
-    "members" : "19",
+    "globals" : "2",
+    "members" : "21",
     "programs" : "1",
-    "start" : "2025-07-08T17:00:04.718+02:00",
-    "statements" : "5",
-    "units" : "5",
+    "start" : "2025-07-08T19:10:22.165+02:00",
+    "statements" : "7",
+    "units" : "6",
     "version" : "0.1",
     "warnings" : "0"
   },
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/character"
+    "workdir" : "java-outputs/wrapper"
   }
 }
