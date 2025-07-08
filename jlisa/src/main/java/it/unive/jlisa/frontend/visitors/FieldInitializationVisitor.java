@@ -1,5 +1,10 @@
 package it.unive.jlisa.frontend.visitors;
 
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -14,10 +19,6 @@ import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class FieldInitializationVisitor extends JavaASTVisitor{
     private CFG cfg;
@@ -31,17 +32,18 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
     }
 
     public boolean visit(FieldDeclaration node) {
-        int modifiers = node.getModifiers();
         TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
         node.getType().accept(typeVisitor);
         Type type = typeVisitor.getType();
 
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        VariableRef thisExpr = new VariableRef(cfg, unknownLocation, "this");
+        SourceCodeLocation fieldloc = getSourceCodeLocation(node);
+        SourceCodeLocation thisloc = new SourceCodeLocation(fieldloc.getSourceFile(), fieldloc.getLine(), fieldloc.getCol() + 3);
+        SourceCodeLocation initloc = new SourceCodeLocation(fieldloc.getSourceFile(), fieldloc.getLine(), fieldloc.getCol() + 2);
+        SourceCodeLocation asgloc = new SourceCodeLocation(fieldloc.getSourceFile(), fieldloc.getLine(), fieldloc.getCol() + 1);
+
+        VariableRef thisExpr = new VariableRef(cfg, thisloc, "this");
         for (Object f : node.fragments()) {
             VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
-            String variableName = fragment.getName().getIdentifier();
-            SourceCodeLocation loc = getSourceCodeLocation(fragment);
             if (fragment.getExtraDimensions() != 0) {
                 if (type instanceof ArrayType) {
                     ArrayType arrayType = (ArrayType) type;
@@ -60,10 +62,10 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
                     initializer = initializerVisitor.getExpression();
                 }
             } else {
-                initializer = JavaTypeSystem.getDefaultLiteral(type, cfg, unknownLocation);
+                initializer = JavaTypeSystem.getDefaultLiteral(type, cfg, initloc);
             }
             String identifier = fragment.getName().getIdentifier();
-            JavaAssignment assignment = new JavaAssignment(cfg, unknownLocation, new AccessInstanceGlobal(cfg, unknownLocation, thisExpr, identifier), initializer);
+            JavaAssignment assignment = new JavaAssignment(cfg, asgloc, new AccessInstanceGlobal(cfg, fieldloc, thisExpr, identifier), initializer);
             block.addNode(assignment);
             if (first == null) {
                 first = assignment;
