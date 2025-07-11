@@ -26,6 +26,7 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.type.VoidType;
 
 public class ClassASTVisitor extends JavaASTVisitor{
 
@@ -84,7 +85,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), new ReferenceType(type), annotations, paramArray);
+        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
         CFG cfg = new CFG(codeMemberDescriptor);
         parserContext.addVariableType(cfg, "this", new ReferenceType(type));
         String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();

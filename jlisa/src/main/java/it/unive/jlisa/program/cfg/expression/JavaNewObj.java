@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -9,91 +11,96 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.InstrumentedReceiverRef;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.type.ReferenceType;
-import org.apache.commons.lang3.ArrayUtils;
 
 
 public class JavaNewObj extends NaryExpression {
 
-    /**
-     * Builds the object allocation and initialization.
-     *
-     * @param cfg        the {@link CFG} where this operation lies
-     * @param type       the type of the object that is being created
-     * @param parameters the parameters of the constructor call
-     */
-    public JavaNewObj(
-            CFG cfg,
-            SourceCodeLocation location,
-            String constructName,
-            ReferenceType type,
-            Expression... parameters) {
-        super(cfg, location, constructName, type, parameters);
-    }
+	/**
+	 * Builds the object allocation and initialization.
+	 *
+	 * @param cfg        the {@link CFG} where this operation lies
+	 * @param type       the type of the object that is being created
+	 * @param parameters the parameters of the constructor call
+	 */
+	public JavaNewObj(
+			CFG cfg,
+			SourceCodeLocation location,
+			String constructName,
+			ReferenceType type,
+			Expression... parameters) {
+		super(cfg, location, constructName, type, parameters);
+	}
 
-    @Override
-    protected int compareSameClassAndParams(
-            Statement o) {
-        return 0;
-    }
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
 
-    @Override
-    public <A extends AbstractState<A>> AnalysisState<A> forwardSemanticsAux(
-            InterproceduralAnalysis<A> interprocedural,
-            AnalysisState<A> state,
-            ExpressionSet[] params,
-            StatementStore<A> expressions)
-            throws SemanticException {
-    	ReferenceType reftype = (ReferenceType) getStaticType();
-        MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
-        HeapReference ref = new HeapReference(reftype, created, getLocation());
+	@Override
+	public <A extends AbstractState<A>> AnalysisState<A> forwardSemanticsAux(
+			InterproceduralAnalysis<A> interprocedural,
+			AnalysisState<A> state,
+			ExpressionSet[] params,
+			StatementStore<A> expressions)
+					throws SemanticException {
+		
+		ReferenceType reftype = (ReferenceType) getStaticType();
+		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
+		HeapReference ref = new HeapReference(reftype, created, getLocation());
 
-        // we need to add the receiver to the parameters
-        VariableRef paramThis = new VariableRef(getCFG(), getLocation(), "this@" + getLocation(), reftype);
-        Expression[] fullExpressions = ArrayUtils.insert(0, getSubExpressions(), paramThis);
+		AnalysisState<A> allocated = state.smallStepSemantics(created, this);
 
-        // we also have to add the receiver inside the state
-        AnalysisState<A> callstate = state.smallStepSemantics(created, paramThis);
-        callstate = paramThis.forwardSemantics(callstate, interprocedural, expressions);
+		// we need to add the receiver to the parameters
+		InstrumentedReceiverRef paramThis = new InstrumentedReceiverRef(getCFG(), getLocation(), false, reftype);
+		Expression[] fullExpressions = ArrayUtils.insert(0, getSubExpressions(), paramThis);
 
-        
-        AnalysisState<A> tmp = state.bottom();
-        for (SymbolicExpression v : callstate.getComputedExpressions())
-            tmp = tmp.lub(callstate.assign(v, ref, paramThis));
-        ExpressionSet[] fullParams = ArrayUtils.insert(0, params, callstate.getComputedExpressions());
-        expressions.put(paramThis, tmp);
+		// we also have to add the receiver inside the state
+		AnalysisState<A> callstate = paramThis.forwardSemantics(allocated, interprocedural, expressions);
+		ExpressionSet[] fullParams = ArrayUtils.insert(0, params, callstate.getComputedExpressions());
 
-        UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE, reftype.getInnerType().toString(),
-                getConstructName(), fullExpressions);
-        AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
+		// we store a reference to the newly created region in the receiver
+		AnalysisState<A> tmp = state.bottom();
+		for (SymbolicExpression rec : callstate.getComputedExpressions())
+			tmp = tmp.lub(callstate.assign(rec, ref, paramThis));
+		// we store the approximation of the receiver in the sub-expressions
+		expressions.put(paramThis, tmp);
 
-        if (!call.getMetaVariables().isEmpty())
-            sem = sem.forgetIdentifiers(call.getMetaVariables());
+		// constructor call
+		UnresolvedCall call = new UnresolvedCall(
+				getCFG(),
+				getLocation(),
+				CallType.INSTANCE,
+				reftype.getInnerType().toString(),
+				getConstructName(),
+				fullExpressions);
+		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
 
-        // now remove the instrumented receiver
-        expressions.forget(paramThis);
-        for (SymbolicExpression v : callstate.getComputedExpressions())
-            if (v instanceof Identifier)
-                sem = sem.forgetIdentifier((Identifier) v);
+		// now remove the instrumented receiver
+		expressions.forget(paramThis);
+		for (SymbolicExpression v : callstate.getComputedExpressions())
+			if (v instanceof Identifier)
+				// we leave the instrumented receiver in the program variables
+				// until it is popped from the stack to keep a reference to the
+				// newly created object and its fields
+				getMetaVariables().add((Identifier) v);
 
-        sem = sem.smallStepSemantics(created, this);
-
-        AnalysisState<A> result = state.bottom();
-        for (SymbolicExpression loc : sem.getComputedExpressions()) {
-            ReferenceType staticType = new ReferenceType(loc.getStaticType());
-            HeapReference locref = new HeapReference(staticType, loc, getLocation());
-            result = result.lub(sem.smallStepSemantics(locref, call));
-        }
-
-        return result;
-    }
+		// finally, we leave a reference to the newly created object on the
+		// stack; this correponds to the state after the constructor call
+		// but with the receiver left on the stack
+		return new AnalysisState<>(
+				sem.getState(),
+				callstate.getComputedExpressions(),
+				sem.getFixpointInformation());
+	}
 }
