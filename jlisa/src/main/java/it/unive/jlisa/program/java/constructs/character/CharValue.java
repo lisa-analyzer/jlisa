@@ -1,0 +1,52 @@
+package it.unive.jlisa.program.java.constructs.character;
+
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.PluggableStatement;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Untyped;
+
+public class CharValue extends UnaryExpression implements PluggableStatement {
+	protected Statement originating;
+
+	public CharValue(CFG cfg, CodeLocation location, Expression expr) {
+		super(cfg, location, "charValue", expr);
+	}
+
+	public static CharValue build(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
+		return new CharValue(cfg, location, params[0]);
+	}
+
+	@Override
+	protected int compareSameClassAndParams(Statement o) {
+		return 0; 
+	}
+
+
+	@Override
+	public void setOriginatingStatement(Statement st) {
+		originating = st;
+	}
+
+	@Override
+	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+		 GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+         AccessChild access = new AccessChild(JavaCharType.INSTANCE, expr, var, getLocation());
+         return state.smallStepSemantics(access, originating);
+	}
+}

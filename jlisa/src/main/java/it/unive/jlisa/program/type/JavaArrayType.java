@@ -1,5 +1,13 @@
 package it.unive.jlisa.program.type;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
@@ -14,18 +22,15 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
-import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A type representing an  array defined in an Java program. ArrayTypes are
@@ -191,10 +196,13 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
                             new Variable(Untyped.INSTANCE, "len", getLocation()),
                             getLocation());
 
-                    AnalysisState<A> lenSt = entryState.bottom();
                     // TODO fix when we'll support multidimensional arrays
-                    lenSt = lenSt.lub(allocSt.assign(len, new PushAny(JavaIntType.INSTANCE, getLocation()), this));
-                    initSt = initSt.lub(lenSt);
+                    // len > 0 
+                    Constant zero = new Constant(JavaIntType.INSTANCE, 0, getLocation());
+					Variable v = new Variable(JavaIntType.INSTANCE, "v", getLocation());
+					BinaryExpression constraint = new BinaryExpression(Untyped.INSTANCE, zero, v, ComparisonLe.INSTANCE, location);
+					
+					initSt = initSt.lub(allocSt.assign(len, new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
                 }
 
                 AnalysisState<A> refSt = entryState.bottom();

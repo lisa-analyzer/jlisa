@@ -1,0 +1,14 @@
+class Character extends Object:
+	instance field value type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	instance method Character: it.unive.jlisa.program.java.constructs.character.CharacterConstructor
+		libtype Character*
+		param this libtype Character*
+		param c type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+		
+	instance method charValue: it.unive.jlisa.program.java.constructs.character.CharValue
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param this libtype Character*
+
+		
