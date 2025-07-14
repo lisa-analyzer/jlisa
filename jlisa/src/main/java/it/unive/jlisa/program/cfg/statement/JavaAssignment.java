@@ -19,6 +19,7 @@ import it.unive.lisa.program.cfg.statement.evaluation.RightToLeftEvaluation;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
@@ -61,9 +62,15 @@ public class JavaAssignment extends Assignment {
 			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped())
 				result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, right, expressions));
 			else if (rType.canBeAssignedTo(left.getStaticType())) {
-				Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
-				BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeConv, TypeConv.INSTANCE, loc);
-				result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+				if (left.getStaticType().isReferenceType()) { // type-cast
+					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
+					BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeConv, TypeCast.INSTANCE, loc);
+					result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+				} else { // type-conv
+					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
+					BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeConv, TypeConv.INSTANCE, loc);
+					result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+				}
 			}
 		}
 		return result;

@@ -1,4 +1,4 @@
-class Random:
+class Random extends Object:
 	instance method nextDouble: it.unive.jlisa.program.java.constructs.random.NextDouble
 		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param self libtype Random*
