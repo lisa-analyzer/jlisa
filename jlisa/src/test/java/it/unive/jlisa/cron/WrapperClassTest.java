@@ -11,7 +11,7 @@ import it.unive.jlisa.helpers.TestHelpers;
 public class WrapperClassTest extends JLiSAAnalysisExecutor {
 	
 	@Test
-	public void characterTest()  throws IOException {
+	public void wrapperClassTest()  throws IOException {
 		CronConfiguration conf = TestHelpers.createConfiguration("wrapper", "", "Main.java");
 		perform(conf);
 	}

@@ -10,14 +10,16 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.type.VoidType;
 
 public class ObjectConstructor extends NativeCFG {
 
     public ObjectConstructor(
             CodeLocation location,
             ClassUnit stringUnit) {
-        super(new CodeMemberDescriptor(location, stringUnit, true, "Object", JavaClassType.lookup("Object", null),
-                        new Parameter(location, "this", JavaClassType.lookup("Object", null))),
+        super(new CodeMemberDescriptor(location, stringUnit, true, "Object", VoidType.INSTANCE,
+                        new Parameter(location, "this", new ReferenceType(JavaClassType.lookup("Object", null)))),
                 ObjectConstructor.JavaObjectConstructor.class);
     }
 
