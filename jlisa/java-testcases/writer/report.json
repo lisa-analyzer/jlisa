@@ -1,17 +1,17 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_ForLoopsExample1.ForLoopsExample1(ForLoopsExample1__this)_cfg.json", "void_ForLoopsExample1.emptyStructures()_cfg.json", "void_ForLoopsExample1.main(String[]_args)_cfg.json" ],
+  "files" : [ "report.json", "void_Main.main(String[]_args).json" ],
   "info" : {
-    "cfgs" : "3",
-    "duration" : "3ms",
-    "end" : "2025-07-15T14:51:18.087+02:00",
-    "expressions" : "20",
-    "files" : "3",
+    "cfgs" : "2",
+    "duration" : "99ms",
+    "end" : "2025-07-15T14:49:27.184+02:00",
+    "expressions" : "24",
+    "files" : "1",
     "globals" : "2",
-    "members" : "26",
+    "members" : "25",
     "programs" : "1",
-    "start" : "2025-07-15T14:51:18.084+02:00",
-    "statements" : "14",
+    "start" : "2025-07-15T14:49:27.085+02:00",
+    "statements" : "12",
     "units" : "8",
     "version" : "0.1",
     "warnings" : "0"
@@ -28,11 +28,11 @@
     "optimize" : "false",
     "recursionWideningThreshold" : "5",
     "semanticChecks" : "",
-    "serializeInputs" : "true",
-    "serializeResults" : "false",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/control-flow-structures/for/for"
+    "workdir" : "java-outputs/writer"
   }
 }
