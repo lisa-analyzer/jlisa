@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.main(String[]_args).json" ],
+  "info" : {
+    "cfgs" : "2",
+    "duration" : "276ms",
+    "end" : "2025-07-16T12:38:24.627+02:00",
+    "expressions" : "4",
+    "files" : "1",
+    "globals" : "2",
+    "members" : "28",
+    "programs" : "1",
+    "start" : "2025-07-16T12:38:24.351+02:00",
+    "statements" : "4",
+    "units" : "15",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/array"
+  }
+}
