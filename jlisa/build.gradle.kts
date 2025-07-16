@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("application")
+    id("antlr")
 }
 
 group = "it.unive.jlisa"
@@ -23,6 +24,9 @@ repositories {
 }
 
 dependencies {
+	antlr("org.antlr:antlr4:4.8-1")
+	
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("junit:junit:4.13")
@@ -34,6 +38,24 @@ dependencies {
     implementation("io.github.lisa-analyzer:lisa-sdk:0.2-svcomp-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-analyses:0.2-svcomp-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-program:0.2-svcomp-SNAPSHOT")
+    implementation("io.github.classgraph:classgraph:4.8.175")
+}
+
+
+tasks.named<org.gradle.api.plugins.antlr.AntlrTask>("generateGrammarSource") {
+    maxHeapSize = "64m"
+    arguments.addAll(listOf("-visitor", "-no-listener"))
+
+    doLast {
+        copy {
+            from("build/generated-src/antlr/main/")
+            include("*.*")
+            into("build/generated-src/antlr/main/it/unive/jlisa/antlr")
+        }
+        project.delete(fileTree("build/generated-src/antlr/main") {
+            include("*.*")
+        })
+    }
 }
 
 tasks.test {

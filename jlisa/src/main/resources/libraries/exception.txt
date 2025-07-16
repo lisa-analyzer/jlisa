@@ -1,0 +1,7 @@
+class Exception extends Object:
+
+class IOException extends Exception:
+
+class ParseException extends Exception:
+
+class FileNotFoundException extends IOException:
