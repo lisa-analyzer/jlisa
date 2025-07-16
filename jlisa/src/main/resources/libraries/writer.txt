@@ -1,0 +1,29 @@
+class Writer extends Object:
+
+class PrintWriter extends Writer:
+
+	instance method PrintWriter: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype PrintWriter*
+		param out libtype Writer*
+		
+		
+	instance method PrintWriter: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterConstructorWithAutoFlush
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype PrintWriter*
+		param out libtype Writer*
+		param autoflush type it.unive.lisa.program.type.BoolType::INSTANCE
+		
+	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrint
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype PrintWriter*
+		param p type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrintln
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype PrintWriter*
+		param p type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterFlush
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype PrintWriter*
