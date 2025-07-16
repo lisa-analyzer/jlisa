@@ -116,7 +116,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 		Type type = typeVisitor.getType();
 		Expression length = lengthVisitor.getExpression();
-		expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, type);
+		expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
 		return false;		
 	}
 
