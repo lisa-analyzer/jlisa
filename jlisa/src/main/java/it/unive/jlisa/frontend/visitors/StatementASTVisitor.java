@@ -232,10 +232,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
         block.addNode(expression);
         
-        if (doBody.getLast() != null) {
-        	if(!(doBody.getLast() instanceof JavaContinue || doBody.getLast() instanceof JavaBreak))
-        		block.addEdge(new SequentialEdge(hasBody ? doBody.getLast() : noBody, expression));
-        }
+        if(!(doBody.getLast() instanceof JavaContinue || doBody.getLast() instanceof JavaBreak))
+        	block.addEdge(new SequentialEdge(hasBody ? doBody.getLast() : noBody, expression));
+
 
         block.addEdge(new TrueEdge(expression, hasBody ? doBody.getFirst() : noBody));
 
@@ -297,10 +296,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
        
        block.addEdge( new SequentialEdge(assignment, hasBody ? loopBody.getFirst() : noBody));
        
-       if (loopBody.getLast() != null) {
        	if(!(loopBody.getLast() instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak))
        		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, condition));
-       }
        
        Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
        block.addNode(noop);
@@ -410,18 +407,17 @@ public class StatementASTVisitor extends JavaASTVisitor {
         Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col +2 to avoid conflict with the other noop
         block.addNode(noop);
         
-        if (loopBody.getLast() != null) {
-           	if(!(loopBody.getLast() instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak)) {
-           		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, hasUpdaters ? updaters.getLeft() : hasCondition ? condition : alwaysTrue));
+        if(!(loopBody.getLast() instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak)) {
+           	block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, hasUpdaters ? updaters.getLeft() : hasCondition ? condition : alwaysTrue));
            	    
-           		if(hasCondition)
-    	        	block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.getLast() : noBody, condition));
-    	        else
-    	        	block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.getLast() : noBody, alwaysTrue));
+           	if(hasCondition)
+    	        block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.getLast() : noBody, condition));
+    	    else
+    	        block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.getLast() : noBody, alwaysTrue));
 
-           	}
+        }
            	
-        }      
+   
         
         if(hasCondition)
         	block.addEdge(new FalseEdge(condition, noop));  
@@ -501,10 +497,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
         Statement noop = new NoOp(cfg, condition.getLocation());
         block.addNode(noop);
         
-        if (trueVisitor.getLast() != null) {
-        	if(!(trueVisitor.getLast() instanceof JavaContinue || trueVisitor.getLast() instanceof JavaBreak))
+        if(!(trueVisitor.getLast() instanceof JavaContinue || trueVisitor.getLast() instanceof JavaBreak))
         		block.addEdge(new SequentialEdge( !isEmptyTrueBlock ? trueVisitor.getLast() : noTrueBody, noop));
-        }
+        
        
         StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
         NodeList<CFG, Statement, Edge> falseBlock = null;
@@ -522,10 +517,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
                 block.addEdge(new FalseEdge(condition, !isEmptyFalseBlock ? falseVisitor.getFirst() : noFalseBody));
                 
-                if (falseVisitor.getLast() != null) {
-                	if(!(falseVisitor.getLast() instanceof JavaContinue || falseVisitor.getLast() instanceof JavaBreak))
-                		 block.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
-                }
+                if(!(falseVisitor.getLast() instanceof JavaContinue || falseVisitor.getLast() instanceof JavaBreak))
+                	block.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
                
             }
         } else {
@@ -749,11 +742,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
         }
 
         block.addEdge(new TrueEdge(expression, hasBody ? loopBody.getFirst() : noBody));
-        
-        if (loopBody.getLast() != null) {
-        	if(!(loopBody.getLast()instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak))
-        		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, expression));
-        } 
+
+        if(!(loopBody.getLast()instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak))
+        	block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, expression));
 
         Statement noop = new NoOp(this.cfg, expression.getLocation());
         block.addNode(noop);
