@@ -53,4 +53,10 @@ public class ControlFlowStructureTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = createConfiguration("control-flow-structures", "if", "if-1.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void testBreakContinue()  throws IOException {
+		CronConfiguration conf = createConfiguration("control-flow-structures", "break-continue", "break-continue.java");
+		perform(conf);
+	}
 }
