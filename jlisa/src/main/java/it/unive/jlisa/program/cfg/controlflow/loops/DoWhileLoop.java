@@ -1,4 +1,4 @@
-package it.unive.jlisa.program.cfg.controlflow.forloops;
+package it.unive.jlisa.program.cfg.controlflow.loops;
 
 import java.util.Collection;
 
@@ -9,11 +9,11 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 
 /**
- * Traditional While loop
+ * Traditional Do-While loop
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class WhileLoop extends Loop {
+public class DoWhileLoop extends Loop {
 
 	/**
 	 * Builds the construct.
@@ -24,7 +24,7 @@ public class WhileLoop extends Loop {
 	 * @param firstFollower the first statement after the structure exits
 	 * @param body          the statements in the loop body
 	 */
-	public WhileLoop(NodeList<CFG, Statement, Edge> cfgMatrix, Statement condition, Statement firstFollower,
+	public DoWhileLoop(NodeList<CFG, Statement, Edge> cfgMatrix, Statement condition, Statement firstFollower,
 			Collection<Statement> body) {
 		super(cfgMatrix, condition, firstFollower, body);
 	}

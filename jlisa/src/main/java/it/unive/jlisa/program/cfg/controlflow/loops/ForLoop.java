@@ -1,4 +1,4 @@
-package it.unive.jlisa.program.cfg.controlflow.forloops;
+package it.unive.jlisa.program.cfg.controlflow.loops;
 
 import java.util.Collection;
 
