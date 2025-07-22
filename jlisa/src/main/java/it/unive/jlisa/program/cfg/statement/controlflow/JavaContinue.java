@@ -8,9 +8,11 @@ import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 
 
 /**
@@ -20,7 +22,32 @@ import it.unive.lisa.program.cfg.statement.Statement;
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class JavaContinue extends NaryExpression{
+public class JavaContinue extends Expression{
+
+	protected JavaContinue(CFG cfg, CodeLocation location) {
+		super(cfg, location);
+	}
+
+	@Override
+	public <V> boolean accept(GraphVisitor<CFG, Statement, Edge, V> visitor, V tool) {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return "continue";
+	}
+
+	@Override
+	public <A extends AbstractState<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
+			InterproceduralAnalysis<A> interprocedural, StatementStore<A> expressions) throws SemanticException {
+		return entryState;
+	}
+
+	@Override
+	protected int compareSameClass(Statement o) {
+		return 0;
+	}
 
 	/**
 	 * Builds the continue, happening at the given location in the program.
@@ -29,19 +56,5 @@ public class JavaContinue extends NaryExpression{
 	 * @param location the location where this statement is defined within the
 	 *                     program
 	 */
-	public JavaContinue(CFG cfg, CodeLocation location) {
-		super(cfg, location, "continue", new Expression[0]);
-	}
-
-	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0;
-	}
-
-	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A> interprocedural,
-			AnalysisState<A> state, ExpressionSet[] params, StatementStore<A> expressions) throws SemanticException {
-		return state;  // do nothing
-	}
 
 }
