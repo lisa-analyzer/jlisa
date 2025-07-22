@@ -2,7 +2,7 @@ public class Main {
 	public static void main(String[] args) {
 
 		String s = "input";
-/*
+
 		switch (s) {
 			case "Hello":
 				System.out.println("Hello");
@@ -56,7 +56,7 @@ public class Main {
 				System.out.println(s);
 				System.out.println("unknown animal");
 		}
-*/
+
 		switch (s) {
 			case "A":
 			case "B":
@@ -76,9 +76,9 @@ public class Main {
 			default:
 		}
 
-    switch(s) {
+		switch(s) {
 
-    }
+		}
 
 	}
 }

@@ -35,7 +35,7 @@ public class JavaBreak extends Expression {
 
 	@Override
 	public <V> boolean accept(GraphVisitor<CFG, Statement, Edge, V> visitor, V tool) {
-		return false;
+		return visitor.visit(tool, getCFG(), this);
 	}
 
 	@Override

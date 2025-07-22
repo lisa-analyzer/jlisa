@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(String[]_args)_cfg.json" ],
+  "info" : {
+    "cfgs" : "2",
+    "duration" : "180ms",
+    "end" : "2025-07-22T16:13:09.850+02:00",
+    "expressions" : "91",
+    "files" : "2",
+    "globals" : "2",
+    "members" : "28",
+    "programs" : "1",
+    "start" : "2025-07-22T16:13:09.670+02:00",
+    "statements" : "59",
+    "units" : "15",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "true",
+    "serializeResults" : "false",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/control-flow-structures/switch"
+  }
+}

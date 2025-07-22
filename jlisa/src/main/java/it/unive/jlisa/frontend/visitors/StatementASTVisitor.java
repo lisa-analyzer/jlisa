@@ -752,11 +752,13 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
     		if(follower != null) {
     			block.addEdge(new SequentialEdge(switchDefault, follower));
+    			block.addEdge(new SequentialEdge(instrList.getLast(), noop));
     		} else {
     			emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
     			offsetCol++;
     			block.addNode(emptyBlock);
     			block.addEdge(new SequentialEdge(switchDefault, emptyBlock));
+    			block.addEdge(new SequentialEdge(emptyBlock, noop));
     		}
 		}
         
