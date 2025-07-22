@@ -4,13 +4,11 @@ import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 
@@ -22,9 +20,17 @@ import it.unive.lisa.util.datastructures.graph.GraphVisitor;
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class JavaContinue extends Expression{
+public class JavaContinue extends Expression {
 
-	protected JavaContinue(CFG cfg, CodeLocation location) {
+
+	/**
+	 * Builds the continue, happening at the given location in the program.
+	 * 
+	 * @param cfg      the cfg that this statement belongs to
+	 * @param location the location where this statement is defined within the
+	 *                     program
+	 */
+	public JavaContinue(CFG cfg, CodeLocation location) {
 		super(cfg, location);
 	}
 
@@ -49,12 +55,5 @@ public class JavaContinue extends Expression{
 		return 0;
 	}
 
-	/**
-	 * Builds the continue, happening at the given location in the program.
-	 * 
-	 * @param cfg      the cfg that this statement belongs to
-	 * @param location the location where this statement is defined within the
-	 *                     program
-	 */
 
 }

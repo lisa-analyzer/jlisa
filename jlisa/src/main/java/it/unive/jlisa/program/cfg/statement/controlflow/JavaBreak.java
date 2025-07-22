@@ -20,7 +20,7 @@ import it.unive.lisa.util.datastructures.graph.GraphVisitor;
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class JavaBreak extends Expression{
+public class JavaBreak extends Expression {
 
 	/**
 	 * Builds the break, happening at the given location in the program.
