@@ -1,7 +1,8 @@
 package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -43,10 +44,11 @@ public class IntValue extends UnaryExpression implements PluggableStatement {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
 		 GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
          AccessChild access = new AccessChild(JavaIntType.INSTANCE, expr, var, getLocation());
-         return state.smallStepSemantics(access, originating);
+         return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
 	}
 }

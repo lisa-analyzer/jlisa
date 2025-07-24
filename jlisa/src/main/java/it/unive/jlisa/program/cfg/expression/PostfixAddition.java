@@ -1,14 +1,18 @@
 package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.*;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
@@ -30,13 +34,16 @@ public class PostfixAddition extends UnaryExpression {
     }
 
     @Override
-    public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-        if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isNumericType))
+    public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+        Analysis<A, D> analysis = interprocedural.getAnalysis();
+        if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
             return state.bottom();
 
         Identifier meta = getMetaVariable();
-        state = state.assign(meta, expr, this);
-        state = state.assign(
+        state = analysis.assign(state, meta, expr, this);
+        state = analysis.assign(
+                state,
                 expr,
                 new BinaryExpression(
                         getStaticType(),
@@ -45,7 +52,7 @@ public class PostfixAddition extends UnaryExpression {
                         NumericNonOverflowingAdd.INSTANCE,
                         getLocation()),
                 this);
-        return state.smallStepSemantics(meta, this);
+        return analysis.smallStepSemantics(state, meta, this);
 
     }
 

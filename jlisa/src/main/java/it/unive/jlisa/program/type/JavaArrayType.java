@@ -8,7 +8,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -178,14 +180,16 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
             CodeLocation location) {
         return new DefaultParamInitialization(cfg, location, this) {
             @Override
-            public <A extends AbstractState<A>> AnalysisState<A> forwardSemantics(
+            public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
                     AnalysisState<A> entryState,
-                    InterproceduralAnalysis<A> interprocedural,
+                    InterproceduralAnalysis<A, D> interprocedural,
                     StatementStore<A> expressions)
                     throws SemanticException {
                 Type type = getStaticType();
                 MemoryAllocation alloc = new MemoryAllocation(type, getLocation(), false);
-                AnalysisState<A> allocSt = entryState.smallStepSemantics(alloc, this);
+                Analysis<A, D> analysis = interprocedural.getAnalysis();
+                AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
                 ExpressionSet allocExps = allocSt.getComputedExpressions();
 
                 AnalysisState<A> initSt = entryState.bottom();
@@ -202,14 +206,14 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 					Variable v = new Variable(JavaIntType.INSTANCE, "v", getLocation());
 					BinaryExpression constraint = new BinaryExpression(Untyped.INSTANCE, zero, v, ComparisonLe.INSTANCE, location);
 					
-					initSt = initSt.lub(allocSt.assign(len, new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
+					initSt = initSt.lub(analysis.assign(allocSt, len, new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
                 }
 
                 AnalysisState<A> refSt = entryState.bottom();
                 for (SymbolicExpression loc : allocSt.getComputedExpressions()) {
                     ReferenceType t = new ReferenceType(loc.getStaticType());
                     HeapReference ref = new HeapReference(t, loc, getLocation());
-                    AnalysisState<A> refSem = initSt.smallStepSemantics(ref, this);
+                    AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
                     refSt = refSt.lub(refSem);
                 }
 
@@ -217,9 +221,10 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
             }
 
             @Override
-            public <A extends AbstractState<A>> AnalysisState<A> backwardSemantics(
+            public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> backwardSemantics(
                     AnalysisState<A> exitState,
-                    InterproceduralAnalysis<A> interprocedural,
+                    InterproceduralAnalysis<A, D> interprocedural,
                     StatementStore<A> expressions)
                     throws SemanticException {
                 // TODO implement this when backward analysis will be out of

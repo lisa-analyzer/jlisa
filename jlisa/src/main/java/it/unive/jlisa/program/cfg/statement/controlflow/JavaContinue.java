@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.statement.controlflow;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -45,8 +46,9 @@ public class JavaContinue extends Expression {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
-			InterproceduralAnalysis<A> interprocedural, StatementStore<A> expressions) throws SemanticException {
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
+			InterproceduralAnalysis<A, D> interprocedural, StatementStore<A> expressions) throws SemanticException {
 		return entryState;
 	}
 

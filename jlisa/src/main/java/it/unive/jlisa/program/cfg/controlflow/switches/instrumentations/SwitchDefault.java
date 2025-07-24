@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.controlflow.switches.instrumentations;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -8,9 +9,9 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.edge.Edge;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
-import it.unive.lisa.program.cfg.statement.Expression;
 /**
  * Instrumentation for switch statements: represent the default case check
  * 
@@ -40,8 +41,9 @@ public class SwitchDefault extends Expression {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
-			InterproceduralAnalysis<A> interprocedural, StatementStore<A> expressions) throws SemanticException {
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
+			InterproceduralAnalysis<A, D> interprocedural, StatementStore<A> expressions) throws SemanticException {
 		return entryState;
 	}
 

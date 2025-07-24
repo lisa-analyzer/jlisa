@@ -1,14 +1,22 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.NativeCFG;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -20,9 +28,6 @@ import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * The native construct representing the array length operation. This construct
@@ -123,14 +128,15 @@ public class ArrayLength extends NativeCFG {
 		}
 
 		@Override
-		public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(
-				InterproceduralAnalysis<A> interprocedural,
+		public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+				InterproceduralAnalysis<A, D> interprocedural,
 				AnalysisState<A> state,
 				SymbolicExpression expr,
 				StatementStore<A> expressions)
 				throws SemanticException {
 			Set<Type> arraytypes = new HashSet<>();
-			Set<Type> types = state.getState().getRuntimeTypesOf(expr, this, state.getState());
+			Set<Type> types = interprocedural.getAnalysis().getRuntimeTypesOf(state, expr, this);
 			for (Type t : types)
 				if (t.isPointerType() && t.asPointerType().getInnerType().isArrayType())
 					arraytypes.add(t.asPointerType().getInnerType());
@@ -146,7 +152,7 @@ public class ArrayLength extends NativeCFG {
 					new Variable(Untyped.INSTANCE, "len", getLocation()),
 					getLocation());
 
-			return state.smallStepSemantics(len, this);
+			return interprocedural.getAnalysis().smallStepSemantics(state, len, this);
 		}
 	}
 }

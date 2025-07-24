@@ -6,7 +6,9 @@ import java.util.Set;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaShortType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -35,8 +37,9 @@ public class JavaAssignment extends Assignment {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression left,
 			SymbolicExpression right,
@@ -45,7 +48,8 @@ public class JavaAssignment extends Assignment {
 		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state.bottom();
 		Type targetType = left.getStaticType();
-		Set<Type> rightTypes = state.getState().getRuntimeTypesOf(right, this, state.getState());
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+        Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
 
 		// int constants, if they fit the target type, can be assigned
 		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType || targetType instanceof JavaCharType)

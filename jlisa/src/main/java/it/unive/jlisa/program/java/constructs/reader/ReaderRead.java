@@ -1,7 +1,8 @@
 package it.unive.jlisa.program.java.constructs.reader;
 
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -40,8 +41,9 @@ public class ReaderRead extends NaryExpression implements PluggableStatement {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, ExpressionSet[] params, StatementStore<A> expressions) throws SemanticException {
-		return state.smallStepSemantics(new PushAny(JavaIntType.INSTANCE, getLocation()), originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()), originating);
 	}
 }

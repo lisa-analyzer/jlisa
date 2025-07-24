@@ -2,7 +2,9 @@ package it.unive.jlisa.program.cfg.expression;
 
 import java.util.Collections;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -30,16 +32,19 @@ public class JavaCastExpression extends UnaryExpression {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
 		Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(type)), type, getLocation());
 
-		AnalysisState<A> exprState = state.smallStepSemantics(expr, this);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		
+		AnalysisState<A> exprState = analysis.smallStepSemantics(state, expr, this);
 		AnalysisState<A> result = state.bottom();
 		
 		for (SymbolicExpression exp : exprState.getComputedExpressions()) {
 			BinaryExpression castExpression =  new BinaryExpression(type, exp, typeConv, TypeCast.INSTANCE, getLocation());
-			result = result.lub(exprState.smallStepSemantics(castExpression, this));
+			result = result.lub(analysis.smallStepSemantics(exprState, castExpression, this));
 		}
 		
 		return result;

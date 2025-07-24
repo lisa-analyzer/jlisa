@@ -1,9 +1,14 @@
 package it.unive.jlisa.program.cfg.statement;
 
+import java.util.Collections;
+import java.util.Set;
+
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaShortType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -23,9 +28,6 @@ import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
-
-import java.util.Collections;
-import java.util.Set;
 
 public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpression {
 
@@ -63,15 +65,17 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression left,
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 					throws SemanticException {
-		Set<Type> leftTypes = state.getState().getRuntimeTypesOf(left, this, state.getState());
-		Set<Type> rightTypes = state.getState().getRuntimeTypesOf(right, this, state.getState());
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+        Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, this);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
 		SymbolicExpression actualLeft = left;
 		SymbolicExpression actualRight = right;
 		AnalysisState<A> result = state.bottom();
@@ -100,7 +104,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					continue;
 				}
 
-				result = result.lub(state.smallStepSemantics(
+				result = result.lub(analysis.smallStepSemantics(
+						state,
 						new BinaryExpression(
 								type, 
 								actualLeft, 

@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -42,24 +44,24 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdTernarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression middle, SymbolicExpression right,
 			StatementStore<A> expressions) throws SemanticException {
-		
-		AnalysisState<A> result = state.smallStepSemantics(left, this);
-		
-		Satisfiability sat = result.satisfies(left, this);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		AnalysisState<A> result = analysis.smallStepSemantics(state, left, this);
+		Satisfiability sat = analysis.satisfies(result, left, this);
 		
 		switch(sat) {
 			case SATISFIED:
-				return result.smallStepSemantics(middle, this);
+				return analysis.smallStepSemantics(result, middle, this);
 			case NOT_SATISFIED:
-				return result.smallStepSemantics(right, this);
+				return analysis.smallStepSemantics(result, right, this);
 			case BOTTOM:
 				return result.bottom();
 			case UNKNOWN:
 			default:
-				return result.smallStepSemantics(middle, this).lub(result.smallStepSemantics(right, this));
+				return analysis.smallStepSemantics(result, middle, this).lub(analysis.smallStepSemantics(result, right, this));
 		}
 		
 	}

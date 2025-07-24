@@ -2,7 +2,9 @@ package it.unive.jlisa.program.cfg.statement.asserts;
 
 import java.util.Set;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -48,12 +50,15 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-		if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isBooleanType))
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+        if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isBooleanType))
 			return state.bottom();
 
-		return state.smallStepSemantics(
+		return analysis.smallStepSemantics(
+				state,
 				new it.unive.lisa.symbolic.value.UnaryExpression(VoidType.INSTANCE, expr, new UnaryOperator() {
 					@Override
 					public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {

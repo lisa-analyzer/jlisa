@@ -1,16 +1,23 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.lisa.program.*;
-import org.eclipse.jdt.core.dom.*;
-
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.lisa.program.AbstractClassUnit;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.ProgramValidationException;
+import it.unive.lisa.program.SourceCodeLocation;
 
 public class CompilationUnitASTVisitor extends JavaASTVisitor {
     Boolean visitUnit;
@@ -31,7 +38,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
     }
 
     private void addUnits(CompilationUnit unit) {
-        List types = unit.types();
+        List<?> types = unit.types();
         for (Object type : types) {
             if (type instanceof TypeDeclaration) {
                 TypeDeclaration typeDecl = (TypeDeclaration) type;
@@ -53,7 +60,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
     }
 
     private void visitUnits(CompilationUnit unit) {
-        List types = unit.types();
+        List<?> types = unit.types();
         for (Object type : types) {
             if (type instanceof TypeDeclaration) {
                 TypeDeclaration typeDecl = (TypeDeclaration) type;

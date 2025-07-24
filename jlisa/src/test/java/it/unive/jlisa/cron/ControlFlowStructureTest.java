@@ -17,7 +17,7 @@ public class ControlFlowStructureTest extends JLiSAAnalysisExecutor {
 		configuration.serializeInputs = true;
 		configuration.serializeResults = false;
 		configuration.jsonOutput = true;
-		configuration.abstractState = null;
+		configuration.analysis = null;
 		configuration.analysisGraphs = GraphType.NONE;
 		
 		return configuration;

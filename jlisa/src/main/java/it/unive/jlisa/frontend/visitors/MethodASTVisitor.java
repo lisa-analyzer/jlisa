@@ -1,28 +1,31 @@
 package it.unive.jlisa.frontend.visitors;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
+
 import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
-import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.symbolic.heap.HeapReference;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import org.eclipse.jdt.core.dom.*;
-
-import java.util.*;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -47,13 +50,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
         for (Parameter p : codeMemberDescriptor.getFormals()) {
             parserContext.addVariableType(cfg, p.getName(), p.getStaticType());
         }
-        Statement initFieldsStatement = null;
         BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
         node.getBody().accept(blockStatementASTVisitor);
         cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock());
-        if (initFieldsStatement != null) {
-            cfg.addEdge(new SequentialEdge(initFieldsStatement, blockStatementASTVisitor.getFirst()));
-        }
         if (blockStatementASTVisitor.getBlock().getNodes().isEmpty()) {
             return false;
         }
