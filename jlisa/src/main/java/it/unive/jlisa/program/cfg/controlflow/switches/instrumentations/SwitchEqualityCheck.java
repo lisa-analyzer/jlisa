@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.controlflow.switches.instrumentations;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -33,12 +34,14 @@ public class SwitchEqualityCheck extends it.unive.lisa.program.cfg.statement.Bin
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdBinarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression right, StatementStore<A> expressions)
 			throws SemanticException {
 		//TODO: handle case with equals
 		
-		return state.smallStepSemantics(
+		return interprocedural.getAnalysis().smallStepSemantics(
+				state,
 				new BinaryExpression(
 						getStaticType(),
 						left,

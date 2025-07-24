@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.expression.instrumentations;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -9,7 +10,6 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
-
 import it.unive.lisa.symbolic.SymbolicExpression;
 
 /**
@@ -37,9 +37,10 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
 		//TODO: to implement semantics
-		return state.smallStepSemantics(expr, this);
+		return interprocedural.getAnalysis().smallStepSemantics(state, expr, this);
 	}
 }

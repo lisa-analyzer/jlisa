@@ -1,7 +1,8 @@
 package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -43,11 +44,12 @@ public class IntegerConstructor extends BinaryExpression implements PluggableSta
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdBinarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression right, StatementStore<A> expressions)
 			throws SemanticException {
 		 GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
          AccessChild access = new AccessChild(JavaIntType.INSTANCE, left, var, getLocation());
-         return state.assign(access, right, originating);
+         return interprocedural.getAnalysis().assign(state, access, right, originating);
 	}
 }

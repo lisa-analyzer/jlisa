@@ -1,17 +1,33 @@
 package it.unive.jlisa.frontend.visitors;
 
+import org.eclipse.jdt.core.dom.ArrayType;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IntersectionType;
+import org.eclipse.jdt.core.dom.NameQualifiedType;
+import org.eclipse.jdt.core.dom.PrimitiveType;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.QualifiedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.UnionType;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
-import it.unive.lisa.program.type.*;
+import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
-import org.eclipse.jdt.core.dom.*;
 
 public class TypeASTVisitor extends JavaASTVisitor{
     private Type type;

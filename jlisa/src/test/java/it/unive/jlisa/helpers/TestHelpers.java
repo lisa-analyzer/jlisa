@@ -2,13 +2,10 @@ package it.unive.jlisa.helpers;
 
 import java.util.ArrayList;
 
-import it.unive.lisa.analysis.SimpleAbstractState;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
-import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
-import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
-import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
@@ -41,10 +38,10 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
-		TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
-		ValueEnvironment<Interval> domain = new ValueEnvironment<>(new Interval());
+		InferredTypes type = new InferredTypes();
+		Interval domain = new Interval();
 
-		conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
+		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 		
 		// for interprocedural analysis
 		conf.callGraph = new RTACallGraph();
