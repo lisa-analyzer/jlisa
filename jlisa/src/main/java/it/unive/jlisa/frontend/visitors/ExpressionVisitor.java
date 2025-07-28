@@ -49,6 +49,7 @@ import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.PostfixAddition;
 import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
@@ -111,12 +112,37 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 
+		
 		node.getType().accept(typeVisitor);
-		// TODO: currently we handle single-dim arrays
-		((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 		Type type = typeVisitor.getType();
-		Expression length = lengthVisitor.getExpression();
-		expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
+
+		// TODO: currently we handle single-dim arrays
+		if(node.dimensions().size() != 0) {
+			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
+			Expression length = lengthVisitor.getExpression();
+			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
+		} else {
+			ArrayInitializer initializer = node.getInitializer();
+								
+			//initializer.expressions();
+			List<Expression> parameters = new ArrayList<>();
+
+			for (Object args : initializer.expressions()) {
+				ASTNode e  = (ASTNode) args;
+				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+				e.accept(argumentsVisitor);
+				Expression expr = argumentsVisitor.getExpression();
+				if (expr != null) {
+					// This parsing error should be logged in ExpressionVisitor.
+					parameters.add(expr);
+				}
+
+			}
+				
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node) , parameters.toArray(new Expression[0]), new ReferenceType(type));
+					
+		}
+		
 		return false;		
 	}
 

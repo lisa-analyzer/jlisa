@@ -15,5 +15,11 @@ public class ArrayCreationTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.createConfiguration("array", "", "Main.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void testArrayWithInitializer()  throws IOException {
+		CronConfiguration conf = TestHelpers.createConfiguration("array-with-initializer", "", "Main.java");
+		perform(conf);
+	}
 
 }

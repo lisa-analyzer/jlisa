@@ -3,14 +3,14 @@
   "files" : [ "report.json", "void_Main.main(String[]_args).json" ],
   "info" : {
     "cfgs" : "2",
-    "duration" : "317ms",
-    "end" : "2025-07-28T17:01:12.177+02:00",
-    "expressions" : "4",
+    "duration" : "9ms",
+    "end" : "2025-07-28T17:01:12.360+02:00",
+    "expressions" : "6",
     "files" : "1",
     "globals" : "2",
     "members" : "28",
     "programs" : "1",
-    "start" : "2025-07-28T17:01:11.860+02:00",
+    "start" : "2025-07-28T17:01:12.351+02:00",
     "statements" : "4",
     "units" : "15",
     "version" : "0.1",
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/array"
+    "workdir" : "java-outputs/array-with-initializer"
   }
 }
