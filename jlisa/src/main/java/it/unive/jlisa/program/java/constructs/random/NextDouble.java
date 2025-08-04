@@ -2,7 +2,8 @@ package it.unive.jlisa.program.java.constructs.random;
 
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -44,7 +45,8 @@ public  class NextDouble extends UnaryExpression implements PluggableStatement {
 
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, getLocation());
 		Constant one = new Constant(JavaIntType.INSTANCE, 1, getLocation());
 		Variable v = new Variable(JavaIntType.INSTANCE, "v", getLocation());
@@ -53,7 +55,7 @@ public  class NextDouble extends UnaryExpression implements PluggableStatement {
 		// 1 >= v
 		BinaryExpression const2 = new BinaryExpression(Untyped.INSTANCE, one, v, ComparisonGe.INSTANCE, getLocation());
 
-		return state.smallStepSemantics(new PushFromConstraints(JavaDoubleType.INSTANCE, getLocation(), const1, const2), originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushFromConstraints(JavaDoubleType.INSTANCE, getLocation(), const1, const2), originating);
 	}
 
 	@Override

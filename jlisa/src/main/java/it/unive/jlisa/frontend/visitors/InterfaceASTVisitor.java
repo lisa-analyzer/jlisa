@@ -1,14 +1,11 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 
 public class InterfaceASTVisitor extends JavaASTVisitor {
 
@@ -18,7 +15,7 @@ public class InterfaceASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(TypeDeclaration node) {
-        InterfaceUnit iUnit = (InterfaceUnit) getProgram().getUnit(node.getName().toString());
+        // InterfaceUnit iUnit = (InterfaceUnit) getProgram().getUnit(node.getName().toString());
         //TODO manage superinterfaces
         if (node.getSuperclassType() != null) {
             parserContext.addException(

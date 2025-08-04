@@ -8,19 +8,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import it.unive.jlisa.analysis.ConstantPropagation;
+import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalyzedCFG;
 import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.SimpleAbstractState;
-import it.unive.lisa.analysis.heap.pointbased.PointBasedHeap;
-import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
+import it.unive.lisa.analysis.SemanticOracle;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
+import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
-import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.checks.semantic.CheckToolWithAnalysisResults;
 import it.unive.lisa.checks.semantic.SemanticCheck;
+import it.unive.lisa.lattices.SimpleAbstractState;
+import it.unive.lisa.lattices.heap.allocations.AllocationSites;
+import it.unive.lisa.lattices.types.TypeSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -35,16 +38,35 @@ import it.unive.lisa.type.Type;
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class AssertChecker implements
-		SemanticCheck<SimpleAbstractState<PointBasedHeap, ValueEnvironment<ConstantPropagation>, TypeEnvironment<InferredTypes>>> {
+public class AssertChecker 
+		implements
+		SemanticCheck<
+			SimpleAbstractState<
+				HeapEnvironment<AllocationSites>, 
+				ValueEnvironment<ConstantValue>, 
+				TypeEnvironment<TypeSet>>,
+			SimpleAbstractDomain<
+				HeapEnvironment<AllocationSites>, 
+				ValueEnvironment<ConstantValue>, 
+				TypeEnvironment<TypeSet>>
+		> {
 	
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
 	
 	@Override
 	public boolean visit(
-			CheckToolWithAnalysisResults<SimpleAbstractState<PointBasedHeap, ValueEnvironment<ConstantPropagation>, TypeEnvironment<InferredTypes>>> tool,
-			CFG graph, Statement node) {
-
+			CheckToolWithAnalysisResults<
+				SimpleAbstractState<
+					HeapEnvironment<AllocationSites>, 
+					ValueEnvironment<ConstantValue>, 
+					TypeEnvironment<TypeSet>>,
+				SimpleAbstractDomain<
+					HeapEnvironment<AllocationSites>, 
+					ValueEnvironment<ConstantValue>, 
+					TypeEnvironment<TypeSet>>
+			> tool,
+			CFG graph, 
+			Statement node) {
 		if (node instanceof AssertStatement)
 			try {
 				checkAssert(tool, graph, (AssertStatement) node);
@@ -56,12 +78,26 @@ public class AssertChecker implements
 	}
 
 	private void checkAssert(
-			CheckToolWithAnalysisResults<SimpleAbstractState<PointBasedHeap, ValueEnvironment<ConstantPropagation>, TypeEnvironment<InferredTypes>>> tool,
-			CFG graph, AssertStatement node) throws SemanticException {
-		for (AnalyzedCFG<SimpleAbstractState<PointBasedHeap, ValueEnvironment<ConstantPropagation>, TypeEnvironment<InferredTypes>>> result : tool
-				.getResultOf(graph)) {
-
-			AnalysisState<SimpleAbstractState<PointBasedHeap, ValueEnvironment<ConstantPropagation>, TypeEnvironment<InferredTypes>>> state = null;
+			CheckToolWithAnalysisResults<
+				SimpleAbstractState<
+					HeapEnvironment<AllocationSites>, 
+					ValueEnvironment<ConstantValue>, 
+					TypeEnvironment<TypeSet>>,
+				SimpleAbstractDomain<
+					HeapEnvironment<AllocationSites>, 
+					ValueEnvironment<ConstantValue>, 
+					TypeEnvironment<TypeSet>>
+			> tool,
+			CFG graph, 
+			AssertStatement node) 
+			throws SemanticException {
+		for (var result : tool.getResultOf(graph)) {
+			AnalysisState<
+				SimpleAbstractState<
+					HeapEnvironment<AllocationSites>, 
+					ValueEnvironment<ConstantValue>, 
+					TypeEnvironment<TypeSet>>
+			> state = null;
 			if (node instanceof SimpleAssert)
 				state = result.getAnalysisStateAfter(((SimpleAssert) node).getSubExpression());
 			else if (node instanceof AssertionStatement) {
@@ -72,22 +108,26 @@ public class AssertChecker implements
 			Iterator<SymbolicExpression> comExprIterator = state.getComputedExpressions().iterator();
 			if (comExprIterator.hasNext()) {
 				SymbolicExpression boolExpr = comExprIterator.next();
-				reachableIds
-						.addAll(state.getState().reachableFrom(boolExpr, (Statement) node, state.getState()).elements);
+				reachableIds.addAll(tool.getAnalysis().reachableFrom(
+						state,		
+						boolExpr, 
+						(Statement) node)
+					.elements);
 
 				for (SymbolicExpression s : reachableIds) {
-					Set<Type> types = state.getState().getRuntimeTypesOf(s, (Statement) node, state.getState());
+					Set<Type> types = tool.getAnalysis().getRuntimeTypesOf(state, s, (Statement) node);
 
 					if (types.stream().allMatch(t -> t.isInMemoryType() || t.isPointerType()))
 						continue;
 
-					ValueEnvironment<ConstantPropagation> valueState = state.getState().getValueState();
+					ValueEnvironment<ConstantValue> valueState = state.getState().valueState;
+					ConstantPropagation cp = (ConstantPropagation) tool.getAnalysis().domain.valueDomain;
+					SemanticOracle oracle = tool.getAnalysis().domain.makeOracle(state.getState());
+					ConstantValue abstractValue = cp.eval(valueState, (ValueExpression) s, (ProgramPoint) node, oracle);
 
-					ConstantPropagation abstractValue = valueState.eval((ValueExpression) s, (ProgramPoint) node,
-							state.getState());
 					if (!abstractValue.isBottom()) {
 						if (!abstractValue.isTop()) {
-							Object cnst = abstractValue.getConstant();
+							Object cnst = abstractValue.getValue();
 							if (cnst != null && cnst instanceof Boolean) {
 								Boolean hold = (Boolean) cnst;
 								if (hold.booleanValue()) {

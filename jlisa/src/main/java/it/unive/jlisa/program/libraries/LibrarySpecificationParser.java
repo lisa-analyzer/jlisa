@@ -26,10 +26,10 @@ import it.unive.jlisa.program.libraries.loader.Method;
 import it.unive.jlisa.program.libraries.loader.NoneValue;
 import it.unive.jlisa.program.libraries.loader.NumberValue;
 import it.unive.jlisa.program.libraries.loader.Parameter;
+import it.unive.jlisa.program.libraries.loader.Runtime;
 import it.unive.jlisa.program.libraries.loader.StringValue;
 import it.unive.jlisa.program.libraries.loader.Type;
 import it.unive.jlisa.program.libraries.loader.Value;
-import it.unive.jlisa.program.libraries.loader.Runtime;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 

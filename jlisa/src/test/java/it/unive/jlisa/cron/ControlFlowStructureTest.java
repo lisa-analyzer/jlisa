@@ -17,7 +17,7 @@ public class ControlFlowStructureTest extends JLiSAAnalysisExecutor {
 		configuration.serializeInputs = true;
 		configuration.serializeResults = false;
 		configuration.jsonOutput = true;
-		configuration.abstractState = null;
+		configuration.analysis = null;
 		configuration.analysisGraphs = GraphType.NONE;
 		
 		return configuration;
@@ -51,6 +51,18 @@ public class ControlFlowStructureTest extends JLiSAAnalysisExecutor {
 	@Test
 	public void testIf()  throws IOException {
 		CronConfiguration conf = createConfiguration("control-flow-structures", "if", "if-1.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void testBreakContinue()  throws IOException {
+		CronConfiguration conf = createConfiguration("control-flow-structures", "break-continue", "break-continue.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void testSwitch()  throws IOException {
+		CronConfiguration conf = createConfiguration("control-flow-structures", "switch", "switch.java");
 		perform(conf);
 	}
 }

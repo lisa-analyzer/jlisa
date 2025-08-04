@@ -1,16 +1,15 @@
 package it.unive.jlisa.frontend.visitors;
 
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.lisa.program.Program;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class VariableDeclarationASTVisitor extends JavaASTVisitor{
     Parameter parameter;

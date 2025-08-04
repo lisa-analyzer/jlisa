@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -31,16 +33,19 @@ public class BitwiseNot extends UnaryExpression {
     }
 
     @Override
-    public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(
-            InterproceduralAnalysis<A> interprocedural,
+    public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+            InterproceduralAnalysis<A, D> interprocedural,
             AnalysisState<A> state,
             SymbolicExpression expr,
             StatementStore<A> expressions)
             throws SemanticException {
-        if (state.getState().getRuntimeTypesOf(expr, this, state.getState()).stream().noneMatch(Type::isNumericType))
+        Analysis<A, D> analysis = interprocedural.getAnalysis();
+        if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
             return state.bottom();
         //TODO: check that the type is numeric and integral
-        return state.smallStepSemantics(
+        return analysis.smallStepSemantics(
+                state,
                 new it.unive.lisa.symbolic.value.UnaryExpression(
                         Untyped.INSTANCE,
                         expr,

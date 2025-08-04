@@ -1,29 +1,23 @@
 package it.unive.jlisa.frontend.visitors;
 
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.cfg.expression.PrefixAddition;
-import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.statement.Expression;
-import org.eclipse.jdt.core.dom.*;
-
-import static org.eclipse.jdt.core.dom.Assignment.Operator.ASSIGN;
-import static org.eclipse.jdt.core.dom.Assignment.Operator.PLUS_ASSIGN;
 
 public class StatementExpressionVisitor extends JavaASTVisitor {
-    private CFG cfg;
     private it.unive.lisa.program.cfg.statement.Expression expression;
 
     public StatementExpressionVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg) {
         super(parserContext, source, compilationUnit);
-        this.cfg = cfg;
     }
 
     @Override
     public boolean visit(ClassInstanceCreation node) {
-        String className = node.getName().toString();
         parserContext.addException(
                 new ParsingException("class-instance-creation", ParsingException.Type.UNSUPPORTED_STATEMENT,
                         "Class instance creation expressions are not supported.",

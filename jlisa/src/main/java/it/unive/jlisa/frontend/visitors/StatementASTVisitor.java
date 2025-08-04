@@ -2,7 +2,10 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -33,16 +36,22 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.program.cfg.controlflow.forloops.DoWhileLoop;
-import it.unive.jlisa.program.cfg.controlflow.forloops.ForEachLoop;
-import it.unive.jlisa.program.cfg.controlflow.forloops.ForLoop;
-import it.unive.jlisa.program.cfg.controlflow.forloops.WhileLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.DoWhileLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.ForEachLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.WhileLoop;
+import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
+import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
+import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
+import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
+import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
+import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -73,10 +82,26 @@ public class StatementASTVisitor extends JavaASTVisitor {
     private it.unive.lisa.program.cfg.statement.Statement first;
     private it.unive.lisa.program.cfg.statement.Statement last;
     private NodeList<CFG, it.unive.lisa.program.cfg.statement.Statement, Edge> block = new NodeList<>(new SequentialEdge());
+    
+    private Set<Statement> breakContinueStatements;
 
     public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg) {
         super(parserContext, source, compilationUnit);
         this.cfg = cfg;
+        this.breakContinueStatements = new HashSet<>();
+    }
+    
+    public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, Set<Statement> breakContinueStatements) {
+        super(parserContext, source, compilationUnit);
+        this.cfg = cfg;
+        this.breakContinueStatements = breakContinueStatements;
+    }
+    
+    public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, Set<Statement> breakContinueStatements, Expression switchItem) {
+        super(parserContext, source, compilationUnit);
+        this.cfg = cfg;
+        this.breakContinueStatements = breakContinueStatements;
+        this.switchItem = switchItem;
     }
 
     public Statement getFirst() {
@@ -127,18 +152,24 @@ public class StatementASTVisitor extends JavaASTVisitor {
         block = new NodeList<>(new SequentialEdge());
 
         for (Object o : node.statements()) {
-            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg);
+            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, breakContinueStatements);
             ((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
-            if (statementASTVisitor.getBlock().getNodes().isEmpty()) {
-                // A PARSING ERROR HAPPENS. IGNORE THAT.
-                return false;
+            
+            boolean isEmptyBlock = statementASTVisitor.getBlock().getNodes().isEmpty();
+            EmptyBody emptyBlock = null;
+            if (isEmptyBlock) {
+            	 new EmptyBody(cfg, getSourceCodeLocation(node));
+            	block.addNode(emptyBlock);
+            } else {
+            	block.mergeWith(statementASTVisitor.getBlock());
             }
-            block.mergeWith(statementASTVisitor.getBlock());
+            
             if (first == null) {
-                first = statementASTVisitor.getFirst();
+                first = isEmptyBlock ? emptyBlock : statementASTVisitor.getFirst();
             }
             if (last != null) {
-                block.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
+            	if(!(last instanceof JavaContinue || last instanceof JavaBreak))
+            		block.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
             }
             last = statementASTVisitor.getLast();
         }
@@ -147,11 +178,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(BreakStatement node) {
-        parserContext.addException(
-                new ParsingException("break-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Break statements are not supported.",
-                        getSourceCodeLocation(node))
-        );
+    	JavaBreak brk = new JavaBreak(cfg, getSourceCodeLocation(node));
+        block.addNode(brk);
+        
+        first = brk;
+        last = brk;
+        
+        breakContinueStatements.add(brk);
+    	
         return false;
     }
 
@@ -183,7 +217,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
                 }
             }
         }
-        first = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[parameters.size()]));
+        first = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
         last = first;
         block.addNode(first);
 
@@ -192,11 +226,15 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(ContinueStatement node) {
-        parserContext.addException(
-                new ParsingException("continue-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Continue statements are not supported.",
-                        getSourceCodeLocation(node))
-        );
+    	
+    	JavaContinue cnt = new JavaContinue(cfg, getSourceCodeLocation(node));
+        block.addNode(cnt);
+        
+        first = cnt;
+        last = cnt;
+        
+        breakContinueStatements.add(cnt);
+    	
         return false;
     }
 
@@ -205,14 +243,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
         NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
 
         
-        StatementASTVisitor doBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        StatementASTVisitor doBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
         if(node.getBody() == null)
         	return false; // parsing error
         
         node.getBody().accept(doBody);
         Statement noBody = new EmptyBody(this.cfg, getSourceCodeLocation(node));
         
-        boolean hasBody = doBody.first != null && doBody.last != null;
+        boolean hasBody = doBody.getFirst() != null && doBody.getLast() != null;
         if(hasBody) {
      	  block.mergeWith(doBody.getBlock());
      	  this.first = doBody.getFirst();
@@ -232,10 +270,12 @@ public class StatementASTVisitor extends JavaASTVisitor {
         }
 
         block.addNode(expression);
+        
+        if(!(doBody.getLast() instanceof JavaContinue || doBody.getLast() instanceof JavaBreak))
+        	block.addEdge(new SequentialEdge(hasBody ? doBody.getLast() : noBody, expression));
 
-        block.addEdge(new SequentialEdge(hasBody ? doBody.last : noBody, expression));
 
-        block.addEdge(new TrueEdge(expression, hasBody ? doBody.first : noBody));
+        block.addEdge(new TrueEdge(expression, hasBody ? doBody.getFirst() : noBody));
 
         Statement noop = new NoOp(this.cfg, expression.getLocation());
         block.addNode(noop);
@@ -243,6 +283,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
         this.last = noop;
         this.block = block;
+        
+        bindBreakAndContinueStatements(expression, noop);
         
         DoWhileLoop doWhileLoop = new DoWhileLoop(block, expression, noop, doBody.getBlock().getNodes());
         this.cfg.addControlFlowStructure(doWhileLoop);
@@ -261,7 +303,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
        NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
         
-       
        ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
        node.getParameter().accept(itemVisitor);
        Expression item = itemVisitor.getExpression();
@@ -278,22 +319,23 @@ public class StatementASTVisitor extends JavaASTVisitor {
        block.addNode(assignment);
        block.addEdge(new TrueEdge(condition, assignment));
        
-       StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+       StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
        if(node.getBody() == null)
        	return false; // parsing error
        
        node.getBody().accept(loopBody);
        Statement noBody = new EmptyBody(this.cfg, condition.getLocation());
        
-       boolean hasBody = loopBody.first != null && loopBody.last != null;
+       boolean hasBody = loopBody.getFirst() != null && loopBody.getLast() != null;
        if(hasBody)
     	   block.mergeWith(loopBody.getBlock());
        else
     	   block.addNode(noBody);
        
-       block.addEdge( new SequentialEdge(assignment, hasBody ? loopBody.first : noBody));
+       block.addEdge( new SequentialEdge(assignment, hasBody ? loopBody.getFirst() : noBody));
        
-       block.addEdge(new SequentialEdge(hasBody ? loopBody.last : noBody, condition));
+       	if(!(loopBody.getLast() instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak))
+       		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, condition));
        
        Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
        block.addNode(noop);
@@ -302,19 +344,51 @@ public class StatementASTVisitor extends JavaASTVisitor {
   
        this.last = noop;
        this.block = block;
+       
+       bindBreakAndContinueStatements(condition, noop);
         
        ForEachLoop forEachLoop = new ForEachLoop(block, item, condition, collection, noop, loopBody.getBlock().getNodes());
        this.cfg.addControlFlowStructure(forEachLoop);
-
+       
        return false;
     }
 
-    @Override
+    private void bindBreakAndContinueStatements(Statement condition, Statement firstFollower) {
+        
+        if(!breakContinueStatements.isEmpty()) {
+     	   for(Statement stmt : breakContinueStatements) {
+     		   if(stmt instanceof JavaContinue) {
+     			   block.addEdge(new SequentialEdge(stmt, condition));
+     		   } else if(stmt instanceof JavaBreak) {
+     			   block.addEdge(new SequentialEdge(stmt, firstFollower));
+     		   }
+     	   } 
+     	   breakContinueStatements = new HashSet<>(); // make it empty
+        }
+		
+	}
+    
+    private void bindOnlyBreakStatements(Statement firstFollower) {
+    	Set<Statement> tmp = new HashSet<>(); // make it empty
+        if(!breakContinueStatements.isEmpty()) {
+     	   for(Statement stmt : breakContinueStatements) {
+     		   if(stmt instanceof JavaContinue) {
+     			   tmp.add(stmt); // keep continue statements
+     		   } else if(stmt instanceof JavaBreak) {
+     			   block.addEdge(new SequentialEdge(stmt, firstFollower));
+     		   }
+     	   } 
+     	  breakContinueStatements = new HashSet<>(); // make it empty
+     	  breakContinueStatements.addAll(tmp);
+        }
+		
+	}
+
+	@Override
     public boolean visit(ExpressionStatement node) {
         block = new NodeList<>(new SequentialEdge());
         ExpressionVisitor expressionVisitor = new ExpressionVisitor(parserContext, this.source, this.compilationUnit, this.cfg);
         node.getExpression().accept(expressionVisitor);
-
         first = expressionVisitor.getExpression();
         if (first == null) {
             // PARSING ERROR. IGNORE
@@ -327,6 +401,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean visit(ForStatement node) {
 
         NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
@@ -359,7 +434,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         	block.addEdge(new SequentialEdge(hasInitalizers? initializers.getRight() : noInit, alwaysTrue));
         }
 
-        StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
         if(node.getBody() == null)
         	return false; // parsing error
         
@@ -368,16 +443,16 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
         Statement noBody = new EmptyBody(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
         
-        boolean hasBody = loopBody.first != null && loopBody.last != null;
+        boolean hasBody = loopBody.getFirst() != null && loopBody.getLast() != null;
         if(hasBody)
         	block.mergeWith(loopBody.getBlock());
         else
         	block.addNode(noBody);
         
         if(hasCondition)
-        	block.addEdge( new TrueEdge(condition, hasBody ? loopBody.first : noBody));
+        	block.addEdge( new TrueEdge(condition, hasBody ? loopBody.getFirst() : noBody));
         else
-        	block.addEdge( new TrueEdge(alwaysTrue, hasBody ? loopBody.first : noBody));
+        	block.addEdge( new TrueEdge(alwaysTrue, hasBody ? loopBody.getFirst() : noBody));
         
         Triple<Statement, NodeList<CFG, Statement, Edge>, Statement> updaters = visitSequentialExpressions(node.updaters());
         block.mergeWith(updaters.getMiddle());
@@ -386,13 +461,18 @@ public class StatementASTVisitor extends JavaASTVisitor {
         
         Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col +2 to avoid conflict with the other noop
         block.addNode(noop);
-                
-        block.addEdge(new SequentialEdge(hasBody ? loopBody.last : noBody, hasUpdaters ? updaters.getLeft() : hasCondition ? condition : alwaysTrue));
         
-        if(hasCondition)
-        	block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.last : noBody, condition));
-        else
-        	block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.last : noBody, alwaysTrue));
+        if(!(loopBody.getLast() instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak)) {
+           	block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, hasUpdaters ? updaters.getLeft() : hasCondition ? condition : alwaysTrue));
+           	    
+           	if(hasCondition)
+    	        block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.getLast() : noBody, condition));
+    	    else
+    	        block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getRight() : hasBody ? loopBody.getLast() : noBody, alwaysTrue));
+
+        }
+           	
+   
         
         if(hasCondition)
         	block.addEdge(new FalseEdge(condition, noop));  
@@ -401,6 +481,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
        
         this.last = noop;
         this.block = block;
+        
+        bindBreakAndContinueStatements(hasCondition ? condition : alwaysTrue, noop);
         
         ForLoop forloop = new ForLoop(block, hasInitalizers ? initializers.getMiddle().getNodes() : null, hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getMiddle().getNodes() : null, noop, loopBody.getBlock().getNodes());
         
@@ -446,7 +528,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         first = condition;
         block.addNode(condition);
 
-        StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
         
         if (node.getThenStatement() == null) {
         	return false; // parsing error
@@ -470,10 +552,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
         Statement noop = new NoOp(cfg, condition.getLocation());
         block.addNode(noop);
         
-        block.addEdge(new SequentialEdge( !isEmptyTrueBlock ? trueVisitor.getLast() : noTrueBody, noop));
+        if(!(trueVisitor.getLast() instanceof JavaContinue || trueVisitor.getLast() instanceof JavaBreak))
+        		block.addEdge(new SequentialEdge( !isEmptyTrueBlock ? trueVisitor.getLast() : noTrueBody, noop));
         
        
-        StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
         NodeList<CFG, Statement, Edge> falseBlock = null;
         
         if (node.getElseStatement() != null) {
@@ -488,7 +571,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
                 	block.addNode(noFalseBody);
 
                 block.addEdge(new FalseEdge(condition, !isEmptyFalseBlock ? falseVisitor.getFirst() : noFalseBody));
-                block.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
+                
+                if(!(falseVisitor.getLast() instanceof JavaContinue || falseVisitor.getLast() instanceof JavaBreak))
+                	block.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
+               
             }
         } else {
             block.addEdge(new FalseEdge(condition, noop));
@@ -575,25 +661,269 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(SwitchCase node) {
-        parserContext.addException(
-                new ParsingException("switch-case", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Switch cases are not supported.",
-                        getSourceCodeLocation(node))
-        );
+    	
+        ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        node.accept(exprVisitor);
+        Expression expr = exprVisitor.getExpression();
+        
+        Statement st = expr != null ? new SwitchEqualityCheck(cfg, getSourceCodeLocation(node), switchItem, expr) :  new SwitchDefault(cfg, getSourceCodeLocation(node));
+        
+    	block.addNode(st);
+    	
+    	first = st;
+    	last = st;
+    	
         return false;
     }
 
+    private Expression switchItem = null;
     @Override
     public boolean visit(SwitchStatement node) {
-        parserContext.addException(
-                new ParsingException("switch-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                        "Switch statements are not supported.",
-                        getSourceCodeLocation(node))
-        );
+    	
+    	block = new NodeList<>(new SequentialEdge());
+    	
+        ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        node.getExpression().accept(itemVisitor);
+        switchItem = itemVisitor.getExpression();
+        
+        if(node.statements() == null)
+        	return false; // parsing error
+        
+        Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
+        block.addNode(noop);
+        
+        List<it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase> cases = new ArrayList<>();
+        
+        DefaultSwitchCase defaultCase = null;
+        SwitchDefault switchDefault  = null;
+        
+        List<SwitchEqualityCheck> workList= new ArrayList<>();
+        
+        List<Statement> instrList= new ArrayList<>();
+        
+        int offsetCol = 2;
+        
+        for (Object o : node.statements()) {
+            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, breakContinueStatements, switchItem);
+            ((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
+            
+            boolean isEmptyBlock = statementASTVisitor.getBlock().getNodes().isEmpty();
+            EmptyBody emptyBlock = null;
+            if (isEmptyBlock) {
+            	emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+            	block.addNode(emptyBlock);
+            } else {
+            	block.mergeWith(statementASTVisitor.getBlock());
+            	instrList.addAll(statementASTVisitor.getBlock().getNodes());
+            }
+            
+            if(o instanceof SwitchCase) {
+            	if(statementASTVisitor.getFirst() instanceof SwitchEqualityCheck)
+            		workList.add((SwitchEqualityCheck) statementASTVisitor.getFirst());
+            	else if(statementASTVisitor.getFirst() instanceof SwitchDefault) {
+            		switchDefault = (SwitchDefault) statementASTVisitor.getFirst();
+            	}  		
+        	} else if(o instanceof BreakStatement) {
+        		for(SwitchEqualityCheck switchCondition : workList) {
+        			
+        			block.addEdge(new TrueEdge(switchCondition, getFirstInstructionAfterSwitchInstr(switchCondition, instrList)));
+        			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
+        			
+        		}
+        		
+        		if(switchDefault != null) {
+        			defaultCase = new DefaultSwitchCase(switchDefault, instrList);
+        			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
+            		if(follower != null) {
+            			block.addEdge(new SequentialEdge(switchDefault, follower));
+            		} else {
+            			emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
+            			offsetCol++;
+            			block.addNode(emptyBlock);
+            			block.addEdge(new SequentialEdge(switchDefault, emptyBlock));
+            		}
+        		}
+        		
+        		workList = new ArrayList<>();
+        		instrList = new ArrayList<>();
+        		
+        		bindOnlyBreakStatements(noop);
+        		
+        	} else if(o instanceof IfStatement) {
+        		if(breakContinueStatements.stream().anyMatch(s -> s instanceof JavaBreak)) {
+        			for(SwitchEqualityCheck switchCondition : workList) {
+        				block.addEdge(new TrueEdge(switchCondition, getFirstInstructionAfterSwitchInstr(switchCondition, instrList)));
+        				cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
+        			}
+        			workList = new ArrayList<>();
+        			instrList = new ArrayList<>();
+        		}
+        		
+        		bindOnlyBreakStatements(noop);
+        	}
+            
+            if (first == null) {
+                first = isEmptyBlock ? emptyBlock : statementASTVisitor.getFirst();
+            }
+            if (last != null) {
+            	if(!(last instanceof JavaContinue || last instanceof JavaBreak 
+            			|| last instanceof SwitchEqualityCheck || last instanceof SwitchDefault))
+            		block.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
+            }
+            last = statementASTVisitor.getLast();
+        } 
+       
+        EmptyBody emptyBlock = null;
+        
+		if(switchDefault != null && defaultCase == null) {
+			defaultCase = new DefaultSwitchCase(switchDefault, instrList);
+			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
+    		if(follower != null) {
+    			block.addEdge(new SequentialEdge(switchDefault, follower));
+    			block.addEdge(new SequentialEdge(instrList.getLast(), noop));
+    		} else {
+    			emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
+    			offsetCol++;
+    			block.addNode(emptyBlock);
+    			block.addEdge(new SequentialEdge(switchDefault, emptyBlock));
+    			block.addEdge(new SequentialEdge(emptyBlock, noop));
+    		}
+		}
+        
+		for(SwitchEqualityCheck switchCondition : workList) {
+			
+    		if(instrList.size() > 0) {
+    			block.addEdge(new TrueEdge(switchCondition,instrList.getFirst()));
+    		} else {
+    			emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
+    			offsetCol++;
+    			block.addNode(emptyBlock);
+        		block.addEdge(new TrueEdge(defaultCase.getEntry(),emptyBlock));
+    		}
+    		
+			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
+			if(instrList.size() > 0 )
+				offsetCol++;		
+		}
+		
+		for(int i = 0; i < cases.size()-1; i++)
+			block.addEdge(new FalseEdge(cases.get(i).getCondition(), cases.get(i+1).getCondition()));
+		
+        
+		if(defaultCase != null && !cases.isEmpty())
+			block.addEdge(new FalseEdge(cases.getLast().getCondition(), defaultCase.getEntry()));
+
+		
+		lazySwitchEdgeBindingCleanUp(cases, defaultCase != null ? defaultCase.getEntry() : null);
+		
+		if(node.statements().isEmpty() || (cases.isEmpty() && defaultCase == null)) {
+			emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
+			block.addNode(emptyBlock);
+			block.addEdge(new SequentialEdge(emptyBlock, noop));
+			first = emptyBlock;
+		}
+
+		this.last = noop;
+        
+        cfg.addControlFlowStructure(new Switch(block, !cases.isEmpty() ? cases.getFirst().getCondition() : defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, cases.toArray(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase[cases.size()]), defaultCase)); 
+        
         return false;
     }
 
-    @Override
+    private void lazySwitchEdgeBindingCleanUp(List<it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase> cases, SwitchDefault switchDefault) {
+		for(it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase c : cases) {
+			for(Edge e : block.getEdges()) {
+				if(e.getDestination().equals(c.getCondition()) 
+						&& !( e instanceof FalseEdge && (e.getSource() instanceof SwitchEqualityCheck || e.getSource() instanceof SwitchDefault))) {
+					block.removeEdge(e);
+					block.addEdge(e.newInstance(e.getSource(), getFirstInstructionAfterSwitchInstr(block, c.getCondition())));
+				} 
+			}
+		}
+		
+		if(switchDefault != null) {
+			for(Edge e : block.getEdges()) {
+				if(e.getDestination().equals(switchDefault) 
+						&& !( e instanceof FalseEdge && e.getSource() instanceof SwitchEqualityCheck)) {
+					block.removeEdge(e);
+					block.addEdge(e.newInstance(e.getSource(), getFirstInstructionAfterSwitchInstr(block, switchDefault)));
+				}
+			}
+		}
+	}
+    
+    private Statement getFirstInstructionAfterSwitchInstr(NodeList<CFG, Statement, Edge> block, Statement stmt) {
+    	
+    	return getFirstInstructionAfterSwitchInstrRecursive(block, stmt, new HashSet<>());
+    }
+
+	private Statement getFirstInstructionAfterSwitchInstrRecursive(NodeList<CFG, Statement, Edge> block, Statement stmt, Set<Statement> seen) {
+		
+		if(!seen.contains(stmt)) {
+			seen.add(stmt);
+			
+			
+			List<TrueEdge> trueSwitchCaseEdges = new ArrayList<>();
+			List<FalseEdge> falseSwitchCaseEdges = new ArrayList<>();
+			List<SequentialEdge> defaultEdges = new ArrayList<>();
+			
+			for(Edge e : block.getEdges()) {
+				if(e.getSource().equals(stmt)) {
+					if(! (e.getDestination() instanceof SwitchEqualityCheck || e.getDestination() instanceof SwitchDefault) ) {
+						return e.getDestination();
+					} else if(stmt instanceof SwitchEqualityCheck) {
+						if(e instanceof TrueEdge)
+							trueSwitchCaseEdges.add((TrueEdge) e);
+						else if(e instanceof FalseEdge)
+							falseSwitchCaseEdges.add((FalseEdge) e);
+					} else if(stmt instanceof SwitchDefault) {
+						defaultEdges.add((SequentialEdge) e);
+					}
+				}
+			}
+			
+			for(TrueEdge e : trueSwitchCaseEdges) {
+				Statement res = getFirstInstructionAfterSwitchInstrRecursive(block, e.getDestination(), seen);
+				if(res != null)
+					return res;
+			}
+
+			for(FalseEdge e : falseSwitchCaseEdges) {
+				Statement res = getFirstInstructionAfterSwitchInstrRecursive(block, e.getDestination(), seen);
+				if(res != null)
+					return res;
+			}
+			
+			for(SequentialEdge e : defaultEdges) {
+				Statement res = getFirstInstructionAfterSwitchInstrRecursive(block, e.getDestination(), seen);
+				if(res != null)
+					return res;
+			}
+		}
+		return null;	
+	}
+
+	private Statement getFirstInstructionAfterSwitchInstr(Statement stmt, List<Statement> instrList) {
+		Iterator<Statement> iter = instrList.iterator();
+		
+		boolean found = false;
+		while(iter.hasNext() && !found) {
+			if(iter.next().equals(stmt))
+				found = true;
+		}
+		
+		if(found) {
+			while(iter.hasNext()) {
+				Statement next = iter.next();
+				if(!(next instanceof SwitchDefault || next instanceof SwitchEqualityCheck))
+    				return next;
+    		}
+    	}
+		
+		return null;
+	}
+
+	@Override
     public boolean visit(SynchronizedStatement node) {
         parserContext.addException(
                 new ParsingException("synchronized-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -695,7 +1025,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         this.first = expression;
         block.addNode(expression);
 
-        StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+        StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.breakContinueStatements);
         node.getBody().accept(loopBody);
         
         if(node.getBody() == null)
@@ -703,7 +1033,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         
         Statement noBody = new EmptyBody(this.cfg, getSourceCodeLocation(node));
         
-        boolean hasBody = loopBody.first != null && loopBody.last != null;
+        boolean hasBody = loopBody.getFirst() != null && loopBody.getLast() != null;
         if(hasBody) {
      	  block.mergeWith(loopBody.getBlock());
         } else {
@@ -711,7 +1041,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
         }
 
         block.addEdge(new TrueEdge(expression, hasBody ? loopBody.getFirst() : noBody));
-        block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, expression));
+
+        if(!(loopBody.getLast()instanceof JavaContinue || loopBody.getLast() instanceof JavaBreak))
+        	block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, expression));
 
         Statement noop = new NoOp(this.cfg, expression.getLocation());
         block.addNode(noop);
@@ -719,6 +1051,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
         this.last = noop;
         this.block = block;
+        
+        bindBreakAndContinueStatements(expression, noop);
         
         WhileLoop whileLoop = new WhileLoop(block, expression, noop, loopBody.getBlock().getNodes());
         this.cfg.addControlFlowStructure(whileLoop);

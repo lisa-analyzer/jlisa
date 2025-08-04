@@ -1,23 +1,32 @@
 package it.unive.jlisa.program.java.constructs.object;
 
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.cfg.*;
-import it.unive.lisa.program.cfg.statement.*;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.NativeCFG;
+import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.PluggableStatement;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.type.VoidType;
 
 public class ObjectConstructor extends NativeCFG {
 
     public ObjectConstructor(
             CodeLocation location,
             ClassUnit stringUnit) {
-        super(new CodeMemberDescriptor(location, stringUnit, true, "Object", new ReferenceType(JavaClassType.lookup("Object", null)),
+        super(new CodeMemberDescriptor(location, stringUnit, true, "Object", VoidType.INSTANCE,
                         new Parameter(location, "this", new ReferenceType(JavaClassType.lookup("Object", null)))),
                 ObjectConstructor.JavaObjectConstructor.class);
     }
@@ -44,8 +53,9 @@ public class ObjectConstructor extends NativeCFG {
 
 
         @Override
-        public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-            return state.smallStepSemantics(expr, originating);
+        public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+            return state; // do nothing.
         }
 
         @Override

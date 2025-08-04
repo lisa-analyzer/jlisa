@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.reader.pushbackreader;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -39,10 +40,11 @@ public class PushbackReaderConstructorWithSize extends TernaryExpression impleme
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdTernarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression middle, SymbolicExpression right,
 			StatementStore<A> expressions) throws SemanticException {
-		return state.smallStepSemantics(new PushAny(getStaticType(), getLocation()), originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()), originating);
 	}
 }
 

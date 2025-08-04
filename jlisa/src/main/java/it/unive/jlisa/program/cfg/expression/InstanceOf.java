@@ -2,7 +2,8 @@ package it.unive.jlisa.program.cfg.expression;
 
 import java.util.Collections;
 
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -31,11 +32,12 @@ public class InstanceOf extends UnaryExpression {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
 		TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
 		BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr, new Constant(typeToken, 0, getLocation()), TypeCheck.INSTANCE, getLocation());
-		return state.smallStepSemantics(tc, this);
+		return interprocedural.getAnalysis().smallStepSemantics(state, tc, this);
 	}
 
 	@Override

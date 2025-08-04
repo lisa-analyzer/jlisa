@@ -1,29 +1,29 @@
 package it.unive.jlisa;
 
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
+
 import it.unive.jlisa.analysis.ConstantPropagation;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.lisa.LiSA;
-import it.unive.lisa.analysis.SimpleAbstractState;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
-import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
-import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
-import it.unive.lisa.analysis.numeric.IntegerConstantPropagation;
-import it.unive.lisa.analysis.numeric.Sign;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.program.Program;
-import org.apache.commons.cli.*;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.*;
-import org.apache.logging.log4j.core.config.*;
-import org.eclipse.jdt.core.dom.*;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 
 public class Main {
@@ -127,10 +127,10 @@ public class Main {
         conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
         conf.optimize = false;
 
-        FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap().bottom();
-        TypeEnvironment<InferredTypes> type = new TypeEnvironment<>(new InferredTypes());
-        ValueEnvironment<ConstantPropagation> domain = new ValueEnvironment<>(new ConstantPropagation());
-        conf.abstractState = new SimpleAbstractState<>(heap, domain, type);
+        conf.analysis = new SimpleAbstractDomain<>(
+            new FieldSensitivePointBasedHeap(), 
+            new ConstantPropagation(), 
+            new InferredTypes());
 
 
         LiSA lisa = new LiSA(conf);

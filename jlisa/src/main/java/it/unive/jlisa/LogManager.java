@@ -2,7 +2,6 @@ package it.unive.jlisa;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.osgi.service.log.LogLevel;
 
 
 public class LogManager {
@@ -12,6 +11,4 @@ public class LogManager {
         Configurator.setLevel(LISA_LOGGER, level);
         Configurator.setLevel(JLISA_LOGGER, level);
     }
-
-
 }
