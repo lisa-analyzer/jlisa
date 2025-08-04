@@ -2,7 +2,9 @@ package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -52,17 +54,19 @@ public class JavaNewArrayWithInitializer extends NaryExpression{
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, ExpressionSet[] params, StatementStore<A> expressions) throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ReferenceType refType = (ReferenceType) getStaticType();
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
-		AnalysisState<A> allocated = state.smallStepSemantics(created, this);	
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
 
-		AnalysisState<A> tmp = allocated.assign(array, ref, this);
+		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 
@@ -70,10 +74,10 @@ public class JavaNewArrayWithInitializer extends NaryExpression{
 
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 
-		Constant lenght = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
-		
-		tmp = tmp.assign(lenAccess, lenght, getEvaluationPredecessor());
-				
+		Constant length = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
+
+		tmp = analysis.assign(tmp, lenAccess, length, getEvaluationPredecessor());
+
 		int i = 0;
 		
 		for(ExpressionSet exprs : params){
@@ -85,7 +89,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression{
 					
 				AnalysisState<A> init = state.bottom();	
 					
-				init = init.lub(tmp.assign(access, expr, getEvaluationPredecessor()));
+				init = init.lub(analysis.assign(tmp, access, expr, getEvaluationPredecessor()));
 				
 				tmp = init;
 				
@@ -95,8 +99,8 @@ public class JavaNewArrayWithInitializer extends NaryExpression{
 		} 
 
 		getMetaVariables().add(array);
-		
-		return tmp.smallStepSemantics(array, this);
+
+		return analysis.smallStepSemantics(tmp, array, this);
 	}
 
 }

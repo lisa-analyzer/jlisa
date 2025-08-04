@@ -2,7 +2,9 @@ package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -30,17 +32,19 @@ public class JavaNewArray extends UnaryExpression {
 	}
 
 	@Override
-	public <A extends AbstractState<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A> interprocedural,
+	public <A extends AbstractLattice<A>,
+		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {	
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ReferenceType refType = (ReferenceType) getStaticType();
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
-		AnalysisState<A> allocated = state.smallStepSemantics(created, this);	
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);	
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
 
-		AnalysisState<A> tmp = allocated.assign(array, ref, this);
+		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 
@@ -48,8 +52,8 @@ public class JavaNewArray extends UnaryExpression {
 
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 
-		tmp = tmp.assign(lenAccess, expr, getEvaluationPredecessor());
-		
+		tmp = analysis.assign(tmp, lenAccess, expr, getEvaluationPredecessor());
+
 		if(!(expr instanceof Constant)) {
 			throw new UnsupportedOperationException("For the moment we only support constant length arrays.");
 		}
@@ -62,7 +66,7 @@ public class JavaNewArray extends UnaryExpression {
 			AnalysisState<A> init = state.bottom();
 			
 			for(SymbolicExpression v : tmp2.getComputedExpressions()) {
-				init = init.lub(tmp2.assign(access, v, getEvaluationPredecessor()));
+				init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
 			}
 			
 			tmp = init;
@@ -70,8 +74,8 @@ public class JavaNewArray extends UnaryExpression {
 		} 
 
 		getMetaVariables().add(array);
-		
-		return tmp.smallStepSemantics(array, this);
+
+		return analysis.smallStepSemantics(tmp, array, this);
 	}
 
 	@Override
