@@ -46,6 +46,7 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
+import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
@@ -102,7 +103,14 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ArrayAccess node) {
-		parserContext.addException(new ParsingException("array-access", ParsingException.Type.UNSUPPORTED_STATEMENT, "Array Accesses are not supported.", getSourceCodeLocation(node)));
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		node.getArray().accept(leftVisitor);
+		node.getIndex().accept(rightVisitor);
+		Expression left = leftVisitor.getExpression();
+		Expression right = rightVisitor.getExpression();
+		
+		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node), left, right);
 		return false;
 	}
 
@@ -139,7 +147,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 			}
 				
-			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node) , parameters.toArray(new Expression[0]), new ReferenceType(type));
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
 					
 		}
 		
