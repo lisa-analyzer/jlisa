@@ -10,7 +10,7 @@ import java.io.IOException;
 public class StringTest extends JLiSAAnalysisExecutor {
 	
     @Test
-    public void testEmptyStringConstruction()  throws IOException {
+    public void testString()  throws IOException {
         CronConfiguration conf = TestHelpers.constantPropagation("string", "", "StringTest.java");
         perform(conf);
     }
