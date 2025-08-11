@@ -1,8 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringLength;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -17,23 +15,22 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Untyped;
 
-
-public class StringLength extends UnaryExpression implements PluggableStatement {
+public class StringEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringLength(CFG cfg, CodeLocation location, Expression exp) {
-		super(cfg, location, "length", exp);
+	public StringEmptyConstructor(CFG cfg, CodeLocation location, Expression exp) {
+		super(cfg, location, "String", exp);
 	}
 
-	public static StringLength build(
+	public static StringEmptyConstructor build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringLength(cfg, location, params[0]);
+		return new StringEmptyConstructor(cfg, location, params[0]);
 	}
 
 	@Override
@@ -53,11 +50,10 @@ public class StringLength extends UnaryExpression implements PluggableStatement 
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
 			StatementStore<A> expressions) throws SemanticException {
 		JavaClassType stringType = JavaClassType.lookup("String", null);
+		Constant emptyString = new Constant(stringType, "", getLocation());
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
-		AccessChild access = new AccessChild(stringType, deref, var, getLocation());
-		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(JavaIntType.INSTANCE, access, JavaStringLength.INSTANCE, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, length, originating);
+		AccessChild access = new AccessChild(stringType, expr, var, getLocation());
+		return interprocedural.getAnalysis().assign(state, access, emptyString, originating);
 	}
 }

@@ -39,7 +39,7 @@ public class JavaProgram extends Program {
         str.addInstanceCodeMember(new StringEndsWith(unknownLocation, str));
         str.addInstanceCodeMember(new StringEquals(unknownLocation, str));
         str.addInstanceCodeMember(new StringIndexOf(unknownLocation, str));
-        str.addInstanceCodeMember(new StringLength(unknownLocation, str));
+//        str.addInstanceCodeMember(new StringLength(unknownLocation, str));
         str.addInstanceCodeMember(new StringReplace(unknownLocation, str));
         str.addInstanceCodeMember(new StringStartsWith(unknownLocation, str));
         str.addInstanceCodeMember(new StringSubstring(unknownLocation, str));
