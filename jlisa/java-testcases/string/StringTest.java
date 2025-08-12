@@ -10,5 +10,6 @@ public class StringTest {
 		String s5 = "A" + "B";
 		String s6 = s5 + s4;
 		String s7 = "A" + s6;
+		boolean b = s4.contains(s2);
 	}
 }

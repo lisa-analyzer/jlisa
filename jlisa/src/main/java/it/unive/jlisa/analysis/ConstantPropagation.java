@@ -4,6 +4,7 @@ import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaStringConcat;
+import it.unive.jlisa.program.operator.JavaStringContains;
 import it.unive.jlisa.program.operator.JavaStringLength;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -24,7 +25,7 @@ import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
-
+		
 	@Override
 	public boolean canProcess(
 			SymbolicExpression expression,
@@ -122,7 +123,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		
 		if (operator instanceof JavaStringConcat)
 			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
-
+		if (operator instanceof JavaStringContains) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.contains(rv));			
+		}
+		
 		return top();
 	}
 
@@ -149,7 +155,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesBinaryExpression(BinaryExpression expression, ConstantValue left,
 			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
-		// TODO Auto-generated method stub
+		BinaryOperator operator = expression.getOperator();
+
+		if (operator instanceof JavaStringContains) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+		}
+		
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 

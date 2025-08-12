@@ -18,3 +18,8 @@ class String extends Object:
 		param this libtype String*
 		param other libtype String*
 		
+	instance method contains: it.unive.jlisa.program.java.constructs.string.StringContains
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param this libtype String*
+		param other libtype String*
+		
