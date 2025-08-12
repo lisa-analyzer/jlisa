@@ -108,33 +108,48 @@ public class Main {
             System.exit(1);
         }
 
-        JavaFrontend frontend = new JavaFrontend();
-        frontend.parseFromListOfFile(Arrays.stream(sources).toList());
-        if (!frontend.getParserContext().getExceptions().isEmpty()) {
-            CSVExceptionWriter.writeCSV(outdir + "errors.csv", frontend.getParserContext().getExceptions());
-            throw new RuntimeException("Some errors occurred. Check " + outdir + "errors.csv file.");
+        JavaFrontend frontend = null;
+        try {
+            frontend = new JavaFrontend();
+            frontend.parseFromListOfFile(Arrays.stream(sources).toList());
+            if (!frontend.getParserContext().getExceptions().isEmpty()) {
+                CSVExceptionWriter.writeCSV(outdir + "frontend.csv", frontend.getParserContext().getExceptions());
+                System.err.print("Some errors occurred during the parsing. Check " + outdir + "frontend.csv file.");
+                System.exit(1);
+            }
         }
-        Program p = frontend.getProgram();
+        catch(Throwable e) {
+                CSVExceptionWriter.writeCSV(outdir + "frontend-noparsing.csv",e);
+                System.err.println("Some errors occurred in the frontend outside the parsing phase. Check " + outdir + "-noparsing.csv file.");
+                System.exit(1);
+            }
+        try{
+            Program p = frontend.getProgram();
 
-        System.out.println(p);
-        LiSAConfiguration conf = new LiSAConfiguration();
-        conf.workdir = outdir;
-        conf.serializeResults = false;
-        conf.jsonOutput = false;
-        conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
-        conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
-        conf.callGraph = new RTACallGraph();
-        conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-        conf.optimize = false;
+            System.out.println(p);
+            LiSAConfiguration conf = new LiSAConfiguration();
+            conf.workdir = outdir;
+            conf.serializeResults = false;
+            conf.jsonOutput = false;
+            conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+            conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
+            conf.callGraph = new RTACallGraph();
+            conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
+            conf.optimize = false;
 
-        conf.analysis = new SimpleAbstractDomain<>(
-            new FieldSensitivePointBasedHeap(), 
-            new ConstantPropagation(), 
-            new InferredTypes());
+            conf.analysis = new SimpleAbstractDomain<>(
+                    new FieldSensitivePointBasedHeap(),
+                    new ConstantPropagation(),
+                    new InferredTypes());
 
 
-        LiSA lisa = new LiSA(conf);
-        lisa.run(p);
+            LiSA lisa = new LiSA(conf);
+                lisa.run(p);
+        } catch (Throwable e) {
+            CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause()!=null? e.getCause(): e);
+            System.err.print("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
+            System.exit(1);
+        }
 
     }
 }
