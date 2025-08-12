@@ -3,6 +3,7 @@ package it.unive.jlisa;
 import java.io.IOException;
 import java.util.Arrays;
 
+import it.unive.jlisa.checkers.AssertChecker;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -58,15 +59,24 @@ public class Main {
                 .desc("Log level: (INFO, DEBUG, WARNING, ERROR, FATAL, TRACE, ALL, OFF)")
                 .required(false)
                 .build();
+
+        Option checker = Option.builder("c")
+                .longOpt("checker")
+                .hasArg()
+                .desc("Checker: (Assert)")
+                .required(false)
+                .build();
         options.addOption(helpOption);
         options.addOption(sourceOption);
         options.addOption(outdirOption);
         options.addOption(logLevel);
+        options.addOption(checker);
         // Create parser and formatter
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         String[] sources = new String[0];
         String outdir = "";
+        String checkerName ="";
         try {
             CommandLine cmd = parser.parse(options, args);
 
@@ -88,6 +98,7 @@ public class Main {
                 }
                 LogManager.setLogLevel(level);
             }
+            checkerName = cmd.getOptionValue("c");
 
             sources = cmd.getOptionValues("s");
             outdir = cmd.getOptionValue("o");
@@ -130,12 +141,17 @@ public class Main {
             LiSAConfiguration conf = new LiSAConfiguration();
             conf.workdir = outdir;
             conf.serializeResults = false;
-            conf.jsonOutput = false;
+            conf.jsonOutput = true;
             conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
             conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
             conf.callGraph = new RTACallGraph();
             conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
             conf.optimize = false;
+            switch (checkerName) {
+                case "Assert": conf.semanticChecks.add(new AssertChecker()); break;
+                case "": break;
+                default: throw new ParseException("Invalid checker name: " + checkerName);
+            }
 
             conf.analysis = new SimpleAbstractDomain<>(
                     new FieldSensitivePointBasedHeap(),
@@ -144,7 +160,7 @@ public class Main {
 
 
             LiSA lisa = new LiSA(conf);
-                lisa.run(p);
+            lisa.run(p);
         } catch (Throwable e) {
             CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause()!=null? e.getCause(): e);
             System.err.print("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
