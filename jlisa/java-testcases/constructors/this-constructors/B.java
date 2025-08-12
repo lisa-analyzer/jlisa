@@ -1,7 +1,7 @@
 public class B {
     int i;
     int x;
-    
+
     public B() {
         this.i = 10;
     }
