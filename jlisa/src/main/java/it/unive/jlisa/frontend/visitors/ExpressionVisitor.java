@@ -46,8 +46,11 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
+import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaNewArray;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.PostfixAddition;
 import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
@@ -75,7 +78,6 @@ import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
 import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
-import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
@@ -102,13 +104,55 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ArrayAccess node) {
-		parserContext.addException(new ParsingException("array-access", ParsingException.Type.UNSUPPORTED_STATEMENT, "Array Accesses are not supported.", getSourceCodeLocation(node)));
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		node.getArray().accept(leftVisitor);
+		node.getIndex().accept(rightVisitor);
+		Expression left = leftVisitor.getExpression();
+		Expression right = rightVisitor.getExpression();
+		
+		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node), left, right);
 		return false;
 	}
 
 	@Override
 	public boolean visit(ArrayCreation node) {
-		throw new RuntimeException(new UnsupportedStatementException("Array Creation expressions are not supported"));
+		// TODO: currently initializer are not supported
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+
+		
+		node.getType().accept(typeVisitor);
+		Type type = typeVisitor.getType();
+
+		// TODO: currently we handle single-dim arrays
+		if(node.dimensions().size() != 0) {
+			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
+			Expression length = lengthVisitor.getExpression();
+			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
+		} else {
+			ArrayInitializer initializer = node.getInitializer();
+								
+			//initializer.expressions();
+			List<Expression> parameters = new ArrayList<>();
+
+			for (Object args : initializer.expressions()) {
+				ASTNode e  = (ASTNode) args;
+				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+				e.accept(argumentsVisitor);
+				Expression expr = argumentsVisitor.getExpression();
+				if (expr != null) {
+					// This parsing error should be logged in ExpressionVisitor.
+					parameters.add(expr);
+				}
+
+			}
+				
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
+					
+		}
+		
+		return false;		
 	}
 
 	@Override
@@ -117,59 +161,59 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	}
 
 
-    @Override
-    public boolean visit(Assignment node) {
-        Assignment.Operator operator = node.getOperator();
-        ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-        ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-        node.getLeftHandSide().accept(leftVisitor);
-        node.getRightHandSide().accept(rightVisitor);
-        Expression left = leftVisitor.getExpression();
-        Expression right = rightVisitor.getExpression();
-        if (left == null || right == null) {
-            // SKIP. There is an error.
-            return false;
-        }
-        switch (operator.toString()) {
-            case "=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
-                break;
-            case "+=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-                        new Addition(cfg, getSourceCodeLocation(node), left, right));
-                break;
-            case "-=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-                        new Subtraction(cfg, getSourceCodeLocation(node), left, right));
-                break;
-            case "*=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-                        new Multiplication(cfg, getSourceCodeLocation(node), left, right));
-                break;
-            case "/=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-                        new Division(cfg, getSourceCodeLocation(node), left, right));
-                break;
-            case "%=":
-                expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-                        new Modulo(cfg, getSourceCodeLocation(node), left, right));
-            case "|=":
-            case "&=":
-            case "^=":
-            case "<<=":
-            case ">>=":
-            case ">>>=":
-                parserContext.addException(
-                        new ParsingException("operators", ParsingException.Type.UNSUPPORTED_STATEMENT,
-                                operator + " operator are not supported.",
-                                getSourceCodeLocation(node))
-                );
-                break;
-            default:
-                throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
-        }
-        return false;
-    }
+	@Override
+	public boolean visit(Assignment node) {
+		Assignment.Operator operator = node.getOperator();
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		node.getLeftHandSide().accept(leftVisitor);
+		node.getRightHandSide().accept(rightVisitor);
+		Expression left = leftVisitor.getExpression();
+		Expression right = rightVisitor.getExpression();
+		if (left == null || right == null) {
+			// SKIP. There is an error.
+			return false;
+		}
+		switch (operator.toString()) {
+		case "=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
+			break;
+		case "+=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new Addition(cfg, getSourceCodeLocation(node), left, right));
+			break;
+		case "-=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new Subtraction(cfg, getSourceCodeLocation(node), left, right));
+			break;
+		case "*=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new Multiplication(cfg, getSourceCodeLocation(node), left, right));
+			break;
+		case "/=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new Division(cfg, getSourceCodeLocation(node), left, right));
+			break;
+		case "%=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new Modulo(cfg, getSourceCodeLocation(node), left, right));
+		case "|=":
+		case "&=":
+		case "^=":
+		case "<<=":
+		case ">>=":
+		case ">>>=":
+			parserContext.addException(
+					new ParsingException("operators", ParsingException.Type.UNSUPPORTED_STATEMENT,
+							operator + " operator are not supported.",
+							getSourceCodeLocation(node))
+					);
+			break;
+		default:
+			throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
+		}
+		return false;
+	}
 
 	@Override
 	public boolean visit(BooleanLiteral node) {
@@ -202,12 +246,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		expression = new JavaCastExpression(cfg, getSourceCodeLocation(node), left, right);
 		return false;
 	}
-	
-    @Override
-    public boolean visit(CharacterLiteral node) {
-        expression = new CharLiteral(this.cfg, getSourceCodeLocation(node), node.charValue());
-        return false;
-    }
+
+	@Override
+	public boolean visit(CharacterLiteral node) {
+		expression = new CharLiteral(this.cfg, getSourceCodeLocation(node), node.charValue());
+		return false;
+	}
 
 
 	@Override
@@ -313,7 +357,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		if (expr != null) {
-			expression = new AccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+			expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
 		}
 		return false;
 	}
@@ -521,35 +565,35 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		return false;
 	}
 
-    @Override
-    public boolean visit(NumberLiteral node) {
-        String token = node.getToken();
-        if ((token.endsWith("f") || token.endsWith("F")) && !token.startsWith("0x")) {
-            // FlOAT
-            expression = new FloatLiteral(this.cfg, getSourceCodeLocation(node), Float.parseFloat(token));
-            return false;
-        }
-        if (token.contains(".") || ((token.contains("e") || token.contains("E") || token.endsWith("d") || token.endsWith("D")) && !token.startsWith("0x"))) {
-            // DOUBLE
-            expression = new DoubleLiteral(this.cfg, getSourceCodeLocation(node), Double.parseDouble(token));
-            return false;
-        }
-        if (token.endsWith("l") || token.endsWith("L")) {
-            expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
-            return false;
-        }
-        try {
-            long value = Long.decode(token); // handles 0x, 0b, octal, decimal
-            if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
-            } else {
-                expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
-            }
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Could not parse " + token + ": not a valid Number Literal", e );
-        }
-        return false;
-    }
+	@Override
+	public boolean visit(NumberLiteral node) {
+		String token = node.getToken();
+		if ((token.endsWith("f") || token.endsWith("F")) && !token.startsWith("0x")) {
+			// FlOAT
+			expression = new FloatLiteral(this.cfg, getSourceCodeLocation(node), Float.parseFloat(token));
+			return false;
+		}
+		if (token.contains(".") || ((token.contains("e") || token.contains("E") || token.endsWith("d") || token.endsWith("D")) && !token.startsWith("0x"))) {
+			// DOUBLE
+			expression = new DoubleLiteral(this.cfg, getSourceCodeLocation(node), Double.parseDouble(token));
+			return false;
+		}
+		if (token.endsWith("l") || token.endsWith("L")) {
+			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
+			return false;
+		}
+		try {
+			long value = Long.decode(token); // handles 0x, 0b, octal, decimal
+			if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+				expression = new IntLiteral(this.cfg, getSourceCodeLocation(node), (int) value);
+			} else {
+				expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), value);
+			}
+		} catch (NumberFormatException e) {
+			throw new RuntimeException("Could not parse " + token + ": not a valid Number Literal", e );
+		}
+		return false;
+	}
 
 	@Override
 	public boolean visit(NullLiteral node) {
@@ -619,7 +663,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		expression = new JavaStringLiteral(this.cfg, getSourceCodeLocation(node), literal);
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(SuperFieldAccess node) {
 

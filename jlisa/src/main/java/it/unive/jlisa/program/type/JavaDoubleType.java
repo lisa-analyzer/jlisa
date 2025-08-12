@@ -1,5 +1,9 @@
 package it.unive.jlisa.program.type;
 
+import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
@@ -51,4 +55,8 @@ public class JavaDoubleType implements JavaNumericType {
         return false;
     }
 
+    @Override
+    public Expression defaultValue(CFG cfg, CodeLocation location) {
+		return new DoubleLiteral(cfg, location, 0.0);
+	}
 }
