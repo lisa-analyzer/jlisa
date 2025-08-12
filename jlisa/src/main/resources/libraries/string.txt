@@ -13,3 +13,8 @@ class String extends Object:
 		type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*
 		
+	instance method concat: it.unive.jlisa.program.java.constructs.string.StringConcat
+		libtype String*
+		param this libtype String*
+		param other libtype String*
+		

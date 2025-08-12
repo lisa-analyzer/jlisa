@@ -3,6 +3,7 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaStringConcat;
 import it.unive.jlisa.program.operator.JavaStringLength;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -91,14 +92,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
-
-			if (lVal instanceof Double || rVal instanceof Double) {
+			
+			if (lVal instanceof String || rVal instanceof String) {
+			} else if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() + ((Number) rVal).doubleValue());
 			} else if (lVal instanceof Float || rVal instanceof Float) {
 				return new ConstantValue(((Number) lVal).floatValue() + ((Number) rVal).floatValue());
 			} else if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() + ((Number) rVal).longValue());
-			} else {
+			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() + ((Number) rVal).intValue());
 			}
 		}
@@ -117,6 +119,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() - ((Number) rVal).intValue());
 			}
 		}
+		
+		if (operator instanceof JavaStringConcat)
+			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
 
 		return top();
 	}

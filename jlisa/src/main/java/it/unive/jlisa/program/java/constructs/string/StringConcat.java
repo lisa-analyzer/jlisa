@@ -1,106 +1,98 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.cfg.*;
+import it.unive.jlisa.program.operator.JavaStringConcat;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.InstrumentedReceiverRef;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.string.Concat;
-import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Identifier;
+import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.type.Untyped;
 
-/**
- * The native construct representing the concatenation operation. This construct
- * can be invoked on a string variable {@code x} with {@code x.concat(other)},
- * where {@code other} is the string to be appended to {@code x}.
- * 
- * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
- */
-public class StringConcat extends NativeCFG {
+public class StringConcat extends BinaryExpression implements PluggableStatement {
+	protected Statement originating;
 
-	/**
-	 * Builds the construct.
-	 * 
-	 * @param location   the location where this construct is defined
-	 * @param stringUnit the unit where this construct is defined
-	 */
-	public StringConcat(
-			CodeLocation location,
-			ClassUnit stringUnit) {
-		super(new CodeMemberDescriptor(location, stringUnit, true, "concat", StringType.INSTANCE,
-				new Parameter(location, "this", StringType.INSTANCE),
-				new Parameter(location, "other", StringType.INSTANCE)),
-				IMPStringConcat.class);
+	public StringConcat(CFG cfg, CodeLocation location, Expression left, Expression right) {
+		super(cfg, location, "concat", left, right);
 	}
 
-	/**
-	 * An expression modeling the string contains operation. The type of both
-	 * operands must be {@link StringType}. The type of this expression is the
-	 * {@link BoolType}.
-	 * 
-	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
-	 */
-	public static class IMPStringConcat extends Concat implements PluggableStatement {
+	public static StringConcat build(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
+		return new StringConcat(cfg, location, params[0], params[1]);
+	}
 
-		/**
-		 * Builds a new instance of this native call, according to the
-		 * {@link PluggableStatement} contract.
-		 * 
-		 * @param cfg      the cfg where the native call happens
-		 * @param location the location where the native call happens
-		 * @param params   the parameters of the native call
-		 * 
-		 * @return the newly-built call
-		 */
-		public static IMPStringConcat build(
-				CFG cfg,
-				CodeLocation location,
-				Expression... params) {
-			return new IMPStringConcat(cfg, location, params[0], params[1]);
-		}
+	@Override
+	protected int compareSameClassAndParams(Statement o) {
+		return 0; 
+	}
 
-		@Override
-		public void setOriginatingStatement(
-				Statement st) {
-			originating = st;
-		}
 
-		/**
-		 * Builds the concat.
-		 * 
-		 * @param cfg        the {@link CFG} where this operation lies
-		 * @param sourceFile the source file name where this operation is
-		 *                       defined
-		 * @param line       the line number where this operation is defined
-		 * @param col        the column where this operation is defined
-		 * @param left       the left-hand side of this operation
-		 * @param right      the right-hand side of this operation
-		 */
-		public IMPStringConcat(
-				CFG cfg,
-				String sourceFile,
-				int line,
-				int col,
-				Expression left,
-				Expression right) {
-			this(cfg, new SourceCodeLocation(sourceFile, line, col), left, right);
-		}
+	@Override
+	public void setOriginatingStatement(Statement st) {
+		originating = st;
+	}
 
-		/**
-		 * Builds the concat.
-		 * 
-		 * @param cfg      the {@link CFG} where this operation lies
-		 * @param location the code location where this operation is defined
-		 * @param left     the left-hand side of this operation
-		 * @param right    the right-hand side of this operation
-		 */
-		public IMPStringConcat(
-				CFG cfg,
-				CodeLocation location,
-				Expression left,
-				Expression right) {
-			super(cfg, location, left, right);
+	@Override
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
+			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+		JavaClassType stringType = JavaClassType.lookup("String", null);
+		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
+
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
+
+		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
+		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		
+		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(stringType, accessLeft, accessRight, JavaStringConcat.INSTANCE, getLocation());
+		
+		// allocate the concatenation
+		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
+		HeapReference ref = new HeapReference(reftype, created, getLocation());
+		AnalysisState<A> allocated = interprocedural.getAnalysis().smallStepSemantics(state, created, this);
+
+		InstrumentedReceiverRef paramThis = new InstrumentedReceiverRef(getCFG(), getLocation(), false, reftype);
+
+		// we also have to add the receiver inside the state
+		AnalysisState<A> callstate = paramThis.forwardSemantics(allocated, interprocedural, expressions);
+
+		// we store a reference to the newly created region in the receiver
+		AnalysisState<A> tmp = callstate.bottom();
+		for (SymbolicExpression rec : callstate.getComputedExpressions()) {
+			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
+			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callstate, access, concat, this);
+			tmp = tmp.lub(interprocedural.getAnalysis().assign(sem, rec, ref, paramThis));
 		}
+		
+		// we store the approximation of the receiver in the sub-expressions
+		expressions.put(paramThis, tmp);
+
+		// now remove the instrumented receiver
+		expressions.forget(paramThis);
+		for (SymbolicExpression v : callstate.getComputedExpressions())
+			if (v instanceof Identifier)
+				getMetaVariables().add((Identifier) v);
+		
+		return tmp;
 	}
 }
