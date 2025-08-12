@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.lisa.analysis.value.ValueDomain;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -66,17 +67,24 @@ public class Main {
                 .desc("Checker: (Assert)")
                 .required(false)
                 .build();
+        Option numericalDomainOption = Option.builder("n")
+                .longOpt("numericalDomain")
+                .hasArg()
+                .desc("Numerical domain: (ConstantPropagation)")
+                .required(false)
+                .build();
         options.addOption(helpOption);
         options.addOption(sourceOption);
         options.addOption(outdirOption);
         options.addOption(logLevel);
         options.addOption(checker);
+        options.addOption(numericalDomainOption);
         // Create parser and formatter
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         String[] sources = new String[0];
         String outdir = "";
-        String checkerName ="";
+        String checkerName ="", numericalDomain="";
         try {
             CommandLine cmd = parser.parse(options, args);
 
@@ -90,6 +98,11 @@ public class Main {
             if (!cmd.hasOption("s") || !cmd.hasOption("o")) {
                 throw new ParseException("Missing required options: --source and/or --outdir");
             }
+
+            // Check required manually if help was not triggered
+            if (!cmd.hasOption("n") || !cmd.hasOption("o")) {
+                throw new ParseException("Missing required options: --numericalDomain");
+            }
             if (cmd.hasOption("l")) {
                 String log4jLevelName = cmd.getOptionValue("l").toUpperCase();
                 Level level = Level.getLevel(log4jLevelName);
@@ -99,6 +112,7 @@ public class Main {
                 LogManager.setLogLevel(level);
             }
             checkerName = cmd.getOptionValue("c");
+            numericalDomain = cmd.getOptionValue("n");
 
             sources = cmd.getOptionValues("s");
             outdir = cmd.getOptionValue("o");
@@ -152,10 +166,15 @@ public class Main {
                 case "": break;
                 default: throw new ParseException("Invalid checker name: " + checkerName);
             }
+            ValueDomain<?> domain;
+            switch (numericalDomain) {
+                case "ConstantPropagation": domain = new ConstantPropagation(); break;
+                default: throw new ParseException("Invalid numerical domain name: " + numericalDomain);
+            }
 
             conf.analysis = new SimpleAbstractDomain<>(
                     new FieldSensitivePointBasedHeap(),
-                    new ConstantPropagation(),
+                    domain,
                     new InferredTypes());
 
 
