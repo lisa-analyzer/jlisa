@@ -18,6 +18,8 @@ import it.unive.lisa.symbolic.value.PushInv;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.DivisionOperator;
+import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
@@ -121,6 +123,36 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 		
+		if (operator instanceof MultiplicationOperator) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return new ConstantValue(((Number) lVal).doubleValue() * ((Number) rVal).doubleValue());
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(((Number) lVal).floatValue() * ((Number) rVal).floatValue());
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return new ConstantValue(((Number) lVal).longValue() * ((Number) rVal).longValue());
+			} else {
+				return new ConstantValue(((Number) lVal).intValue() * ((Number) rVal).intValue());
+			}
+		}
+		
+		if (operator instanceof DivisionOperator) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return new ConstantValue(((Number) lVal).doubleValue() / ((Number) rVal).doubleValue());
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(((Number) lVal).floatValue() / ((Number) rVal).floatValue());
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return new ConstantValue(((Number) lVal).longValue() / ((Number) rVal).longValue());
+			} else {
+				return new ConstantValue(((Number) lVal).intValue() / ((Number) rVal).intValue());
+			}
+		}
+				
 		if (operator instanceof JavaStringConcat)
 			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
 		if (operator instanceof JavaStringContains) {
