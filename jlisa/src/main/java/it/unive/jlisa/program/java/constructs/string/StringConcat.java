@@ -4,6 +4,7 @@ import it.unive.jlisa.program.operator.JavaStringConcat;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -56,6 +57,7 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
 		JavaClassType stringType = JavaClassType.lookup("String", null);
 		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -69,7 +71,7 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		// allocate the concatenation
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());
-		AnalysisState<A> allocated = interprocedural.getAnalysis().smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
 
 		InstrumentedReceiverRef paramThis = new InstrumentedReceiverRef(getCFG(), getLocation(), false, reftype);
 
@@ -80,8 +82,8 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		AnalysisState<A> tmp = callstate.bottom();
 		for (SymbolicExpression rec : callstate.getComputedExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callstate, access, concat, this);
-			tmp = tmp.lub(interprocedural.getAnalysis().assign(sem, rec, ref, paramThis));
+			AnalysisState<A> sem = analysis.assign(callstate, access, concat, this);
+			tmp = tmp.lub(analysis.assign(sem, rec, ref, paramThis));
 		}
 		
 		// we store the approximation of the receiver in the sub-expressions
@@ -93,6 +95,10 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 			if (v instanceof Identifier)
 				getMetaVariables().add((Identifier) v);
 		
-		return tmp;
-	}
+		// return tmp
+		return new AnalysisState<>(
+				tmp.getState(),
+				callstate.getComputedExpressions(),
+				tmp.getFixpointInformation());
+		}
 }

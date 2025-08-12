@@ -399,12 +399,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			new Modulo(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "+":
-			int startPos = node.getStartPosition();
-			int line = compilationUnit.getLineNumber(startPos);
-			int col = compilationUnit.getColumnNumber(startPos) + node.getLength();
-			SourceCodeLocation loc = new SourceCodeLocation(source, line, col);
 			expression = buildExpression(operands, (first, second) ->
-			new JavaAddition(cfg, loc, first, second));
+			new JavaAddition(cfg, getOperatorLocation(node), first, second));
 			break;
 		case "-":
 			expression = buildExpression(operands, (first, second) ->
