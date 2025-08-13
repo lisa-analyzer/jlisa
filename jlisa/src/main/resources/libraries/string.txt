@@ -34,4 +34,8 @@ class String extends Object:
 				
 	instance method toLowerCase: it.unive.jlisa.program.java.constructs.string.StringToLowerCase
 		libtype String*
+		param this libtype String*	
+						
+	instance method toString: it.unive.jlisa.program.java.constructs.string.StringToString
+		libtype String*
 		param this libtype String*		

@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringToLowerCase;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -27,18 +26,18 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Untyped;
 
 
-public class StringToLowerCase extends UnaryExpression implements PluggableStatement {
+public class StringToString extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringToLowerCase(CFG cfg, CodeLocation location, Expression exp) {
-		super(cfg, location, "toLowerCase", exp);
+	public StringToString(CFG cfg, CodeLocation location, Expression exp) {
+		super(cfg, location, "toString", exp);
 	}
 
-	public static StringToLowerCase build(
+	public static StringToString build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringToLowerCase(cfg, location, params[0]);
+		return new StringToString(cfg, location, params[0]);
 	}
 
 	@Override
@@ -64,7 +63,6 @@ public class StringToLowerCase extends UnaryExpression implements PluggableState
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
 		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
-		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(stringType, accessExpr, JavaStringToLowerCase.INSTANCE, getLocation());
 
 		// allocate the string
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
@@ -80,7 +78,7 @@ public class StringToLowerCase extends UnaryExpression implements PluggableState
 		AnalysisState<A> tmp = callstate.bottom();
 		for (SymbolicExpression rec : callstate.getComputedExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callstate, access, lower, this);
+			AnalysisState<A> sem = analysis.assign(callstate, access, accessExpr, this);
 			tmp = tmp.lub(analysis.assign(sem, rec, ref, paramThis));
 		}
 

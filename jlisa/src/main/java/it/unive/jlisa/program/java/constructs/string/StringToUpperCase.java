@@ -66,7 +66,7 @@ public class StringToUpperCase extends UnaryExpression implements PluggableState
 		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
 		it.unive.lisa.symbolic.value.UnaryExpression upper = new it.unive.lisa.symbolic.value.UnaryExpression(stringType, accessExpr, JavaStringToUpperCase.INSTANCE, getLocation());
 
-		// allocate the concatenation
+		// allocate the string
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
