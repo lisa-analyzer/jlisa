@@ -10,6 +10,7 @@ import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringTrimOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -95,6 +96,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		
 		if (operator instanceof JavaStringToUpperCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toUpperCase());
+		
+		if (operator instanceof JavaStringTrimOperator && arg.getValue() instanceof String str)
+			return new ConstantValue(str.trim());
 		
 		return top();
 	}

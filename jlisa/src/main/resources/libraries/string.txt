@@ -44,3 +44,7 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param this libtype String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	instance method trim: it.unive.jlisa.program.java.constructs.string.StringTrim
+		libtype String*
+		param this libtype String*	

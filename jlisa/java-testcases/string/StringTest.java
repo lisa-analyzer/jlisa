@@ -18,5 +18,7 @@ public class StringTest {
 		String s9 = s4.toUpperCase();
 		String s10 = s5.toString();
 		char c = s10.charAt(0);
+		String s11 = s4.trim();
+		
 	}
 }
