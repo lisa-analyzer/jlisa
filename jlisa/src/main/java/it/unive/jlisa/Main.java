@@ -192,10 +192,20 @@ public class Main {
         }
     }
 
-    private static JavaFrontend runFrontend(String[] sources) throws IOException {
-        JavaFrontend frontend = new JavaFrontend();
-        frontend.parseFromListOfFile(Arrays.stream(sources).toList());
-        return frontend;
+    private static JavaFrontend runFrontend(String[] sources) throws IOException, ParsingException {
+        JavaFrontend frontend = null;
+        try {
+            frontend = new JavaFrontend();
+            frontend.parseFromListOfFile(Arrays.stream(sources).toList());
+            return frontend;
+        }
+        catch(Exception e) {
+            if (frontend != null && !frontend.getParserContext().getExceptions().isEmpty()) {
+                System.err.print("Some errors occurred during the parsing, reporting the first one");
+                throw frontend.getParserContext().getExceptions().getFirst();
+            }
+            else throw e;
+        }
     }
 
     private static void runAnalysis(String outdir, String checkerName, String numericalDomain, JavaFrontend frontend) throws ParseException {

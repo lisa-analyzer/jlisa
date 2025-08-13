@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import it.unive.jlisa.program.cfg.expression.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -44,19 +45,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.cfg.expression.BitwiseNot;
-import it.unive.jlisa.program.cfg.expression.InstanceOf;
-import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
-import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
-import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
-import it.unive.jlisa.program.cfg.expression.JavaNewArray;
-import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.expression.PostfixAddition;
-import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
-import it.unive.jlisa.program.cfg.expression.PrefixAddition;
-import it.unive.jlisa.program.cfg.expression.PrefixPlus;
-import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -405,8 +393,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			expression = buildExpression(operands, (first, second) ->
 			new Subtraction(cfg, getSourceCodeLocation(node), first, second));
 			break;
-		case "<<":
 		case ">>":
+			expression = buildExpression(operands, (first, second) ->
+					new JavaShiftOperator(cfg, getSourceCodeLocation(node), first, second));
+			break;
+		case "<<":
 		case ">>>":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -434,8 +425,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			expression = buildExpression(operands, (first, second) ->
 			new NotEqual(cfg, getSourceCodeLocation(node), first, second));
 			break;
-		case "^":
 		case "&":
+			expression = buildExpression(operands, (first, second) ->
+					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
+			break;
+		case "^":
 		case "|":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
