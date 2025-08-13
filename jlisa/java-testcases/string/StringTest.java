@@ -13,5 +13,8 @@ public class StringTest {
 		boolean b0 = s4.contains(s2);
 		boolean b1 = s2.equals(s3);
 		boolean b2 = s2.equals(s4);
+
+		String s8 = s4.toLowerCase();
+		String s9 = s4.toUpperCase();
 	}
 }

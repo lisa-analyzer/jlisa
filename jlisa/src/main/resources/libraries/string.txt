@@ -28,3 +28,10 @@ class String extends Object:
 		param this libtype String*
 		param other libtype String*
 		
+	instance method toUpperCase: it.unive.jlisa.program.java.constructs.string.StringToUpperCase
+		libtype String*
+		param this libtype String*	
+				
+	instance method toLowerCase: it.unive.jlisa.program.java.constructs.string.StringToLowerCase
+		libtype String*
+		param this libtype String*		
