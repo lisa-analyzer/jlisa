@@ -1,4 +1,4 @@
-class String extends Object:
+class String extends Object: it.unive.jlisa.program.type.JavaStringType
 
 	instance method String: it.unive.jlisa.program.java.constructs.string.StringEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
