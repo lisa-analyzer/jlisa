@@ -1,7 +1,6 @@
 package it.unive.jlisa.program;
 
 import it.unive.jlisa.program.java.constructs.object.ObjectConstructor;
-import it.unive.jlisa.program.java.constructs.string.*;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
@@ -26,26 +25,5 @@ public class JavaProgram extends Program {
         JavaClassType.lookup("Object", rootClassUnit);
         rootClassUnit.addInstanceCodeMember(new ObjectConstructor(unknownLocation, rootClassUnit));
         this.addUnit(rootClassUnit);
-        this.addUnit(getStringClassUnit());
-
     }
-
-    public ClassUnit getStringClassUnit() {
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        ClassUnit str = new ClassUnit(unknownLocation, this, "String", true);
-        str.addAncestor(rootClassUnit);
-
-        str.addInstanceCodeMember(new StringContains(unknownLocation, str));
-        str.addInstanceCodeMember(new StringEndsWith(unknownLocation, str));
-        str.addInstanceCodeMember(new StringEquals(unknownLocation, str));
-        str.addInstanceCodeMember(new StringIndexOf(unknownLocation, str));
-        str.addInstanceCodeMember(new StringLength(unknownLocation, str));
-        str.addInstanceCodeMember(new StringReplace(unknownLocation, str));
-        str.addInstanceCodeMember(new StringStartsWith(unknownLocation, str));
-        str.addInstanceCodeMember(new StringSubstring(unknownLocation, str));
-
-        JavaClassType.lookup("String", str);
-        return str;
-    }
-
 }

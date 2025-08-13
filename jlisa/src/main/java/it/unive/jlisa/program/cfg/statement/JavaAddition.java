@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -12,11 +13,14 @@ import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call.CallType;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -81,41 +85,67 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		AnalysisState<A> result = state.bottom();
 		BinaryOperator op;
 		Type type;
-
+		
+		AnalysisState<A> partialResult = state.bottom();
 		for (Type lType : leftTypes) {
 			for( Type rType : rightTypes) {
-				if(lType.isStringType() && rType.isStringType()) {
-					op = StringConcat.INSTANCE;
-					type = StringType.INSTANCE;
+				if(lType.isReferenceType() && rType.isReferenceType() && lType.asReferenceType().getInnerType().equals(JavaClassType.lookup("String", null)) && lType.asReferenceType().getInnerType().equals(rType.asReferenceType().getInnerType())) {
+					UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null, "concat", lType, getSubExpressions());
+					ExpressionSet[] expressionSet = new ExpressionSet[2];
+					expressionSet[0] = new ExpressionSet(actualLeft);
+					expressionSet[1] = new ExpressionSet(actualRight);
+					partialResult = call.forwardSemanticsAux(interprocedural, state, expressionSet, expressions);
+					getMetaVariables().addAll(call.getMetaVariables());
 				} else if (lType.isStringType()) {
+					//TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
 					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)), StringType.INSTANCE, this.getLocation());
 					actualRight =  new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE, this.getLocation());
 					type = StringType.INSTANCE;
+					partialResult = analysis.smallStepSemantics(
+							state,
+							new BinaryExpression(
+									type, 
+									actualLeft, 
+									actualRight, 
+									op, 
+									getLocation()), 
+							this);
 				} else if (rType.isStringType()) {
+					//TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
 					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)), StringType.INSTANCE, this.getLocation());
 					actualLeft =  new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE, this.getLocation());
 					type = StringType.INSTANCE;
+					partialResult = analysis.smallStepSemantics(
+							state,
+							new BinaryExpression(
+									type, 
+									actualLeft, 
+									actualRight, 
+									op, 
+									getLocation()), 
+							this);
 				} else if (lType.isNumericType() && rType.isNumericType()) {
 					op = NumericNonOverflowingAdd.INSTANCE;
 					type = lType.commonSupertype(rType);
+					partialResult = analysis.smallStepSemantics(
+							state,
+							new BinaryExpression(
+									type, 
+									actualLeft, 
+									actualRight, 
+									op, 
+									getLocation()), 
+							this);
 				} else {
 					continue;
 				}
 
-				result = result.lub(analysis.smallStepSemantics(
-						state,
-						new BinaryExpression(
-								type, 
-								actualLeft, 
-								actualRight, 
-								op, 
-								getLocation()), 
-						this));
+				result = result.lub(partialResult);
 			}
 		}
-		
+			
 		return result;
 	}
 

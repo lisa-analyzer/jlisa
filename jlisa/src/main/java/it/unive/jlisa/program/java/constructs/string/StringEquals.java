@@ -1,107 +1,68 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.cfg.*;
+import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.string.Equals;
-import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
-/**
- * The native construct representing the equals operation. This construct can be
- * invoked on a string variable {@code x} with {@code x.equals(other)}, where
- * {@code other} is the string that will be checked for equality against
- * {@code x}.
- * 
- * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
- */
-public class StringEquals extends NativeCFG {
+public class StringEquals extends BinaryExpression implements PluggableStatement {
+	protected Statement originating;
 
-	/**
-	 * Builds the construct.
-	 * 
-	 * @param location   the location where this construct is defined
-	 * @param stringUnit the unit where this construct is defined
-	 */
-	public StringEquals(
-			CodeLocation location,
-			ClassUnit stringUnit) {
-		super(new CodeMemberDescriptor(location, stringUnit, true, "equals", BoolType.INSTANCE,
-				new Parameter(location, "this", StringType.INSTANCE),
-				new Parameter(location, "other", StringType.INSTANCE)),
-				IMPStringEquals.class);
+	public StringEquals(CFG cfg, CodeLocation location, Expression left, Expression right) {
+		super(cfg, location, "equals", left, right);
 	}
 
-	/**
-	 * An expression modeling the string equals operation. The type of both
-	 * operands must be {@link StringType}. The type of this expression is the
-	 * {@link BoolType}.
-	 * 
-	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
-	 */
-	public static class IMPStringEquals extends Equals implements PluggableStatement {
+	public static StringEquals build(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
+		return new StringEquals(cfg, location, params[0], params[1]);
+	}
 
-		/**
-		 * Builds a new instance of this native call, according to the
-		 * {@link PluggableStatement} contract.
-		 * 
-		 * @param cfg      the cfg where the native call happens
-		 * @param location the location where the native call happens
-		 * @param params   the parameters of the native call
-		 * 
-		 * @return the newly-built call
-		 */
-		public static IMPStringEquals build(
-				CFG cfg,
-				CodeLocation location,
-				Expression... params) {
-			return new IMPStringEquals(cfg, location, params[0], params[1]);
-		}
+	@Override
+	protected int compareSameClassAndParams(Statement o) {
+		return 0; 
+	}
 
-		@Override
-		public void setOriginatingStatement(
-				Statement st) {
-			originating = st;
-		}
 
-		/**
-		 * Builds the equals.
-		 * 
-		 * @param cfg        the {@link CFG} where this operation lies
-		 * @param sourceFile the source file name where this operation is
-		 *                       defined
-		 * @param line       the line number where this operation is defined
-		 * @param col        the column where this operation is defined
-		 * @param left       the left-hand side of this operation
-		 * @param right      the right-hand side of this operation
-		 */
-		public IMPStringEquals(
-				CFG cfg,
-				String sourceFile,
-				int line,
-				int col,
-				Expression left,
-				Expression right) {
-			this(cfg, new SourceCodeLocation(sourceFile, line, col), left, right);
-		}
+	@Override
+	public void setOriginatingStatement(Statement st) {
+		originating = st;
+	}
 
-		/**
-		 * Builds the equals.
-		 * 
-		 * @param cfg      the {@link CFG} where this operation lies
-		 * @param location the code location where this operation is defined
-		 * @param left     the left-hand side of this operation
-		 * @param right    the right-hand side of this operation
-		 */
-		public IMPStringEquals(
-				CFG cfg,
-				CodeLocation location,
-				Expression left,
-				Expression right) {
-			super(cfg, location, left, right);
-		}
+	@Override
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
+			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+		Type stringType = getProgram().getTypes().getStringType();
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
+
+		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
+		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		
+		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+				getProgram().getTypes().getBooleanType(), 
+				accessLeft, 
+				accessRight, 
+				JavaStringEqualsOperator.INSTANCE, 
+				getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
 	}
 }
