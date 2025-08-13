@@ -7,3 +7,61 @@ class Math extends Object:
 	method cos: it.unive.jlisa.program.java.constructs.math.MathCos
 		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method pow: it.unive.jlisa.program.java.constructs.math.MathPow
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method sqrt: it.unive.jlisa.program.java.constructs.math.MathSqrt
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method tan: it.unive.jlisa.program.java.constructs.math.MathTan
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method atan: it.unive.jlisa.program.java.constructs.math.MathAtan
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method log: it.unive.jlisa.program.java.constructs.math.MathLog
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method log10: it.unive.jlisa.program.java.constructs.math.MathLog10
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method asin: it.unive.jlisa.program.java.constructs.math.MathAsin
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method exp: it.unive.jlisa.program.java.constructs.math.MathExp
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method acos: it.unive.jlisa.program.java.constructs.math.MathAcos
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE		
+	
+	method floor: it.unive.jlisa.program.java.constructs.math.MathFloor
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method abs: it.unive.jlisa.program.java.constructs.math.MathAbs
+		type it.unive.lisa.type.Untyped::INSTANCE
+		param v type it.unive.lisa.type.Untyped::INSTANCE
+					
+	method atan2: it.unive.jlisa.program.java.constructs.math.MathAtan2
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method round: it.unive.jlisa.program.java.constructs.math.MathRound
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method toRadians: it.unive.jlisa.program.java.constructs.math.MathToRadians
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

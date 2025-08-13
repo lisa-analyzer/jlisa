@@ -40,13 +40,13 @@ public class MathCos extends it.unive.lisa.program.cfg.statement.UnaryExpression
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
 			StatementStore<A> expressions) throws SemanticException {
-		UnaryExpression sin = new UnaryExpression(
+		UnaryExpression cos = new UnaryExpression(
 				JavaDoubleType.INSTANCE, 
 				expr, 
 				JavaMathCos.INSTANCE, 
 				getLocation());
 		
-		return interprocedural.getAnalysis().smallStepSemantics(state, sin, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, cos, originating);
 	}
 
 	@Override
