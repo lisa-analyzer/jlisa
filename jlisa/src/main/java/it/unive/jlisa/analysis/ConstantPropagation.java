@@ -3,6 +3,7 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaMathSin;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
@@ -32,7 +33,7 @@ import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
-		
+
 	@Override
 	public boolean canProcess(
 			SymbolicExpression expression,
@@ -86,20 +87,31 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		// if arg is top, top is returned
 		if (arg.isTop())
 			return top();
-		
-		UnaryOperator operator = expression.getOperator();		
+
+		UnaryOperator operator = expression.getOperator();
+
+		// numeric
+		if (operator instanceof JavaMathSin)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.sin(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.sin(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.sin(v));
+
+		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
-		
+
 		if (operator instanceof JavaStringToLowerCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toLowerCase());
-		
+
 		if (operator instanceof JavaStringToUpperCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toUpperCase());
-		
+
 		if (operator instanceof JavaStringTrimOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.trim());
-		
+
 		return top();
 	}
 
@@ -113,12 +125,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		// if left or right is top, top is returned
 		if (left.isTop() || right.isTop())
 			return top();
-		
+
 		BinaryOperator operator = expression.getOperator();
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
-			
+
 			if (lVal instanceof String || rVal instanceof String) {
 			} else if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() + ((Number) rVal).doubleValue());
@@ -145,7 +157,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() - ((Number) rVal).intValue());
 			}
 		}
-		
+
 		if (operator instanceof MultiplicationOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
@@ -160,7 +172,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() * ((Number) rVal).intValue());
 			}
 		}
-		
+
 		if (operator instanceof DivisionOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
@@ -175,28 +187,28 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() / ((Number) rVal).intValue());
 			}
 		}
-				
+
 		if (operator instanceof JavaStringConcatOperator)
 			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
-		
+
 		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.contains(rv));			
 		}
-		
+
 		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.equals(rv));			
 		}
-		
+
 		if (operator instanceof JavaStringCharAtOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.charAt(rv));			
 		}
-		
+
 		return top();
 	}
 
@@ -230,13 +242,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String rv = ((String) right.getValue());
 			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
-		
+
 		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
-		
+
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 
