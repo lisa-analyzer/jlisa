@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_MathTest.main(String[]_args).json" ],
+  "info" : {
+    "cfgs" : "2",
+    "duration" : "112ms",
+    "end" : "2025-08-13T22:38:44.583+02:00",
+    "expressions" : "99",
+    "files" : "1",
+    "globals" : "2",
+    "members" : "47",
+    "programs" : "1",
+    "start" : "2025-08-13T22:38:44.471+02:00",
+    "statements" : "27",
+    "units" : "16",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/math"
+  }
+}
