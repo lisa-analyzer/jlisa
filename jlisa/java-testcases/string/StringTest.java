@@ -17,5 +17,6 @@ public class StringTest {
 		String s8 = s4.toLowerCase();
 		String s9 = s4.toUpperCase();
 		String s10 = s5.toString();
+		char c = s10.charAt(0);
 	}
 }
