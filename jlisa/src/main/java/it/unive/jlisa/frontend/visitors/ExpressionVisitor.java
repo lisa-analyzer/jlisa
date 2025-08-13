@@ -568,7 +568,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			return false;
 		}
 		if (token.endsWith("l") || token.endsWith("L")) {
-			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token));
+			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token.substring(0, token.length() - 1)));
 			return false;
 		}
 		try {
