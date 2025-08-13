@@ -3,6 +3,7 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaCharacterIsDigit;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetter;
 import it.unive.jlisa.program.operator.JavaMathAbs;
 import it.unive.jlisa.program.operator.JavaMathAcos;
@@ -111,6 +112,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isLetter(v));
 
+		if (operator instanceof JavaCharacterIsDigit)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isDigit(v));
+
 		// numeric
 		if (operator instanceof NumericNegation)
 			if (arg.getValue() instanceof Double v)
@@ -121,7 +126,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(-v);
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(-v);
-		
+
 		if (operator instanceof JavaMathSin)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.sin(v));
@@ -129,7 +134,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.sin(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.sin(v));
-		
+
 		if (operator instanceof JavaMathCos)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.cos(v));
@@ -137,7 +142,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.cos(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.cos(v));
-		
+
 		if (operator instanceof JavaMathSqrt)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.sqrt(v));
@@ -145,7 +150,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.sqrt(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.sqrt(v));
-		
+
 		if (operator instanceof JavaMathTan)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.tan(v));
@@ -153,7 +158,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.tan(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.tan(v));
-		
+
 		if (operator instanceof JavaMathAtan)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.atan(v));
@@ -161,7 +166,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.atan(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.atan(v));
-		
+
 		if (operator instanceof JavaMathLog)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.log(v));
@@ -169,7 +174,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.log(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.log(v));
-		
+
 		if (operator instanceof JavaMathLog10)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.log10(v));
@@ -177,7 +182,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.log10(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.log10(v));
-		
+
 		if (operator instanceof JavaMathAsin)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.asin(v));
@@ -185,7 +190,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.asin(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.asin(v));
-		
+
 		if (operator instanceof JavaMathExp)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.exp(v));
@@ -193,7 +198,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.exp(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.exp(v));
-		
+
 		if (operator instanceof JavaMathAcos)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.acos(v));
@@ -201,7 +206,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.acos(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.acos(v));
-		
+
 		if (operator instanceof JavaMathFloor)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.floor(v));
@@ -209,7 +214,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.floor(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.floor(v));
-		
+
 		if (operator instanceof JavaMathRound)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.round(v));
@@ -217,7 +222,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.round(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.round(v));
-		
+
 		if (operator instanceof JavaMathToRadians)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.toRadians(v));
@@ -225,7 +230,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.toRadians(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.toRadians(v));
-		
+
 		if (operator instanceof JavaMathAbs)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Math.abs(v));
@@ -235,7 +240,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.abs(v));
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.abs(v));
-				
+
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
@@ -324,7 +329,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() / ((Number) rVal).intValue());
 			}
 		}
-		
+
 		if (operator instanceof JavaMathPow) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
@@ -333,7 +338,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.pow(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
-		
+
 		if (operator instanceof JavaMathAtan2) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
@@ -386,13 +391,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			SemanticOracle oracle) throws SemanticException {
 		if (arg.isTop())
 			return Satisfiability.UNKNOWN;
-		
+
 		UnaryOperator operator = expression.getOperator();
 		if (operator instanceof JavaCharacterIsLetter)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isLetter(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
-		// TODO Auto-generated method stub
+
+		if (operator instanceof JavaCharacterIsDigit)
+			if (arg.getValue() instanceof Integer v)
+				return Character.isDigit(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}
 
