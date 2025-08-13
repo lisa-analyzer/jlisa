@@ -3,3 +3,7 @@ class Math extends Object:
 	method sin: it.unive.jlisa.program.java.constructs.math.MathSin
 		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method cos: it.unive.jlisa.program.java.constructs.math.MathCos
+		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

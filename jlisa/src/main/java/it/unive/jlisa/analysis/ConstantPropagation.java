@@ -3,6 +3,7 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaMathCos;
 import it.unive.jlisa.program.operator.JavaMathSin;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
@@ -98,6 +99,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.sin(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.sin(v));
+		
+		if (operator instanceof JavaMathCos)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.cos(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.cos(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.cos(v));
 
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
