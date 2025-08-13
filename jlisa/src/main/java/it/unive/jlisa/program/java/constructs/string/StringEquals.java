@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringEquals;
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -18,6 +17,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringEquals extends BinaryExpression implements PluggableStatement {
@@ -49,7 +49,7 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-		JavaClassType stringType = JavaClassType.lookup("String", null);
+		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
@@ -57,12 +57,12 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
 		
-		it.unive.lisa.symbolic.value.BinaryExpression contains = new it.unive.lisa.symbolic.value.BinaryExpression(
+		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
 				getProgram().getTypes().getBooleanType(), 
 				accessLeft, 
 				accessRight, 
-				JavaStringEquals.INSTANCE, 
+				JavaStringEqualsOperator.INSTANCE, 
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, contains, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
 	}
 }

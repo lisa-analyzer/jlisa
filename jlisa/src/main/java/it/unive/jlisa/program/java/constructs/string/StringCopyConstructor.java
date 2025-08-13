@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -16,6 +15,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringCopyConstructor extends BinaryExpression implements PluggableStatement {
@@ -47,7 +47,7 @@ public class StringCopyConstructor extends BinaryExpression implements Pluggable
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-		JavaClassType stringType = JavaClassType.lookup("String", null);
+		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());		
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());

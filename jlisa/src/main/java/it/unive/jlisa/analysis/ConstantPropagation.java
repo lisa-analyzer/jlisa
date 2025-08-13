@@ -3,13 +3,13 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
-import it.unive.jlisa.program.operator.JavaStringCharAt;
-import it.unive.jlisa.program.operator.JavaStringConcat;
-import it.unive.jlisa.program.operator.JavaStringContains;
-import it.unive.jlisa.program.operator.JavaStringEquals;
-import it.unive.jlisa.program.operator.JavaStringLength;
-import it.unive.jlisa.program.operator.JavaStringToLowerCase;
-import it.unive.jlisa.program.operator.JavaStringToUpperCase;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringConcatOperator;
+import it.unive.jlisa.program.operator.JavaStringContainsOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -82,14 +82,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public ConstantValue evalUnaryExpression(UnaryExpression expression, ConstantValue arg, ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
-		UnaryOperator operator = expression.getOperator();
-		if (operator instanceof JavaStringLength && arg.getValue() instanceof String str)
+		// if arg is top, top is returned
+		if (arg.isTop())
+			return top();
+		
+		UnaryOperator operator = expression.getOperator();		
+		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
 		
-		if (operator instanceof JavaStringToLowerCase && arg.getValue() instanceof String str)
+		if (operator instanceof JavaStringToLowerCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toLowerCase());
 		
-		if (operator instanceof JavaStringToUpperCase && arg.getValue() instanceof String str)
+		if (operator instanceof JavaStringToUpperCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toUpperCase());
 		
 		return top();
@@ -102,6 +106,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue right,
 			ProgramPoint pp,
 			SemanticOracle oracle) {
+		// if left or right is top, top is returned
+		if (left.isTop() || right.isTop())
+			return top();
+		
 		BinaryOperator operator = expression.getOperator();
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
@@ -164,22 +172,22 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 				
-		if (operator instanceof JavaStringConcat)
+		if (operator instanceof JavaStringConcatOperator)
 			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
 		
-		if (operator instanceof JavaStringContains) {
+		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.contains(rv));			
 		}
 		
-		if (operator instanceof JavaStringEquals) {
+		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.equals(rv));			
 		}
 		
-		if (operator instanceof JavaStringCharAt) {
+		if (operator instanceof JavaStringCharAtOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.charAt(rv));			
@@ -191,14 +199,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesAbstractValue(ConstantValue value, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
-		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesAbstractValue(value, pp, oracle);
+		// this method should not be never called
+		return Satisfiability.UNKNOWN;
 	}
 
 	@Override
 	public Satisfiability satisfiesNullConstant(ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
-		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesNullConstant(pp, oracle);
+		// this method should not be never called
+		return Satisfiability.UNKNOWN;
 	}
 
 	@Override
@@ -213,13 +221,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
 		BinaryOperator operator = expression.getOperator();
 
-		if (operator instanceof JavaStringContains) {
+		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
 		
-		if (operator instanceof JavaStringEquals) {
+		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
@@ -239,8 +247,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesNonNullConstant(Constant constant, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
-		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesNonNullConstant(constant, pp, oracle);
+		// this method should not be never called
+		return Satisfiability.UNKNOWN;
 	}
 
 	@Override

@@ -3,39 +3,38 @@ package it.unive.jlisa.program.operator;
 import java.util.Collections;
 import java.util.Set;
 
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaStringLength implements
+public class JavaStringToLowerCaseOperator implements
 StringOperator,
 UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaStringLength INSTANCE = new JavaStringLength();
+	public static final JavaStringToLowerCaseOperator INSTANCE = new JavaStringToLowerCaseOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaStringLength() {
+	protected JavaStringToLowerCaseOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "strlen";
+		return "strlower";
 	}
 
 	@Override
 	public Set<Type> typeInference(
 			TypeSystem types,
 			Set<Type> argument) {
-		if (argument.stream().noneMatch(t -> t.equals(JavaClassType.lookup("String", null))))
+		if (argument.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		return Collections.singleton(types.getIntegerType());
 	}

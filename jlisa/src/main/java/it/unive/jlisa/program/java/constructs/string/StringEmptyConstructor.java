@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -17,6 +16,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringEmptyConstructor extends UnaryExpression implements PluggableStatement {
@@ -49,7 +49,7 @@ public class StringEmptyConstructor extends UnaryExpression implements Pluggable
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
 			StatementStore<A> expressions) throws SemanticException {
-		JavaClassType stringType = JavaClassType.lookup("String", null);
+		Type stringType = getProgram().getTypes().getStringType();
 		Constant emptyString = new Constant(stringType, "", getLocation());
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());

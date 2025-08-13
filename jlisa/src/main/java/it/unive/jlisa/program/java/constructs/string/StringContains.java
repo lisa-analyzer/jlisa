@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringContains;
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -18,6 +17,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringContains extends BinaryExpression implements PluggableStatement {
@@ -49,7 +49,7 @@ public class StringContains extends BinaryExpression implements PluggableStateme
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-		JavaClassType stringType = JavaClassType.lookup("String", null);
+		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
@@ -61,7 +61,7 @@ public class StringContains extends BinaryExpression implements PluggableStateme
 				getProgram().getTypes().getBooleanType(), 
 				accessLeft, 
 				accessRight, 
-				JavaStringContains.INSTANCE, 
+				JavaStringContainsOperator.INSTANCE, 
 				getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, contains, originating);
 	}

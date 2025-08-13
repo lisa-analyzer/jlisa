@@ -3,39 +3,43 @@ package it.unive.jlisa.program.operator;
 import java.util.Collections;
 import java.util.Set;
 
-import it.unive.jlisa.program.type.JavaCharType;
-import it.unive.lisa.symbolic.value.operator.binary.StringOperation;
+import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaStringCharAt extends StringOperation {
+public class JavaStringConcatOperator extends StringConcat {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaStringCharAt INSTANCE = new JavaStringCharAt();
+	public static final JavaStringConcatOperator INSTANCE = new JavaStringConcatOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaStringCharAt() {
+	protected JavaStringConcatOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "strcharat";
+		return "strcat";
 	}
 
 	@Override
 	public Set<Type> typeInference(TypeSystem types, Set<Type> left, Set<Type> right) {
-		return Collections.singleton(JavaCharType.INSTANCE);
+		if (left.stream().noneMatch(t -> t.equals(types.getStringType())))
+			return Collections.emptySet();
+		if (right.stream().noneMatch(t -> t.equals(types.getStringType())))
+			return Collections.emptySet();
+		return Collections.singleton(types.getStringType());
 	}
 	
 	@Override
 	protected Type resultType(
 			TypeSystem types) {
-		return JavaCharType.INSTANCE;
+		return types.getStringType();
 	}
+
 }

@@ -97,6 +97,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					partialResult = call.forwardSemanticsAux(interprocedural, state, expressionSet, expressions);
 					getMetaVariables().addAll(call.getMetaVariables());
 				} else if (lType.isStringType()) {
+					//TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
 					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)), StringType.INSTANCE, this.getLocation());
 					actualRight =  new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE, this.getLocation());
@@ -111,6 +112,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									getLocation()), 
 							this);
 				} else if (rType.isStringType()) {
+					//TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
 					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)), StringType.INSTANCE, this.getLocation());
 					actualLeft =  new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE, this.getLocation());
@@ -143,7 +145,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 				result = result.lub(partialResult);
 			}
 		}
-		
+			
 		return result;
 	}
 

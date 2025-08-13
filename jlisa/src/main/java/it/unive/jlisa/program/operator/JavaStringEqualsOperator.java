@@ -3,40 +3,42 @@ package it.unive.jlisa.program.operator;
 import java.util.Collections;
 import java.util.Set;
 
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.symbolic.value.operator.binary.StringOperation;
+import it.unive.lisa.symbolic.value.operator.binary.StringEquals;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaStringConcat extends StringOperation {
+public class JavaStringEqualsOperator extends StringEquals {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaStringConcat INSTANCE = new JavaStringConcat();
+	public static final JavaStringEqualsOperator INSTANCE = new JavaStringEqualsOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaStringConcat() {
+	protected JavaStringEqualsOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "strcat";
+		return "strequals";
 	}
 
 	@Override
 	public Set<Type> typeInference(TypeSystem types, Set<Type> left, Set<Type> right) {
-		return Collections.singleton(JavaClassType.lookup("String", null));
+		if (left.stream().noneMatch(t -> t.equals(types.getStringType())))
+			return Collections.emptySet();
+		if (right.stream().noneMatch(t -> t.equals(types.getStringType())))
+			return Collections.emptySet();
+		return Collections.singleton(types.getBooleanType());
 	}
 	
 	@Override
 	protected Type resultType(
 			TypeSystem types) {
-		return JavaClassType.lookup("String", null);
+		return types.getBooleanType();
 	}
-
 }

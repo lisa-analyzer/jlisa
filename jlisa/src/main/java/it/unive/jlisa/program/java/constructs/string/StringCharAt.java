@@ -1,8 +1,7 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringCharAt;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.type.JavaCharType;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -20,6 +19,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringCharAt extends BinaryExpression implements PluggableStatement {
@@ -51,14 +51,18 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-		JavaClassType stringType = JavaClassType.lookup("String", null);
+		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 		
-		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(JavaCharType.INSTANCE, accessLeft, right, JavaStringCharAt.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaCharType.INSTANCE, 
+				accessLeft, 
+				right, 
+				JavaStringCharAtOperator.INSTANCE, 
+				getLocation());
 		
 		return analysis.smallStepSemantics(state, concat, originating);
 	}
