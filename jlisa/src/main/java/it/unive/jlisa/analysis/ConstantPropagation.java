@@ -5,6 +5,7 @@ import java.util.Set;
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaStringConcat;
 import it.unive.jlisa.program.operator.JavaStringContains;
+import it.unive.jlisa.program.operator.JavaStringEquals;
 import it.unive.jlisa.program.operator.JavaStringLength;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -155,10 +156,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				
 		if (operator instanceof JavaStringConcat)
 			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
+		
 		if (operator instanceof JavaStringContains) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.contains(rv));			
+		}
+		
+		if (operator instanceof JavaStringEquals) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.equals(rv));			
 		}
 		
 		return top();
@@ -193,6 +201,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+		}
+		
+		if (operator instanceof JavaStringEquals) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
 		
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);

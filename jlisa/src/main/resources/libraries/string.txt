@@ -23,3 +23,8 @@ class String extends Object:
 		param this libtype String*
 		param other libtype String*
 		
+	instance method equals: it.unive.jlisa.program.java.constructs.string.StringEquals
+		libtype String*
+		param this libtype String*
+		param other libtype String*
+		
