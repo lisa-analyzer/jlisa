@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.lisa.analysis.value.ValueDomain;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,7 +30,7 @@ import it.unive.lisa.program.Program;
 
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException, ParsingException {
         //String source = "public class Hello { public static void main() { System.out.println(\"Hello World :)\"); } }";
 
         //ASTParser parser = ASTParser.newParser(AST.getJLSLatest()); // NOTE: JLS8 is deprecated. getJLSLatest will return JDK23
@@ -67,24 +68,34 @@ public class Main {
                 .desc("Checker: (Assert)")
                 .required(false)
                 .build();
+
         Option numericalDomainOption = Option.builder("n")
                 .longOpt("numericalDomain")
                 .hasArg()
                 .desc("Numerical domain: (ConstantPropagation)")
                 .required(false)
                 .build();
+
+        Option mode = Option.builder("m")
+                .longOpt("mode")
+                .hasArg()
+                .desc("Execution mode: (Statistics, Debug [DEFAULT])")
+                .required(false)
+                .build();
+
         options.addOption(helpOption);
         options.addOption(sourceOption);
         options.addOption(outdirOption);
         options.addOption(logLevel);
         options.addOption(checker);
         options.addOption(numericalDomainOption);
+        options.addOption(mode);
         // Create parser and formatter
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         String[] sources = new String[0];
         String outdir = "";
-        String checkerName ="", numericalDomain="";
+        String checkerName ="", numericalDomain="", executionMode="Debug";
         try {
             CommandLine cmd = parser.parse(options, args);
 
@@ -127,16 +138,40 @@ public class Main {
 
             System.out.println("Output directory: " + outdir);
 
+            if(cmd.hasOption("m"))
+                executionMode = cmd.getOptionValue("m");
+
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage());
             formatter.printHelp("jlisa", options, true);
             System.exit(1);
         }
 
+        switch(executionMode) {
+            case "Debug":
+                runDebug(sources, outdir, checkerName, numericalDomain);
+                break;
+            case "Statistics":
+                runStatistics(sources, outdir, checkerName, numericalDomain);
+                break;
+            default:
+                System.err.print("Unknown execution mode: " + executionMode);
+                System.exit(1);
+        }
+    }
+    private static void runDebug(String[] sources, String outdir, String checkerName, String numericalDomain) throws IOException, ParseException, ParsingException {
+        JavaFrontend frontend = runFrontend(sources);
+        if (!frontend.getParserContext().getExceptions().isEmpty()) {
+            System.err.print("Some errors occurred during the parsing, reporting the first one");
+            throw frontend.getParserContext().getExceptions().getFirst();
+        }
+        runAnalysis(outdir, checkerName, numericalDomain, frontend);
+    }
+
+    private static void runStatistics(String[] sources, String outdir, String checkerName, String numericalDomain) {
         JavaFrontend frontend = null;
         try {
-            frontend = new JavaFrontend();
-            frontend.parseFromListOfFile(Arrays.stream(sources).toList());
+            frontend = runFrontend(sources);
             if (!frontend.getParserContext().getExceptions().isEmpty()) {
                 CSVExceptionWriter.writeCSV(outdir + "frontend.csv", frontend.getParserContext().getExceptions());
                 System.err.print("Some errors occurred during the parsing. Check " + outdir + "frontend.csv file.");
@@ -149,42 +184,49 @@ public class Main {
                 System.exit(1);
             }
         try{
-            Program p = frontend.getProgram();
-
-            System.out.println(p);
-            LiSAConfiguration conf = new LiSAConfiguration();
-            conf.workdir = outdir;
-            conf.serializeResults = false;
-            conf.jsonOutput = true;
-            conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
-            conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
-            conf.callGraph = new RTACallGraph();
-            conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-            conf.optimize = false;
-            switch (checkerName) {
-                case "Assert": conf.semanticChecks.add(new AssertChecker()); break;
-                case "": break;
-                default: throw new ParseException("Invalid checker name: " + checkerName);
-            }
-            ValueDomain<?> domain;
-            switch (numericalDomain) {
-                case "ConstantPropagation": domain = new ConstantPropagation(); break;
-                default: throw new ParseException("Invalid numerical domain name: " + numericalDomain);
-            }
-
-            conf.analysis = new SimpleAbstractDomain<>(
-                    new FieldSensitivePointBasedHeap(),
-                    domain,
-                    new InferredTypes());
-
-
-            LiSA lisa = new LiSA(conf);
-            lisa.run(p);
+            runAnalysis(outdir, checkerName, numericalDomain, frontend);
         } catch (Throwable e) {
             CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause()!=null? e.getCause(): e);
             System.err.print("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
             System.exit(1);
         }
+    }
 
+    private static JavaFrontend runFrontend(String[] sources) throws IOException {
+        JavaFrontend frontend = new JavaFrontend();
+        frontend.parseFromListOfFile(Arrays.stream(sources).toList());
+        return frontend;
+    }
+
+    private static void runAnalysis(String outdir, String checkerName, String numericalDomain, JavaFrontend frontend) throws ParseException {
+        Program p = frontend.getProgram();
+        LiSAConfiguration conf = new LiSAConfiguration();
+        conf.workdir = outdir;
+        conf.serializeResults = false;
+        conf.jsonOutput = true;
+        conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+        conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
+        conf.callGraph = new RTACallGraph();
+        conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
+        conf.optimize = false;
+        switch (checkerName) {
+            case "Assert": conf.semanticChecks.add(new AssertChecker()); break;
+            case "": break;
+            default: throw new ParseException("Invalid checker name: " + checkerName);
+        }
+        ValueDomain<?> domain;
+        switch (numericalDomain) {
+            case "ConstantPropagation": domain = new ConstantPropagation(); break;
+            default: throw new ParseException("Invalid numerical domain name: " + numericalDomain);
+        }
+
+        conf.analysis = new SimpleAbstractDomain<>(
+                new FieldSensitivePointBasedHeap(),
+                domain,
+                new InferredTypes());
+
+
+        LiSA lisa = new LiSA(conf);
+        lisa.run(p);
     }
 }
