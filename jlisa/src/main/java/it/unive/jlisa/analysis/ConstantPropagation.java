@@ -3,6 +3,7 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaCharacterIsLetter;
 import it.unive.jlisa.program.operator.JavaMathAbs;
 import it.unive.jlisa.program.operator.JavaMathAcos;
 import it.unive.jlisa.program.operator.JavaMathAsin;
@@ -105,6 +106,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		UnaryOperator operator = expression.getOperator();
+		// char
+		if (operator instanceof JavaCharacterIsLetter)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isLetter(v));
 
 		// numeric
 		if (operator instanceof NumericNegation)
@@ -379,6 +384,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesUnaryExpression(UnaryExpression expression, ConstantValue arg, ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
+		if (arg.isTop())
+			return Satisfiability.UNKNOWN;
+		
+		UnaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaCharacterIsLetter)
+			if (arg.getValue() instanceof Integer v)
+				return Character.isLetter(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		
 		// TODO Auto-generated method stub
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}

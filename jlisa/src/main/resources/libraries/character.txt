@@ -6,9 +6,11 @@ class Character extends Object:
 		param this libtype Character*
 		param c type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
-		
 	instance method charValue: it.unive.jlisa.program.java.constructs.character.CharValue
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param this libtype Character*
 
+	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
