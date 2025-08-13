@@ -64,6 +64,7 @@ import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -399,7 +400,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "+":
 			expression = buildExpression(operands, (first, second) ->
-			new JavaAddition(cfg, getSourceCodeLocation(node), first, second));
+			new JavaAddition(cfg, getOperatorLocation(node), first, second));
 			break;
 		case "-":
 			expression = buildExpression(operands, (first, second) ->
@@ -654,8 +655,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(StringLiteral node) {
-		String literal = node.getEscapedValue();
-		expression = new it.unive.lisa.program.cfg.statement.literal.StringLiteral(this.cfg, getSourceCodeLocation(node.getParent()), literal);
+		String literal = node.getLiteralValue();
+		expression = new JavaStringLiteral(this.cfg, getSourceCodeLocation(node), literal);
 		return false;
 	}
 

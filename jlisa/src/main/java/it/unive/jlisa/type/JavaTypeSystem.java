@@ -8,9 +8,9 @@ import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.BooleanType;
 import it.unive.lisa.type.NumericType;
+import it.unive.lisa.type.StringType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
@@ -23,7 +23,7 @@ public class JavaTypeSystem extends TypeSystem {
 
     @Override
     public StringType getStringType() {
-        return StringType.INSTANCE;
+        return (StringType) JavaClassType.lookup("String", null);
     }
 
     @Override

@@ -53,9 +53,9 @@ public class JavaClassType implements UnitType {
         return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
     }
 
-    private final String name;
+    protected final String name;
 
-    private final CompilationUnit unit;
+    protected final CompilationUnit unit;
 
     protected JavaClassType(
             String name,

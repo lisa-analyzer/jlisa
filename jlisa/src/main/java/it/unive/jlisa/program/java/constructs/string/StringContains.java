@@ -1,107 +1,68 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.cfg.*;
+import it.unive.jlisa.program.operator.JavaStringContainsOperator;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.string.Contains;
-import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
-/**
- * The native construct representing the contains operation. This construct can
- * be invoked on a string variable {@code x} with {@code x.contains(other)},
- * where {@code other} is the string that will be checked against substrings of
- * {@code x}.
- * 
- * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
- */
-public class StringContains extends NativeCFG {
+public class StringContains extends BinaryExpression implements PluggableStatement {
+	protected Statement originating;
 
-	/**
-	 * Builds the construct.
-	 * 
-	 * @param location   the location where this construct is defined
-	 * @param stringUnit the unit where this construct is defined
-	 */
-	public StringContains(
-			CodeLocation location,
-			ClassUnit stringUnit) {
-		super(new CodeMemberDescriptor(location, stringUnit, true, "contains", BoolType.INSTANCE,
-				new Parameter(location, "this", StringType.INSTANCE),
-				new Parameter(location, "other", StringType.INSTANCE)),
-				IMPStringContains.class);
+	public StringContains(CFG cfg, CodeLocation location, Expression left, Expression right) {
+		super(cfg, location, "contains", left, right);
 	}
 
-	/**
-	 * An expression modeling the string contains operation. The type of both
-	 * operands must be {@link StringType}. The type of this expression is the
-	 * {@link BoolType}.
-	 * 
-	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
-	 */
-	public static class IMPStringContains extends Contains implements PluggableStatement {
+	public static StringContains build(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
+		return new StringContains(cfg, location, params[0], params[1]);
+	}
 
-		/**
-		 * Builds a new instance of this native call, according to the
-		 * {@link PluggableStatement} contract.
-		 * 
-		 * @param cfg      the cfg where the native call happens
-		 * @param location the location where the native call happens
-		 * @param params   the parameters of the native call
-		 * 
-		 * @return the newly-built call
-		 */
-		public static IMPStringContains build(
-				CFG cfg,
-				CodeLocation location,
-				Expression... params) {
-			return new IMPStringContains(cfg, location, params[0], params[1]);
-		}
+	@Override
+	protected int compareSameClassAndParams(Statement o) {
+		return 0; 
+	}
 
-		@Override
-		public void setOriginatingStatement(
-				Statement st) {
-			originating = st;
-		}
 
-		/**
-		 * Builds the contains.
-		 * 
-		 * @param cfg        the {@link CFG} where this operation lies
-		 * @param sourceFile the source file name where this operation is
-		 *                       defined
-		 * @param line       the line number where this operation is defined
-		 * @param col        the column where this operation is defined
-		 * @param left       the left-hand side of this operation
-		 * @param right      the right-hand side of this operation
-		 */
-		public IMPStringContains(
-				CFG cfg,
-				String sourceFile,
-				int line,
-				int col,
-				Expression left,
-				Expression right) {
-			this(cfg, new SourceCodeLocation(sourceFile, line, col), left, right);
-		}
+	@Override
+	public void setOriginatingStatement(Statement st) {
+		originating = st;
+	}
 
-		/**
-		 * Builds the contains.
-		 * 
-		 * @param cfg      the {@link CFG} where this operation lies
-		 * @param location the code location where this operation is defined
-		 * @param left     the left-hand side of this operation
-		 * @param right    the right-hand side of this operation
-		 */
-		public IMPStringContains(
-				CFG cfg,
-				CodeLocation location,
-				Expression left,
-				Expression right) {
-			super(cfg, location, left, right);
-		}
+	@Override
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
+			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+		Type stringType = getProgram().getTypes().getStringType();
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
+
+		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
+		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		
+		it.unive.lisa.symbolic.value.BinaryExpression contains = new it.unive.lisa.symbolic.value.BinaryExpression(
+				getProgram().getTypes().getBooleanType(), 
+				accessLeft, 
+				accessRight, 
+				JavaStringContainsOperator.INSTANCE, 
+				getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, contains, originating);
 	}
 }
