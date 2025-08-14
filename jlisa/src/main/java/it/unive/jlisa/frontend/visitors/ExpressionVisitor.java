@@ -185,8 +185,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		case "%=":
 			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
 					new Modulo(cfg, getSourceCodeLocation(node), left, right));
-		case "|=":
 		case "&=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), left, right));
+			break;
+		case "|=":
 		case "^=":
 		case "<<=":
 		case ">>=":
@@ -569,7 +572,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			return false;
 		}
 		if (token.endsWith("l") || token.endsWith("L")) {
-			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.parseLong(token.substring(0, token.length() - 1)));
+			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.decode(token.substring(0, token.length()-1)));
 			return false;
 		}
 		try {
