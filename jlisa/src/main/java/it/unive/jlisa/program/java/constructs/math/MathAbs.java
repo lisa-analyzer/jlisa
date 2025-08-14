@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathAbs;
+import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -43,7 +43,7 @@ public class MathAbs extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		UnaryExpression abs = new UnaryExpression(
 				Untyped.INSTANCE, 
 				expr, 
-				JavaMathAbs.INSTANCE, 
+				JavaMathAbsOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, abs, originating);

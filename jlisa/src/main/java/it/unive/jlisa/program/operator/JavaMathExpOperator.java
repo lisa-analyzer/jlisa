@@ -8,24 +8,24 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaMathCos implements UnaryOperator {
+public class JavaMathExpOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaMathCos INSTANCE = new JavaMathCos();
+	public static final JavaMathExpOperator INSTANCE = new JavaMathExpOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaMathCos() {
+	protected JavaMathExpOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "cos";
+		return "exp";
 	}
 
 	@Override

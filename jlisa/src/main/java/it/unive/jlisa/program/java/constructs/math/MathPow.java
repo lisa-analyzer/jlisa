@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathPow;
+import it.unive.jlisa.program.operator.JavaMathPowOperator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -48,7 +48,7 @@ public class MathPow extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 				JavaDoubleType.INSTANCE, 
 				left,
 				right,
-				JavaMathPow.INSTANCE, 
+				JavaMathPowOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, pow, originating);

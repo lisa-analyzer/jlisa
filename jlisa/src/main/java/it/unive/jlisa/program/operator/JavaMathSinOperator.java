@@ -8,24 +8,24 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaMathToRadians implements UnaryOperator {
+public class JavaMathSinOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaMathToRadians INSTANCE = new JavaMathToRadians();
+	public static final JavaMathSinOperator INSTANCE = new JavaMathSinOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaMathToRadians() {
+	protected JavaMathSinOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "toRadians";
+		return "sin";
 	}
 
 	@Override

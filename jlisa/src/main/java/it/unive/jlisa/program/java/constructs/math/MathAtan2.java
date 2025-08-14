@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathAtan2;
+import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -48,7 +48,7 @@ public class MathAtan2 extends it.unive.lisa.program.cfg.statement.BinaryExpress
 				JavaDoubleType.INSTANCE, 
 				left,
 				right,
-				JavaMathAtan2.INSTANCE, 
+				JavaMathAtan2Operator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, atan2, originating);
