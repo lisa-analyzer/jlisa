@@ -3,6 +3,7 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigit;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetter;
 import it.unive.jlisa.program.operator.JavaMathAbs;
@@ -368,6 +369,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.charAt(rv));			
+		}
+		
+		// char
+		if (operator instanceof JavaCharacterEqualsOperator) {
+			Integer lv = ((Integer) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.equals(rv));			
 		}
 
 		return top();

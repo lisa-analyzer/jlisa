@@ -8,5 +8,7 @@ public class Main {
     	char a = 'a';
     	boolean b0 = Character.isLetter(a);
     	boolean b1 = Character.isDigit(a);
+    	boolean b2 = c.equals(new Character('a'));
+    	
     }
 }
