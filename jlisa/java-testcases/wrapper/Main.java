@@ -10,5 +10,7 @@ public class Main {
     	boolean b1 = Character.isDigit(a);
     	boolean b2 = c.equals(new Character('a'));
     	
+    	Integer k = Integer.valueOf(4);
+    	
     }
 }

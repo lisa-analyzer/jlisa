@@ -10,5 +10,9 @@ class Integer extends Object:
 	instance method intValue: it.unive.jlisa.program.java.constructs.integer.IntValue
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype Integer*
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.integer.IntegerValueOf
+		libtype Integer* 
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE 
 
 		
