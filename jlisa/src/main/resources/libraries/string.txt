@@ -58,3 +58,13 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param this libtype String*
 		param other libtype String*
+		
+	instance method matches: it.unive.jlisa.program.java.constructs.string.StringMatches
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param this libtype String*
+		param other libtype String*
+		
+	instance method substring: it.unive.jlisa.program.java.constructs.string.StringSubstring
+		libtype String*
+		param this libtype String*
+		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE

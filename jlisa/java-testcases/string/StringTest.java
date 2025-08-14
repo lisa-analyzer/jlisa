@@ -19,8 +19,11 @@ public class StringTest {
 		String s10 = s5.toString();
 		char c = s10.charAt(0);
 		String s11 = s4.trim();
+		
 		boolean b3 = s4.startsWith(s2);
 		boolean b4 = s4.endsWith("World"); 
+		boolean b5 = s5.matches("^AB");
+		String s12 = s4.substring(5);
 		
 	}
 }

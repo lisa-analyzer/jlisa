@@ -9,7 +9,9 @@ import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringTrimOperator;
@@ -211,6 +213,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.endsWith(rv));			
 		}
 		
+		if (operator instanceof JavaStringMatchesOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.matches(rv));			
+		}
+		
+		if (operator instanceof JavaStringSubstringOperator) {
+			String lv = ((String) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.substring(rv));			
+		}
+		
 		return top();
 	}
 
@@ -261,6 +275,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.endsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+		}
+		
+		if (operator instanceof JavaStringMatchesOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
 		
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
