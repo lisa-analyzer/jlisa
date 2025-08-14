@@ -12,7 +12,7 @@ public class WrapperClassTest extends JLiSAAnalysisExecutor {
 	
 	@Test
 	public void wrapperClassTest()  throws IOException {
-		CronConfiguration conf = TestHelpers.createConfiguration("wrapper", "", "Main.java");
+		CronConfiguration conf = TestHelpers.constantPropagation("wrapper", "", "Main.java");
 		perform(conf);
 	}
 }
