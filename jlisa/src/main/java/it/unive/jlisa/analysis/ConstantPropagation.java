@@ -6,8 +6,10 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
+import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringTrimOperator;
@@ -197,6 +199,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.charAt(rv));			
 		}
 		
+		if (operator instanceof JavaStringStartsWithOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.startsWith(rv));			
+		}
+		
+		if (operator instanceof JavaStringEndsWithOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.endsWith(rv));			
+		}
+		
 		return top();
 	}
 
@@ -235,6 +249,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+		}
+		
+		if (operator instanceof JavaStringStartsWithOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return lv.startsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+		}
+		
+		if (operator instanceof JavaStringEndsWithOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return lv.endsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
 		
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
