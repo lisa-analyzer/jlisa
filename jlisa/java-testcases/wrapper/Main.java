@@ -1,3 +1,5 @@
+import it.unive.jlisa.program.java.constructs.doublew.DoubleValue;
+
 public class Main {
 	
     public static void main(String[] args) {
@@ -11,6 +13,7 @@ public class Main {
     	boolean b2 = c.equals(new Character('a'));
     	
     	Integer k = Integer.valueOf(4);
-    	
+    	Double dx = Double.valueOf(5.3);
+    	double dd = dx.doubleValue();
     }
 }
