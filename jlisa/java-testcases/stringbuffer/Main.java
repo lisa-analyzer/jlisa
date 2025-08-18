@@ -9,5 +9,6 @@ public class StringTest {
 		
 		b1.append('b');
 		b1.append("c");
+		b1.insert(1, 'x');
 	}
 }

@@ -22,3 +22,9 @@ class StringBuffer extends Object:
 		libtype StringBuffer*
 		param this libtype StringBuffer*	
 		param val libtype String*
+		
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferInsertChar
+		libtype StringBuffer*
+		param this libtype StringBuffer*	
+		param val1 type it.unive.jlisa.program.type.JavaIntType::INSTANCE		
+		param val2 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
