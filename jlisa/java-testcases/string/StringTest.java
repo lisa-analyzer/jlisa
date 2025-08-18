@@ -29,6 +29,7 @@ public class StringTest {
 		String s13 = s4.replaceAll("o", "i");
 		long l1 = 123;
 		String s14 = String.valueOf(l1);
+		int i2 = s4.indexOf("World");
 		
 	}
 }
