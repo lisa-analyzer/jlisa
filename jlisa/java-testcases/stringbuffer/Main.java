@@ -7,5 +7,7 @@ public class StringTest {
 		
 		String s = b1.toString();
 		
+		b1.append('b');
+		b1.append("c");
 	}
 }

@@ -12,3 +12,13 @@ class StringBuffer extends Object:
 	instance method toString: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferToString
 		libtype String*
 		param this libtype StringBuffer*	
+		
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendChar
+		libtype StringBuffer*
+		param this libtype StringBuffer*	
+		param val type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendString
+		libtype StringBuffer*
+		param this libtype StringBuffer*	
+		param val libtype String*

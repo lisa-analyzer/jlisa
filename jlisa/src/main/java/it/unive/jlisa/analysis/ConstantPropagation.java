@@ -9,19 +9,21 @@ import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
 import it.unive.jlisa.program.operator.JavaMathAsinOperator;
-import it.unive.jlisa.program.operator.JavaMathAtanOperator;
 import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaMathAtanOperator;
 import it.unive.jlisa.program.operator.JavaMathCosOperator;
 import it.unive.jlisa.program.operator.JavaMathExpOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
-import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.operator.JavaMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.operator.JavaMathPowOperator;
 import it.unive.jlisa.program.operator.JavaMathRoundOperator;
 import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaMathTanOperator;
 import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
@@ -369,6 +371,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.charAt(rv));			
+		}
+		
+		if (operator instanceof JavaStringAppendCharOperator) {
+			String lv = ((String) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv + ((char) rv.intValue()));			
+		}	
+		
+		if (operator instanceof JavaStringAppendStringOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv + rv);			
 		}
 		
 		// char
