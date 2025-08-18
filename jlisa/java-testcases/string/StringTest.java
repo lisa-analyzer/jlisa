@@ -30,6 +30,7 @@ public class StringTest {
 		long l1 = 123;
 		String s14 = String.valueOf(l1);
 		int i2 = s4.indexOf("World");
+		int i3 = s4.lastIndexOf('H');
 		
 	}
 }
