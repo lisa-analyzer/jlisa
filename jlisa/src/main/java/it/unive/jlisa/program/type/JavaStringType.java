@@ -14,9 +14,12 @@ import it.unive.lisa.type.Untyped;
 public class JavaStringType extends JavaClassType implements StringType, InMemoryType, UnitType {
 
 	public JavaStringType(CompilationUnit unit) {
-		super("String", unit);
 		// TODO: this should work also with java.lang.String
-		types.put("String", this);
+		super("String", unit);
+		
+		// we update the String unit if only if not already registered
+		if (!types.containsKey("String"))
+			types.put("String", this);
 	}
 
 	@Override
