@@ -25,5 +25,8 @@ public class StringTest {
 		boolean b5 = s5.matches("^AB");
 		String s12 = s4.substring(5);
 		
+		int i1 = s4.compareTo("Hello World");
+		String s13 = s4.replaceAll("o", "i");
+		
 	}
 }

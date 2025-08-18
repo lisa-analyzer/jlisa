@@ -4,12 +4,14 @@ import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
@@ -31,6 +33,7 @@ import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
@@ -225,9 +228,40 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.substring(rv));			
 		}
 		
+		if (operator instanceof JavaStringCompareToOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.compareTo(rv));			
+		}
+		
 		return top();
 	}
 
+	@Override
+	public ConstantValue evalTernaryExpression(
+			TernaryExpression expression,
+			ConstantValue left,
+			ConstantValue middle,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle
+			) {
+		// if left, or middle or right is top, top is returned
+		if (left.isTop() || middle.isTop() || right.isTop())
+			return top();
+				
+		TernaryOperator operator = expression.getOperator();
+		
+		if (operator instanceof JavaStringReplaceAllOperator) {
+			String lv = ((String) left.getValue());
+			String mv = ((String) middle.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.replaceAll(mv,rv));	
+		}
+		
+		return top();	
+	}
+	
 	@Override
 	public Satisfiability satisfiesAbstractValue(ConstantValue value, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
