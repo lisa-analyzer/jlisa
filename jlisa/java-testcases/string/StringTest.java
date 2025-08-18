@@ -27,6 +27,8 @@ public class StringTest {
 		
 		int i1 = s4.compareTo("Hello World");
 		String s13 = s4.replaceAll("o", "i");
+		long l1 = 123;
+		String s14 = String.valueOf(l1);
 		
 	}
 }
