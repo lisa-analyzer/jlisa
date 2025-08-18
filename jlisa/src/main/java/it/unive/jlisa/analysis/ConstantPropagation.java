@@ -6,6 +6,7 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
 import it.unive.jlisa.program.operator.JavaMathAsinOperator;
@@ -245,6 +246,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.abs(v));
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.abs(v));
+		
+		if (operator instanceof JavaDoubleToRawLongBitsOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
 
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
