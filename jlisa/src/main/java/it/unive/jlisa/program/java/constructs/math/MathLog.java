@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathLog;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -43,7 +43,7 @@ public class MathLog extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		UnaryExpression log = new UnaryExpression(
 				JavaDoubleType.INSTANCE, 
 				expr, 
-				JavaMathLog.INSTANCE, 
+				JavaMathLogOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, log, originating);

@@ -1,35 +1,41 @@
 package it.unive.jlisa.program.operator;
 
+import java.util.Collections;
 import java.util.Set;
 
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaMathAbs implements UnaryOperator {
+public class JavaCharacterIsLetterOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaMathAbs INSTANCE = new JavaMathAbs();
+	public static final JavaCharacterIsLetterOperator INSTANCE = new JavaCharacterIsLetterOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaMathAbs() {
+	protected JavaCharacterIsLetterOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "abs";
+		return "isLetter";
 	}
 
 	@Override
 	public Set<Type> typeInference(
 			TypeSystem types,
 			Set<Type> argument) {
-		return argument;
+		if (argument.stream().noneMatch(t -> t.equals(JavaCharType.INSTANCE) || t.equals(JavaIntType.INSTANCE)))
+			return Collections.emptySet();
+		return Collections.singleton(types.getBooleanType());
 	}
+
 }

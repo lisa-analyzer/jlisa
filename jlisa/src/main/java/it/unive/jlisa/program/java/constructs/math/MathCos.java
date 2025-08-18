@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathCos;
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -43,7 +43,7 @@ public class MathCos extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		UnaryExpression cos = new UnaryExpression(
 				JavaDoubleType.INSTANCE, 
 				expr, 
-				JavaMathCos.INSTANCE, 
+				JavaMathCosOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, cos, originating);

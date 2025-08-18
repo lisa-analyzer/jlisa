@@ -1,3 +1,5 @@
+import it.unive.jlisa.program.java.constructs.doublew.DoubleValue;
+
 public class Main {
 	
     public static void main(String[] args) {
@@ -8,5 +10,10 @@ public class Main {
     	char a = 'a';
     	boolean b0 = Character.isLetter(a);
     	boolean b1 = Character.isDigit(a);
+    	boolean b2 = c.equals(new Character('a'));
+    	
+    	Integer k = Integer.valueOf(4);
+    	Double dx = Double.valueOf(5.3);
+    	double dd = dx.doubleValue();
     }
 }

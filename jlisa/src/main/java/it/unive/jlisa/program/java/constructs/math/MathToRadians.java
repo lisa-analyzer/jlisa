@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathToRadians;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -43,7 +43,7 @@ public class MathToRadians extends it.unive.lisa.program.cfg.statement.UnaryExpr
 		UnaryExpression acos = new UnaryExpression(
 				JavaDoubleType.INSTANCE, 
 				expr, 
-				JavaMathToRadians.INSTANCE, 
+				JavaMathToRadiansOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, acos, originating);

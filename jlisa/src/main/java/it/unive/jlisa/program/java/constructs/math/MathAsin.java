@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathAsin;
+import it.unive.jlisa.program.operator.JavaMathAsinOperator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -43,7 +43,7 @@ public class MathAsin extends it.unive.lisa.program.cfg.statement.UnaryExpressio
 		UnaryExpression asin = new UnaryExpression(
 				JavaDoubleType.INSTANCE, 
 				expr, 
-				JavaMathAsin.INSTANCE, 
+				JavaMathAsinOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, asin, originating);

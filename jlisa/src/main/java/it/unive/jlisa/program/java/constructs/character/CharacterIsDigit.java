@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.character;
 
-import it.unive.jlisa.program.operator.JavaCharacterIsDigit;
+import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -42,7 +42,7 @@ public class CharacterIsDigit extends it.unive.lisa.program.cfg.statement.UnaryE
 		UnaryExpression un = new UnaryExpression(
 				getProgram().getTypes().getBooleanType(), 
 				expr, 
-				JavaCharacterIsDigit.INSTANCE, 
+				JavaCharacterIsDigitOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);

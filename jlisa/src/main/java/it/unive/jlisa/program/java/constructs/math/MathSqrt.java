@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.math;
 
-import it.unive.jlisa.program.operator.JavaMathSqrt;
+import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -43,7 +43,7 @@ public class MathSqrt extends it.unive.lisa.program.cfg.statement.UnaryExpressio
 		UnaryExpression sqrt = new UnaryExpression(
 				JavaDoubleType.INSTANCE, 
 				expr, 
-				JavaMathSqrt.INSTANCE, 
+				JavaMathSqrtOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, sqrt, originating);

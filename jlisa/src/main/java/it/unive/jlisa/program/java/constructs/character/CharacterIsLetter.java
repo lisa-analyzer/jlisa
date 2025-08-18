@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.character;
 
-import it.unive.jlisa.program.operator.JavaCharacterIsLetter;
+import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -42,7 +42,7 @@ public class CharacterIsLetter extends it.unive.lisa.program.cfg.statement.Unary
 		UnaryExpression un = new UnaryExpression(
 				getProgram().getTypes().getBooleanType(), 
 				expr, 
-				JavaCharacterIsLetter.INSTANCE, 
+				JavaCharacterIsLetterOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);

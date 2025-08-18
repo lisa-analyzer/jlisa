@@ -8,24 +8,24 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaMathSqrt implements UnaryOperator {
+public class JavaMathAcosOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaMathSqrt INSTANCE = new JavaMathSqrt();
+	public static final JavaMathAcosOperator INSTANCE = new JavaMathAcosOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaMathSqrt() {
+	protected JavaMathAcosOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "sqrt";
+		return "acos";
 	}
 
 	@Override

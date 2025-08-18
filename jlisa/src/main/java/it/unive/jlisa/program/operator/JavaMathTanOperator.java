@@ -8,24 +8,24 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaMathExp implements UnaryOperator {
+public class JavaMathTanOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaMathExp INSTANCE = new JavaMathExp();
+	public static final JavaMathTanOperator INSTANCE = new JavaMathTanOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaMathExp() {
+	protected JavaMathTanOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "exp";
+		return "tan";
 	}
 
 	@Override

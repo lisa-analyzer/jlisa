@@ -18,3 +18,8 @@ class Character extends Object:
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
+	instance method equals: it.unive.jlisa.program.java.constructs.character.CharacterEquals
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param this libtype Character*
+		param other libtype Character*
+		

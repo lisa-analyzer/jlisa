@@ -8,24 +8,24 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaMathSin implements UnaryOperator {
+public class JavaMathAsinOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaMathSin INSTANCE = new JavaMathSin();
+	public static final JavaMathAsinOperator INSTANCE = new JavaMathAsinOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaMathSin() {
+	protected JavaMathAsinOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "sin";
+		return "asin";
 	}
 
 	@Override
