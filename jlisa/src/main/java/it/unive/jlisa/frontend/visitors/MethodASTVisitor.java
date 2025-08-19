@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -92,9 +93,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
             getProgram().addEntryPoint(cfg);
         }
 
-        CFGTweaker.splitProtectedYields(cfg, RuntimeException::new);
-		CFGTweaker.addFinallyEdges(cfg, RuntimeException::new);
-		CFGTweaker.addReturns(cfg, RuntimeException::new);
+        CFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new);
+		CFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
+		CFGTweaker.addReturns(cfg, JavaSyntaxException::new);
         cfg.simplify();
 
         return false;
