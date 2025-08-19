@@ -10,6 +10,7 @@ import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.ControlFlowTracker;
 
 public class BlockStatementASTVisitor extends JavaASTVisitor{
     private CFG cfg;
@@ -46,7 +47,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
             block.addNode(first);
         }
         for (Object o : node.statements()) {
-            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg);
+            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker());
             ((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
             block.mergeWith(statementASTVisitor.getBlock());
             if (statementASTVisitor.getBlock().getNodes().isEmpty()) {

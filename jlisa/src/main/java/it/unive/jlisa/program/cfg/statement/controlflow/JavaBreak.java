@@ -43,6 +43,11 @@ public class JavaBreak extends Expression {
 	public String toString() {
 		return "break";
 	}
+	
+	@Override
+	public boolean breaksControlFlow() {
+		return true;
+	}
 
 	@Override
 	public <A extends AbstractLattice<A>,

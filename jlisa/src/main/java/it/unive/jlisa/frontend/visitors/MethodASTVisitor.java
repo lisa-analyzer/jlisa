@@ -26,6 +26,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.CFGTweaker;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -91,6 +92,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
             getProgram().addEntryPoint(cfg);
         }
 
+        CFGTweaker.splitProtectedYields(cfg, RuntimeException::new);
+		CFGTweaker.addFinallyEdges(cfg, RuntimeException::new);
+		CFGTweaker.addReturns(cfg, RuntimeException::new);
         cfg.simplify();
 
         return false;
