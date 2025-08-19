@@ -44,6 +44,11 @@ public class JavaContinue extends Expression {
 	public String toString() {
 		return "continue";
 	}
+	
+	@Override
+	public boolean continuesControlFlow() {
+		return true;
+	}
 
 	@Override
 	public <A extends AbstractLattice<A>,

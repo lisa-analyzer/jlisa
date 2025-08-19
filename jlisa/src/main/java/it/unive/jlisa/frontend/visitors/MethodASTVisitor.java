@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -26,6 +27,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.CFGTweaker;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -91,6 +93,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
             getProgram().addEntryPoint(cfg);
         }
 
+        CFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new);
+		CFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
+		CFGTweaker.addReturns(cfg, JavaSyntaxException::new);
         cfg.simplify();
 
         return false;

@@ -64,4 +64,10 @@ public class ControlFlowStructureTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = createConfiguration("control-flow-structures", "switch", "switch.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void testException()  throws IOException {
+		CronConfiguration conf = createConfiguration("control-flow-structures", "try-catch", "Main.java");
+		perform(conf);
+	}
 }
