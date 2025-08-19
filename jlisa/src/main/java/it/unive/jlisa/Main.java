@@ -27,9 +27,12 @@ import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.program.Program;
+import org.apache.logging.log4j.Logger;
 
 
 public class Main {
+
+    private static Logger LOG;
     public static void main(String[] args) throws IOException, ParseException, ParsingException {
         //String source = "public class Hello { public static void main() { System.out.println(\"Hello World :)\"); } }";
 
@@ -122,6 +125,7 @@ public class Main {
                 }
                 LogManager.setLogLevel(level);
             }
+            LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
             checkerName = cmd.getOptionValue("c");
             numericalDomain = cmd.getOptionValue("n");
 
@@ -131,18 +135,18 @@ public class Main {
                 outdir += "/";
             }
             // Output
-            System.out.println("Source files:");
+            LOG.info("Source files:");
             for (String file : sources) {
-                System.out.println(" - " + file);
+                LOG.info(" - " + file);
             }
 
-            System.out.println("Output directory: " + outdir);
+            LOG.info("Output directory: " + outdir);
 
             if(cmd.hasOption("m"))
                 executionMode = cmd.getOptionValue("m");
 
         } catch (ParseException e) {
-            System.err.println("Error: " + e.getMessage());
+            LOG.error("Error: " + e.getMessage());
             formatter.printHelp("jlisa", options, true);
             System.exit(1);
         }
@@ -155,14 +159,14 @@ public class Main {
                 runStatistics(sources, outdir, checkerName, numericalDomain);
                 break;
             default:
-                System.err.print("Unknown execution mode: " + executionMode);
+                LOG.error("Unknown execution mode: " + executionMode);
                 System.exit(1);
         }
     }
     private static void runDebug(String[] sources, String outdir, String checkerName, String numericalDomain) throws IOException, ParseException, ParsingException {
         JavaFrontend frontend = runFrontend(sources);
         if (!frontend.getParserContext().getExceptions().isEmpty()) {
-            System.err.print("Some errors occurred during the parsing, reporting the first one");
+            LOG.error("Some errors occurred during the parsing, reporting the first one");
             throw frontend.getParserContext().getExceptions().getFirst();
         }
         runAnalysis(outdir, checkerName, numericalDomain, frontend);
@@ -174,20 +178,20 @@ public class Main {
             frontend = runFrontend(sources);
             if (!frontend.getParserContext().getExceptions().isEmpty()) {
                 CSVExceptionWriter.writeCSV(outdir + "frontend.csv", frontend.getParserContext().getExceptions());
-                System.err.print("Some errors occurred during the parsing. Check " + outdir + "frontend.csv file.");
+                LOG.error("Some errors occurred during the parsing. Check " + outdir + "frontend.csv file.");
                 System.exit(1);
             }
         }
         catch(Throwable e) {
                 CSVExceptionWriter.writeCSV(outdir + "frontend-noparsing.csv",e);
-                System.err.println("Some errors occurred in the frontend outside the parsing phase. Check " + outdir + "-noparsing.csv file.");
+                LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir + "-noparsing.csv file.");
                 System.exit(1);
             }
         try{
             runAnalysis(outdir, checkerName, numericalDomain, frontend);
         } catch (Throwable e) {
             CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause()!=null? e.getCause(): e);
-            System.err.print("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
+            LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
             System.exit(1);
         }
     }
@@ -201,7 +205,7 @@ public class Main {
         }
         catch(Exception e) {
             if (frontend != null && !frontend.getParserContext().getExceptions().isEmpty()) {
-                System.err.print("Some errors occurred during the parsing, reporting the first one");
+                LOG.error("Some errors occurred during the parsing, reporting the first one");
                 throw frontend.getParserContext().getExceptions().getFirst();
             }
             else throw e;
