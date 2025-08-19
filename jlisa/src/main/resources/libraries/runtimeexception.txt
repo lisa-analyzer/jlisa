@@ -1,0 +1,2 @@
+class RuntimeException extends Object:
+		

@@ -1,5 +1,4 @@
 class StringBuffer extends Object:
-
 	instance method StringBuffer: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype StringBuffer*
