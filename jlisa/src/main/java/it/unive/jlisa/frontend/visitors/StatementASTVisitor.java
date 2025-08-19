@@ -287,7 +287,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         bindBreakAndContinueStatements(expression, noop);
         
         DoWhileLoop doWhileLoop = new DoWhileLoop(block, expression, noop, doBody.getBlock().getNodes());
-        this.cfg.addControlFlowStructure(doWhileLoop);
+        this.cfg.getDescriptor().addControlFlowStructure(doWhileLoop);
 
         return false;
     }
@@ -348,7 +348,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
        bindBreakAndContinueStatements(condition, noop);
         
        ForEachLoop forEachLoop = new ForEachLoop(block, item, condition, collection, noop, loopBody.getBlock().getNodes());
-       this.cfg.addControlFlowStructure(forEachLoop);
+       this.cfg.getDescriptor().addControlFlowStructure(forEachLoop);
        
        return false;
     }
@@ -486,7 +486,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         
         ForLoop forloop = new ForLoop(block, hasInitalizers ? initializers.getMiddle().getNodes() : null, hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getMiddle().getNodes() : null, noop, loopBody.getBlock().getNodes());
         
-        this.cfg.addControlFlowStructure(forloop);
+        this.cfg.getDescriptor().addControlFlowStructure(forloop);
  
         return false;
     }
@@ -582,7 +582,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         
         last = noop;
         
-        cfg.addControlFlowStructure(new IfThenElse(block, condition, noop, trueBlock.getNodes(), falseBlock != null ? falseBlock.getNodes() : Collections.emptyList()));
+        cfg.getDescriptor().addControlFlowStructure(new IfThenElse(block, condition, noop, trueBlock.getNodes(), falseBlock != null ? falseBlock.getNodes() : Collections.emptyList()));
         
         return false;
     }
@@ -825,7 +825,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		this.last = noop;
         
-        cfg.addControlFlowStructure(new Switch(block, !cases.isEmpty() ? cases.getFirst().getCondition() : defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, cases.toArray(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase[cases.size()]), defaultCase)); 
+        cfg.getDescriptor().addControlFlowStructure(new Switch(block, !cases.isEmpty() ? cases.getFirst().getCondition() : defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, cases.toArray(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase[cases.size()]), defaultCase));
         
         return false;
     }
@@ -1055,7 +1055,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
         bindBreakAndContinueStatements(expression, noop);
         
         WhileLoop whileLoop = new WhileLoop(block, expression, noop, loopBody.getBlock().getNodes());
-        this.cfg.addControlFlowStructure(whileLoop);
+        this.cfg.getDescriptor().addControlFlowStructure(whileLoop);
         
         return false;
     }
