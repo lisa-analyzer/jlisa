@@ -1,9 +1,11 @@
 package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +14,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
+import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.ContinueStatement;
@@ -59,9 +62,13 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
 import it.unive.lisa.program.cfg.edge.Edge;
+import it.unive.lisa.program.cfg.edge.ErrorEdge;
 import it.unive.lisa.program.cfg.edge.FalseEdge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.edge.TrueEdge;
+import it.unive.lisa.program.cfg.protection.CatchBlock;
+import it.unive.lisa.program.cfg.protection.ProtectedBlock;
+import it.unive.lisa.program.cfg.protection.ProtectionBlock;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Ret;
@@ -171,7 +178,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			if (first == null) {
 				first = isEmptyBlock ? emptyBlock : statementASTVisitor.getFirst();
 			}
-			
+
 			if (last != null) {
 				block.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
 			}
@@ -879,27 +886,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	}
 
 	@Override
-	public boolean visit(ThrowStatement node) {
-		parserContext.addException(
-				new ParsingException("throw-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Throw statements are not supported.",
-						getSourceCodeLocation(node))
-				);
-		return false;
-	}
-
-	@Override
-	public boolean visit(TryStatement node) {
-		parserContext.addException(
-				new ParsingException("try-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Try-catch-finally blocks are not supported.",
-						getSourceCodeLocation(node))
-				);
-		return false;
-	}
-
-
-	@Override
 	public boolean visit(TypeDeclarationStatement node) {
 		parserContext.addException(
 				new ParsingException("type-declaration-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -1000,6 +986,154 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		this.cfg.getDescriptor().addControlFlowStructure(whileLoop);
 		this.control.endControlFlowOf(block, expression, noop, expression, null);
 
+		return false;
+	}
+
+	@Override
+	public boolean visit(ThrowStatement node) {
+		parserContext.addException(
+				new ParsingException("throw-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Throw statements are not supported.",
+						getSourceCodeLocation(node))
+				);
+		return false;
+	}
+
+	@Override
+	public boolean visit(TryStatement node) {
+		NodeList<CFG, Statement, Edge> trycatch = new NodeList<>(new SequentialEdge());
+		System.err.println(node.getFinally());
+		// normal exit points of the try-catch in case there is no finally
+		// block:
+		// in this case, we have to add a noop at the end of the whole try-catch
+		// to use it as unique exit point in the returned triple
+		Collection<Statement> normalExits = new LinkedList<>();
+
+		// we parse the body of the try block normally
+		StatementASTVisitor blockVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		node.getBody().accept(blockVisitor);
+		// body of the try
+		NodeList<CFG, Statement, Edge> body = blockVisitor.getBlock();
+
+		trycatch.mergeWith(body);
+
+		// if there is an else block, we parse it immediately and connect it
+		// to the end of the try block *only* if it does not end with a
+		// return/throw
+		// (as it would be deadcode)
+		normalExits.add(body.getExits().stream().findFirst().get());
+
+
+		// we then parse each catch block, and we connect *every* instruction
+		// that can end the try block to the beginning of each catch block
+		List<CatchBlock> catches = new LinkedList<>();
+		List<NodeList<CFG, Statement, Edge>> catchBodies = new LinkedList<>();
+		for (int i = 0; i < node.catchClauses().size(); i++) {
+			CatchClause cl = (CatchClause) node.catchClauses().get(i);
+			StatementASTVisitor clVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+			cl.accept(clVisitor);
+
+			CatchBlock block =  clVisitor.clBlock;
+			NodeList<CFG, Statement, Edge> visit =  clVisitor.block;
+			catches.add(block);
+			catchBodies.add(visit);
+			trycatch.mergeWith(visit);
+
+			Statement end = body.getExits().stream().findFirst().get();
+			Statement entry = visit.getEntries().stream().findFirst().get();
+
+			if (end != null && !end.stopsExecution() && !end.breaksControlFlow() && !end.continuesControlFlow())
+				trycatch.addEdge(
+						new ErrorEdge(end, entry, block.getIdentifier(), block.getExceptions()));
+			for (Statement st : body.getNodes())
+				if (st.stopsExecution())
+					trycatch.addEdge(new ErrorEdge(st, entry, block.getIdentifier(), block.getExceptions()));
+
+			Statement visitEnd = visit.getExits().stream().findFirst().get();
+
+			if (visitEnd != null && !visitEnd.stopsExecution() && !visitEnd.breaksControlFlow() && !visitEnd.continuesControlFlow())
+				// non-stopping last statement
+				normalExits.add(visitEnd);
+		}
+
+		// lastly, we parse the finally block and
+		// we connect it with the body (or the else block if it exists) and with
+		// each catch block
+
+		//TODO: final
+		NodeList<CFG, Statement, Edge> finallyBlock = null;
+		if (node.getFinally() != null) {
+			StatementASTVisitor finallyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+			node.getFinally().accept(finallyVisitor);
+			finallyBlock =  finallyVisitor.getBlock();			
+			trycatch.mergeWith(finallyBlock);
+		}
+
+		// this is the noop closing the whole try-catch, only if there is at
+		// least one path that does
+		// not return/throw anything
+		Statement noop = new NoOp(cfg, getSourceCodeLocation(node));
+		boolean usedNoop = !normalExits.isEmpty();
+		if (usedNoop) {
+			trycatch.addNode(noop);
+			if (node.getFinally() == null)
+				// if there is no finally block, we connect the noop to the
+				// end of all non-terminating inner blocks. otherwise,
+				// the CFGTweaker will add the edges to the finally block
+				// and back to the noop
+				for (Statement st : normalExits)
+					trycatch.addEdge(new SequentialEdge(st, noop));
+		}
+
+		Statement end = body.getExits().stream().findFirst().get();
+		Statement entry = body.getEntries().stream().findFirst().get();
+
+		// build protection block
+		this.cfg.getDescriptor().addProtectionBlock(
+				new ProtectionBlock(
+						new ProtectedBlock(entry, end, body.getNodes()),
+						catches,
+						null,
+						finallyBlock == null ? null
+								: new ProtectedBlock(
+										finallyBlock.getEntries().stream().findFirst().get(),
+										finallyBlock.getExits().stream().findFirst().get(),
+										finallyBlock.getNodes()),
+								usedNoop ? noop : null));
+
+		this.block = trycatch;
+		this.first = entry;
+		this.last = usedNoop ? noop : null;
+		return false;
+	}
+
+	private CatchBlock clBlock;
+
+	@Override
+	public boolean visit(CatchClause node) {
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		node.getException().getType().accept(typeVisitor);
+		node.getException().getName().accept(paramVisitor);
+
+		// type of the exception		
+		Type type = typeVisitor.getType();
+		// exception param
+		Expression param = paramVisitor.getExpression();
+
+		StatementASTVisitor catchBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		node.getBody().accept(catchBody);
+		// body of the catch clause
+		this.block = catchBody.getBlock();
+
+
+		CatchBlock catchBlock = new CatchBlock(
+				(VariableRef) param,
+				new ProtectedBlock(block.getEntries().stream().findFirst().get(), block.getExits().stream().findFirst().get(), block.getNodes()),
+				type);
+
+		this.clBlock = catchBlock;
+		this.last = block.getExits().stream().findFirst().get();
 		return false;
 	}
 }
