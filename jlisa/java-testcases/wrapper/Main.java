@@ -15,5 +15,6 @@ public class Main {
     	Integer k = Integer.valueOf(4);
     	Double dx = Double.valueOf(5.3);
     	double dd = dx.doubleValue();
+    	long l = Double.doubleToRawLongBits(543);
     }
 }

@@ -6,26 +6,30 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
 import it.unive.jlisa.program.operator.JavaMathAsinOperator;
-import it.unive.jlisa.program.operator.JavaMathAtanOperator;
 import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaMathAtanOperator;
 import it.unive.jlisa.program.operator.JavaMathCosOperator;
 import it.unive.jlisa.program.operator.JavaMathExpOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
-import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.operator.JavaMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.operator.JavaMathPowOperator;
 import it.unive.jlisa.program.operator.JavaMathRoundOperator;
 import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaMathTanOperator;
 import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
@@ -46,6 +50,7 @@ import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.NullType;
@@ -241,6 +246,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.abs(v));
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.abs(v));
+		
+		if (operator instanceof JavaDoubleToRawLongBitsOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
 
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
@@ -371,6 +386,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.charAt(rv));			
 		}
 		
+		if (operator instanceof JavaStringAppendCharOperator) {
+			String lv = ((String) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv + ((char) rv.intValue()));			
+		}	
+		
+		if (operator instanceof JavaStringAppendStringOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv + rv);			
+		}
+		
 		// char
 		if (operator instanceof JavaCharacterEqualsOperator) {
 			Integer lv = ((Integer) left.getValue());
@@ -381,6 +408,25 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return top();
 	}
 
+	@Override
+	public ConstantValue evalTernaryExpression(TernaryExpression expression, ConstantValue left, ConstantValue middle,
+			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+		// if left, middle or right is top, top is returned
+		if (left.isTop() || middle.isTop() || right.isTop())
+			return top();
+		
+		TernaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaStringInsertCharOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (char)rv.intValue()).toString());
+		}
+		
+		return top();
+
+	}
+	
 	@Override
 	public Satisfiability satisfiesAbstractValue(ConstantValue value, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
