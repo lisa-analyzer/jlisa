@@ -49,8 +49,8 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
         for (Object o : node.statements()) {
             StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker());
             ((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
-            block.mergeWith(statementASTVisitor.getBlock());
-            if (statementASTVisitor.getBlock().getNodes().isEmpty()) {
+            block.mergeWith(statementASTVisitor.getBlock().getBody());
+            if (statementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
                 // parsing error.
                 return false;
             }
