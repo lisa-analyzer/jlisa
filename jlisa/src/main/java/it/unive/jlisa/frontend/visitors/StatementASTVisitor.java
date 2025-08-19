@@ -73,6 +73,7 @@ import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Return;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
@@ -89,10 +90,6 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 public class StatementASTVisitor extends JavaASTVisitor {
 
 	private CFG cfg;
-
-	//	private Statement first;
-	//
-	//	private Statement last;
 
 	private ParsedBlock block;
 
@@ -970,11 +967,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ThrowStatement node) {
-		parserContext.addException(
-				new ParsingException("throw-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Throw statements are not supported.",
-						getSourceCodeLocation(node))
-				);
+		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		node.getExpression().accept(exprVisitor);
+		Expression expr = exprVisitor.getExpression();
+		Throw th = new Throw(cfg, getSourceCodeLocation(node), expr);
+
+		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
+		adj.addNode(th);
+		this.block = new ParsedBlock(th, adj, th);
 		return false;
 	}
 
@@ -1017,17 +1017,12 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			catchBodies.add(visit);
 			trycatch.mergeWith(visit.getBody());
 
-//			Statement end = body.getExits().stream().findFirst().get();
-//			Statement entry = visit.getEntries().stream().findFirst().get();
-
 			if (body.canBeContinued())
 				trycatch.addEdge(
 						new ErrorEdge(body.getEnd(), visit.getBegin(), block.getIdentifier(), block.getExceptions()));
 			for (Statement st : body.getBody().getNodes())
 				if (st.stopsExecution())
 					trycatch.addEdge(new ErrorEdge(st, visit.getBegin(), block.getIdentifier(), block.getExceptions()));
-
-//			Statement visitEnd = visit.getExits().stream().findFirst().get();
 
 			if (visit.canBeContinued())
 				// non-stopping last statement
@@ -1037,8 +1032,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		// lastly, we parse the finally block and
 		// we connect it with the body (or the else block if it exists) and with
 		// each catch block
-
-		//TODO: final
 		ParsedBlock finallyBlock = null;
 		if (node.getFinally() != null) {
 			StatementASTVisitor finallyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
@@ -1063,8 +1056,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 					trycatch.addEdge(new SequentialEdge(st, noop));
 		}
 
-//		Statement end = body.getExits().stream().findFirst().get();
-//		Statement entry = body.getEntries().stream().findFirst().get();
 
 		// build protection block
 		this.cfg.getDescriptor().addProtectionBlock(
