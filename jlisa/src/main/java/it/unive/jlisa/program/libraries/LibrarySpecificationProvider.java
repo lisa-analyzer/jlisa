@@ -32,22 +32,6 @@ public class LibrarySpecificationProvider {
 	public static final String LIBS_FOLDER = "/libraries/";
 	private static final String STDLIB_FILE = "stdlib.txt";
 
-	public static final String SET = "Set";
-	public static final String DICT = "Dict";
-	public static final String LIST = "List";
-	public static final String TUPLE = "Tuple";
-	public static final String SLICE = "Slice";
-	public static final String OBJECT = "Object";
-
-	public static final String WARNINGS = "warnings";
-
-	public static final String PANDAS = "pandas";
-	public static final String PANDAS_DF = "pandas.DataFrame";
-	public static final String PANDAS_SERIES = "pandas.Series";
-
-	public static final String GEOPANDAS = "geopandas";
-	public static final String GEOPANDAS_TOOLS = "geopandas.tools";
-
 	private static final Map<String, Library> AVAILABLE_LIBS = new HashMap<>();
 
 	public static CompilationUnit hierarchyRoot;
@@ -69,7 +53,7 @@ public class LibrarySpecificationProvider {
 		stdlib.getLeft().fillProgram(program, root);
 		hierarchyRoot = root.get();
 //		makeInit(program);
-//		stdlib.getLeft().populateProgram(program, init, hierarchyRoot);
+		stdlib.getLeft().populateProgram(program, init, hierarchyRoot);
 		for (Library lib : stdlib.getValue())
 			AVAILABLE_LIBS.put(lib.getName(), lib);
 

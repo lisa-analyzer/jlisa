@@ -22,14 +22,13 @@ import java.util.stream.Collectors;
 
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.helpers.JsonReportComparer.BaseDiffAlgorithm;
+import it.unive.jlisa.helpers.JsonReportComparer.DiffAlgorithm;
+import it.unive.jlisa.helpers.JsonReportComparer.REPORTED_COMPONENT;
+import it.unive.jlisa.helpers.JsonReportComparer.REPORT_TYPE;
 import it.unive.lisa.AnalysisException;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.conf.LiSAConfiguration;
-import it.unive.lisa.outputs.compare.JsonReportComparer;
-import it.unive.lisa.outputs.compare.JsonReportComparer.BaseDiffAlgorithm;
-import it.unive.lisa.outputs.compare.JsonReportComparer.DiffAlgorithm;
-import it.unive.lisa.outputs.compare.JsonReportComparer.REPORTED_COMPONENT;
-import it.unive.lisa.outputs.compare.JsonReportComparer.REPORT_TYPE;
 import it.unive.lisa.outputs.json.JsonReport;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.util.file.FileManager;
