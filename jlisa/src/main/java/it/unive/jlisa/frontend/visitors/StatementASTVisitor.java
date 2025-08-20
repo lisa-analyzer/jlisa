@@ -480,7 +480,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			return false; // parsing error
 		}
 
-
 		node.getExpression().accept(conditionVisitor);
 
 		Expression condition = conditionVisitor.getExpression();
@@ -499,7 +498,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		Statement noTrueBody = new EmptyBody(this.cfg, !isEmptyTrueBlock ? condition.getLocation() : new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
 
-
 		if(!isEmptyTrueBlock)
 			nodeList.mergeWith(trueBlock.getBody());
 		else
@@ -509,7 +507,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		Statement noop = new NoOp(cfg, condition.getLocation());
 		nodeList.addNode(noop);
-		nodeList.addEdge(new SequentialEdge( !isEmptyTrueBlock ? trueVisitor.getLast() : noTrueBody, noop));
+		if(isEmptyTrueBlock || (!isEmptyTrueBlock && !trueVisitor.getLast().stopsExecution()))
+			nodeList.addEdge(new SequentialEdge( !isEmptyTrueBlock ? trueVisitor.getLast() : noTrueBody, noop));
 
 		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		ParsedBlock falseBlock = null;
@@ -526,7 +525,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 					nodeList.addNode(noFalseBody);
 
 				nodeList.addEdge(new FalseEdge(condition, !isEmptyFalseBlock ? falseVisitor.getFirst() : noFalseBody));
-				nodeList.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
+				if(isEmptyFalseBlock || (!isEmptyFalseBlock && !falseVisitor.getLast().stopsExecution()))
+					nodeList.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
 
 			}
 		} else {
