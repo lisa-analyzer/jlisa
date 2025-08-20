@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
@@ -89,6 +90,9 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class StatementASTVisitor extends JavaASTVisitor {
 
+
+	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(StatementASTVisitor.class);
+	
 	private CFG cfg;
 
 	private ParsedBlock block;
@@ -280,21 +284,28 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			return false;
 		}
 
-		block.addNode(expression);
-
-		block.addEdge(new SequentialEdge(hasBody ? doBody.getLast() : noBody, expression));
-		
-		block.addEdge(new TrueEdge(expression, hasBody ? doBody.getFirst() : noBody));
-
 		Statement noop = new NoOp(this.cfg, expression.getLocation());
-		block.addNode(noop);
-		block.addEdge(new FalseEdge(expression, noop));
+		
+		boolean isConditionDeadcode = hasBody && doBody.getLast().stopsExecution();
+		
+		if(!isConditionDeadcode) {
+			block.addNode(expression);
+			block.addEdge(new SequentialEdge(hasBody ? doBody.getLast() : noBody, expression));
+			
+			block.addEdge(new TrueEdge(expression, hasBody ? doBody.getFirst() : noBody));
+	
+			block.addNode(noop);
+			block.addEdge(new FalseEdge(expression, noop));
+			
+			// TODO: labels
+			DoWhileLoop doWhileLoop = new DoWhileLoop(block, expression, noop, doBody.getBlock().getBody().getNodes());
+			this.cfg.getDescriptor().addControlFlowStructure(doWhileLoop);
+			this.control.endControlFlowOf(block, expression, noop, expression, null);
+		} else {
+			LOG.warn("The last statement of do-while's body stops the execution, then the guard is not reachable.");
+		}
 
 
-		// TODO: labels
-		DoWhileLoop doWhileLoop = new DoWhileLoop(block, expression, noop, doBody.getBlock().getBody().getNodes());
-		this.cfg.getDescriptor().addControlFlowStructure(doWhileLoop);
-		this.control.endControlFlowOf(block, expression, noop, expression, null);
 		this.block = new ParsedBlock(entry, block, noop);
 
 		return false;
@@ -426,18 +437,24 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			block.addEdge( new TrueEdge(alwaysTrue, hasBody ? loopBody.getFirst() : noBody));
 
 		ParsedBlock updaters = visitSequentialExpressions(node.updaters());
-		block.mergeWith(updaters.getBody());
-
+		
 		boolean hasUpdaters= updaters.getBegin() != null && updaters.getEnd() != null;
+		
+		boolean areUpdatersDeadcode = hasBody && loopBody.getLast().stopsExecution();
+		
+		if(!areUpdatersDeadcode)
+			block.mergeWith(updaters.getBody());
+		else if(hasUpdaters)
+			LOG.warn("The last statement of for's body stops the execution, then updaters are not reachable.");
 
 		Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col +2 to avoid conflict with the other noop
 		block.addNode(noop);
 
+		if(!areUpdatersDeadcode) {
+			block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, hasUpdaters ? updaters.getBegin() : hasCondition ? condition : alwaysTrue));
+			block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getEnd() : hasBody ? loopBody.getLast() : noBody, hasCondition ? condition : alwaysTrue));
+		}
 		
-		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, hasUpdaters ? updaters.getBegin() : hasCondition ? condition : alwaysTrue));
-
-		
-		block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getEnd() : hasBody ? loopBody.getLast() : noBody, hasCondition ? condition : alwaysTrue));
 		block.addEdge(new FalseEdge(hasCondition ? condition : alwaysTrue, noop));  
 
 		// TODO: labels
