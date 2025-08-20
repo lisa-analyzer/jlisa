@@ -42,7 +42,10 @@ import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringTrimOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -279,9 +282,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringTrimOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.trim());
 		
-		if (operator instanceof JavaStringValueOfOperator && arg.getValue() instanceof Integer l)
+		if (operator instanceof JavaStringValueOfLongOperator && arg.getValue() instanceof Integer l)
 			return new ConstantValue(String.valueOf(l));
 
+		if (operator instanceof JavaStringValueOfBooleanOperator && arg.getValue() instanceof Boolean b)
+			return new ConstantValue(String.valueOf(b));
+		
+		if (operator instanceof JavaStringValueOfDoubleOperator && arg.getValue() instanceof Double d)
+			return new ConstantValue(String.valueOf(d));
+		
+		if (operator instanceof JavaStringValueOfCharOperator && arg.getValue() instanceof Character c)
+			return new ConstantValue(String.valueOf(c));
+		
 		return top();
 	}
 

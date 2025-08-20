@@ -1,7 +1,10 @@
 package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaStringValueOfOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -23,18 +26,18 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringValueOf extends UnaryExpression implements PluggableStatement {
+public class StringValueOfLong extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringValueOf(CFG cfg, CodeLocation location, Expression exp) {
+	public StringValueOfLong(CFG cfg, CodeLocation location, Expression exp) {
 		super(cfg, location, "valueOf", exp);
 	}
 	
-	public static StringValueOf build(
+	public static StringValueOfLong build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringValueOf(cfg, location, params[0]);
+		return new StringValueOfLong(cfg, location, params[0]);
 	}
 	
 	@Override
@@ -56,11 +59,25 @@ public class StringValueOf extends UnaryExpression implements PluggableStatement
 		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		
-		it.unive.lisa.symbolic.value.UnaryExpression valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType, 
-				expr, 
-				JavaStringValueOfOperator.INSTANCE, 
-				getLocation());
+		it.unive.lisa.symbolic.value.UnaryExpression valueOf = null;
+		
+		if(expr.getStaticType() instanceof JavaLongType) {
+			
+			valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType, 
+					expr, 
+					JavaStringValueOfLongOperator.INSTANCE, 
+					getLocation());
+		}
+		
+		if(expr.getStaticType() instanceof JavaCharType) {
+			valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType, 
+					expr, 
+					JavaStringValueOfCharOperator.INSTANCE, 
+					getLocation());
+		}
+		
 		
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype, new Expression[0]);

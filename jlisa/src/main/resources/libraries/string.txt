@@ -79,11 +79,15 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param this libtype String*
 		param other libtype String*
 		param pattern libtype String*
-		
-	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
+			
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfBoolean
+		libtype String*
+		param other type it.unive.lisa.program.type.BoolType::INSTANCE
+			
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfLong
 		libtype String*
 		param other type it.unive.jlisa.program.type.JavaLongType::INSTANCE
-		
+			
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOf
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*

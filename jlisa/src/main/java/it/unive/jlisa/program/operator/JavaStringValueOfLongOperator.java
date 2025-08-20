@@ -9,19 +9,19 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaStringValueOfOperator implements StringOperator, UnaryOperator {
+public class JavaStringValueOfLongOperator implements StringOperator, UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaStringValueOfOperator INSTANCE = new JavaStringValueOfOperator();
+	public static final JavaStringValueOfLongOperator INSTANCE = new JavaStringValueOfLongOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaStringValueOfOperator() {
+	protected JavaStringValueOfLongOperator() {
 	}
 
 	@Override

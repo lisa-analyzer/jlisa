@@ -17,7 +17,7 @@ public class StringTest {
 		String s8 = s4.toLowerCase();
 		String s9 = s4.toUpperCase();
 		String s10 = s5.toString();
-		char c = s10.charAt(0);
+		char c1 = s10.charAt(0);
 		String s11 = s4.trim();
 		
 		boolean b3 = s4.startsWith(s2);
@@ -28,9 +28,15 @@ public class StringTest {
 		int i1 = s4.compareTo("Hello World");
 		String s13 = s4.replaceAll("o", "i");
 		long l1 = 123;
-		String s14 = String.valueOf(l1);
 		int i2 = s4.indexOf("World");
 		int i3 = s4.lastIndexOf('H');
+		String s14 = String.valueOf(l1);
+		boolean b6 = false;
+		String s15 = String.valueOf(b6);
+		//double d1 = 3.14;
+		//String s16 = String.valueOf(d1);
+		char c2 = s10.charAt(0);
+		String s17 = String.valueOf(c2);
 		
 	}
 }
