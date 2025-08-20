@@ -98,7 +98,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		
+
 		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node), left, right);
 		return false;
 	}
@@ -109,7 +109,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 
-		
+
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 
@@ -120,7 +120,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
 		} else {
 			ArrayInitializer initializer = node.getInitializer();
-								
+
 			//initializer.expressions();
 			List<Expression> parameters = new ArrayList<>();
 
@@ -135,11 +135,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				}
 
 			}
-				
+
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
-					
+
 		}
-		
+
 		return false;		
 	}
 
@@ -399,7 +399,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case ">>":
 			expression = buildExpression(operands, (first, second) ->
-					new JavaShiftOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaShiftOperator(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "<<":
 		case ">>>":
@@ -431,7 +431,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "&":
 			expression = buildExpression(operands, (first, second) ->
-					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "^":
 		case "|":
@@ -524,10 +524,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				}
 			}
 		}
-		//TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
-		if (instance) {
-			expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
-		}
+		// TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
+		// TODO: instead of Call.CallType.UNKNOWN, we can provide better information of the call type
+		expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
