@@ -5,3 +5,13 @@ class IOException extends Exception:
 class ParseException extends Exception:
 
 class FileNotFoundException extends IOException:
+
+class Throwable extends Object:
+
+class Error extends Throwable:
+
+class AssertionError extends Error:
+
+	instance method AssertionError: it.unive.jlisa.program.java.constructs.assertionerror.AssertionErrorEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype AssertionError*

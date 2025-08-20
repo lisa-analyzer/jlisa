@@ -3,16 +3,30 @@
   "files" : [ "report.json", "void_A.A(A__this)_-968937908.json", "void_B.B(B__this)_1707430528.json", "void_Main.main(String[]_args).json" ],
   "info" : {
     "cfgs" : "4",
+<<<<<<< HEAD
     "duration" : "9ms",
     "end" : "2025-08-18T18:10:13.194+02:00",
+=======
+    "duration" : "5ms",
+    "end" : "2025-08-19T16:12:34.797+02:00",
+>>>>>>> refs/remotes/origin/development
     "expressions" : "14",
     "files" : "3",
+<<<<<<< HEAD
     "globals" : "3",
     "members" : "42",
+=======
+    "globals" : "4",
+    "members" : "64",
+>>>>>>> refs/remotes/origin/development
     "programs" : "1",
+<<<<<<< HEAD
     "start" : "2025-08-18T18:10:13.185+02:00",
+=======
+    "start" : "2025-08-19T16:12:34.792+02:00",
+>>>>>>> refs/remotes/origin/development
     "statements" : "11",
-    "units" : "17",
+    "units" : "34",
     "version" : "0.1",
     "warnings" : "0"
   },

@@ -3,6 +3,28 @@ package it.unive.jlisa.analysis;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
+import it.unive.jlisa.program.operator.JavaMathExpOperator;
+import it.unive.jlisa.program.operator.JavaMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
+import it.unive.jlisa.program.operator.JavaMathPowOperator;
+import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaMathSinOperator;
+import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaMathTanOperator;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
@@ -11,6 +33,7 @@ import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
@@ -37,12 +60,13 @@ import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
+import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
-		
+
 	@Override
 	public boolean canProcess(
 			SymbolicExpression expression,
@@ -96,23 +120,168 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		// if arg is top, top is returned
 		if (arg.isTop())
 			return top();
+
+		UnaryOperator operator = expression.getOperator();
+		// char
+		if (operator instanceof JavaCharacterIsLetterOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isLetter(v));
+
+		if (operator instanceof JavaCharacterIsDigitOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isDigit(v));
+
+		// numeric
+		if (operator instanceof NumericNegation)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(-v);
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(-v);
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(-v);
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(-v);
+
+		if (operator instanceof JavaMathSinOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.sin(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.sin(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.sin(v));
+
+		if (operator instanceof JavaMathCosOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.cos(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.cos(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.cos(v));
+
+		if (operator instanceof JavaMathSqrtOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.sqrt(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.sqrt(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.sqrt(v));
+
+		if (operator instanceof JavaMathTanOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.tan(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.tan(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.tan(v));
+
+		if (operator instanceof JavaMathAtanOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.atan(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.atan(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.atan(v));
+
+		if (operator instanceof JavaMathLogOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.log(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.log(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.log(v));
+
+		if (operator instanceof JavaMathLog10Operator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.log10(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.log10(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.log10(v));
+
+		if (operator instanceof JavaMathAsinOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.asin(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.asin(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.asin(v));
+
+		if (operator instanceof JavaMathExpOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.exp(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.exp(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.exp(v));
+
+		if (operator instanceof JavaMathAcosOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.acos(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.acos(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.acos(v));
+
+		if (operator instanceof JavaMathFloorOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.floor(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.floor(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.floor(v));
+
+		if (operator instanceof JavaMathRoundOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.round(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.round(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.round(v));
+
+		if (operator instanceof JavaMathToRadiansOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.toRadians(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.toRadians(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.toRadians(v));
+
+		if (operator instanceof JavaMathAbsOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Math.abs(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Math.abs(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.abs(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.abs(v));
 		
-		UnaryOperator operator = expression.getOperator();		
+		if (operator instanceof JavaDoubleToRawLongBitsOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Double.doubleToRawLongBits(v));
+
+		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
-		
+
 		if (operator instanceof JavaStringToLowerCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toLowerCase());
-		
+
 		if (operator instanceof JavaStringToUpperCaseOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.toUpperCase());
-		
+
 		if (operator instanceof JavaStringTrimOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.trim());
 		
 		if (operator instanceof JavaStringValueOfOperator && arg.getValue() instanceof Integer l)
 			return new ConstantValue(String.valueOf(l));
-		
+
 		return top();
 	}
 
@@ -126,12 +295,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		// if left or right is top, top is returned
 		if (left.isTop() || right.isTop())
 			return top();
-		
+
 		BinaryOperator operator = expression.getOperator();
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
-			
+
 			if (lVal instanceof String || rVal instanceof String) {
 			} else if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() + ((Number) rVal).doubleValue());
@@ -158,7 +327,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() - ((Number) rVal).intValue());
 			}
 		}
-		
+
 		if (operator instanceof MultiplicationOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
@@ -173,7 +342,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() * ((Number) rVal).intValue());
 			}
 		}
-		
+
 		if (operator instanceof DivisionOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
@@ -188,22 +357,41 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).intValue() / ((Number) rVal).intValue());
 			}
 		}
-				
+
+		if (operator instanceof JavaMathPowOperator) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer || lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(Math.pow(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
+			}
+		}
+
+		if (operator instanceof JavaMathAtan2Operator) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer || lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(Math.atan2(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
+			}
+		}
+
+		// strings
 		if (operator instanceof JavaStringConcatOperator)
 			return new ConstantValue(((String) left.getValue()) + ((String) right.getValue()));
-		
+
 		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.contains(rv));			
 		}
-		
+
 		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.equals(rv));			
 		}
-		
+
 		if (operator instanceof JavaStringCharAtOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
@@ -252,23 +440,41 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.lastIndexOf(rv));
 		}
 		
+		if (operator instanceof JavaStringAppendCharOperator) {
+			String lv = ((String) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv + ((char) rv.intValue()));			
+		}	
+		
+		if (operator instanceof JavaStringAppendStringOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv + rv);			
+		}
+		
+		// char
+		if (operator instanceof JavaCharacterEqualsOperator) {
+			Integer lv = ((Integer) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.equals(rv));			
+		}
+
 		return top();
 	}
-
-	@Override
-	public ConstantValue evalTernaryExpression(
-			TernaryExpression expression,
-			ConstantValue left,
-			ConstantValue middle,
-			ConstantValue right,
-			ProgramPoint pp,
-			SemanticOracle oracle
-			) {
-		// if left, or middle or right is top, top is returned
+		
+	public ConstantValue evalTernaryExpression(TernaryExpression expression, ConstantValue left, ConstantValue middle,
+			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+		// if left, middle or right is top, top is returned
 		if (left.isTop() || middle.isTop() || right.isTop())
 			return top();
-				
+		
 		TernaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaStringInsertCharOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (char)rv.intValue()).toString());
+		}
 		
 		if (operator instanceof JavaStringReplaceAllOperator) {
 			String lv = ((String) left.getValue());
@@ -277,7 +483,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.replaceAll(mv,rv));	
 		}
 		
-		return top();	
+		return top();
+
 	}
 	
 	@Override
@@ -296,7 +503,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesUnaryExpression(UnaryExpression expression, ConstantValue arg, ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
-		// TODO Auto-generated method stub
+		if (arg.isTop())
+			return Satisfiability.UNKNOWN;
+
+		UnaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaCharacterIsLetterOperator)
+			if (arg.getValue() instanceof Integer v)
+				return Character.isLetter(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+
+		if (operator instanceof JavaCharacterIsDigitOperator)
+			if (arg.getValue() instanceof Integer v)
+				return Character.isDigit(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}
 
@@ -310,7 +528,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String rv = ((String) right.getValue());
 			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
-		
+
 		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());

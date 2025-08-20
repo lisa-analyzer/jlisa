@@ -1,0 +1,19 @@
+class Double extends Object:
+	instance field value type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+	
+	instance method Double: it.unive.jlisa.program.java.constructs.doublew.DoubleConstructor
+		libtype Double*
+		param this libtype Double*
+		param c type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+	
+	instance method doubleValue: it.unive.jlisa.program.java.constructs.doublew.DoubleValue
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param this libtype Double*
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.doublew.DoubleValueOf
+		libtype Double* 
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE 
+		
+	method doubleToRawLongBits: it.unive.jlisa.program.java.constructs.doublew.DoubleToRawLongBits
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE 
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE 

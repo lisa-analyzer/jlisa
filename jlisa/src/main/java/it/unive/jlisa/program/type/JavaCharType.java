@@ -6,7 +6,7 @@ import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaCharType implements JavaNumericType{
+public class JavaCharType implements JavaNumericType {
 	public static final JavaCharType INSTANCE = new JavaCharType();
 
 	protected JavaCharType() {}
