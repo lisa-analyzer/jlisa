@@ -692,22 +692,23 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, control, switchItem);
 			((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
 
-			boolean isEmptyBlock = statementASTVisitor.getBlock() == null || statementASTVisitor.getBlock().getBody().getNodes().isEmpty();
+			ParsedBlock caseBlock = statementASTVisitor.getBlock();
+			boolean isEmptyBlock = caseBlock == null || caseBlock.getBody().getNodes().isEmpty();
 			EmptyBody emptyBlock = null;
 			
 			if (isEmptyBlock) {
 				emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
 				adj.addNode(emptyBlock);
 			} else {
-				adj.mergeWith(statementASTVisitor.getBlock().getBody());
-				instrList.addAll(statementASTVisitor.getBlock().getBody().getNodes());
+				adj.mergeWith(caseBlock.getBody());
+				instrList.addAll(caseBlock.getBody().getNodes());
 			}
 
 			if(o instanceof SwitchCase) {
-				if(statementASTVisitor.getFirst() instanceof SwitchEqualityCheck)
-					workList.add((SwitchEqualityCheck) statementASTVisitor.getFirst());
-				else if(statementASTVisitor.getFirst() instanceof SwitchDefault) {
-					switchDefault = (SwitchDefault) statementASTVisitor.getFirst();
+				if(caseBlock.getBegin() instanceof SwitchEqualityCheck)
+					workList.add((SwitchEqualityCheck) caseBlock.getBegin());
+				else if(caseBlock.getBegin() instanceof SwitchDefault) {
+					switchDefault = (SwitchDefault) caseBlock.getBegin();
 				}  		
 			} else if(o instanceof BreakStatement) {
 				for(SwitchEqualityCheck switchCondition : workList) {
@@ -735,13 +736,13 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			} 
 
 			if (first == null) {
-				first = isEmptyBlock ? emptyBlock : statementASTVisitor.getFirst();
+				first = isEmptyBlock ? emptyBlock : caseBlock.getBegin();
 			}
 			if (last != null) {
 				if(!(last instanceof SwitchEqualityCheck || last instanceof SwitchDefault))
-					adj.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
+					adj.addEdge(new SequentialEdge(last, caseBlock.getBegin()));
 			}
-			last = statementASTVisitor.getLast();
+			last = caseBlock.getEnd();
 		} 
 
 		EmptyBody emptyBlock = null;
