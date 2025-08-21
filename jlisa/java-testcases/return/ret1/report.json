@@ -1,18 +1,18 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(String[]_args)_cfg.json" ],
+  "files" : [ "int_A.getX(A__this)_1707432481.json", "report.json", "void_A.A(A__this)_1707430528.json", "void_A.setX(A__this,_int_x)_1707424824.json", "void_Main.main(String[]_args).json" ],
   "info" : {
-    "cfgs" : "2",
-    "duration" : "5ms",
-    "end" : "2025-08-21T16:51:26.345+02:00",
-    "expressions" : "49",
-    "files" : "2",
-    "globals" : "3",
-    "members" : "63",
+    "cfgs" : "5",
+    "duration" : "313ms",
+    "end" : "2025-08-21T16:53:42.088+02:00",
+    "expressions" : "21",
+    "files" : "4",
+    "globals" : "4",
+    "members" : "66",
     "programs" : "1",
-    "start" : "2025-08-21T16:51:26.340+02:00",
-    "statements" : "27",
-    "units" : "32",
+    "start" : "2025-08-21T16:53:41.775+02:00",
+    "statements" : "13",
+    "units" : "33",
     "version" : "0.1",
     "warnings" : "0"
   },
@@ -28,11 +28,11 @@
     "optimize" : "false",
     "recursionWideningThreshold" : "5",
     "semanticChecks" : "",
-    "serializeInputs" : "true",
-    "serializeResults" : "false",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/control-flow-structures/break-continue"
+    "workdir" : "java-outputs/return/ret1"
   }
 }
