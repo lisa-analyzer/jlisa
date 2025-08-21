@@ -1,0 +1,3 @@
+method assume: it.unive.jlisa.program.java.constructs.Assume
+	type it.unive.lisa.type.VoidType::INSTANCE
+	param expr type it.unive.lisa.program.type.BoolType::INSTANCE
