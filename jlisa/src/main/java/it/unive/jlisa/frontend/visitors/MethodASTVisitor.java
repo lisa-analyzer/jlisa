@@ -22,16 +22,19 @@ import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.CFGTweaker;
+import it.unive.lisa.util.frontend.LocalVariableTracker;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
     CFG cfg;
+    
     public MethodASTVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
         super(parserContext, source, astCompilationUnit);
         this.lisacompilationUnit = lisacompilationUnit;
@@ -39,20 +42,27 @@ public class MethodASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(MethodDeclaration node) {
+    	
         CodeMemberDescriptor codeMemberDescriptor;
         if (node.isConstructor()) {
             codeMemberDescriptor = buildConstructorCodeMemberDescriptor(node);
         } else {
             codeMemberDescriptor = buildCodeMemberDescriptor(node);
         }
+        
         boolean isMain = isMain(node);
-
+        
         int modifiers = node.getModifiers();
         this.cfg = new CFG(codeMemberDescriptor);
+        
+        LocalVariableTracker tracker = new LocalVariableTracker(cfg, codeMemberDescriptor);
+        tracker.enterScope();
+        
         for (Parameter p : codeMemberDescriptor.getFormals()) {
             parserContext.addVariableType(cfg, p.getName(), p.getStaticType());
+            tracker.addVariable(p.getName(), new NoOp(cfg, p.getLocation()), p.getAnnotations());
         }
-        BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
+        BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg, tracker);
         node.getBody().accept(blockStatementASTVisitor);
         cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock());
         if (blockStatementASTVisitor.getBlock().getNodes().isEmpty()) {
@@ -82,6 +92,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
                     if (preExits.contains(entry.getScopeEnd()))
                         entry.setScopeEnd(ret);
             }
+            
         }
         if (!Modifier.isStatic(modifiers)) {
             lisacompilationUnit.addInstanceCodeMember(cfg);
@@ -97,6 +108,8 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		CFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
 		CFGTweaker.addReturns(cfg, JavaSyntaxException::new);
         cfg.simplify();
+        
+        tracker.exitScope(blockStatementASTVisitor.getLast());
 
         return false;
     }

@@ -42,9 +42,7 @@ public class ParserContext {
             types = new HashMap<>();
             variableTypes.put(cfg, types);
         }
-        if (types.get(variableName) != null) {
-            throw new RuntimeException("Variable " + variableName + " already exists in the cfg");
-        }
+
         types.put(variableName, type);
     }
     public Type getVariableStaticType(CFG cfg, String name) {

@@ -11,20 +11,24 @@ import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
+import it.unive.lisa.util.frontend.LocalVariableTracker;
 
 public class BlockStatementASTVisitor extends JavaASTVisitor{
     private CFG cfg;
     private it.unive.lisa.program.cfg.statement.Statement first;
     private it.unive.lisa.program.cfg.statement.Statement last;
     private NodeList<CFG, it.unive.lisa.program.cfg.statement.Statement, Edge> block = new NodeList<>(new SequentialEdge());
+    
+    LocalVariableTracker tracker;
 
     public BlockStatementASTVisitor(ParserContext parserContext, String source,CompilationUnit compilationUnit) {
         super(parserContext, source, compilationUnit);
     }
 
-    public BlockStatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg) {
+    public BlockStatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, LocalVariableTracker tracker) {
         this(parserContext, source, compilationUnit);
         this.cfg = cfg;
+        this.tracker = tracker;
     }
 
     public Statement getFirst() {
@@ -47,7 +51,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
             block.addNode(first);
         }
         for (Object o : node.statements()) {
-            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker());
+            StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker(), tracker);
             ((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
             block.mergeWith(statementASTVisitor.getBlock().getBody());
             if (statementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
