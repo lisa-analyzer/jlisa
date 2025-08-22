@@ -46,9 +46,8 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
 			EmptyBody emptyBlock = null;
 			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
 			nodeList.addNode(emptyBlock);
+			first = emptyBlock;
 			last = emptyBlock;
-			nodeList.addEdge(new SequentialEdge(last, emptyBlock));
-
 		} else {
 			for (Object o : node.statements()) {
 				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker());
