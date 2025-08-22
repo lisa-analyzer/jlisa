@@ -32,7 +32,8 @@ import org.apache.logging.log4j.Logger;
 
 public class Main {
 
-    private static Logger LOG;
+    private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
+    	
     public static void main(String[] args) throws IOException, ParseException, ParsingException {
         //String source = "public class Hello { public static void main() { System.out.println(\"Hello World :)\"); } }";
 
@@ -125,7 +126,7 @@ public class Main {
                 }
                 LogManager.setLogLevel(level);
             }
-            LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
+            
             checkerName = cmd.getOptionValue("c");
             numericalDomain = cmd.getOptionValue("n");
 

@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
@@ -89,6 +90,9 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class StatementASTVisitor extends JavaASTVisitor {
 
+
+	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(StatementASTVisitor.class);
+	
 	private CFG cfg;
 
 	private ParsedBlock block;
@@ -153,35 +157,40 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		return false;
 	}
+	
+	
 
 	@Override
 	public boolean visit(Block node) {
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 
 		Statement first = null, last = null;
-		for (Object o : node.statements()) {
-			StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, this.control);
-			((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
-
-			boolean isEmptyBlock = stmtVisitor.getBlock().getBody().getNodes().isEmpty();
+		if(node.statements().isEmpty()) { // empty block
+			
 			EmptyBody emptyBlock = null;
-			if (isEmptyBlock) {
-				emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
-				nodeList.addNode(emptyBlock);
-			} else {
-				nodeList.mergeWith(stmtVisitor.getBlock().getBody());
-			}
+			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+			nodeList.addNode(emptyBlock);
+			first = emptyBlock;
+			last = emptyBlock;
+		} else {
+			for (Object o : node.statements()) {
+				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, this.control);
+				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
+				
+				ParsedBlock stmtBlock = stmtVisitor.getBlock();
+				
+				nodeList.mergeWith(stmtBlock.getBody());
+				
+				if (first == null)
+					first = stmtBlock.getBegin();
+	
+				if (last != null)
+					nodeList.addEdge(new SequentialEdge(last, stmtBlock.getBegin()));
 
-			if (first == null) {
-				first = isEmptyBlock ? emptyBlock : stmtVisitor.getBlock().getBegin();
+				last = stmtBlock.getEnd();
 			}
-
-			if (last != null) {
-				nodeList.addEdge(new SequentialEdge(last, stmtVisitor.getBlock().getBegin()));
-			}
-			last = stmtVisitor.getBlock().getEnd();
 		}
-
+		
 		this.block = new ParsedBlock(first, nodeList, last);
 		return false;
 	}
@@ -253,23 +262,18 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(DoStatement node) {
 		NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
 
-		StatementASTVisitor doBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor doBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		if(node.getBody() == null)
 			return false; // parsing error
 
-		node.getBody().accept(doBody);
-		Statement noBody = new EmptyBody(this.cfg, getSourceCodeLocation(node));
+		node.getBody().accept(doBodyVisitor);
+		
+		ParsedBlock loopBody = doBodyVisitor.getBlock();
 
 		Statement entry;
-		boolean hasBody = doBody.getFirst() != null && doBody.getLast() != null;
-		if(hasBody) {
-			block.mergeWith(doBody.getBlock().getBody());
-			entry = doBody.getFirst();
-		} else {
-			block.addNode(noBody);
-			entry = noBody;
-		}
 
+		block.mergeWith(loopBody.getBody());
+		entry = loopBody.getBegin();
 
 		ExpressionVisitor whileCondition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(whileCondition);
@@ -280,20 +284,28 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			return false;
 		}
 
-		block.addNode(expression);
-		block.addEdge(new SequentialEdge(hasBody ? doBody.getLast() : noBody, expression));
-		block.addEdge(new TrueEdge(expression, hasBody ? doBody.getFirst() : noBody));
-
 		Statement noop = new NoOp(this.cfg, expression.getLocation());
-		block.addNode(noop);
-		block.addEdge(new FalseEdge(expression, noop));
+		
+		boolean isConditionDeadcode = !loopBody.canBeContinued();
+		
+		if(!isConditionDeadcode) {
+			block.addNode(expression);
+			block.addEdge(new SequentialEdge(loopBody.getEnd(), expression));
+			
+			block.addEdge(new TrueEdge(expression, loopBody.getBegin()));
+	
+			block.addNode(noop);
+			block.addEdge(new FalseEdge(expression, noop));
+			
+			// TODO: labels
+			DoWhileLoop doWhileLoop = new DoWhileLoop(block, expression, noop, loopBody.getBody().getNodes());
+			this.cfg.getDescriptor().addControlFlowStructure(doWhileLoop);
+			this.control.endControlFlowOf(block, expression, noop, expression, null);
+		} else {
+			LOG.warn("The last statement of do-while's body stops the execution, then the guard is not reachable.");
+		}
 
-
-		// TODO: labels
-		DoWhileLoop doWhileLoop = new DoWhileLoop(block, expression, noop, doBody.getBlock().getBody().getNodes());
-		this.cfg.getDescriptor().addControlFlowStructure(doWhileLoop);
-		this.control.endControlFlowOf(block, expression, noop, expression, null);
-		this.block = new ParsedBlock(entry, block, noop);
+		this.block = new ParsedBlock(entry, block, isConditionDeadcode ? loopBody.getEnd() : noop);
 
 		return false;
 	}
@@ -301,6 +313,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(EmptyStatement node) {
 
+		NoOp noop = new NoOp(cfg, getSourceCodeLocation(node));
+		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
+		adj.addNode(noop);
+		this.block = new ParsedBlock(noop, adj, noop);
+		
 		return false;
 	}
 
@@ -324,22 +341,20 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		block.addNode(assignment);
 		block.addEdge(new TrueEdge(condition, assignment));
 
-		StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		if(node.getBody() == null)
 			return false; // parsing error
 
-		node.getBody().accept(loopBody);
-		Statement noBody = new EmptyBody(this.cfg, condition.getLocation());
+		node.getBody().accept(loopBodyVisitor);
+		
+		ParsedBlock loopBody = loopBodyVisitor.getBlock();
+		
+		block.mergeWith(loopBody.getBody());
 
-		boolean hasBody = loopBody.getFirst() != null && loopBody.getLast() != null;
-		if(hasBody)
-			block.mergeWith(loopBody.getBlock().getBody());
-		else
-			block.addNode(noBody);
-
-		block.addEdge( new SequentialEdge(assignment, hasBody ? loopBody.getFirst() : noBody));
-
-		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, condition));
+		block.addEdge( new SequentialEdge(assignment, loopBody.getBegin()));
+		
+		if(loopBody.canBeContinued())
+			block.addEdge(new SequentialEdge(loopBody.getEnd(), condition));
 
 		Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
 		block.addNode(noop);
@@ -347,7 +362,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		block.addEdge(new FalseEdge(condition, noop));
 
 		// TODO: labels
-		ForEachLoop forEachLoop = new ForEachLoop(block, item, condition, collection, noop, hasBody ? loopBody.getBlock().getBody().getNodes() : Collections.emptySet());
+		ForEachLoop forEachLoop = new ForEachLoop(block, item, condition, collection, noop, loopBody.getBody().getNodes());
 		this.cfg.getDescriptor().addControlFlowStructure(forEachLoop);
 		this.control.endControlFlowOf(block, condition, noop, condition, null);
 		this.block = new ParsedBlock(condition, block, noop);
@@ -402,48 +417,41 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			block.addEdge(new SequentialEdge(hasInitalizers? initializers.getEnd() : noInit, alwaysTrue));
 		}
 
-		StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		if(node.getBody() == null)
 			return false; // parsing error
 
-		node.getBody().accept(loopBody);
+		node.getBody().accept(loopBodyVisitor);
 
+		ParsedBlock loopBody = loopBodyVisitor.getBlock();
 
-		Statement noBody = new EmptyBody(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
+		block.mergeWith(loopBody.getBody());
 
-		boolean hasBody = loopBody.getFirst() != null && loopBody.getLast() != null;
-		if(hasBody)
-			block.mergeWith(loopBody.getBlock().getBody());
-		else
-			block.addNode(noBody);
-
-		if(hasCondition)
-			block.addEdge( new TrueEdge(condition, hasBody ? loopBody.getFirst() : noBody));
-		else
-			block.addEdge( new TrueEdge(alwaysTrue, hasBody ? loopBody.getFirst() : noBody));
+		block.addEdge( new TrueEdge(hasCondition ? condition : alwaysTrue, loopBody.getBegin()));
 
 		ParsedBlock updaters = visitSequentialExpressions(node.updaters());
-		block.mergeWith(updaters.getBody());
-
+		
 		boolean hasUpdaters= updaters.getBegin() != null && updaters.getEnd() != null;
+		
+		boolean areUpdatersDeadcode = !loopBody.canBeContinued();
+		
+		if(!areUpdatersDeadcode)
+			block.mergeWith(updaters.getBody());
+		else if(hasUpdaters)
+			LOG.warn("The last statement of for's body stops the execution, then updaters are not reachable.");
 
 		Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col +2 to avoid conflict with the other noop
 		block.addNode(noop);
 
-		block.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, hasUpdaters ? updaters.getBegin() : hasCondition ? condition : alwaysTrue));
-
-		if(hasCondition)
-			block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getEnd() : hasBody ? loopBody.getLast() : noBody, condition));
-		else
-			block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getEnd() : hasBody ? loopBody.getLast() : noBody, alwaysTrue));
-
-		if(hasCondition)
-			block.addEdge(new FalseEdge(condition, noop));  
-		else
-			block.addEdge(new FalseEdge(alwaysTrue, noop));  
+		if(!areUpdatersDeadcode) {
+			block.addEdge(new SequentialEdge(loopBody.getEnd(), hasUpdaters ? updaters.getBegin() : hasCondition ? condition : alwaysTrue));
+			block.addEdge(new SequentialEdge(hasUpdaters ? updaters.getEnd() : loopBody.getEnd(), hasCondition ? condition : alwaysTrue));
+		}
+		
+		block.addEdge(new FalseEdge(hasCondition ? condition : alwaysTrue, noop));  
 
 		// TODO: labels
-		ForLoop forloop = new ForLoop(block, hasInitalizers ? initializers.getBody().getNodes() : null, hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getBody().getNodes() : null, noop, hasBody ? loopBody.getBlock().getBody().getNodes() : Collections.emptySet());
+		ForLoop forloop = new ForLoop(block, hasInitalizers ? initializers.getBody().getNodes() : null, hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getBody().getNodes() : null, noop, loopBody.getBody().getNodes());
 		this.cfg.getDescriptor().addControlFlowStructure(forloop);
 		this.control.endControlFlowOf(block, hasCondition ? condition : alwaysTrue, noop, hasCondition ? condition : alwaysTrue, null);
 		this.block = new ParsedBlock(entry, block, noop);
@@ -480,7 +488,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			return false; // parsing error
 		}
 
-
 		node.getExpression().accept(conditionVisitor);
 
 		Expression condition = conditionVisitor.getExpression();
@@ -491,26 +498,20 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		if (node.getThenStatement() == null) {
 			return false; // parsing error
 		}
-
+		
 		node.getThenStatement().accept(trueVisitor);
 		ParsedBlock trueBlock = trueVisitor.getBlock();
 
-		boolean isEmptyTrueBlock = trueBlock == null || trueBlock.getBody().getNodes().isEmpty();
+		nodeList.mergeWith(trueBlock.getBody());
 
-		Statement noTrueBody = new EmptyBody(this.cfg, !isEmptyTrueBlock ? condition.getLocation() : new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
-
-
-		if(!isEmptyTrueBlock)
-			nodeList.mergeWith(trueBlock.getBody());
-		else
-			nodeList.addNode(noTrueBody);
-
-		nodeList.addEdge(new TrueEdge(condition, !isEmptyTrueBlock ? trueVisitor.getFirst() : noTrueBody));
+		nodeList.addEdge(new TrueEdge(condition, trueVisitor.getFirst()));
 
 		Statement noop = new NoOp(cfg, condition.getLocation());
-		nodeList.addNode(noop);
-		nodeList.addEdge(new SequentialEdge( !isEmptyTrueBlock ? trueVisitor.getLast() : noTrueBody, noop));
 
+		if(trueBlock.canBeContinued()) {
+			nodeList.addNode(noop);
+			nodeList.addEdge(new SequentialEdge(trueBlock.getEnd(), noop));
+		}
 		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		ParsedBlock falseBlock = null;
 
@@ -518,24 +519,33 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			node.getElseStatement().accept(falseVisitor);
 			if (node.getElseStatement() != null) {
 				falseBlock = falseVisitor.getBlock();
-				boolean isEmptyFalseBlock = falseBlock.getBody().getNodes().isEmpty();
-				Statement noFalseBody = new EmptyBody(this.cfg, !isEmptyFalseBlock ? condition.getLocation() : new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col + 2 to avoid conflict with the other noop
-				if(!isEmptyFalseBlock)
-					nodeList.mergeWith(falseBlock.getBody());
-				else
-					nodeList.addNode(noFalseBody);
+				
+				nodeList.mergeWith(falseBlock.getBody());
 
-				nodeList.addEdge(new FalseEdge(condition, !isEmptyFalseBlock ? falseVisitor.getFirst() : noFalseBody));
-				nodeList.addEdge(new SequentialEdge( !isEmptyFalseBlock ? falseVisitor.getLast() : noFalseBody, noop));
-
+				nodeList.addEdge(new FalseEdge(condition,falseVisitor.getFirst()));
+				if(falseBlock.canBeContinued()) {
+					nodeList.addNode(noop);
+					nodeList.addEdge(new SequentialEdge(falseBlock.getEnd(), noop));
+				}
 			}
 		} else {
+			nodeList.addNode(noop);
 			nodeList.addEdge(new FalseEdge(condition, noop));
 		}
 
-		this.cfg.getDescriptor().addControlFlowStructure(new IfThenElse(nodeList, condition, noop, trueBlock != null ? trueBlock.getBody().getNodes() : Collections.emptyList(), falseBlock != null ? falseBlock.getBody().getNodes() : Collections.emptyList()));
-		this.block = new ParsedBlock(condition, nodeList, noop);
+		Statement follower = null;
+		Statement lastBlockStatement = null;
 		
+		if(trueBlock == null || (trueBlock != null && trueBlock.canBeContinued())
+				|| falseBlock == null || (falseBlock != null && falseBlock.canBeContinued())) {
+			nodeList.addNode(noop);
+			follower = noop;
+			lastBlockStatement = noop;
+		}
+		
+		this.cfg.getDescriptor().addControlFlowStructure(new IfThenElse(nodeList, condition, follower, trueBlock != null ? trueBlock.getBody().getNodes() : Collections.emptyList(), falseBlock != null ? falseBlock.getBody().getNodes() : Collections.emptyList()));
+		this.block = new ParsedBlock(condition, nodeList, lastBlockStatement);
+	
 		return false;
 	}
 
@@ -652,21 +662,23 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, control, switchItem);
 			((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
 
-			boolean isEmptyBlock = statementASTVisitor.getBlock().getBody().getNodes().isEmpty();
+			ParsedBlock caseBlock = statementASTVisitor.getBlock();
+			boolean isEmptyBlock = caseBlock == null || caseBlock.getBody().getNodes().isEmpty();
 			EmptyBody emptyBlock = null;
+			
 			if (isEmptyBlock) {
 				emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
 				adj.addNode(emptyBlock);
 			} else {
-				adj.mergeWith(statementASTVisitor.getBlock().getBody());
-				instrList.addAll(statementASTVisitor.getBlock().getBody().getNodes());
+				adj.mergeWith(caseBlock.getBody());
+				instrList.addAll(caseBlock.getBody().getNodes());
 			}
 
 			if(o instanceof SwitchCase) {
-				if(statementASTVisitor.getFirst() instanceof SwitchEqualityCheck)
-					workList.add((SwitchEqualityCheck) statementASTVisitor.getFirst());
-				else if(statementASTVisitor.getFirst() instanceof SwitchDefault) {
-					switchDefault = (SwitchDefault) statementASTVisitor.getFirst();
+				if(caseBlock.getBegin() instanceof SwitchEqualityCheck)
+					workList.add((SwitchEqualityCheck) caseBlock.getBegin());
+				else if(caseBlock.getBegin() instanceof SwitchDefault) {
+					switchDefault = (SwitchDefault) caseBlock.getBegin();
 				}  		
 			} else if(o instanceof BreakStatement) {
 				for(SwitchEqualityCheck switchCondition : workList) {
@@ -694,13 +706,13 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			} 
 
 			if (first == null) {
-				first = isEmptyBlock ? emptyBlock : statementASTVisitor.getFirst();
+				first = isEmptyBlock ? emptyBlock : caseBlock.getBegin();
 			}
 			if (last != null) {
 				if(!(last instanceof SwitchEqualityCheck || last instanceof SwitchDefault))
-					adj.addEdge(new SequentialEdge(last, statementASTVisitor.getFirst()));
+					adj.addEdge(new SequentialEdge(last, caseBlock.getBegin()));
 			}
-			last = statementASTVisitor.getLast();
+			last = caseBlock.getEnd();
 		} 
 
 		EmptyBody emptyBlock = null;
@@ -722,8 +734,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		for(SwitchEqualityCheck switchCondition : workList) {
 
-			if(instrList.size() > 0) {
-				adj.addEdge(new TrueEdge(switchCondition,instrList.getFirst()));
+			if(instrList.size() > 1) {
+				adj.addEdge(new TrueEdge(switchCondition,instrList.get(1)));
 			} else {
 				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
 				offsetCol++;
@@ -765,8 +777,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			for(Edge e : adj.getEdges()) {
 				if(e.getDestination().equals(c.getCondition()) 
 						&& !( e instanceof FalseEdge && (e.getSource() instanceof SwitchEqualityCheck || e.getSource() instanceof SwitchDefault))) {
-					adj.removeEdge(e);
 					adj.addEdge(e.newInstance(e.getSource(), getFirstInstructionAfterSwitchInstr(adj, c.getCondition())));
+					adj.removeEdge(e);
 				} 
 			}
 		}
@@ -775,8 +787,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			for(Edge e : adj.getEdges()) {
 				if(e.getDestination().equals(switchDefault) 
 						&& !( e instanceof FalseEdge && e.getSource() instanceof SwitchEqualityCheck)) {
-					adj.removeEdge(e);
 					adj.addEdge(e.newInstance(e.getSource(), getFirstInstructionAfterSwitchInstr(adj, switchDefault)));
+					adj.removeEdge(e);
 				}
 			}
 		}
@@ -934,30 +946,27 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		adj.addNode(expression);
 
-		StatementASTVisitor loopBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-		node.getBody().accept(loopBody);
+		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		node.getBody().accept(loopBodyVisitor);
 
 		if(node.getBody() == null)
 			return false; // parsing error
+		
+		ParsedBlock loopBody = loopBodyVisitor.getBlock();
+		
+		adj.mergeWith(loopBody.getBody());
 
-		Statement noBody = new EmptyBody(this.cfg, getSourceCodeLocation(node));
-
-		boolean hasBody = loopBody.getFirst() != null && loopBody.getLast() != null;
-		if(hasBody) {
-			adj.mergeWith(loopBody.getBlock().getBody());
-		} else {
-			adj.addNode(noBody);
-		}
-
-		adj.addEdge(new TrueEdge(expression, hasBody ? loopBody.getFirst() : noBody));
-		adj.addEdge(new SequentialEdge(hasBody ? loopBody.getLast() : noBody, expression));
+		
+		adj.addEdge(new TrueEdge(expression, loopBody.getBegin()));
+		if(loopBody.canBeContinued())
+			adj.addEdge(new SequentialEdge(loopBody.getEnd(), expression));
 
 		Statement noop = new NoOp(this.cfg, expression.getLocation());
 		adj.addNode(noop);
 		adj.addEdge(new FalseEdge(expression, noop));
 
 		// TODO: labels
-		WhileLoop whileLoop = new WhileLoop(adj, expression, noop, hasBody ? loopBody.getBlock().getBody().getNodes() : Collections.emptySet());
+		WhileLoop whileLoop = new WhileLoop(adj, expression, noop, loopBody.getBody().getNodes());
 		this.cfg.getDescriptor().addControlFlowStructure(whileLoop);
 		this.control.endControlFlowOf(adj, expression, noop, expression, null);
 		this.block = new ParsedBlock(expression, adj, noop);
@@ -1103,4 +1112,5 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		this.block = body;
 		return false;
 	}
+	
 }
