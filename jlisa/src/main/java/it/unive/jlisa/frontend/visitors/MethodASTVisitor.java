@@ -64,8 +64,8 @@ public class MethodASTVisitor extends JavaASTVisitor {
         }
         BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg, tracker);
         node.getBody().accept(blockStatementASTVisitor);
-        cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock());
-        if (blockStatementASTVisitor.getBlock().getNodes().isEmpty()) {
+        cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
+        if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
             return false;
         }
         cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
