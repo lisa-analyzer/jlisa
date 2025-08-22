@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.dom.Type;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -57,11 +58,22 @@ public class MethodASTVisitor extends JavaASTVisitor {
         
         LocalVariableTracker tracker = new LocalVariableTracker(cfg, codeMemberDescriptor);
         tracker.enterScope();
-        
-        for (Parameter p : codeMemberDescriptor.getFormals()) {
-            parserContext.addVariableType(cfg, p.getName(), p.getStaticType());
-            tracker.addVariable(p.getName(), new NoOp(cfg, p.getLocation()), p.getAnnotations());
+        Parameter[] formalParams = codeMemberDescriptor.getFormals();
+        for (int i=0; i < formalParams.length-1; i++) {
+        	for (int j=i; j < formalParams.length; j++) {
+        		if(formalParams[i].getName().equals(formalParams[j].getName()))		
+        			parserContext.addException(
+        					new ParsingException("parameter-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+        							"Parameter " + formalParams[j].getName() + " already exists in the cfg", getSourceCodeLocation(node)));
+        	}
         }
+		
+        for (Parameter p : formalParams) {
+            parserContext.addVariableType(cfg, p.getName(), p.getStaticType()); //FIXME: to remove when changed the visibility of LocalVariableTracker fields
+            // Not required add the parameter in the tracker because it is done in the tracker constructor given the descriptor.
+        }
+        
+        
         BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg, tracker);
         node.getBody().accept(blockStatementASTVisitor);
         cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());

@@ -951,6 +951,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addEdge(new SequentialEdge(first, assignment));
 			}
 			
+			if(tracker.hasVariable(variableName))
+				parserContext.addException(
+						new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+								"Variable " + variableName + " already exists in the cfg", getSourceCodeLocation(node)));
 			tracker.addVariable(variableName, assignment, ref.getAnnotations());
 			
 			last = assignment;
