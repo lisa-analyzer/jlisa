@@ -54,7 +54,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
-				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker());
+				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker(), tracker);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 				
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();

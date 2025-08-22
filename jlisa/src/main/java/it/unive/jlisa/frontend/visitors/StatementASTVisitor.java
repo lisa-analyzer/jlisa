@@ -176,7 +176,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
-				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, this.control);
+				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, this.control, this.tracker);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 				
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();
@@ -266,7 +266,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		tracker.enterScope();
 
-		StatementASTVisitor doBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor doBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		if(node.getBody() == null)
 			return false; // parsing error
 
@@ -348,7 +348,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		block.addNode(assignment);
 		block.addEdge(new TrueEdge(condition, assignment));
 
-		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		if(node.getBody() == null)
 			return false; // parsing error
 
@@ -428,7 +428,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			block.addEdge(new SequentialEdge(hasInitalizers? initializers.getEnd() : noInit, alwaysTrue));
 		}
 
-		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		if(node.getBody() == null)
 			return false; // parsing error
 
@@ -529,7 +529,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			nodeList.addNode(noop);
 			nodeList.addEdge(new SequentialEdge(trueBlock.getEnd(), noop));
 		}
-		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		ParsedBlock falseBlock = null;
 
 		tracker.enterScope();
@@ -977,7 +977,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		adj.addNode(expression);
 
-		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		node.getBody().accept(loopBodyVisitor);
 
 		if(node.getBody() == null)
