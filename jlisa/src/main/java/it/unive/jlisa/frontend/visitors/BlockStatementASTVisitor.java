@@ -15,9 +15,7 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class BlockStatementASTVisitor extends JavaASTVisitor{
     private CFG cfg;
-    private it.unive.lisa.program.cfg.statement.Statement first;
-    private it.unive.lisa.program.cfg.statement.Statement last;
-    private NodeList<CFG, it.unive.lisa.program.cfg.statement.Statement, Edge> block = new NodeList<>(new SequentialEdge());
+    private ParsedBlock block;
 
     public BlockStatementASTVisitor(ParserContext parserContext, String source,CompilationUnit compilationUnit) {
         super(parserContext, source, compilationUnit);
@@ -29,14 +27,14 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
     }
 
     public Statement getFirst() {
-        return first;
+        return block.getBegin();
     }
 
     public Statement getLast() {
-        return last;
+        return block.getEnd();
     }
 
-    public NodeList<CFG, Statement, Edge> getBlock() {
+    public ParsedBlock getBlock() {
         return block;
     }
 
@@ -48,7 +46,6 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
 			EmptyBody emptyBlock = null;
 			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
 			nodeList.addNode(emptyBlock);
-			this.first = emptyBlock;
 			last = emptyBlock;
 			nodeList.addEdge(new SequentialEdge(last, emptyBlock));
 
@@ -71,10 +68,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
 			}
 		}
 		
-		this.block = nodeList;
-		this.first= first;
-		this.last = last;
-		
+		this.block = new ParsedBlock(first, nodeList, last);
 		return false;
     }
 }
