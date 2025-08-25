@@ -1,2 +1,9 @@
 class Map extends Object:
+
+class HashMap extends Map:
 		
+library Map:
+	location Map
+	class Entry extends Object:
+	
+	
