@@ -38,6 +38,8 @@ public class StringTest {
 		char c2 = s10.charAt(0);
 		String s17 = String.valueOf(c2);
 		int i4 = s4.indexOf('o');
+		Object o1 = new String("Nuovo Oggetto");
+		String s18 = String.valueOf(o1);
 		
 	}
 }
