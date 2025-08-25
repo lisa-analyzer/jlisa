@@ -10,6 +10,24 @@ class Throwable extends Object:
 
 class Error extends Throwable:
 
+class RuntimeException extends Exception:
+
+class ArithmeticException extends RuntimeException:
+
+class NullPointerException extends RuntimeException:
+
+class ClassCastException extends RuntimeException:
+
+class IndexOutOfBoundsException extends RuntimeException:
+
+class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
+
+class IllegalArgumentException extends RuntimeException:
+
+class NumberFormatException extends IllegalArgumentException:
+
+class NegativeArraySizeException extends RuntimeException:
+
 class AssertionError extends Error:
 
 	instance method AssertionError: it.unive.jlisa.program.java.constructs.assertionerror.AssertionErrorEmptyConstructor
