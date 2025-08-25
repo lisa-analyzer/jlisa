@@ -31,6 +31,7 @@ import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
@@ -443,6 +444,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringIndexOfOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.indexOf(rv));			
+		}
+		
+		if (operator instanceof JavaStringIndexOfCharOperator) {
+			String lv = ((String) left.getValue());
+			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.indexOf(rv));			
 		}
 		

@@ -33,10 +33,11 @@ public class StringTest {
 		String s14 = String.valueOf(l1);
 		boolean b6 = false;
 		String s15 = String.valueOf(b6);
-		//double d1 = 3.14;
-		//String s16 = String.valueOf(d1);
+		double d1 = 3.14;
+		String s16 = String.valueOf(d1);
 		char c2 = s10.charAt(0);
 		String s17 = String.valueOf(c2);
+		int i4 = s4.indexOf('o');
 		
 	}
 }

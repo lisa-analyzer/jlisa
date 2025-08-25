@@ -2,8 +2,10 @@ package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -61,8 +63,7 @@ public class StringValueOfLong extends UnaryExpression implements PluggableState
 		
 		it.unive.lisa.symbolic.value.UnaryExpression valueOf = null;
 		
-		if(expr.getStaticType() instanceof JavaLongType) {
-			
+		if(expr.getStaticType() instanceof JavaLongType) {	
 			valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
 					stringType, 
 					expr, 
@@ -78,6 +79,13 @@ public class StringValueOfLong extends UnaryExpression implements PluggableState
 					getLocation());
 		}
 		
+		if(expr.getStaticType() instanceof JavaDoubleType) {
+			valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType, 
+					expr, 
+					JavaStringValueOfDoubleOperator.INSTANCE, 
+					getLocation());
+		}
 		
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype, new Expression[0]);

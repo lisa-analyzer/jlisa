@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -58,15 +60,31 @@ public class StringIndexOf extends BinaryExpression implements PluggableStatemen
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
-		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression indexOf = null;
+		
+		if(right.getStaticType() instanceof JavaCharType) {
 
-		it.unive.lisa.symbolic.value.BinaryExpression indexOf = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaIntType.INSTANCE, 
-				accessLeft, 
-				accessRight, 
-				JavaStringIndexOfOperator.INSTANCE, 
-				getLocation());
+			indexOf = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaIntType.INSTANCE, 
+					accessLeft, 
+					right, 
+					JavaStringIndexOfCharOperator.INSTANCE, 
+					getLocation());
+		}
+		else if(right.getStaticType().asPointerType().getInnerType().isStringType() ) {
+			HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
+			AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+
+			
+			indexOf = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaIntType.INSTANCE, 
+					accessLeft, 
+					accessRight, 
+					JavaStringIndexOfOperator.INSTANCE, 
+					getLocation());
+		}
+		
+		
 
 		return analysis.smallStepSemantics(state, indexOf, originating);
 	}
