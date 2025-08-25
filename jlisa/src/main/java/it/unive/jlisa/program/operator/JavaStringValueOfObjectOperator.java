@@ -30,8 +30,6 @@ public class JavaStringValueOfObjectOperator implements StringOperator, UnaryOpe
 		
 	@Override
 	public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
-		//if (argument.stream().noneMatch(t -> t.equals()))
-		//	return Collections.emptySet();
 		return Collections.singleton(types.getStringType());
 	}
 }

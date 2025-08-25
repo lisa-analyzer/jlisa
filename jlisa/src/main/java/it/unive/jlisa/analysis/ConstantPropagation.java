@@ -30,7 +30,9 @@ import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringGetBytesOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
@@ -38,6 +40,7 @@ import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
@@ -299,6 +302,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringValueOfObjectOperator && arg.getValue() instanceof Object o)
 			return new ConstantValue(String.valueOf(o));
 		
+		if (operator instanceof JavaStringGetBytesOperator && arg.getValue() instanceof String s) {
+			return new ConstantValue(s.getBytes());
+		}
+		
 		return top();
 	}
 
@@ -475,13 +482,19 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv + rv);			
 		}
 		
+		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.equalsIgnoreCase(rv));			
+		}
+		
 		// char
 		if (operator instanceof JavaCharacterEqualsOperator) {
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.equals(rv));			
 		}
-
+		
 		return top();
 	}
 		
@@ -504,6 +517,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String mv = ((String) middle.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.replaceAll(mv,rv));	
+		}
+		
+		if (operator instanceof JavaStringReplaceOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.replace( (char) mv.intValue(),(char) rv.intValue()));	
 		}
 		
 		return top();

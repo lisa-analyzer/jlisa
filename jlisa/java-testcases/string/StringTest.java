@@ -40,6 +40,9 @@ public class StringTest {
 		int i4 = s4.indexOf('o');
 		Object o1 = new String("Nuovo Oggetto");
 		String s18 = String.valueOf(o1);
+		//byte[] by1 = s4.getBytes();
+		boolean b7 = s4.equalsIgnoreCase("HELLO WORlD");
+		String s19 = s4.replace('o', 'a');
 		
 	}
 }
