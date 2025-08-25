@@ -571,7 +571,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			return false;
 		}
 		if (token.endsWith("l") || token.endsWith("L")) {
-			expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), Long.decode(token.substring(0, token.length()-1)));
+			// drop 'l' or 'L'
+			String value = token.substring(0, token.length() - 1);
+			if (value.startsWith("0x") || value.startsWith("0X")) {
+			    long parsed = Long.parseUnsignedLong(value.substring(2), 16);
+			    expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), parsed);
+			} else {
+			    long parsed = Long.decode(value);
+			    expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), parsed);
+			}
 			return false;
 		}
 		try {
