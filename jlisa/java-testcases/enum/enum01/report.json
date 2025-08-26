@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_EnumExample.EnumExample(EnumExample__this,_String__name)_1707418965.json", "void_EnumExample.EnumExample(EnumExample__this,_String__name)_1707424731.json", "void_EnumExample.EnumExample(EnumExample__this,_String__name)_1707430497.json", "void_Main.main(String[]_args).json" ],
+  "info" : {
+    "cfgs" : "3",
+    "duration" : "105ms",
+    "end" : "2025-08-26T15:07:27.360+02:00",
+    "expressions" : "15",
+    "files" : "4",
+    "globals" : "6",
+    "members" : "66",
+    "programs" : "1",
+    "start" : "2025-08-26T15:07:27.255+02:00",
+    "statements" : "9",
+    "units" : "47",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/enum/enum01"
+  }
+}
