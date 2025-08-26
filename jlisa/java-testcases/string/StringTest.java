@@ -45,6 +45,8 @@ public class StringTest {
 		String s19 = s4.replace('o', 'a');
 		int i5 = s4.indexOf('o', 6);
 		int i6 = ("ABCABABCAB").lastIndexOf("AB");
+		int i7 = ("ABCABABCAB").lastIndexOf("C", 5);
+		String s20 = s4.substring(4, 7);
 		
 	}
 }

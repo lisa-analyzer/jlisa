@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis;
 
+import java.net.Inet4Address;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
@@ -37,6 +38,7 @@ import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
@@ -44,6 +46,7 @@ import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringFromToOperator;
 import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
@@ -539,6 +542,20 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.indexOf( (char) mv.intValue(), rv));	
+		}
+		
+		if (operator instanceof JavaStringLastIndexOfStringFromIndexOperator) {
+			String lv = ((String) left.getValue());
+			String mv = ((String) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.lastIndexOf(mv, rv));	
+		}
+		
+		if (operator instanceof JavaStringSubstringFromToOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.substring(mv, rv));	
 		}
 		
 		return top();
