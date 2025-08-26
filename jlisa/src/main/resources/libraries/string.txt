@@ -96,10 +96,10 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		libtype String*
 		param other type it.unive.lisa.program.type.BoolType::INSTANCE
 			
-	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfLong
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
 		libtype String*
 		param other type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
-		
+			
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfObject
 		libtype String*
 		param other libtype Object*

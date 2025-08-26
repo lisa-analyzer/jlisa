@@ -47,6 +47,8 @@ public class StringTest {
 		int i6 = ("ABCABABCAB").lastIndexOf("AB");
 		int i7 = ("ABCABABCAB").lastIndexOf("C", 5);
 		String s20 = s4.substring(4, 7);
+		String s21 = String.valueOf(2.5f);
+		String s22 = String.valueOf(i7);
 		
 	}
 }

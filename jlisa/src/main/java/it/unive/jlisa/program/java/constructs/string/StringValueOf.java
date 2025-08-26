@@ -3,9 +3,13 @@ package it.unive.jlisa.program.java.constructs.string;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -28,18 +32,18 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringValueOfLong extends UnaryExpression implements PluggableStatement {
+public class StringValueOf extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringValueOfLong(CFG cfg, CodeLocation location, Expression exp) {
+	public StringValueOf(CFG cfg, CodeLocation location, Expression exp) {
 		super(cfg, location, "valueOf", exp);
 	}
 	
-	public static StringValueOfLong build(
+	public static StringValueOf build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringValueOfLong(cfg, location, params[0]);
+		return new StringValueOf(cfg, location, params[0]);
 	}
 	
 	@Override
@@ -76,6 +80,22 @@ public class StringValueOfLong extends UnaryExpression implements PluggableState
 					stringType, 
 					expr, 
 					JavaStringValueOfCharOperator.INSTANCE, 
+					getLocation());
+		}
+		
+		if(expr.getStaticType() instanceof JavaFloatType) {
+			valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType, 
+					expr, 
+					JavaStringValueOfFloatOperator.INSTANCE, 
+					getLocation());
+		}
+		
+		if(expr.getStaticType() instanceof JavaIntType) {
+			valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType, 
+					expr, 
+					JavaStringValueOfIntOperator.INSTANCE, 
 					getLocation());
 		}
 		

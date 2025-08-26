@@ -1,6 +1,5 @@
 package it.unive.jlisa.analysis;
 
-import java.net.Inet4Address;
 import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
@@ -54,6 +53,8 @@ import it.unive.jlisa.program.operator.JavaStringTrimOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
 import it.unive.lisa.analysis.SemanticException;
@@ -300,6 +301,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		
 		if (operator instanceof JavaStringValueOfDoubleOperator && arg.getValue() instanceof Double d)
 			return new ConstantValue(String.valueOf(d));
+		
+		if (operator instanceof JavaStringValueOfFloatOperator && arg.getValue() instanceof Float f)
+			return new ConstantValue(String.valueOf(f));
+		
+		if (operator instanceof JavaStringValueOfIntOperator && arg.getValue() instanceof Integer i)
+			return new ConstantValue(String.valueOf(i));
 		
 		if (operator instanceof JavaStringValueOfCharOperator && arg.getValue() instanceof Character c)
 			return new ConstantValue(String.valueOf(c));
