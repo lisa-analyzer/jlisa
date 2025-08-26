@@ -34,8 +34,10 @@ import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringGetBytesOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
@@ -470,6 +472,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.lastIndexOf(rv));
 		}
 		
+		if (operator instanceof JavaStringLastIndexOfStringOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.lastIndexOf(rv));
+		}
+		
 		if (operator instanceof JavaStringAppendCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
@@ -524,6 +532,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.replace( (char) mv.intValue(),(char) rv.intValue()));	
+		}
+		
+		if (operator instanceof JavaStringIndexOfFromIndexOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(lv.indexOf( (char) mv.intValue(), rv));	
 		}
 		
 		return top();

@@ -43,6 +43,8 @@ public class StringTest {
 		//byte[] by1 = s4.getBytes();
 		boolean b7 = s4.equalsIgnoreCase("HELLO WORlD");
 		String s19 = s4.replace('o', 'a');
+		int i5 = s4.indexOf('o', 6);
+		int i6 = ("ABCABABCAB").lastIndexOf("AB");
 		
 	}
 }
