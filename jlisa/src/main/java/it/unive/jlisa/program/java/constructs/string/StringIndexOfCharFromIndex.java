@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringIndexOfFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -21,19 +21,19 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringIndexOfFromIndex extends TernaryExpression implements PluggableStatement {
+public class StringIndexOfCharFromIndex extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	protected StringIndexOfFromIndex(CFG cfg, CodeLocation location, Expression left, Expression middle,
+	protected StringIndexOfCharFromIndex(CFG cfg, CodeLocation location, Expression left, Expression middle,
 			Expression right) {
 		super(cfg, location, "replaceAll", left, middle, right);
 	}
 
-	public static StringIndexOfFromIndex build(
+	public static StringIndexOfCharFromIndex build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringIndexOfFromIndex(cfg, location, params[0], params[1], params[2]);
+		return new StringIndexOfCharFromIndex(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class StringIndexOfFromIndex extends TernaryExpression implements Pluggab
 				accessLeft,
 				middle,
 				right, 
-				JavaStringIndexOfFromIndexOperator.INSTANCE, 
+				JavaStringIndexOfCharFromIndexOperator.INSTANCE, 
 				getLocation());
 		
 		return analysis.smallStepSemantics(state, indexOf, originating);

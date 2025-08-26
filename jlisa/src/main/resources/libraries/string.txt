@@ -120,6 +120,12 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*
 		param other type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfStringFromIndex
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype String*
+		param other libtype String*
+		param idx type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
 	
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOf
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
@@ -143,7 +149,13 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param other type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
-	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfFromIndex
+	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfCharFromIndex
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype String*
+		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOfCharFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE

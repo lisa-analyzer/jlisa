@@ -50,6 +50,8 @@ public class StringTest {
 		String s21 = String.valueOf(2.5f);
 		String s22 = String.valueOf(i7);
 		boolean b8 = s4.startsWith("World", 6);
+		int i8 = s4.indexOf("o", 6);
+		int i9 = ("ABCABABCAB").lastIndexOf('C', 5);
 		
 	}
 }

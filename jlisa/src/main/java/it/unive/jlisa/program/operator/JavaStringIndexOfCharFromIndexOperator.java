@@ -9,19 +9,19 @@ import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaStringIndexOfFromIndexOperator implements StringOperator,TernaryOperator{
+public class JavaStringIndexOfCharFromIndexOperator implements StringOperator,TernaryOperator{
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaStringIndexOfFromIndexOperator INSTANCE = new JavaStringIndexOfFromIndexOperator();
+	public static final JavaStringIndexOfCharFromIndexOperator INSTANCE = new JavaStringIndexOfCharFromIndexOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaStringIndexOfFromIndexOperator() {
+	protected JavaStringIndexOfCharFromIndexOperator() {
 	}
 
 	@Override
