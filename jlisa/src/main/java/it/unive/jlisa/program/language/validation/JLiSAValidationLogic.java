@@ -1,8 +1,13 @@
 package it.unive.jlisa.program.language.validation;
 
-import it.unive.lisa.program.*;
+import it.unive.lisa.program.CodeUnit;
+import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.Global;
+import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.language.validation.BaseValidationLogic;
 
@@ -43,12 +48,20 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
         validateLocation(member.getDescriptor().getLocation().getCodeLocation(), member);
         if (member instanceof CFG cfg) {
             for (Statement statement : cfg.getNodes()) {
-                validateLocation(statement.getLocation().getCodeLocation(), statement);
+                validate(statement);
             }
         }
         super.validate(member, instance);
     }
 
+    public void validate(Statement statement) throws ProgramValidationException {
+        validateLocation(statement.getLocation().getCodeLocation(), statement);
+        if (statement instanceof NaryExpression naryExpression) {
+            for (Expression e : naryExpression.getSubExpressions()) {
+                validate(e);
+            }
+        }
+    }
     public void validate(
             Global global,
             boolean isInstance)
