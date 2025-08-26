@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import it.unive.jlisa.program.cfg.expression.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -45,9 +44,25 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.cfg.expression.BitwiseNot;
+import it.unive.jlisa.program.cfg.expression.InstanceOf;
+import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseAndOperator;
+import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
+import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaNewArray;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaShiftOperator;
+import it.unive.jlisa.program.cfg.expression.PostfixAddition;
+import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
+import it.unive.jlisa.program.cfg.expression.PrefixAddition;
+import it.unive.jlisa.program.cfg.expression.PrefixPlus;
+import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
@@ -55,6 +70,8 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -348,7 +365,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		if (expr != null) {
-			expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
 		}
 		return false;
 	}
@@ -532,21 +549,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(QualifiedName node) {
-		String target = node.getName().getIdentifier(); // you may still want this
-		ExpressionVisitor receiverVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
-		if (node.getQualifier() instanceof QualifiedName) {
-			parserContext.addException(
-					new ParsingException("qualified-name", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Qualified Name expressions as qualifier of Qualifier Name expressions are not supported.",
-							getSourceCodeLocation(node))
-					);
-		}
-		node.getQualifier().accept(receiverVisitor);
-		Expression receiver = receiverVisitor.getExpression();
-		if (receiver == null) {
-			return false;
-		}
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node),receiver, target);
+		String targetName = node.getName().getIdentifier();
+		String unitName = node.getQualifier().toString();
+        ClassUnit cUnit = (ClassUnit) getProgram().getUnit(unitName);
+        Global g = new Global(getSourceCodeLocation(node), cUnit, targetName, false);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), cUnit, g);
 		return false;
 	}
 

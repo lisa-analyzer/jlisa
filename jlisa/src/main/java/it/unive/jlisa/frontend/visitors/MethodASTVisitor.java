@@ -12,8 +12,16 @@ import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
+import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.lisa.program.Global;
+import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -32,6 +40,7 @@ import it.unive.lisa.util.frontend.CFGTweaker;
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
     CFG cfg;
+    
     public MethodASTVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
         super(parserContext, source, astCompilationUnit);
         this.lisacompilationUnit = lisacompilationUnit;
@@ -90,7 +99,26 @@ public class MethodASTVisitor extends JavaASTVisitor {
         }
 
         if (isMain) {
-            getProgram().addEntryPoint(cfg);
+			// in the main method, we instantiate enum constants
+        	for (Unit unit : getProgram().getUnits()) 
+        		if (unit instanceof EnumUnit) {
+            		 it.unive.lisa.type.Type enumType = getProgram().getTypes().getType(unit.getName());
+
+        			for (Global gl : unit.getGlobals()) {
+        				SourceCodeLocation loc = (SourceCodeLocation) gl.getLocation();
+        				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, loc, unit, gl);
+        				JavaNewObj call = new JavaNewObj(cfg, loc, unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, loc, gl.getName()));
+        				JavaAssignment asg = new JavaAssignment(cfg, loc, accessGlobal, call);
+        				cfg.addNode(asg);
+        				for (Statement entry : cfg.getEntrypoints()) {
+        					cfg.addEdge(new SequentialEdge(asg, entry));
+        					cfg.getEntrypoints().remove(entry);
+        					cfg.getEntrypoints().add(asg);
+        				}
+        			}
+        		}
+        	
+        	getProgram().addEntryPoint(cfg);
         }
 
         CFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new);
