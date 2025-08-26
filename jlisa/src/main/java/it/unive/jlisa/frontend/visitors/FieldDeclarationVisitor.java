@@ -41,9 +41,8 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 				}
 			}
 			String identifier = fragment.getName().getIdentifier();
-
 			boolean isStatic = Modifier.isStatic(modifiers);
-			Global global = new Global(getSourceCodeLocation(node), lisacompilationUnit, identifier, !isStatic, type, new Annotations());
+			Global global = new Global(getSourceCodeLocation(fragment), lisacompilationUnit, identifier, !isStatic, type, new Annotations());
 			if (isStatic) {
 				lisacompilationUnit.addGlobal(global);
 			} else {

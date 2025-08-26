@@ -1,6 +1,8 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -26,6 +28,7 @@ public class ParserContext {
     private int apiLevel;
     private List<ParsingException> exceptions;
 
+    private Map<String, SyntheticCodeLocationManager> syntheticCodeLocationManagers = new HashMap<>();
     private EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy;
 
     Map<CFG, Map<String, Type>> variableTypes = new HashMap<>();
@@ -108,5 +111,13 @@ public class ParserContext {
             throw new RuntimeException(e);
         }
         exceptions.add(e);
+    }
+
+    public SourceCodeLocationManager getLocationManager(String fileName, int lineNumber, int columnNumber) {
+        return new SourceCodeLocationManager(fileName, lineNumber, columnNumber);
+    }
+
+    public SyntheticCodeLocationManager getCurrentSyntheticCodeLocationManager(String fileName) {
+        return syntheticCodeLocationManagers.computeIfAbsent(fileName, SyntheticCodeLocationManager::new);
     }
 }

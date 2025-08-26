@@ -1,25 +1,9 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import it.unive.lisa.program.cfg.Parameter;
-import it.unive.lisa.program.cfg.VariableTableEntry;
+import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
@@ -28,6 +12,12 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.CFGTweaker;
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -62,7 +52,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
         Collection<Statement> entrypoints = cfg.getEntrypoints();
         if (cfg.getAllExitpoints().isEmpty()) {
-            Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
+            Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
             if (cfg.getNodesCount() == 0) {
                 // empty method, so the ret is also the entrypoint
                 list.addNode(ret);

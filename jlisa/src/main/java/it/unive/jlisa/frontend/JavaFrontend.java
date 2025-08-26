@@ -1,5 +1,23 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
+import it.unive.jlisa.program.JavaProgram;
+import it.unive.jlisa.program.language.JavaLanguageFeatures;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
+import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.type.BoolType;
+import it.unive.lisa.program.type.StringType;
+import it.unive.lisa.type.TypeSystem;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,33 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
-import it.unive.jlisa.program.JavaProgram;
-import it.unive.jlisa.program.language.JavaLanguageFeatures;
-import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
-import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaDoubleType;
-import it.unive.jlisa.program.type.JavaFloatType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.jlisa.program.type.JavaLongType;
-import it.unive.jlisa.program.type.JavaShortType;
-import it.unive.jlisa.type.JavaTypeSystem;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.program.type.StringType;
-import it.unive.lisa.type.TypeSystem;
 
 public class JavaFrontend {
     private ParserContext parserContext;
