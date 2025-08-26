@@ -1,14 +1,12 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.SourceCodeLocation;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.InfixExpression;
-
-import it.unive.jlisa.frontend.ParserContext;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.SourceCodeLocation;
 
 public abstract class JavaASTVisitor extends ASTVisitor {
     protected String source;
@@ -25,8 +23,24 @@ public abstract class JavaASTVisitor extends ASTVisitor {
         return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
     }
 
+    public SourceCodeLocation getSourceCodeLocation(ASTNode node, boolean nextRow) {
+        int startPos = node.getStartPosition();
+        if (nextRow) {
+            return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos) + node.getLength()).getCurrentLocation();
+        }
+        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
+    }
+
     public SourceCodeLocationManager getSourceCodeLocationManager(ASTNode node) {
         int startPos = node.getStartPosition();
+        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos));
+    }
+
+    public SourceCodeLocationManager getSourceCodeLocationManager(ASTNode node, boolean end) {
+        int startPos = node.getStartPosition();
+        if (end) {
+            return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos) + node.getLength());
+        }
         return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos));
     }
 
@@ -40,12 +54,5 @@ public abstract class JavaASTVisitor extends ASTVisitor {
 
     public ParserContext getParserContext() {
         return parserContext;
-    }
-    
-    public SourceCodeLocation getOperatorLocation(InfixExpression node) {
-        int startPos = node.getStartPosition();
-        int startRight = node.getRightOperand().getStartPosition();
-        startRight = compilationUnit.getColumnNumber(startRight) - 2;
-        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), startRight).getCurrentLocation();
     }
 }

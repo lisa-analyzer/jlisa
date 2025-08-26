@@ -22,7 +22,6 @@ import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
@@ -181,7 +180,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 
 		// get the type from the descriptor
-		Expression thisExpression = new VariableRef(cfg, getSourceCodeLocation(node), "this");
+		Expression thisExpression = new VariableRef(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), "this");
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
 
@@ -197,7 +196,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				}
 			}
 		}
-		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
+		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -294,8 +293,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ExpressionVisitor collectionVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(collectionVisitor);
 		Expression collection = collectionVisitor.getExpression();
-		SourceCodeLocation itemCodeLocation = (SourceCodeLocation) item.getLocation();
-		SourceCodeLocationManager locationManager =  new SourceCodeLocationManager(source, itemCodeLocation.getLine(), itemCodeLocation.getCol());
+
+		SourceCodeLocationManager locationManager =  getSourceCodeLocationManager(node.getParameter());
 		Expression condition = new Equal(cfg, locationManager.nextColumn(), new TrueLiteral(cfg, locationManager.nextColumn()), new HasNextForEach(cfg,locationManager.nextColumn(),collection));
 		block.addNode(condition);
 
@@ -568,7 +567,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			}
 		}
 
-		Statement call = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+		Statement call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -858,24 +857,31 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
-			SourceCodeLocation loc = getSourceCodeLocation(fragment);
+
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, variableType);
 			Expression initializer;
+			JavaAssignment assignment;
 			parserContext.addVariableType(cfg,variableName, variableType);
 			if(fragment.getInitializer() == null) {
-				initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, loc);
+				initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+				assignment = new JavaAssignment(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref, initializer);
 			} else {
+				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);
 				org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 				ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 				expr.accept(exprVisitor);
 				initializer = exprVisitor.getExpression();
 				if (initializer == null) {
-					initializer = new NullLiteral(cfg, loc);
+					initializer = new NullLiteral(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+					assignment = new JavaAssignment(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref, initializer);
+				} else {
+					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, initializer);
 				}
+
 			}
-			JavaAssignment assignment = new JavaAssignment(cfg, loc, ref, initializer);
+
 			adj.addNode(assignment);
 			if (getFirst() == null) {
 				first = assignment;

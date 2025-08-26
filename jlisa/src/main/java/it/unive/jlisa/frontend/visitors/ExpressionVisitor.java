@@ -1,59 +1,14 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-
-import it.unive.jlisa.program.cfg.expression.*;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.ArrayCreation;
-import org.eclipse.jdt.core.dom.ArrayInitializer;
-import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.BooleanLiteral;
-import org.eclipse.jdt.core.dom.CaseDefaultExpression;
-import org.eclipse.jdt.core.dom.CastExpression;
-import org.eclipse.jdt.core.dom.CharacterLiteral;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ConditionalExpression;
-import org.eclipse.jdt.core.dom.CreationReference;
-import org.eclipse.jdt.core.dom.ExpressionMethodReference;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.InstanceofExpression;
-import org.eclipse.jdt.core.dom.LambdaExpression;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.NullLiteral;
-import org.eclipse.jdt.core.dom.NumberLiteral;
-import org.eclipse.jdt.core.dom.ParenthesizedExpression;
-import org.eclipse.jdt.core.dom.PostfixExpression;
-import org.eclipse.jdt.core.dom.PrefixExpression;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.StringLiteral;
-import org.eclipse.jdt.core.dom.SuperFieldAccess;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.SuperMethodReference;
-import org.eclipse.jdt.core.dom.SwitchExpression;
-import org.eclipse.jdt.core.dom.ThisExpression;
-import org.eclipse.jdt.core.dom.TypeLiteral;
-import org.eclipse.jdt.core.dom.TypeMethodReference;
-import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
-import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.*;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -61,24 +16,20 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.program.cfg.statement.comparison.Equal;
-import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
-import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
-import it.unive.lisa.program.cfg.statement.comparison.LessThan;
-import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
+import it.unive.lisa.program.cfg.statement.comparison.*;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
-import it.unive.lisa.program.cfg.statement.numeric.Addition;
-import it.unive.lisa.program.cfg.statement.numeric.Division;
-import it.unive.lisa.program.cfg.statement.numeric.Modulo;
-import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
-import it.unive.lisa.program.cfg.statement.numeric.Negation;
-import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
+import it.unive.lisa.program.cfg.statement.numeric.*;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import org.apache.commons.lang3.function.TriFunction;
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -98,8 +49,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-
-		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node), left, right);
+		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node, true), left, right);
 		return false;
 	}
 
@@ -162,32 +112,33 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			// SKIP. There is an error.
 			return false;
 		}
+		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
 		switch (operator.toString()) {
 		case "=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left, right);
 			break;
 		case "+=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Addition(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Addition(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "-=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Subtraction(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Subtraction(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "*=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Multiplication(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Multiplication(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "/=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Division(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Division(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "%=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Modulo(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Modulo(cfg, locationManager.nextColumn(), left, right));
 		case "&=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaBitwiseAndOperator(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "|=":
 		case "^=":
@@ -348,7 +299,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		if (expr != null) {
-			expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+			expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node, true).nextColumn(), expr, node.getName().getIdentifier());
 		}
 		return false;
 	}
@@ -367,39 +318,44 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			return false;
 		}
 		List<Expression> operands = new ArrayList<>();
+		List<ASTNode> jdtOperands = new ArrayList<>();
 		operands.add(left);
+		jdtOperands.add(node.getLeftOperand());
 		operands.add(right);
+		jdtOperands.add(node.getRightOperand());
 		for (Object n : node.extendedOperands()) {
 			ExpressionVisitor extendedOperandVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 			((ASTNode) n).accept(extendedOperandVisitor);
 			if (extendedOperandVisitor.getExpression() != null) {
 				operands.add(extendedOperandVisitor.getExpression());
+				jdtOperands.add((ASTNode) n);
 			}
 		}
+		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftOperand(), true);
 		switch (operator.toString()) {
 		case "*":
-			expression = buildExpression(operands, (first, second) ->
-			new Multiplication(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Multiplication(cfg, location, first, second));
 			break;
 		case "/":
-			expression = buildExpression(operands, (first, second) ->
-			new Division(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Division(cfg, location, first, second));
 			break;
 		case "%":
-			expression = buildExpression(operands, (first, second) ->
-			new Modulo(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Modulo(cfg, location, first, second));
 			break;
 		case "+":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaAddition(cfg, getOperatorLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaAddition(cfg, location, first, second));
 			break;
 		case "-":
-			expression = buildExpression(operands, (first, second) ->
-			new Subtraction(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Subtraction(cfg, location, first, second));
 			break;
 		case ">>":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaShiftOperator(cfg, getSourceCodeLocation(node), first, second));
+			buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaShiftOperator(cfg, location, first, second));
 			break;
 		case "<<":
 		case ">>>":
@@ -410,28 +366,28 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					);
 			break;
 		case "<":
-			expression = new LessThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = new LessThan(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
 			break;
 		case ">":
-			expression = new GreaterThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = new GreaterThan(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
 			break;
 		case "<=":
-			expression = new LessOrEqual(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = new LessOrEqual(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
 			break;
 		case ">=":
-			expression = new GreaterThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = new GreaterThan(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
 			break;
 		case "==":
-			expression = buildExpression(operands, (first, second) ->
-			new Equal(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Equal(cfg, location, first, second));
 			break;
 		case "!=":
-			expression = buildExpression(operands, (first, second) ->
-			new NotEqual(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new NotEqual(cfg, location, first, second));
 			break;
 		case "&":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaBitwiseAndOperator(cfg, location, first, second));
 			break;
 		case "^":
 		case "|":
@@ -442,12 +398,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					);
 			break;
 		case "&&":
-			expression = buildExpression(operands, (first, second) ->
-			new And(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new And(cfg, location, first, second));
 			break;
 		case "||":
-			expression = buildExpression(operands, (first, second) ->
-			new Or(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Or(cfg, location, first, second));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
@@ -457,14 +413,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	private Expression buildExpression(
 			List<Expression> operands,
-			BiFunction<Expression, Expression, Expression> opBuilder) {
+			List<ASTNode> jdtOperands,
+			TriFunction<Expression, Expression, SourceCodeLocation, Expression> opBuilder) {
 
 		if (operands.isEmpty())
 			throw new IllegalArgumentException("No operands for expression");
 
 		Expression result = operands.getFirst();
 		for (int i = 1; i < operands.size(); i++) {
-			result = opBuilder.apply(result, operands.get(i));
+			result = opBuilder.apply(result, operands.get(i), getSourceCodeLocationManager(jdtOperands.get(i - 1), true).getCurrentLocation());
 		}
 		return result;
 	}
@@ -478,7 +435,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Expression left = leftVisitor.getExpression();
 		Type right = rightVisitor.getType();
 
-		expression = new InstanceOf(cfg, getSourceCodeLocation(node), left, right);
+		expression = new InstanceOf(cfg, getSourceCodeLocationManager(node, true).nextColumn(), left, right);
 
 		return false;
 	}
@@ -526,7 +483,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 		// TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
 		// TODO: instead of Call.CallType.UNKNOWN, we can provide better information of the call type
-		expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
@@ -546,7 +503,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		if (receiver == null) {
 			return false;
 		}
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node),receiver, target);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),receiver, target);
 		return false;
 	}
 
@@ -618,10 +575,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			return false;
 		}
 		if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
-			expression = new PostfixAddition(cfg, getSourceCodeLocation(node), expr);
+			expression = new PostfixAddition(cfg, getSourceCodeLocationManager(node.getOperand(), true).nextColumn(), expr);
 		}
 		if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
-			expression = new PostfixSubtraction(cfg, getSourceCodeLocation(node), expr);
+			expression = new PostfixSubtraction(cfg, getSourceCodeLocationManager(node.getOperand(), true).nextColumn(), expr);
 		}
 		return false;
 	}
@@ -757,7 +714,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
-			expression= new JavaAssignment(cfg, loc, ref, initializer);
+			expression= new JavaAssignment(cfg, getSourceCodeLocationManager(fragment.getName(), true).getCurrentLocation(), ref, initializer);
 		}
 		return false;
 	}
