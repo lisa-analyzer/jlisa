@@ -25,7 +25,7 @@ public class JavaStringLastIndexOfStringFromIndexOperator implements StringOpera
 
 	@Override
 	public String toString() {
-		return "strreplaceall";
+		return "strlastindexof";
 	}
 	
 	

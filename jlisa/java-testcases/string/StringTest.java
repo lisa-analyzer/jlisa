@@ -49,6 +49,7 @@ public class StringTest {
 		String s20 = s4.substring(4, 7);
 		String s21 = String.valueOf(2.5f);
 		String s22 = String.valueOf(i7);
+		boolean b8 = s4.startsWith("World", 6);
 		
 	}
 }

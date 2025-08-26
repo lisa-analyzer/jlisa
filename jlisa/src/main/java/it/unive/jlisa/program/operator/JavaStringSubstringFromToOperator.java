@@ -25,7 +25,7 @@ public class JavaStringSubstringFromToOperator implements StringOperator,Ternary
 
 	@Override
 	public String toString() {
-		return "strreplaceall";
+		return "strsubstring";
 	}
 	
 	

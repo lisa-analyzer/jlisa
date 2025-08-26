@@ -24,7 +24,7 @@ public class JavaStringEqualsIgnoreCaseOperator extends StringEquals {
 
 	@Override
 	public String toString() {
-		return "strequals";
+		return "strequalsignorecase";
 	}
 
 	@Override
