@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
@@ -550,8 +551,19 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(QualifiedName node) {
 		String targetName = node.getName().getIdentifier();
-		String unitName = node.getQualifier().toString();
-        ClassUnit cUnit = (ClassUnit) getProgram().getUnit(unitName);
+		
+		// FIXME: we are currently taking just the last name (the true name of the unit)
+		String unitName;
+		if (node.getQualifier() instanceof SimpleName)
+			unitName = node.getQualifier().toString();
+		else {
+			Name lastName = node.getQualifier();
+			while (lastName instanceof QualifiedName)
+				lastName = ((QualifiedName) lastName).getQualifier();
+			unitName = lastName.toString();
+		}
+			
+        ClassUnit cUnit = (ClassUnit) getProgram().getUnit(unitName);        
         Global g = new Global(getSourceCodeLocation(node), cUnit, targetName, false);
 		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), cUnit, g);
 		return false;
