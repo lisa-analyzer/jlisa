@@ -9,7 +9,7 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Error: Cannot divide by zero!");
         } finally {
-        	Syste.out.println("Finally");
+        	System.out.println("Finally");
         }
 
         System.out.println("Program continues after try-catch.");
