@@ -188,8 +188,7 @@ public class JavaFrontend {
         if (problems.length != 0) {
             throw new RuntimeException(problems.length + " problems found.");
         }
-        
-		LibrarySpecificationProvider.load(this.parserContext.getProgram());
+
         cu.accept(visitor);
 
         registerTypes();

@@ -7,6 +7,7 @@ import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.*;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -390,12 +391,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				new JavaBitwiseAndOperator(cfg, location, first, second));
 			break;
 		case "^":
-		case "|":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
 							"The '" + operator + "' infix operator is not supported.",
 							getSourceCodeLocation(node))
 					);
+			break;
+		case "|":
+			expression = buildExpression(operands, (first, second) ->
+			new JavaBitwiseOr(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "&&":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->

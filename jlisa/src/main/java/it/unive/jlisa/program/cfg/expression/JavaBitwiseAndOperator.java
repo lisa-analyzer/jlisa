@@ -24,22 +24,31 @@ public class JavaBitwiseAndOperator extends it.unive.lisa.program.cfg.statement.
 		Type leftType = left.getStaticType();
 		Type rightType = right.getStaticType();
 
-        if (leftType.isNumericType() && rightType.isNumericType()) {
-            return leftType;
-        }
+		if (leftType.isNumericType() && rightType.isNumericType()) {
+			return leftType;
+		}
 		else return Untyped.INSTANCE;
 	}
 
 	@Override
-	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression left,
-			SymbolicExpression right,
-			StatementStore<A> expressions)
-					throws SemanticException {
-		throw new SemanticException("Shift operator not supported");
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
+			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isNumericType))
+			return state.bottom();
+		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(Type::isNumericType))
+			return state.bottom();
+
+		return analysis.smallStepSemantics(
+				state,
+				new it.unive.lisa.symbolic.value.BinaryExpression(
+						Untyped.INSTANCE,
+						left,
+						right,
+						it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd.INSTANCE,
+						getLocation()),
+				this);
 	}
 
 	@Override
