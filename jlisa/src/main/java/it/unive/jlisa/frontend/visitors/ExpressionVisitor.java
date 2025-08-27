@@ -763,11 +763,17 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(TypeLiteral node) {
-		parserContext.addException(
-				new ParsingException("type-literal", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type Literals are not supported.",
-						getSourceCodeLocation(node))
-				);
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		node.getType().accept(visitor);
+		
+		// FIXME: we erase the type parameter
+		JavaClassType classType = JavaClassType.lookup("Class", null);
+		expression = new JavaNewObj(
+				cfg,
+				getSourceCodeLocation(node),
+				classType.getUnit().getName(),
+				new ReferenceType(classType),
+				new Expression[0]);
 		return false;
 	}
 
