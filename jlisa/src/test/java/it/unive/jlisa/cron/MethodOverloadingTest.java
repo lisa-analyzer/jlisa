@@ -74,4 +74,28 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
         // to invert the assert condition.
         assert !frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
     }
+
+    @Test
+    public void testMethodOverloading8() throws IOException {
+        JavaFrontend frontend = new JavaFrontend();
+        frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test8/Test8.java"));
+        assert frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+    }
+
+    @Test
+    public void testMethodOverloading9() throws IOException {
+        JavaFrontend frontend = new JavaFrontend();
+        frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test9/Test9.java"));
+        assert !frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+
+        perform(TestHelpers.createConfiguration("method-overloading", "Test9", "Test9.java"));
+    }
+
+    @Test
+    public void testMethodOverloading10() throws IOException {
+        JavaFrontend frontend = new JavaFrontend();
+        frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test10/Test10.java"));
+        // note: failure due to missing matching between static - instance methods.
+        assert frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+    }
 }

@@ -24,15 +24,13 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
             CodeMemberDescriptor reference) {
         if (!getName().equals(reference.getName()))
             return false;
-
         if (getFormals().length != reference.getFormals().length)
             return false;
-
         for (int i = 0; i < getFormals().length; i++) {
             if (!getFormals()[i].getStaticType().equals(reference.getFormals()[i].getStaticType())) {
-                    return false;
-                }
+                return false;
             }
+        }
         return true;
     }
 }
