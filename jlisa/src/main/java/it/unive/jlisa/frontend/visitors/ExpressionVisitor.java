@@ -575,8 +575,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
         if (cUnit == null) {
         	// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
         	if (Character.isUpperCase(unitName.charAt(0)))
-        		System.err.println(unitName);
-        	else {
+        		parserContext.addException(
+        				new ParsingException("missing-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+        						"Missing unit " + unitName,
+        						getSourceCodeLocation(node))
+        				);        	else {
         		// it is a field access
         		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
         		lastName.accept(visitor);
