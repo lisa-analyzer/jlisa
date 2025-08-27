@@ -11,8 +11,14 @@ import it.unive.jlisa.helpers.TestHelpers;
 public class EnumTest extends JLiSAAnalysisExecutor {
 
 	@Test
-	public void testEnum()  throws IOException {
+	public void testEnum01()  throws IOException {
 		CronConfiguration conf = TestHelpers.constantPropagation("enum", "enum01", "EnumExample.java", "Main.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void testEnum02()  throws IOException {
+		CronConfiguration conf = TestHelpers.constantPropagation("enum", "enum02", "Main.java");
 		perform(conf);
 	}
 }

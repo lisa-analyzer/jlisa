@@ -2,7 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -43,20 +43,20 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 
 public class ClassASTVisitor extends JavaASTVisitor{
-	
+
 	private boolean nested;
 
-    public ClassASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
-        super(parserContext, source, compilationUnit);
-        nested = false;
-    }
+	public ClassASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
+		super(parserContext, source, compilationUnit);
+		nested = false;
+	}
 
-    public ClassASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, boolean nested) {
-        super(parserContext, source, compilationUnit);
-        this.nested = nested;
-    }
-    
-   
+	public ClassASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, boolean nested) {
+		super(parserContext, source, compilationUnit);
+		this.nested = nested;
+	}
+
+
 	@Override
 	public boolean visit(EnumDeclaration node) {
 		// iterates over inner declarations
@@ -72,13 +72,12 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false, new ReferenceType(enumType));
 			enUnit.addGlobal(g);
 		}
-		
+
 		return false;
 	}
 
-    
-	private void computeNestedUnits(TypeDeclaration typeDecl) {
 
+	private void computeNestedUnits(TypeDeclaration typeDecl) {
 		if ((typeDecl.isInterface())) {
 			InterfaceUnit iUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
 			getProgram().getTypes().registerType(JavaInterfaceType.lookup(iUnit.getName(), iUnit));
@@ -89,68 +88,61 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			getProgram().addUnit(cUnit);
 		}
 	}
-    
 
-    public InterfaceUnit buildInterfaceUnit(String source, Program program, TypeDeclaration typeDecl) {
-        SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
-        int modifiers = typeDecl.getModifiers();
-        if (Modifier.isFinal(modifiers)) {
-            throw new RuntimeException(new ProgramValidationException("Illegal combination of modifiers: interface and final"));
-        }
+	public InterfaceUnit buildInterfaceUnit(String source, Program program, TypeDeclaration typeDecl) {
+		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
-        InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
-        program.addUnit(iUnit);
-        return iUnit;
-    }
+		int modifiers = typeDecl.getModifiers();
+		if (Modifier.isFinal(modifiers)) {
+			throw new RuntimeException(new ProgramValidationException("Illegal combination of modifiers: interface and final"));
+		}
 
-    public ClassUnit buildClassUnit(String source, Program program, TypeDeclaration typeDecl) {
-        SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
+		InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
+		program.addUnit(iUnit);
+		return iUnit;
+	}
 
-        int modifiers = typeDecl.getModifiers();
-        if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit)) {
-            throw new RuntimeException(new ProgramValidationException("Modifier private not allowed in a top-level class"));
-        }
-        ClassUnit cUnit;
-        if (Modifier.isAbstract(modifiers)) {
-            if (Modifier.isFinal(modifiers)) {
-                throw new RuntimeException(new ProgramValidationException("illegal combination of modifiers: abstract and final"));
-            }
-            cUnit = new AbstractClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
-        } else {
-            cUnit = new ClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
-        }
-        program.addUnit(cUnit);
-        return cUnit;
-    }
+	public ClassUnit buildClassUnit(String source, Program program, TypeDeclaration typeDecl) {
+		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
+
+		int modifiers = typeDecl.getModifiers();
+		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit)) {
+			throw new RuntimeException(new ProgramValidationException("Modifier private not allowed in a top-level class"));
+		}
+		ClassUnit cUnit;
+		if (Modifier.isAbstract(modifiers)) {
+			if (Modifier.isFinal(modifiers)) {
+				throw new RuntimeException(new ProgramValidationException("illegal combination of modifiers: abstract and final"));
+			}
+			cUnit = new AbstractClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+		} else {
+			cUnit = new ClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+		}
+		program.addUnit(cUnit);
+		return cUnit;
+	}
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		
-        TypeDeclaration[] types = node.getTypes(); // nested types (e.g. nested inner classes)
-        
-        for (Object type : types) {
-            if (type instanceof TypeDeclaration) {
-                TypeDeclaration typeDecl = (TypeDeclaration) type;
-                if ((typeDecl.isInterface())) {
-                    InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, compilationUnit);
-                    typeDecl.accept(interfaceVisitor);
-                } else {
-                    ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, compilationUnit, true);
-                    typeDecl.accept(classVisitor);
-                }
-            }
-            if (type instanceof EnumDeclaration) {
-                parserContext.addException(new ParsingException("enum-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Enum Declarations are not supported.", getSourceCodeLocation((EnumDeclaration)type)));
-            }
-            if (type instanceof AnnotationTypeDeclaration) {
-                parserContext.addException(new ParsingException("annotation-type-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Annotation Type Declarations are not supported.", getSourceCodeLocation((AnnotationTypeDeclaration)type)));
-            }
-        }
-        
-        if(nested)
-        	computeNestedUnits(node);
-        
+		TypeDeclaration[] types = node.getTypes(); // nested types (e.g. nested inner classes)
+
+		for (TypeDeclaration type : types) {
+			if (type instanceof TypeDeclaration) {
+				TypeDeclaration typeDecl = (TypeDeclaration) type;
+				if ((typeDecl.isInterface())) {
+					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, compilationUnit);
+					typeDecl.accept(interfaceVisitor);
+				} else {
+					ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, compilationUnit, true);
+					typeDecl.accept(classVisitor);
+				}
+			}
+		}
+
+		if (nested)
+			computeNestedUnits(node);
+
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
 		if (node.getSuperclassType() != null) {
 			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
@@ -165,11 +157,12 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		} else {
 			cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
 		}
+		
 		if (!node.permittedTypes().isEmpty()) {
 			parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT, "Permits is not supported.", getSourceCodeLocation(node)));
 		}
 
-		// iterates over inner declarations
+		// iterates over inner declarations (just enums)
 		for (Object decl : node.bodyDeclarations()) {
 			// enum inner declaration
 			if (decl instanceof EnumDeclaration) 
@@ -320,6 +313,6 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			}
 		}
 	}
-	
+
 
 }
