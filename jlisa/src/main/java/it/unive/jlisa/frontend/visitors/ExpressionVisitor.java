@@ -47,6 +47,7 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
