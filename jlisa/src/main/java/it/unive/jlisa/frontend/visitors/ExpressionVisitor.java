@@ -452,12 +452,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "^":
-		case "|":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
 							"The '" + operator + "' infix operator is not supported.",
 							getSourceCodeLocation(node))
 					);
+			break;
+		case "|":
+			expression = buildExpression(operands, (first, second) ->
+			new JavaBitwiseOr(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "&&":
 			expression = buildExpression(operands, (first, second) ->
