@@ -48,7 +48,8 @@ import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseAndOperator;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
@@ -205,9 +206,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new Modulo(cfg, getSourceCodeLocation(node), left, right));
 		case "&=":
 			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), left, right));
+					new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		case "|=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaBitwiseOr(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case "^=":
 		case "<<=":
 		case ">>=":
@@ -449,15 +453,18 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "&":
 			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "^":
-		case "|":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
 							"The '" + operator + "' infix operator is not supported.",
 							getSourceCodeLocation(node))
 					);
+			break;
+		case "|":
+			expression = buildExpression(operands, (first, second) ->
+			new JavaBitwiseOr(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "&&":
 			expression = buildExpression(operands, (first, second) ->
@@ -554,16 +561,32 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		
 		// FIXME: we are currently taking just the last name (the true name of the unit)
 		String unitName;
+		Name lastName = node.getQualifier();
+
 		if (node.getQualifier() instanceof SimpleName)
-			unitName = node.getQualifier().toString();
+			unitName = lastName.toString();
 		else {
-			Name lastName = node.getQualifier();
 			while (lastName instanceof QualifiedName)
 				lastName = ((QualifiedName) lastName).getQualifier();
 			unitName = lastName.toString();
 		}
-			
+		
         ClassUnit cUnit = (ClassUnit) getProgram().getUnit(unitName);        
+        if (cUnit == null) {
+        	// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
+        	if (Character.isUpperCase(unitName.charAt(0)))
+        		System.err.println(unitName);
+        	else {
+        		// it is a field access
+        		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+        		lastName.accept(visitor);
+        		Expression expr = visitor.getExpression();
+    			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+        		return false;
+        	}
+        }
+        	
+        
         Global g = new Global(getSourceCodeLocation(node), cUnit, targetName, false);
 		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), cUnit, g);
 		return false;
@@ -740,11 +763,17 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(TypeLiteral node) {
-		parserContext.addException(
-				new ParsingException("type-literal", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type Literals are not supported.",
-						getSourceCodeLocation(node))
-				);
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		node.getType().accept(visitor);
+		
+		// FIXME: we erase the type parameter
+		JavaClassType classType = JavaClassType.lookup("Class", null);
+		expression = new JavaNewObj(
+				cfg,
+				getSourceCodeLocation(node),
+				classType.getUnit().getName(),
+				new ReferenceType(classType),
+				new Expression[0]);
 		return false;
 	}
 
