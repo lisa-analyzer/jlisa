@@ -49,6 +49,7 @@ import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
@@ -213,6 +214,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new JavaBitwiseOr(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		case "^=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case "<<=":
 		case ">>=":
 		case ">>>=":
@@ -456,11 +460,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "^":
-			parserContext.addException(
-					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"The '" + operator + "' infix operator is not supported.",
-							getSourceCodeLocation(node))
-					);
+			expression = buildExpression(operands, (first, second) ->
+			new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "|":
 			expression = buildExpression(operands, (first, second) ->
