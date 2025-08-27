@@ -20,4 +20,10 @@ public class LiteralTest extends JLiSAAnalysisExecutor {
         CronConfiguration conf = TestHelpers.createConfiguration("literals", "char", "CharTest.java");
         perform(conf);
     }
+
+    @Test
+    public void testInt() throws IOException {
+        CronConfiguration conf = TestHelpers.constantPropagation("literals", "int", "IntTest.java");
+        perform(conf);
+    }
 }
