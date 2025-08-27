@@ -86,7 +86,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 
 	}
 
-	public InterfaceUnit buildInterfaceUnit(String source, CompilationUnit unit, Program program, TypeDeclaration typeDecl) {
+	private InterfaceUnit buildInterfaceUnit(String source, CompilationUnit unit, Program program, TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
@@ -99,7 +99,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		return iUnit;
 	}
 
-	public ClassUnit buildClassUnit(String source, CompilationUnit unit, Program program, TypeDeclaration typeDecl) {
+	private ClassUnit buildClassUnit(String source, CompilationUnit unit, Program program, TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
