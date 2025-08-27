@@ -14,12 +14,13 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class FieldDeclarationVisitor extends JavaASTVisitor {
-	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
+	it.unive.lisa.program.CompilationUnit unit;
 
 	public FieldDeclarationVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
 		super(parserContext, source, astCompilationUnit);
-		this.lisacompilationUnit = lisacompilationUnit;
+		this.unit = lisacompilationUnit;
 	}
+	
 	@Override
 	public boolean visit(FieldDeclaration node) {
 		int modifiers = node.getModifiers();
@@ -42,11 +43,11 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 			}
 			String identifier = fragment.getName().getIdentifier();
 			boolean isStatic = Modifier.isStatic(modifiers);
-			Global global = new Global(getSourceCodeLocation(fragment), lisacompilationUnit, identifier, !isStatic, type, new Annotations());
+			Global global = new Global(getSourceCodeLocation(fragment), unit, identifier, !isStatic, type, new Annotations());
 			if (isStatic) {
-				lisacompilationUnit.addGlobal(global);
+				unit.addGlobal(global);
 			} else {
-				lisacompilationUnit.addInstanceGlobal(global);
+				unit.addInstanceGlobal(global);
 			}
 		}
 
