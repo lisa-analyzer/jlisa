@@ -151,24 +151,16 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
 				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
+					// FIXME: This parsing error should be logged in ExpressionVisitor.
 					parameters.add(expr);
 				}
-
 			}
 
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
-
 		}
 
 		return false;		
 	}
-
-	@Override
-	public boolean visit(ArrayInitializer node) {
-		throw new RuntimeException(new UnsupportedStatementException("Array Initializer expressions are not supported"));
-	}
-
 
 	@Override
 	public boolean visit(Assignment node) {
