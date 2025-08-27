@@ -1,0 +1,11 @@
+class Byte extends Object:
+	instance field value type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+	
+	instance method Byte: it.unive.jlisa.program.java.constructs.bytew.ByteConstructor
+		libtype Byte*
+		param this libtype Byte*
+		param b type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		
+	instance method byteValue: it.unive.jlisa.program.java.constructs.bytew.ByteValue
+		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		param this libtype Byte*
