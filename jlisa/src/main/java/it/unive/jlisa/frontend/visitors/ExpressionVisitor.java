@@ -100,6 +100,7 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.program.Unit;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -574,8 +575,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			unitName = lastName.toString();
 		}
 		
-        ClassUnit cUnit = (ClassUnit) getProgram().getUnit(unitName);        
-        if (cUnit == null) {
+		Unit unit = getProgram().getUnit(unitName);        
+        if (unit == null) {
         	// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
         	if (Character.isUpperCase(unitName.charAt(0)))
         		parserContext.addException(
@@ -593,8 +594,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
         }
         	
         
-        Global g = new Global(getSourceCodeLocation(node), cUnit, targetName, false);
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), cUnit, g);
+        Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), unit, g);
 		return false;
 	}
 
