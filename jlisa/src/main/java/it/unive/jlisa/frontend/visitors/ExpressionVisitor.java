@@ -172,10 +172,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		if (left == null || right == null) {
-			// SKIP. There is an error.
-			return false;
-		}
+
 		switch (operator.toString()) {
 		case "=":
 			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
@@ -275,11 +272,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(ClassInstanceCreation node) {
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
 		node.getType().accept(typeVisitor);
-		it.unive.lisa.type.Type type = typeVisitor.getType();
-		if (type == null) {
-			// an error occurred.
-			return false;
-		}
+		Type type = typeVisitor.getType();
+
 		if (!(type instanceof JavaClassType)) {
 			parserContext.addException(
 					new ParsingException("arguments-constructor", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -388,10 +382,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightOperand().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		if (left == null || right == null) {
-			// SKIP. There is an error.
-			return false;
-		}
+	
 		List<Expression> operands = new ArrayList<>();
 		operands.add(left);
 		operands.add(right);
@@ -726,7 +717,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
-
 		parserContext.addException(
 				new ParsingException("super-method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Super Method Invocation expressions are not supported.",
