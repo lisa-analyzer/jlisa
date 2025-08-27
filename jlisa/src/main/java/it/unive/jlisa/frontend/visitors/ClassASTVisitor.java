@@ -2,11 +2,6 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -173,30 +168,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
         return cUnit;
     }
 
-	public CompilationUnit getCompilationUnit(String source) {
-        ASTParser parser = getParser(source, ASTParser.K_COMPILATION_UNIT);
-        return (CompilationUnit) parser.createAST(null);
-    }
-    
-    public ASTParser getParser(String source, int parseAs) {
-        ASTParser parser = ASTParser.newParser(AST.getJLSLatest()); // NOTE: JLS8 is deprecated. getJLSLatest will return JDK23
-        parser.setKind(parseAs);
-        Map<String, String> options = JavaCore.getOptions();
-        JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
-        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
-        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
-        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
-        parser.setCompilerOptions(options);
-        parser.setSource(source.toCharArray());
-        parser.setResolveBindings(true);
-        parser.setBindingsRecovery(true);
-        //String[] classpath = {};
-        //parser.setEnvironment(classpath, new String[] { "." }, null, true);
-        //parser.setCompilerOptions(JavaCore.getOptions());
 
-        return parser;
-    }
-    
     private CFG createDefaultConstructor(ClassUnit classUnit) {
 
         it.unive.lisa.type.Type type = getProgram().getTypes().getType(classUnit.getName());
