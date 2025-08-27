@@ -19,6 +19,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.ReferenceType;
@@ -33,7 +34,7 @@ public class JavaNewArray extends UnaryExpression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
+	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {	
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ReferenceType refType = (ReferenceType) getStaticType();
@@ -54,28 +55,27 @@ public class JavaNewArray extends UnaryExpression {
 
 		tmp = analysis.assign(tmp, lenAccess, expr, getEvaluationPredecessor());
 
-		if(!(expr instanceof Constant)) {
-			throw new UnsupportedOperationException("For the moment we only support constant length arrays.");
+		// first case: the size is constant
+		if(expr instanceof Constant) {
+			for(int i = 0; i < (Integer)((Constant) expr).getValue(); i++) {
+				Variable var = new Variable(JavaIntType.INSTANCE, "" + i, getLocation());
+				AccessChild access = new AccessChild(contentType, array, var, getLocation());
+
+				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp, interprocedural, expressions);
+				AnalysisState<A> init = state.bottom();
+
+				for(SymbolicExpression v : tmp2.getComputedExpressions()) {
+					init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
+				}
+
+				tmp = init;
+			} 
 		}
-		
-		for(int i = 0; i < (Integer)((Constant) expr).getValue(); i++) {
-			Variable var = new Variable(JavaIntType.INSTANCE, "" + i, getLocation());
-			AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
-			AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp, interprocedural, expressions);
-			AnalysisState<A> init = state.bottom();
-			
-			for(SymbolicExpression v : tmp2.getComputedExpressions()) {
-				init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
-			}
-			
-			tmp = init;
-						
-		} 
-
+		// FIXME: second case: the size is not constant, return the 'top' array
+		// this is a temporary solution
 		getMetaVariables().add(array);
-
-		return analysis.smallStepSemantics(tmp, array, this);
+		return analysis.smallStepSemantics(tmp, array, this);	
 	}
 
 	@Override

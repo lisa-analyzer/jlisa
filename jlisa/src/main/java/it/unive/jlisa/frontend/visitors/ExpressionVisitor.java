@@ -797,21 +797,23 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(VariableDeclarationExpression node) {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		node.getType().accept(visitor);
-		it.unive.lisa.type.Type variableType = visitor.getType();
+		it.unive.lisa.type.Type varType = visitor.getType();
+		varType = varType.isInMemoryType() ? new ReferenceType(varType) : varType;
+		
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
 			SourceCodeLocation loc = getSourceCodeLocation(fragment);
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
-					variableName, variableType);
-			parserContext.addVariableType(cfg,variableName, variableType);
+					variableName, varType);
+			parserContext.addVariableType(cfg,variableName, varType);
 
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
-			expression= new JavaAssignment(cfg, loc, ref, initializer);
+			expression = new JavaAssignment(cfg, loc, ref, initializer);
 		}
 		return false;
 	}
