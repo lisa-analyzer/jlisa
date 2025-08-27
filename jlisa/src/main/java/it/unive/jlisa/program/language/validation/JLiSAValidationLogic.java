@@ -21,19 +21,15 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
     private String STATEMENT_LOCATIONS = "Two statements at the same location %s: %s - %s";
     private Map<String, Object> locations = new HashMap<String, Object>();
 
+    @Override
     public void validateAndFinalize(
             CodeUnit unit)
             throws ProgramValidationException {
         validateLocation(unit.getLocation().getCodeLocation(), unit);
         super.validateAndFinalize(unit);
     }
-
-    private void validateLocation(String location, Object programEntity) throws ProgramValidationException {
-        if (locations.containsKey(location) && !locations.get(location).equals(programEntity)) {
-            throw new ProgramValidationException(format(STATEMENT_LOCATIONS, location, locations.get(location).toString(), programEntity.toString()));
-        }
-        locations.put(location, programEntity);
-    }
+    
+    @Override
     public void validateAndFinalize(
             CompilationUnit unit)
             throws ProgramValidationException {
@@ -41,6 +37,7 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
         super.validateAndFinalize(unit);
     }
 
+    @Override
     public void validate(
             CodeMember member,
             boolean instance)
@@ -54,6 +51,15 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
         super.validate(member, instance);
     }
 
+    @Override
+    public void validate(
+            Global global,
+            boolean isInstance)
+            throws ProgramValidationException {
+        validateLocation(global.getLocation().getCodeLocation(), global);
+        super.validate(global, isInstance);
+    }
+    
     public void validate(Statement statement) throws ProgramValidationException {
         validateLocation(statement.getLocation().getCodeLocation(), statement);
         if (statement instanceof NaryExpression naryExpression) {
@@ -62,11 +68,11 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
             }
         }
     }
-    public void validate(
-            Global global,
-            boolean isInstance)
-            throws ProgramValidationException {
-        validateLocation(global.getLocation().getCodeLocation(), global);
-        super.validate(global, isInstance);
+        
+    private void validateLocation(String location, Object programEntity) throws ProgramValidationException {
+        if (locations.containsKey(location) && !locations.get(location).equals(programEntity)) {
+            throw new ProgramValidationException(format(STATEMENT_LOCATIONS, location, locations.get(location).toString(), programEntity.toString()));
+        }
+        locations.put(location, programEntity);
     }
 }
