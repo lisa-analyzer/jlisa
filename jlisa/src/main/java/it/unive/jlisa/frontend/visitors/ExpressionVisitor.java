@@ -56,7 +56,8 @@ import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.expression.JavaShiftOperator;
+import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
+import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
 import it.unive.jlisa.program.cfg.expression.PostfixAddition;
 import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
@@ -218,7 +219,13 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		case "<<=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaShiftLeft(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case ">>=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaShiftRight(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case ">>>=":
 			parserContext.addException(
 					new ParsingException("operators", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -425,9 +432,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case ">>":
 			expression = buildExpression(operands, (first, second) ->
-			new JavaShiftOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaShiftRight(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "<<":
+			expression = buildExpression(operands, (first, second) ->
+			new JavaShiftLeft(cfg, getSourceCodeLocation(node), first, second));
+			break;
 		case ">>>":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
