@@ -3,7 +3,7 @@ package it.unive.jlisa.program.libraries.loader;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
@@ -94,7 +94,7 @@ public class Method {
 		for (int i = 0; i < pars.length; i++)
 			pars[i] = this.params.get(i).toLiSAParameter(location, init);
 
-		CodeMemberDescriptor desc = new CodeMemberDescriptor(
+		JavaCodeMemberDescriptor desc = new JavaCodeMemberDescriptor(
 				location,
 				container,
 				this.instance,

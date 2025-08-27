@@ -1,22 +1,14 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
@@ -27,6 +19,13 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
 
@@ -85,7 +84,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+        JavaCodeMemberDescriptor codeMemberDescriptor = new JavaCodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
         CFG cfg = new CFG(codeMemberDescriptor);
         parserContext.addVariableType(cfg, "this", new ReferenceType(type));
         String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();

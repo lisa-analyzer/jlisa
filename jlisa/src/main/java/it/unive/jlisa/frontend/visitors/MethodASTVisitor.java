@@ -1,20 +1,16 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.lisa.program.annotations.Annotations;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
@@ -28,6 +24,12 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.CFGTweaker;
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MethodASTVisitor extends JavaASTVisitor {
     it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -39,11 +41,11 @@ public class MethodASTVisitor extends JavaASTVisitor {
 
     @Override
     public boolean visit(MethodDeclaration node) {
-        CodeMemberDescriptor codeMemberDescriptor;
+        JavaCodeMemberDescriptor codeMemberDescriptor;
         if (node.isConstructor()) {
-            codeMemberDescriptor = buildConstructorCodeMemberDescriptor(node);
+            codeMemberDescriptor = buildConstructorJavaCodeMemberDescriptor(node);
         } else {
-            codeMemberDescriptor = buildCodeMemberDescriptor(node);
+            codeMemberDescriptor = buildJavaCodeMemberDescriptor(node);
         }
         boolean isMain = isMain(node);
 
@@ -83,12 +85,18 @@ public class MethodASTVisitor extends JavaASTVisitor {
                         entry.setScopeEnd(ret);
             }
         }
+        boolean added = false;
         if (!Modifier.isStatic(modifiers)) {
-            lisacompilationUnit.addInstanceCodeMember(cfg);
+            added = lisacompilationUnit.addInstanceCodeMember(cfg);
         } else {
-            lisacompilationUnit.addCodeMember(cfg);
+            added = lisacompilationUnit.addCodeMember(cfg);
         }
-
+        if (!added) {
+            parserContext.addException(new ParsingException("duplicated_method_descriptor",
+                    ParsingException.Type.MALFORMED_SOURCE,
+                    "Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
+                    getSourceCodeLocation(node)));
+        }
         if (isMain) {
             getProgram().addEntryPoint(cfg);
         }
@@ -101,9 +109,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
         return false;
     }
 
-    private CodeMemberDescriptor buildCodeMemberDescriptor(MethodDeclaration node) {
+    private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(MethodDeclaration node) {
         CodeLocation loc = getSourceCodeLocation(node);
-        CodeMemberDescriptor codeMemberDescriptor;
+        JavaCodeMemberDescriptor codeMemberDescriptor;
         boolean instance = !Modifier.isStatic(node.getModifiers());
         TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
         node.getReturnType2().accept(typeVisitor);
@@ -125,7 +133,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        codeMemberDescriptor = new CodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), returnType.isInMemoryType() ? new ReferenceType(returnType) : returnType, annotations, paramArray);
+        codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), returnType.isInMemoryType() ? new ReferenceType(returnType) : returnType, annotations, paramArray);
         if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
             codeMemberDescriptor.setOverridable(false);
         } else {
@@ -135,9 +143,10 @@ public class MethodASTVisitor extends JavaASTVisitor {
         return codeMemberDescriptor;
     }
 
-    private CodeMemberDescriptor buildConstructorCodeMemberDescriptor(MethodDeclaration node) {
+    private JavaCodeMemberDescriptor buildConstructorJavaCodeMemberDescriptor(MethodDeclaration node) {
+
         CodeLocation loc = getSourceCodeLocation(node);
-        CodeMemberDescriptor codeMemberDescriptor;
+        JavaCodeMemberDescriptor codeMemberDescriptor;
         boolean instance = !Modifier.isStatic(node.getModifiers());
         it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
 
@@ -153,7 +162,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        codeMemberDescriptor = new CodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), VoidType.INSTANCE, annotations, paramArray);
+        codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), VoidType.INSTANCE, annotations, paramArray);
         if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
             codeMemberDescriptor.setOverridable(false);
         } else {
