@@ -558,16 +558,32 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		
 		// FIXME: we are currently taking just the last name (the true name of the unit)
 		String unitName;
+		Name lastName = node.getQualifier();
+
 		if (node.getQualifier() instanceof SimpleName)
-			unitName = node.getQualifier().toString();
+			unitName = lastName.toString();
 		else {
-			Name lastName = node.getQualifier();
 			while (lastName instanceof QualifiedName)
 				lastName = ((QualifiedName) lastName).getQualifier();
 			unitName = lastName.toString();
 		}
-			
+		
         ClassUnit cUnit = (ClassUnit) getProgram().getUnit(unitName);        
+        if (cUnit == null) {
+        	// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
+        	if (Character.isUpperCase(unitName.charAt(0)))
+        		System.err.println(unitName);
+        	else {
+        		// it is a field access
+        		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+        		lastName.accept(visitor);
+        		Expression expr = visitor.getExpression();
+    			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+        		return false;
+        	}
+        }
+        	
+        
         Global g = new Global(getSourceCodeLocation(node), cUnit, targetName, false);
 		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), cUnit, g);
 		return false;
