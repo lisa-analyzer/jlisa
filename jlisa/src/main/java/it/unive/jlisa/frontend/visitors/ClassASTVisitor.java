@@ -2,16 +2,29 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.lisa.program.AbstractClassUnit;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.ProgramValidationException;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -29,14 +42,49 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 
 public class ClassASTVisitor extends JavaASTVisitor{
+	
+	private boolean nested;
 
     public ClassASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
         super(parserContext, source, compilationUnit);
+        nested = false;
     }
 
+    public ClassASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, boolean nested) {
+        super(parserContext, source, compilationUnit);
+        this.nested = nested;
+    }
+    
     @Override
     public boolean visit(TypeDeclaration node) {
+    	
+        TypeDeclaration[] types = node.getTypes(); // nested types (e.g. nested inner classes)
+        
+        for (Object type : types) {
+            if (type instanceof TypeDeclaration) {
+                TypeDeclaration typeDecl = (TypeDeclaration) type;
+                if ((typeDecl.isInterface())) {
+                    InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, compilationUnit);
+                    typeDecl.accept(interfaceVisitor);
+                } else {
+                    ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, compilationUnit, true);
+                    typeDecl.accept(classVisitor);
+                }
+            }
+            if (type instanceof EnumDeclaration) {
+                parserContext.addException(new ParsingException("enum-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Enum Declarations are not supported.", getSourceCodeLocation((EnumDeclaration)type)));
+            }
+            if (type instanceof AnnotationTypeDeclaration) {
+                parserContext.addException(new ParsingException("annotation-type-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Annotation Type Declarations are not supported.", getSourceCodeLocation((AnnotationTypeDeclaration)type)));
+            }
+        }
+        
+        if(nested)
+        	computeNestedUnits(node);
+        
         ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
+
+        
         if (node.getSuperclassType() != null) {
             TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
             node.getSuperclassType().accept(visitor);
@@ -71,10 +119,84 @@ public class ClassASTVisitor extends JavaASTVisitor{
             CFG defaultConstructor = createDefaultConstructor(cUnit);
             fixConstructorCFG(defaultConstructor, node.getFields());
         }
+        
+
 
         return false;
     }
 
+    
+	private void computeNestedUnits(TypeDeclaration typeDecl) {
+
+		if ((typeDecl.isInterface())) {
+			InterfaceUnit iUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
+			getProgram().getTypes().registerType(JavaInterfaceType.lookup(iUnit.getName(), iUnit));
+			getProgram().addUnit(iUnit);
+		} else {
+			ClassUnit cUnit = buildClassUnit(source, getProgram(), typeDecl);
+			getProgram().getTypes().registerType(JavaClassType.lookup(cUnit.getName(), cUnit));
+			getProgram().addUnit(cUnit);
+		}
+	}
+    
+
+    public InterfaceUnit buildInterfaceUnit(String source, Program program, TypeDeclaration typeDecl) {
+        SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
+
+        int modifiers = typeDecl.getModifiers();
+        if (Modifier.isFinal(modifiers)) {
+            throw new RuntimeException(new ProgramValidationException("Illegal combination of modifiers: interface and final"));
+        }
+
+        InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
+        program.addUnit(iUnit);
+        return iUnit;
+    }
+
+    public ClassUnit buildClassUnit(String source, Program program, TypeDeclaration typeDecl) {
+        SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
+
+        int modifiers = typeDecl.getModifiers();
+        if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit)) {
+            throw new RuntimeException(new ProgramValidationException("Modifier private not allowed in a top-level class"));
+        }
+        ClassUnit cUnit;
+        if (Modifier.isAbstract(modifiers)) {
+            if (Modifier.isFinal(modifiers)) {
+                throw new RuntimeException(new ProgramValidationException("illegal combination of modifiers: abstract and final"));
+            }
+            cUnit = new AbstractClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+        } else {
+            cUnit = new ClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+        }
+        program.addUnit(cUnit);
+        return cUnit;
+    }
+
+	public CompilationUnit getCompilationUnit(String source) {
+        ASTParser parser = getParser(source, ASTParser.K_COMPILATION_UNIT);
+        return (CompilationUnit) parser.createAST(null);
+    }
+    
+    public ASTParser getParser(String source, int parseAs) {
+        ASTParser parser = ASTParser.newParser(AST.getJLSLatest()); // NOTE: JLS8 is deprecated. getJLSLatest will return JDK23
+        parser.setKind(parseAs);
+        Map<String, String> options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
+        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
+        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
+        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
+        parser.setCompilerOptions(options);
+        parser.setSource(source.toCharArray());
+        parser.setResolveBindings(true);
+        parser.setBindingsRecovery(true);
+        //String[] classpath = {};
+        //parser.setEnvironment(classpath, new String[] { "." }, null, true);
+        //parser.setCompilerOptions(JavaCore.getOptions());
+
+        return parser;
+    }
+    
     private CFG createDefaultConstructor(ClassUnit classUnit) {
 
         it.unive.lisa.type.Type type = getProgram().getTypes().getType(classUnit.getName());

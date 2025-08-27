@@ -1,0 +1,1 @@
+{"name":"void A::main(A* this, String[] args)","description":null,"nodes":[{"id":0,"text":"foo()"},{"id":1,"text":"ret"}],"edges":[{"sourceId":0,"destId":1,"kind":"SequentialEdge"}],"descriptions":[]}

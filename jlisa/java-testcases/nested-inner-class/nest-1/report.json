@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "String__B.toString(B__this)_cfg.json", "report.json", "void_A.A(A__this)_cfg.json", "void_A.foo(A__this)_cfg.json", "void_A.main(A__this,_String[]_args)_cfg.json", "void_B.B(B__this)_cfg.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(String[]_args)_cfg.json" ],
+  "info" : {
+    "cfgs" : "7",
+    "duration" : "9ms",
+    "end" : "2025-08-27T11:52:21.800+02:00",
+    "expressions" : "16",
+    "files" : "7",
+    "globals" : "4",
+    "members" : "70",
+    "programs" : "1",
+    "start" : "2025-08-27T11:52:21.791+02:00",
+    "statements" : "16",
+    "units" : "48",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "true",
+    "serializeResults" : "false",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/nested-inner-class/nest-1"
+  }
+}
