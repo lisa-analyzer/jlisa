@@ -10,9 +10,9 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class JavaBitwiseAndOperator extends it.unive.lisa.program.cfg.statement.BinaryExpression {
+public class JavaBitwiseAnd extends it.unive.lisa.program.cfg.statement.BinaryExpression {
 
-	public JavaBitwiseAndOperator(
+	public JavaBitwiseAnd(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,

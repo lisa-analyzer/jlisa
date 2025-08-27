@@ -48,7 +48,8 @@ import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseAndOperator;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
@@ -62,7 +63,6 @@ import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -206,9 +206,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new Modulo(cfg, getSourceCodeLocation(node), left, right));
 		case "&=":
 			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), left, right));
+					new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		case "|=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaBitwiseOr(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case "^=":
 		case "<<=":
 		case ">>=":
@@ -450,7 +453,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "&":
 			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "^":
 			parserContext.addException(
