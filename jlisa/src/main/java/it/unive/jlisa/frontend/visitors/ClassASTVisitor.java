@@ -90,7 +90,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 	}
 
 
-	public InterfaceUnit buildInterfaceUnit(String source, Program program, TypeDeclaration typeDecl) {
+	private InterfaceUnit buildInterfaceUnit(String source, Program program, TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
@@ -103,13 +103,11 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		return iUnit;
 	}
 
-	public ClassUnit buildClassUnit(String source, Program program, TypeDeclaration typeDecl) {
+	private ClassUnit buildClassUnit(String source, Program program, TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit)) {
-			throw new RuntimeException(new ProgramValidationException("Modifier private not allowed in a top-level class"));
-		}
+		// FIXME: nested inner class can be private, but we currently do not model it (treated as public)
 		ClassUnit cUnit;
 		if (Modifier.isAbstract(modifiers)) {
 			if (Modifier.isFinal(modifiers)) {
