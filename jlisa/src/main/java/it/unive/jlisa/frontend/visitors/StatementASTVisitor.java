@@ -653,8 +653,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		List<SwitchEqualityCheck> workList= new ArrayList<>();
 
-		List<Statement> instrList= new ArrayList<>();
-
+		List<Statement> caseInstrs= new ArrayList<>();
+		Statement lastCaseInstr = null;
+		
 		int offsetCol = 2;
 
 		Statement first = null, last = null;
@@ -671,7 +672,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addNode(emptyBlock);
 			} else {
 				adj.mergeWith(caseBlock.getBody());
-				instrList.addAll(caseBlock.getBody().getNodes());
+				caseInstrs.addAll(caseBlock.getBody().getNodes());
+				lastCaseInstr = caseBlock.getEnd();
 			}
 
 			if(o instanceof SwitchCase) {
@@ -683,14 +685,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			} else if(o instanceof BreakStatement) {
 				for(SwitchEqualityCheck switchCondition : workList) {
 
-					adj.addEdge(new TrueEdge(switchCondition, getFirstInstructionAfterSwitchInstr(switchCondition, instrList)));
-					cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
+					adj.addEdge(new TrueEdge(switchCondition, getFirstInstructionAfterSwitchInstr(switchCondition, caseInstrs)));
+					cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
 
 				}
 
 				if(switchDefault != null) {
-					defaultCase = new DefaultSwitchCase(switchDefault, instrList);
-					Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
+					defaultCase = new DefaultSwitchCase(switchDefault, caseInstrs);
+					Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 					if(follower != null) {
 						adj.addEdge(new SequentialEdge(switchDefault, follower));
 					} else {
@@ -702,7 +704,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				}
 
 				workList = new ArrayList<>();
-				instrList = new ArrayList<>();        		
+				caseInstrs = new ArrayList<>();        		
 			} 
 
 			if (first == null) {
@@ -718,11 +720,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		EmptyBody emptyBlock = null;
 
 		if(switchDefault != null && defaultCase == null) {
-			defaultCase = new DefaultSwitchCase(switchDefault, instrList);
-			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
+			defaultCase = new DefaultSwitchCase(switchDefault, caseInstrs);
+			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 			if(follower != null) {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
-				adj.addEdge(new SequentialEdge(instrList.getLast(), noop));
+				adj.addEdge(new SequentialEdge(lastCaseInstr, noop)); //
 			} else {
 				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
 				offsetCol++;
@@ -734,8 +736,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		for(SwitchEqualityCheck switchCondition : workList) {
 
-			if(instrList.size() > 1) {
-				adj.addEdge(new TrueEdge(switchCondition,instrList.get(1)));
+			if(caseInstrs.size() > 1) {
+				adj.addEdge(new TrueEdge(switchCondition,caseInstrs.get(1)));
 			} else {
 				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
 				offsetCol++;
@@ -743,8 +745,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(),emptyBlock));
 			}
 
-			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
-			if(instrList.size() > 0 )
+			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
+			if(caseInstrs.size() > 0 )
 				offsetCol++;		
 		}
 
