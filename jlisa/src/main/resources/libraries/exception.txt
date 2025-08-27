@@ -28,6 +28,8 @@ class NumberFormatException extends IllegalArgumentException:
 
 class NegativeArraySizeException extends RuntimeException:
 
+class UnsupportedEncodingException extends IOException:
+
 class AssertionError extends Error:
 
 	instance method AssertionError: it.unive.jlisa.program.java.constructs.assertionerror.AssertionErrorEmptyConstructor
