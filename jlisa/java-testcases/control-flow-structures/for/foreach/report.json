@@ -1,18 +1,34 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_ForLoopsExample2.ForLoopsExample2(ForLoopsExample2__this)_cfg.json", "void_ForLoopsExample2.emptyStructures(String[]_args)_cfg.json", "void_ForLoopsExample2.main(String[]_args)_cfg.json" ],
+  "files" : [ "report.json", "void_ForLoopsExample2.ForLoopsExample2(ForLoopsExample2__this)_cfg.json", "void_ForLoopsExample2.emptyStructures(String_[]_args)_cfg.json", "void_ForLoopsExample2.main(String_[]_args)_cfg.json" ],
   "info" : {
     "cfgs" : "3",
+<<<<<<< HEAD
     "duration" : "5ms",
     "end" : "2025-08-26T17:13:16.025+02:00",
     "expressions" : "22",
+=======
+    "duration" : "3ms",
+    "end" : "2025-08-27T17:48:31.666+02:00",
+    "expressions" : "21",
+>>>>>>> refs/remotes/origin/development
     "files" : "3",
     "globals" : "3",
+<<<<<<< HEAD
     "members" : "84",
+=======
+    "members" : "67",
+>>>>>>> refs/remotes/origin/development
     "programs" : "1",
+<<<<<<< HEAD
     "start" : "2025-08-26T17:13:16.020+02:00",
     "statements" : "13",
     "units" : "32",
+=======
+    "start" : "2025-08-27T17:48:31.663+02:00",
+    "statements" : "12",
+    "units" : "57",
+>>>>>>> refs/remotes/origin/development
     "version" : "0.1",
     "warnings" : "0"
   },

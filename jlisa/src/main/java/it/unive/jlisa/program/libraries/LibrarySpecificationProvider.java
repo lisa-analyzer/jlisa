@@ -64,8 +64,11 @@ public class LibrarySpecificationProvider {
 					Pair<Runtime, Collection<Library>> libs = readFile("/" + path);
 					libs.getLeft().fillProgram(program, root);
 					libs.getLeft().populateProgram(program, init, hierarchyRoot);
-					for (Library lib : libs.getValue())
+					for (Library lib : libs.getValue()) {
 						AVAILABLE_LIBS.put(lib.getName(), lib);
+						// TODO: to check if it is correct
+						importLibrary(program, lib.getName());
+					}
 				}
 		}
 	}

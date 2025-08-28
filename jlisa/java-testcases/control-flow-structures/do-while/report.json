@@ -1,18 +1,31 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.emptyStructure()_cfg.json", "void_Main.main(String[]_args)_cfg.json" ],
+  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.emptyStructure()_cfg.json", "void_Main.main(String_[]_args)_cfg.json" ],
   "info" : {
     "cfgs" : "3",
+<<<<<<< HEAD
     "duration" : "5ms",
     "end" : "2025-08-26T17:13:16.281+02:00",
+=======
+    "duration" : "3ms",
+    "end" : "2025-08-27T17:48:31.741+02:00",
+>>>>>>> refs/remotes/origin/development
     "expressions" : "13",
     "files" : "3",
     "globals" : "3",
+<<<<<<< HEAD
     "members" : "84",
+=======
+    "members" : "67",
+>>>>>>> refs/remotes/origin/development
     "programs" : "1",
+<<<<<<< HEAD
     "start" : "2025-08-26T17:13:16.276+02:00",
+=======
+    "start" : "2025-08-27T17:48:31.738+02:00",
+>>>>>>> refs/remotes/origin/development
     "statements" : "11",
-    "units" : "32",
+    "units" : "57",
     "version" : "0.1",
     "warnings" : "0"
   },
