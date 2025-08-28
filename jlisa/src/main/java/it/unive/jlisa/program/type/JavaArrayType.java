@@ -87,8 +87,8 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
             Type base,
             int dimensions) {
         this.base = base;
-        if (dimensions < 1)
-            throw new IllegalArgumentException("Cannot create an array type with less then 1 dimensions");
+        if (dimensions < 0)
+            throw new IllegalArgumentException("Cannot create an array type with negative dimensions");
         this.dimensions = dimensions;
     }
 
@@ -153,7 +153,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
     @Override
     public Type getInnerType() {
-        if (dimensions == 1)
+        if (dimensions <= 1)
             return base;
         return lookup(base, dimensions - 1);
     }
