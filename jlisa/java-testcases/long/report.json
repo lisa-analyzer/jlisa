@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_LongTest.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "2",
+    "duration" : "9ms",
+    "end" : "2025-08-28T16:17:38.217+02:00",
+    "expressions" : "8",
+    "files" : "1",
+    "globals" : "5",
+    "members" : "91",
+    "programs" : "1",
+    "start" : "2025-08-28T16:17:38.208+02:00",
+    "statements" : "6",
+    "units" : "59",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/long"
+  }
+}
