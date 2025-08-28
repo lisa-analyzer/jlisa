@@ -58,6 +58,7 @@ import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
+import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
 import it.unive.jlisa.program.cfg.expression.PostfixAddition;
 import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
@@ -74,9 +75,9 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
@@ -100,7 +101,6 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.program.Unit;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -214,11 +214,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new JavaShiftRight(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		case ">>>=":
-			parserContext.addException(
-					new ParsingException("operators", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							operator + " operator are not supported.",
-							getSourceCodeLocation(node))
-					);
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaUnsignedShiftRight(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
@@ -420,11 +417,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			new JavaShiftLeft(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case ">>>":
-			parserContext.addException(
-					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"The '" + operator + "' infix operator is not supported.",
-							getSourceCodeLocation(node))
-					);
+			expression = buildExpression(operands, (first, second) ->
+			new JavaUnsignedShiftRight(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "<":
 			expression = new LessThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());

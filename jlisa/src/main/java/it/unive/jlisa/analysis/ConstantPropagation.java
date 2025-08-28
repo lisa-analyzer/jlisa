@@ -54,6 +54,7 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseOr;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftLeft;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftRight;
+import it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
@@ -322,6 +323,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			
 			if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() >> ((Number) rVal).intValue());
+			}
+		}
+		
+		if (operator instanceof BitwiseUnsignedShiftRight) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+			
+			if (lVal instanceof Integer || rVal instanceof Integer) {
+				return new ConstantValue(((Number) lVal).intValue() >>> ((Number) rVal).intValue());
 			}
 		}
 		
