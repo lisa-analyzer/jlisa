@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.language;
 
-import it.unive.jlisa.program.language.validation.JLiSAValidationLogic;
+import it.unive.jlisa.program.language.validation.JavaValidationLogic;
 import it.unive.lisa.program.language.LanguageFeatures;
 import it.unive.lisa.program.language.hierarchytraversal.HierarcyTraversalStrategy;
 import it.unive.lisa.program.language.hierarchytraversal.SingleInheritanceTraversalStrategy;
@@ -28,6 +28,6 @@ public class JavaLanguageFeatures extends LanguageFeatures {
 
     @Override
     public ProgramValidationLogic getProgramValidationLogic() {
-        return new JLiSAValidationLogic();
+        return new JavaValidationLogic();
     }
 }

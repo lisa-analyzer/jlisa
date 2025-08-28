@@ -14,10 +14,7 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.Parameter;
-import it.unive.lisa.program.cfg.VariableTableEntry;
+import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
@@ -94,20 +91,18 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			}
 		}
 
-        boolean added = false;
-        if (!Modifier.isStatic(modifiers)) {
-            added = lisacompilationUnit.addInstanceCodeMember(cfg);
-        } else {
-            added = lisacompilationUnit.addCodeMember(cfg);
-        }
-
+		boolean added;
+		if (!Modifier.isStatic(modifiers)) {
+			added = lisacompilationUnit.addInstanceCodeMember(cfg);
+		} else {
+			added = lisacompilationUnit.addCodeMember(cfg);
+		}
         if (!added) {
             parserContext.addException(new ParsingException("duplicated_method_descriptor",
                     ParsingException.Type.MALFORMED_SOURCE,
                     "Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
                     getSourceCodeLocation(node)));
         }
-
 		if (isMain) {
 			// in the main method, we instantiate enum constants
 			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);

@@ -16,7 +16,7 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-public class JLiSAValidationLogic extends BaseValidationLogic {
+public class JavaValidationLogic extends BaseValidationLogic {
 
     private String STATEMENT_LOCATIONS = "Two statements at the same location %s: %s - %s";
     private Map<String, Object> locations = new HashMap<String, Object>();
@@ -28,7 +28,7 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
         validateLocation(unit.getLocation().getCodeLocation(), unit);
         super.validateAndFinalize(unit);
     }
-    
+
     @Override
     public void validateAndFinalize(
             CompilationUnit unit)
@@ -59,7 +59,7 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
         validateLocation(global.getLocation().getCodeLocation(), global);
         super.validate(global, isInstance);
     }
-    
+
     public void validate(Statement statement) throws ProgramValidationException {
         validateLocation(statement.getLocation().getCodeLocation(), statement);
         if (statement instanceof NaryExpression naryExpression) {
@@ -68,7 +68,7 @@ public class JLiSAValidationLogic extends BaseValidationLogic {
             }
         }
     }
-        
+
     private void validateLocation(String location, Object programEntity) throws ProgramValidationException {
         if (locations.containsKey(location) && !locations.get(location).equals(programEntity)) {
             throw new ProgramValidationException(format(STATEMENT_LOCATIONS, location, locations.get(location).toString(), programEntity.toString()));
