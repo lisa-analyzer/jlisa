@@ -973,6 +973,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ThrowStatement node) {
+		System.err.println(node);
 		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		node.getExpression().accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();
@@ -1001,11 +1002,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ParsedBlock body = blockVisitor.getBlock();
 		trycatch.mergeWith(body.getBody());
 
-		// if there is an else block, we parse it immediately and connect it
-		// to the end of the try block *only* if it does not end with a
-		// return/throw
-		// (as it would be deadcode)
-		normalExits.add(body.getEnd());
+		// we add the the end of the try block *only* if it does not end with a
+		// return/throw (as it would be deadcode)
+		if (body.canBeContinued())
+			normalExits.add(body.getEnd());
 
 
 		// we then parse each catch block, and we connect *every* instruction
