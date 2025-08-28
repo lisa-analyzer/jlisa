@@ -13,3 +13,4 @@ class Long extends Object:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype Long*
 		
+		
