@@ -10,7 +10,7 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -26,7 +26,7 @@ public class ObjectConstructor extends NativeCFG {
     public ObjectConstructor(
             CodeLocation location,
             ClassUnit stringUnit) {
-        super(new CodeMemberDescriptor(location, stringUnit, true, "Object", VoidType.INSTANCE,
+        super(new JavaCodeMemberDescriptor(location, stringUnit, true, "Object", VoidType.INSTANCE,
                         new Parameter(location, "this", new ReferenceType(JavaClassType.lookup("Object", null)))),
                 ObjectConstructor.JavaObjectConstructor.class);
     }

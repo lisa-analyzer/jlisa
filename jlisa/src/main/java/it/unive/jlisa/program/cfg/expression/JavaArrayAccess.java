@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -15,7 +16,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.type.Type;
+import it.unive.lisa.type.ReferenceType;
 
 public class JavaArrayAccess extends BinaryExpression {
 
@@ -30,14 +31,13 @@ public class JavaArrayAccess extends BinaryExpression {
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
 		AnalysisState<A> result = state.bottom();				
         Analysis<A, D> analysis = interprocedural.getAnalysis();
-        Type type = left.getStaticType();
-     	
-        HeapDereference container = new HeapDereference(type, left, getLocation());
-        		        		
-        AccessChild access = new AccessChild(type, container, right, getLocation());
-
-        result = result.lub(analysis.smallStepSemantics(state, access, getEvaluationPredecessor()));
-        		        	
+        if (!left.getStaticType().isReferenceType() || !left.getStaticType().asReferenceType().getInnerType().isArrayType())
+        	return state.bottom();
+        
+        JavaArrayType arrayType = (JavaArrayType) ((ReferenceType) left.getStaticType()).getInnerType();
+        HeapDereference container = new HeapDereference(arrayType, left, getLocation()); 		    	
+        AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
+        result = result.lub(analysis.smallStepSemantics(state, access, getEvaluationPredecessor()));  		        	
 		return result;
 	}
 

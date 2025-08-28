@@ -76,7 +76,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression{
 
 		Constant length = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
 
-		tmp = analysis.assign(tmp, lenAccess, length, getEvaluationPredecessor());
+		tmp = analysis.assign(tmp, lenAccess, length, this);
 
 		int i = 0;
 		

@@ -17,8 +17,8 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/lisa-analyzer/lisa")
         credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
-            password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+            username = "olivieriluca"
+            password = "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"
         }
     }
 }
