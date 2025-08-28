@@ -102,7 +102,7 @@ public class Method {
 				this.type.toLiSAType(),
 				pars);
 
-		desc.setOverridable(this.sealed);
+		desc.setOverridable(!this.sealed);
 
 		try {
 			return new NativeCFG(desc,

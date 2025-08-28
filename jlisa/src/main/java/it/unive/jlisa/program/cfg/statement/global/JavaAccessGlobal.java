@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -10,148 +7,142 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.annotations.Annotations;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.program.language.hierarchytraversal.HierarcyTraversalStrategy;
-import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.Variable;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
+import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 
-public class JavaAccessGlobal extends UnaryExpression {
+/**
+ * An access to a {@link Global} of a {@link Unit}.
+ * 
+ * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
+ */
+public class JavaAccessGlobal extends Expression {
 
-    private final String target;
+	/**
+	 * The receiver of the access
+	 */
+	private final Unit container;
 
-    public JavaAccessGlobal(
-            CFG cfg,
-            CodeLocation location,
-            Expression receiver,
-            String target) {
-        super(cfg, location, "::", Untyped.INSTANCE, receiver);
-        this.target = target;
-        receiver.setParentStatement(this);
-    }
+	/**
+	 * The global being accessed
+	 */
+	private final Global target;
 
-    /**
-     * Yields the expression that determines the receiver of the global access
-     * defined by this expression.
-     *
-     * @return the receiver of the access
-     */
-    public Expression getReceiver() {
-        return getSubExpression();
-    }
+	/**
+	 * Builds the global access, happening at the given location in the program.
+	 * The type of this expression is the one of the accessed global.
+	 * 
+	 * @param cfg       the cfg that this expression belongs to
+	 * @param location  the location where the expression is defined within the
+	 *                      program
+	 * @param container the unit containing the accessed global
+	 * @param target    the accessed global
+	 */
+	public JavaAccessGlobal(
+			CFG cfg,
+			CodeLocation location,
+			Unit container,
+			Global target) {
+		super(cfg, location, target.getStaticType());
+		this.container = container;
+		this.target = target;
+	}
 
-    /**
-     * Yields the instance {@link Global} targeted by this expression.
-     *
-     * @return the global
-     */
-    public String getTarget() {
-        return target;
-    }
+	/**
+	 * Yields the {@link Unit} where the global targeted by this access is
+	 * defined.
+	 * 
+	 * @return the container of the global
+	 */
+	public Unit getContainer() {
+		return container;
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((target == null) ? 0 : target.hashCode());
-        return result;
-    }
+	/**
+	 * Yields the {@link Global} targeted by this expression.
+	 * 
+	 * @return the global
+	 */
+	public Global getTarget() {
+		return target;
+	}
 
-    @Override
-    public boolean equals(
-            Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        JavaAccessGlobal other = (JavaAccessGlobal) obj;
-        if (target == null) {
-            if (other.target != null)
-                return false;
-        } else if (!target.equals(other.target))
-            return false;
-        return true;
-    }
+	@Override
+	public <V> boolean accept(
+			GraphVisitor<CFG, Statement, Edge, V> visitor,
+			V tool) {
+		return visitor.visit(tool, getCFG(), this);
+	}
 
-    @Override
-    protected int compareSameClassAndParams(
-            Statement o) {
-        JavaAccessGlobal other = (JavaAccessGlobal) o;
-        return target.compareTo(other.target);
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((container == null) ? 0 : container.hashCode());
+		result = prime * result + ((target == null) ? 0 : target.hashCode());
+		return result;
+	}
 
-    @Override
-    public String toString() {
-        return getSubExpression() + "::" + target;
-    }
+	@Override
+	public boolean equals(
+			Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JavaAccessGlobal other = (JavaAccessGlobal) obj;
+		if (container == null) {
+			if (other.container != null)
+				return false;
+		} else if (!container.equals(other.container))
+			return false;
+		if (target == null) {
+			if (other.target != null)
+				return false;
+		} else if (!target.equals(other.target))
+			return false;
+		return true;
+	}
 
-    @Override
-    public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-            InterproceduralAnalysis<A, D> interprocedural,
-            AnalysisState<A> state,
-            SymbolicExpression expr,
-            StatementStore<A> expressions)
-            throws SemanticException {
-        CodeLocation loc = getLocation();
+	@Override
+	protected int compareSameClass(
+			Statement o) {
+		JavaAccessGlobal other = (JavaAccessGlobal) o;
+		int cmp;
+		if ((cmp = container.getName().compareTo(other.container.getName())) != 0)
+			return cmp;
+		return target.getName().compareTo(other.target.getName());
+	}
 
-        AnalysisState<A> result = state.bottom();
-        boolean atLeastOne = false;
-        Analysis<A, D> analysis = interprocedural.getAnalysis();
-        Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+	@Override
+	public String toString() {
+		return container.getName() + "::" + target.getName();
+	}
 
-        for (Type recType : types)
-            if (recType.isPointerType()) {
-                Type inner = recType.asPointerType().getInnerType();
-                if (!inner.isUnitType())
-                    continue;
 
-                HeapDereference container = new HeapDereference(inner, expr, loc);
-                CompilationUnit unit = inner.asUnitType().getUnit();
+	@Override
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+			AnalysisState<A> entryState,
+			InterproceduralAnalysis<A, D> interprocedural,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		if (target instanceof ConstantGlobal)
+			return analysis.smallStepSemantics(entryState, ((ConstantGlobal) target).getConstant(), this);
 
-                Set<CompilationUnit> seen = new HashSet<>();
-                HierarcyTraversalStrategy strategy = getProgram().getFeatures().getTraversalStrategy();
-                for (CompilationUnit cu : strategy.traverse(this, unit))
-                    if (seen.add(unit)) {
-                        Global global = cu.getInstanceGlobal(target, false);
-                        if (global != null) {
-                            GlobalVariable var = global.toSymbolicVariable(loc);
-                            AccessChild access = new AccessChild(var.getStaticType(), container, var, loc);
-                            result = result.lub(analysis.smallStepSemantics(state, access, this));
-                            atLeastOne = true;
-                        }
-                    }
-            }
-
-        if (atLeastOne)
-            return result;
-
-        // worst case: we are accessing a global that we know nothing about
-        Set<Type> rectypes = new HashSet<>();
-        for (Type t : types)
-            if (t.isPointerType())
-                rectypes.add(t.asPointerType().getInnerType());
-
-        if (rectypes.isEmpty())
-            return state.bottom();
-
-        Type rectype = Type.commonSupertype(rectypes, Untyped.INSTANCE);
-        Variable var = new Variable(Untyped.INSTANCE, target, new Annotations(), getLocation());
-        HeapDereference container = new HeapDereference(rectype, expr, getLocation());
-        AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
-        return analysis.smallStepSemantics(state, access, this);
-    }
+		// unit globals are unique, we can directly access those
+		return analysis.smallStepSemantics(
+				entryState,
+				new GlobalVariable(target.getStaticType(), toString(), target.getAnnotations(), getLocation()),
+				this);
+	}
 }

@@ -1,0 +1,1 @@
+class PriorityQueue extends Object:

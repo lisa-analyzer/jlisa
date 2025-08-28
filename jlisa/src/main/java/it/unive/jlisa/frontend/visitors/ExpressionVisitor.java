@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import it.unive.jlisa.program.cfg.expression.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -24,6 +23,7 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
@@ -45,10 +45,28 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.cfg.expression.BitwiseNot;
+import it.unive.jlisa.program.cfg.expression.InstanceOf;
+import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
+import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
+import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
+import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaNewArray;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
+import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
+import it.unive.jlisa.program.cfg.expression.PostfixAddition;
+import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
+import it.unive.jlisa.program.cfg.expression.PrefixAddition;
+import it.unive.jlisa.program.cfg.expression.PrefixPlus;
+import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
@@ -56,6 +74,8 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -80,6 +100,7 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.program.Unit;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -130,25 +151,14 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
-
+				parameters.add(expr);
 			}
 
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
-
 		}
 
 		return false;		
 	}
-
-	@Override
-	public boolean visit(ArrayInitializer node) {
-		throw new RuntimeException(new UnsupportedStatementException("Array Initializer expressions are not supported"));
-	}
-
 
 	@Override
 	public boolean visit(Assignment node) {
@@ -159,10 +169,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		if (left == null || right == null) {
-			// SKIP. There is an error.
-			return false;
-		}
+
 		switch (operator.toString()) {
 		case "=":
 			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
@@ -188,12 +195,24 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new Modulo(cfg, getSourceCodeLocation(node), left, right));
 		case "&=":
 			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), left, right));
+					new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), left, right));
 			break;
 		case "|=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaBitwiseOr(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case "^=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case "<<=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaShiftLeft(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case ">>=":
+			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
+					new JavaShiftRight(cfg, getSourceCodeLocation(node), left, right));
+			break;
 		case ">>>=":
 			parserContext.addException(
 					new ParsingException("operators", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -250,11 +269,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(ClassInstanceCreation node) {
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
 		node.getType().accept(typeVisitor);
-		it.unive.lisa.type.Type type = typeVisitor.getType();
-		if (type == null) {
-			// an error occurred.
-			return false;
-		}
+		Type type = typeVisitor.getType();
+
 		if (!(type instanceof JavaClassType)) {
 			parserContext.addException(
 					new ParsingException("arguments-constructor", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -349,7 +365,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		if (expr != null) {
-			expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
 		}
 		return false;
 	}
@@ -363,10 +379,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightOperand().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		if (left == null || right == null) {
-			// SKIP. There is an error.
-			return false;
-		}
+	
 		List<Expression> operands = new ArrayList<>();
 		operands.add(left);
 		operands.add(right);
@@ -400,9 +413,12 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case ">>":
 			expression = buildExpression(operands, (first, second) ->
-			new JavaShiftOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaShiftRight(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "<<":
+			expression = buildExpression(operands, (first, second) ->
+			new JavaShiftLeft(cfg, getSourceCodeLocation(node), first, second));
+			break;
 		case ">>>":
 			parserContext.addException(
 					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -432,14 +448,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "&":
 			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseAndOperator(cfg, getSourceCodeLocation(node), first, second));
+			new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "^":
-			parserContext.addException(
-					new ParsingException("infix-operator", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"The '" + operator + "' infix operator is not supported.",
-							getSourceCodeLocation(node))
-					);
+			expression = buildExpression(operands, (first, second) ->
+			new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), first, second));
 			break;
 		case "|":
 			expression = buildExpression(operands, (first, second) ->
@@ -536,21 +549,41 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(QualifiedName node) {
-		String target = node.getName().getIdentifier(); // you may still want this
-		ExpressionVisitor receiverVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
-		if (node.getQualifier() instanceof QualifiedName) {
-			parserContext.addException(
-					new ParsingException("qualified-name", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Qualified Name expressions as qualifier of Qualifier Name expressions are not supported.",
-							getSourceCodeLocation(node))
-					);
+		String targetName = node.getName().getIdentifier();
+		
+		// FIXME: we are currently taking just the last name (the true name of the unit)
+		String unitName;
+		Name lastName = node.getQualifier();
+
+		if (node.getQualifier() instanceof SimpleName)
+			unitName = lastName.toString();
+		else {
+			while (lastName instanceof QualifiedName)
+				lastName = ((QualifiedName) lastName).getQualifier();
+			unitName = lastName.toString();
 		}
-		node.getQualifier().accept(receiverVisitor);
-		Expression receiver = receiverVisitor.getExpression();
-		if (receiver == null) {
-			return false;
-		}
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node),receiver, target);
+		
+		Unit unit = getProgram().getUnit(unitName);        
+        if (unit == null) {
+        	// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
+        	if (Character.isUpperCase(unitName.charAt(0)))
+        		parserContext.addException(
+        				new ParsingException("missing-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+        						"Missing unit " + unitName,
+        						getSourceCodeLocation(node))
+        				);        	else {
+        		// it is a field access
+        		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+        		lastName.accept(visitor);
+        		Expression expr = visitor.getExpression();
+    			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+        		return false;
+        	}
+        }
+        	
+        
+        Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), unit, g);
 		return false;
 	}
 
@@ -681,7 +714,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
-
 		parserContext.addException(
 				new ParsingException("super-method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Super Method Invocation expressions are not supported.",
@@ -725,11 +757,17 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(TypeLiteral node) {
-		parserContext.addException(
-				new ParsingException("type-literal", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type Literals are not supported.",
-						getSourceCodeLocation(node))
-				);
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		node.getType().accept(visitor);
+		
+		// FIXME: we erase the type parameter
+		JavaClassType classType = JavaClassType.lookup("Class", null);
+		expression = new JavaNewObj(
+				cfg,
+				getSourceCodeLocation(node),
+				classType.getUnit().getName(),
+				new ReferenceType(classType),
+				new Expression[0]);
 		return false;
 	}
 
@@ -747,21 +785,23 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(VariableDeclarationExpression node) {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		node.getType().accept(visitor);
-		it.unive.lisa.type.Type variableType = visitor.getType();
+		it.unive.lisa.type.Type varType = visitor.getType();
+		varType = varType.isInMemoryType() ? new ReferenceType(varType) : varType;
+		
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
 			SourceCodeLocation loc = getSourceCodeLocation(fragment);
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
-					variableName, variableType);
-			parserContext.addVariableType(cfg,variableName, variableType);
+					variableName, varType);
+			parserContext.addVariableType(cfg,variableName, varType);
 
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
-			expression= new JavaAssignment(cfg, loc, ref, initializer);
+			expression = new JavaAssignment(cfg, loc, ref, initializer);
 		}
 		return false;
 	}
