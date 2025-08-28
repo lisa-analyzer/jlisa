@@ -126,15 +126,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Type contentType = Untyped.INSTANCE;
 		for (Object args : node.expressions()) {
 			ASTNode e  = (ASTNode) args;
-			ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-			e.accept(argumentsVisitor);
-			Expression expr = argumentsVisitor.getExpression();
-			parameters.add(expr);
-			contentType = expr.getStaticType();
-		}
+            ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+            e.accept(argumentsVisitor);
+            Expression expr = argumentsVisitor.getExpression();
+            parameters.add(expr);
+            contentType = expr.getStaticType();
+        }
 
-		expression = new JavaNewArrayWithInitializer(cfg,
-					getSourceCodeLocation(node),
+        expression = new JavaNewArrayWithInitializer(cfg,
+                getSourceCodeLocation(node),
 					parameters.toArray(new Expression[0]),
 					new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
 		return false;

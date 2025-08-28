@@ -1,35 +1,18 @@
 package it.unive.jlisa.frontend.visitors;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.lisa.program.AbstractClassUnit;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.ProgramValidationException;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.*;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -42,10 +25,8 @@ import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -220,6 +201,37 @@ public class ClassASTVisitor extends JavaASTVisitor{
         return cfg;
     }
 
+	private CFG createEnumConstructor(EnumUnit enumUnit, EnumDeclaration enumDecl) {
+		Type type = getProgram().getTypes().getType(enumUnit.getName());
+
+		List<Parameter> parameters = new ArrayList<>();
+		CodeLocation enumDeclLoc = getSourceCodeLocation(enumDecl);
+		parameters.add(new Parameter(enumDeclLoc, "this", new ReferenceType(type), null, new Annotations()));
+		parameters.add(new Parameter(enumDeclLoc, "name", new ReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
+
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(enumDeclLoc, enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+		CFG cfg = new CFG(codeMemberDescriptor);
+		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
+		parserContext.addVariableType(cfg, "name", new ReferenceType(getProgram().getTypes().getStringType()));
+
+		JavaAssignment glAsg = new JavaAssignment(cfg, enumDeclLoc,
+				new JavaAccessInstanceGlobal(cfg, enumDeclLoc,
+						new VariableRef(cfg, enumDeclLoc, "this"),
+						"name"),
+				new VariableRef(cfg, enumDeclLoc, "name"));
+
+
+		Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
+		cfg.addNode(glAsg);
+		cfg.addNode(ret);
+		cfg.getEntrypoints().add(glAsg);
+		cfg.addEdge(new SequentialEdge(glAsg, ret));
+		enumUnit.addInstanceCodeMember(cfg);
+		return cfg;
+	}
+
 	private void fixConstructorCFG(CFG cfg, FieldDeclaration[] fields) {
 		Statement entryPoint = cfg.getEntrypoints().iterator().next();
 		Statement injectionPoint = entryPoint;
@@ -255,7 +267,6 @@ public class ClassASTVisitor extends JavaASTVisitor{
             entryPoint = call;
             //injectionPoint = call;
         }
-        Statement first = null, last = null;
 		if (injectionPoint instanceof UnresolvedCall &&
 				((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
 			return;
