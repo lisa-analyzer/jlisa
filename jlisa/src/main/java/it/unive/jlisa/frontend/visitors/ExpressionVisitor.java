@@ -74,6 +74,7 @@ import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -101,6 +102,7 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -126,11 +128,31 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	}
 
 	@Override
+	public boolean visit(ArrayInitializer node) {
+		List<Expression> parameters = new ArrayList<>();
+
+		Type contentType = Untyped.INSTANCE;
+		for (Object args : node.expressions()) {
+			ASTNode e  = (ASTNode) args;
+			ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+			e.accept(argumentsVisitor);
+			Expression expr = argumentsVisitor.getExpression();
+			parameters.add(expr);
+			contentType = expr.getStaticType();
+		}
+
+		expression = new JavaNewArrayWithInitializer(cfg, 
+					getSourceCodeLocation(node), 
+					parameters.toArray(new Expression[0]), 
+					new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
+		return false;	
+
+	}
+
+	@Override
 	public boolean visit(ArrayCreation node) {
-		// TODO: currently initializer are not supported
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-
 
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
@@ -376,7 +398,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightOperand().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-	
+
 		List<Expression> operands = new ArrayList<>();
 		operands.add(left);
 		operands.add(right);
@@ -544,7 +566,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(QualifiedName node) {
 		String targetName = node.getName().getIdentifier();
-		
+
 		// FIXME: we are currently taking just the last name (the true name of the unit)
 		String unitName;
 		Name lastName = node.getQualifier();
@@ -556,27 +578,27 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				lastName = ((QualifiedName) lastName).getQualifier();
 			unitName = lastName.toString();
 		}
-		
+
 		Unit unit = getProgram().getUnit(unitName);        
-        if (unit == null) {
-        	// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
-        	if (Character.isUpperCase(unitName.charAt(0)))
-        		parserContext.addException(
-        				new ParsingException("missing-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
-        						"Missing unit " + unitName,
-        						getSourceCodeLocation(node))
-        				);        	else {
-        		// it is a field access
-        		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
-        		lastName.accept(visitor);
-        		Expression expr = visitor.getExpression();
-    			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
-        		return false;
-        	}
-        }
-        	
-        
-        Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
+		if (unit == null) {
+			// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
+			if (Character.isUpperCase(unitName.charAt(0)))
+				parserContext.addException(
+						new ParsingException("missing-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+								"Missing unit " + unitName,
+								getSourceCodeLocation(node))
+						);        	else {
+							// it is a field access
+							ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+							lastName.accept(visitor);
+							Expression expr = visitor.getExpression();
+							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+							return false;
+						}
+		}
+
+
+		Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
 		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), unit, g);
 		return false;
 	}
@@ -605,11 +627,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			// drop 'l' or 'L'
 			String value = token.substring(0, token.length() - 1);
 			if (value.startsWith("0x") || value.startsWith("0X")) {
-			    long parsed = Long.parseUnsignedLong(value.substring(2), 16);
-			    expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), parsed);
+				long parsed = Long.parseUnsignedLong(value.substring(2), 16);
+				expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), parsed);
 			} else {
-			    long parsed = Long.decode(value);
-			    expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), parsed);
+				long parsed = Long.decode(value);
+				expression = new LongLiteral(this.cfg, getSourceCodeLocation(node), parsed);
 			}
 			return false;
 		}
@@ -753,7 +775,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(TypeLiteral node) {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		node.getType().accept(visitor);
-		
+
 		// FIXME: we erase the type parameter
 		JavaClassType classType = JavaClassType.lookup("Class", null);
 		expression = new JavaNewObj(
@@ -781,7 +803,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getType().accept(visitor);
 		it.unive.lisa.type.Type varType = visitor.getType();
 		varType = varType.isInMemoryType() ? new ReferenceType(varType) : varType;
-		
+
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
