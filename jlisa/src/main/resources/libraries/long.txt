@@ -1,0 +1,14 @@
+class Long extends Object:
+	instance field value type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+			
+	instance method longValue: it.unive.jlisa.program.java.constructs.longw.LongValue
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype Long*
+	
+	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype Long*
+		
+	method valueOf: it.unive.jlisa.program.java.construcs.longw.LongValueOf
+		libtype Long*
+		param this libtype String*
