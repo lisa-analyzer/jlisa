@@ -4,35 +4,34 @@ import java.util.Collections;
 import java.util.Set;
 
 import it.unive.jlisa.program.type.JavaLongType;
-import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
-public class JavaLongValueOfOperator implements UnaryOperator {
+public class JavaLongIntValueOperator implements UnaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaLongValueOfOperator INSTANCE = new JavaLongValueOfOperator();
+	public static final JavaLongIntValueOperator INSTANCE = new JavaLongIntValueOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaLongValueOfOperator() {
+	protected JavaLongIntValueOperator() {
 	}
 
 	@Override
 	public String toString() {
-		return "strvalueof";
+		return "longintvalue";
 	}
 		
 	@Override
 	public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
-		if (argument.stream().noneMatch(t -> t.equals(types.getStringType())))
+		if (argument.stream().noneMatch(t -> t.equals(JavaLongType.INSTANCE)))
 			return Collections.emptySet();
-		return Collections.singleton(JavaLongType.INSTANCE);
+		return Collections.singleton(types.getIntegerType());
 	}
 }

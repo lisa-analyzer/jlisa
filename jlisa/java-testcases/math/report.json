@@ -3,29 +3,16 @@
   "files" : [ "report.json", "void_MathTest.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "2",
-<<<<<<< HEAD
-    "duration" : "73ms",
-    "end" : "2025-08-26T17:13:14.763+02:00",
-=======
-    "duration" : "9ms",
-    "end" : "2025-08-27T17:48:32.469+02:00",
->>>>>>> refs/remotes/origin/development
+    "duration" : "56ms",
+    "end" : "2025-08-28T16:17:35.441+02:00",
     "expressions" : "99",
     "files" : "1",
-    "globals" : "3",
-<<<<<<< HEAD
-    "members" : "83",
-=======
-    "members" : "66",
->>>>>>> refs/remotes/origin/development
+    "globals" : "5",
+    "members" : "91",
     "programs" : "1",
-<<<<<<< HEAD
-    "start" : "2025-08-26T17:13:14.690+02:00",
-=======
-    "start" : "2025-08-27T17:48:32.460+02:00",
->>>>>>> refs/remotes/origin/development
+    "start" : "2025-08-28T16:17:35.385+02:00",
     "statements" : "27",
-    "units" : "57",
+    "units" : "59",
     "version" : "0.1",
     "warnings" : "0"
   },

@@ -3,32 +3,16 @@
   "files" : [ "report.json", "void_ForLoopsExample1.ForLoopsExample1(ForLoopsExample1__this)_cfg.json", "void_ForLoopsExample1.emptyStructures()_cfg.json", "void_ForLoopsExample1.main(String_[]_args)_cfg.json" ],
   "info" : {
     "cfgs" : "3",
-<<<<<<< HEAD
-    "duration" : "9ms",
-    "end" : "2025-08-26T17:13:15.891+02:00",
-    "expressions" : "20",
-=======
-    "duration" : "3ms",
-    "end" : "2025-08-27T17:48:31.630+02:00",
+    "duration" : "7ms",
+    "end" : "2025-08-28T16:17:36.694+02:00",
     "expressions" : "18",
->>>>>>> refs/remotes/origin/development
     "files" : "3",
-    "globals" : "3",
-<<<<<<< HEAD
-    "members" : "84",
-=======
-    "members" : "67",
->>>>>>> refs/remotes/origin/development
+    "globals" : "5",
+    "members" : "92",
     "programs" : "1",
-<<<<<<< HEAD
-    "start" : "2025-08-26T17:13:15.882+02:00",
-    "statements" : "14",
-    "units" : "32",
-=======
-    "start" : "2025-08-27T17:48:31.627+02:00",
+    "start" : "2025-08-28T16:17:36.687+02:00",
     "statements" : "13",
-    "units" : "57",
->>>>>>> refs/remotes/origin/development
+    "units" : "59",
     "version" : "0.1",
     "warnings" : "0"
   },

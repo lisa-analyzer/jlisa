@@ -8,7 +8,8 @@ class Long extends Object:
 	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype Long*
+				
+	instance method intValue: it.unive.jlisa.program.java.constructs.longw.LongIntValue
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype Long*
 		
-	method valueOf: it.unive.jlisa.program.java.construcs.longw.LongValueOf
-		libtype Long*
-		param this libtype String*

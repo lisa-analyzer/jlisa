@@ -7,6 +7,7 @@ import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
 import it.unive.jlisa.program.operator.JavaMathAsinOperator;
@@ -325,6 +326,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		
 		if (operator instanceof JavaStringGetBytesOperator && arg.getValue() instanceof String s) {
 			return new ConstantValue(s.getBytes());
+		}
+		
+		if (operator instanceof JavaLongIntValueOperator && arg.getValue() instanceof Long l) {
+			return new ConstantValue(l.intValue());
 		}
 		
 		return top();
