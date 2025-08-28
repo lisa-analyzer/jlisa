@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_A.A(A__this)_-1428881374.json", "void_A.foo(A__this)_-1428887078.json", "void_B.B(B__this)_1520260952.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "7",
+    "duration" : "244ms",
+    "end" : "2025-08-28T09:52:41.102+02:00",
+    "expressions" : "15",
+    "files" : "4",
+    "globals" : "4",
+    "members" : "71",
+    "programs" : "1",
+    "start" : "2025-08-28T09:52:40.858+02:00",
+    "statements" : "16",
+    "units" : "59",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/nested-inner-class/nest-1"
+  }
+}

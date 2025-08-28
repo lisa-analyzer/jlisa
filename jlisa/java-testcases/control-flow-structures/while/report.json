@@ -1,18 +1,18 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.emptyStructures()_cfg.json", "void_Main.main(String[]_args)_cfg.json" ],
+  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.emptyStructures()_cfg.json", "void_Main.main(String_[]_args)_cfg.json" ],
   "info" : {
     "cfgs" : "3",
     "duration" : "3ms",
-    "end" : "2025-08-25T23:10:07.753+02:00",
+    "end" : "2025-08-27T17:48:31.851+02:00",
     "expressions" : "13",
     "files" : "3",
     "globals" : "3",
-    "members" : "66",
+    "members" : "67",
     "programs" : "1",
-    "start" : "2025-08-25T23:10:07.750+02:00",
+    "start" : "2025-08-27T17:48:31.848+02:00",
     "statements" : "12",
-    "units" : "46",
+    "units" : "57",
     "version" : "0.1",
     "warnings" : "0"
   },

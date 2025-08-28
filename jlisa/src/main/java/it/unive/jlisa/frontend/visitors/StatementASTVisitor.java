@@ -85,7 +85,6 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
-import it.unive.lisa.util.frontend.LocalVariableTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class StatementASTVisitor extends JavaASTVisitor {
@@ -97,21 +96,17 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	private ParsedBlock block;
 
-	private final LocalVariableTracker tracker;
-
 	private final ControlFlowTracker control;
 
 	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
-		tracker = new LocalVariableTracker(cfg, cfg.getDescriptor());
 		this.control = control;   
 	}
 
 	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control, Expression switchItem) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
-		tracker = new LocalVariableTracker(cfg, cfg.getDescriptor());
 		this.control = control;
 		this.switchItem = switchItem;
 	}
@@ -653,8 +648,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		List<SwitchEqualityCheck> workList= new ArrayList<>();
 
-		List<Statement> instrList= new ArrayList<>();
-
+		List<Statement> caseInstrs= new ArrayList<>();
+		Statement lastCaseInstr = null;
+		
 		int offsetCol = 2;
 
 		Statement first = null, last = null;
@@ -671,7 +667,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addNode(emptyBlock);
 			} else {
 				adj.mergeWith(caseBlock.getBody());
-				instrList.addAll(caseBlock.getBody().getNodes());
+				caseInstrs.addAll(caseBlock.getBody().getNodes());
+				lastCaseInstr = caseBlock.getEnd();
 			}
 
 			if(o instanceof SwitchCase) {
@@ -683,14 +680,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			} else if(o instanceof BreakStatement) {
 				for(SwitchEqualityCheck switchCondition : workList) {
 
-					adj.addEdge(new TrueEdge(switchCondition, getFirstInstructionAfterSwitchInstr(switchCondition, instrList)));
-					cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
+					adj.addEdge(new TrueEdge(switchCondition, getFirstInstructionAfterSwitchInstr(switchCondition, caseInstrs)));
+					cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
 
 				}
 
 				if(switchDefault != null) {
-					defaultCase = new DefaultSwitchCase(switchDefault, instrList);
-					Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
+					defaultCase = new DefaultSwitchCase(switchDefault, caseInstrs);
+					Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 					if(follower != null) {
 						adj.addEdge(new SequentialEdge(switchDefault, follower));
 					} else {
@@ -702,7 +699,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				}
 
 				workList = new ArrayList<>();
-				instrList = new ArrayList<>();        		
+				caseInstrs = new ArrayList<>();        		
 			} 
 
 			if (first == null) {
@@ -718,11 +715,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		EmptyBody emptyBlock = null;
 
 		if(switchDefault != null && defaultCase == null) {
-			defaultCase = new DefaultSwitchCase(switchDefault, instrList);
-			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, instrList);
+			defaultCase = new DefaultSwitchCase(switchDefault, caseInstrs);
+			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 			if(follower != null) {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
-				adj.addEdge(new SequentialEdge(instrList.getLast(), noop));
+				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
 			} else {
 				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
 				offsetCol++;
@@ -734,8 +731,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		for(SwitchEqualityCheck switchCondition : workList) {
 
-			if(instrList.size() > 1) {
-				adj.addEdge(new TrueEdge(switchCondition,instrList.get(1)));
+			if(caseInstrs.size() > 1) {
+				adj.addEdge(new TrueEdge(switchCondition,caseInstrs.get(1)));
 			} else {
 				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
 				offsetCol++;
@@ -743,8 +740,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(),emptyBlock));
 			}
 
-			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, instrList));
-			if(instrList.size() > 0 )
+			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
+			if(caseInstrs.size() > 0 )
 				offsetCol++;		
 		}
 
@@ -976,6 +973,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ThrowStatement node) {
+		System.err.println(node);
 		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		node.getExpression().accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();
@@ -1004,11 +1002,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ParsedBlock body = blockVisitor.getBlock();
 		trycatch.mergeWith(body.getBody());
 
-		// if there is an else block, we parse it immediately and connect it
-		// to the end of the try block *only* if it does not end with a
-		// return/throw
-		// (as it would be deadcode)
-		normalExits.add(body.getEnd());
+		// we add the the end of the try block *only* if it does not end with a
+		// return/throw (as it would be deadcode)
+		if (body.canBeContinued())
+			normalExits.add(body.getEnd());
 
 
 		// we then parse each catch block, and we connect *every* instruction
@@ -1062,7 +1059,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				// the CFGTweaker will add the edges to the finally block
 				// and back to the noop
 				for (Statement st : normalExits)
-					trycatch.addEdge(new SequentialEdge(st, noop));
+					if(!st.stopsExecution())
+						trycatch.addEdge(new SequentialEdge(st, noop));
 		}
 
 
@@ -1112,5 +1110,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		this.block = body;
 		return false;
 	}
+	
+	
 	
 }

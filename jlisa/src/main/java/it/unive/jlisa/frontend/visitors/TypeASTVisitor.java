@@ -26,6 +26,7 @@ import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.type.BoolType;
+import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
@@ -80,7 +81,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
         if (node.getDimensions() == 0) {
             throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
         }
-        _type = JavaArrayType.lookup(_type, node.getDimensions());
+        _type = JavaArrayType.lookup(_type.isInMemoryType() ? new ReferenceType(_type) : _type, node.getDimensions());
         type = _type;
         return false;
 
