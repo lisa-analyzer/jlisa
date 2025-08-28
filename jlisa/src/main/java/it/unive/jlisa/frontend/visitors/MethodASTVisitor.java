@@ -63,6 +63,10 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			parserContext.addVariableType(cfg, p.getName(), paramType.isInMemoryType() ? new ReferenceType(paramType) : paramType);
 		}
 		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
+		
+		if(node.getBody() == null) // e.g. abstract method declarations
+			return false;
+		
 		node.getBody().accept(blockStatementASTVisitor);
 		cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
 		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
