@@ -1064,7 +1064,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				// the CFGTweaker will add the edges to the finally block
 				// and back to the noop
 				for (Statement st : normalExits)
-					trycatch.addEdge(new SequentialEdge(st, noop));
+					if(!st.stopsExecution())
+						trycatch.addEdge(new SequentialEdge(st, noop));
 		}
 
 
@@ -1114,5 +1115,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		this.block = body;
 		return false;
 	}
+	
+	
 	
 }

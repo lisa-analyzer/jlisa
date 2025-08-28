@@ -1,17 +1,17 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(String_[]_args)_cfg.json" ],
+  "files" : [ "char_Main.foo(String_name)_cfg.json", "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(String_[]_args)_cfg.json" ],
   "info" : {
-    "cfgs" : "2",
-    "duration" : "2ms",
-    "end" : "2025-08-27T17:26:32.439+02:00",
-    "expressions" : "17",
-    "files" : "2",
+    "cfgs" : "3",
+    "duration" : "5ms",
+    "end" : "2025-08-28T09:55:27.062+02:00",
+    "expressions" : "13",
+    "files" : "3",
     "globals" : "3",
-    "members" : "66",
+    "members" : "67",
     "programs" : "1",
-    "start" : "2025-08-27T17:26:32.437+02:00",
-    "statements" : "9",
+    "start" : "2025-08-28T09:55:27.057+02:00",
+    "statements" : "10",
     "units" : "56",
     "version" : "0.1",
     "warnings" : "0"
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/control-flow-structures/try-catch"
+    "workdir" : "java-outputs/control-flow-structures/try-catch/try-catch2"
   }
 }
