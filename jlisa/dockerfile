@@ -1,0 +1,14 @@
+FROM gradle:jdk23
+
+ARG GPR_USER
+ARG GPR_KEY
+
+RUN mkdir -p /root/.gradle && \
+    echo "gpr.user=${GPR_USER}" >> /root/.gradle/gradle.properties && \
+    echo "gpr.key=${GPR_KEY}" >> /root/.gradle/gradle.properties
+
+WORKDIR /app
+COPY . .
+
+RUN ./gradlew distZip
+RUN mkdir -p /artifacts && cp build/distributions/*.zip /artifacts
