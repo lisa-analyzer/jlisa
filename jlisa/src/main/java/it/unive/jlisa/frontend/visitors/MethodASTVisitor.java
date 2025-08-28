@@ -1,21 +1,10 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
@@ -25,7 +14,6 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.Parameter;
@@ -122,6 +110,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 
 		if (isMain) {
 			// in the main method, we instantiate enum constants
+			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 			for (Unit unit : getProgram().getUnits())
 				if (unit instanceof EnumUnit) {
 					it.unive.lisa.type.Type enumType = getProgram().getTypes().getType(unit.getName());
@@ -129,9 +118,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
 					for (Global target : unit.getGlobals()) {
 						int line = ((SourceCodeLocation) target.getLocation()).getLine();
 						int col = ((SourceCodeLocation) target.getLocation()).getCol();
-						JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, new SourceCodeLocation(source, line, col), unit, target);
-						JavaNewObj call = new JavaNewObj(cfg, new SourceCodeLocation(source, line, col + 1), unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, new SourceCodeLocation(source, line, col + 2), target.getName()));
-						JavaAssignment asg = new JavaAssignment(cfg, new SourceCodeLocation(source, line, col + 3), accessGlobal, call);
+						JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, target);
+						JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
+						JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
 						cfg.addNode(asg);
 						for (Statement entry : cfg.getEntrypoints()) {
 							cfg.addEdge(new SequentialEdge(asg, entry));
