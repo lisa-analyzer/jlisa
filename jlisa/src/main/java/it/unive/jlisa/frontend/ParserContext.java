@@ -31,8 +31,6 @@ import java.util.Map;
  * <li>Program-wide state management during parsing</li>
  * </ul>
  *
- * @author JLiSA Framework
- * @version 1.0
  */
 public class ParserContext {
 
