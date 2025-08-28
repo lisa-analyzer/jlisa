@@ -2,11 +2,11 @@ name: Run analysis and produce statistics
 
 on:
   pull_request:
-    branches: [ staging ]
+    branches: staging
 
 jobs:
   produce-jlisa-distribution:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: self-hosted
 
     steps:
     - name: Checkout jlisa repo
