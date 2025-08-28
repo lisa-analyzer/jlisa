@@ -85,7 +85,6 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
-import it.unive.lisa.util.frontend.LocalVariableTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class StatementASTVisitor extends JavaASTVisitor {
@@ -97,21 +96,17 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	private ParsedBlock block;
 
-	private final LocalVariableTracker tracker;
-
 	private final ControlFlowTracker control;
 
 	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
-		tracker = new LocalVariableTracker(cfg, cfg.getDescriptor());
 		this.control = control;   
 	}
 
 	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control, Expression switchItem) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
-		tracker = new LocalVariableTracker(cfg, cfg.getDescriptor());
 		this.control = control;
 		this.switchItem = switchItem;
 	}
@@ -724,7 +719,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 			if(follower != null) {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
-				adj.addEdge(new SequentialEdge(lastCaseInstr, noop)); //
+				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
 			} else {
 				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
 				offsetCol++;

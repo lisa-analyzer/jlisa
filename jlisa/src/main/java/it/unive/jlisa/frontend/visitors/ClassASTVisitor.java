@@ -59,8 +59,6 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 	@Override
 	public boolean visit(EnumDeclaration node) {
-		// iterates over inner declarations
-		// enum inner declaration
 		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(node.getName().toString());
 		Type enumType = getProgram().getTypes().getType(enUnit.getName());
 
@@ -123,7 +121,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		TypeDeclaration[] types = node.getTypes(); // nested types (e.g. nested inner classes)
+		TypeDeclaration[] types = node.getTypes(); // nested types (e.g., nested inner classes)
 
 		for (TypeDeclaration type : types) {
 			if (type instanceof TypeDeclaration) {
@@ -245,7 +243,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		return cfg;
 	}
 
-	public void fixConstructorCFG(CFG cfg, FieldDeclaration[] fields) {
+	private void fixConstructorCFG(CFG cfg, FieldDeclaration[] fields) {
 		Statement entryPoint = cfg.getEntrypoints().iterator().next();
 		Statement injectionPoint = entryPoint;
 		Unit u = cfg.getDescriptor().getUnit();
@@ -311,6 +309,4 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			}
 		}
 	}
-
-
 }

@@ -151,10 +151,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// FIXME: This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
 
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
