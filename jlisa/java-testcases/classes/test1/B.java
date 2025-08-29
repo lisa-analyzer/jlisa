@@ -1,0 +1,1 @@
+class B { void foo() { System.out.println("B.foo()"); } }

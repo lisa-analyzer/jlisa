@@ -1,0 +1,1 @@
+class C {void foo() {System.out.println("foo");}}
