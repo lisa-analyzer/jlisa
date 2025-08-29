@@ -18,6 +18,7 @@ import java.util.Set;
 
 public abstract class JavaCallGraph extends BaseCallGraph {
 
+	@Override
     public void resolveInstance(
             UnresolvedCall call,
             Set<Type>[] types,
@@ -47,6 +48,8 @@ public abstract class JavaCallGraph extends BaseCallGraph {
                     int prevTargetsSize = targets.size();
                     for (CodeMember cm : cu.getInstanceCodeMembers(false)) {
                         checkMember(call, types, targets, natives, aliasing, cm, true);
+                        // if checkMember adds some targets, we stop traversing superunits: 
+                        // we have found our targets
                         if (targets.size() > prevTargetsSize) {
                             found = true;
                             break;
