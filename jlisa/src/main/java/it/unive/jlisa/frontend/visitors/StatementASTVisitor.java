@@ -311,7 +311,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		if(loopBody.canBeContinued())
 			block.addEdge(new SequentialEdge(loopBody.getEnd(), condition));
-		Statement noop = new NoOp(this.cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation()); // added col +1 to avoid conflict with the other noop
+		Statement noop = new NoOp(this.cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 		block.addNode(noop);
 
 		block.addEdge(new FalseEdge(condition, noop));
@@ -396,7 +396,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		else if(hasUpdaters)
 			LOG.warn("The last statement of for's body stops the execution, then updaters are not reachable.");
 
-		Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): syntheticLocationManager.nextLocation()); // added col +2 to avoid conflict with the other noop
+		Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): syntheticLocationManager.nextLocation());
 		block.addNode(noop);
 
 		if(!areUpdatersDeadcode) {
@@ -611,8 +611,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		List<Statement> caseInstrs= new ArrayList<>();
 		Statement lastCaseInstr = null;
-		
-		int offsetCol = 2;
 
 		Statement first = null, last = null;
 		for (Object o : node.statements()) {
@@ -653,7 +651,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 						adj.addEdge(new SequentialEdge(switchDefault, follower));
 					} else {
 						emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
-						offsetCol++;
 						adj.addNode(emptyBlock);
 						adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
 					}
@@ -695,14 +692,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addEdge(new TrueEdge(switchCondition,caseInstrs.get(1)));
 			} else {
 				emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
-				offsetCol++;
 				adj.addNode(emptyBlock);
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(),emptyBlock));
 			}
 
 			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
-			if(caseInstrs.size() > 0 )
-				offsetCol++;		
 		}
 
 		for(int i = 0; i < cases.size()-1; i++)

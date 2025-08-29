@@ -18,16 +18,16 @@ import it.unive.jlisa.program.cfg.SyntheticCodeLocation;
 public class SyntheticCodeLocationManager {
 
     /** The path or name of the source file associated with synthetic locations */
-    String sourceFile;
+    private String sourceFile;
 
     /** The current offset used for generating synthetic locations */
-    int currentOffset;
+    private int currentOffset;
 
     /** The current synthetic location managed by this instance */
-    SyntheticCodeLocation currentLocation;
+    private SyntheticCodeLocation currentLocation;
 
     /** The root synthetic location representing the starting position */
-    SyntheticCodeLocation rootLocation;
+    private SyntheticCodeLocation rootLocation;
 
     /**
      * Constructs a new SyntheticCodeLocationManager starting at offset 0.

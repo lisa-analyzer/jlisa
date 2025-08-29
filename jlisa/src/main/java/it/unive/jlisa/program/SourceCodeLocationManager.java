@@ -15,19 +15,19 @@ import it.unive.lisa.program.SourceCodeLocation;
 
 public class SourceCodeLocationManager {
     /** The path or name of the source file being managed */
-    String sourceFile;
+    private String sourceFile;
 
     /** The current line number (0-based) */
-    int currentLineNumber = 0;
+    private int currentLineNumber = 0;
 
     /** The current column number (0-based) */
-    int currentColumnNumber = 0;
+    private int currentColumnNumber = 0;
 
     /** The current location object representing the current position */
-    SourceCodeLocation currentLocation;
+    private SourceCodeLocation currentLocation;
 
     /** The root location representing the starting position of the manager */
-    SourceCodeLocation rootLocation;
+    private SourceCodeLocation rootLocation;
 
     /**
      * Constructs a new SourceCodeLocationManager starting at position (0,0).
