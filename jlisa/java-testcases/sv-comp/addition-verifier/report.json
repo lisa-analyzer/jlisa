@@ -1,17 +1,17 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_MainClass.MainClass(MainClass__this)_1707440448.json", "void_MainClass.abstractMethod(MainClass__this)_1707445284.json", "void_MainClass.main(String_[]_args).json", "void_MyAbstractClass.MyAbstractClass(MyAbstractClass__this)_318915944.json" ],
+  "files" : [ "int_Verifier.nondetInt()_1707453251.json", "int_Verifier.nondetInt()_1707453282.json", "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
-    "cfgs" : "4",
-    "duration" : "303ms",
-    "end" : "2025-08-29T15:12:35.033-04:00",
-    "expressions" : "7",
-    "files" : "4",
+    "cfgs" : "14",
+    "duration" : "265ms",
+    "end" : "2025-08-29T15:10:40.713-04:00",
+    "expressions" : "80",
+    "files" : "3",
     "globals" : "3",
-    "members" : "68",
+    "members" : "78",
     "programs" : "1",
-    "start" : "2025-08-29T15:12:34.730-04:00",
-    "statements" : "9",
+    "start" : "2025-08-29T15:10:40.448-04:00",
+    "statements" : "33",
     "units" : "58",
     "version" : "0.1",
     "warnings" : "0"
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/abstract-method"
+    "workdir" : "java-outputs/sv-comp/addition-verifier"
   }
 }
