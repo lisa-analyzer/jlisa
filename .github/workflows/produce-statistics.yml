@@ -12,7 +12,7 @@ jobs:
     - name: Checkout jLiSA repo
       uses: actions/checkout@v4
 
-    - name: Produce jLiSa distribution
+    - name: Produce jLiSA distribution
       run: |
             docker build \
               --build-arg GPR_USER=${{ secrets.GPR_USER }} \
