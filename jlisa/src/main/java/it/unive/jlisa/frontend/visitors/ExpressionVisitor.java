@@ -593,7 +593,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 							ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 							lastName.accept(visitor);
 							Expression expr = visitor.getExpression();
-							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node, true).nextColumn(), expr, node.getName().getIdentifier());
 							return false;
 						}
 		}
