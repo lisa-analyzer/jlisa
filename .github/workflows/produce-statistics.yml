@@ -57,8 +57,8 @@ jobs:
       run: |
         mkdir -p $GITHUB_WORKSPACE/analysis_results
         docker run --rm \
-          --mount type=bind,src=$GITHUB_WORKSPACE/analysis_results,dst=/app/output \
-          svh
+        --mount type=bind,src=$GITHUB_WORKSPACE/analysis_results,dst=/app/output \
+        svh
       
     - name: Upload analysis results
       uses: actions/upload-artifact@v4
