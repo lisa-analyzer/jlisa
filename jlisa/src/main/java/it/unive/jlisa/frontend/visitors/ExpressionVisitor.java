@@ -2,7 +2,9 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
@@ -76,6 +78,7 @@ import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
@@ -142,9 +145,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 
 		expression = new JavaNewArrayWithInitializer(cfg, 
-					getSourceCodeLocation(node), 
-					parameters.toArray(new Expression[0]), 
-					new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
+				getSourceCodeLocation(node), 
+				parameters.toArray(new Expression[0]), 
+				new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
 		return false;	
 
 	}
@@ -730,11 +733,42 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
-		parserContext.addException(
-				new ParsingException("super-method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Super Method Invocation expressions are not supported.",
-						getSourceCodeLocation(node))
-				);
+		ClassUnit superClass = (ClassUnit) this.cfg.getUnit();
+		
+		//TODO: remove true and stop the cycle when reached Object
+		while (true) {
+			Set<it.unive.lisa.program.CompilationUnit> superClasses = superClass
+					.getImmediateAncestors().stream()
+					.filter(u -> u instanceof ClassUnit)
+					.collect(Collectors.toSet());
+
+			if (superClasses.size() > 1)
+				parserContext.addException(
+						new ParsingException("super-class", ParsingException.Type.UNSUPPORTED_STATEMENT,
+								"A class can extend just from one class.",
+								getSourceCodeLocation(node))
+						);
+
+			superClass = (ClassUnit) superClasses.stream().findFirst().get();
+			if (!superClass.getInstanceCodeMembersByName(node.getName().toString(), false).isEmpty())
+				break;
+		}
+
+		JavaClassType superType = JavaClassType.lookup(superClass.getName(), null);
+
+		// craft the call to superclass
+		List<Expression> parameters = new ArrayList<>();
+		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "super", new ReferenceType(superType)));
+
+		for (Object args : node.arguments()) {
+			ASTNode e  = (ASTNode) args;
+			ExpressionVisitor argVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+			e.accept(argVisitor);
+			Expression expr = argVisitor.getExpression();
+			parameters.add(expr);
+		}
+
+		expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
