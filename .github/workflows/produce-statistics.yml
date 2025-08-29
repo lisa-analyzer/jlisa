@@ -63,5 +63,5 @@ jobs:
     - name: Upload analysis results
       uses: actions/upload-artifact@v4
       with:
-        name: $GITHUB_WORKSPACE/analysis_results
-        path: analysis_results
+        name: analysis_results
+        path: $GITHUB_WORKSPACE/analysis_results
