@@ -2,7 +2,7 @@ name: Run analysis and produce statistics
 
 on:
   pull_request:
-    branches: [ staging ]
+    branches: staging
 
 jobs:
   produce-jlisa-distribution:
@@ -17,7 +17,7 @@ jobs:
             docker build \
               --build-arg GPR_USER=${{ secrets.GPR_USER }} \
               --build-arg GPR_KEY=${{ secrets.GPR_KEY }} \
-              -t produce-jlisa-distribution .
+              -t produce-jlisa-distribution ./jlisa
 
     - name: Extract distribution artifact
       run: |
@@ -32,7 +32,7 @@ jobs:
         path: artifacts/*.zip
 
   run-analysis:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: self-hosted
     needs: produce-jlisa-distribution
 
     steps:
@@ -51,17 +51,17 @@ jobs:
         path: ./svh
     
     - name: Build svh Docker image
-      run: docker build -t jlisa/svcomp ./svh
+      run: docker build -t svh ./svh
 
     - name: Run analysis
       run: |
         mkdir -p $GITHUB_WORKSPACE/analysis_results
         docker run --rm \
           --mount type=bind,src=$GITHUB_WORKSPACE/analysis_results,dst=/app/output \
-          jlisa/svcomp
+          svh
       
     - name: Upload analysis results
       uses: actions/upload-artifact@v4
       with:
-        name: analysis_results
+        name: $GITHUB_WORKSPACE/analysis_results
         path: analysis_results
