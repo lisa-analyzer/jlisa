@@ -10,8 +10,14 @@ import java.io.IOException;
 public class SVCompTest  extends JLiSAAnalysisExecutor {
 
     @Test
-    public void testString() throws IOException {
+    public void testDataStructures3() throws IOException {
         CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "data-structures-3", "DataStructures3.java");
+        perform(conf);
+    }
+
+    @Test
+    public void testAdditionVerifier() throws IOException {
+        CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "addition-verifier", "Main.java", "Verifier.java");
         perform(conf);
     }
 }

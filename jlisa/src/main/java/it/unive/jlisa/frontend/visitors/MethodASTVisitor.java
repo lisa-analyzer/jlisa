@@ -10,11 +10,15 @@ import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.util.frontend.JavaCFGTweaker;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
@@ -22,7 +26,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import it.unive.lisa.util.frontend.CFGTweaker;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -128,9 +131,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			getProgram().addEntryPoint(cfg);
 		}
 
-		CFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new);
-		CFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
-		CFGTweaker.addReturns(cfg, JavaSyntaxException::new);
+		JavaCFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new, parserContext.getCurrentSyntheticCodeLocationManager(source));
+		JavaCFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
+		JavaCFGTweaker.addReturns(cfg, JavaSyntaxException::new, parserContext.getCurrentSyntheticCodeLocationManager(source));
 		cfg.simplify();
 
 		return false;
