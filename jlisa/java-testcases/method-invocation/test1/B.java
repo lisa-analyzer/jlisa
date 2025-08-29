@@ -1,1 +1,5 @@
-class B { void foo() { System.out.println("B.foo()"); } }
+public class B { 
+	public int foo() { 
+		return 1;
+	}
+}

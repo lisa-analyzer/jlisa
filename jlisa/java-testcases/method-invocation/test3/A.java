@@ -1,5 +1,5 @@
-class A extends C {
-    void foo() {
-        System.out.println("A.foo");
+public class A extends C {
+    public int foo() {
+        return 1;
     }
 }

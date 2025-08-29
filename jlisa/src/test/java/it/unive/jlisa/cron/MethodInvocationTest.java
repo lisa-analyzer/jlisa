@@ -11,19 +11,19 @@ public class MethodInvocationTest  extends JLiSAAnalysisExecutor {
 
     @Test
     public void test01()  throws IOException {
-        CronConfiguration conf = TestHelpers.createConfiguration("method-invocation", "test1", "Main.java", "A.java", "B.java");
+        CronConfiguration conf = TestHelpers.constantPropagation("method-invocation", "test1", "Main.java", "A.java", "B.java");
         perform(conf);
     }
 
     @Test
     public void test02()  throws IOException {
-        CronConfiguration conf = TestHelpers.createConfiguration("method-invocation", "test2", "Main.java", "A.java", "B.java", "C.java");
+        CronConfiguration conf = TestHelpers.constantPropagation("method-invocation", "test2", "Main.java", "A.java", "B.java", "C.java");
         perform(conf);
     }
 
     @Test
     public void test03()  throws IOException {
-        CronConfiguration conf = TestHelpers.createConfiguration("method-invocation", "test3", "Main.java", "A.java", "B.java", "C.java");
+        CronConfiguration conf = TestHelpers.constantPropagation("method-invocation", "test3", "Main.java", "A.java", "B.java", "C.java");
         perform(conf);
     }
 

@@ -6,6 +6,6 @@ class Main {
         } else {
             c = new B();
         }
-        c.foo();
+        int x = c.foo();
     }
 }

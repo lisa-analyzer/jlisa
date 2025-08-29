@@ -1,1 +1,5 @@
-class C {void foo() {System.out.println("foo");}}
+public class C {
+	public int foo() { 
+		return 2;
+	} 
+}

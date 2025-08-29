@@ -1,6 +1,6 @@
-class Main {
+public class Main {
     public static void main(String[] args) {
         A a = new A();
-        a.foo();
+        int x = a.foo();
     }
 }
