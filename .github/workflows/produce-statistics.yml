@@ -60,7 +60,7 @@ jobs:
         --mount type=bind,src=$GITHUB_WORKSPACE/analysis_results,dst=/app/output \
         svh
       
-    - name: Upload analysis results
+    - name: Upload analysis results artifact
       uses: actions/upload-artifact@v4
       with:
         name: analysis_results
