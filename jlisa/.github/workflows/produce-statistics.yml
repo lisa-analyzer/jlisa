@@ -1,0 +1,67 @@
+name: Run analysis and produce statistics
+
+on:
+  pull_request:
+    branches: [ staging ]
+
+jobs:
+  produce-jlisa-distribution:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout jlisa repo
+      uses: actions/checkout@v4
+
+    - name: Produce jLiSA distribution
+      run: |
+            docker build \
+              --build-arg GPR_USER=${{ secrets.GPR_USER }} \
+              --build-arg GPR_KEY=${{ secrets.GPR_KEY }} \
+              -t produce-jlisa-distribution .
+
+    - name: Extract distribution artifact
+      run: |
+        container_id=$(docker create produce-jlisa-distribution)
+        docker cp $container_id:/artifacts ./artifacts
+        docker rm $container_id
+
+    - name: Upload distribution artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: jlisa-distribution
+        path: artifacts/*.zip
+
+  run-analysis:
+    runs-on: [self-hosted, linux, x64]
+    needs: produce-jlisa-distribution
+
+    steps:
+    - name: Checkout svh repo
+      uses: actions/checkout@v4
+      with:
+        repository: lisa-analyzer/sv-comp
+        ref: main
+        path: svh
+        token: ${{ secrets.READ_REPO_ACCESS_TOKEN }}
+
+    - name: Download and add jLiSA distribution into svh folder
+      uses: actions/download-artifact@v4
+      with:
+        name: jlisa-distribution
+        path: ./svh
+    
+    - name: Build svh Docker image
+      run: docker build -t jlisa/svcomp ./svh
+
+    - name: Run analysis
+      run: |
+        mkdir -p $GITHUB_WORKSPACE/analysis_results
+        docker run --rm \
+          --mount type=bind,src=$GITHUB_WORKSPACE/analysis_results,dst=/app/output \
+          jlisa/svcomp
+      
+    - name: Upload analysis results
+      uses: actions/upload-artifact@v4
+      with:
+        name: analysis_results
+        path: analysis_results
