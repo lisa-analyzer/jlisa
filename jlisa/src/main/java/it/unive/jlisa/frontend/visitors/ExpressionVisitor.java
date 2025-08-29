@@ -431,7 +431,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				new Subtraction(cfg, location, first, second));
 			break;
 		case ">>":
-			buildExpression(operands, jdtOperands, (first, second, location) ->
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
 				new JavaShiftRight(cfg, location, first, second));
 			break;
 		case "<<":
