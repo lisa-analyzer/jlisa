@@ -44,7 +44,7 @@ jobs:
         path: svh
         token: ${{ secrets.READ_REPO_ACCESS_TOKEN }}
 
-    - name: Download and add jLiSA distribution into svh folder
+    - name: Download jLiSA distribution into svh folder
       uses: actions/download-artifact@v4
       with:
         name: jlisa-distribution
