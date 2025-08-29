@@ -3,14 +3,12 @@ package it.unive.jlisa.helpers;
 import java.util.ArrayList;
 
 import it.unive.jlisa.analysis.ConstantPropagation;
+import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
-import it.unive.lisa.analysis.string.StringConstantPropagation;
 import it.unive.lisa.analysis.types.InferredTypes;
-import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.FullStackToken;
 
@@ -47,7 +45,7 @@ public class TestHelpers {
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 		
 		// for interprocedural analysis
-		conf.callGraph = new RTACallGraph();
+		conf.callGraph = new JavaRTACallGraph();
 		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		return conf;
 	}
@@ -75,7 +73,7 @@ public class TestHelpers {
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 		
 		// for interprocedural analysis
-		conf.callGraph = new RTACallGraph();
+		conf.callGraph = new JavaRTACallGraph();
 		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		return conf;
 	}
