@@ -40,7 +40,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: lisa-analyzer/sv-comp
-        ref: main
+        ref: 105-github-actions-for-statistics
         path: svh
         token: ${{ secrets.READ_REPO_ACCESS_TOKEN }}
 
