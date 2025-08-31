@@ -115,7 +115,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node, true), left, right);
+		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node.getArray(), true), left, right);
 		return false;
 	}
 

@@ -20,4 +20,10 @@ public class SVCompTest  extends JLiSAAnalysisExecutor {
         CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "addition-verifier", "Main.java", "Verifier.java");
         perform(conf);
     }
+
+    @Test
+    public void testArrayIndexOutOfBoundException1() throws IOException {
+        CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "ArrayIndexOutOfBoundsException", "Main.java", "Verifier.java");
+        perform(conf);
+    }
 }
