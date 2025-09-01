@@ -1,18 +1,18 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_B.B(B__this)_1707430528.json", "void_Main.main(String[]_args).json" ],
+  "files" : [ "report.json", "void_B.B(B__this)_1707430528.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "3",
     "duration" : "3ms",
-    "end" : "2025-08-22T14:01:07.328+02:00",
+    "end" : "2025-08-27T17:48:32.595+02:00",
     "expressions" : "4",
     "files" : "2",
     "globals" : "3",
-    "members" : "66",
+    "members" : "67",
     "programs" : "1",
-    "start" : "2025-08-22T14:01:07.325+02:00",
+    "start" : "2025-08-27T17:48:32.592+02:00",
     "statements" : "6",
-    "units" : "38",
+    "units" : "58",
     "version" : "0.1",
     "warnings" : "0"
   },

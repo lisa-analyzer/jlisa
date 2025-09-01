@@ -9,6 +9,7 @@ public class ParsingException extends Exception {
         UNSUPPORTED_STATEMENT,
         MISSING_EXPECTED_EXPRESSION,
         VARIABLE_ALREADY_DECLARED
+        MALFORMED_SOURCE
     }
     private String message;
     private String name;
