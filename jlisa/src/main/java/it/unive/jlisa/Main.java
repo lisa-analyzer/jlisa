@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.value.ValueDomain;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,7 +25,6 @@ import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.interprocedural.callgraph.RTACallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.program.Program;
 import org.apache.logging.log4j.Logger;
@@ -221,7 +221,7 @@ public class Main {
         conf.jsonOutput = true;
         conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
         conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
-        conf.callGraph = new RTACallGraph();
+        conf.callGraph = new JavaRTACallGraph();
         conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
         conf.optimize = false;
         switch (checkerName) {
