@@ -349,7 +349,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		SyntheticCodeLocationManager syntheticLocationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 		NoOp noInit = new NoOp(cfg, syntheticLocationManager.nextLocation());
 		Statement entry;
-		if(hasInitalizers) {
+		if (hasInitalizers) {
 			block.mergeWith(initializers.getBody());
 			entry = initializers.getBegin();
 		} else {

@@ -809,7 +809,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
-			SourceCodeLocation loc = getSourceCodeLocation(fragment);
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, varType);
@@ -819,7 +818,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
-			expression = new JavaAssignment(cfg, getSourceCodeLocationManager(fragment.getName()).getCurrentLocation(), ref, initializer);
+			expression = new JavaAssignment(cfg, getSourceCodeLocationManager(fragment.getName(), true).getCurrentLocation(), ref, initializer);
 		}
 		return false;
 	}
