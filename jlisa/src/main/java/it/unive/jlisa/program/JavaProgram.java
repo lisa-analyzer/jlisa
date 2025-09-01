@@ -4,7 +4,6 @@ import it.unive.jlisa.program.java.constructs.object.ObjectConstructor;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Program;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.language.LanguageFeatures;
 import it.unive.lisa.type.TypeSystem;
 
@@ -20,10 +19,10 @@ public class JavaProgram extends Program {
      */
     public JavaProgram(LanguageFeatures features, TypeSystem types) {
         super(features, types);
-        SourceCodeLocation unknownLocation = new SourceCodeLocation("java-runtime", 0, 0);
-        rootClassUnit = new ClassUnit(unknownLocation, this, "Object", false);
+        SourceCodeLocationManager locationManager = new SourceCodeLocationManager("$java-runtime/Object");
+        rootClassUnit = new ClassUnit(locationManager.getRoot(), this, "Object", false);
         JavaClassType.lookup("Object", rootClassUnit);
-        rootClassUnit.addInstanceCodeMember(new ObjectConstructor(unknownLocation, rootClassUnit));
+        rootClassUnit.addInstanceCodeMember(new ObjectConstructor(locationManager.nextRow(), rootClassUnit));
         this.addUnit(rootClassUnit);
     }
 }
