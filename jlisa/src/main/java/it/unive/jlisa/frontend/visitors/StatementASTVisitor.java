@@ -877,8 +877,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			if (getFirst() == null) {
 				first = assignment;
 			} else {
-				// FIXME: first? not last?
-				adj.addEdge(new SequentialEdge(first, assignment));
+				adj.addEdge(new SequentialEdge(last, assignment));
 			}
 			
 			last = assignment;
