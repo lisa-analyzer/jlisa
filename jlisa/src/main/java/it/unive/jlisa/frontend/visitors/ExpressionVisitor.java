@@ -114,7 +114,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node.getArray(), true), left, right);
+		expression = new JavaArrayAccess(cfg, getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(), left, right);
 		return false;
 	}
 
@@ -188,7 +188,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
         switch (operator.toString()) {
 		case "=":
-			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left, right);
+			expression = new JavaAssignment(cfg, locationManager.nextColumn(), left, right);
 			break;
 		case "+=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
@@ -374,12 +374,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(FieldAccess node) {
-		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+		ExpressionVisitor visitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
-		if (expr != null) {
-			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node, true).nextColumn(), expr, node.getName().getIdentifier());
-		}
+		expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr, node.getName().getIdentifier());
 		return false;
 	}
 
@@ -563,7 +561,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 		// TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
 		// TODO: instead of Call.CallType.UNKNOWN, we can provide better information of the call type
-		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.UNKNOWN, null, node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
@@ -596,7 +594,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 							ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 							lastName.accept(visitor);
 							Expression expr = visitor.getExpression();
-							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node, true).nextColumn(), expr, node.getName().getIdentifier());
+							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr, node.getName().getIdentifier());
 							return false;
 						}
 		}
@@ -821,7 +819,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
-			expression = new JavaAssignment(cfg, getSourceCodeLocationManager(fragment.getName(), true).getCurrentLocation(), ref, initializer);
+			expression = new JavaAssignment(cfg, getSourceCodeLocationManager(fragment.getName()).getCurrentLocation(), ref, initializer);
 		}
 		return false;
 	}

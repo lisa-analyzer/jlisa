@@ -23,14 +23,6 @@ public abstract class JavaASTVisitor extends ASTVisitor {
         return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
     }
 
-    public SourceCodeLocation getSourceCodeLocation(ASTNode node, boolean nextRow) {
-        int startPos = node.getStartPosition();
-        if (nextRow) {
-            return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos) + node.getLength()).getCurrentLocation();
-        }
-        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
-    }
-
     public SourceCodeLocationManager getSourceCodeLocationManager(ASTNode node) {
         int startPos = node.getStartPosition();
         return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos));
