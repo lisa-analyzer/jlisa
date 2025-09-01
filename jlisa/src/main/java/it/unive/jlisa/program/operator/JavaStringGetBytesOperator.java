@@ -30,6 +30,7 @@ public class JavaStringGetBytesOperator implements StringOperator, UnaryOperator
 		
 	@Override
 	public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
+		//TODO: understand how to correctly type arrays
 		return Collections.singleton(types.getType("JavaArrayType"));
 	}
 }
