@@ -1,5 +1,17 @@
 package it.unive.jlisa.frontend.visitors;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
+
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
@@ -12,7 +24,6 @@ import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.util.frontend.JavaCFGTweaker;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -26,12 +37,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import org.eclipse.jdt.core.dom.*;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 public class MethodASTVisitor extends JavaASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -114,8 +119,6 @@ public class MethodASTVisitor extends JavaASTVisitor {
 					it.unive.lisa.type.Type enumType = getProgram().getTypes().getType(unit.getName());
 
 					for (Global target : unit.getGlobals()) {
-						int line = ((SourceCodeLocation) target.getLocation()).getLine();
-						int col = ((SourceCodeLocation) target.getLocation()).getCol();
 						JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, target);
 						JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
 						JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
