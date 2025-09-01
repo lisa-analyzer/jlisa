@@ -347,7 +347,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 							getSourceCodeLocation(node)));
 		}
 
-		expression = new JavaConditionalExpression(cfg, getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
+		expression = new JavaConditionalExpression(cfg, getSourceCodeLocationManager(node.getExpression(), true).getCurrentLocation(), conditionExpr, thenExpr, elseExpr);
 
 		return false;
 	}
