@@ -184,7 +184,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-        SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node, true);
+        SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
 
         switch (operator.toString()) {
 		case "=":
