@@ -734,9 +734,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
 		ClassUnit superClass = (ClassUnit) this.cfg.getUnit();
-		
-		//TODO: remove true and stop the cycle when reached Object
-		while (true) {
+		boolean resolved = false;
+
+		do {
 			Set<it.unive.lisa.program.CompilationUnit> superClasses = superClass
 					.getImmediateAncestors().stream()
 					.filter(u -> u instanceof ClassUnit)
@@ -750,9 +750,18 @@ public class ExpressionVisitor extends JavaASTVisitor {
 						);
 
 			superClass = (ClassUnit) superClasses.stream().findFirst().get();
-			if (!superClass.getInstanceCodeMembersByName(node.getName().toString(), false).isEmpty())
+			if (!superClass.getInstanceCodeMembersByName(node.getName().toString(), false).isEmpty()) {
+				resolved = true;
 				break;
-		}
+			}
+		} while (!superClass.getName().equals("Object"));
+
+		if (!resolved)
+			parserContext.addException(
+					new ParsingException("super-class", ParsingException.Type.UNSUPPORTED_STATEMENT,
+							"Cannot resolved super method invocation",
+							getSourceCodeLocation(node))
+					);
 
 		JavaClassType superType = JavaClassType.lookup(superClass.getName(), null);
 
