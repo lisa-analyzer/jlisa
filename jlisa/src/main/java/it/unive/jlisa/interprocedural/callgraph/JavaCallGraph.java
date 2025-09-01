@@ -46,11 +46,12 @@ public abstract class JavaCallGraph extends BaseCallGraph {
                 if (seen.add(cu)) {
                     // we inspect only the ones of the current unit
                     int prevTargetsSize = targets.size();
+                    int prevNativesSize = natives.size();
                     for (CodeMember cm : cu.getInstanceCodeMembers(false)) {
                         checkMember(call, types, targets, natives, aliasing, cm, true);
                         // if checkMember adds some targets, we stop traversing superunits: 
                         // we have found our targets
-                        if (targets.size() > prevTargetsSize) {
+                        if (targets.size() > prevTargetsSize || natives.size() > prevNativesSize) {
                             found = true;
                             break;
                         }
