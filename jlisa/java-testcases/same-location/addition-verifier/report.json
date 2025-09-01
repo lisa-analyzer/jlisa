@@ -1,17 +1,17 @@
 {
   "warnings" : [ ],
-  "files" : [ "int_Verifier.nondetInt()_1707451670.json", "report.json", "void_Main.main(String[]_args).json" ],
+  "files" : [ "int_Verifier.nondetInt()_1707453251.json", "int_Verifier.nondetInt()_1707453282.json", "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
-    "cfgs" : "13",
-    "duration" : "399ms",
-    "end" : "2025-08-31T00:10:26.857-04:00",
-    "expressions" : "53",
-    "files" : "2",
+    "cfgs" : "14",
+    "duration" : "112ms",
+    "end" : "2025-09-01T19:17:35.509+02:00",
+    "expressions" : "80",
+    "files" : "3",
     "globals" : "3",
-    "members" : "77",
+    "members" : "78",
     "programs" : "1",
-    "start" : "2025-08-31T00:10:26.458-04:00",
-    "statements" : "28",
+    "start" : "2025-09-01T19:17:35.397+02:00",
+    "statements" : "33",
     "units" : "58",
     "version" : "0.1",
     "warnings" : "0"
@@ -33,6 +33,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/sv-comp/ArrayIndexOutOfBoundsException"
+    "workdir" : "java-outputs/same-location/addition-verifier"
   }
 }

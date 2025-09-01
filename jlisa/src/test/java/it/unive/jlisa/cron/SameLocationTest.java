@@ -7,23 +7,23 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-public class SVCompTest  extends JLiSAAnalysisExecutor {
+public class SameLocationTest  extends JLiSAAnalysisExecutor {
 
     @Test
     public void testDataStructures3() throws IOException {
-        CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "data-structures-3", "DataStructures3.java");
+        CronConfiguration conf = TestHelpers.constantPropagation("same-location", "data-structures-3", "DataStructures3.java");
         perform(conf);
     }
 
     @Test
     public void testAdditionVerifier() throws IOException {
-        CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "addition-verifier", "Main.java", "Verifier.java");
+        CronConfiguration conf = TestHelpers.constantPropagation("same-location", "addition-verifier", "Main.java", "Verifier.java");
         perform(conf);
     }
 
     @Test
     public void testArrayIndexOutOfBoundException1() throws IOException {
-        CronConfiguration conf = TestHelpers.constantPropagation("sv-comp", "ArrayIndexOutOfBoundsException", "Main.java", "Verifier.java");
+        CronConfiguration conf = TestHelpers.constantPropagation("same-location", "ArrayIndexOutOfBoundsException", "Main.java", "Verifier.java");
         perform(conf);
     }
 }

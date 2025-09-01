@@ -65,7 +65,6 @@ import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.SourceCodeLocationManager;
-import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -185,7 +184,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-        SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
+        SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node, true);
 
         switch (operator.toString()) {
 		case "=":
@@ -215,24 +214,24 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					new JavaBitwiseAnd(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "|=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseOr(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaBitwiseOr(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "^=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaBitwiseExclusiveOr(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "<<=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaShiftLeft(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaShiftLeft(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case ">>=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaShiftRight(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaShiftRight(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case ">>>=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaUnsignedShiftRight(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaUnsignedShiftRight(cfg, locationManager.nextColumn(), left, right));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
@@ -348,7 +347,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 							getSourceCodeLocation(node)));
 		}
 
-		expression = new JavaConditionalExpression(cfg,getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
+		expression = new JavaConditionalExpression(cfg, getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
 
 		return false;
 	}
@@ -408,7 +407,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				jdtOperands.add((ASTNode) n);
 			}
 		}
-		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftOperand(), true);
+		
 		switch (operator.toString()) {
 		case "*":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
@@ -443,16 +442,20 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			new JavaUnsignedShiftRight(cfg, location, first, second));
 			break;
 		case "<":
-			expression = new LessThan(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new LessThan(cfg, location, first, second));
 			break;
 		case ">":
-			expression = new GreaterThan(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new GreaterThan(cfg, location, first, second));
 			break;
 		case "<=":
-			expression = new LessOrEqual(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new LessOrEqual(cfg, location, first, second));
 			break;
 		case ">=":
-			expression = new GreaterThan(cfg, locationManager.getCurrentLocation(), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new GreaterOrEqual(cfg, location, first, second));
 			break;
 		case "==":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
@@ -468,11 +471,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "^":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-			new JavaBitwiseExclusiveOr(cfg, location, first, second));
+				new JavaBitwiseExclusiveOr(cfg, location, first, second));
 			break;
 		case "|":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-			new JavaBitwiseOr(cfg, location, first, second));
+				new JavaBitwiseOr(cfg, location, first, second));
 			break;
 		case "&&":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->

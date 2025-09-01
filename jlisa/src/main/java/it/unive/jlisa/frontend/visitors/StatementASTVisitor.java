@@ -289,11 +289,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		node.getExpression().accept(collectionVisitor);
 		Expression collection = collectionVisitor.getExpression();
 
-		SourceCodeLocationManager locationManager =  getSourceCodeLocationManager(node.getParameter());
+		SourceCodeLocationManager locationManager =  getSourceCodeLocationManager(node);
 		Expression condition = new Equal(cfg, locationManager.nextColumn(), new TrueLiteral(cfg, locationManager.nextColumn()), new HasNextForEach(cfg,locationManager.nextColumn(),collection));
 		block.addNode(condition);
 
-		JavaAssignment assignment = new JavaAssignment(cfg, locationManager.nextColumn(), item, new GetNextForEach(cfg,locationManager.nextColumn(),collection));
+		JavaAssignment assignment = new JavaAssignment(cfg, locationManager.nextColumn(), item, new GetNextForEach(cfg, locationManager.nextColumn(),collection));
 		block.addNode(assignment);
 		block.addEdge(new TrueEdge(condition, assignment));
 
