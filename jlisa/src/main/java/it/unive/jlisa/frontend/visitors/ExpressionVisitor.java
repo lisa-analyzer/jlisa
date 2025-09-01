@@ -66,16 +66,12 @@ import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
+import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
-import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.*;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
@@ -87,25 +83,21 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.program.cfg.statement.comparison.Equal;
-import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
-import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
-import it.unive.lisa.program.cfg.statement.comparison.LessThan;
-import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
+import it.unive.lisa.program.cfg.statement.comparison.*;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
-import it.unive.lisa.program.cfg.statement.numeric.Addition;
-import it.unive.lisa.program.cfg.statement.numeric.Division;
-import it.unive.lisa.program.cfg.statement.numeric.Modulo;
-import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
-import it.unive.lisa.program.cfg.statement.numeric.Negation;
-import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
+import it.unive.lisa.program.cfg.statement.numeric.*;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import org.apache.commons.lang3.function.TriFunction;
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -125,8 +117,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-
-		expression = new JavaArrayAccess(cfg, getSourceCodeLocation(node), left, right);
+		expression = new JavaArrayAccess(cfg, getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(), left, right);
 		return false;
 	}
 
@@ -137,18 +128,19 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Type contentType = Untyped.INSTANCE;
 		for (Object args : node.expressions()) {
 			ASTNode e  = (ASTNode) args;
-			ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-			e.accept(argumentsVisitor);
-			Expression expr = argumentsVisitor.getExpression();
-			parameters.add(expr);
-			contentType = expr.getStaticType();
-		}
+            ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+            e.accept(argumentsVisitor);
+            Expression expr = argumentsVisitor.getExpression();
+            parameters.add(expr);
+            contentType = expr.getStaticType();
+        }
 
 		expression = new JavaNewArrayWithInitializer(cfg, 
 				getSourceCodeLocation(node), 
 				parameters.toArray(new Expression[0]), 
 				new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
 		return false;	
+
 
 	}
 
@@ -176,9 +168,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				parameters.add(expr);
-			}
-
+				if (expr != null) {
+					// This parsing error should be logged in ExpressionVisitor.
+					parameters.add(expr);
+				}
+            }
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
 		}
 
@@ -194,53 +188,54 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
+        SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
 
-		switch (operator.toString()) {
+        switch (operator.toString()) {
 		case "=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left, right);
+			expression = new JavaAssignment(cfg, locationManager.nextColumn(), left, right);
 			break;
 		case "+=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Addition(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Addition(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "-=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Subtraction(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Subtraction(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "*=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Multiplication(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Multiplication(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "/=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Division(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Division(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "%=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new Modulo(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new Modulo(cfg, locationManager.nextColumn(), left, right));
 		case "&=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaBitwiseAnd(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "|=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseOr(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaBitwiseOr(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "^=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaBitwiseExclusiveOr(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "<<=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaShiftLeft(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaShiftLeft(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case ">>=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaShiftRight(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaShiftRight(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case ">>>=":
-			expression = new JavaAssignment(cfg, getSourceCodeLocation(node), left,
-					new JavaUnsignedShiftRight(cfg, getSourceCodeLocation(node), left, right));
+			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
+					new JavaUnsignedShiftRight(cfg, locationManager.nextColumn(), left, right));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
@@ -356,7 +351,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 							getSourceCodeLocation(node)));
 		}
 
-		expression = new JavaConditionalExpression(cfg,getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
+		expression = new JavaConditionalExpression(cfg, getSourceCodeLocationManager(node.getExpression(), true).getCurrentLocation(), conditionExpr, thenExpr, elseExpr);
 
 		return false;
 	}
@@ -383,12 +378,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(FieldAccess node) {
-		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
+		ExpressionVisitor visitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
-		if (expr != null) {
-			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
-		}
+		expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr, node.getName().getIdentifier());
 		return false;
 	}
 
@@ -403,87 +396,96 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Expression right = rightVisitor.getExpression();
 
 		List<Expression> operands = new ArrayList<>();
+		List<ASTNode> jdtOperands = new ArrayList<>();
 		operands.add(left);
+		jdtOperands.add(node.getLeftOperand());
 		operands.add(right);
+		jdtOperands.add(node.getRightOperand());
 		for (Object n : node.extendedOperands()) {
 			ExpressionVisitor extendedOperandVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 			((ASTNode) n).accept(extendedOperandVisitor);
 			if (extendedOperandVisitor.getExpression() != null) {
 				operands.add(extendedOperandVisitor.getExpression());
+				jdtOperands.add((ASTNode) n);
 			}
 		}
+		
 		switch (operator.toString()) {
 		case "*":
-			expression = buildExpression(operands, (first, second) ->
-			new Multiplication(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Multiplication(cfg, location, first, second));
 			break;
 		case "/":
-			expression = buildExpression(operands, (first, second) ->
-			new Division(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Division(cfg, location, first, second));
 			break;
 		case "%":
-			expression = buildExpression(operands, (first, second) ->
-			new Modulo(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Modulo(cfg, location, first, second));
 			break;
 		case "+":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaAddition(cfg, getOperatorLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaAddition(cfg, location, first, second));
 			break;
 		case "-":
-			expression = buildExpression(operands, (first, second) ->
-			new Subtraction(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Subtraction(cfg, location, first, second));
 			break;
 		case ">>":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaShiftRight(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaShiftRight(cfg, location, first, second));
 			break;
 		case "<<":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaShiftLeft(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new JavaShiftLeft(cfg, location, first, second));
 			break;
 		case ">>>":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaUnsignedShiftRight(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new JavaUnsignedShiftRight(cfg, location, first, second));
 			break;
 		case "<":
-			expression = new LessThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new LessThan(cfg, location, first, second));
 			break;
 		case ">":
-			expression = new GreaterThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new GreaterThan(cfg, location, first, second));
 			break;
 		case "<=":
-			expression = new LessOrEqual(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new LessOrEqual(cfg, location, first, second));
 			break;
 		case ">=":
-			expression = new GreaterThan(cfg, getSourceCodeLocation(node), leftVisitor.getExpression(), rightVisitor.getExpression());
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+			new GreaterOrEqual(cfg, location, first, second));
 			break;
 		case "==":
-			expression = buildExpression(operands, (first, second) ->
-			new Equal(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Equal(cfg, location, first, second));
 			break;
 		case "!=":
-			expression = buildExpression(operands, (first, second) ->
-			new NotEqual(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new NotEqual(cfg, location, first, second));
 			break;
 		case "&":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseAnd(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaBitwiseAnd(cfg, location, first, second));
 			break;
 		case "^":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseExclusiveOr(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaBitwiseExclusiveOr(cfg, location, first, second));
 			break;
 		case "|":
-			expression = buildExpression(operands, (first, second) ->
-			new JavaBitwiseOr(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new JavaBitwiseOr(cfg, location, first, second));
 			break;
 		case "&&":
-			expression = buildExpression(operands, (first, second) ->
-			new And(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new And(cfg, location, first, second));
 			break;
 		case "||":
-			expression = buildExpression(operands, (first, second) ->
-			new Or(cfg, getSourceCodeLocation(node), first, second));
+			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
+				new Or(cfg, location, first, second));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
@@ -493,14 +495,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	private Expression buildExpression(
 			List<Expression> operands,
-			BiFunction<Expression, Expression, Expression> opBuilder) {
+			List<ASTNode> jdtOperands,
+			TriFunction<Expression, Expression, SourceCodeLocation, Expression> opBuilder) {
 
 		if (operands.isEmpty())
 			throw new IllegalArgumentException("No operands for expression");
 
 		Expression result = operands.getFirst();
 		for (int i = 1; i < operands.size(); i++) {
-			result = opBuilder.apply(result, operands.get(i));
+			result = opBuilder.apply(result, operands.get(i), getSourceCodeLocationManager(jdtOperands.get(i - 1), true).getCurrentLocation());
 		}
 		return result;
 	}
@@ -514,7 +517,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Expression left = leftVisitor.getExpression();
 		Type right = rightVisitor.getType();
 
-		expression = new InstanceOf(cfg, getSourceCodeLocation(node), left, right);
+		expression = new InstanceOf(cfg, getSourceCodeLocationManager(node, true).nextColumn(), left, right);
 
 		return false;
 	}
@@ -562,7 +565,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 		// TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
 		// TODO: instead of Call.CallType.UNKNOWN, we can provide better information of the call type
-		expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.UNKNOWN, null,node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.UNKNOWN, null, node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
@@ -582,7 +585,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			unitName = lastName.toString();
 		}
 
-		Unit unit = getProgram().getUnit(unitName);        
+		Unit unit = getProgram().getUnit(unitName);
 		if (unit == null) {
 			// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
 			if (Character.isUpperCase(unitName.charAt(0)))
@@ -595,14 +598,14 @@ public class ExpressionVisitor extends JavaASTVisitor {
 							ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 							lastName.accept(visitor);
 							Expression expr = visitor.getExpression();
-							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocation(node), expr, node.getName().getIdentifier());
+							expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr, node.getName().getIdentifier());
 							return false;
 						}
 		}
 
 
 		Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), unit, g);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),unit, g);
 		return false;
 	}
 
@@ -674,10 +677,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			return false;
 		}
 		if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
-			expression = new PostfixAddition(cfg, getSourceCodeLocation(node), expr);
+			expression = new PostfixAddition(cfg, getSourceCodeLocationManager(node.getOperand(), true).nextColumn(), expr);
 		}
 		if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
-			expression = new PostfixSubtraction(cfg, getSourceCodeLocation(node), expr);
+			expression = new PostfixSubtraction(cfg, getSourceCodeLocationManager(node.getOperand(), true).nextColumn(), expr);
 		}
 		return false;
 	}
@@ -777,7 +780,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			parameters.add(expr);
 		}
 
-		expression = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
@@ -850,7 +853,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
-			SourceCodeLocation loc = getSourceCodeLocation(fragment);
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, varType);
@@ -860,7 +862,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
-			expression = new JavaAssignment(cfg, loc, ref, initializer);
+			expression = new JavaAssignment(cfg, getSourceCodeLocationManager(fragment.getName(), true).getCurrentLocation(), ref, initializer);
 		}
 		return false;
 	}

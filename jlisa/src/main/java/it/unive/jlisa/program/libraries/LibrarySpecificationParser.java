@@ -1,43 +1,24 @@
 package it.unive.jlisa.program.libraries;
 
 
-import java.util.Collection;
-import java.util.LinkedList;
-
+import it.unive.jlisa.antlr.LibraryDefinitionParser.*;
+import it.unive.jlisa.antlr.LibraryDefinitionParserBaseVisitor;
+import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.libraries.loader.*;
+import it.unive.jlisa.program.libraries.loader.Runtime;
 import org.apache.commons.lang3.tuple.Pair;
 
-import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.FileContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.LibraryContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.LibtypeContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.LisatypeContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.MethodContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.ParamContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.TypeContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParserBaseVisitor;
-import it.unive.jlisa.program.libraries.loader.BooleanValue;
-import it.unive.jlisa.program.libraries.loader.ClassDef;
-import it.unive.jlisa.program.libraries.loader.Field;
-import it.unive.jlisa.program.libraries.loader.LiSAType;
-import it.unive.jlisa.program.libraries.loader.LibType;
-import it.unive.jlisa.program.libraries.loader.Library;
-import it.unive.jlisa.program.libraries.loader.Method;
-import it.unive.jlisa.program.libraries.loader.NoneValue;
-import it.unive.jlisa.program.libraries.loader.NumberValue;
-import it.unive.jlisa.program.libraries.loader.Parameter;
-import it.unive.jlisa.program.libraries.loader.Runtime;
-import it.unive.jlisa.program.libraries.loader.StringValue;
-import it.unive.jlisa.program.libraries.loader.Type;
-import it.unive.jlisa.program.libraries.loader.Value;
+import java.util.Collection;
+import java.util.LinkedList;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 
 	private final String file;
-
+	private final SourceCodeLocationManager locationManager;
 	public LibrarySpecificationParser(
 			String file) {
 		this.file = file;
+		this.locationManager = new SourceCodeLocationManager("$java_runtime" + file.substring(0, file.lastIndexOf('.')));
 	}
 
 	@Override
@@ -127,7 +108,7 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	@Override
 	public Library visitLibrary(
 			LibraryContext ctx) {
-		Library lib = new Library(ctx.name.getText(), ctx.loc.getText());
+		Library lib = new Library(ctx.name.getText(), locationManager);
 		for (MethodContext mtd : ctx.method())
 			lib.getMethods().add(visitMethod(mtd));
 
@@ -143,7 +124,7 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	@Override
 	public Pair<Runtime, Collection<Library>> visitFile(
 			FileContext ctx) {
-		Runtime runtime = new Runtime();
+		Runtime runtime = new Runtime(locationManager);
 		Collection<Library> libraries = new LinkedList<>();
 
 		for (ClassDefContext cls : ctx.classDef())

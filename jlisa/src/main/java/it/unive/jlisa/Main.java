@@ -127,7 +127,7 @@ public class Main {
                 LogManager.setLogLevel(level);
             }
             
-            checkerName = cmd.getOptionValue("c");
+            checkerName = cmd.getOptionValue("c", "Assert");
             numericalDomain = cmd.getOptionValue("n");
 
             sources = cmd.getOptionValues("s");
