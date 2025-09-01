@@ -758,7 +758,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 		// craft the call to superclass
 		List<Expression> parameters = new ArrayList<>();
-		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "super", new ReferenceType(superType)));
+		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new ReferenceType(superType)));
 
 		for (Object args : node.arguments()) {
 			ASTNode e  = (ASTNode) args;
