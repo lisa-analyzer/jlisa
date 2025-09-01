@@ -42,6 +42,7 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.cfg.controlflow.loops.DoWhileLoop;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForEachLoop;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
 import it.unive.jlisa.program.cfg.controlflow.loops.WhileLoop;
 import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
@@ -55,6 +56,7 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
+import it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -79,7 +81,9 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
+import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
+import it.unive.lisa.program.cfg.statement.literal.StringLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
@@ -863,11 +867,61 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(SynchronizedStatement node) {
-		parserContext.addException(
-				new ParsingException("synchronized-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Synchronized statements are not supported.",
-						getSourceCodeLocation(node))
-				);
+		
+		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
+
+		ExpressionVisitor synchTargetVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+		node.getExpression().accept(synchTargetVisitor);
+		Expression syncTarget = synchTargetVisitor.getExpression();
+		
+		if (syncTarget == null) {
+			// Parsing error. Skipping...
+			return false;
+		}
+		
+		Statement syntheticCondition = new NotEqual(cfg, syncTarget.getLocation(), syncTarget, new NullLiteral(cfg, syncTarget.getLocation())); // FIXME: add correct code location after the merge of branch with the fix of code locations 
+
+		adj.addNode(syntheticCondition);
+
+		StatementASTVisitor bodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		node.getBody().accept(bodyVisitor);
+
+		if(node.getBody() == null)
+			return false; // parsing error
+		
+		ParsedBlock synchronizedBody = bodyVisitor.getBlock();
+		
+		adj.mergeWith(synchronizedBody.getBody());
+		
+		adj.addEdge(new TrueEdge(syntheticCondition, synchronizedBody.getBegin()));
+
+		Statement noop = new NoOp(cfg, syntheticCondition.getLocation()); // FIXME: add correct code location after the merge of branch with the fix of code locations
+
+		if(synchronizedBody.canBeContinued()) {
+			adj.addNode(noop);
+			adj.addEdge(new SequentialEdge(synchronizedBody.getEnd(), noop));
+		}
+		
+		Statement nullPointerTrigger = new Throw(cfg, getSourceCodeLocation(node), // FIXME: add correct code location after the merge of branch with the fix of code locations
+					new NullPointerExceptionConstructor(cfg, getSourceCodeLocation(node), // FIXME: add correct code location after the merge of branch with the fix of code locations
+							new StringLiteral(cfg, getSourceCodeLocation(node), "Cannot enter synchronized block because "+syncTarget+" is null"))); // FIXME: add correct code location after the merge of branch with the fix of code locations
+		adj.addNode(nullPointerTrigger);
+		adj.addEdge(new FalseEdge(syntheticCondition, nullPointerTrigger));
+		
+		
+		Statement follower = null;
+		Statement lastBlockStatement = null;
+		
+		if(synchronizedBody == null || (synchronizedBody != null && synchronizedBody.canBeContinued())) {
+			adj.addNode(noop);
+			follower = noop;
+			lastBlockStatement = noop;
+		}
+		
+		this.cfg.getDescriptor().addControlFlowStructure(new SynchronizedBlock(adj,syncTarget,syntheticCondition, synchronizedBody.getBody().getNodes(), follower));
+		this.block = new ParsedBlock(syntheticCondition, adj, lastBlockStatement);
+		
+		
 		return false;
 	}
 
