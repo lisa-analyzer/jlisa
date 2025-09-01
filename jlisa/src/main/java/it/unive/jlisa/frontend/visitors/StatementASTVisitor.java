@@ -87,6 +87,7 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
+import it.unive.lisa.util.frontend.LocalVariableTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class StatementASTVisitor extends JavaASTVisitor {
@@ -99,6 +100,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	private ParsedBlock block;
 
 	private final ControlFlowTracker control;
+	
+	private LocalVariableTracker tracker;
 
 	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control, LocalVariableTracker tracker) {
 		super(parserContext, source, compilationUnit);

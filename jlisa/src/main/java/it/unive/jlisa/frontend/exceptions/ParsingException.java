@@ -8,7 +8,7 @@ public class ParsingException extends Exception {
     public enum Type {
         UNSUPPORTED_STATEMENT,
         MISSING_EXPECTED_EXPRESSION,
-        VARIABLE_ALREADY_DECLARED
+        VARIABLE_ALREADY_DECLARED,
         MALFORMED_SOURCE
     }
     private String message;

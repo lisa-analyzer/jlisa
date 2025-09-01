@@ -113,6 +113,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
             }
             
         }
+        
+        boolean added = false;
+        
         if (!Modifier.isStatic(modifiers)) {
             added = lisacompilationUnit.addInstanceCodeMember(cfg);
         } else {
