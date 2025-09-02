@@ -149,8 +149,7 @@ public class JavaAccessGlobal extends Expression {
 		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
 			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
 		
-		
-		// we need to check whether to call the clinit of the container unit or the one of its superclass
+		// we need to check whether to call the clinit of the container unit or  to call the one of its superclass
 		Unit classInit = container;
 		if (((ClassUnit) container).getGlobal(target.getName()) == null) {
 			Set<it.unive.lisa.program.CompilationUnit> superClasses = ((ClassUnit) container)
@@ -162,7 +161,7 @@ public class JavaAccessGlobal extends Expression {
 			classInit = (ClassUnit) superClasses.stream().findFirst().get();
 		}
 
-		// if needed, calling the class initializer (if the class has one)
+		// if needed, calling the class initializer
 		if (!JavaClassType.lookup(classInit.toString(), null).getUnit().getCodeMembersByName(classInit.toString() + "_clinit").isEmpty())
 			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(classInit.toString())) {
 				UnresolvedCall clinit = new UnresolvedCall(
@@ -183,7 +182,7 @@ public class JavaAccessGlobal extends Expression {
 		// unit globals are unique, we can directly access those
 		return analysis.smallStepSemantics(
 				state,
-				new GlobalVariable(target.getStaticType(), toString(), target.getAnnotations(), getLocation()),
+				new GlobalVariable(target.getStaticType(), classInit.getName() + "::" + target.getName(), target.getAnnotations(), getLocation()),
 				this);
 	}
 }
