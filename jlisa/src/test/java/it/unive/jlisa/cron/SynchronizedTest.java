@@ -11,7 +11,7 @@ import it.unive.jlisa.helpers.TestHelpers;
 public class SynchronizedTest extends JLiSAAnalysisExecutor {
 
 	@Test
-	public void testNestedInnerClass1()  throws IOException {
+	public void testSynchronizedStatement1()  throws IOException {
 		CronConfiguration conf = TestHelpers.constantPropagation("synchronized", "synchronized-stmt-1", "Main.java");
 		perform(conf);
 	}
