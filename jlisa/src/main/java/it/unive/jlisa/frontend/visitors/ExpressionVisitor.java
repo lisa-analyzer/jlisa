@@ -80,6 +80,7 @@ import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -547,11 +548,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(MethodInvocation node) {
 		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		List<Expression> parameters = new ArrayList<>();
-		boolean isInstance = JavaClassType.lookup(node.getExpression().toString(), null) == null;
+		Satisfiability isInstance = node.getExpression() == null ? 
+				Satisfiability.UNKNOWN: 
+				JavaClassType.hasType(node.getExpression().toString()) ? 
+							Satisfiability.NOT_SATISFIED : 
+							Satisfiability.SATISFIED;
 
 		if (node.getExpression() != null) {
 			node.getExpression().accept(receiver);
-			if (isInstance) {
+			if (isInstance != Satisfiability.NOT_SATISFIED) {
 				parameters.add(receiver.getExpression());
 			}
 		}
@@ -572,11 +577,13 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			}
 		}
 
-		if (isInstance)
+		if (isInstance == Satisfiability.SATISFIED)
 			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
-		else
+		else if (isInstance == Satisfiability.NOT_SATISFIED)
 			expression = new UnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
-
+		else 
+			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.UNKNOWN, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+		
 		return false;
 	}
 
