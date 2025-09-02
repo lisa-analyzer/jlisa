@@ -605,7 +605,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 
 		Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),unit, g);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), unit, g);
 		return false;
 	}
 

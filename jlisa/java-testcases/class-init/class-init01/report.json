@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.main(String_[]_args).json", "void_MyClass.MyClass(MyClass__this)_1707432450.json", "void_MyClass.MyClass_clinit()_1707432450.json" ],
+  "info" : {
+    "cfgs" : "4",
+    "duration" : "98ms",
+    "end" : "2025-09-02T14:40:43.538+02:00",
+    "expressions" : "17",
+    "files" : "3",
+    "globals" : "5",
+    "members" : "70",
+    "programs" : "1",
+    "start" : "2025-09-02T14:40:43.440+02:00",
+    "statements" : "13",
+    "units" : "58",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/class-init/class-init01"
+  }
+}

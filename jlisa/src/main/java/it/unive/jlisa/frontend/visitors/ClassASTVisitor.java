@@ -1,15 +1,37 @@
 package it.unive.jlisa.frontend.visitors;
 
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.lisa.program.*;
+import it.unive.lisa.program.AbstractClassUnit;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.ProgramValidationException;
+import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
@@ -24,11 +46,6 @@ import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
-import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
 
@@ -152,12 +169,15 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			if (decl instanceof EnumDeclaration)
 				visit((EnumDeclaration) decl);
 		}
-
+		
+		// all fields (static and non-static) are visited
 		for (FieldDeclaration fd : node.getFields()) {
 			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit);
 			fd.accept(visitor);
 		}
-
+		
+		createClassInitializer(cUnit, node);
+		
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
 			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit);
@@ -174,6 +194,73 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 		return false;
 	}
+	
+	private void createClassInitializer(ClassUnit unit, TypeDeclaration node) {
+		
+		// we add a class initializer only if the class has
+		// static fields
+		Set<FieldDeclaration> staticFields = new LinkedHashSet<FieldDeclaration>();
+        for (FieldDeclaration fd : node.getFields()) {
+			if (Modifier.isStatic(fd.getModifiers()))
+				staticFields.add(fd);
+        }
+        
+        if (staticFields.isEmpty()) 
+        	return;
+        
+		// create the CFG corresponding to the class initializer
+        SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+        CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false, unit.getName() + "_clinit", VoidType.INSTANCE, new Annotations(), new Parameter[0]);
+        CFG cfg = new CFG(cmDesc);
+
+        Statement first = null, last = null;
+        
+		// just static fields are considered to build the class initializer
+		for (FieldDeclaration fd : staticFields) {
+			TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+			fd.getType().accept(typeVisitor);
+			Type type = typeVisitor.getType();
+			if (type.isInMemoryType())
+				type = new ReferenceType(type);
+
+			for (Object f : fd.fragments()) {
+				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
+				it.unive.lisa.program.cfg.statement.Expression init;
+				if (fragment.getInitializer() != null) {
+		            ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+		            fragment.getInitializer().accept(exprVisitor);
+		            init = exprVisitor.getExpression();
+				} else
+					init = type.defaultValue(cfg, locationManager.nextLocation());
+				
+				Global global = new Global(
+						locationManager.nextLocation(), 
+						unit, 
+						fragment.getName().getIdentifier(), 
+						false, 
+						type, 
+						new Annotations());
+				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
+				JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
+				cfg.addNode(asg);
+				
+				if (first == null)
+					first = asg;
+				else
+					cfg.addEdge(new SequentialEdge(last, asg));
+				last = asg;
+			}
+		}
+		
+		cfg.getEntrypoints().add(first);
+
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
+		cfg.addNode(ret);
+		cfg.addEdge(new SequentialEdge(last, ret));
+		unit.addCodeMember(cfg);
+		return;
+	}
+	
 
 	private CFG createDefaultConstructor(ClassUnit classUnit) {
 		Type type = getProgram().getTypes().getType(classUnit.getName());
@@ -267,6 +354,9 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Statement first = null, last = null;
 
 		for (FieldDeclaration field : fields) {
+			// static fields are skipped in constructor
+			if (Modifier.isStatic(field.getModifiers()))
+				continue;
 			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(parserContext, source, compilationUnit, cfg);
 			field.accept(initVisitor);
 

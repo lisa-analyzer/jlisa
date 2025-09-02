@@ -231,10 +231,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
 		}
 		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
@@ -279,12 +276,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ExpressionVisitor whileCondition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(whileCondition);
 		Expression expression = whileCondition.getExpression();
-
-		if (expression == null) {
-			// Parsing error. Skipping...
-			return false;
-		}
-
 		Statement noop = new NoOp(this.cfg, expression.getLocation());
 		
 		boolean isConditionDeadcode = !loopBody.canBeContinued();
@@ -344,9 +335,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		block.addEdge(new TrueEdge(condition, assignment));
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-		if(node.getBody() == null)
-			return false; // parsing error
-
 		node.getBody().accept(loopBodyVisitor);
 		
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
@@ -420,9 +408,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-		if(node.getBody() == null)
-			return false; // parsing error
-
 		node.getBody().accept(loopBodyVisitor);
 
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
@@ -485,22 +470,12 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(IfStatement node) {
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 		ExpressionVisitor conditionVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
-
-		if (node.getExpression() == null) {
-			return false; // parsing error
-		}
-
 		node.getExpression().accept(conditionVisitor);
 
 		Expression condition = conditionVisitor.getExpression();
 		nodeList.addNode(condition);
 
-		StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-
-		if (node.getThenStatement() == null) {
-			return false; // parsing error
-		}
-		
+		StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);		
 		node.getThenStatement().accept(trueVisitor);
 		ParsedBlock trueBlock = trueVisitor.getBlock();
 
@@ -514,6 +489,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			nodeList.addNode(noop);
 			nodeList.addEdge(new SequentialEdge(trueBlock.getEnd(), noop));
 		}
+		
 		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		ParsedBlock falseBlock = null;
 
@@ -586,7 +562,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(SuperConstructorInvocation node) {
 		Unit unit = cfg.getDescriptor().getUnit();
 		if (!(unit instanceof ClassUnit)) {
-			throw new RuntimeException("The Unit must be a ClassUnit when dealing with SuperConstructorInvocation");
+			throw new RuntimeException("The unit must be a ClassUnit when dealing with SuperConstructorInvocation");
 		}
 		ClassUnit classUnit = (ClassUnit) unit;
 		String superclassName = classUnit.getImmediateAncestors().iterator().next().getName();
@@ -601,10 +577,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
 		}
 
@@ -641,11 +614,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(itemVisitor);
 		switchItem = itemVisitor.getExpression();
-
-		if(node.statements() == null)
-			return false; // parsing error
-
-		Statement noop = new NoOp(this.cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation()); // added col +1 to avoid conflict with the other noop
+		Statement noop = new NoOp(this.cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 		adj.addNode(noop);
 
 		List<it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase> cases = new ArrayList<>();
@@ -988,19 +957,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		node.getExpression().accept(condition);
 		Expression expression = condition.getExpression();
 
-		if (expression == null) {
-			// Parsing error. Skipping...
-			return false;
-		}
-
 		adj.addNode(expression);
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		node.getBody().accept(loopBodyVisitor);
 
-		if(node.getBody() == null)
-			return false; // parsing error
-		
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
 		
 		adj.mergeWith(loopBody.getBody());
@@ -1025,7 +986,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(ThrowStatement node) {
-		System.err.println(node);
 		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		node.getExpression().accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();

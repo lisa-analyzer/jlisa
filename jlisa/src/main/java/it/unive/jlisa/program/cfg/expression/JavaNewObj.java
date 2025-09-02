@@ -1,7 +1,9 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
+import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -45,7 +47,7 @@ public class JavaNewObj extends NaryExpression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+	D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			ExpressionSet[] params,
@@ -53,6 +55,23 @@ public class JavaNewObj extends NaryExpression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ReferenceType reftype = (ReferenceType) getStaticType();
+
+		// if needed, calling the class initializer (if the class has one)
+		String className = reftype.getInnerType().toString();
+		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + "_clinit").isEmpty())
+			if (state.getInfo(className) != Satisfiability.SATISFIED) {
+				UnresolvedCall clinit = new UnresolvedCall(
+						getCFG(),
+						getLocation(),
+						CallType.STATIC,
+						className,
+						className + "_clinit",
+						new Expression[0]);
+
+				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
+				state.storeInfo(className, Satisfiability.SATISFIED);
+			}
+
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());
 
