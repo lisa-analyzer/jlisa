@@ -253,7 +253,8 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		}
 		
 		cfg.getEntrypoints().add(first);
-
+		
+		// TODO: static block
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
 		cfg.addEdge(new SequentialEdge(last, ret));

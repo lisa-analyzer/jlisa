@@ -1,9 +1,16 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.analysis.*;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -18,7 +25,6 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.type.ReferenceType;
-import org.apache.commons.lang3.ArrayUtils;
 
 
 public class JavaNewObj extends NaryExpression {
@@ -56,10 +62,13 @@ public class JavaNewObj extends NaryExpression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ReferenceType reftype = (ReferenceType) getStaticType();
 
+		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
+			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
+		
 		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
-		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + "_clinit").isEmpty())
-			if (state.getInfo(className) != Satisfiability.SATISFIED) {
+		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + "_clinit").isEmpty()) {
+			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
@@ -67,10 +76,11 @@ public class JavaNewObj extends NaryExpression {
 						className,
 						className + "_clinit",
 						new Expression[0]);
-
+				
+				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className)) ;
 				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
-				state.storeInfo(className, Satisfiability.SATISFIED);
 			}
+		}
 
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());

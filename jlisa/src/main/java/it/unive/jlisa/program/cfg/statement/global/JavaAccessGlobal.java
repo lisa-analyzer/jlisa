@@ -1,11 +1,14 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
@@ -15,6 +18,8 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call.CallType;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 
@@ -131,17 +136,36 @@ public class JavaAccessGlobal extends Expression {
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
-			AnalysisState<A> entryState,
+			AnalysisState<A> state,
 			InterproceduralAnalysis<A, D> interprocedural,
 			StatementStore<A> expressions)
-			throws SemanticException {
+					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
+			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
+		
+		// if needed, calling the class initializer (if the class has one)
+		if (!JavaClassType.lookup(container.toString(), null).getUnit().getCodeMembersByName(container.toString() + "_clinit").isEmpty())
+			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(container.toString())) {
+				UnresolvedCall clinit = new UnresolvedCall(
+						getCFG(),
+						getLocation(),
+						CallType.STATIC,
+						container.toString(),
+						container.toString() + "_clinit",
+						new Expression[0]);
+
+				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(container.toString())) ;
+				state = clinit.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			}
+
 		if (target instanceof ConstantGlobal)
-			return analysis.smallStepSemantics(entryState, ((ConstantGlobal) target).getConstant(), this);
+			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);
 
 		// unit globals are unique, we can directly access those
 		return analysis.smallStepSemantics(
-				entryState,
+				state,
 				new GlobalVariable(target.getStaticType(), toString(), target.getAnnotations(), getLocation()),
 				this);
 	}
