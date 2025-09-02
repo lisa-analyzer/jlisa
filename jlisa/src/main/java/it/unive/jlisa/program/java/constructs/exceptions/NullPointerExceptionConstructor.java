@@ -22,8 +22,15 @@ public class NullPointerExceptionConstructor extends NaryExpression implements P
 		super(cfg, location, "NullPointerException", params);
 	}
 	
-	public NullPointerExceptionConstructor(CFG cfg, CodeLocation location) {
-		super(cfg, location, "NullPointerException");
+	public static NullPointerExceptionConstructor build(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
+		if (params[1] == null)
+			return new NullPointerExceptionConstructor(cfg, location, params[0]);
+		else
+			return new NullPointerExceptionConstructor(cfg, location, params[0], params[1]);
+
 	}
 
 	@Override

@@ -1,5 +1,42 @@
 package it.unive.jlisa.frontend.visitors;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AssertStatement;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.BreakStatement;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConstructorInvocation;
+import org.eclipse.jdt.core.dom.ContinueStatement;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.EmptyStatement;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.LabeledStatement;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.SynchronizedStatement;
+import org.eclipse.jdt.core.dom.ThrowStatement;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.jdt.core.dom.WhileStatement;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.SourceCodeLocationManager;
@@ -13,6 +50,7 @@ import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
@@ -21,35 +59,39 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
-import it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
-import it.unive.lisa.program.cfg.edge.*;
+import it.unive.lisa.program.cfg.edge.Edge;
+import it.unive.lisa.program.cfg.edge.ErrorEdge;
+import it.unive.lisa.program.cfg.edge.FalseEdge;
+import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.edge.TrueEdge;
 import it.unive.lisa.program.cfg.protection.CatchBlock;
 import it.unive.lisa.program.cfg.protection.ProtectedBlock;
 import it.unive.lisa.program.cfg.protection.ProtectionBlock;
-import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.NoOp;
+import it.unive.lisa.program.cfg.statement.Ret;
+import it.unive.lisa.program.cfg.statement.Return;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.Throw;
+import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
-import it.unive.lisa.program.cfg.statement.literal.StringLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.*;
-
-import java.util.*;
 
 public class StatementASTVisitor extends JavaASTVisitor {
 
@@ -821,45 +863,41 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(SynchronizedStatement node) {
-		
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 
 		ExpressionVisitor synchTargetVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(synchTargetVisitor);
 		Expression syncTarget = synchTargetVisitor.getExpression();
 		
-		if (syncTarget == null) {
-			// Parsing error. Skipping...
-			return false;
-		}
-		
-		
-		Statement syntheticCondition = new NotEqual(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), syncTarget, new NullLiteral(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation())); 
+		SyntheticCodeLocationManager syntheticLocMan = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		Statement syntheticCondition = new NotEqual(cfg, syntheticLocMan.nextLocation(), syncTarget, new NullLiteral(cfg, syntheticLocMan.nextLocation())); 
 
 		adj.addNode(syntheticCondition);
 
 		StatementASTVisitor bodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		node.getBody().accept(bodyVisitor);
 
-		if(node.getBody() == null)
-			return false; // parsing error
-		
 		ParsedBlock synchronizedBody = bodyVisitor.getBlock();
 		
 		adj.mergeWith(synchronizedBody.getBody());
 		
 		adj.addEdge(new TrueEdge(syntheticCondition, synchronizedBody.getBegin()));
 
-		Statement noop = new NoOp(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+		Statement noop = new NoOp(cfg, syntheticLocMan.nextLocation());
 
-		if(synchronizedBody.canBeContinued()) {
+		if (synchronizedBody.canBeContinued()) {
 			adj.addNode(noop);
 			adj.addEdge(new SequentialEdge(synchronizedBody.getEnd(), noop));
 		}
 		
-		Statement nullPointerTrigger = new Throw(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-					new NullPointerExceptionConstructor(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-							new StringLiteral(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), "Cannot enter synchronized block because "+syncTarget+" is null")));
+		JavaClassType npeType = JavaClassType.lookup("NullPointerException", null);
+		Statement nullPointerTrigger = new Throw(cfg, syntheticLocMan.nextLocation(),
+				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException", 
+						new ReferenceType(npeType), 
+						new JavaStringLiteral(cfg, 
+								syntheticLocMan.nextLocation(), 
+								"Cannot enter synchronized block because " + syncTarget + " is null"))
+							);
 		adj.addNode(nullPointerTrigger);
 		adj.addEdge(new FalseEdge(syntheticCondition, nullPointerTrigger));
 		
@@ -867,7 +905,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		Statement follower = null;
 		Statement lastBlockStatement = null;
 		
-		if(synchronizedBody == null || (synchronizedBody != null && synchronizedBody.canBeContinued())) {
+		if (synchronizedBody == null || (synchronizedBody != null && synchronizedBody.canBeContinued())) {
 			adj.addNode(noop);
 			follower = noop;
 			lastBlockStatement = noop;
@@ -875,7 +913,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		this.cfg.getDescriptor().addControlFlowStructure(new SynchronizedBlock(adj,syncTarget,syntheticCondition, synchronizedBody.getBody().getNodes(), follower));
 		this.block = new ParsedBlock(syntheticCondition, adj, lastBlockStatement);
-		
 		
 		return false;
 	}
