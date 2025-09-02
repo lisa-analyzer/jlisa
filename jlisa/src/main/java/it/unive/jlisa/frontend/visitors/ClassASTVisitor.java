@@ -1,35 +1,17 @@
 package it.unive.jlisa.frontend.visitors;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.lisa.program.AbstractClassUnit;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.ProgramValidationException;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.*;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -42,6 +24,11 @@ import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
+import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClassASTVisitor extends JavaASTVisitor{
 
@@ -154,7 +141,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		} else {
 			cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
 		}
-		
+
 		if (!node.permittedTypes().isEmpty()) {
 			parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT, "Permits is not supported.", getSourceCodeLocation(node)));
 		}
@@ -162,7 +149,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		// iterates over inner declarations (just enums)
 		for (Object decl : node.bodyDeclarations()) {
 			// enum inner declaration
-			if (decl instanceof EnumDeclaration) 
+			if (decl instanceof EnumDeclaration)
 				visit((EnumDeclaration) decl);
 		}
 
@@ -191,51 +178,50 @@ public class ClassASTVisitor extends JavaASTVisitor{
 	private CFG createDefaultConstructor(ClassUnit classUnit) {
 		Type type = getProgram().getTypes().getType(classUnit.getName());
 
-		List<Parameter> parameters = new ArrayList<>();
-		CodeLocation unknownLocation = classUnit.getLocation();
-		parameters.add(new Parameter(unknownLocation, "this", new ReferenceType(type), null, new Annotations()));
+        List<Parameter> parameters = new ArrayList<>();
+        SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+        parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
 
-		Annotations annotations = new Annotations();
-		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(unknownLocation, classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
-		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
-		String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
+        Annotations annotations = new Annotations();
+        Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+        CFG cfg = new CFG(codeMemberDescriptor);
+        parserContext.addVariableType(cfg, "this", new ReferenceType(type));
+        String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
 
-		Statement call = new UnresolvedCall(cfg, unknownLocation, Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, unknownLocation, "this"));
+        Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
-		Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
-		cfg.addNode(ret);
-		cfg.addNode(call);
-		cfg.getEntrypoints().add(call);
-		cfg.addEdge(new SequentialEdge(call, ret));
-		classUnit.addInstanceCodeMember(cfg);
-		return cfg;
-	}
+        Ret ret = new Ret(cfg, locationManager.nextLocation());
+        cfg.addNode(ret);
+        cfg.addNode(call);
+        cfg.getEntrypoints().add(call);
+        cfg.addEdge(new SequentialEdge(call, ret));
+        classUnit.addInstanceCodeMember(cfg);
+        return cfg;
+    }
 
 	private CFG createEnumConstructor(EnumUnit enumUnit, EnumDeclaration enumDecl) {
 		Type type = getProgram().getTypes().getType(enumUnit.getName());
-
+		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 		List<Parameter> parameters = new ArrayList<>();
-		CodeLocation enumDeclLoc = getSourceCodeLocation(enumDecl);
-		parameters.add(new Parameter(enumDeclLoc, "this", new ReferenceType(type), null, new Annotations()));
-		parameters.add(new Parameter(enumDeclLoc, "name", new ReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
+		parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
+		parameters.add(new Parameter(locationManager.nextLocation(), "name", new ReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(enumDeclLoc, enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
 		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
 		parserContext.addVariableType(cfg, "name", new ReferenceType(getProgram().getTypes().getStringType()));
 
-		JavaAssignment glAsg = new JavaAssignment(cfg, enumDeclLoc, 
-				new JavaAccessInstanceGlobal(cfg, enumDeclLoc, 
-						new VariableRef(cfg, enumDeclLoc, "this"), 
-						"name"), 
-				new VariableRef(cfg, enumDeclLoc, "name"));
+		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
+				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
+						new VariableRef(cfg, locationManager.nextLocation(), "this"),
+						"name"),
+				new VariableRef(cfg, locationManager.nextLocation(), "name"));
 
 
-		Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(glAsg);
 		cfg.addNode(ret);
 		cfg.getEntrypoints().add(glAsg);
@@ -264,20 +250,20 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			}
 		}
 
-		if (injectionPoint instanceof UnresolvedCall &&
-				((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
-			return;
-		}
-		if (implicitlyCallSuper) {
-			// add a super() call to this constructor, as a first statement, before the field initializator.
-			CodeLocation unknownLocation = cfg.getDescriptor().getLocation();
-			Statement call = new UnresolvedCall(cfg, unknownLocation, Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, unknownLocation, "this"));
-			cfg.addNode(call);
-			cfg.addEdge(new SequentialEdge(call, injectionPoint));
-			cfg.getEntrypoints().clear();
-			cfg.getEntrypoints().add(call);
-			entryPoint = call;
-		}
+        if (injectionPoint instanceof UnresolvedCall &&
+                ((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
+            return;
+        }
+        if (implicitlyCallSuper) {
+            // add a super() call to this constructor, as a first statement, before the field initializator.
+            SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+            Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
+            cfg.addNode(call);
+            cfg.addEdge(new SequentialEdge(call, injectionPoint));
+            cfg.getEntrypoints().clear();
+            cfg.getEntrypoints().add(call);
+            entryPoint = call;
+        }
 		Statement first = null, last = null;
 
 		for (FieldDeclaration field : fields) {

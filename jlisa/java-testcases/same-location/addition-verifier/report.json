@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "int_Verifier.nondetInt()_1707442680.json", "int_Verifier.nondetInt()_1707442711.json", "report.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "108ms",
+    "end" : "2025-09-01T22:54:48.031+02:00",
+    "expressions" : "80",
+    "files" : "3",
+    "globals" : "3",
+    "members" : "78",
+    "programs" : "1",
+    "start" : "2025-09-01T22:54:47.923+02:00",
+    "statements" : "33",
+    "units" : "58",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/same-location/addition-verifier"
+  }
+}

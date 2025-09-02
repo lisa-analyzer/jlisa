@@ -1,0 +1,16 @@
+package it.unive.jlisa.interprocedural.callgraph;
+
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.type.Type;
+
+import java.util.Collection;
+import java.util.Set;
+
+public class JavaCHACallGraph extends JavaCallGraph {
+    @Override
+    public Collection<Type> getPossibleTypesOfReceiver(
+            Expression receiver,
+            Set<Type> types) {
+        return receiver.getStaticType().allInstances(receiver.getProgram().getTypes());
+    }
+}
