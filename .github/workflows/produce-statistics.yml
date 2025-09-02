@@ -50,7 +50,7 @@ jobs:
         name: jlisa-distribution
         path: ./svh
     
-    - name: Build svh docker image
+    - name: Build svh Docker image
       run: docker build -t svh ./svh
 
     - name: Run analysis
