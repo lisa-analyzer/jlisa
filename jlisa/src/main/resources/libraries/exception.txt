@@ -15,7 +15,16 @@ class RuntimeException extends Exception:
 class ArithmeticException extends RuntimeException:
 
 class NullPointerException extends RuntimeException:
-
+	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NullPointerException*
+		
+	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NullPointerException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+		
 class ClassCastException extends RuntimeException:
 
 class IndexOutOfBoundsException extends RuntimeException:

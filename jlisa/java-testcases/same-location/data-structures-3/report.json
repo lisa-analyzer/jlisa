@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_C.C(C__this)_-1111259140.json", "void_C.C(C__this)_-1111259233.json", "void_Datastructures3.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "6",
+    "duration" : "4ms",
+    "end" : "2025-09-02T10:18:03.009+02:00",
+    "expressions" : "31",
+    "files" : "3",
+    "globals" : "5",
+    "members" : "72",
+    "programs" : "1",
+    "start" : "2025-09-02T10:18:03.005+02:00",
+    "statements" : "19",
+    "units" : "58",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/same-location/data-structures-3"
+  }
+}
