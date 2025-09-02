@@ -16,13 +16,14 @@ import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.util.frontend.JavaCFGTweaker;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -36,12 +37,11 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import it.unive.lisa.util.frontend.CFGTweaker;
 
 public class MethodASTVisitor extends JavaASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
 	CFG cfg;
-	
+
 	public MethodASTVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
 		super(parserContext, source, astCompilationUnit);
 		this.lisacompilationUnit = lisacompilationUnit;
@@ -64,10 +64,10 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			parserContext.addVariableType(cfg, p.getName(), paramType.isInMemoryType() ? new ReferenceType(paramType) : paramType);
 		}
 		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
-		
+
 		if(node.getBody() == null) // e.g. abstract method declarations
 			return false;
-		
+
 		node.getBody().accept(blockStatementASTVisitor);
 		cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
 		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
@@ -77,7 +77,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
 		if (cfg.getAllExitpoints().isEmpty()) {
-			Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
+			Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			if (cfg.getNodesCount() == 0) {
 				// empty method, so the ret is also the entrypoint
 				list.addNode(ret);
@@ -98,33 +98,30 @@ public class MethodASTVisitor extends JavaASTVisitor {
 						entry.setScopeEnd(ret);
 			}
 		}
-		
-        boolean added = false;
-        if (!Modifier.isStatic(modifiers)) {
-            added = lisacompilationUnit.addInstanceCodeMember(cfg);
-        } else {
-            added = lisacompilationUnit.addCodeMember(cfg);
-        }
-        
+
+		boolean added;
+		if (!Modifier.isStatic(modifiers)) {
+			added = lisacompilationUnit.addInstanceCodeMember(cfg);
+		} else {
+			added = lisacompilationUnit.addCodeMember(cfg);
+		}
         if (!added) {
             parserContext.addException(new ParsingException("duplicated_method_descriptor",
                     ParsingException.Type.MALFORMED_SOURCE,
                     "Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
                     getSourceCodeLocation(node)));
         }
-
 		if (isMain) {
 			// in the main method, we instantiate enum constants
-			for (Unit unit : getProgram().getUnits()) 
+			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+			for (Unit unit : getProgram().getUnits())
 				if (unit instanceof EnumUnit) {
 					it.unive.lisa.type.Type enumType = getProgram().getTypes().getType(unit.getName());
 
 					for (Global target : unit.getGlobals()) {
-						int line = ((SourceCodeLocation) target.getLocation()).getLine();
-						int col = ((SourceCodeLocation) target.getLocation()).getCol();
-						JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, new SourceCodeLocation(source, line, col), unit, target);
-						JavaNewObj call = new JavaNewObj(cfg, new SourceCodeLocation(source, line, col + 1), unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, new SourceCodeLocation(source, line, col + 2), target.getName()));
-						JavaAssignment asg = new JavaAssignment(cfg, new SourceCodeLocation(source, line, col + 3), accessGlobal, call);
+						JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, target);
+						JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
+						JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
 						cfg.addNode(asg);
 						for (Statement entry : cfg.getEntrypoints()) {
 							cfg.addEdge(new SequentialEdge(asg, entry));
@@ -137,9 +134,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			getProgram().addEntryPoint(cfg);
 		}
 
-		CFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new);
-		CFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
-		CFGTweaker.addReturns(cfg, JavaSyntaxException::new);
+		JavaCFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new, parserContext.getCurrentSyntheticCodeLocationManager(source));
+		JavaCFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
+		JavaCFGTweaker.addReturns(cfg, JavaSyntaxException::new, parserContext.getCurrentSyntheticCodeLocationManager(source));
 		cfg.simplify();
 
 		return false;
@@ -165,7 +162,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			sd.accept(vd);
 			parameters.add(vd.getParameter());
         }
-		
+
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
@@ -194,7 +191,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			sd.accept(vd);
 			parameters.add(vd.getParameter());
         }
-		
+
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);

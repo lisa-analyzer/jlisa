@@ -90,12 +90,4 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
 
         perform(TestHelpers.createConfiguration("method-overloading", "Test9", "Test9.java"));
     }
-
-    @Test
-    public void testMethodOverloading10() throws IOException {
-        JavaFrontend frontend = new JavaFrontend();
-        frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test10/Test10.java"));
-        // note: failure due to missing matching between static - instance methods.
-        assert frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
-    }
 }

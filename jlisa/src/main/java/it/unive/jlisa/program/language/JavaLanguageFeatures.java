@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.language;
 
+import it.unive.jlisa.program.language.validation.JavaValidationLogic;
 import it.unive.lisa.program.language.LanguageFeatures;
 import it.unive.lisa.program.language.hierarchytraversal.HierarcyTraversalStrategy;
 import it.unive.lisa.program.language.hierarchytraversal.SingleInheritanceTraversalStrategy;
@@ -7,7 +8,6 @@ import it.unive.lisa.program.language.parameterassignment.OrderPreservingAssigni
 import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStrategy;
 import it.unive.lisa.program.language.resolution.JavaLikeMatchingStrategy;
 import it.unive.lisa.program.language.resolution.ParameterMatchingStrategy;
-import it.unive.lisa.program.language.validation.BaseValidationLogic;
 import it.unive.lisa.program.language.validation.ProgramValidationLogic;
 
 public class JavaLanguageFeatures extends LanguageFeatures {
@@ -28,6 +28,6 @@ public class JavaLanguageFeatures extends LanguageFeatures {
 
     @Override
     public ProgramValidationLogic getProgramValidationLogic() {
-        return new BaseValidationLogic();
+        return new JavaValidationLogic();
     }
 }

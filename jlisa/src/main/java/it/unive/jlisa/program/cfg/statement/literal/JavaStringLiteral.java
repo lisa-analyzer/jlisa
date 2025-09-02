@@ -2,15 +2,9 @@ package it.unive.jlisa.program.cfg.statement.literal;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.analysis.AbstractDomain;
-import it.unive.lisa.analysis.AbstractLattice;
-import it.unive.lisa.analysis.Analysis;
-import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -47,7 +41,7 @@ public class JavaStringLiteral extends Literal<String> {
 		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype, new Expression[0]);
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "String", reftype, new Expression[0]);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = entryState.bottom();

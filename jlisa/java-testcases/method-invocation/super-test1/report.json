@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "int_A.foo(A__this)_-968936885.json", "int_A.foo(A__this)_-968950339.json", "int_B.foo(B__this)_1707429598.json", "report.json", "void_A.A(A__this)_916216053.json", "void_B.B(B__this)_1707424762.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "7",
+    "duration" : "4ms",
+    "end" : "2025-09-02T10:18:03.065+02:00",
+    "expressions" : "17",
+    "files" : "6",
+    "globals" : "3",
+    "members" : "73",
+    "programs" : "1",
+    "start" : "2025-09-02T10:18:03.061+02:00",
+    "statements" : "13",
+    "units" : "59",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/method-invocation/super-test1"
+  }
+}
