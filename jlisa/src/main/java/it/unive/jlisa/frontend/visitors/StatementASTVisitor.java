@@ -833,7 +833,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			return false;
 		}
 		
-		Statement syntheticCondition = new NotEqual(cfg, syncTarget.getLocation(), syncTarget, new NullLiteral(cfg, syncTarget.getLocation())); // FIXME: add correct code location after the merge of branch with the fix of code locations 
+		
+		Statement syntheticCondition = new NotEqual(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), syncTarget, new NullLiteral(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation())); 
 
 		adj.addNode(syntheticCondition);
 
@@ -849,16 +850,16 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		adj.addEdge(new TrueEdge(syntheticCondition, synchronizedBody.getBegin()));
 
-		Statement noop = new NoOp(cfg, syntheticCondition.getLocation()); // FIXME: add correct code location after the merge of branch with the fix of code locations
+		Statement noop = new NoOp(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 
 		if(synchronizedBody.canBeContinued()) {
 			adj.addNode(noop);
 			adj.addEdge(new SequentialEdge(synchronizedBody.getEnd(), noop));
 		}
 		
-		Statement nullPointerTrigger = new Throw(cfg, getSourceCodeLocation(node), // FIXME: add correct code location after the merge of branch with the fix of code locations
-					new NullPointerExceptionConstructor(cfg, getSourceCodeLocation(node), // FIXME: add correct code location after the merge of branch with the fix of code locations
-							new StringLiteral(cfg, getSourceCodeLocation(node), "Cannot enter synchronized block because "+syncTarget+" is null"))); // FIXME: add correct code location after the merge of branch with the fix of code locations
+		Statement nullPointerTrigger = new Throw(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+					new NullPointerExceptionConstructor(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							new StringLiteral(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), "Cannot enter synchronized block because "+syncTarget+" is null")));
 		adj.addNode(nullPointerTrigger);
 		adj.addEdge(new FalseEdge(syntheticCondition, nullPointerTrigger));
 		
