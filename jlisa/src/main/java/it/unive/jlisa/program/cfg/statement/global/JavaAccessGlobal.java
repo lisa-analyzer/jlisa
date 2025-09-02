@@ -1,5 +1,8 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -10,6 +13,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Unit;
@@ -145,18 +149,31 @@ public class JavaAccessGlobal extends Expression {
 		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
 			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
 		
+		
+		// we need to check whether to call the clinit of the container unit or the one of its superclass
+		Unit classInit = container;
+		if (((ClassUnit) container).getGlobal(target.getName()) == null) {
+			Set<it.unive.lisa.program.CompilationUnit> superClasses = ((ClassUnit) container)
+					.getImmediateAncestors().stream()
+					.filter(u -> u instanceof ClassUnit)
+					.collect(Collectors.toSet());
+
+			// we can safely suppose that there exist a single superclass
+			classInit = (ClassUnit) superClasses.stream().findFirst().get();
+		}
+
 		// if needed, calling the class initializer (if the class has one)
-		if (!JavaClassType.lookup(container.toString(), null).getUnit().getCodeMembersByName(container.toString() + "_clinit").isEmpty())
-			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(container.toString())) {
+		if (!JavaClassType.lookup(classInit.toString(), null).getUnit().getCodeMembersByName(classInit.toString() + "_clinit").isEmpty())
+			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(classInit.toString())) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
 						CallType.STATIC,
-						container.toString(),
-						container.toString() + "_clinit",
+						classInit.toString(),
+						classInit.toString() + "_clinit",
 						new Expression[0]);
 
-				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(container.toString())) ;
+				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(classInit.toString())) ;
 				state = clinit.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			}
 

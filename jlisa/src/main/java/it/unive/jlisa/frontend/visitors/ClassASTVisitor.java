@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -38,11 +39,13 @@ import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
@@ -169,15 +172,15 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			if (decl instanceof EnumDeclaration)
 				visit((EnumDeclaration) decl);
 		}
-		
+
 		// all fields (static and non-static) are visited
 		for (FieldDeclaration fd : node.getFields()) {
 			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit);
 			fd.accept(visitor);
 		}
-		
+
 		createClassInitializer(cUnit, node);
-		
+
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
 			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit);
@@ -194,27 +197,48 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 		return false;
 	}
-	
+
 	private void createClassInitializer(ClassUnit unit, TypeDeclaration node) {
-		
+
 		// we add a class initializer only if the class has
 		// static fields
 		Set<FieldDeclaration> staticFields = new LinkedHashSet<FieldDeclaration>();
-        for (FieldDeclaration fd : node.getFields()) {
+		for (FieldDeclaration fd : node.getFields()) {
 			if (Modifier.isStatic(fd.getModifiers()))
 				staticFields.add(fd);
-        }
-        
-        if (staticFields.isEmpty()) 
-        	return;
-        
-		// create the CFG corresponding to the class initializer
-        SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-        CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false, unit.getName() + "_clinit", VoidType.INSTANCE, new Annotations(), new Parameter[0]);
-        CFG cfg = new CFG(cmDesc);
+		}
 
-        Statement first = null, last = null;
-        
+		if (staticFields.isEmpty()) 
+			return;
+
+		// create the CFG corresponding to the class initializer
+		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false, unit.getName() + "_clinit", VoidType.INSTANCE, new Annotations(), new Parameter[0]);
+		CFG cfg = new CFG(cmDesc);
+
+
+		// first, we add the clinit call to the superclass
+		Set<it.unive.lisa.program.CompilationUnit> superClasses = unit
+				.getImmediateAncestors().stream()
+				.filter(u -> u instanceof ClassUnit)
+				.collect(Collectors.toSet());
+
+		// we can safely suppose that there exist a single superclass
+		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
+		UnresolvedCall superClassInit = new UnresolvedCall(
+				cfg,
+				locationManager.nextLocation(),
+				CallType.STATIC,
+				superClass.toString(),
+				superClass.toString() + "_clinit",
+				new Expression[0]);
+
+		cfg.addNode(superClassInit);
+		cfg.getEntrypoints().add(superClassInit);
+
+
+		Statement last = superClassInit;
+
 		// just static fields are considered to build the class initializer
 		for (FieldDeclaration fd : staticFields) {
 			TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
@@ -227,12 +251,12 @@ public class ClassASTVisitor extends JavaASTVisitor{
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
-		            ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-		            fragment.getInitializer().accept(exprVisitor);
-		            init = exprVisitor.getExpression();
+					ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+					fragment.getInitializer().accept(exprVisitor);
+					init = exprVisitor.getExpression();
 				} else
 					init = type.defaultValue(cfg, locationManager.nextLocation());
-				
+
 				Global global = new Global(
 						locationManager.nextLocation(), 
 						unit, 
@@ -243,17 +267,12 @@ public class ClassASTVisitor extends JavaASTVisitor{
 				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
 				JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
 				cfg.addNode(asg);
-				
-				if (first == null)
-					first = asg;
-				else
-					cfg.addEdge(new SequentialEdge(last, asg));
+				cfg.addEdge(new SequentialEdge(last, asg));
 				last = asg;
 			}
 		}
-		
-		cfg.getEntrypoints().add(first);
-		
+
+
 		// TODO: static block
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
@@ -261,32 +280,32 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		unit.addCodeMember(cfg);
 		return;
 	}
-	
+
 
 	private CFG createDefaultConstructor(ClassUnit classUnit) {
 		Type type = getProgram().getTypes().getType(classUnit.getName());
 
-        List<Parameter> parameters = new ArrayList<>();
-        SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-        parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
+		List<Parameter> parameters = new ArrayList<>();
+		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
 
-        Annotations annotations = new Annotations();
-        Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
-        CFG cfg = new CFG(codeMemberDescriptor);
-        parserContext.addVariableType(cfg, "this", new ReferenceType(type));
-        String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+		CFG cfg = new CFG(codeMemberDescriptor);
+		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
+		String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
 
-        Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
+		Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
-        Ret ret = new Ret(cfg, locationManager.nextLocation());
-        cfg.addNode(ret);
-        cfg.addNode(call);
-        cfg.getEntrypoints().add(call);
-        cfg.addEdge(new SequentialEdge(call, ret));
-        classUnit.addInstanceCodeMember(cfg);
-        return cfg;
-    }
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
+		cfg.addNode(ret);
+		cfg.addNode(call);
+		cfg.getEntrypoints().add(call);
+		cfg.addEdge(new SequentialEdge(call, ret));
+		classUnit.addInstanceCodeMember(cfg);
+		return cfg;
+	}
 
 	private CFG createEnumConstructor(EnumUnit enumUnit, EnumDeclaration enumDecl) {
 		Type type = getProgram().getTypes().getType(enumUnit.getName());
@@ -338,20 +357,20 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			}
 		}
 
-        if (injectionPoint instanceof UnresolvedCall &&
-                ((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
-            return;
-        }
-        if (implicitlyCallSuper) {
-            // add a super() call to this constructor, as a first statement, before the field initializator.
-            SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-            Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
-            cfg.addNode(call);
-            cfg.addEdge(new SequentialEdge(call, injectionPoint));
-            cfg.getEntrypoints().clear();
-            cfg.getEntrypoints().add(call);
-            entryPoint = call;
-        }
+		if (injectionPoint instanceof UnresolvedCall &&
+				((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
+			return;
+		}
+		if (implicitlyCallSuper) {
+			// add a super() call to this constructor, as a first statement, before the field initializator.
+			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+			Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
+			cfg.addNode(call);
+			cfg.addEdge(new SequentialEdge(call, injectionPoint));
+			cfg.getEntrypoints().clear();
+			cfg.getEntrypoints().add(call);
+			entryPoint = call;
+		}
 		Statement first = null, last = null;
 
 		for (FieldDeclaration field : fields) {
