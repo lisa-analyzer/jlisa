@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import it.unive.jlisa.frontend.EnumUnit;
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -213,7 +214,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 		// create the CFG corresponding to the class initializer
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false, unit.getName() + "_clinit", VoidType.INSTANCE, new Annotations(), new Parameter[0]);
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false, unit.getName() + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE, new Annotations(), new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
 
@@ -230,7 +231,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 				locationManager.nextLocation(),
 				CallType.STATIC,
 				superClass.toString(),
-				superClass.toString() + "_clinit",
+				superClass.toString() + InitializedClassSet.SUFFIX_CLINIT,
 				new Expression[0]);
 
 		cfg.addNode(superClassInit);

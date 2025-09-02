@@ -67,14 +67,14 @@ public class JavaNewObj extends NaryExpression {
 		
 		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
-		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + "_clinit").isEmpty()) {
+		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
 			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
 						CallType.STATIC,
 						className,
-						className + "_clinit",
+						className + InitializedClassSet.SUFFIX_CLINIT,
 						new Expression[0]);
 				
 				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className)) ;

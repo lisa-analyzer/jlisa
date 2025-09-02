@@ -162,14 +162,14 @@ public class JavaAccessGlobal extends Expression {
 		}
 
 		// if needed, calling the class initializer
-		if (!JavaClassType.lookup(classInit.toString(), null).getUnit().getCodeMembersByName(classInit.toString() + "_clinit").isEmpty())
+		if (!JavaClassType.lookup(classInit.toString(), null).getUnit().getCodeMembersByName(classInit.toString() + InitializedClassSet.SUFFIX_CLINIT).isEmpty())
 			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(classInit.toString())) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
 						CallType.STATIC,
 						classInit.toString(),
-						classInit.toString() + "_clinit",
+						classInit.toString() + InitializedClassSet.SUFFIX_CLINIT,
 						new Expression[0]);
 
 				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(classInit.toString())) ;

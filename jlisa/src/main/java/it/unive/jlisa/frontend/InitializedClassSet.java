@@ -14,6 +14,8 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 
 	public static final String INFO_KEY = "clinit";
 	
+	public static final String SUFFIX_CLINIT = "_clinit";
+	
 	public InitializedClassSet() {
 		super(new TreeSet<String>(), false);
 	}
