@@ -21,4 +21,10 @@ public class ClassInitializationTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.constantPropagation("class-init", "class-init02", "Main.java", "A.java", "B.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void tesClassInit03()  throws IOException {
+		CronConfiguration conf = TestHelpers.constantPropagation("class-init", "class-init03", "Main.java", "A.java", "B.java");
+		perform(conf);
+	}
 }
