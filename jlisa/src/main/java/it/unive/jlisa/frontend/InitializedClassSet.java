@@ -7,8 +7,6 @@ import java.util.TreeSet;
 
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.lattices.InverseSetLattice;
-import it.unive.lisa.lattices.symbolic.DefiniteIdSet;
-import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
 
@@ -62,8 +60,8 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 	}
 
 	/**
-	 * Adds a new {@link Identifier} to this set. This method has no side
-	 * effect: a new {@link DefiniteIdSet} is created, modified and returned.
+	 * Adds a new String to this set. This method has no side
+	 * effect: a new {@link InitializedClassSet} is created, modified and returned.
 	 * 
 	 * @param id the identifier to add
 	 * 
