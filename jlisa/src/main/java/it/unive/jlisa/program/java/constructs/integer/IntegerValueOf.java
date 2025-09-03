@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -16,7 +17,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
@@ -43,7 +43,7 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
 			StatementStore<A> expressions) throws SemanticException {
 		Type intType = JavaClassType.lookup("Integer", null);
-		ReferenceType reftype = (ReferenceType) new ReferenceType(intType);
+		JavaReferenceType reftype = new JavaReferenceType(intType);
 		
 		// allocate the value
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "Integer", reftype, new Expression[] {getSubExpression()});

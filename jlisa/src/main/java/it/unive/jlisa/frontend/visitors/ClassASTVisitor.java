@@ -28,6 +28,7 @@ import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.AbstractClassUnit;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -47,9 +48,8 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
-import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 
@@ -76,7 +76,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 		// adding static fields corresponding to enum constants
 		for (Object con : node.enumConstants()) {
-			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false, new ReferenceType(enumType));
+			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false, new JavaReferenceType(enumType));
 			enUnit.addGlobal(g);
 		}
 		
@@ -216,7 +216,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Statement init = null, last = null;
 		for (Global target : enumUnit.getGlobals()) {
 			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), enumUnit, target);
-			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), enumUnit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
+			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), enumUnit.getName(), new JavaReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
 			JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
 			cfg.addNode(asg);
 
@@ -240,15 +240,15 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Type type = getProgram().getTypes().getType(enumUnit.getName());
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
-		parameters.add(new Parameter(locationManager.nextLocation(), "name", new ReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
+		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null, new Annotations()));
+		parameters.add(new Parameter(locationManager.nextLocation(), "name", new JavaReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
-		parserContext.addVariableType(cfg, "name", new ReferenceType(getProgram().getTypes().getStringType()));
+		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
+		parserContext.addVariableType(cfg, "name", new JavaReferenceType(getProgram().getTypes().getStringType()));
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
 				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
@@ -312,7 +312,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			fd.getType().accept(typeVisitor);
 			Type type = typeVisitor.getType();
 			if (type.isInMemoryType())
-				type = new ReferenceType(type);
+				type = new JavaReferenceType(type);
 
 			for (Object f : fd.fragments()) {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
@@ -322,7 +322,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
-					// FIME: referenceType default value
+					// FIME: JavaReferenceType default value
 					init = type.defaultValue(cfg, locationManager.nextLocation());
 
 				Global global = new Global(
@@ -355,13 +355,13 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 		List<Parameter> parameters = new ArrayList<>();
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
+		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null, new Annotations()));
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
+		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
 		String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
 
 		Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));

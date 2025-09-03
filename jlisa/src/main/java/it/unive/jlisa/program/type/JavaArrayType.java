@@ -29,7 +29,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
@@ -211,7 +210,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
                 AnalysisState<A> refSt = entryState.bottom();
                 for (SymbolicExpression loc : allocSt.getComputedExpressions()) {
-                    ReferenceType t = new ReferenceType(loc.getStaticType());
+                    JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
                     HeapReference ref = new HeapReference(t, loc, getLocation());
                     AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
                     refSt = refSt.lub(refSem);

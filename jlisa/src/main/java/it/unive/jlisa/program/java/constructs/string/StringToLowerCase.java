@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -21,7 +22,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -57,7 +57,7 @@ public class StringToLowerCase extends UnaryExpression implements PluggableState
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
 			StatementStore<A> expressions) throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
-		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());

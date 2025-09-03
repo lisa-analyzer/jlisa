@@ -71,7 +71,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
         if (node.getDimensions() == 0) {
             throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
         }
-        _type = JavaArrayType.lookup(_type.isInMemoryType() ? new ReferenceType(_type) : _type, node.getDimensions());
+        _type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type, node.getDimensions());
         type = _type;
         return false;
 

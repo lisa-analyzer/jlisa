@@ -16,6 +16,7 @@ import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.util.frontend.JavaCFGTweaker;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -125,7 +126,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
-			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new ReferenceType(type), null, new Annotations()));
+			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null, new Annotations()));
 		}
 
 		for (Object o : node.parameters()) {
