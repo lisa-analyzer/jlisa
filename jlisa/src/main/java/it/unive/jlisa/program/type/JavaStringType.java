@@ -4,6 +4,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.type.InMemoryType;
 import it.unive.lisa.type.StringType;
 import it.unive.lisa.type.Type;
@@ -42,5 +46,10 @@ public class JavaStringType extends JavaClassType implements StringType, InMemor
 	@Override
 	public CompilationUnit getUnit() {
 		return this.unit;
+	}
+	
+	@Override
+	public Expression defaultValue(CFG cfg, CodeLocation location) {
+		return new NullLiteral(cfg, location);
 	}
 }

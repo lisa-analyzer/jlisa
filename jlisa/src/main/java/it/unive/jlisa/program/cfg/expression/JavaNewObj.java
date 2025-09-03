@@ -1,6 +1,16 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.lisa.analysis.*;
+import org.apache.commons.lang3.ArrayUtils;
+
+import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -15,8 +25,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
-import it.unive.lisa.type.ReferenceType;
-import org.apache.commons.lang3.ArrayUtils;
 
 
 public class JavaNewObj extends NaryExpression {
@@ -32,7 +40,7 @@ public class JavaNewObj extends NaryExpression {
 			CFG cfg,
 			CodeLocation location,
 			String constructName,
-			ReferenceType type,
+			JavaReferenceType type,
 			Expression... parameters) {
 		super(cfg, location, constructName, type, parameters);
 	}
@@ -45,14 +53,35 @@ public class JavaNewObj extends NaryExpression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+	D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			ExpressionSet[] params,
 			StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		ReferenceType reftype = (ReferenceType) getStaticType();
+		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
+
+		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
+			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
+		
+		// if needed, calling the class initializer (if the class has one)
+		String className = reftype.getInnerType().toString();
+		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
+			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
+				UnresolvedCall clinit = new UnresolvedCall(
+						getCFG(),
+						getLocation(),
+						CallType.STATIC,
+						className,
+						className + InitializedClassSet.SUFFIX_CLINIT,
+						new Expression[0]);
+				
+				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className)) ;
+				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
+			}
+		}
+
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());
 

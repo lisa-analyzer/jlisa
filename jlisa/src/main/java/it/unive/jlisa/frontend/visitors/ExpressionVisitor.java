@@ -2,10 +2,8 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.function.TriFunction;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -47,6 +45,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
@@ -66,14 +65,21 @@ import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.UnresolvedStaticCall;
+import it.unive.jlisa.program.cfg.expression.UnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
-import it.unive.jlisa.program.cfg.statement.literal.*;
+import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -83,21 +89,25 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.program.cfg.statement.comparison.*;
+import it.unive.lisa.program.cfg.statement.comparison.Equal;
+import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
+import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
+import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
+import it.unive.lisa.program.cfg.statement.comparison.LessThan;
+import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
-import it.unive.lisa.program.cfg.statement.numeric.*;
-import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.program.cfg.statement.numeric.Addition;
+import it.unive.lisa.program.cfg.statement.numeric.Division;
+import it.unive.lisa.program.cfg.statement.numeric.Modulo;
+import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
+import it.unive.lisa.program.cfg.statement.numeric.Negation;
+import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import org.apache.commons.lang3.function.TriFunction;
-import org.eclipse.jdt.core.dom.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -128,17 +138,17 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Type contentType = Untyped.INSTANCE;
 		for (Object args : node.expressions()) {
 			ASTNode e  = (ASTNode) args;
-            ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
-            e.accept(argumentsVisitor);
-            Expression expr = argumentsVisitor.getExpression();
-            parameters.add(expr);
-            contentType = expr.getStaticType();
-        }
+			ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+			e.accept(argumentsVisitor);
+			Expression expr = argumentsVisitor.getExpression();
+			parameters.add(expr);
+			contentType = expr.getStaticType();
+		}
 
 		expression = new JavaNewArrayWithInitializer(cfg, 
 				getSourceCodeLocation(node), 
 				parameters.toArray(new Expression[0]), 
-				new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
+				new JavaReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
 		return false;	
 
 
@@ -156,7 +166,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		if(node.dimensions().size() != 0) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 			Expression length = lengthVisitor.getExpression();
-			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
+			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new JavaReferenceType(type));
 		} else {
 			ArrayInitializer initializer = node.getInitializer();
 
@@ -172,8 +182,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					// This parsing error should be logged in ExpressionVisitor.
 					parameters.add(expr);
 				}
-            }
-			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
+			}
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		}
 
 		return false;		
@@ -188,9 +198,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-        SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
+		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
 
-        switch (operator.toString()) {
+		switch (operator.toString()) {
 		case "=":
 			expression = new JavaAssignment(cfg, locationManager.nextColumn(), left, right);
 			break;
@@ -313,7 +323,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				cfg,
 				getSourceCodeLocation(node),
 				((JavaClassType) type).getUnit().getName(),
-				new ReferenceType(type),
+				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
 	}
@@ -409,31 +419,31 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				jdtOperands.add((ASTNode) n);
 			}
 		}
-		
+
 		switch (operator.toString()) {
 		case "*":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new Multiplication(cfg, location, first, second));
+			new Multiplication(cfg, location, first, second));
 			break;
 		case "/":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new Division(cfg, location, first, second));
+			new Division(cfg, location, first, second));
 			break;
 		case "%":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new Modulo(cfg, location, first, second));
+			new Modulo(cfg, location, first, second));
 			break;
 		case "+":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new JavaAddition(cfg, location, first, second));
+			new JavaAddition(cfg, location, first, second));
 			break;
 		case "-":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new Subtraction(cfg, location, first, second));
+			new Subtraction(cfg, location, first, second));
 			break;
 		case ">>":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new JavaShiftRight(cfg, location, first, second));
+			new JavaShiftRight(cfg, location, first, second));
 			break;
 		case "<<":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
@@ -461,31 +471,31 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "==":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new Equal(cfg, location, first, second));
+			new Equal(cfg, location, first, second));
 			break;
 		case "!=":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new NotEqual(cfg, location, first, second));
+			new NotEqual(cfg, location, first, second));
 			break;
 		case "&":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new JavaBitwiseAnd(cfg, location, first, second));
+			new JavaBitwiseAnd(cfg, location, first, second));
 			break;
 		case "^":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new JavaBitwiseExclusiveOr(cfg, location, first, second));
+			new JavaBitwiseExclusiveOr(cfg, location, first, second));
 			break;
 		case "|":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new JavaBitwiseOr(cfg, location, first, second));
+			new JavaBitwiseOr(cfg, location, first, second));
 			break;
 		case "&&":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new And(cfg, location, first, second));
+			new And(cfg, location, first, second));
 			break;
 		case "||":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-				new Or(cfg, location, first, second));
+			new Or(cfg, location, first, second));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
@@ -536,14 +546,27 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(MethodInvocation node) {
 		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		List<Expression> parameters = new ArrayList<>();
-		boolean instance = false;
-		if (node.getExpression() != null) {
+		String methodName = node.getName().toString();
+		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
+
+		boolean isInstance;
+		// we do not have a receiver
+		if (node.getExpression() == null) {
+			isInstance = !classUnit.getInstanceCodeMembersByName(methodName, true).isEmpty();
+			
+			// if instance, we add this as parameter
+			if (isInstance)
+				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
+		} else {
 			node.getExpression().accept(receiver);
-			if (receiver.getExpression() != null) {
+			if (JavaClassType.hasType(node.getExpression().toString()))
+				isInstance = false;
+			else {
 				parameters.add(receiver.getExpression());
-				instance = true;
+				isInstance = true;
 			}
 		}
+
 		if (!node.typeArguments().isEmpty()) {
 			parserContext.addException(
 					new ParsingException("method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -557,15 +580,15 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
 		}
-		// TODO: REASON ABOUT INSTANCE / STATIC B.m() -> static, b.m() -> NOT STATIC, m() -> both satic and non-static
-		// TODO: instead of Call.CallType.UNKNOWN, we can provide better information of the call type
-		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.UNKNOWN, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+
+		if (isInstance)
+			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+		else 
+			expression = new UnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
+
 		return false;
 	}
 
@@ -605,7 +628,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 
 		Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
-		expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),unit, g);
+		expression = new JavaAccessGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), unit, g);
 		return false;
 	}
 
@@ -737,40 +760,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
 		ClassUnit superClass = (ClassUnit) this.cfg.getUnit();
-		boolean resolved = false;
-
-		do {
-			Set<it.unive.lisa.program.CompilationUnit> superClasses = superClass
-					.getImmediateAncestors().stream()
-					.filter(u -> u instanceof ClassUnit)
-					.collect(Collectors.toSet());
-
-			if (superClasses.size() > 1)
-				parserContext.addException(
-						new ParsingException("super-class", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"A class can extend just from one class.",
-								getSourceCodeLocation(node))
-						);
-
-			superClass = (ClassUnit) superClasses.stream().findFirst().get();
-			if (!superClass.getInstanceCodeMembersByName(node.getName().toString(), false).isEmpty()) {
-				resolved = true;
-				break;
-			}
-		} while (!superClass.getName().equals("Object"));
-
-		if (!resolved)
-			parserContext.addException(
-					new ParsingException("super-class", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Cannot resolved super method invocation",
-							getSourceCodeLocation(node))
-					);
-
 		JavaClassType superType = JavaClassType.lookup(superClass.getName(), null);
 
 		// craft the call to superclass
 		List<Expression> parameters = new ArrayList<>();
-		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new ReferenceType(superType)));
+		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(superType)));
 
 		for (Object args : node.arguments()) {
 			ASTNode e  = (ASTNode) args;
@@ -780,7 +774,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			parameters.add(expr);
 		}
 
-		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new UnresolvedSuperCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 
@@ -828,7 +822,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				cfg,
 				getSourceCodeLocation(node),
 				classType.getUnit().getName(),
-				new ReferenceType(classType),
+				new JavaReferenceType(classType),
 				new Expression[0]);
 		return false;
 	}
@@ -848,7 +842,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		node.getType().accept(visitor);
 		it.unive.lisa.type.Type varType = visitor.getType();
-		varType = varType.isInMemoryType() ? new ReferenceType(varType) : varType;
+		varType = varType.isInMemoryType() ? new JavaReferenceType(varType) : varType;
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;

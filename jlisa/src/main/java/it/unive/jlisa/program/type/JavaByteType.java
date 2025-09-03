@@ -1,4 +1,8 @@
 package it.unive.jlisa.program.type;
+import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
@@ -59,5 +63,10 @@ public class JavaByteType implements JavaNumericType {
     @Override
     public Set<Type> allInstances(TypeSystem types) {
         return Collections.singleton(this);
+    }
+    
+    @Override
+    public Expression defaultValue(CFG cfg, CodeLocation location) {
+        return new ByteLiteral(cfg, location, (byte) 0);
     }
 }

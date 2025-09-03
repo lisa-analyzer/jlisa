@@ -9,7 +9,6 @@ import it.unive.jlisa.program.type.*;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
 import org.eclipse.jdt.core.JavaCore;
@@ -74,7 +73,7 @@ public class JavaFrontend {
 
     public void registerTypes() {
         TypeSystem typeSystem = this.parserContext.getProgram().getTypes();
-        typeSystem.registerType(BoolType.INSTANCE);
+        typeSystem.registerType(JavaBooleanType.INSTANCE);
         typeSystem.registerType(JavaByteType.INSTANCE);
         typeSystem.registerType(JavaShortType.INSTANCE);
         typeSystem.registerType(JavaIntType.INSTANCE);

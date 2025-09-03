@@ -1,4 +1,4 @@
-package it.unive.jlisa.util.frontend;
+package it.unive.jlisa.frontend.util;
 
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.lisa.program.cfg.CFG;
