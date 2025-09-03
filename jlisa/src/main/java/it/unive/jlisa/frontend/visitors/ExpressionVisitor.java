@@ -2,8 +2,6 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.function.TriFunction;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -68,6 +66,7 @@ import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.expression.UnresolvedStaticCall;
+import it.unive.jlisa.program.cfg.expression.UnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -761,35 +760,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
 		ClassUnit superClass = (ClassUnit) this.cfg.getUnit();
-		boolean resolved = false;
-
-		do {
-			Set<it.unive.lisa.program.CompilationUnit> superClasses = superClass
-					.getImmediateAncestors().stream()
-					.filter(u -> u instanceof ClassUnit)
-					.collect(Collectors.toSet());
-
-			if (superClasses.size() > 1)
-				parserContext.addException(
-						new ParsingException("super-class", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"A class can extend just from one class.",
-								getSourceCodeLocation(node))
-						);
-
-			superClass = (ClassUnit) superClasses.stream().findFirst().get();
-			if (!superClass.getInstanceCodeMembersByName(node.getName().toString(), false).isEmpty()) {
-				resolved = true;
-				break;
-			}
-		} while (!superClass.getName().equals("Object"));
-
-		if (!resolved)
-			parserContext.addException(
-					new ParsingException("super-class", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Cannot resolved super method invocation",
-							getSourceCodeLocation(node))
-					);
-
 		JavaClassType superType = JavaClassType.lookup(superClass.getName(), null);
 
 		// craft the call to superclass
@@ -804,7 +774,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			parameters.add(expr);
 		}
 
-		expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new UnresolvedSuperCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 

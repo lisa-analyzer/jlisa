@@ -20,6 +20,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.DefaultParamInitialization;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
@@ -171,6 +172,11 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
     public Set<Type> allInstances(
             TypeSystem types) {
         return Collections.singleton(this);
+    }
+    
+    @Override
+    public Expression defaultValue(CFG cfg, CodeLocation location) {
+    	return new NullLiteral(cfg, location);
     }
 
     @Override
