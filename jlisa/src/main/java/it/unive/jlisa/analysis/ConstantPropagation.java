@@ -8,6 +8,8 @@ import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
+import it.unive.jlisa.program.operator.JavaCharacterToLowerCaseOperator;
+import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
@@ -160,6 +162,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaCharacterIsDefinedOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isDefined(v));
+		
+		if (operator instanceof JavaCharacterToLowerCaseOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue( (char) Character.toLowerCase(v));
+		
+		if (operator instanceof JavaCharacterToUpperCaseOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue( (char) Character.toUpperCase(v));
 		
 		// numeric
 		if (operator instanceof NumericNegation)
