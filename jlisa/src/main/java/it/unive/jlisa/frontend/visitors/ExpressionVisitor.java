@@ -80,7 +80,6 @@ import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -548,19 +547,27 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(MethodInvocation node) {
 		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		List<Expression> parameters = new ArrayList<>();
-		// TODO: better when node.getExpression is null
-		Satisfiability isInstance = node.getExpression() == null ? 
-				Satisfiability.UNKNOWN: 
-				JavaClassType.hasType(node.getExpression().toString()) ? 
-							Satisfiability.NOT_SATISFIED : 
-							Satisfiability.SATISFIED;
+		String methodName = node.getName().toString();
+		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
 
-		if (node.getExpression() != null) {
+		boolean isInstance;
+		// we do not have a receiver
+		if (node.getExpression() == null) {
+			isInstance = !classUnit.getInstanceCodeMembersByName(methodName, true).isEmpty();
+			
+			// if instance, we add this as parameter
+			if (isInstance)
+				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new ReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
+		} else {
 			node.getExpression().accept(receiver);
-			if (isInstance != Satisfiability.NOT_SATISFIED) {
+			if (JavaClassType.hasType(node.getExpression().toString()))
+				isInstance = false;
+			else {
 				parameters.add(receiver.getExpression());
+				isInstance = true;
 			}
 		}
+
 		if (!node.typeArguments().isEmpty()) {
 			parserContext.addException(
 					new ParsingException("method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -578,13 +585,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			}
 		}
 
-		if (isInstance == Satisfiability.SATISFIED)
+		if (isInstance)
 			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
-		else if (isInstance == Satisfiability.NOT_SATISFIED)
-			expression = new UnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		else 
-			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.UNKNOWN, null, node.getName().toString(), parameters.toArray(new Expression[0]));
-		
+			expression = new UnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
+
 		return false;
 	}
 
