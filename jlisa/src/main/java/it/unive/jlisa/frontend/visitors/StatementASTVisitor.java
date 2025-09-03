@@ -61,6 +61,7 @@ import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
@@ -87,7 +88,6 @@ import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
@@ -862,7 +862,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		JavaClassType npeType = JavaClassType.lookup("NullPointerException", null);
 		Statement nullPointerTrigger = new Throw(cfg, syntheticLocMan.nextLocation(),
 				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException", 
-						new ReferenceType(npeType), 
+						new JavaReferenceType(npeType), 
 						new JavaStringLiteral(cfg, 
 								syntheticLocMan.nextLocation(), 
 								"Cannot enter synchronized block because " + syncTarget + " is null"))
@@ -904,7 +904,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		node.getType().accept(visitor);
 		Type variableType = visitor.getType();
 		if (variableType.isInMemoryType()) {
-			variableType = new ReferenceType(variableType);
+			variableType = new JavaReferenceType(variableType);
 		}
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;

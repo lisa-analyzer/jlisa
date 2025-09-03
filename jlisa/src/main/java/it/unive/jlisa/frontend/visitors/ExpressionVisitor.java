@@ -80,6 +80,7 @@ import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -106,7 +107,6 @@ import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.program.cfg.statement.numeric.Subtraction;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -149,7 +149,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		expression = new JavaNewArrayWithInitializer(cfg, 
 				getSourceCodeLocation(node), 
 				parameters.toArray(new Expression[0]), 
-				new ReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
+				new JavaReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
 		return false;	
 
 
@@ -167,7 +167,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		if(node.dimensions().size() != 0) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 			Expression length = lengthVisitor.getExpression();
-			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new ReferenceType(type));
+			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new JavaReferenceType(type));
 		} else {
 			ArrayInitializer initializer = node.getInitializer();
 
@@ -184,7 +184,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					parameters.add(expr);
 				}
 			}
-			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new ReferenceType(type));
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		}
 
 		return false;		
@@ -324,7 +324,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				cfg,
 				getSourceCodeLocation(node),
 				((JavaClassType) type).getUnit().getName(),
-				new ReferenceType(type),
+				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
 	}
@@ -557,7 +557,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			
 			// if instance, we add this as parameter
 			if (isInstance)
-				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new ReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
+				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
 		} else {
 			node.getExpression().accept(receiver);
 			if (JavaClassType.hasType(node.getExpression().toString()))
@@ -794,7 +794,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 		// craft the call to superclass
 		List<Expression> parameters = new ArrayList<>();
-		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new ReferenceType(superType)));
+		parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(superType)));
 
 		for (Object args : node.arguments()) {
 			ASTNode e  = (ASTNode) args;
@@ -852,7 +852,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				cfg,
 				getSourceCodeLocation(node),
 				classType.getUnit().getName(),
-				new ReferenceType(classType),
+				new JavaReferenceType(classType),
 				new Expression[0]);
 		return false;
 	}
@@ -872,7 +872,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		node.getType().accept(visitor);
 		it.unive.lisa.type.Type varType = visitor.getType();
-		varType = varType.isInMemoryType() ? new ReferenceType(varType) : varType;
+		varType = varType.isInMemoryType() ? new JavaReferenceType(varType) : varType;
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;

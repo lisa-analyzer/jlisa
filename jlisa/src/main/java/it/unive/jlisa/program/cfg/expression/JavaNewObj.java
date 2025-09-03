@@ -4,6 +4,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -24,7 +25,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
-import it.unive.lisa.type.ReferenceType;
 
 
 public class JavaNewObj extends NaryExpression {
@@ -40,7 +40,7 @@ public class JavaNewObj extends NaryExpression {
 			CFG cfg,
 			CodeLocation location,
 			String constructName,
-			ReferenceType type,
+			JavaReferenceType type,
 			Expression... parameters) {
 		super(cfg, location, constructName, type, parameters);
 	}
@@ -60,7 +60,7 @@ public class JavaNewObj extends NaryExpression {
 			StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		ReferenceType reftype = (ReferenceType) getStaticType();
+		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
 
 		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
 			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());

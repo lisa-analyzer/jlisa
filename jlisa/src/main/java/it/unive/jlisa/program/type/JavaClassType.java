@@ -8,7 +8,6 @@ import java.util.Set;
 
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
@@ -183,6 +182,6 @@ public class JavaClassType implements UnitType {
     }
 
 	public Type getReference() {
-		return new ReferenceType(this);
+		return new JavaReferenceType(this);
 	}
 }
