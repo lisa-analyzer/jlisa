@@ -548,6 +548,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(MethodInvocation node) {
 		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 		List<Expression> parameters = new ArrayList<>();
+		// TODO: better when node.getExpression is null
 		Satisfiability isInstance = node.getExpression() == null ? 
 				Satisfiability.UNKNOWN: 
 				JavaClassType.hasType(node.getExpression().toString()) ? 

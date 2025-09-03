@@ -256,6 +256,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
+					// FIME: referenceType default value
 					init = type.defaultValue(cfg, locationManager.nextLocation());
 
 				Global global = new Global(
