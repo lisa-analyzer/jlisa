@@ -4,6 +4,8 @@ import java.util.Set;
 
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
@@ -154,7 +156,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaCharacterIsDigitOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isDigit(v));
-
+		
+		if (operator instanceof JavaCharacterIsDefinedOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isDefined(v));
+		
 		// numeric
 		if (operator instanceof NumericNegation)
 			if (arg.getValue() instanceof Double v)
@@ -324,13 +330,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringValueOfObjectOperator && arg.getValue() instanceof Object o)
 			return new ConstantValue(String.valueOf(o));
 		
-		if (operator instanceof JavaStringGetBytesOperator && arg.getValue() instanceof String s) {
+		if (operator instanceof JavaStringGetBytesOperator && arg.getValue() instanceof String s)
 			return new ConstantValue(s.getBytes());
-		}
 		
-		if (operator instanceof JavaLongIntValueOperator && arg.getValue() instanceof Long l) {
+		if (operator instanceof JavaLongIntValueOperator && arg.getValue() instanceof Long l)
 			return new ConstantValue(l.intValue());
-		}
 		
 		return top();
 	}
@@ -584,6 +588,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.equals(rv));			
+		}
+		
+		if (operator instanceof JavaCharacterForDigitOperator) {
+			Integer lv = ((Integer) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(Character.forDigit(lv,rv));			
 		}
 		
 		return top();

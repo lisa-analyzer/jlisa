@@ -23,3 +23,11 @@ class Character extends Object:
 		param this libtype Character*
 		param other libtype Character*
 		
+	method isDefined: it.unive.jlisa.program.java.constructs.character.CharacterIsDefined
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method forDigit: it.unive.jlisa.program.java.constructs.character.CharacterForDigit
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE	
