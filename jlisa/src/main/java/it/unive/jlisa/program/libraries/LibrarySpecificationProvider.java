@@ -1,18 +1,5 @@
 package it.unive.jlisa.program.libraries;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
-
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import it.unive.jlisa.antlr.LibraryDefinitionLexer;
@@ -24,6 +11,15 @@ import it.unive.lisa.program.CodeUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class LibrarySpecificationProvider {
@@ -58,7 +54,18 @@ public class LibrarySpecificationProvider {
 			AVAILABLE_LIBS.put(lib.getName(), lib);
 
 		try (ScanResult scanResult = new ClassGraph().acceptPaths(LIBS_FOLDER).scan()) {
-			for (String path : scanResult.getAllResources().getPaths())
+			// NOTE: THE NEXT TWO LINES ARE TEMPORARILY INCLUDED TO ALLOW SV-COMP ANALYSIS TO RUN.
+			// HOWEVER, THIS DOES NOT GUARANTEE CORRECT EXECUTION IF NEW .TXT MODELS ARE INTRODUCED.
+			// The issue arises when a parameter of a class defined in a .txt file is of a library type, and its definition
+			// resides in another .txt file that has not yet been processed. In such cases, the analysis may fail.
+			// Currently, an (approximate) correct order of parsing is the sorted one.
+			// However, is not guaranteed that scanResult.getAllResources().getPaths() is sorted.
+			System.out.println("WARNING: library files are being sorted by name to enable pipeline execution.");
+			List<String> sortedPath = scanResult.getAllResources().getPaths();
+			Collections.sort(sortedPath);
+
+			// for (String path : scanResult.getAllResources().getPaths())
+			for (String path : sortedPath) { // temporary
 				if (!path.endsWith("/" + STDLIB_FILE)) {
 					// need to add the / since the returned paths are relative
 					Pair<Runtime, Collection<Library>> libs = readFile("/" + path);
@@ -70,6 +77,7 @@ public class LibrarySpecificationProvider {
 						importLibrary(program, lib.getName());
 					}
 				}
+			}
 		}
 	}
 
