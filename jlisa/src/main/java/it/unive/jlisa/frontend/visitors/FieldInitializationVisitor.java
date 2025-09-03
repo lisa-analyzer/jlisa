@@ -1,10 +1,14 @@
 package it.unive.jlisa.frontend.visitors;
 
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
@@ -14,10 +18,6 @@ import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class FieldInitializationVisitor extends JavaASTVisitor{
     private CFG cfg;
@@ -59,7 +59,7 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
                     initializer = initializerVisitor.getExpression();
                 }
             } else {
-                initializer = JavaTypeSystem.getDefaultLiteral(type, cfg, locationManager.nextLocation());
+                initializer = type.defaultValue(cfg, locationManager.nextLocation());
             }
             String identifier = fragment.getName().getIdentifier();
             JavaAssignment assignment = new JavaAssignment(cfg, locationManager.nextLocation(), new AccessInstanceGlobal(cfg, locationManager.nextLocation(), thisExpr, identifier), initializer);

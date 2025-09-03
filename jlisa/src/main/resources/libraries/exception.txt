@@ -12,6 +12,8 @@ class Error extends Throwable:
 
 class RuntimeException extends Exception:
 
+class InterruptedException extends Exception:
+
 class ArithmeticException extends RuntimeException:
 
 class NullPointerException extends RuntimeException:

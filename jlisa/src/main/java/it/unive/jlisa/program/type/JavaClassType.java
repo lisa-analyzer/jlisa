@@ -8,6 +8,10 @@ import java.util.Set;
 
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
@@ -183,5 +187,10 @@ public class JavaClassType implements UnitType {
 
 	public Type getReference() {
 		return new JavaReferenceType(this);
+	}
+	
+	@Override
+	public Expression defaultValue(CFG cfg, CodeLocation location) {
+		return new NullLiteral(cfg, location);
 	}
 }

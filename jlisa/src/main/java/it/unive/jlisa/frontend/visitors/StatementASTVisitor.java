@@ -62,7 +62,6 @@ import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
@@ -917,7 +916,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			JavaAssignment assignment;
 			parserContext.addVariableType(cfg,variableName, variableType);
 			if(fragment.getInitializer() == null) {
-				initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+				initializer = variableType.defaultValue(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				assignment = new JavaAssignment(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref, initializer);
 			} else {
 				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);

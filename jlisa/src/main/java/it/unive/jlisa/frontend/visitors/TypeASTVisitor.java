@@ -19,7 +19,6 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
-import it.unive.lisa.program.type.BoolType;
 
 public class TypeASTVisitor extends JavaASTVisitor{
     private Type type;
@@ -49,7 +48,7 @@ public class TypeASTVisitor extends JavaASTVisitor{
             type = JavaDoubleType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.BOOLEAN) {
-            type = BoolType.INSTANCE;
+            type = JavaBooleanType.INSTANCE;
         }
         if (node.getPrimitiveTypeCode() ==  PrimitiveType.CHAR) {
             type = JavaCharType.INSTANCE;
