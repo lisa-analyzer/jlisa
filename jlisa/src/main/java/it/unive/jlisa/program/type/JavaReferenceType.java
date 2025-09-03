@@ -15,6 +15,7 @@ public class JavaReferenceType extends ReferenceType {
 
 	@Override
 	public Expression defaultValue(CFG cfg, CodeLocation location) {
+		// TODO: we should create a custom null literal
 		return new NullLiteral(cfg, location);
 	}
 }
