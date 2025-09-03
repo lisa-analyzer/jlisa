@@ -1,5 +1,8 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.program.type.*;
+import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.type.*;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IntersectionType;
@@ -14,22 +17,9 @@ import org.eclipse.jdt.core.dom.UnionType;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaCharType;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaDoubleType;
-import it.unive.jlisa.program.type.JavaFloatType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaLongType;
-import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.type.BoolType;
-import it.unive.lisa.type.ReferenceType;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
-import it.unive.lisa.type.VoidType;
 
 public class TypeASTVisitor extends JavaASTVisitor{
     private Type type;
@@ -151,16 +141,15 @@ public class TypeASTVisitor extends JavaASTVisitor{
         if (u == null) {
             throw new UnsupportedStatementException(node.getFullyQualifiedName() + " not exists in program, location: ." + getSourceCodeLocation(node));
         }
-        if (!(u instanceof ClassUnit)) {
-            throw new UnsupportedStatementException(node.getFullyQualifiedName() + " is not a class unit.");
-        }
-        JavaClassType javaClassType = JavaClassType.lookup(node.getFullyQualifiedName(), (ClassUnit)u);
-        if (javaClassType == null) {
-            type = Untyped.INSTANCE;
+        type = Untyped.INSTANCE;
+        if (u instanceof ClassUnit cu) {
+            type = JavaClassType.lookup(u.getName(), cu);
+        } else if (u instanceof InterfaceUnit iu) {
+            type = JavaInterfaceType.lookup(u.getName(), iu);
         } else {
-            type = javaClassType;
+            throw new UnsupportedStatementException(node.getFullyQualifiedName() + " is not a class or interface unit.");
         }
-        
+
         return false;
     }
     
