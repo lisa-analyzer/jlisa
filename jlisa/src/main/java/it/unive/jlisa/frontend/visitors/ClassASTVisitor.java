@@ -21,9 +21,11 @@ import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.AbstractClassUnit;
@@ -71,15 +73,18 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(node.getName().toString());
 		Type enumType = getProgram().getTypes().getType(enUnit.getName());
 
-		// build private constructor for enum
-		createEnumConstructor(enUnit, (EnumDeclaration) node);
 
 		// adding static fields corresponding to enum constants
 		for (Object con : node.enumConstants()) {
 			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false, new ReferenceType(enumType));
 			enUnit.addGlobal(g);
 		}
+		
+		// build the enum constructor (for initializing fields)
+		createEnumConstructor(enUnit);
 
+		// build enum static initializer
+		createEnumInitializer(enUnit);
 		return false;
 	}
 
@@ -199,6 +204,67 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		return false;
 	}
 
+	private void createEnumInitializer(EnumUnit enumUnit) {
+
+		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, false, enumUnit.getName() + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE, new Annotations(), new Parameter[0]);
+		CFG cfg = new CFG(cmDesc);
+
+		// in the main method, we instantiate enum constants
+		it.unive.lisa.type.Type enumType = getProgram().getTypes().getType(enumUnit.getName());
+
+		Statement init = null, last = null;
+		for (Global target : enumUnit.getGlobals()) {
+			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), enumUnit, target);
+			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), enumUnit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
+			JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
+			cfg.addNode(asg);
+
+			if (init == null) 
+				init = asg;
+			else
+				cfg.addEdge(new SequentialEdge(last, asg));
+
+			last = asg;
+		}
+
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
+		cfg.addNode(ret);
+		cfg.addEdge(new SequentialEdge(last, ret));
+		enumUnit.addCodeMember(cfg);
+		cfg.getEntrypoints().add(init);
+		return;
+	}
+
+	private void createEnumConstructor(EnumUnit enumUnit) {
+		Type type = getProgram().getTypes().getType(enumUnit.getName());
+		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		List<Parameter> parameters = new ArrayList<>();
+		parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
+		parameters.add(new Parameter(locationManager.nextLocation(), "name", new ReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
+
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+		CFG cfg = new CFG(codeMemberDescriptor);
+		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
+		parserContext.addVariableType(cfg, "name", new ReferenceType(getProgram().getTypes().getStringType()));
+
+		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
+				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
+						new VariableRef(cfg, locationManager.nextLocation(), "this"),
+						"name"),
+				new VariableRef(cfg, locationManager.nextLocation(), "name"));
+
+
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
+		cfg.addNode(glAsg);
+		cfg.addNode(ret);
+		cfg.getEntrypoints().add(glAsg);
+		cfg.addEdge(new SequentialEdge(glAsg, ret));
+		enumUnit.addInstanceCodeMember(cfg);
+	}
+
 	private void createClassInitializer(ClassUnit unit, TypeDeclaration node) {
 
 		// we add a class initializer only if the class has
@@ -306,36 +372,6 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		cfg.getEntrypoints().add(call);
 		cfg.addEdge(new SequentialEdge(call, ret));
 		classUnit.addInstanceCodeMember(cfg);
-		return cfg;
-	}
-
-	private CFG createEnumConstructor(EnumUnit enumUnit, EnumDeclaration enumDecl) {
-		Type type = getProgram().getTypes().getType(enumUnit.getName());
-		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(locationManager.nextLocation(), "this", new ReferenceType(type), null, new Annotations()));
-		parameters.add(new Parameter(locationManager.nextLocation(), "name", new ReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
-
-		Annotations annotations = new Annotations();
-		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
-		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new ReferenceType(type));
-		parserContext.addVariableType(cfg, "name", new ReferenceType(getProgram().getTypes().getStringType()));
-
-		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
-				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
-						new VariableRef(cfg, locationManager.nextLocation(), "this"),
-						"name"),
-				new VariableRef(cfg, locationManager.nextLocation(), "name"));
-
-
-		Ret ret = new Ret(cfg, locationManager.nextLocation());
-		cfg.addNode(glAsg);
-		cfg.addNode(ret);
-		cfg.getEntrypoints().add(glAsg);
-		cfg.addEdge(new SequentialEdge(glAsg, ret));
-		enumUnit.addInstanceCodeMember(cfg);
 		return cfg;
 	}
 

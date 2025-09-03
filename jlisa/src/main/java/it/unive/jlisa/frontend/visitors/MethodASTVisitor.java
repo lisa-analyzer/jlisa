@@ -12,19 +12,11 @@ import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
-import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.statement.JavaAssignment;
-import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
-import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.util.frontend.JavaCFGTweaker;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -111,28 +103,8 @@ public class MethodASTVisitor extends JavaASTVisitor {
                     "Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
                     getSourceCodeLocation(node)));
         }
-		if (isMain) {
-			// in the main method, we instantiate enum constants
-			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-			for (Unit unit : getProgram().getUnits())
-				if (unit instanceof EnumUnit) {
-					it.unive.lisa.type.Type enumType = getProgram().getTypes().getType(unit.getName());
-
-					for (Global target : unit.getGlobals()) {
-						JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, target);
-						JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), unit.getName(), new ReferenceType(enumType), new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
-						JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
-						cfg.addNode(asg);
-						for (Statement entry : cfg.getEntrypoints()) {
-							cfg.addEdge(new SequentialEdge(asg, entry));
-							cfg.getEntrypoints().remove(entry);
-							cfg.getEntrypoints().add(asg);
-						}
-					}
-				}
-
+		if (isMain) 
 			getProgram().addEntryPoint(cfg);
-		}
 
 		JavaCFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new, parserContext.getCurrentSyntheticCodeLocationManager(source));
 		JavaCFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
