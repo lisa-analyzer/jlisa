@@ -27,7 +27,6 @@ import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 
@@ -54,7 +53,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		this.cfg = new CFG(codeMemberDescriptor);
 		for (Parameter p : codeMemberDescriptor.getFormals()) {
 			it.unive.lisa.type.Type paramType = p.getStaticType();
-			parserContext.addVariableType(cfg, p.getName(), paramType.isInMemoryType() ? new ReferenceType(paramType) : paramType);
+			parserContext.addVariableType(cfg, p.getName(), paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
 		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
 
@@ -139,7 +138,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         //TODO annotations
         Annotations annotations = new Annotations();
         Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-        codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), returnType.isInMemoryType() ? new ReferenceType(returnType) : returnType, annotations, paramArray);
+        codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisacompilationUnit, instance, node.getName().getIdentifier(), returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType, annotations, paramArray);
         if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
             codeMemberDescriptor.setOverridable(false);
         } else {
@@ -157,7 +156,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new ReferenceType(type), null, new Annotations()));
+		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null, new Annotations()));
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source, compilationUnit);
