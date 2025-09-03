@@ -1,13 +1,6 @@
 package it.unive.jlisa.program.cfg.statement.asserts;
 
-import java.util.Set;
-
-import it.unive.lisa.analysis.AbstractDomain;
-import it.unive.lisa.analysis.AbstractLattice;
-import it.unive.lisa.analysis.Analysis;
-import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -19,6 +12,8 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.VoidType;
+
+import java.util.Set;
 
 /**
  * Simple assert statement in Java
@@ -64,7 +59,15 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 					public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
 						return Set.of(VoidType.INSTANCE);
 					}
+					public String toString() {
+						return "assert";
+					}
 				}, getLocation()), this);
+	}
+
+	@Override
+	public String toString() {
+		return "assert " + getSubExpression().toString();
 	}
 
 }

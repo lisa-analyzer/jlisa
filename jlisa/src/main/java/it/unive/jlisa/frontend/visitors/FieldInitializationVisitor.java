@@ -6,10 +6,9 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.jlisa.type.JavaTypeSystem;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
@@ -35,13 +34,11 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
         TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
         node.getType().accept(typeVisitor);
         Type type = typeVisitor.getType();
+        SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 
-        SourceCodeLocation fieldloc = getSourceCodeLocation(node);
-        SourceCodeLocation thisloc = new SourceCodeLocation(fieldloc.getSourceFile(), fieldloc.getLine(), fieldloc.getCol() + 3);
-        SourceCodeLocation initloc = new SourceCodeLocation(fieldloc.getSourceFile(), fieldloc.getLine(), fieldloc.getCol() + 2);
-        SourceCodeLocation asgloc = new SourceCodeLocation(fieldloc.getSourceFile(), fieldloc.getLine(), fieldloc.getCol() + 1);
 
-        VariableRef thisExpr = new VariableRef(cfg, thisloc, "this");
+
+        VariableRef thisExpr = new VariableRef(cfg, locationManager.nextLocation(), "this");
         for (Object f : node.fragments()) {
             VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
             if (fragment.getExtraDimensions() != 0) {
@@ -62,10 +59,10 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
                     initializer = initializerVisitor.getExpression();
                 }
             } else {
-                initializer = JavaTypeSystem.getDefaultLiteral(type, cfg, initloc);
+                initializer = type.defaultValue(cfg, locationManager.nextLocation());
             }
             String identifier = fragment.getName().getIdentifier();
-            JavaAssignment assignment = new JavaAssignment(cfg, asgloc, new AccessInstanceGlobal(cfg, fieldloc, thisExpr, identifier), initializer);
+            JavaAssignment assignment = new JavaAssignment(cfg, locationManager.nextLocation(), new AccessInstanceGlobal(cfg, locationManager.nextLocation(), thisExpr, identifier), initializer);
             block.addNode(assignment);
             if (first == null) {
                 first = assignment;

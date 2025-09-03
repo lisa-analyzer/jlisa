@@ -1,5 +1,9 @@
 package it.unive.jlisa.program.type;
 
+import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 
@@ -61,5 +65,9 @@ public class JavaShortType implements JavaNumericType {
     public boolean isIntegral() {
         return true;
     }
-
+    
+    @Override
+    public Expression defaultValue(CFG cfg, CodeLocation location) {
+        return new ShortLiteral(cfg, location, (short) 0);
+    }
 }

@@ -20,6 +20,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.DefaultParamInitialization;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
@@ -29,7 +30,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
@@ -87,8 +87,8 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
             Type base,
             int dimensions) {
         this.base = base;
-        if (dimensions < 1)
-            throw new IllegalArgumentException("Cannot create an array type with less then 1 dimensions");
+        if (dimensions < 0)
+            throw new IllegalArgumentException("Cannot create an array type with negative dimensions");
         this.dimensions = dimensions;
     }
 
@@ -153,7 +153,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
     @Override
     public Type getInnerType() {
-        if (dimensions == 1)
+        if (dimensions <= 1)
             return base;
         return lookup(base, dimensions - 1);
     }
@@ -172,6 +172,11 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
     public Set<Type> allInstances(
             TypeSystem types) {
         return Collections.singleton(this);
+    }
+    
+    @Override
+    public Expression defaultValue(CFG cfg, CodeLocation location) {
+    	return new NullLiteral(cfg, location);
     }
 
     @Override
@@ -211,7 +216,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
                 AnalysisState<A> refSt = entryState.bottom();
                 for (SymbolicExpression loc : allocSt.getComputedExpressions()) {
-                    ReferenceType t = new ReferenceType(loc.getStaticType());
+                    JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
                     HeapReference ref = new HeapReference(t, loc, getLocation());
                     AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
                     refSt = refSt.lub(refSem);

@@ -74,5 +74,4 @@ public class JavaFloatType implements JavaNumericType {
     public Expression defaultValue(CFG cfg, CodeLocation location) {
     	return new FloatLiteral(cfg, location, 0.0f);
     }
-
 }

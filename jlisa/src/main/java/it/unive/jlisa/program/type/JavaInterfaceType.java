@@ -8,6 +8,10 @@ import java.util.Set;
 
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
@@ -168,4 +172,9 @@ public final class JavaInterfaceType implements UnitType {
                 instances.add(JavaClassType.lookup(un.getName(), null));
         return instances;
     }
+    
+	@Override
+	public Expression defaultValue(CFG cfg, CodeLocation location) {
+		return new NullLiteral(cfg, location);
+	}
 }

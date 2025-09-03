@@ -7,19 +7,20 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.ArrayType;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class FieldDeclarationVisitor extends JavaASTVisitor {
-	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
+	it.unive.lisa.program.CompilationUnit unit;
 
 	public FieldDeclarationVisitor(ParserContext parserContext, String source, it.unive.lisa.program.CompilationUnit lisacompilationUnit, CompilationUnit astCompilationUnit) {
 		super(parserContext, source, astCompilationUnit);
-		this.lisacompilationUnit = lisacompilationUnit;
+		this.unit = lisacompilationUnit;
 	}
+	
 	@Override
 	public boolean visit(FieldDeclaration node) {
 		int modifiers = node.getModifiers();
@@ -27,7 +28,7 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
-			type = new ReferenceType(type);
+			type = new JavaReferenceType(type);
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
@@ -41,13 +42,12 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 				}
 			}
 			String identifier = fragment.getName().getIdentifier();
-
 			boolean isStatic = Modifier.isStatic(modifiers);
-			Global global = new Global(getSourceCodeLocation(node), lisacompilationUnit, identifier, !isStatic, type, new Annotations());
+			Global global = new Global(getSourceCodeLocation(fragment), unit, identifier, !isStatic, type, new Annotations());
 			if (isStatic) {
-				lisacompilationUnit.addGlobal(global);
+				unit.addGlobal(global);
 			} else {
-				lisacompilationUnit.addInstanceGlobal(global);
+				unit.addInstanceGlobal(global);
 			}
 		}
 

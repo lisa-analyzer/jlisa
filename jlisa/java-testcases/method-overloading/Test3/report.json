@@ -1,0 +1,38 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Test3.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "4",
+    "duration" : "3ms",
+    "end" : "2025-09-03T17:10:02.362+02:00",
+    "expressions" : "8",
+    "files" : "1",
+    "globals" : "6",
+    "members" : "95",
+    "programs" : "1",
+    "start" : "2025-09-03T17:10:02.359+02:00",
+    "statements" : "9",
+    "units" : "64",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/method-overloading/Test3"
+  }
+}

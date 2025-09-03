@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.expression;
 
 import java.util.Collections;
 
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -18,7 +19,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 
@@ -28,7 +28,7 @@ public class JavaCastExpression extends UnaryExpression {
 
 	public JavaCastExpression(CFG cfg, CodeLocation location, Expression subExpression, Type type) {
 		super(cfg, location, "cast", subExpression);
-		this.type = type.isInMemoryType() ? new ReferenceType(type) : type;
+		this.type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 	}
 
 	@Override

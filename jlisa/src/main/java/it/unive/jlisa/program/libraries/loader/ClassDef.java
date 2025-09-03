@@ -1,10 +1,6 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
-
+import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
@@ -13,6 +9,11 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.NativeCFG;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ClassDef {
 	private final boolean root;
@@ -104,7 +105,7 @@ public class ClassDef {
 	}
 
 	public ClassUnit populateUnit(
-			CodeLocation location,
+			SourceCodeLocationManager locationManager,
 			CFG init,
 			CompilationUnit root) {
 		ClassUnit unit = (ClassUnit) JavaClassType.lookup(this.name, null).getUnit();
@@ -115,7 +116,7 @@ public class ClassDef {
 			unit.addAncestor(root);
 
 		for (Method mtd : this.methods) {
-			NativeCFG construct = mtd.toLiSACfg(location, init, unit);
+			NativeCFG construct = mtd.toLiSACfg(locationManager.nextRow(), init, unit);
 			if (construct.getDescriptor().isInstance())
 				unit.addInstanceCodeMember(construct);
 			else
@@ -123,7 +124,7 @@ public class ClassDef {
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(location, unit);
+			Global field = fld.toLiSAObject(locationManager.nextRow(), unit);
 			if (field.isInstance())
 				unit.addInstanceGlobal(field);
 			else

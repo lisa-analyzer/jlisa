@@ -1,9 +1,9 @@
 package it.unive.jlisa.program.libraries;
 
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.CodeUnit;
 import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class JavaLibraryUnitType extends JavaClassType {
@@ -62,8 +62,8 @@ public class JavaLibraryUnitType extends JavaClassType {
 			return false;
 		if (t instanceof JavaLibraryUnitType)
 			return ((JavaLibraryUnitType) t).getLibraryName().equals(lib);
-		else if (includeReferences && t instanceof ReferenceType)
-			return is(((ReferenceType) t).getInnerType(), lib, true);
+		else if (includeReferences && t instanceof JavaReferenceType)
+			return is(((JavaReferenceType) t).getInnerType(), lib, true);
 		else
 			return false;
 	}

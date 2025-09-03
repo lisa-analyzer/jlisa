@@ -39,14 +39,18 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.loops.DoWhileLoop;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForEachLoop;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
 import it.unive.jlisa.program.cfg.controlflow.loops.WhileLoop;
 import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
@@ -55,9 +59,10 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
-import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
@@ -79,9 +84,9 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
+import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
@@ -215,7 +220,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 
 		// get the type from the descriptor
-		Expression thisExpression = new VariableRef(cfg, getSourceCodeLocation(node), "this");
+		Expression thisExpression = new VariableRef(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), "this");
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
 
@@ -225,13 +230,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
 		}
-		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
+		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -273,12 +275,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ExpressionVisitor whileCondition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(whileCondition);
 		Expression expression = whileCondition.getExpression();
-
-		if (expression == null) {
-			// Parsing error. Skipping...
-			return false;
-		}
-
 		Statement noop = new NoOp(this.cfg, expression.getLocation());
 		
 		boolean isConditionDeadcode = !loopBody.canBeContinued();
@@ -329,17 +325,15 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		node.getExpression().accept(collectionVisitor);
 		Expression collection = collectionVisitor.getExpression();
 
-		Expression condition = new Equal(cfg, item.getLocation(), new TrueLiteral(cfg, item.getLocation()), new HasNextForEach(cfg,item.getLocation(),collection));
+		SourceCodeLocationManager locationManager =  getSourceCodeLocationManager(node);
+		Expression condition = new Equal(cfg, locationManager.nextColumn(), new TrueLiteral(cfg, locationManager.nextColumn()), new HasNextForEach(cfg,locationManager.nextColumn(),collection));
 		block.addNode(condition);
 
-		JavaAssignment assignment = new JavaAssignment(cfg, item.getLocation(), item, new GetNextForEach(cfg,item.getLocation(),collection));
+		JavaAssignment assignment = new JavaAssignment(cfg, locationManager.nextColumn(), item, new GetNextForEach(cfg, locationManager.nextColumn(),collection));
 		block.addNode(assignment);
 		block.addEdge(new TrueEdge(condition, assignment));
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-		if(node.getBody() == null)
-			return false; // parsing error
-
 		node.getBody().accept(loopBodyVisitor);
 		
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
@@ -350,8 +344,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		if(loopBody.canBeContinued())
 			block.addEdge(new SequentialEdge(loopBody.getEnd(), condition));
-
-		Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
+		Statement noop = new NoOp(this.cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 		block.addNode(noop);
 
 		block.addEdge(new FalseEdge(condition, noop));
@@ -386,9 +379,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ParsedBlock initializers = visitSequentialExpressions(node.initializers());
 
 		boolean hasInitalizers = initializers.getBegin() != null && initializers.getEnd() != null;
-		NoOp noInit = new NoOp(cfg, getSourceCodeLocation(node));
+		SyntheticCodeLocationManager syntheticLocationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		NoOp noInit = new NoOp(cfg, syntheticLocationManager.nextLocation());
 		Statement entry;
-		if(hasInitalizers) {
+		if (hasInitalizers) {
 			block.mergeWith(initializers.getBody());
 			entry = initializers.getBegin();
 		} else {
@@ -400,7 +394,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		if(node.getExpression() != null)
 			node.getExpression().accept(conditionExpr);
 		Expression condition = conditionExpr.getExpression();
-		Statement alwaysTrue = new Equal(cfg, getSourceCodeLocation(node), new TrueLiteral(cfg, getSourceCodeLocation(node)), new TrueLiteral(cfg, getSourceCodeLocation(node)));
+		Statement alwaysTrue = new Equal(cfg, syntheticLocationManager.nextLocation(), new TrueLiteral(cfg, syntheticLocationManager.nextLocation()), new TrueLiteral(cfg, syntheticLocationManager.nextLocation()));
 
 		boolean hasCondition = condition != null;
 
@@ -413,9 +407,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-		if(node.getBody() == null)
-			return false; // parsing error
-
 		node.getBody().accept(loopBodyVisitor);
 
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
@@ -435,7 +426,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		else if(hasUpdaters)
 			LOG.warn("The last statement of for's body stops the execution, then updaters are not reachable.");
 
-		Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+2)); // added col +2 to avoid conflict with the other noop
+		Statement noop = new NoOp(this.cfg, hasCondition ? condition.getLocation(): syntheticLocationManager.nextLocation());
 		block.addNode(noop);
 
 		if(!areUpdatersDeadcode) {
@@ -478,22 +469,12 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(IfStatement node) {
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 		ExpressionVisitor conditionVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
-
-		if (node.getExpression() == null) {
-			return false; // parsing error
-		}
-
 		node.getExpression().accept(conditionVisitor);
 
 		Expression condition = conditionVisitor.getExpression();
 		nodeList.addNode(condition);
 
-		StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
-
-		if (node.getThenStatement() == null) {
-			return false; // parsing error
-		}
-		
+		StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);		
 		node.getThenStatement().accept(trueVisitor);
 		ParsedBlock trueBlock = trueVisitor.getBlock();
 
@@ -507,6 +488,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			nodeList.addNode(noop);
 			nodeList.addEdge(new SequentialEdge(trueBlock.getEnd(), noop));
 		}
+		
 		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		ParsedBlock falseBlock = null;
 
@@ -579,7 +561,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(SuperConstructorInvocation node) {
 		Unit unit = cfg.getDescriptor().getUnit();
 		if (!(unit instanceof ClassUnit)) {
-			throw new RuntimeException("The Unit must be a ClassUnit when dealing with SuperConstructorInvocation");
+			throw new RuntimeException("The unit must be a ClassUnit when dealing with SuperConstructorInvocation");
 		}
 		ClassUnit classUnit = (ClassUnit) unit;
 		String superclassName = classUnit.getImmediateAncestors().iterator().next().getName();
@@ -594,14 +576,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
 		}
 
-		Statement call = new UnresolvedCall(cfg, getSourceCodeLocation(node), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+		Statement call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -634,11 +613,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
 		node.getExpression().accept(itemVisitor);
 		switchItem = itemVisitor.getExpression();
-
-		if(node.statements() == null)
-			return false; // parsing error
-
-		Statement noop = new NoOp(this.cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+1)); // added col +1 to avoid conflict with the other noop
+		Statement noop = new NoOp(this.cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 		adj.addNode(noop);
 
 		List<it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase> cases = new ArrayList<>();
@@ -650,8 +625,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		List<Statement> caseInstrs= new ArrayList<>();
 		Statement lastCaseInstr = null;
-		
-		int offsetCol = 2;
 
 		Statement first = null, last = null;
 		for (Object o : node.statements()) {
@@ -663,7 +636,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			EmptyBody emptyBlock = null;
 			
 			if (isEmptyBlock) {
-				emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+				emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 			} else {
 				adj.mergeWith(caseBlock.getBody());
@@ -691,8 +664,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 					if(follower != null) {
 						adj.addEdge(new SequentialEdge(switchDefault, follower));
 					} else {
-						emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
-						offsetCol++;
+						emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 						adj.addNode(emptyBlock);
 						adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
 					}
@@ -721,8 +693,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
 				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
 			} else {
-				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
-				offsetCol++;
+				emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
 				adj.addEdge(new SequentialEdge(emptyBlock, noop));
@@ -734,15 +705,12 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			if(caseInstrs.size() > 1) {
 				adj.addEdge(new TrueEdge(switchCondition,caseInstrs.get(1)));
 			} else {
-				emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
-				offsetCol++;
+				emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(),emptyBlock));
 			}
 
 			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
-			if(caseInstrs.size() > 0 )
-				offsetCol++;		
 		}
 
 		for(int i = 0; i < cases.size()-1; i++)
@@ -756,7 +724,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
 
 		if(node.statements().isEmpty() || (cases.isEmpty() && defaultCase == null)) {
-			emptyBlock = new EmptyBody(cfg, new SourceCodeLocation(getSourceCodeLocation(node).getSourceFile(), getSourceCodeLocation(node).getLine(), getSourceCodeLocation(node).getCol()+offsetCol));
+			emptyBlock = new EmptyBody(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			adj.addNode(emptyBlock);
 			adj.addEdge(new SequentialEdge(emptyBlock, noop));
 			first = emptyBlock;
@@ -863,11 +831,57 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(SynchronizedStatement node) {
-		parserContext.addException(
-				new ParsingException("synchronized-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Synchronized statements are not supported.",
-						getSourceCodeLocation(node))
-				);
+		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
+
+		ExpressionVisitor synchTargetVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg);
+		node.getExpression().accept(synchTargetVisitor);
+		Expression syncTarget = synchTargetVisitor.getExpression();
+		
+		SyntheticCodeLocationManager syntheticLocMan = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		Statement syntheticCondition = new NotEqual(cfg, syntheticLocMan.nextLocation(), syncTarget, new NullLiteral(cfg, syntheticLocMan.nextLocation())); 
+
+		adj.addNode(syntheticCondition);
+
+		StatementASTVisitor bodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
+		node.getBody().accept(bodyVisitor);
+
+		ParsedBlock synchronizedBody = bodyVisitor.getBlock();
+		
+		adj.mergeWith(synchronizedBody.getBody());
+		
+		adj.addEdge(new TrueEdge(syntheticCondition, synchronizedBody.getBegin()));
+
+		Statement noop = new NoOp(cfg, syntheticLocMan.nextLocation());
+
+		if (synchronizedBody.canBeContinued()) {
+			adj.addNode(noop);
+			adj.addEdge(new SequentialEdge(synchronizedBody.getEnd(), noop));
+		}
+		
+		JavaClassType npeType = JavaClassType.lookup("NullPointerException", null);
+		Statement nullPointerTrigger = new Throw(cfg, syntheticLocMan.nextLocation(),
+				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException", 
+						new JavaReferenceType(npeType), 
+						new JavaStringLiteral(cfg, 
+								syntheticLocMan.nextLocation(), 
+								"Cannot enter synchronized block because " + syncTarget + " is null"))
+							);
+		adj.addNode(nullPointerTrigger);
+		adj.addEdge(new FalseEdge(syntheticCondition, nullPointerTrigger));
+		
+		
+		Statement follower = null;
+		Statement lastBlockStatement = null;
+		
+		if (synchronizedBody == null || (synchronizedBody != null && synchronizedBody.canBeContinued())) {
+			adj.addNode(noop);
+			follower = noop;
+			lastBlockStatement = noop;
+		}
+		
+		this.cfg.getDescriptor().addControlFlowStructure(new SynchronizedBlock(adj,syncTarget,syntheticCondition, synchronizedBody.getBody().getNodes(), follower));
+		this.block = new ParsedBlock(syntheticCondition, adj, lastBlockStatement);
+		
 		return false;
 	}
 
@@ -889,35 +903,41 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		node.getType().accept(visitor);
 		Type variableType = visitor.getType();
 		if (variableType.isInMemoryType()) {
-			variableType = new ReferenceType(variableType);
+			variableType = new JavaReferenceType(variableType);
 		}
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
-			SourceCodeLocation loc = getSourceCodeLocation(fragment);
+
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, variableType);
 			Expression initializer;
+			JavaAssignment assignment;
 			parserContext.addVariableType(cfg,variableName, variableType);
 			if(fragment.getInitializer() == null) {
-				initializer = JavaTypeSystem.getDefaultLiteral(variableType, cfg, loc);
+				initializer = variableType.defaultValue(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+				assignment = new JavaAssignment(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref, initializer);
 			} else {
+				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);
 				org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 				ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg);
 				expr.accept(exprVisitor);
 				initializer = exprVisitor.getExpression();
 				if (initializer == null) {
-					initializer = new NullLiteral(cfg, loc);
+					initializer = new NullLiteral(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+					assignment = new JavaAssignment(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref, initializer);
+				} else {
+					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, initializer);
 				}
+
 			}
-			JavaAssignment assignment = new JavaAssignment(cfg, loc, ref, initializer);
+
 			adj.addNode(assignment);
 			if (getFirst() == null) {
 				first = assignment;
 			} else {
-				// FIXME: first? not last?
-				adj.addEdge(new SequentialEdge(first, assignment));
+				adj.addEdge(new SequentialEdge(last, assignment));
 			}
 			
 			last = assignment;
@@ -936,19 +956,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		node.getExpression().accept(condition);
 		Expression expression = condition.getExpression();
 
-		if (expression == null) {
-			// Parsing error. Skipping...
-			return false;
-		}
-
 		adj.addNode(expression);
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control);
 		node.getBody().accept(loopBodyVisitor);
 
-		if(node.getBody() == null)
-			return false; // parsing error
-		
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
 		
 		adj.mergeWith(loopBody.getBody());
@@ -1001,11 +1013,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ParsedBlock body = blockVisitor.getBlock();
 		trycatch.mergeWith(body.getBody());
 
-		// if there is an else block, we parse it immediately and connect it
-		// to the end of the try block *only* if it does not end with a
-		// return/throw
-		// (as it would be deadcode)
-		normalExits.add(body.getEnd());
+		// we add the the end of the try block *only* if it does not end with a
+		// return/throw (as it would be deadcode)
+		if (body.canBeContinued())
+			normalExits.add(body.getEnd());
 
 
 		// we then parse each catch block, and we connect *every* instruction
