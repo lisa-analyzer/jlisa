@@ -39,3 +39,11 @@ class Character extends Object:
 	method toUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterToUpperCase
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	
+	method isJavaIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierPart
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	
+	method isJavaIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierStart
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE

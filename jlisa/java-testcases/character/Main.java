@@ -10,6 +10,11 @@ public class Main{
 		char char2 = Character.forDigit(10, 16);
 		char char3 = Character.toLowerCase('H');
 		char char4 = Character.toUpperCase('h');
+		boolean b3 = Character.isJavaIdentifierPart(' ');
+		
+		// This returns true if passed 2 as argument
+		boolean b4 = Character.isJavaIdentifierStart('+');
+		
 	}
 	
 }
