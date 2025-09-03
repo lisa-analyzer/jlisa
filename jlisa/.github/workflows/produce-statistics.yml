@@ -1,4 +1,4 @@
-name: Run analysis and produce statistics
+name: Run analysis and produce statistics test
 
 on:
   push:
