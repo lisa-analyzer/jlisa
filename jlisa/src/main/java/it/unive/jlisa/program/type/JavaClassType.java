@@ -52,6 +52,10 @@ public class JavaClassType implements UnitType {
             CompilationUnit unit) {
         return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
     }
+    
+    public static boolean hasType(String name) {
+    	return types.containsKey(name);
+    }
 
     protected final String name;
 

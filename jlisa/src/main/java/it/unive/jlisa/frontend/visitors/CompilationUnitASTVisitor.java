@@ -2,7 +2,6 @@ package it.unive.jlisa.frontend.visitors;
 
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -10,7 +9,6 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.AbstractClassUnit;
@@ -55,10 +53,6 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 				EnumUnit emUnit = buildEnumUnit(source, getProgram(), (EnumDeclaration) type);
 				JavaClassType.lookup(emUnit.getName(), emUnit);
 			}
-
-			if (type instanceof AnnotationTypeDeclaration) {
-				parserContext.addException(new ParsingException("annotation-type-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Annotation Type Declarations are not supported.", getSourceCodeLocation((AnnotationTypeDeclaration)type)));
-			}
 		}
 	}
 
@@ -77,10 +71,6 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 			} else if (type instanceof EnumDeclaration) {
 				ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit);
 				((EnumDeclaration) type).accept(classVisitor);
-			}
-			
-			if (type instanceof AnnotationTypeDeclaration) {
-				parserContext.addException(new ParsingException("annotation-type-declaration", ParsingException.Type.UNSUPPORTED_STATEMENT, "Annotation Type Declarations are not supported.", getSourceCodeLocation((AnnotationTypeDeclaration)type)));
 			}
 		}
 
