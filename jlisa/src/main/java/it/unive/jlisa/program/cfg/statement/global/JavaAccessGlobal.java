@@ -146,8 +146,8 @@ public class JavaAccessGlobal extends Expression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
-			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
+		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
+			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
 		
 		// we need to check whether to call the clinit of the container unit or  to call the one of its superclass
 		Unit classInit = container;
@@ -163,7 +163,7 @@ public class JavaAccessGlobal extends Expression {
 
 		// if needed, calling the class initializer
 		if (!JavaClassType.lookup(classInit.toString(), null).getUnit().getCodeMembersByName(classInit.toString() + InitializedClassSet.SUFFIX_CLINIT).isEmpty())
-			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(classInit.toString())) {
+			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(classInit.toString())) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
@@ -172,7 +172,7 @@ public class JavaAccessGlobal extends Expression {
 						classInit.toString() + InitializedClassSet.SUFFIX_CLINIT,
 						new Expression[0]);
 
-				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(classInit.toString())) ;
+				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(classInit.toString())) ;
 				state = clinit.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			}
 
