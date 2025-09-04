@@ -16,6 +16,8 @@ class InterruptedException extends Exception:
 
 class ClassNotFoundException extends Exception:
 
+class CloneNotSupportedException extends Exception:
+
 class ArithmeticException extends RuntimeException:
 
 class NullPointerException extends RuntimeException:
