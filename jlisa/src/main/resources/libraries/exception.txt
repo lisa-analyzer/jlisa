@@ -16,6 +16,8 @@ class InterruptedException extends Exception:
 
 class ClassNotFoundException extends Exception:
 
+class CloneNotSupportedException extends Exception:
+
 class ArithmeticException extends RuntimeException:
 
 class NullPointerException extends RuntimeException:
@@ -40,6 +42,8 @@ class IllegalArgumentException extends RuntimeException:
 class NumberFormatException extends IllegalArgumentException:
 
 class NegativeArraySizeException extends RuntimeException:
+
+class UnsupportedOperationException extends RuntimeException:
 
 class UnsupportedEncodingException extends IOException:
 
