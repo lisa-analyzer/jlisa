@@ -43,6 +43,8 @@ class NumberFormatException extends IllegalArgumentException:
 
 class NegativeArraySizeException extends RuntimeException:
 
+class UnsupportedOperationException extends RuntimeException:
+
 class UnsupportedEncodingException extends IOException:
 
 class AssertionError extends Error:
