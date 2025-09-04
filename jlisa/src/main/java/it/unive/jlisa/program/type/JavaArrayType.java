@@ -195,7 +195,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
                 MemoryAllocation alloc = new MemoryAllocation(type, getLocation(), false);
                 Analysis<A, D> analysis = interprocedural.getAnalysis();
                 AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
-                ExpressionSet allocExps = allocSt.getComputedExpressions();
+                ExpressionSet allocExps = allocSt.getExecutionExpressions();
 
                 AnalysisState<A> initSt = entryState.bottom();
                 for (SymbolicExpression allocExp : allocExps) {
@@ -215,7 +215,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
                 }
 
                 AnalysisState<A> refSt = entryState.bottom();
-                for (SymbolicExpression loc : allocSt.getComputedExpressions()) {
+                for (SymbolicExpression loc : allocSt.getExecutionExpressions()) {
                     JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
                     HeapReference ref = new HeapReference(t, loc, getLocation());
                     AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);

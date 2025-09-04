@@ -50,7 +50,7 @@ public class JavaStringLiteral extends Literal<String> {
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = entryState.bottom();
-		for (SymbolicExpression ref : callState.getComputedExpressions()) {
+		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, new Constant(stringType, getValue(), getLocation()), this);
@@ -58,9 +58,6 @@ public class JavaStringLiteral extends Literal<String> {
 		}
 
 		getMetaVariables().addAll(call.getMetaVariables());		
-		return new AnalysisState<>(
-				tmp.getState(),
-				callState.getComputedExpressions(),
-				tmp.getFixpointInformation());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 }

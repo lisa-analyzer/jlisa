@@ -63,7 +63,7 @@ public class JavaNewArray extends UnaryExpression {
 				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp, interprocedural, expressions);
 				AnalysisState<A> init = state.bottom();
 
-				for(SymbolicExpression v : tmp2.getComputedExpressions()) {
+				for(SymbolicExpression v : tmp2.getExecutionExpressions()) {
 					init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
 				}
 

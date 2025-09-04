@@ -42,7 +42,7 @@ public class JavaCastExpression extends UnaryExpression {
 		AnalysisState<A> exprState = analysis.smallStepSemantics(state, expr, this);
 		AnalysisState<A> result = state.bottom();
 		
-		for (SymbolicExpression exp : exprState.getComputedExpressions()) {
+		for (SymbolicExpression exp : exprState.getExecutionExpressions()) {
 			BinaryExpression castExpression =  new BinaryExpression(type, exp, typeConv, TypeCast.INSTANCE, getLocation());
 			result = result.lub(analysis.smallStepSemantics(exprState, castExpression, this));
 		}

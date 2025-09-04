@@ -62,13 +62,13 @@ public class JavaNewObj extends NaryExpression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
 
-		if (state.getInfo(InitializedClassSet.INFO_KEY) == null)
-			state = state.storeInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
+		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
+			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
 		
 		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
 		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
-			if (!state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
+			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
@@ -77,7 +77,7 @@ public class JavaNewObj extends NaryExpression {
 						className + InitializedClassSet.SUFFIX_CLINIT,
 						new Expression[0]);
 				
-				state = state.storeInfo(InitializedClassSet.INFO_KEY, state.getInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className)) ;
+				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className)) ;
 				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
 			}
 		}
@@ -93,11 +93,11 @@ public class JavaNewObj extends NaryExpression {
 
 		// we also have to add the receiver inside the state
 		AnalysisState<A> callstate = paramThis.forwardSemantics(allocated, interprocedural, expressions);
-		ExpressionSet[] fullParams = ArrayUtils.insert(0, params, callstate.getComputedExpressions());
+		ExpressionSet[] fullParams = ArrayUtils.insert(0, params, callstate.getExecutionExpressions());
 
 		// we store a reference to the newly created region in the receiver
 		AnalysisState<A> tmp = state.bottom();
-		for (SymbolicExpression rec : callstate.getComputedExpressions())
+		for (SymbolicExpression rec : callstate.getExecutionExpressions())
 			tmp = tmp.lub(analysis.assign(callstate, rec, ref, paramThis));
 		// we store the approximation of the receiver in the sub-expressions
 		expressions.put(paramThis, tmp);
@@ -114,7 +114,7 @@ public class JavaNewObj extends NaryExpression {
 
 		// now remove the instrumented receiver
 		expressions.forget(paramThis);
-		for (SymbolicExpression v : callstate.getComputedExpressions())
+		for (SymbolicExpression v : callstate.getExecutionExpressions())
 			if (v instanceof Identifier)
 				// we leave the instrumented receiver in the program variables
 				// until it is popped from the stack to keep a reference to the
@@ -124,9 +124,6 @@ public class JavaNewObj extends NaryExpression {
 		// finally, we leave a reference to the newly created object on the
 		// stack; this correponds to the state after the constructor call
 		// but with the receiver left on the stack
-		return new AnalysisState<>(
-				sem.getState(),
-				callstate.getComputedExpressions(),
-				sem.getFixpointInformation());
+		return sem.withExecutionExpressions(callstate.getExecutionExpressions());				
 	}
 }

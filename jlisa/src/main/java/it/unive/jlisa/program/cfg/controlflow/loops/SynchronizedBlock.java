@@ -56,4 +56,18 @@ public class SynchronizedBlock extends ControlFlowStructure {
 		return targeted;
 	}
 
+	@Override
+	public void addWith(Statement toAdd, Statement reference) {
+		if (body.contains(reference))
+			body.add(toAdd);
+	}
+
+	@Override
+	public void replace(Statement original, Statement replacement) {
+		if (body.contains(original)) {
+			body.remove(replacement);
+			body.add(replacement);		
+		}
+	}
+
 }
