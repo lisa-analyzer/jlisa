@@ -14,7 +14,7 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
     public void testMethodOverloading1() throws IOException {
         JavaFrontend frontend = new JavaFrontend();
         frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test1/Test1.java"));
-        assert !frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+        assert frontend.getParserContext().getExceptions().stream().anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
 
         perform(TestHelpers.createConfiguration("method-overloading", "Test1", "Test1.java"));
     }
