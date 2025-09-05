@@ -16,7 +16,10 @@ import it.unive.jlisa.program.operator.JavaCharacterIsLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
+import it.unive.jlisa.program.operator.JavaDoubleParseDoubleOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToStringOperator;
 import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
@@ -331,7 +334,21 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Double.doubleToRawLongBits(v));
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Double.doubleToRawLongBits(v));
-
+		
+		if (operator instanceof JavaDoubleLongBitsToDoubleOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Double.longBitsToDouble(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Double.longBitsToDouble(v));
+		
+		if (operator instanceof JavaDoubleToStringOperator)
+			if(arg.getValue() instanceof Double d)
+				return new ConstantValue(d.toString());
+		
+		if (operator instanceof JavaDoubleParseDoubleOperator)
+			if(arg.getValue() instanceof String s)
+				return new ConstantValue(Double.parseDouble(s));
+		
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
