@@ -536,7 +536,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesAbstractValue(ConstantValue value, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
-		// this method should not be never called
+		if (value.getValue() instanceof Boolean)
+			return ((Boolean) value.getValue()).booleanValue() ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		
 		return Satisfiability.UNKNOWN;
 	}
 
@@ -627,7 +629,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public Satisfiability satisfiesNonNullConstant(Constant constant, ProgramPoint pp, SemanticOracle oracle)
 			throws SemanticException {
-		// this method should not be never called
+		if (constant.getValue() instanceof Boolean)
+			return ((Boolean) constant.getValue()).booleanValue() ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		
+		
 		return Satisfiability.UNKNOWN;
 	}
 	
