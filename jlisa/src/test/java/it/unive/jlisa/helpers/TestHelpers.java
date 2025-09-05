@@ -90,8 +90,8 @@ public class TestHelpers {
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.semanticChecks.add(new AssertChecker());
-		conf.forceUpdate = true;
-		// conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
+//		conf.forceUpdate = true;
+//		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
