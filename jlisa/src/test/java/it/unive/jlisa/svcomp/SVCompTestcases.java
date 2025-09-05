@@ -41,4 +41,12 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Verifier.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void iarith1_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "iarith1", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
 }
