@@ -13,7 +13,12 @@ public class Main{
 		boolean b3 = Character.isJavaIdentifierPart(' ');
 		
 		// This returns true if passed 2 as argument
-		boolean b4 = Character.isJavaIdentifierStart('+');
+		boolean b4 = Character.isJavaIdentifierStart('2');
+		
+		boolean b5 = Character.isLetterOrDigit('-');
+		
+		boolean b6 = Character.isLowerCase('l');
+		boolean b7 = Character.isUpperCase('L');
 		
 	}
 	

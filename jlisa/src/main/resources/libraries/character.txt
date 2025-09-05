@@ -47,3 +47,15 @@ class Character extends Object:
 	method isJavaIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierStart
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isLetterOrDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsLetterOrDigit
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterIsLowerCase
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterIsUpperCase
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
