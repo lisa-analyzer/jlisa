@@ -1,0 +1,43 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':44:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: The assertion is hold."
+  }, {
+    "message" : "['Main.java':45:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: The assertion is hold."
+  } ],
+  "files" : [ "int_Main.i()_1707429877.json", "long_Main.l()_1707429908.json", "report.json", "void_Main.main(String_[]_args).json", "void_Main.s()_1707423212.json" ],
+  "info" : {
+    "cfgs" : "16",
+    "duration" : "117ms",
+    "end" : "2025-09-05T14:02:47.121+02:00",
+    "expressions" : "113",
+    "files" : "4",
+    "globals" : "4",
+    "members" : "82",
+    "programs" : "1",
+    "start" : "2025-09-05T14:02:47.004+02:00",
+    "statements" : "49",
+    "units" : "66",
+    "version" : "0.1",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashException" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/iarith2"
+  }
+}

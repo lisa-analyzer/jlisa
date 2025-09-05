@@ -38,6 +38,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
+import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -45,6 +46,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushInv;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.ModuloOperator;
@@ -58,6 +60,7 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
@@ -323,7 +326,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 			
-			if (lVal instanceof Integer || rVal instanceof Integer) {
+			if (lVal instanceof Long || rVal instanceof Long) {
+				return new ConstantValue(((Number) lVal).longValue() >> ((Number) rVal).longValue());
+			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() >> ((Number) rVal).intValue());
 			}
 		}
@@ -332,18 +337,22 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 			
-			if (lVal instanceof Integer || rVal instanceof Integer) {
+			if (lVal instanceof Long || rVal instanceof Long) {
+				return new ConstantValue(((Number) lVal).longValue() >>> ((Number) rVal).longValue());
+			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() >>> ((Number) rVal).intValue());
-			}
+			} 
 		}
 		
 		if (operator instanceof BitwiseShiftLeft) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 			
-			if (lVal instanceof Integer || rVal instanceof Integer) {
+			if (lVal instanceof Long || rVal instanceof Long) {
+				return new ConstantValue(((Number) lVal).longValue() << ((Number) rVal).longValue());
+			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() << ((Number) rVal).intValue());
-			}
+			} 
 		}
 		
 		if (operator instanceof BitwiseXor) {
@@ -426,6 +435,21 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() % ((Number) rVal).intValue());
 			}
+		}
+		
+		if (operator instanceof ComparisonLt) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return new ConstantValue(((Number) lVal).doubleValue() < ((Number) rVal).doubleValue());
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(((Number) lVal).floatValue() < ((Number) rVal).floatValue());
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return new ConstantValue(((Number) lVal).longValue() < ((Number) rVal).longValue());
+			} else {
+				return new ConstantValue(((Number) lVal).intValue() < ((Number) rVal).intValue());
+			}	
 		}
 		
 		if (operator instanceof JavaMathPowOperator) {
@@ -544,7 +568,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	public Satisfiability satisfiesBinaryExpression(BinaryExpression expression, ConstantValue left,
 			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
 		BinaryOperator operator = expression.getOperator();
-
+		if (left.isTop() || right.isTop())
+			return Satisfiability.UNKNOWN;
+		
 		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
@@ -572,6 +598,21 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}	
 		}
 
+		if (operator instanceof ComparisonLt) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return ((Number) lVal).doubleValue() < ((Number) rVal).doubleValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return ((Number) lVal).floatValue() < ((Number) rVal).floatValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return ((Number) lVal).longValue() < ((Number) rVal).longValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+			} else {
+				return ((Number) lVal).intValue() < ((Number) rVal).intValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+			}	
+		}
+		
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 
@@ -588,6 +629,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			throws SemanticException {
 		// this method should not be never called
 		return Satisfiability.UNKNOWN;
+	}
+	
+	@Override
+	public ValueEnvironment<ConstantValue> assume(ValueEnvironment<ConstantValue> environment,
+			ValueExpression expression, ProgramPoint src, ProgramPoint dest, SemanticOracle oracle)
+			throws SemanticException {
+		Satisfiability sat = satisfies(environment, expression, dest, oracle);
+		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
+			return environment;
+		else 
+			return new ValueEnvironment<>(new ConstantValue()).bottom();			
 	}
 
 	@Override
