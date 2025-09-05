@@ -29,7 +29,7 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.1")
 
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
     implementation("commons-cli:commons-cli:1.4")
@@ -84,34 +84,4 @@ tasks.jar {
 
 tasks.named<Zip>("distZip") {
 	dependsOn(tasks.test)
-}
-
-val jpackage by tasks.registering(Exec::class) {
-    dependsOn(tasks.named("jar"))
-
-    val outputDir = "${buildDir}/jpackage"
-    val appName = "jlisa"
-    val mainJar = "${project.buildDir}/libs/${appName}-${version}.jar"
-    val mainClassName = application.mainClass.get() // Dynamically getting Main-Class
-
-    doFirst {
-        mkdir(outputDir)
-        val appBundle = file("$outputDir/$appName.app")
-        if (appBundle.exists()) {
-            println("Deleting existing app bundle: $appBundle")
-            appBundle.deleteRecursively()
-        }
-    }
-
-    // Base jpackage command
-    commandLine(
-        "jpackage",
-        "--input", "${buildDir}/libs",
-        "--name", appName,
-        "--main-jar", "${appName}-${version}.jar",
-        "--main-class", mainClassName,
-        "--dest", outputDir,
-        "--type", if (System.getProperty("os.name").startsWith("Windows")) "exe" else "app-image",
-        "--java-options", "-Xmx512m"
-    )
 }
