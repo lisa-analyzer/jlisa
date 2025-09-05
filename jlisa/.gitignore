@@ -47,3 +47,4 @@ bin/
 ### Mac OS ###
 .DS_Store
 /gradle.properties
+sv-comp-benchmark
