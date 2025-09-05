@@ -99,4 +99,28 @@ public class Switch extends ControlFlowStructure {
 		targeted.add(getFirstFollower());
 		return targeted;
 	}
+
+	@Override
+	public void addWith(Statement toAdd, Statement reference) {
+		for (SwitchCase switchCase : cases)
+			if (switchCase.getBody().contains(reference))
+				switchCase.getBody().add(reference);
+		
+		if (defaultCase.getBody().contains(reference))
+			defaultCase.getBody().add(reference);
+	}
+
+	@Override
+	public void replace(Statement original, Statement replacement) {
+		for (SwitchCase switchCase : cases)
+			if (switchCase.getBody().contains(original)) {
+				switchCase.getBody().remove(original);
+				switchCase.getBody().add(replacement);
+			}
+		
+		if (defaultCase.getBody().contains(original)) {
+			defaultCase.getBody().remove(original);
+			defaultCase.getBody().add(replacement);
+		}	
+	}
 }

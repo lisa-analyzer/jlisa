@@ -1012,6 +1012,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		// body of the try
 		ParsedBlock body = blockVisitor.getBlock();
 		trycatch.mergeWith(body.getBody());
+		ProtectedBlock tryBlock = new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes());
+
 
 		// we add the the end of the try block *only* if it does not end with a
 		// return/throw (as it would be deadcode)
@@ -1036,10 +1038,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 			if (body.canBeContinued())
 				trycatch.addEdge(
-						new ErrorEdge(body.getEnd(), visit.getBegin(), block.getIdentifier(), block.getExceptions()));
+						new ErrorEdge(body.getEnd(), visit.getBegin(), block.getIdentifier(), tryBlock, block.getExceptions()));
 			for (Statement st : body.getBody().getNodes())
 				if (st.stopsExecution())
-					trycatch.addEdge(new ErrorEdge(st, visit.getBegin(), block.getIdentifier(), block.getExceptions()));
+					trycatch.addEdge(new ErrorEdge(st, visit.getBegin(), block.getIdentifier(), tryBlock, block.getExceptions()));
 
 			if (visit.canBeContinued())
 				// non-stopping last statement
@@ -1078,7 +1080,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		// build protection block
 		this.cfg.getDescriptor().addProtectionBlock(
 				new ProtectionBlock(
-						new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
+						tryBlock,
 						catches,
 						null,
 						finallyBlock == null ? null

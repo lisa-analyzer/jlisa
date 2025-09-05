@@ -105,7 +105,7 @@ public class AssertChecker
 			}
 
 			Set<SymbolicExpression> reachableIds = new HashSet<>();
-			Iterator<SymbolicExpression> comExprIterator = state.getComputedExpressions().iterator();
+			Iterator<SymbolicExpression> comExprIterator = state.getExecutionExpressions().iterator();
 			if (comExprIterator.hasNext()) {
 				SymbolicExpression boolExpr = comExprIterator.next();
 				reachableIds.addAll(tool.getAnalysis().reachableFrom(
@@ -120,9 +120,9 @@ public class AssertChecker
 					if (types.stream().allMatch(t -> t.isInMemoryType() || t.isPointerType()))
 						continue;
 
-					ValueEnvironment<ConstantValue> valueState = state.getState().valueState;
+					ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
 					ConstantPropagation cp = (ConstantPropagation) tool.getAnalysis().domain.valueDomain;
-					SemanticOracle oracle = tool.getAnalysis().domain.makeOracle(state.getState());
+					SemanticOracle oracle = tool.getAnalysis().domain.makeOracle(state.getExecutionState());
 					ConstantValue abstractValue = cp.eval(valueState, (ValueExpression) s, (ProgramPoint) node, oracle);
 
 					if (!abstractValue.isBottom()) {

@@ -219,9 +219,9 @@ public class JavaCFGTweaker {
         // from the end of the finally block to the closing
         if (!pb.canBeContinued())
             return pathIdx;
-        cfg.addEdge(new BeginFinallyEdge(pb.getEnd(), fin.getStart(), pathIdx));
+        cfg.addEdge(new SequentialEdge(pb.getEnd(), fin.getStart()));
         if (fin.canBeContinued())
-            cfg.addEdge(new EndFinallyEdge(fin.getEnd(), normalExit, pathIdx));
+			cfg.addEdge(new SequentialEdge(fin.getEnd(), normalExit));
         return pathIdx + 1;
     }
 
@@ -252,15 +252,15 @@ public class JavaCFGTweaker {
         while (next != null) {
             yieldersInCurrentBlock = false;
             if (current == null)
-                cfg.addEdge(new BeginFinallyEdge(start, next.getStart(), pathIdx));
+				cfg.addEdge(new SequentialEdge(start, next.getStart()));
             else {
                 if (current.alwaysContinues())
-                    cfg.addEdge(new BeginFinallyEdge(current.getEnd(), next.getStart(), pathIdx));
+					cfg.addEdge(new SequentialEdge(current.getEnd(), next.getStart()));
                 else
                     for (Statement st : current.getBody())
                         if (st.stopsExecution())
                             for (Edge preEnd : cfg.getIngoingEdges(st)) {
-                                cfg.addEdge(new BeginFinallyEdge(preEnd.getSource(), next.getStart(), pathIdx));
+								cfg.addEdge(new SequentialEdge(preEnd.getSource(), next.getStart()));
                                 cfg.getNodeList().removeEdge(preEnd);
                             }
             }
@@ -286,7 +286,7 @@ public class JavaCFGTweaker {
         // block we found on our way there
         if (!yieldersInCurrentBlock)
             for (Statement st : lastYielders)
-                cfg.addEdge(new EndFinallyEdge(current.getEnd(), st, pathIdx));
+                cfg.addEdge(new SequentialEdge(current.getEnd(), st));
         return pathIdx + 1;
     }
 
@@ -474,7 +474,7 @@ public class JavaCFGTweaker {
         if (catches.isEmpty())
             return;
         for (CatchBlock cb : catches)
-            cfg.addEdge(new ErrorEdge(target, cb.getBody().getStart(), cb.getIdentifier(), cb.getExceptions()));
+            cfg.addEdge(new ErrorEdge(target, cb.getBody().getStart(), cb.getIdentifier(), cb.getBody(), cb.getExceptions()));
     }
 
     private static void removeOutgoingErrorEdges(

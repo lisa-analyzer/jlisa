@@ -21,7 +21,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -57,7 +56,6 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			SymbolicExpression middle, SymbolicExpression right, StatementStore<A> expressions)
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
-		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
 		
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -76,16 +74,14 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
-		for (SymbolicExpression ref : callState.getComputedExpressions()) {
+		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, substring, this);
 			tmp = tmp.lub(sem);
 		}
 
 		getMetaVariables().addAll(call.getMetaVariables());		
-		return new AnalysisState<>(
-				tmp.getState(),
-				callState.getComputedExpressions(),
-				tmp.getFixpointInformation());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());				
+
 	}
 }

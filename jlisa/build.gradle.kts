@@ -82,6 +82,10 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+tasks.named<Zip>("distZip") {
+	dependsOn(tasks.test)
+}
+
 val jpackage by tasks.registering(Exec::class) {
     dependsOn(tasks.named("jar"))
 

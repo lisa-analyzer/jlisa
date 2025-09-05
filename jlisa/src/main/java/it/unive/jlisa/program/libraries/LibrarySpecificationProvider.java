@@ -1,18 +1,5 @@
 package it.unive.jlisa.program.libraries;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
-
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import it.unive.jlisa.antlr.LibraryDefinitionLexer;
@@ -24,6 +11,15 @@ import it.unive.lisa.program.CodeUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class LibrarySpecificationProvider {
@@ -43,33 +39,69 @@ public class LibrarySpecificationProvider {
 	public static void load(
 			Program program)
 			throws AnalysisSetupException {
-		init = null;
-		hierarchyRoot = null;
-		AVAILABLE_LIBS.clear();
-		LOADED_LIBS.clear();
-
-		Pair<Runtime, Collection<Library>> stdlib = readFile(LIBS_FOLDER + STDLIB_FILE);
-		AtomicReference<CompilationUnit> root = new AtomicReference<CompilationUnit>(null);
+		reset();
+		// Load stdlib
+		loadStdlib(program);
+		var stdlib = readFile(LIBS_FOLDER + STDLIB_FILE);
+		var root = new AtomicReference<CompilationUnit>();
 		stdlib.getLeft().fillProgram(program, root);
 		hierarchyRoot = root.get();
-//		makeInit(program);
+		stdlib.getLeft().populateProgram(program, init, hierarchyRoot);
+		stdlib.getRight().forEach(lib -> AVAILABLE_LIBS.put(lib.getName(), lib));
 		stdlib.getLeft().populateProgram(program, init, hierarchyRoot);
 		for (Library lib : stdlib.getValue())
 			AVAILABLE_LIBS.put(lib.getName(), lib);
 
+		// Load other libraries
 		try (ScanResult scanResult = new ClassGraph().acceptPaths(LIBS_FOLDER).scan()) {
-			for (String path : scanResult.getAllResources().getPaths())
-				if (!path.endsWith("/" + STDLIB_FILE)) {
-					// need to add the / since the returned paths are relative
-					Pair<Runtime, Collection<Library>> libs = readFile("/" + path);
-					libs.getLeft().fillProgram(program, root);
-					libs.getLeft().populateProgram(program, init, hierarchyRoot);
-					for (Library lib : libs.getValue()) {
-						AVAILABLE_LIBS.put(lib.getName(), lib);
-						// TODO: to check if it is correct
-						importLibrary(program, lib.getName());
-					}
-				}
+			List<Pair<Runtime, Collection<Library>>> parsedLibs =
+					readLibraries(scanResult.getAllResources().getPaths());
+			fillUnits(program, parsedLibs, root);
+			populateProgram(program, parsedLibs);
+		}
+	}
+
+	private static void loadStdlib(Program program) {
+		var stdlib = readFile(LIBS_FOLDER + STDLIB_FILE);
+		var root = new AtomicReference<CompilationUnit>();
+		stdlib.getLeft().fillProgram(program, root);
+		hierarchyRoot = root.get();
+		stdlib.getLeft().populateProgram(program, init, hierarchyRoot);
+		stdlib.getRight().forEach(lib -> AVAILABLE_LIBS.put(lib.getName(), lib));
+		stdlib.getLeft().populateProgram(program, init, hierarchyRoot);
+	}
+
+	private static void reset() {
+		init = null;
+		hierarchyRoot = null;
+		AVAILABLE_LIBS.clear();
+		LOADED_LIBS.clear();
+	}
+
+	private static List<Pair<Runtime, Collection<Library>>> readLibraries(List<String> paths) {
+		List<Pair<Runtime, Collection<Library>>> result = new ArrayList<>();
+		for (String path : paths) {
+			if (!path.endsWith("/" + STDLIB_FILE)) {
+				result.add(readFile(path.startsWith("/") ? path : "/" + path));
+			}
+		}
+		return result;
+	}
+
+	private static void fillUnits(Program program, List<Pair<Runtime, Collection<Library>>> parsedLibs, AtomicReference<CompilationUnit> root) {
+		for (Pair<Runtime, Collection<Library>> libs : parsedLibs) {
+			libs.getLeft().fillProgram(program, root);
+		}
+	}
+
+	private static void populateProgram(Program program, List<Pair<Runtime, Collection<Library>>> parsedLibs) {
+		for (Pair<Runtime, Collection<Library>> libs : parsedLibs) {
+			libs.getLeft().populateProgram(program, init, hierarchyRoot);
+			for (Library lib : libs.getValue()) {
+				AVAILABLE_LIBS.put(lib.getName(), lib);
+				// TODO: to check if it is correct
+				importLibrary(program, lib.getName());
+			}
 		}
 	}
 
@@ -87,14 +119,6 @@ public class LibrarySpecificationProvider {
 		LibrarySpecificationParser libParser = new LibrarySpecificationParser(file);
 		return libParser.visitFile(parser.file());
 	}
-
-//	private static CFG makeInit(
-//			Program program) {
-//		init = new CFG(new CodeMemberDescriptor(SyntheticLocation.INSTANCE, program, false, "LiSA$init"));
-//		init.addNode(new Ret(init, SyntheticLocation.INSTANCE), true);
-//		program.addCodeMember(init);
-//		return init;
-//	}
 
 	public static void importLibrary(
 			Program program,

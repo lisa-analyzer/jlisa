@@ -61,17 +61,15 @@ public class CharacterValueOf extends it.unive.lisa.program.cfg.statement.UnaryE
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
-		for (SymbolicExpression ref : callState.getComputedExpressions()) {
+		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(charType, ref, var, getLocation());
 			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, expr, this);
 			tmp = tmp.lub(sem);
 		}
 
 		getMetaVariables().addAll(call.getMetaVariables());		
-		return new AnalysisState<>(
-				tmp.getState(),
-				callState.getComputedExpressions(),
-				tmp.getFixpointInformation());	}
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());				
+	}
 
 	@Override
 	protected int compareSameClassAndParams(Statement o) {
