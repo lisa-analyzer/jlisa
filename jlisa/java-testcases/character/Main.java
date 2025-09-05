@@ -20,6 +20,8 @@ public class Main{
 		boolean b6 = Character.isLowerCase('l');
 		boolean b7 = Character.isUpperCase('L');
 		
+		char char5 = Character.digit('F', 16);
+		
 	}
 	
 }

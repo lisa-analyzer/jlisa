@@ -59,3 +59,8 @@ class Character extends Object:
 	method isUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterIsUpperCase
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method digit: it.unive.jlisa.program.java.constructs.character.CharacterDigit
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
