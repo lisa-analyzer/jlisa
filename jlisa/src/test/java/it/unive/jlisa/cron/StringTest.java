@@ -14,4 +14,5 @@ public class StringTest extends JLiSAAnalysisExecutor {
         CronConfiguration conf = TestHelpers.constantPropagation("string", "", "StringTest.java");
         perform(conf);
     }
+    
 }
