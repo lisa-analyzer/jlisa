@@ -106,4 +106,12 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Verifier.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void StaticCharMethods04_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StaticCharMethods04", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
 }
