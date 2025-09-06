@@ -124,11 +124,11 @@ TypeEnvironment<TypeSet>>
 					if (!valueState.isBottom()) {
 						if (!valueState.isTop()) {
 							if (sat == Satisfiability.SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: The assertion is hold.");
+								tool.warnOn((Statement) node, "DEFINITE: The assertion holds.");
 							} else if (sat == Satisfiability.NOT_SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: The assertion is NOT hold.");
+								tool.warnOn((Statement) node, "DEFINITE: The assertion DOES NOT hold");
 							} else if (sat == Satisfiability.UNKNOWN)
-								tool.warnOn((Statement) node, "POSSIBLE: The assertion MAY BE (NOT) hold.");
+								tool.warnOn((Statement) node, "POSSIBLE: The assertion MAY (NOT) BE hold.");
 							else
 								LOG.error("Cannot satisfy the expression");
 						} else

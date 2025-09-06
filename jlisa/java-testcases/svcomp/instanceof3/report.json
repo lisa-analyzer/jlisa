@@ -1,18 +1,18 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':11:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: The assertion is hold."
+    "message" : "['Main.java':11:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: The assertion holds."
   } ],
   "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "4ms",
-    "end" : "2025-09-06T12:14:39.281+02:00",
+    "duration" : "5ms",
+    "end" : "2025-09-06T14:50:23.093+02:00",
     "expressions" : "42",
     "files" : "1",
     "globals" : "6",
     "members" : "118",
     "programs" : "1",
-    "start" : "2025-09-06T12:14:39.277+02:00",
+    "start" : "2025-09-06T14:50:23.088+02:00",
     "statements" : "23",
     "units" : "69",
     "version" : "0.1",
