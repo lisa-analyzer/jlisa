@@ -11,9 +11,12 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.ProgramState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
@@ -65,7 +68,16 @@ TypeEnvironment<TypeSet>>
 			> tool,
 			CFG graph, 
 			Statement node) {
-		if (node instanceof AssertStatement)
+
+		// RuntimeException property checker
+		if (graph.getProgram().getEntryPoints().contains(graph) && node.stopsExecution())
+			try {
+				checkRuntimeException(tool, graph, node);
+			} catch (SemanticException e) {
+				e.printStackTrace();
+			}
+		// assert checker
+		else if (node instanceof AssertStatement)
 			try {
 				checkAssert(tool, graph, (AssertStatement) node);
 			} catch (SemanticException e) {
@@ -73,6 +85,40 @@ TypeEnvironment<TypeSet>>
 			}
 
 		return true;
+	}
+
+	private void checkRuntimeException(
+			CheckToolWithAnalysisResults<SimpleAbstractState<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>, SimpleAbstractDomain<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>> tool,
+			CFG graph, Statement node) throws SemanticException {
+
+		for (var result : tool.getResultOf(graph)) {
+			AnalysisState<
+			SimpleAbstractState<
+			HeapEnvironment<AllocationSites>, 
+			ValueEnvironment<ConstantValue>, 
+			TypeEnvironment<TypeSet>>
+			> state = result.getAnalysisStateBefore(node);
+
+			// gets the exception state
+			ProgramState<SimpleAbstractState<
+			HeapEnvironment<AllocationSites>, 
+			ValueEnvironment<ConstantValue>, 
+			TypeEnvironment<TypeSet>>> exceptionState = state.getState(
+					new Exception(JavaClassType.lookup("RuntimeException", null), null));
+			SimpleAbstractState<
+			HeapEnvironment<AllocationSites>, 
+			ValueEnvironment<ConstantValue>, 
+			TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
+
+			// if it is not bottom, we raise a warning
+			if (!exceptionState.isBottom())
+				// if the normal state is bottom, we raise a definite error
+				if (normaleState.isBottom())
+					tool.warnOn((Statement) node, "[DEFINITE] Uncaught runtime exception in main method");
+				// otherwise, we raise  a possible error (both normal and exception states are not bottom)
+				else
+					tool.warnOn((Statement) node, "[POSSIBLE] Uncaught runtime exception in main method");
+		}
 	}
 
 	private void checkAssert(
@@ -120,7 +166,8 @@ TypeEnvironment<TypeSet>>
 
 					ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
 					Satisfiability sat = tool.getAnalysis().satisfies(state, s, (ProgramPoint) node);
-					
+
+					// assert property
 					if (!valueState.isBottom()) {
 						if (!valueState.isTop()) {
 							if (sat == Satisfiability.SATISFIED) {
