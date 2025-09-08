@@ -119,8 +119,8 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 			if (recType.isPointerType()) {
 				Type inner = recType.asPointerType().getInnerType();
 				if (inner.isNullType()) {
-					JavaClassType arithException = JavaClassType.lookup("NullPointerException", null);
-					result = result.lub(analysis.moveExecutionToError(state, new Exception(arithException, this)));
+					JavaClassType npe = JavaClassType.lookup("NullPointerException", null);
+					result = result.lub(analysis.moveExecutionToError(state, new Exception(npe, this)));
 					atLeastOne = true;
 					continue;
 				} else if (!inner.isUnitType())

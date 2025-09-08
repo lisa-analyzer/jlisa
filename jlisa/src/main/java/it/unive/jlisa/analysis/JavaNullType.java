@@ -7,7 +7,7 @@ import it.unive.lisa.type.Untyped;
 public class JavaNullType extends NullType {
 	
 	/**
-	 * Unique instance of {@link NullType}.
+	 * Unique instance of {@link JavaNullType}.
 	 */
 	public static final JavaNullType INSTANCE = new JavaNullType();
 

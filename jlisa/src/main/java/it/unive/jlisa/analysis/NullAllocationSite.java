@@ -8,6 +8,7 @@ public class NullAllocationSite extends HeapAllocationSite {
 	public static NullAllocationSite INSTANCE = new NullAllocationSite();
 	
 	private NullAllocationSite() {
+		// FIXME: better code location
 		super(JavaNullType.INSTANCE, "null", false, new SourceCodeLocation("", 0, 0));
 	}
 	
