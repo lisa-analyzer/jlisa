@@ -3,15 +3,15 @@
   "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "2",
-    "duration" : "104ms",
-    "end" : "2025-09-08T17:00:58.464+02:00",
+    "duration" : "99ms",
+    "end" : "2025-09-08T17:35:33.731+02:00",
     "expressions" : "17",
     "files" : "1",
     "globals" : "6",
     "members" : "107",
     "programs" : "1",
-    "start" : "2025-09-08T17:00:58.360+02:00",
-    "statements" : "13",
+    "start" : "2025-09-08T17:35:33.632+02:00",
+    "statements" : "11",
     "units" : "68",
     "version" : "0.1",
     "warnings" : "0"
@@ -34,6 +34,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/nulltest"
+    "workdir" : "java-outputs/nulltest/nulltest02"
   }
 }

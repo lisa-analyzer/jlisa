@@ -9,5 +9,13 @@ public class Main {
     		x--; // reachable
     	
     	s = "hello";
+    	String s1 = s;
+    	if (s1 == s)
+    		x++; // reachable
+    	else
+    		x--; // not reachable
+    	
+    	
+    	// expected x == 0;
     }
 }

@@ -90,7 +90,7 @@ FieldSensitivePointBasedHeap {
 			else
 				rhsExps = new ExpressionSet(rightExpr);
 
-
+			Satisfiability sat = Satisfiability.BOTTOM;
 			for (SymbolicExpression l : lhsExps)
 				for (SymbolicExpression r : rhsExps) {
 					if (l instanceof MemoryPointer && r instanceof MemoryPointer) {
@@ -102,50 +102,53 @@ FieldSensitivePointBasedHeap {
 							// left is null
 							if (lp.equals(NullAllocationSite.INSTANCE))
 								if (rp.equals(NullAllocationSite.INSTANCE))
-									return Satisfiability.SATISFIED;
+									sat = sat.lub(Satisfiability.SATISFIED);
 								else
-									return Satisfiability.NOT_SATISFIED;
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 						// right is null
 							else if (rp.equals(NullAllocationSite.INSTANCE))
-								return Satisfiability.NOT_SATISFIED;
+								sat = sat.lub(Satisfiability.NOT_SATISFIED);
 						// rp is strong
 							else if (!rp.isWeak())
 								if (rp.equals(lp))
-									return Satisfiability.SATISFIED;
+									sat = sat.lub(Satisfiability.SATISFIED);
 								else
-									return Satisfiability.NOT_SATISFIED;
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 						// lp is strong
 							else if (!lp.isWeak())
 								if (rp.equals(lp))
-									return Satisfiability.SATISFIED;
+									sat = sat.lub(Satisfiability.SATISFIED);
 								else
-									return Satisfiability.NOT_SATISFIED;
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 
 						// !=
 						if (bin.getOperator() == ComparisonNe.INSTANCE)
 							// left is null
 							if (lp.equals(NullAllocationSite.INSTANCE))
 								if (rp.equals(NullAllocationSite.INSTANCE))
-									return Satisfiability.NOT_SATISFIED;
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 								else
-									return Satisfiability.SATISFIED;
+									sat = sat.lub(Satisfiability.SATISFIED);
 						// right is null
 							else if (rp.equals(NullAllocationSite.INSTANCE))
-								return Satisfiability.SATISFIED;
+								sat = sat.lub(Satisfiability.SATISFIED);
 						// rp is strong
 							else if (!rp.isWeak())
 								if (rp.equals(lp))
-									return Satisfiability.NOT_SATISFIED;
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 								else
-									return Satisfiability.SATISFIED;
+									sat = sat.lub(Satisfiability.SATISFIED);
 						// lp is strong
 							else if (!lp.isWeak())
 								if (rp.equals(lp))
-									return Satisfiability.NOT_SATISFIED;
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 								else
-									return Satisfiability.SATISFIED;
+									sat = sat.lub(Satisfiability.SATISFIED);
 					}
 				}
+			
+			// FIXME: better check
+			return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
 		}
 
 		return super.satisfies(state, expression, pp, oracle);

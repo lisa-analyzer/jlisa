@@ -10,8 +10,14 @@ import java.io.IOException;
 public class NullTest extends JLiSAAnalysisExecutor {
 	
     @Test
-    public void testNull()  throws IOException {
-        CronConfiguration conf = TestHelpers.constantPropagation("nulltest", "", "Main.java");
+    public void testNull01()  throws IOException {
+        CronConfiguration conf = TestHelpers.constantPropagation("nulltest", "nulltest01", "Main.java");
+        perform(conf);
+    }
+    
+    @Test
+    public void testNull02()  throws IOException {
+        CronConfiguration conf = TestHelpers.constantPropagation("nulltest", "nulltest02", "Main.java");
         perform(conf);
     }
     
