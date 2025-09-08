@@ -16,14 +16,12 @@ public class JavaNullType extends NullType {
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaNullType() {
-	}
-	
-	
+	protected JavaNullType() {}
+
 	@Override
 	public boolean canBeAssignedTo(
 			Type other) {
-		return other.isInMemoryType();
+		return other.isInMemoryType() || other.isUntyped();
 	}
 
 	@Override

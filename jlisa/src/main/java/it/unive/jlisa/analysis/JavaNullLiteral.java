@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis;
 
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -13,7 +14,7 @@ import it.unive.lisa.program.cfg.statement.literal.Literal;
 public class JavaNullLiteral extends Literal<Object> {
 
 	public JavaNullLiteral(CFG cfg, CodeLocation location) {
-		super(cfg, location, null, JavaNullType.INSTANCE);
+		super(cfg, location, null, new JavaReferenceType(JavaNullType.INSTANCE));
 	}
 
 	@Override

@@ -3,10 +3,6 @@ package it.unive.jlisa;
 import java.io.IOException;
 import java.util.Arrays;
 
-import it.unive.jlisa.checkers.AssertChecker;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
-import it.unive.lisa.analysis.value.ValueDomain;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -15,19 +11,23 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 import it.unive.jlisa.analysis.ConstantPropagation;
+import it.unive.jlisa.analysis.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
-import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.types.InferredTypes;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.program.Program;
-import org.apache.logging.log4j.Logger;
 
 
 public class Main {
@@ -236,7 +236,7 @@ public class Main {
         }
 
         conf.analysis = new SimpleAbstractDomain<>(
-                new FieldSensitivePointBasedHeap(),
+                new JavaFieldSensitivePointBasedHeap(),
                 domain,
                 new InferredTypes());
 

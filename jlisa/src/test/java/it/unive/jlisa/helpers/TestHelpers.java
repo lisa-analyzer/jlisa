@@ -3,13 +3,13 @@ package it.unive.jlisa.helpers;
 import java.util.ArrayList;
 
 import it.unive.jlisa.analysis.ConstantPropagation;
+import it.unive.jlisa.analysis.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
-import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.FullStackToken;
@@ -39,7 +39,7 @@ public class TestHelpers {
 		// conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
-		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		Interval domain = new Interval();
 
@@ -62,11 +62,11 @@ public class TestHelpers {
 		conf.jsonOutput = false;
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		// conf.forceUpdate = true;
+//		 conf.forceUpdate = true;
 		// conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
-		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
 
@@ -94,7 +94,7 @@ public class TestHelpers {
 //		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
-		FieldSensitivePointBasedHeap heap = new FieldSensitivePointBasedHeap();
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
 
