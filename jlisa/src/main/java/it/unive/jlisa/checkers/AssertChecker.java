@@ -167,7 +167,6 @@ TypeEnvironment<TypeSet>>
 					ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
 					Satisfiability sat = tool.getAnalysis().satisfies(state, s, (ProgramPoint) node);
 
-					// assert property
 					if (!valueState.isBottom()) {
 						if (!valueState.isTop()) {
 							if (sat == Satisfiability.SATISFIED) {
