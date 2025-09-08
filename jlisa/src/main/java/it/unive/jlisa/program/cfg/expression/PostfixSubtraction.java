@@ -53,8 +53,8 @@ public class PostfixSubtraction extends UnaryExpression {
                         NumericNonOverflowingSub.INSTANCE,
                         getLocation()),
                 this);
+        getMetaVariables().add(getMetaVariable());
         return analysis.smallStepSemantics(state, meta, this);
-
     }
 
     @Override
