@@ -19,8 +19,10 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.HeapLocation;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.MemoryPointer;
+import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 
 /**
  * A field-insensitive program point-based {@link AllocationSiteBasedAnalysis}.
@@ -51,9 +53,24 @@ FieldSensitivePointBasedHeap {
 
 	@Override
 	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(HeapEnvWithFields state, SymbolicExpression expression,
-			ProgramPoint src, ProgramPoint dest, SemanticOracle oracle) throws SemanticException {
-		if (expression instanceof BinaryExpression) {
-			BinaryExpression bin = (BinaryExpression) expression;
+			ProgramPoint src, ProgramPoint dest, SemanticOracle oracle) throws SemanticException {	
+		Satisfiability sat = satisfies(state, expression, dest, oracle);
+		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
+			return Pair.of(state, List.of());
+		else 
+			return Pair.of(state.bottom(), List.of());		
+	}
+
+	@Override
+	public Satisfiability satisfies(HeapEnvWithFields state, SymbolicExpression expression, ProgramPoint pp,
+			SemanticOracle oracle) throws SemanticException {
+		
+		if (expression instanceof UnaryExpression un) {
+			if (un.getOperator() == LogicalNegation.INSTANCE)
+				return satisfies(state, un.getExpression(), pp, oracle).negate();
+		}
+		
+		if (expression instanceof BinaryExpression bin) {
 			SymbolicExpression leftExpr = bin.getLeft();
 			SymbolicExpression rightExpr = bin.getRight();
 
@@ -62,14 +79,14 @@ FieldSensitivePointBasedHeap {
 			if (leftExpr instanceof Identifier) {
 				lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr));
 			} else if (expression.mightNeedRewriting())
-				lhsExps = rewrite(state, leftExpr, src, oracle);
+				lhsExps = rewrite(state, leftExpr, pp, oracle);
 			else
 				lhsExps = new ExpressionSet(leftExpr);
 
 			if (rightExpr instanceof Identifier) {
 				rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr));
 			} else if (expression.mightNeedRewriting())
-				rhsExps = rewrite(state, rightExpr, src, oracle);
+				rhsExps = rewrite(state, rightExpr, pp, oracle);
 			else
 				rhsExps = new ExpressionSet(rightExpr);
 
@@ -79,48 +96,58 @@ FieldSensitivePointBasedHeap {
 					if (l instanceof MemoryPointer && r instanceof MemoryPointer) {
 						HeapLocation lp = ((MemoryPointer) l).getReferencedLocation();
 						HeapLocation rp = ((MemoryPointer) r).getReferencedLocation();
-						
+
 						// ==
 						if (bin.getOperator() == ComparisonEq.INSTANCE)
 							// left is null
 							if (lp.equals(NullAllocationSite.INSTANCE))
 								if (rp.equals(NullAllocationSite.INSTANCE))
-									return Pair.of(state, List.of());
+									return Satisfiability.SATISFIED;
 								else
-									return Pair.of(state.bottom(), List.of());
-							// right is null
+									return Satisfiability.NOT_SATISFIED;
+						// right is null
 							else if (rp.equals(NullAllocationSite.INSTANCE))
-								return Pair.of(state.bottom(), List.of());
-						
+								return Satisfiability.NOT_SATISFIED;
+						// rp is strong
+							else if (!rp.isWeak())
+								if (rp.equals(lp))
+									return Satisfiability.SATISFIED;
+								else
+									return Satisfiability.NOT_SATISFIED;
+						// lp is strong
+							else if (!lp.isWeak())
+								if (rp.equals(lp))
+									return Satisfiability.SATISFIED;
+								else
+									return Satisfiability.NOT_SATISFIED;
+
 						// !=
 						if (bin.getOperator() == ComparisonNe.INSTANCE)
 							// left is null
 							if (lp.equals(NullAllocationSite.INSTANCE))
 								if (rp.equals(NullAllocationSite.INSTANCE))
-									return Pair.of(state.bottom(), List.of());
+									return Satisfiability.NOT_SATISFIED;
 								else
-									return Pair.of(state, List.of());
-							// right is null
+									return Satisfiability.SATISFIED;
+						// right is null
 							else if (rp.equals(NullAllocationSite.INSTANCE))
-								return Pair.of(state, List.of());
+								return Satisfiability.SATISFIED;
+						// rp is strong
+							else if (!rp.isWeak())
+								if (rp.equals(lp))
+									return Satisfiability.NOT_SATISFIED;
+								else
+									return Satisfiability.SATISFIED;
+						// lp is strong
+							else if (!lp.isWeak())
+								if (rp.equals(lp))
+									return Satisfiability.NOT_SATISFIED;
+								else
+									return Satisfiability.SATISFIED;
 					}
 				}
 		}
 
-		return super.assume(state, expression, src, dest, oracle);
-	}
-
-	@Override
-	public Satisfiability satisfies(HeapEnvWithFields state, SymbolicExpression expression, ProgramPoint pp,
-			SemanticOracle oracle) throws SemanticException {
-		if (expression instanceof BinaryExpression) {
-			BinaryExpression bin = (BinaryExpression) expression;
-			SymbolicExpression left = bin.getLeft();
-			SymbolicExpression right = bin.getRight();
-			System.err.println(left);
-			System.err.println(right);
-
-		}
 		return super.satisfies(state, expression, pp, oracle);
 	}
 
