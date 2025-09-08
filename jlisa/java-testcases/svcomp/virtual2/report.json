@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':16:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: The assertion DOES NOT hold"
+  } ],
+  "files" : [ "report.json", "void_A.A(A__this)_318508480.json", "void_B.B(B__this)_1707427304.json", "void_B.f(B__this)_1707424452.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "17",
+    "duration" : "14ms",
+    "end" : "2025-09-06T14:50:22.579+02:00",
+    "expressions" : "46",
+    "files" : "4",
+    "globals" : "6",
+    "members" : "122",
+    "programs" : "1",
+    "start" : "2025-09-06T14:50:22.565+02:00",
+    "statements" : "32",
+    "units" : "71",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashException" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/virtual2"
+  }
+}

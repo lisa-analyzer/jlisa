@@ -79,7 +79,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false, new JavaReferenceType(enumType));
 			enUnit.addGlobal(g);
 		}
-		
+
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
 
@@ -153,6 +153,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		if (nested)
 			computeNestedUnits(node);
 
+		// parsing superclass
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
 		if (node.getSuperclassType() != null) {
 			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
@@ -166,6 +167,17 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			}
 		} else {
 			cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
+		}
+		
+		// parsing implemented interfaces
+		for (Object intf : node.superInterfaceTypes()) {
+			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+			((ASTNode) intf).accept(visitor);
+			Type intfType = visitor.getType();
+			it.unive.lisa.program.Unit intfUnit = getProgram().getUnit(intfType.toString());
+			if (intfUnit instanceof it.unive.lisa.program.CompilationUnit) {
+				cUnit.addAncestor((it.unive.lisa.program.CompilationUnit) intfUnit);
+			}
 		}
 
 		if (!node.permittedTypes().isEmpty()) {
@@ -361,8 +373,9 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
 		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
-		String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
-
+		// we filter just the class unit, not interfaces
+		String superClassName = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get().getName();
+		
 		Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
@@ -382,7 +395,8 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			throw new RuntimeException("The unit of a constructor must be a class unit");
 		}
 		ClassUnit classUnit = (ClassUnit) u;
-		Unit ancestor = classUnit.getImmediateAncestors().iterator().next();
+		// we filter just the class unit, not interfaces
+		Unit ancestor = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get();
 		boolean implicitlyCallSuper = true;
 		if (injectionPoint instanceof UnresolvedCall call) {
 			if (ancestor.getName().equals(call.getConstructName())) {
