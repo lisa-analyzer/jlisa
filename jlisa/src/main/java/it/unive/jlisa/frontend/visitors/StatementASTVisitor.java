@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
+import it.unive.jlisa.analysis.JavaNullLiteral;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.SourceCodeLocationManager;
@@ -838,7 +839,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		Expression syncTarget = synchTargetVisitor.getExpression();
 		
 		SyntheticCodeLocationManager syntheticLocMan = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		Statement syntheticCondition = new NotEqual(cfg, syntheticLocMan.nextLocation(), syncTarget, new NullLiteral(cfg, syntheticLocMan.nextLocation())); 
+		Statement syntheticCondition = new NotEqual(cfg, syntheticLocMan.nextLocation(), syncTarget, new JavaNullLiteral(cfg, syntheticLocMan.nextLocation())); 
 
 		adj.addNode(syntheticCondition);
 
