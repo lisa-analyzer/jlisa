@@ -17,9 +17,8 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/lisa-analyzer/lisa")
         credentials {
-            username = "olivieriluca"
-            password = "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"
-        }
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")        }
     }
 }
 
@@ -29,7 +28,7 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.1")
 
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
     implementation("commons-cli:commons-cli:1.4")
@@ -82,32 +81,6 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-val jpackage by tasks.registering(Exec::class) {
-    dependsOn(tasks.named("jar"))
-
-    val outputDir = "${buildDir}/jpackage"
-    val appName = "jlisa"
-    val mainJar = "${project.buildDir}/libs/${appName}-${version}.jar"
-    val mainClassName = application.mainClass.get() // Dynamically getting Main-Class
-
-    doFirst {
-        mkdir(outputDir)
-        val appBundle = file("$outputDir/$appName.app")
-        if (appBundle.exists()) {
-            println("Deleting existing app bundle: $appBundle")
-            appBundle.deleteRecursively()
-        }
-    }
-
-    // Base jpackage command
-    commandLine(
-        "jpackage",
-        "--input", "${buildDir}/libs",
-        "--name", appName,
-        "--main-jar", "${appName}-${version}.jar",
-        "--main-class", mainClassName,
-        "--dest", outputDir,
-        "--type", if (System.getProperty("os.name").startsWith("Windows")) "exe" else "app-image",
-        "--java-options", "-Xmx512m"
-    )
+tasks.named<Zip>("distZip") {
+	dependsOn(tasks.test)
 }

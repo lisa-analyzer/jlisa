@@ -16,5 +16,8 @@ public class Main {
     	Double dx = Double.valueOf(5.3);
     	double dd = dx.doubleValue();
     	long l = Double.doubleToRawLongBits(543);
+    	String s1 = Double.toString(dd);
+    	double d2 = Double.longBitsToDouble(l);
+    	double d3 = Double.parseDouble("123.5");
     }
 }

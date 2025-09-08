@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -e
+PYTHON_COMMAND="python3.11"
+mkdir -p sv-comp-benchmark
+cd sv-comp-benchmark
+
+if [ ! -d "sv-comp" ]; then
+    echo "[sv-comp] Cloning..."
+    git clone git@github.com:lisa-analyzer/sv-comp.git
+else
+    echo "[sv-comp] Check for updates..."
+    cd sv-comp
+    git fetch origin
+    git pull
+    cd ..
+fi
+
+echo "[sv-comp] Setting up..."
+cd sv-comp
+$PYTHON_COMMAND ./vendor/vendorize.py
+cd ../..
+echo "[sv-comp] Setup complete."
+
+echo "[jlisa] building..."
+./gradlew distZip
+echo "[jlisa] unzipping jar..."
+unzip -o build/distributions/*.zip -d jlisa_dist
+JLISA_JAR=$(pwd)/$(find jlisa_dist -name "jlisa*.jar" | head -n 1)
+echo "[jlisa] jar located at $JLISA_JAR"
+
+cd sv-comp-benchmark
+if [ ! -d "sv-benchmarks" ]; then
+    git clone --no-checkout https://gitlab.com/sosy-lab/benchmarking/sv-benchmarks.git
+    cd sv-benchmarks
+    git sparse-checkout init --cone
+    git sparse-checkout set java
+    git checkout main
+
+else
+    echo "Updating sv-benchmarks repository..."
+    cd sv-benchmarks
+    git fetch origin
+    git pull
+
+fi
+cd ../..
+JAVA_FOLDER="$(pwd)/sv-comp-benchmark/sv-benchmarks/java"
+SV_COMP_FOLDER="$(pwd)/sv-comp-benchmark/sv-benchmarks/"
+
+echo "[sv-benchmarks] Prepare benchmarks files..."
+
+echo "[sv-benchmarks] benchmarks sources located at $JAVA_FOLDER"
+
+echo "[sv-comp] run sv-comp"
+
+TIMESTAMP=$(date +"%d_%m_%Y_%H_%M_%S")
+OUTDIR="$(pwd)/sv-comp-benchmark/$TIMESTAMP"
+mkdir -p "$OUTDIR"
+CONFIG_JSON_PATH=$(pwd)/sv-comp-benchmark/sv-comp/config.json
+touch $CONFIG_JSON_PATH
+cat > $CONFIG_JSON_PATH << EOF
+{
+    "path_to_sv_comp_benchmark_dir": "$SV_COMP_FOLDER",
+    "path_to_lisa_instance": "$JLISA_JAR",
+    "path_to_output_dir": "$OUTDIR"
+}
+EOF
+cd sv-comp-benchmark/sv-comp
+$PYTHON_COMMAND  main.py harvest
+$PYTHON_COMMAND  main.py analyse
+cd ../..
+echo "[sv-comp] Results available at $OUTDIR"

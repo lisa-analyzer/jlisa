@@ -7,10 +7,10 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.ArrayType;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 public class FieldDeclarationVisitor extends JavaASTVisitor {
@@ -28,7 +28,7 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
-			type = new ReferenceType(type);
+			type = new JavaReferenceType(type);
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;

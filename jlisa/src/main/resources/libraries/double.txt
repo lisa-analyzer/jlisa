@@ -16,4 +16,16 @@ class Double extends Object:
 		
 	method doubleToRawLongBits: it.unive.jlisa.program.java.constructs.doublew.DoubleToRawLongBits
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE 
-		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE 
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method toString: it.unive.jlisa.program.java.constructs.doublew.DoubleToString
+		libtype String*
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method longBitsToDouble: it.unive.jlisa.program.java.constructs.doublew.DoubleLongBitsToDouble
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE 
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		
+	method parseDouble: it.unive.jlisa.program.java.constructs.doublew.DoubleParseDouble
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v libtype String* 

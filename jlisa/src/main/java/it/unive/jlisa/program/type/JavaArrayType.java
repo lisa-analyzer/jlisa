@@ -20,6 +20,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.DefaultParamInitialization;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
@@ -29,7 +30,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
@@ -173,6 +173,11 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
             TypeSystem types) {
         return Collections.singleton(this);
     }
+    
+    @Override
+    public Expression defaultValue(CFG cfg, CodeLocation location) {
+    	return new NullLiteral(cfg, location);
+    }
 
     @Override
     public Expression unknownValue(
@@ -190,7 +195,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
                 MemoryAllocation alloc = new MemoryAllocation(type, getLocation(), false);
                 Analysis<A, D> analysis = interprocedural.getAnalysis();
                 AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
-                ExpressionSet allocExps = allocSt.getComputedExpressions();
+                ExpressionSet allocExps = allocSt.getExecutionExpressions();
 
                 AnalysisState<A> initSt = entryState.bottom();
                 for (SymbolicExpression allocExp : allocExps) {
@@ -210,8 +215,8 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
                 }
 
                 AnalysisState<A> refSt = entryState.bottom();
-                for (SymbolicExpression loc : allocSt.getComputedExpressions()) {
-                    ReferenceType t = new ReferenceType(loc.getStaticType());
+                for (SymbolicExpression loc : allocSt.getExecutionExpressions()) {
+                    JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
                     HeapReference ref = new HeapReference(t, loc, getLocation());
                     AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
                     refSt = refSt.lub(refSem);

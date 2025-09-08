@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -21,7 +22,6 @@ import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.Variable;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 
 
@@ -36,7 +36,7 @@ public class JavaNewArray extends UnaryExpression {
 	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {	
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		ReferenceType refType = (ReferenceType) getStaticType();
+		JavaReferenceType refType = (JavaReferenceType) getStaticType();
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
@@ -63,7 +63,7 @@ public class JavaNewArray extends UnaryExpression {
 				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp, interprocedural, expressions);
 				AnalysisState<A> init = state.bottom();
 
-				for(SymbolicExpression v : tmp2.getComputedExpressions()) {
+				for(SymbolicExpression v : tmp2.getExecutionExpressions()) {
 					init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
 				}
 

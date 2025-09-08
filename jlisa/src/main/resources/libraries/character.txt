@@ -23,3 +23,44 @@ class Character extends Object:
 		param this libtype Character*
 		param other libtype Character*
 		
+	method isDefined: it.unive.jlisa.program.java.constructs.character.CharacterIsDefined
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method forDigit: it.unive.jlisa.program.java.constructs.character.CharacterForDigit
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method toLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterToLowerCase
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method toUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterToUpperCase
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	
+	method isJavaIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierPart
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	
+	method isJavaIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierStart
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isLetterOrDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsLetterOrDigit
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterIsLowerCase
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterIsUpperCase
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method digit: it.unive.jlisa.program.java.constructs.character.CharacterDigit
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE

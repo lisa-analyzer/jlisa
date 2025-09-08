@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -21,7 +22,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -55,7 +55,7 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
 			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
-		ReferenceType reftype = (ReferenceType) new ReferenceType(stringType);
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
@@ -72,16 +72,13 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
-		for (SymbolicExpression ref : callState.getComputedExpressions()) {
+		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, concat, this);
 			tmp = tmp.lub(sem);
 		}
 
 		getMetaVariables().addAll(call.getMetaVariables());		
-		return new AnalysisState<>(
-				tmp.getState(),
-				callState.getComputedExpressions(),
-				tmp.getFixpointInformation());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());				
 	}
 }
