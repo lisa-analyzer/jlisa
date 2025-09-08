@@ -133,7 +133,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			// anyway).
 			return true;
 
-		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch( t -> t.toString().equals("String"));
+		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch( t -> t.isStringType());
 	}
 
 	@Override

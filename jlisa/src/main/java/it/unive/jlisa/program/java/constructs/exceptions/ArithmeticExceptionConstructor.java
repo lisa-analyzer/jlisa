@@ -15,22 +15,21 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.value.PushAny;
 
-public class NullPointerExceptionConstructor extends NaryExpression implements PluggableStatement {
+public class ArithmeticExceptionConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public NullPointerExceptionConstructor(CFG cfg, CodeLocation location, Expression... params) {
-		super(cfg, location, "NullPointerException", params);
+	public ArithmeticExceptionConstructor(CFG cfg, CodeLocation location, Expression... params) {
+		super(cfg, location, "ArithmeticException", params);
 	}
 	
-	public static NullPointerExceptionConstructor build(
+	public static ArithmeticExceptionConstructor build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
 		if (params.length == 1)
-			return new NullPointerExceptionConstructor(cfg, location, params[0]);
+			return new ArithmeticExceptionConstructor(cfg, location, params[0]);
 		else
-			return new NullPointerExceptionConstructor(cfg, location, params[0], params[1]);
-
+			return new ArithmeticExceptionConstructor(cfg, location, params[0], params[1]);
 	}
 
 	@Override

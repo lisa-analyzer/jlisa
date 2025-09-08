@@ -55,6 +55,7 @@ import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaDivision;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -102,7 +103,6 @@ import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.Addition;
-import it.unive.lisa.program.cfg.statement.numeric.Division;
 import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
@@ -219,7 +219,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "/=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
-					new Division(cfg, locationManager.nextColumn(), left, right));
+					new JavaDivision(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "%=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
@@ -429,7 +429,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "/":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-			new Division(cfg, location, first, second));
+			new JavaDivision(cfg, location, first, second));
 			break;
 		case "%":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->

@@ -20,6 +20,15 @@ class CloneNotSupportedException extends Exception:
 
 class ArithmeticException extends RuntimeException:
 
+	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArithmeticException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArithmeticException*
+		
 class NullPointerException extends RuntimeException:
 	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
