@@ -46,11 +46,29 @@ class IndexOutOfBoundsException extends RuntimeException:
 
 class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
 
+	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArrayIndexOutOfBoundsException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArrayIndexOutOfBoundsException*
+
 class IllegalArgumentException extends RuntimeException:
 
 class NumberFormatException extends IllegalArgumentException:
 
 class NegativeArraySizeException extends RuntimeException:
+
+	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NegativeArraySizeException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NegativeArraySizeException*
 
 class UnsupportedOperationException extends RuntimeException:
 

@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -9,6 +11,8 @@ import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.continuations.Exception;
+import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -22,6 +26,7 @@ import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 
 
@@ -37,6 +42,20 @@ public class JavaNewArray extends UnaryExpression {
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {	
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType refType = (JavaReferenceType) getStaticType();
+
+		// check for negative size
+		it.unive.lisa.symbolic.value.BinaryExpression bin = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE, expr, new Constant(getProgram().getTypes().getIntegerType(), 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
+
+		Satisfiability sat = analysis.satisfies(state, bin, this);
+		if (sat == Satisfiability.SATISFIED) {
+			// throw exception (definitely)
+			JavaClassType indexOob = JavaClassType.lookup("NegativeArraySizeException", null);
+			return analysis.moveExecutionToError(state, new Exception(indexOob, this));
+		} else {
+			// TODO: UNKNOWN case
+		}
+
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
