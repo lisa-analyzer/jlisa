@@ -30,6 +30,7 @@ jobs:
       with:
         name: jlisa-distribution
         path: artifacts/*.zip
+        retention-days: 1
 
   run-analysis:
     runs-on: self-hosted
@@ -69,6 +70,7 @@ jobs:
       with:
         name: analysis_results
         path: analysis_results
+        retention-days: 1
 
     - name: Read summary
       id: read_summary
@@ -91,3 +93,20 @@ jobs:
 
           Summary:
           ${{ env.summary }}
+  
+  cleanup-artifacts:
+    runs-on: ubuntu-latest
+    needs: run-analysis
+
+    steps:
+      - name: Delete jlisa-distribution artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: jlisa-distribution
+
+      - name: Keep only last 2 analysis_results artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '0 days'
+          skip-recent: 2
+          name: analysis_results
