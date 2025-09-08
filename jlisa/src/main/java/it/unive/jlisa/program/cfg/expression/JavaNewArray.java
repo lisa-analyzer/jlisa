@@ -74,8 +74,8 @@ public class JavaNewArray extends UnaryExpression {
 		tmp = analysis.assign(tmp, lenAccess, expr, getEvaluationPredecessor());
 
 		// first case: the size is constant
-		if(expr instanceof Constant) {
-			for(int i = 0; i < (Integer)((Constant) expr).getValue(); i++) {
+		if (expr instanceof Constant) {
+			for (int i = 0; i < (Integer)((Constant) expr).getValue(); i++) {
 				Variable var = new Variable(JavaIntType.INSTANCE, "" + i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
