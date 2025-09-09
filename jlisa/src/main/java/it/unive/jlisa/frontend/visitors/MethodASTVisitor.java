@@ -65,11 +65,10 @@ public class MethodASTVisitor extends JavaASTVisitor {
         LocalVariableTracker tracker = new LocalVariableTracker(cfg, codeMemberDescriptor);
         tracker.enterScope();
         Parameter[] formalParams = codeMemberDescriptor.getFormals();
-        for (int i=0; i < formalParams.length-1; i++) {
-        	for (int j=i; j < formalParams.length; j++) {
-        		if(formalParams[i].getName().equals(formalParams[j].getName()))		
-        			throw
-        					new ParsingException("parameter-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+        for (int i = 0; i < formalParams.length - 1; i++) {
+        	for (int j = i + 1; j < formalParams.length; j++) {
+        		if (formalParams[i].getName().equals(formalParams[j].getName()))		
+        			throw new ParsingException("parameter-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
         							"Parameter " + formalParams[j].getName() + " already exists in the cfg", getSourceCodeLocation(node));
         	}
         }
