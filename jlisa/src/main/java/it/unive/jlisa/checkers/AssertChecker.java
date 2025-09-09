@@ -2,6 +2,7 @@ package it.unive.jlisa.checkers;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,11 +12,11 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.ProgramState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.continuations.Continuation;
 import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
@@ -98,26 +99,30 @@ TypeEnvironment<TypeSet>>
 			ValueEnvironment<ConstantValue>, 
 			TypeEnvironment<TypeSet>>
 			> state = result.getAnalysisStateBefore(node);
-
-			// gets the exception state
-			ProgramState<SimpleAbstractState<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>> exceptionState = state.getState(
-					new Exception(JavaClassType.lookup("RuntimeException", null), null));
+			
+			// checking if there exists at least one exception state
+			boolean hasExceptionState = false;
+			for (Entry<Continuation, 
+					ProgramState<
+						SimpleAbstractState<
+							HeapEnvironment<AllocationSites>, 
+							ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>>> st : state)
+				if (st.getKey() instanceof Exception)
+					hasExceptionState = true;
+			
 			SimpleAbstractState<
 			HeapEnvironment<AllocationSites>, 
 			ValueEnvironment<ConstantValue>, 
 			TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
 
 			// if it is not bottom, we raise a warning
-			if (!exceptionState.isBottom())
+			if (hasExceptionState)
 				// if the normal state is bottom, we raise a definite error
 				if (normaleState.isBottom())
-					tool.warnOn((Statement) node, "[DEFINITE] Uncaught runtime exception in main method");
+					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
 				// otherwise, we raise  a possible error (both normal and exception states are not bottom)
 				else
-					tool.warnOn((Statement) node, "[POSSIBLE] Uncaught runtime exception in main method");
+					tool.warnOn((Statement) node, "POSSIBLE: uncaught runtime exception in main method");
 		}
 	}
 
@@ -170,11 +175,11 @@ TypeEnvironment<TypeSet>>
 					if (!valueState.isBottom()) {
 						if (!valueState.isTop()) {
 							if (sat == Satisfiability.SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: The assertion holds.");
+								tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
 							} else if (sat == Satisfiability.NOT_SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: The assertion DOES NOT hold");
+								tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
 							} else if (sat == Satisfiability.UNKNOWN)
-								tool.warnOn((Statement) node, "POSSIBLE: The assertion MAY (NOT) BE hold.");
+								tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 							else
 								LOG.error("Cannot satisfy the expression");
 						} else

@@ -52,6 +52,14 @@ FieldSensitivePointBasedHeap {
 
 
 	@Override
+	public Pair<HeapEnvWithFields, List<HeapReplacement>> assign(HeapEnvWithFields state, Identifier id,
+			SymbolicExpression expression, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+		if (state.isBottom())
+			return Pair.of(state, List.of());
+		return super.assign(state, id, expression, pp, oracle);
+	}
+
+	@Override
 	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(HeapEnvWithFields state, SymbolicExpression expression,
 			ProgramPoint src, ProgramPoint dest, SemanticOracle oracle) throws SemanticException {	
 		Satisfiability sat = satisfies(state, expression, dest, oracle);
@@ -64,12 +72,12 @@ FieldSensitivePointBasedHeap {
 	@Override
 	public Satisfiability satisfies(HeapEnvWithFields state, SymbolicExpression expression, ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
-		
+
 		if (expression instanceof UnaryExpression un) {
 			if (un.getOperator() == LogicalNegation.INSTANCE)
 				return satisfies(state, un.getExpression(), pp, oracle).negate();
 		}
-		
+
 		if (expression instanceof BinaryExpression bin) {
 			SymbolicExpression leftExpr = bin.getLeft();
 			SymbolicExpression rightExpr = bin.getRight();
@@ -146,7 +154,7 @@ FieldSensitivePointBasedHeap {
 									sat = sat.lub(Satisfiability.SATISFIED);
 					}
 				}
-			
+
 			// FIXME: better check
 			return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
 		}
@@ -164,6 +172,8 @@ FieldSensitivePointBasedHeap {
 	extends
 	FieldSensitivePointBasedHeap.Rewriter {
 
+		// FIXME: access child and dereference with null receiver
+		
 		@Override
 		public ExpressionSet visit(HeapExpression expression, ExpressionSet[] subExpressions, Object... params)
 				throws SemanticException {
