@@ -20,7 +20,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
     
     LocalVariableTracker tracker;
 
-    public BlockStatementASTVisitor(ParserContext parserContext, String source,CompilationUnit compilationUnit) {
+    private BlockStatementASTVisitor(ParserContext parserContext, String source,CompilationUnit compilationUnit) {
         super(parserContext, source, compilationUnit);
     }
 

@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -54,7 +53,7 @@ import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 
-public class ClassASTVisitor extends JavaASTVisitor{
+public class ClassASTVisitor extends JavaASTVisitor {
 
 	private boolean nested;
 

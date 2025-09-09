@@ -1,6 +1,9 @@
 package it.unive.jlisa.frontend;
 
-import it.unive.lisa.util.frontend.LocalVariableTracker.LocalVariable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.VariableInfo;
@@ -13,16 +16,11 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import it.unive.lisa.util.frontend.LocalVariableTracker.LocalVariable;
 
 /**
  * Central context for parsing operations that manages program state, variable types,

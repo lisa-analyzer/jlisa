@@ -115,7 +115,7 @@ import it.unive.lisa.type.Untyped;
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
 	private Expression expression;
-	
+
 	private LocalVariableTracker tracker;
 
 	public ExpressionVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, LocalVariableTracker tracker) {
@@ -184,11 +184,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
+				parameters.add(expr);
 			}
+			
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		}
 
@@ -319,13 +317,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
-				if (expr != null) {
-					// This parsing error should be logged in ExpressionVisitor.
-					parameters.add(expr);
-				}
-
+				parameters.add(expr);
 			}
 		}
+		
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),
@@ -560,7 +555,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		// we do not have a receiver
 		if (node.getExpression() == null) {
 			isInstance = !classUnit.getInstanceCodeMembersByName(methodName, true).isEmpty();
-			
+
 			// if instance, we add this as parameter
 			if (isInstance)
 				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
@@ -857,11 +852,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, varType);
-			
-			if(tracker.hasVariable(variableName))
-				parserContext.addException(
-						new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
-								"Variable " + variableName + " already exists in the cfg", getSourceCodeLocation(node)));
+
+			if (tracker.hasVariable(variableName))
+				throw new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+						"Variable " + variableName + " already exists in the cfg", getSourceCodeLocation(node));
+
 			tracker.addVariable(variableName, ref, ref.getAnnotations());
 			parserContext.addVariableType(cfg, new VariableInfo(variableName, tracker.getLatestScope().get(variableName)), varType);
 
