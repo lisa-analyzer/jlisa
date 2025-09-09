@@ -66,8 +66,8 @@ import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
-import it.unive.jlisa.program.cfg.expression.UnresolvedStaticCall;
-import it.unive.jlisa.program.cfg.expression.UnresolvedSuperCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -589,7 +589,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		if (isInstance)
 			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
 		else 
-			expression = new UnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
 
 		return false;
 	}
@@ -776,7 +776,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			parameters.add(expr);
 		}
 
-		expression = new UnresolvedSuperCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new JavaUnresolvedSuperCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 

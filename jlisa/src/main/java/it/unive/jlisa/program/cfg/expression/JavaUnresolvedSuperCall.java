@@ -18,9 +18,9 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 
-public class UnresolvedSuperCall extends UnresolvedCall {
+public class JavaUnresolvedSuperCall extends UnresolvedCall {
 
-	public UnresolvedSuperCall(CFG cfg, SourceCodeLocation location, CallType instance, String qualifier, String name,
+	public JavaUnresolvedSuperCall(CFG cfg, SourceCodeLocation location, CallType instance, String qualifier, String name,
 			Expression[] parameters) {
 		super(cfg, location, instance, qualifier, name, parameters);
 	}

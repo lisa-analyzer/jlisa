@@ -20,9 +20,9 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.Untyped;
 
-public class UnresolvedStaticCall extends UnresolvedCall {
+public class JavaUnresolvedStaticCall extends UnresolvedCall {
 
-	public UnresolvedStaticCall(
+	public JavaUnresolvedStaticCall(
 			CFG cfg,
 			CodeLocation location,
 			String qualifier,
