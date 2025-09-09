@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.analysis.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;

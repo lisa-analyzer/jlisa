@@ -1,9 +1,11 @@
-package it.unive.jlisa.analysis;
+package it.unive.jlisa.analysis.heap;
 
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import it.unive.jlisa.analysis.JavaNullConstant;
+import it.unive.jlisa.program.type.JavaNullType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;

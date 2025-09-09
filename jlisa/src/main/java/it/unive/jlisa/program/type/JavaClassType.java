@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import it.unive.jlisa.analysis.JavaNullLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;

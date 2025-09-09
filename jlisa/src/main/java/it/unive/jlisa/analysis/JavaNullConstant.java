@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis;
 
+import it.unive.jlisa.program.type.JavaNullType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.symbolic.ExpressionVisitor;

@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.type;
 
-import it.unive.jlisa.analysis.JavaNullLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;

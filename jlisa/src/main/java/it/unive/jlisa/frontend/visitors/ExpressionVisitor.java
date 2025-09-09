@@ -42,7 +42,6 @@ import org.eclipse.jdt.core.dom.TypeMethodReference;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import it.unive.jlisa.analysis.JavaNullLiteral;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
@@ -77,6 +76,7 @@ import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;

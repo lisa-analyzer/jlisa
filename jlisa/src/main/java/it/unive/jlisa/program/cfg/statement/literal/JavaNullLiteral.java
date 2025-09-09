@@ -1,5 +1,7 @@
-package it.unive.jlisa.analysis;
+package it.unive.jlisa.program.cfg.statement.literal;
 
+import it.unive.jlisa.analysis.JavaNullConstant;
+import it.unive.jlisa.program.type.JavaNullType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;

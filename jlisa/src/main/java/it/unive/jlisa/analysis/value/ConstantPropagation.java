@@ -1,4 +1,4 @@
-package it.unive.jlisa.analysis;
+package it.unive.jlisa.analysis.value;
 
 import java.util.Set;
 

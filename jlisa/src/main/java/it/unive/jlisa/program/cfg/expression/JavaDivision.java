@@ -49,6 +49,5 @@ public class JavaDivision extends Division {
 			AnalysisState<A> noExceptionState = super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 			return exceptionState.lub(noExceptionState);
 		}
-
 	}
 }

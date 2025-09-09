@@ -1,5 +1,6 @@
-package it.unive.jlisa.analysis;
+package it.unive.jlisa.analysis.heap;
 
+import it.unive.jlisa.program.type.JavaNullType;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.program.SourceCodeLocation;
 

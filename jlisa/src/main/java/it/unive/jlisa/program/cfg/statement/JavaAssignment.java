@@ -45,10 +45,10 @@ public class JavaAssignment extends Assignment {
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 					throws SemanticException {
-		CodeLocation loc = getLocation();
-		AnalysisState<A> result = state.bottom();
-		Type targetType = left.getStaticType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation loc = getLocation();
+		AnalysisState<A> result = analysis.mergeErrors(state.bottom(), state);
+		Type targetType = left.getStaticType();
         Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
 
 		// int constants, if they fit the target type, can be assigned
@@ -59,7 +59,7 @@ public class JavaAssignment extends Assignment {
 				Constant newConst = new Constant(targetType, intVal, loc);
 				return super.fwdBinarySemantics(interprocedural, state, left, newConst, expressions);
 			} else 
-				return state.bottom(); // cannot assign: int constant doesn't fit target type
+				return analysis.mergeErrors(state.bottom(), state); // cannot assign: int constant doesn't fit target type
 		}
 
 		for (Type rType : rightTypes) {

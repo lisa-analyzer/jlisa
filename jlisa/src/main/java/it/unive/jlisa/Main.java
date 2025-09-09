@@ -13,8 +13,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
-import it.unive.jlisa.analysis.ConstantPropagation;
-import it.unive.jlisa.analysis.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;

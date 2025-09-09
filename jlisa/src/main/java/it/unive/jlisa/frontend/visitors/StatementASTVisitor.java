@@ -37,7 +37,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-import it.unive.jlisa.analysis.JavaNullLiteral;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.SourceCodeLocationManager;
@@ -60,6 +59,7 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;

@@ -1,4 +1,4 @@
-package it.unive.jlisa.analysis;
+package it.unive.jlisa.program.type;
 
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
