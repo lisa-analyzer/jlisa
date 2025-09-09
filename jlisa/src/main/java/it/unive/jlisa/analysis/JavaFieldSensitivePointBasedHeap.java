@@ -73,90 +73,77 @@ FieldSensitivePointBasedHeap {
 	public Satisfiability satisfies(HeapEnvWithFields state, SymbolicExpression expression, ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
 
+		// negation
 		if (expression instanceof UnaryExpression un) {
 			if (un.getOperator() == LogicalNegation.INSTANCE)
 				return satisfies(state, un.getExpression(), pp, oracle).negate();
 		}
 
 		if (expression instanceof BinaryExpression bin) {
-			SymbolicExpression leftExpr = bin.getLeft();
-			SymbolicExpression rightExpr = bin.getRight();
 
-			ExpressionSet rhsExps;
-			ExpressionSet lhsExps;
-			if (leftExpr instanceof Identifier) {
-				lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr));
-			} else if (expression.mightNeedRewriting())
-				lhsExps = rewrite(state, leftExpr, pp, oracle);
-			else
-				lhsExps = new ExpressionSet(leftExpr);
+			// !=
+			if (bin.getOperator() == ComparisonNe.INSTANCE) {
+				BinaryExpression negatedBin = new BinaryExpression(bin.getStaticType(), bin.getLeft(), bin.getRight(), ComparisonEq.INSTANCE, expression.getCodeLocation());
+				return satisfies(state, negatedBin, pp, oracle).negate();
+			}
 
-			if (rightExpr instanceof Identifier) {
-				rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr));
-			} else if (expression.mightNeedRewriting())
-				rhsExps = rewrite(state, rightExpr, pp, oracle);
-			else
-				rhsExps = new ExpressionSet(rightExpr);
+			// ==
+			if (bin.getOperator() == ComparisonEq.INSTANCE) {
+				SymbolicExpression leftExpr = bin.getLeft();
+				SymbolicExpression rightExpr = bin.getRight();
 
-			Satisfiability sat = Satisfiability.BOTTOM;
-			for (SymbolicExpression l : lhsExps)
-				for (SymbolicExpression r : rhsExps) {
-					if (l instanceof MemoryPointer && r instanceof MemoryPointer) {
-						HeapLocation lp = ((MemoryPointer) l).getReferencedLocation();
-						HeapLocation rp = ((MemoryPointer) r).getReferencedLocation();
+				ExpressionSet rhsExps;
+				ExpressionSet lhsExps;
+				if (leftExpr instanceof Identifier) {
+					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr));
+				} else if (expression.mightNeedRewriting())
+					lhsExps = rewrite(state, leftExpr, pp, oracle);
+				else
+					lhsExps = new ExpressionSet(leftExpr);
 
-						// ==
-						if (bin.getOperator() == ComparisonEq.INSTANCE)
+				if (rightExpr instanceof Identifier) {
+					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr));
+				} else if (expression.mightNeedRewriting())
+					rhsExps = rewrite(state, rightExpr, pp, oracle);
+				else
+					rhsExps = new ExpressionSet(rightExpr);
+
+				Satisfiability sat = Satisfiability.BOTTOM;
+				for (SymbolicExpression l : lhsExps) {
+					for (SymbolicExpression r : rhsExps) {
+						if (l instanceof MemoryPointer && r instanceof MemoryPointer) {
+							HeapLocation lp = ((MemoryPointer) l).getReferencedLocation();
+							HeapLocation rp = ((MemoryPointer) r).getReferencedLocation();
+
 							// left is null
 							if (lp.equals(NullAllocationSite.INSTANCE))
 								if (rp.equals(NullAllocationSite.INSTANCE))
 									sat = sat.lub(Satisfiability.SATISFIED);
 								else
 									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-						// right is null
+							// right is null
 							else if (rp.equals(NullAllocationSite.INSTANCE))
 								sat = sat.lub(Satisfiability.NOT_SATISFIED);
-						// rp is strong
-							else if (!rp.isWeak())
-								if (rp.equals(lp))
-									sat = sat.lub(Satisfiability.SATISFIED);
-								else
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-						// lp is strong
-							else if (!lp.isWeak())
-								if (rp.equals(lp))
-									sat = sat.lub(Satisfiability.SATISFIED);
-								else
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 
-						// !=
-						if (bin.getOperator() == ComparisonNe.INSTANCE)
-							// left is null
-							if (lp.equals(NullAllocationSite.INSTANCE))
-								if (rp.equals(NullAllocationSite.INSTANCE))
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-								else
-									sat = sat.lub(Satisfiability.SATISFIED);
-						// right is null
-							else if (rp.equals(NullAllocationSite.INSTANCE))
-								sat = sat.lub(Satisfiability.SATISFIED);
-						// rp is strong
+							// rp is strong
 							else if (!rp.isWeak())
 								if (rp.equals(lp))
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-								else
 									sat = sat.lub(Satisfiability.SATISFIED);
-						// lp is strong
+								else
+									sat = sat.lub(Satisfiability.UNKNOWN);
+							// lp is strong
 							else if (!lp.isWeak())
 								if (rp.equals(lp))
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-								else
 									sat = sat.lub(Satisfiability.SATISFIED);
+								else
+									sat = sat.lub(Satisfiability.UNKNOWN);
+						}
 					}
 				}
-
-			// FIXME: better check
-			return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
+				
+				// FIXME: better check
+				return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
+			}
 		}
 
 		return super.satisfies(state, expression, pp, oracle);
@@ -173,7 +160,7 @@ FieldSensitivePointBasedHeap {
 	FieldSensitivePointBasedHeap.Rewriter {
 
 		// FIXME: access child and dereference with null receiver
-		
+
 		@Override
 		public ExpressionSet visit(HeapExpression expression, ExpressionSet[] subExpressions, Object... params)
 				throws SemanticException {
