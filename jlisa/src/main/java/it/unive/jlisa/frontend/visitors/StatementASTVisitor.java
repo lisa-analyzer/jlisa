@@ -114,10 +114,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		this.control = control;   
 	}
 
-	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control, Expression switchItem) {
+	public StatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, ControlFlowTracker control, Expression switchItem, LocalVariableTracker tracker) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
 		this.control = control;
+		this.tracker = tracker;
 		this.switchItem = switchItem;
 	}
 
@@ -661,7 +662,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		Statement first = null, last = null;
 		for (Object o : node.statements()) {
-			StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, control, switchItem);
+			StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, control, switchItem, tracker);
 			((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
 
 			ParsedBlock caseBlock = statementASTVisitor.getBlock();
