@@ -1,14 +1,21 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.lisa.util.frontend.LocalVariableTracker.LocalVariable;
+
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -65,7 +72,7 @@ public class ParserContext {
     private EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy;
 
     /** Map storing variable types for each CFG, organized as CFG -> (variable name -> type) */
-    Map<CFG, Map<String, Type>> variableTypes = new HashMap<>();
+    Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
     /**
      * Constructs a new ParserContext with the specified program, API level, and exception handling strategy.
@@ -90,14 +97,14 @@ public class ParserContext {
      * @param type the static type of the variable
      * @throws RuntimeException if a variable with the same name already exists in the CFG
      */
-    public void addVariableType(CFG cfg, String variableName, Type type) {
-        Map<String, Type> types = variableTypes.get(cfg);
+    public void addVariableType(CFG cfg, VariableInfo localVariable, Type type) {
+        Map<VariableInfo, Type> types = variableTypes.get(cfg);
         if (types == null) {
             types = new HashMap<>();
             variableTypes.put(cfg, types);
         }
 
-        types.put(variableName, type);
+        types.put(localVariable, type);
     }
 
     /**
@@ -119,48 +126,57 @@ public class ParserContext {
      * @param name the name of the variable to look up
      * @return the static type of the variable, or Untyped.INSTANCE if not found
      */
-    public Type getVariableStaticType(CFG cfg, String name) {
+    public Type getVariableStaticType(CFG cfg, VariableInfo variableInfo) {
         Type type = null;
-        Map<String, Type> cfgVariables = variableTypes.get(cfg);
+        Map<VariableInfo, Type> cfgVariables = variableTypes.get(cfg);
         if (cfgVariables != null) {
-            type = cfgVariables.get(name);
+            type = cfgVariables.get(variableInfo);
         }
+        
         if (type == null) {
-            Unit unit = cfg.getDescriptor().getUnit();
-            while (unit != null) {
-                if (unit instanceof CompilationUnit) {
-                    CompilationUnit cu = (CompilationUnit) unit;
-                    for (Global g : cu.getGlobals()) {
-                        if (g.getName().equals(name)) {
-                            return g.getStaticType();
-                        }
-                    }
-                    for (Global g : cu.getInstanceGlobals(false)) {
-                        if (g.getName().equals(name)) {
-                            return g.getStaticType();
-                        }
-                    }
-                    if (cu.getImmediateAncestors().isEmpty()) {
-                        unit = null;
-                    } else {
-                        unit = cu.getImmediateAncestors().iterator().next();
-                    }
-                } else {
-                    for (Global g : unit.getGlobals()) {
-                        if (g.getName().equals(name)) {
-                            return g.getStaticType();
-                        }
-                    }
-                }
-
-            }
-            Unit u = program.getUnit(name);
-            if (u instanceof CompilationUnit) {
-                return JavaClassType.lookup(name, (CompilationUnit) u);
-            }
-            return Untyped.INSTANCE;
+        	String name = variableInfo.getName();
+        	type = getVariableStaticTypeFromUnitAndGlobals(cfg, name);
         }
         return type;
+    }
+    
+    
+    public Type getVariableStaticTypeFromUnitAndGlobals(CFG cfg, String name) {
+
+        Unit unit = cfg.getDescriptor().getUnit();
+        while (unit != null) {
+            if (unit instanceof CompilationUnit) {
+                CompilationUnit cu = (CompilationUnit) unit;
+                for (Global g : cu.getGlobals()) {
+                    if (g.getName().equals(name)) {
+                        return g.getStaticType();
+                    }
+                }
+                for (Global g : cu.getInstanceGlobals(false)) {
+                    if (g.getName().equals(name)) {
+                        return g.getStaticType();
+                    }
+                }
+                if (cu.getImmediateAncestors().isEmpty()) {
+                    unit = null;
+                } else {
+                    unit = cu.getImmediateAncestors().iterator().next();
+                }
+            } else {
+                for (Global g : unit.getGlobals()) {
+                    if (g.getName().equals(name)) {
+                        return g.getStaticType();
+                    }
+                }
+            }
+
+        }
+
+        Unit u = program.getUnit(name);
+        if (u instanceof CompilationUnit) {
+            return JavaClassType.lookup(name, (CompilationUnit) u);
+        }
+        return Untyped.INSTANCE;
     }
 
     /**
@@ -233,5 +249,20 @@ public class ParserContext {
      */
     public SyntheticCodeLocationManager getCurrentSyntheticCodeLocationManager(String fileName) {
         return syntheticCodeLocationManagers.computeIfAbsent(fileName, SyntheticCodeLocationManager::new);
+    }
+
+    /**
+     * Retrieves the local variable name from the LocalVariable object
+     * @param localVariable the LocalVariable object
+     * @return name the name of local variable
+     */
+    private String getLocalVariableName(LocalVariable localVariable) {
+    	Statement stmt = localVariable.getScopeStart();
+    	if(stmt instanceof JavaAssignment) {
+    		JavaAssignment assign = (JavaAssignment) stmt;
+    		VariableRef ref = (VariableRef) assign.getLeft();
+    		return ref.getName();
+    	} else
+    		throw new IllegalArgumentException("The following case is currently not supported: " + stmt.getClass().toString());
     }
 }

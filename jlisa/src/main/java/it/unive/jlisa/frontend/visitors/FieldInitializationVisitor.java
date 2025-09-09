@@ -52,7 +52,7 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
             }
             it.unive.lisa.program.cfg.statement.Expression initializer = null;
             if (fragment.getInitializer() != null) {
-                ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+                ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, null);
                 Expression expression = fragment.getInitializer();
                 expression.accept(initializerVisitor);
                 if (initializerVisitor.getExpression() != null) {

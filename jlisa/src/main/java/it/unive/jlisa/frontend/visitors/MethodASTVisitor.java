@@ -16,6 +16,7 @@ import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
+import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
@@ -25,12 +26,10 @@ import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
-import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import it.unive.lisa.util.frontend.CFGTweaker;
 import it.unive.lisa.util.frontend.LocalVariableTracker;
 
 public class MethodASTVisitor extends JavaASTVisitor {
@@ -58,7 +57,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		this.cfg = new CFG(codeMemberDescriptor);
 		for (Parameter p : codeMemberDescriptor.getFormals()) {
 			it.unive.lisa.type.Type paramType = p.getStaticType();
-			parserContext.addVariableType(cfg, p.getName(), paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
+			parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null), paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
 		
         this.cfg = new CFG(codeMemberDescriptor);
@@ -76,7 +75,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         }
 		
         for (Parameter p : formalParams) {
-            parserContext.addVariableType(cfg, p.getName(), p.getStaticType()); //FIXME: to remove when changed the visibility of LocalVariableTracker fields
+            parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null), p.getStaticType());
             // Not required add the parameter in the tracker because it is done in the tracker constructor given the descriptor.
         }
         
@@ -96,7 +95,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
         NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
         Collection<Statement> entrypoints = cfg.getEntrypoints();
         if (cfg.getAllExitpoints().isEmpty()) {
-            Ret ret = new Ret(cfg, cfg.getDescriptor().getLocation());
+        	Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
             if (cfg.getNodesCount() == 0) {
                 // empty method, so the ret is also the entrypoint
                 list.addNode(ret);
