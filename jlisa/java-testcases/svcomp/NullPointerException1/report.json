@@ -1,20 +1,22 @@
 {
-  "warnings" : [ ],
-  "files" : [ "report.json", "void_Test6.foo(int_i)_-1468852312.json", "void_Test6.main(String_[]_args).json" ],
+  "warnings" : [ {
+    "message" : "['$Main.java':1] on 'void Main::main(String*[] args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  } ],
+  "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
-    "cfgs" : "4",
-    "duration" : "106ms",
-    "end" : "2025-09-09T13:49:09.575+02:00",
-    "expressions" : "12",
-    "files" : "2",
+    "cfgs" : "13",
+    "duration" : "100ms",
+    "end" : "2025-09-09T13:47:07.198+02:00",
+    "expressions" : "44",
+    "files" : "1",
     "globals" : "6",
-    "members" : "115",
+    "members" : "124",
     "programs" : "1",
-    "start" : "2025-09-09T13:49:09.469+02:00",
-    "statements" : "9",
-    "units" : "68",
+    "start" : "2025-09-09T13:47:07.098+02:00",
+    "statements" : "26",
+    "units" : "69",
     "version" : "0.1",
-    "warnings" : "0"
+    "warnings" : "1"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",
@@ -27,13 +29,13 @@
     "openCallPolicy" : "ReturnTopPolicy",
     "optimize" : "false",
     "recursionWideningThreshold" : "5",
-    "semanticChecks" : "",
+    "semanticChecks" : "AssertChecker",
     "serializeInputs" : "false",
     "serializeResults" : "true",
     "shouldSmashException" : "unset",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/method-overloading/Test6"
+    "workdir" : "java-outputs/svcomp/NullPointerException1"
   }
 }

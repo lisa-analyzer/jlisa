@@ -60,14 +60,15 @@ import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
 import it.unive.jlisa.program.cfg.expression.PostfixAddition;
 import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -90,7 +91,6 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
@@ -587,7 +587,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 
 		if (isInstance)
-			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
 		else 
 			expression = new JavaUnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
 

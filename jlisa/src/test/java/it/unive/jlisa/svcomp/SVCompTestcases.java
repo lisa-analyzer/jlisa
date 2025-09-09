@@ -139,4 +139,13 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Verifier.java");
 		perform(conf);
 	}
+	
+	// FIXME
+	@Test
+	public void StringCompare01_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare01", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
 }

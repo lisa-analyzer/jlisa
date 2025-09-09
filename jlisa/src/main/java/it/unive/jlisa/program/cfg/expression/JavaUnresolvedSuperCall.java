@@ -51,7 +51,7 @@ public class JavaUnresolvedSuperCall extends UnresolvedCall {
 		if (!resolved)
 			throw new SemanticException("Cannot resolved super method invocation");
 
-		UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE, superClass.getName(), getTargetName(), getSubExpressions());
+		JavaUnresolvedCall call = new JavaUnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE, superClass.getName(), getTargetName(), getSubExpressions());
 		return call.forwardSemantics(state, interprocedural, expressions);
 	}
 

@@ -56,7 +56,8 @@ public class JavaStringLiteral extends Literal<String> {
 			AnalysisState<A> sem = analysis.assign(callState, access, new Constant(stringType, getValue(), getLocation()), this);
 			tmp = tmp.lub(sem);
 		}
-
+		
+		// FIXME: i need to keep metavars on the stack (e.g., s != "hello")
 		getMetaVariables().addAll(call.getMetaVariables());		
 		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}

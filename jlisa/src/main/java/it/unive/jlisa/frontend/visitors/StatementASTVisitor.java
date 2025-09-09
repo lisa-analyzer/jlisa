@@ -51,6 +51,7 @@ import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
@@ -83,7 +84,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
@@ -234,7 +234,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				parameters.add(expr);
 			}
 		}
-		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
+		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -581,7 +581,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			}
 		}
 
-		Statement call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);

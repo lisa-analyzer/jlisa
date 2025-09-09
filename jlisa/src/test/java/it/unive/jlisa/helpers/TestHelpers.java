@@ -2,8 +2,8 @@ package it.unive.jlisa.helpers;
 
 import java.util.ArrayList;
 
-import it.unive.jlisa.analysis.ConstantPropagation;
-import it.unive.jlisa.analysis.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
