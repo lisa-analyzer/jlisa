@@ -30,6 +30,7 @@ jobs:
       with:
         name: jlisa-distribution
         path: artifacts/*.zip
+        retention-days: 3
 
   run-analysis:
     runs-on: self-hosted
@@ -69,6 +70,7 @@ jobs:
       with:
         name: analysis_results
         path: analysis_results
+        retention-days: 3
 
     - name: Read summary
       id: read_summary
