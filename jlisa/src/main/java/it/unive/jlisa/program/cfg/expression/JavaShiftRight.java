@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -28,12 +29,14 @@ public class JavaShiftRight extends it.unive.lisa.program.cfg.statement.BinaryEx
 
 	private static Type inferType(Expression left, Expression right) {
 		Type leftType = left.getStaticType();
-		Type rightType = right.getStaticType();
-
         NumericType integerType = left.getProgram().getTypes().getIntegerType();
-		if (leftType.canBeAssignedTo(integerType) && rightType.canBeAssignedTo(integerType)) {
-            return leftType;
-        }
+		
+		if (leftType.canBeAssignedTo(integerType))
+			return integerType;
+		
+		if (leftType.canBeAssignedTo(JavaLongType.INSTANCE))
+			return JavaLongType.INSTANCE;
+		
 		else return Untyped.INSTANCE;
 	}
 
@@ -47,9 +50,10 @@ public class JavaShiftRight extends it.unive.lisa.program.cfg.statement.BinaryEx
 			StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType())))
+		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(t -> t.isNumericType()))
 			return state.bottom();
-		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType())))
+		
+		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType()) || t.canBeAssignedTo(JavaLongType.INSTANCE)))
 			return state.bottom();
 
 		return analysis.smallStepSemantics(

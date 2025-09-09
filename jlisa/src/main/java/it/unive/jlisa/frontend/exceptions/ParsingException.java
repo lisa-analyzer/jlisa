@@ -2,7 +2,7 @@ package it.unive.jlisa.frontend.exceptions;
 
 import it.unive.lisa.program.SourceCodeLocation;
 
-public class ParsingException extends Exception {
+public class ParsingException extends RuntimeException {
 
 
     public enum Type {

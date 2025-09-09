@@ -71,6 +71,8 @@ public class UnresolvedStaticCall extends UnresolvedCall {
 			}
 		
 		UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.STATIC, classInit.toString(), getTargetName(), getParameters());
-		return call.forwardSemantics(state, interprocedural, expressions);
+		AnalysisState<A> callState = call.forwardSemantics(state, interprocedural, expressions);
+		getMetaVariables().addAll(call.getMetaVariables());
+		return callState;
 	}
 }

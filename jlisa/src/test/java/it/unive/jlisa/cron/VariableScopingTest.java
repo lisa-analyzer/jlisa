@@ -9,7 +9,7 @@ import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 
-public class VariableScoping extends JLiSAAnalysisExecutor {
+public class VariableScopingTest extends JLiSAAnalysisExecutor {
 
 	private static CronConfiguration createConfiguration(String testDir, String subDir, String... programFiles) {
 		CronConfiguration configuration = TestHelpers.createConfiguration(testDir, subDir, programFiles);

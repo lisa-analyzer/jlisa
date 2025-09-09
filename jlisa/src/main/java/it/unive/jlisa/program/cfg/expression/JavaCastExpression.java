@@ -19,6 +19,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
+import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 
@@ -33,21 +34,19 @@ public class JavaCastExpression extends UnaryExpression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
+	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
 		Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(type)), type, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		
-		AnalysisState<A> exprState = analysis.smallStepSemantics(state, expr, this);
-		AnalysisState<A> result = state.bottom();
-		
-		for (SymbolicExpression exp : exprState.getExecutionExpressions()) {
-			BinaryExpression castExpression =  new BinaryExpression(type, exp, typeConv, TypeCast.INSTANCE, getLocation());
-			result = result.lub(analysis.smallStepSemantics(exprState, castExpression, this));
-		}
-		
-		return result;
+
+		if (type.isReferenceType()) {
+			BinaryExpression castExpression =  new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE, getLocation());
+			return analysis.smallStepSemantics(state, castExpression, this);
+		} else {
+			BinaryExpression castExpression =  new BinaryExpression(type, expr, typeConv, TypeConv.INSTANCE, getLocation());
+			return analysis.smallStepSemantics(state, castExpression, this);
+		}	
 	}
 
 	@Override

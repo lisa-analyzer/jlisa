@@ -229,6 +229,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		case "%=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
 					new Modulo(cfg, locationManager.nextColumn(), left, right));
+			break;
 		case "&=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
 					new JavaBitwiseAnd(cfg, locationManager.nextColumn(), left, right));

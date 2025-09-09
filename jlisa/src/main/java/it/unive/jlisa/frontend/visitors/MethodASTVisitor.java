@@ -68,9 +68,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
         for (int i=0; i < formalParams.length-1; i++) {
         	for (int j=i; j < formalParams.length; j++) {
         		if(formalParams[i].getName().equals(formalParams[j].getName()))		
-        			parserContext.addException(
+        			throw
         					new ParsingException("parameter-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
-        							"Parameter " + formalParams[j].getName() + " already exists in the cfg", getSourceCodeLocation(node)));
+        							"Parameter " + formalParams[j].getName() + " already exists in the cfg", getSourceCodeLocation(node));
         	}
         }
 		
