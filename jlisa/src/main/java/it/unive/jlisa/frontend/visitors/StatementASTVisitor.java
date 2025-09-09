@@ -170,6 +170,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(Block node) {
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 
+		tracker.enterScope();
+		
 		Statement first = null, last = null;
 		if(node.statements().isEmpty()) { // empty block
 			
@@ -196,6 +198,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				last = stmtBlock.getEnd();
 			}
 		}
+		tracker.exitScope(last);
 		
 		this.block = new ParsedBlock(first, nodeList, last);
 		return false;
