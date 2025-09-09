@@ -149,41 +149,27 @@ TypeEnvironment<TypeSet>>
 				state = result.getAnalysisStateAfter(((AssertionStatement) node).getLeft());
 			}
 
-//			Set<SymbolicExpression> reachableIds = new HashSet<>();
 			for (SymbolicExpression expr : state.getExecutionExpressions()) {
-//				reachableIds.addAll(tool.getAnalysis().reachableFrom(
-//						state,		
-//						boolExpr, 
-//						(Statement) node)
-//						.elements);
-//
-//				for (SymbolicExpression s : reachableIds) {
-					//					Set<Type> types = tool.getAnalysis().getRuntimeTypesOf(state, s, (Statement) node);
-					//
-					//					if (types.stream().allMatch(t -> t.isInMemoryType() || t.isPointerType()))
-					//						continue;
+				ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
 
-					ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
+				Satisfiability sat = tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node);
+				if (!valueState.isBottom()) {
+					if (!valueState.isTop()) {
+						if (sat == Satisfiability.SATISFIED) {
+							tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+						} else if (sat == Satisfiability.NOT_SATISFIED) {
+							tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
+						} else if (sat == Satisfiability.UNKNOWN)
+							tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+						else
+							LOG.error("Cannot satisfy the expression");
+					} else
+						LOG.error("The abstract state of assert's expression is TOP");
 
-					Satisfiability sat = tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node);
-					if (!valueState.isBottom()) {
-						if (!valueState.isTop()) {
-							if (sat == Satisfiability.SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
-							} else if (sat == Satisfiability.NOT_SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-							} else if (sat == Satisfiability.UNKNOWN)
-								tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-							else
-								LOG.error("Cannot satisfy the expression");
-						} else
-							LOG.error("The abstract state of assert's expression is TOP");
-
-					} else {
-						LOG.error("The abstract state of assert's expression is BOTTOM");
-					}
-				} 
-//			}
+				} else {
+					LOG.error("The abstract state of assert's expression is BOTTOM");
+				}
+			} 
 		}
 	}
 }
