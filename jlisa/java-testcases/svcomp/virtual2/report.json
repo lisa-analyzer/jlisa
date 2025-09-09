@@ -1,18 +1,18 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':16:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: The assertion DOES NOT hold"
+    "message" : "['Main.java':16:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
   "files" : [ "report.json", "void_A.A(A__this)_318508480.json", "void_B.B(B__this)_1707427304.json", "void_B.f(B__this)_1707424452.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "17",
-    "duration" : "3ms",
-    "end" : "2025-09-08T23:03:34.177+02:00",
+    "duration" : "106ms",
+    "end" : "2025-09-09T11:38:39.540+02:00",
     "expressions" : "46",
     "files" : "4",
     "globals" : "6",
     "members" : "128",
     "programs" : "1",
-    "start" : "2025-09-08T23:03:34.174+02:00",
+    "start" : "2025-09-09T11:38:39.434+02:00",
     "statements" : "32",
     "units" : "71",
     "version" : "0.1",
