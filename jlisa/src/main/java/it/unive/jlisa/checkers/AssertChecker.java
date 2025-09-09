@@ -1,9 +1,6 @@
 package it.unive.jlisa.checkers;
 
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +28,6 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.type.Type;
 
 /**
  * Assert Checker
@@ -99,28 +95,28 @@ TypeEnvironment<TypeSet>>
 			ValueEnvironment<ConstantValue>, 
 			TypeEnvironment<TypeSet>>
 			> state = result.getAnalysisStateBefore(node);
-			
+
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = false;
 			for (Entry<Continuation, 
 					ProgramState<
-						SimpleAbstractState<
-							HeapEnvironment<AllocationSites>, 
-							ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>>> st : state)
+					SimpleAbstractState<
+					HeapEnvironment<AllocationSites>, 
+					ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>>> st : state)
 				if (st.getKey() instanceof Exception)
 					hasExceptionState = true;
-			
+
 			SimpleAbstractState<
 			HeapEnvironment<AllocationSites>, 
 			ValueEnvironment<ConstantValue>, 
 			TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
 
-			// if it is not bottom, we raise a warning
+			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)
 				// if the normal state is bottom, we raise a definite error
 				if (normaleState.isBottom())
 					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
-				// otherwise, we raise  a possible error (both normal and exception states are not bottom)
+			// otherwise, we raise  a possible error (both normal and exception states are not bottom)
 				else
 					tool.warnOn((Statement) node, "POSSIBLE: uncaught runtime exception in main method");
 		}
@@ -153,25 +149,23 @@ TypeEnvironment<TypeSet>>
 				state = result.getAnalysisStateAfter(((AssertionStatement) node).getLeft());
 			}
 
-			Set<SymbolicExpression> reachableIds = new HashSet<>();
-			Iterator<SymbolicExpression> comExprIterator = state.getExecutionExpressions().iterator();
-			if (comExprIterator.hasNext()) {
-				SymbolicExpression boolExpr = comExprIterator.next();
-				reachableIds.addAll(tool.getAnalysis().reachableFrom(
-						state,		
-						boolExpr, 
-						(Statement) node)
-						.elements);
-
-				for (SymbolicExpression s : reachableIds) {
-					Set<Type> types = tool.getAnalysis().getRuntimeTypesOf(state, s, (Statement) node);
-
-					if (types.stream().allMatch(t -> t.isInMemoryType() || t.isPointerType()))
-						continue;
+//			Set<SymbolicExpression> reachableIds = new HashSet<>();
+			for (SymbolicExpression expr : state.getExecutionExpressions()) {
+//				reachableIds.addAll(tool.getAnalysis().reachableFrom(
+//						state,		
+//						boolExpr, 
+//						(Statement) node)
+//						.elements);
+//
+//				for (SymbolicExpression s : reachableIds) {
+					//					Set<Type> types = tool.getAnalysis().getRuntimeTypesOf(state, s, (Statement) node);
+					//
+					//					if (types.stream().allMatch(t -> t.isInMemoryType() || t.isPointerType()))
+					//						continue;
 
 					ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
-					Satisfiability sat = tool.getAnalysis().satisfies(state, s, (ProgramPoint) node);
 
+					Satisfiability sat = tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node);
 					if (!valueState.isBottom()) {
 						if (!valueState.isTop()) {
 							if (sat == Satisfiability.SATISFIED) {
@@ -189,7 +183,7 @@ TypeEnvironment<TypeSet>>
 						LOG.error("The abstract state of assert's expression is BOTTOM");
 					}
 				} 
-			}
+//			}
 		}
 	}
 }

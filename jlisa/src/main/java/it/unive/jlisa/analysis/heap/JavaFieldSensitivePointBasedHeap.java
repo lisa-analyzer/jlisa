@@ -52,7 +52,7 @@ FieldSensitivePointBasedHeap {
 		return expression.accept(rewriter, state);
 	}
 
-
+	// FIXME: this method can be removed with the new snapshot
 	@Override
 	public Pair<HeapEnvWithFields, List<HeapReplacement>> assign(HeapEnvWithFields state, Identifier id,
 			SymbolicExpression expression, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
@@ -127,13 +127,13 @@ FieldSensitivePointBasedHeap {
 							else if (rp.equals(NullAllocationSite.INSTANCE))
 								sat = sat.lub(Satisfiability.NOT_SATISFIED);
 
-							// rp is strong
+							// right is strong
 							else if (!rp.isWeak())
 								if (rp.equals(lp))
 									sat = sat.lub(Satisfiability.SATISFIED);
 								else
 									sat = sat.lub(Satisfiability.UNKNOWN);
-							// lp is strong
+							// left is strong
 							else if (!lp.isWeak())
 								if (rp.equals(lp))
 									sat = sat.lub(Satisfiability.SATISFIED);
@@ -143,7 +143,7 @@ FieldSensitivePointBasedHeap {
 					}
 				}
 				
-				// FIXME: better check
+				// FIXME: we may improve this check
 				return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
 			}
 		}
@@ -161,7 +161,7 @@ FieldSensitivePointBasedHeap {
 	extends
 	FieldSensitivePointBasedHeap.Rewriter {
 
-		// FIXME: access child and dereference with null receiver
+		// TODO: access child and dereference with null receiver
 
 		@Override
 		public ExpressionSet visit(HeapExpression expression, ExpressionSet[] subExpressions, Object... params)
