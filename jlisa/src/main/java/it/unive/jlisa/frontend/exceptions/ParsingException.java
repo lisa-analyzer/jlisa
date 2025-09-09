@@ -2,12 +2,13 @@ package it.unive.jlisa.frontend.exceptions;
 
 import it.unive.lisa.program.SourceCodeLocation;
 
-public class ParsingException extends Exception {
+public class ParsingException extends RuntimeException {
 
 
     public enum Type {
         UNSUPPORTED_STATEMENT,
         MISSING_EXPECTED_EXPRESSION,
+        VARIABLE_ALREADY_DECLARED,
         MALFORMED_SOURCE
     }
     private String message;
