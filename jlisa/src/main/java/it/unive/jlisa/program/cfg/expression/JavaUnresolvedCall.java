@@ -73,8 +73,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				if (recType.isPointerType())  {
 					Type inner = recType.asPointerType().getInnerType();
 					if (inner.isNullType()) {
-						JavaClassType npe = JavaClassType.lookup("NullPointerException", null);
-						result = result.lub(analysis.moveExecutionToError(state, new Exception(npe, this)));
+						result = result.lub(analysis.moveExecutionToError(state, new Exception(JavaClassType.getNullPoiterExceptionType(), this)));
 						continue;
 					} else if (!inner.isUnitType())
 						continue;

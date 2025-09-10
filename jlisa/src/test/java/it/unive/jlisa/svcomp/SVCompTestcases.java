@@ -131,6 +131,22 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
+	@Test
+	public void NullPointerException4_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "NullPointerException4", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void ClassCastException1_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ClassCastException1", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
 	// FIXME: after new snapshot
 	@Test
 	public void NegativeArraySizeException1_test()  throws IOException {

@@ -50,8 +50,7 @@ public class JavaNewArray extends UnaryExpression {
 		Satisfiability sat = analysis.satisfies(state, bin, this);
 		if (sat == Satisfiability.SATISFIED) {
 			// throw exception (definitely)
-			JavaClassType indexOob = JavaClassType.lookup("NegativeArraySizeException", null);
-			return analysis.moveExecutionToError(state, new Exception(indexOob, this));
+			return analysis.moveExecutionToError(state, new Exception(JavaClassType.getNegativeArraySizeExceptionType(), this));
 		} else {
 			// TODO: UNKNOWN case
 		}

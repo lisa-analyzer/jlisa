@@ -193,4 +193,16 @@ public class JavaClassType implements UnitType {
 	public Expression defaultValue(CFG cfg, CodeLocation location) {
 		return new JavaNullLiteral(cfg, location);
 	}
+	
+	public static JavaClassType getClassCastExceptionType() {
+		return lookup("ClassCastException", null);
+	}
+	
+	public static JavaClassType getNullPoiterExceptionType() {
+		return lookup("NullPointerException", null);
+	}
+	
+	public static JavaClassType getNegativeArraySizeExceptionType() {
+		return lookup("NegativeArraySizeException", null);
+	}
 }

@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "91ms",
+    "end" : "2025-09-10T10:33:59.468+02:00",
+    "expressions" : "50",
+    "files" : "1",
+    "globals" : "7",
+    "members" : "125",
+    "programs" : "1",
+    "start" : "2025-09-10T10:33:59.377+02:00",
+    "statements" : "28",
+    "units" : "70",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashException" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/NullPointerException4"
+  }
+}
