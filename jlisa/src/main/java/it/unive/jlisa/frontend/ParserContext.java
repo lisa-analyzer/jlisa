@@ -39,21 +39,6 @@ import it.unive.lisa.util.frontend.LocalVariableTracker.LocalVariable;
  */
 public class ParserContext {
 
-    /**
-     * Enumeration defining strategies for handling parsing exceptions.
-     *
-     * <ul>
-     * <li>{@code FAIL} - Immediately throw a RuntimeException when a parsing exception occurs</li>
-     * <li>{@code COLLECT} - Collect parsing exceptions for later analysis without stopping the parsing process</li>
-     * </ul>
-     */
-    public enum EXCEPTION_HANDLING_STRATEGY {
-        /** Fail immediately when a parsing exception occurs */
-        FAIL,
-        /** Collect exceptions and continue parsing */
-        COLLECT
-    }
-
     /** The program being parsed and analyzed */
     private Program program;
 
