@@ -166,7 +166,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 				}
 			}
 		} else {
-			cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
+			cUnit.addAncestor(JavaClassType.getObjectType().getUnit());
 		}
 		
 		// parsing implemented interfaces

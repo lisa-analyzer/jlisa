@@ -205,4 +205,12 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getNegativeArraySizeExceptionType() {
 		return lookup("NegativeArraySizeException", null);
 	}
+	
+	public static JavaClassType getObjectType() {
+		return lookup("Object", null);
+	}
+	
+	public static JavaClassType getStringType() {
+		return lookup("String", null);
+	}
 }

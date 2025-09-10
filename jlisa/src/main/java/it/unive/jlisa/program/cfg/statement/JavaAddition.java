@@ -89,7 +89,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		AnalysisState<A> partialResult = analysis.mergeErrors(state.bottom(), state);
 		for (Type lType : leftTypes) {
 			for( Type rType : rightTypes) {
-				if(lType.isReferenceType() && rType.isReferenceType() && lType.asReferenceType().getInnerType().equals(JavaClassType.lookup("String", null)) && lType.asReferenceType().getInnerType().equals(rType.asReferenceType().getInnerType())) {
+				if(lType.isReferenceType() && rType.isReferenceType() && lType.asReferenceType().getInnerType().equals(JavaClassType.getStringType()) && lType.asReferenceType().getInnerType().equals(rType.asReferenceType().getInnerType())) {
 					UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null, "concat", lType, getSubExpressions());
 					ExpressionSet[] expressionSet = new ExpressionSet[2];
 					expressionSet[0] = new ExpressionSet(actualLeft);
