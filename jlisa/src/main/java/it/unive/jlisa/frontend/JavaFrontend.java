@@ -30,19 +30,25 @@ public class JavaFrontend {
     private ParserContext parserContext;
     private int API_LEVEL = AST.getJLSLatest();
 
+    public JavaFrontend(ParsingOptions parsingOptions) {
+
+        // We are creating a new Program. We need to start from a blank state.
+        clearAll();
+        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL, parsingOptions);
+    }
 
     public JavaFrontend() {
         // We are creating a new Program. We need to start from a blank state.
         clearAll();
-
-        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+        
+        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
     }
 
     public JavaFrontend(int apiLevel) {
         clearAll();
 
         this.API_LEVEL = apiLevel;
-        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+        this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
     }
 
     public JavaFrontend(JavaProgram program) {
@@ -51,12 +57,12 @@ public class JavaFrontend {
              p = createProgram();
         }
         p  = program;
-        this.parserContext = new ParserContext(p, this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+        this.parserContext = new ParserContext(p, this.API_LEVEL);
     }
 
     public JavaFrontend(JavaProgram program, int apiLevel) {
         this.API_LEVEL = apiLevel;
-        this.parserContext = new ParserContext(program, apiLevel, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+        this.parserContext = new ParserContext(program, apiLevel);
     }
 
     public Program getProgram() {

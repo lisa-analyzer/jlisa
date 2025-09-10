@@ -161,23 +161,28 @@ public class Main {
             formatter.printHelp("jlisa", options, true);
             System.exit(1);
         }
-        ParsingOptions options = ParsingOptions.builder()
+        ParsingOptions parsingOptions = ParsingOptions.builder()
             .loopUnrollingFactor(loopUnrollFactor)
-            .exceptionHandlingStrategy(ParsingOptions.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+            .exceptionHandlingStrategy(ParsingOptions.EXCEPTION_HANDLING_STRATEGY.COLLECT)
+            .build();
         switch(executionMode) {
             case "Debug":
-                runDebug(sources, outdir, checkerName, numericalDomain);
+                runDebug(sources, outdir, checkerName, numericalDomain, parsingOptions);
                 break;
             case "Statistics":
-                runStatistics(sources, outdir, checkerName, numericalDomain);
+                runStatistics(sources, outdir, checkerName, numericalDomain, parsingOptions);
                 break;
             default:
                 LOG.error("Unknown execution mode: " + executionMode);
                 System.exit(1);
         }
     }
-    private static void runDebug(String[] sources, String outdir, String checkerName, String numericalDomain) throws IOException, ParseException, ParsingException {
-        JavaFrontend frontend = runFrontend(sources);
+    private static void runDebug(String[] sources, 
+        String outdir, 
+        String checkerName, 
+        String numericalDomain,
+        ParsingOptions parsingOptions) throws IOException, ParseException, ParsingException {
+        JavaFrontend frontend = runFrontend(sources, parsingOptions);
         if (!frontend.getParserContext().getExceptions().isEmpty()) {
             LOG.error("Some errors occurred during the parsing, reporting the first one");
             throw frontend.getParserContext().getExceptions().getFirst();
@@ -185,10 +190,14 @@ public class Main {
         runAnalysis(outdir, checkerName, numericalDomain, frontend);
     }
 
-    private static void runStatistics(String[] sources, String outdir, String checkerName, String numericalDomain) {
+    private static void runStatistics(String[] sources, 
+        String outdir, 
+        String checkerName, 
+        String numericalDomain,
+        ParsinOptions parsingOptions) {
         JavaFrontend frontend = null;
         try {
-            frontend = runFrontend(sources);
+            frontend = runFrontend(sources, parsingOptions);
             if (!frontend.getParserContext().getExceptions().isEmpty()) {
                 CSVExceptionWriter.writeCSV(outdir + "frontend.csv", frontend.getParserContext().getExceptions());
                 LOG.error("Some errors occurred during the parsing. Check " + outdir + "frontend.csv file.");
@@ -209,10 +218,10 @@ public class Main {
         }
     }
 
-    private static JavaFrontend runFrontend(String[] sources) throws IOException, ParsingException {
+    private static JavaFrontend runFrontend(String[] sources, ParsingOptions parsingOptions) throws IOException, ParsingException {
         JavaFrontend frontend = null;
         try {
-            frontend = new JavaFrontend();
+            frontend = new JavaFrontend(parsingOptions);
             frontend.parseFromListOfFile(Arrays.stream(sources).toList());
             return frontend;
         }

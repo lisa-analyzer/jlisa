@@ -45,7 +45,10 @@ public class ParserContext {
     /** The API level for the parsing context */
     private int apiLevel;
 
-    private ParsingOptions options;
+    private ParsingOptions options = ParsingOptions.Builder()
+        .loopUnrollingFactor(0)
+        .exceptionHandlingStrategy(ParsingOptions.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+
     /** Collection of parsing exceptions encountered during processing */
     private List<ParsingException> exceptions;
 
@@ -56,17 +59,26 @@ public class ParserContext {
     Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
     /**
-     * Constructs a new ParserContext with the specified program, API level, and exception handling strategy.
-     *
+     * Constructs a new ParserContext with the specified program, API level, and default parsing options.
      * @param program the program to be parsed and analyzed
      * @param apiLevel the API level for this parsing context
-     * @param exceptionHandlingStrategy the strategy for handling parsing exceptions
      */
-    public ParserContext(Program program, int apiLevel, EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy) {
+    public ParserContext(Program program, int apiLevel) {
         this.program = program;
         this.apiLevel = apiLevel;
         this.exceptions = new ArrayList<>();
-        this.exceptionHandlingStrategy = exceptionHandlingStrategy;
+    }
+
+    /**
+     * Constructs a new ParserContext with the specified program, API level, and parsing options.
+     *
+     * @param program the program to be parsed and analyzed
+     * @param apiLevel the API level for this parsing context
+     * @param options the parsing options
+     */
+    public ParserContext(Program program, int apiLevel, ParsingOptions options) {
+        this(program, apiLevel);
+        this.options = options;
     }
 
     /**
