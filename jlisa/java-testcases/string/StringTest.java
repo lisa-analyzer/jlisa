@@ -52,6 +52,6 @@ public class StringTest {
 		boolean b8 = s4.startsWith("World", 6);
 		int i8 = s4.indexOf("o", 6);
 		int i9 = ("ABCABABCAB").lastIndexOf('C', 5);
-		
+				
 	}
 }

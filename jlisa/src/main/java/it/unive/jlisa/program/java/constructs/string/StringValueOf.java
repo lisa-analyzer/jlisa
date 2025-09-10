@@ -62,6 +62,8 @@ public class StringValueOf extends UnaryExpression implements PluggableStatement
 			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
 			StatementStore<A> expressions) throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
+		
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		
 		it.unive.lisa.symbolic.value.UnaryExpression valueOf = null;
@@ -107,7 +109,7 @@ public class StringValueOf extends UnaryExpression implements PluggableStatement
 		}
 		
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",  new JavaReferenceType(stringType), new Expression[0]);
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype, new Expression[0]);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
@@ -118,7 +120,7 @@ public class StringValueOf extends UnaryExpression implements PluggableStatement
 		}
 
 		getMetaVariables().addAll(call.getMetaVariables());
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());				
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());			
 
 		
 	}
