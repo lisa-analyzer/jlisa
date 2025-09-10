@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -192,8 +193,9 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		}
 
 		// all fields (static and non-static) are visited
+		Set<String> visitedFieldNames = new HashSet<>();
 		for (FieldDeclaration fd : node.getFields()) {
-			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit);
+			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit, visitedFieldNames);
 			fd.accept(visitor);
 		}
 

@@ -638,7 +638,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(SimpleName node) {
 		String identifier = node.getIdentifier();
-		expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(cfg, new VariableInfo(identifier, tracker.getLatestScope().get(identifier))));
+		expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(cfg, new VariableInfo(identifier, tracker != null ? tracker.getLatestScope().get(identifier) : null)));
 		return false;
 	}
 
@@ -854,12 +854,13 @@ public class ExpressionVisitor extends JavaASTVisitor {
 					getSourceCodeLocation(fragment),
 					variableName, varType);
 
-			if (tracker.hasVariable(variableName))
+			if (tracker != null && tracker.hasVariable(variableName))
 				throw new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
 						"Variable " + variableName + " already exists in the cfg", getSourceCodeLocation(node));
 
-			tracker.addVariable(variableName, ref, ref.getAnnotations());
-			parserContext.addVariableType(cfg, new VariableInfo(variableName, tracker.getLatestScope().get(variableName)), varType);
+			if(tracker != null) 
+				tracker.addVariable(variableName, ref, ref.getAnnotations());
+			parserContext.addVariableType(cfg, new VariableInfo(variableName, tracker != null ? tracker.getLatestScope().get(variableName) : null), varType);
 
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker);
