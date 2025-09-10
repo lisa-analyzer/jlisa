@@ -45,6 +45,7 @@ public class ParserContext {
     /** The API level for the parsing context */
     private int apiLevel;
 
+    private ParsingOptions options;
     /** Collection of parsing exceptions encountered during processing */
     private List<ParsingException> exceptions;
 
@@ -177,6 +178,9 @@ public class ParserContext {
         return apiLevel;
     }
 
+    public ParsingOptions getOptions() {
+        return options;
+    }
     /**
      * Returns the list of parsing exceptions collected during parsing.
      * This list will only contain exceptions if the exception handling
@@ -200,7 +204,7 @@ public class ParserContext {
      * @throws RuntimeException if the exception handling strategy is FAIL
      */
     public void addException(ParsingException e) {
-        if (options.getExceptionHandlingStrategy() == FrontendOptions.EXCEPTION_HANDLING_STRATEGY.FAIL) {
+        if (options.getExceptionHandlingStrategy() == ParsingOptions.EXCEPTION_HANDLING_STRATEGY.FAIL) {
             throw new RuntimeException(e);
         }
         exceptions.add(e);

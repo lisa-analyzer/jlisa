@@ -1,6 +1,6 @@
 package it.unive.jlisa.frontend;
 
-public class FrontendOptions {
+public class ParsingOptions {
     
     private int loopUnrollingFactor = 2;
     
@@ -22,7 +22,7 @@ public class FrontendOptions {
     /** The strategy used for handling parsing exceptions */
     private EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy = EXCEPTION_HANDLING_STRATEGY.FAIL;
 
-    private FrontendOptions(final Builder b) {
+    private ParsingOptions(final Builder b) {
         this.loopUnrollingFactor = b.getLoopUnrollingFactor();
         this.exceptionHandlingStrategy = b.exceptionHandlingStrategy;
     }
@@ -40,8 +40,8 @@ public class FrontendOptions {
             this.exceptionHandlingStrategy = exceptionHandlingStrategy;
         }
 
-        public FrontendOptions build() {
-            return new FrontendOptions(this);
+        public ParsingOptions build() {
+            return new ParsingOptions(this);
         }
     }
 
