@@ -1,7 +1,5 @@
 package it.unive.jlisa.checkers;
 
-import java.util.Map.Entry;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,11 +8,8 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.ProgramState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
-import it.unive.lisa.analysis.continuations.Continuation;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
@@ -97,14 +92,7 @@ TypeEnvironment<TypeSet>>
 			> state = result.getAnalysisStateBefore(node);
 
 			// checking if there exists at least one exception state
-			boolean hasExceptionState = false;
-			for (Entry<Continuation, 
-					ProgramState<
-					SimpleAbstractState<
-					HeapEnvironment<AllocationSites>, 
-					ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>>> st : state)
-				if (st.getKey() instanceof Exception)
-					hasExceptionState = true;
+			boolean hasExceptionState = !state.getErrors().isBottom() && !state.getErrors().isTop() && !state.getErrors().function.isEmpty();
 
 			SimpleAbstractState<
 			HeapEnvironment<AllocationSites>, 

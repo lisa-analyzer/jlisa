@@ -82,11 +82,11 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
 		SymbolicExpression actualLeft = left;
 		SymbolicExpression actualRight = right;
-		AnalysisState<A> result = analysis.mergeErrors(state.bottom(), state);
+		AnalysisState<A> result = state.bottomExecution();
 		BinaryOperator op;
 		Type type;
 		
-		AnalysisState<A> partialResult = analysis.mergeErrors(state.bottom(), state);
+		AnalysisState<A> partialResult = state.bottomExecution();
 		for (Type lType : leftTypes) {
 			for( Type rType : rightTypes) {
 				if(lType.isReferenceType() && rType.isReferenceType() && lType.asReferenceType().getInnerType().equals(JavaClassType.getStringType()) && lType.asReferenceType().getInnerType().equals(rType.asReferenceType().getInnerType())) {

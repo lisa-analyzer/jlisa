@@ -10,7 +10,6 @@ import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -51,12 +50,12 @@ public class JavaCastExpression extends UnaryExpression {
 			BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr, new Constant(typeToken, 0, getLocation()), TypeCheck.INSTANCE, getLocation());
 			Satisfiability sat = analysis.satisfies(state, tc, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
-				return analysis.moveExecutionToError(state, new Exception(JavaClassType.getClassCastExceptionType(), this));
+				return analysis.moveExecutionToError(state, new it.unive.lisa.analysis.AnalysisState.Error(JavaClassType.getClassCastExceptionType(), this));
 			} else if (sat == Satisfiability.SATISFIED) {
 				BinaryExpression castExpression =  new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE, getLocation());
 				return analysis.smallStepSemantics(state, castExpression, this);
 			} else if (sat == Satisfiability.UNKNOWN) {
-				AnalysisState<A> exceptionState = analysis.moveExecutionToError(state, new Exception(JavaClassType.getClassCastExceptionType(), this));
+				AnalysisState<A> exceptionState = analysis.moveExecutionToError(state, new it.unive.lisa.analysis.AnalysisState.Error(JavaClassType.getClassCastExceptionType(), this));
 				BinaryExpression castExpression =  new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE, getLocation());
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, castExpression, this);
 				return exceptionState.lub(noExceptionState);

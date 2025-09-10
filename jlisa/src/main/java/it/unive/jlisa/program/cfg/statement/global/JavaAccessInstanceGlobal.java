@@ -8,9 +8,9 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -119,7 +119,7 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 			if (recType.isPointerType()) {
 				Type inner = recType.asPointerType().getInnerType();
 				if (inner.isNullType()) {
-					result = result.lub(analysis.moveExecutionToError(state, new Exception(JavaClassType.getNullPoiterExceptionType(), this)));
+					result = result.lub(analysis.moveExecutionToError(state, new Error(JavaClassType.getNullPoiterExceptionType(), this)));
 					atLeastOne = true;
 					continue;
 				} else if (!inner.isUnitType())

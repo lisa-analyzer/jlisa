@@ -5,9 +5,9 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -40,12 +40,12 @@ public class JavaDivision extends Division {
 
 		if (analysis.satisfies(state, expr, this) == Satisfiability.SATISFIED) {
 			JavaClassType arithException = JavaClassType.lookup("ArithmeticException", null);
-			return analysis.moveExecutionToError(state, new Exception(arithException, this));
+			return analysis.moveExecutionToError(state, new Error(arithException, this));
 		} else if (analysis.satisfies(state, expr, this) == Satisfiability.NOT_SATISFIED)
 			return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 		else {
 			JavaClassType arithException = JavaClassType.lookup("ArithmeticException", null);
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state, new Exception(arithException, this));
+			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state, new Error(arithException, this));
 			AnalysisState<A> noExceptionState = super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 			return exceptionState.lub(noExceptionState);
 		}

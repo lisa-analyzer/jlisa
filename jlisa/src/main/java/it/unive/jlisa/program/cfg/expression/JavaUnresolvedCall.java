@@ -7,9 +7,9 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -65,7 +65,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		// get receiver
 		ExpressionSet receiver = params[0];
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		AnalysisState<A> result = analysis.mergeErrors(state.bottom(), state);
+		AnalysisState<A> result = state.bottomExecution();
 
 		for (SymbolicExpression rec : receiver) {
 			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, this);
@@ -73,7 +73,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				if (recType.isPointerType())  {
 					Type inner = recType.asPointerType().getInnerType();
 					if (inner.isNullType()) {
-						result = result.lub(analysis.moveExecutionToError(state, new Exception(JavaClassType.getNullPoiterExceptionType(), this)));
+						result = result.lub(analysis.moveExecutionToError(state, new Error(JavaClassType.getNullPoiterExceptionType(), this)));
 						continue;
 					} else if (!inner.isUnitType())
 						continue;

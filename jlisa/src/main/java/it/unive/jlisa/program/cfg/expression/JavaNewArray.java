@@ -9,9 +9,9 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -50,7 +50,7 @@ public class JavaNewArray extends UnaryExpression {
 		Satisfiability sat = analysis.satisfies(state, bin, this);
 		if (sat == Satisfiability.SATISFIED) {
 			// throw exception (definitely)
-			return analysis.moveExecutionToError(state, new Exception(JavaClassType.getNegativeArraySizeExceptionType(), this));
+			return analysis.moveExecutionToError(state, new Error(JavaClassType.getNegativeArraySizeExceptionType(), this));
 		} else {
 			// TODO: UNKNOWN case
 		}
