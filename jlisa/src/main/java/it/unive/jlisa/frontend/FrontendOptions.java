@@ -48,4 +48,8 @@ public class FrontendOptions {
     public int getLoopUnrollingFactor() {
         return loopUnrollingFactor;
     }
+
+    public EXCEPTION_HANDLING_STRATEGY getExceptionHandlingStrategy() {
+        return exceptionHandlingStrategy;
+    }
 }

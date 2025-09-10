@@ -51,9 +51,6 @@ public class ParserContext {
     /** Map of synthetic code location managers indexed by file name */
     private Map<String, SyntheticCodeLocationManager> syntheticCodeLocationManagers = new HashMap<>();
 
-    /** The strategy used for handling parsing exceptions */
-    private EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy;
-
     /** Map storing variable types for each CFG, organized as CFG -> (variable name -> type) */
     Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
@@ -203,7 +200,7 @@ public class ParserContext {
      * @throws RuntimeException if the exception handling strategy is FAIL
      */
     public void addException(ParsingException e) {
-        if (exceptionHandlingStrategy == EXCEPTION_HANDLING_STRATEGY.FAIL) {
+        if (options.getExceptionHandlingStrategy() == FrontendOptions.EXCEPTION_HANDLING_STRATEGY.FAIL) {
             throw new RuntimeException(e);
         }
         exceptions.add(e);
