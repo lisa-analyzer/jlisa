@@ -20,7 +20,7 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.LocalVariableTracker;
 
-public class FieldInitializationVisitor extends JavaASTVisitor{
+public class FieldInitializationVisitor extends JavaASTVisitor {
     private CFG cfg;
     private it.unive.lisa.program.cfg.statement.Statement first;
     private it.unive.lisa.program.cfg.statement.Statement last;
@@ -40,6 +40,7 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
 
 
         VariableRef thisExpr = new VariableRef(cfg, locationManager.nextLocation(), "this");
+        
         for (Object f : node.fragments()) {
             VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
             if (fragment.getExtraDimensions() != 0) {
@@ -53,8 +54,7 @@ public class FieldInitializationVisitor extends JavaASTVisitor{
             }
             it.unive.lisa.program.cfg.statement.Expression initializer = null;
             if (fragment.getInitializer() != null) {
-            	//TODO: to check tracker
-                ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, new LocalVariableTracker(cfg, cfg.getDescriptor()));
+                ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, null);
                 Expression expression = fragment.getInitializer();
                 expression.accept(initializerVisitor);
                 if (initializerVisitor.getExpression() != null) {
