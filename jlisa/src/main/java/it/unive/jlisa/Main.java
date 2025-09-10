@@ -73,6 +73,13 @@ public class Main {
                 .required(false)
                 .build();
 
+        Option loopUnrollFactor = Option.builder("lo")
+                .longOpt("loopUnrollFactor")
+                .hasArg()
+                .desc("Loop Unrolling Factor (integer)")
+                .required(false)
+                .build();
+
         Option numericalDomainOption = Option.builder("n")
                 .longOpt("numericalDomain")
                 .hasArg()
@@ -92,14 +99,17 @@ public class Main {
         options.addOption(outdirOption);
         options.addOption(logLevel);
         options.addOption(checker);
-        options.addOption(numericalDomainOption);
+        options.addOption(numericalDomainOption)
+        options.addOption(loopUnrollFactor);
         options.addOption(mode);
         // Create parser and formatter
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         String[] sources = new String[0];
         String outdir = "";
-        String checkerName ="", numericalDomain="", executionMode="Debug";
+        String checkerName = "", numericalDomain="", executionMode="Debug";
+        int loopUnrollFactor;
+
         try {
             CommandLine cmd = parser.parse(options, args);
 
@@ -129,7 +139,7 @@ public class Main {
             
             checkerName = cmd.getOptionValue("c", "Assert");
             numericalDomain = cmd.getOptionValue("n");
-
+            loopUnrollFactor = cmd.getOptionValue("lo");
             sources = cmd.getOptionValues("s");
             outdir = cmd.getOptionValue("o");
             if (!outdir.endsWith("/")) {
@@ -151,7 +161,9 @@ public class Main {
             formatter.printHelp("jlisa", options, true);
             System.exit(1);
         }
-
+        ParsingOptions options = ParsingOptions.builder()
+            .loopUnrollingFactor(loopUnrollFactor)
+            .exceptionHandlingStrategy(ParsingOptions.EXCEPTION_HANDLING_STRATEGY.COLLECT);
         switch(executionMode) {
             case "Debug":
                 runDebug(sources, outdir, checkerName, numericalDomain);
