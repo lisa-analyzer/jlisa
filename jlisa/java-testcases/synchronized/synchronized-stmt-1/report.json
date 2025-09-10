@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "2",
+    "duration" : "112ms",
+    "end" : "2025-09-09T23:20:44.255+02:00",
+    "expressions" : "9",
+    "files" : "1",
+    "globals" : "6",
+    "members" : "113",
+    "programs" : "1",
+    "start" : "2025-09-09T23:20:44.143+02:00",
+    "statements" : "7",
+    "units" : "68",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashException" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/synchronized/synchronized-stmt-1"
+  }
+}

@@ -4,14 +4,13 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
 
-public class VariableDeclarationASTVisitor extends JavaASTVisitor{
+public class VariableDeclarationASTVisitor extends JavaASTVisitor {
     Parameter parameter;
     public VariableDeclarationASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
         super(parserContext, source, compilationUnit);
@@ -21,10 +20,6 @@ public class VariableDeclarationASTVisitor extends JavaASTVisitor{
         TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
         node.getType().accept(visitor);
         Type type = visitor.getType();
-        if (type == null) {
-            throw new RuntimeException(new UnsupportedStatementException("variable should have a type"));
-        }
-
         if (node.getExtraDimensions() != 0) {
             if (type instanceof ArrayType) {
                 ArrayType arrayType = (ArrayType) type;

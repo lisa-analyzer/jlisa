@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(String_[]_args)_cfg.json" ],
+  "info" : {
+    "cfgs" : "2",
+    "duration" : "1ms",
+    "end" : "2025-09-09T23:20:48.014+02:00",
+    "expressions" : "5",
+    "files" : "2",
+    "globals" : "6",
+    "members" : "113",
+    "programs" : "1",
+    "start" : "2025-09-09T23:20:48.013+02:00",
+    "statements" : "5",
+    "units" : "68",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "true",
+    "serializeResults" : "false",
+    "shouldSmashException" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/var-scoping/vs3"
+  }
+}

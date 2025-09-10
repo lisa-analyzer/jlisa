@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,6 +19,7 @@ import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
@@ -53,7 +53,7 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 
-public class ClassASTVisitor extends JavaASTVisitor{
+public class ClassASTVisitor extends JavaASTVisitor {
 
 	private boolean nested;
 
@@ -259,8 +259,8 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
-		parserContext.addVariableType(cfg, "name", new JavaReferenceType(getProgram().getTypes().getStringType()));
+		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+		parserContext.addVariableType(cfg, new VariableInfo("name", null), new JavaReferenceType(getProgram().getTypes().getStringType()));
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
 				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
@@ -329,7 +329,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
-					ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+					ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, null);
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
@@ -371,7 +371,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
+		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
 		// we filter just the class unit, not interfaces
 		String superClassName = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get().getName();
 		
