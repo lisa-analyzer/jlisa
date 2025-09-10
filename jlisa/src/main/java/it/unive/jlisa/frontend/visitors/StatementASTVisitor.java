@@ -67,6 +67,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -1149,6 +1150,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(CatchClause node) {
+		tracker.enterScope();
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
 		node.getException().getType().accept(typeVisitor);
@@ -1156,6 +1158,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		// type of the exception		
 		Type type = typeVisitor.getType();
+		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
+		
 		// exception param
 		Expression param = paramVisitor.getExpression();
 
@@ -1170,6 +1174,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
 				type);
 
+		tracker.addVariable(param.toString(), param, new Annotations());
+		tracker.exitScope(body.getEnd());
 		this.clBlock = catchBlock;
 		this.block = body;
 		return false;

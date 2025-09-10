@@ -18,6 +18,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
 import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -73,7 +74,18 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				if (recType.isPointerType())  {
 					Type inner = recType.asPointerType().getInnerType();
 					if (inner.isNullType()) {
-						result = result.lub(analysis.moveExecutionToError(state, new Error(JavaClassType.getNullPoiterExceptionType(), this)));
+						// builds the exception
+						JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
+						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException", npeType.getReference(), new Expression[0]);
+						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+						
+						// assign exception to variable thrower
+						CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
+						state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+						
+						// deletes the receiver of the constructor
+						state = state.forgetIdentifiers(call.getMetaVariables(), this);
+						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(npeType.getReference(), this)));
 						continue;
 					} else if (!inner.isUnitType())
 						continue;

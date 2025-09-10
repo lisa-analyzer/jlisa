@@ -42,6 +42,10 @@ class NullPointerException extends RuntimeException:
 		
 class ClassCastException extends RuntimeException:
 
+	instance method ClassCastException: it.unive.jlisa.program.java.constructs.exceptions.ClassCastExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ClassCastException*
+
 class IndexOutOfBoundsException extends RuntimeException:
 
 class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:

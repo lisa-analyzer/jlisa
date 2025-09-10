@@ -185,7 +185,7 @@ public class JavaClassType implements UnitType {
         return instances;
     }
 
-	public Type getReference() {
+	public JavaReferenceType getReference() {
 		return new JavaReferenceType(this);
 	}
 	
@@ -213,4 +213,10 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getStringType() {
 		return lookup("String", null);
 	}
+	
+	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
+		return lookup("ArrayIndexOutOfBoundsException", null);
+	}
+
+	
 }

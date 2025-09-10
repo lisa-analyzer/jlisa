@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -19,6 +20,7 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
@@ -49,8 +51,18 @@ public class JavaNewArray extends UnaryExpression {
 
 		Satisfiability sat = analysis.satisfies(state, bin, this);
 		if (sat == Satisfiability.SATISFIED) {
-			// throw exception (definitely)
-			return analysis.moveExecutionToError(state, new Error(JavaClassType.getNegativeArraySizeExceptionType(), this));
+			// builds the exception
+			JavaClassType oonExc = JavaClassType.getNegativeArraySizeExceptionType();
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NegativeArraySizeException", oonExc.getReference(), new Expression[0]);
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+			// assign exception to variable thrower
+			CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
+			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+			// deletes the receiver of the constructor
+			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oonExc.getReference(), this));
 		} else {
 			// TODO: UNKNOWN case
 		}

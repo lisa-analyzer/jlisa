@@ -3,12 +3,14 @@ package it.unive.jlisa.program.cfg.statement.global;
 import java.util.HashSet;
 import java.util.Set;
 
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
+import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
@@ -21,6 +23,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.program.language.hierarchytraversal.HierarcyTraversalStrategy;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -119,7 +122,18 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 			if (recType.isPointerType()) {
 				Type inner = recType.asPointerType().getInnerType();
 				if (inner.isNullType()) {
-					result = result.lub(analysis.moveExecutionToError(state, new Error(JavaClassType.getNullPoiterExceptionType(), this)));
+					// builds the exception
+					JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
+					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException", npeType.getReference(), new Expression[0]);
+					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					
+					// assign exception to variable thrower
+					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
+					state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					
+					// deletes the receiver of the constructor
+					state = state.forgetIdentifiers(call.getMetaVariables(), this);
+					result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(npeType.getReference(), this)));
 					atLeastOne = true;
 					continue;
 				} else if (!inner.isUnitType())
