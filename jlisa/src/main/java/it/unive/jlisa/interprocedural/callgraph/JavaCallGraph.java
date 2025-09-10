@@ -206,12 +206,6 @@ public abstract class JavaCallGraph extends BaseCallGraph {
         ParameterMatchingStrategy strategy = call.getProgram().getFeatures().getMatchingStrategy();
 
         return target && strategy.matches(call, descr.getFormals(), call.getParameters(), types);
-        /*ParameterMatchingStrategy strategy = call.getProgram().getFeatures().getMatchingStrategy();
-        if (add && strategy.matches(call, descr.getFormals(), call.getParameters(), types))
-            if (cm instanceof CFG)
-                targets.add((CFG) cm);
-            else
-                natives.add((NativeCFG) cm);*/
     }
 
     private int distanceFromPerfectTarget(UnresolvedCall call, CodeMember cm, boolean instance) {
