@@ -1,20 +1,34 @@
 package it.unive.jlisa.frontend.util;
 
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.VariableTableEntry;
-import it.unive.lisa.program.cfg.edge.*;
-import it.unive.lisa.program.cfg.protection.CatchBlock;
-import it.unive.lisa.program.cfg.protection.ProtectedBlock;
-import it.unive.lisa.program.cfg.protection.ProtectionBlock;
-import it.unive.lisa.program.cfg.statement.*;
-import it.unive.lisa.program.cfg.statement.literal.Literal;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.VariableTableEntry;
+import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
+import it.unive.lisa.program.cfg.edge.Edge;
+import it.unive.lisa.program.cfg.edge.ErrorEdge;
+import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.protection.CatchBlock;
+import it.unive.lisa.program.cfg.protection.ProtectedBlock;
+import it.unive.lisa.program.cfg.protection.ProtectionBlock;
+import it.unive.lisa.program.cfg.statement.Assignment;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.NoOp;
+import it.unive.lisa.program.cfg.statement.Ret;
+import it.unive.lisa.program.cfg.statement.Return;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.program.cfg.statement.YieldsValue;
+import it.unive.lisa.program.cfg.statement.literal.Literal;
 
 public class JavaCFGTweaker {
 
@@ -87,208 +101,200 @@ public class JavaCFGTweaker {
     }
 
     /**
-     * Adds edges connecting each statement possibly needing to be followed by
-     * the execution of a finally block to the (chain of) finally block(s) that
-     * is (are) to be executed. These include:
-     * <ul>
-     * <li>Edges from statements terminating try/catch/else block normally, and
-     * going into their corresponding finally block;</li>
-     * <li>Edges from statements preceding execution-terminating statements
-     * (e.g., returns or throws) to the enclosing finally blocks that must be
-     * executed before leaving the current CFG, and then the edge back to the
-     * statement itself;</li>
-     * <li>Edges from control flow-altering statements (e.g., breaks or
-     * continues) to the enclosing finally blocks that must be executed before
-     * leaving the current control flow, and then the edge to their target.</li>
-     * </ul>
-     *
-     * @param <E>              the type of exceptions this method can raise
-     * @param cfg              the CFG to be tweaked
-     * @param exceptionFactory a factory for exceptions to be raised in case of
-     *                             errors
-     */
-    public static <E extends RuntimeException> void addFinallyEdges(
-            CFG cfg,
-            Function<String, E> exceptionFactory) {
-        int pathIdx = 0;
-        for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
-            ProtectedBlock fin = pb.getFinallyBlock();
-            if (fin == null || fin.getBody().isEmpty())
-                continue;
+	 * Adds edges connecting each statement possibly needing to be followed by
+	 * the execution of a finally block to the (chain of) finally block(s) that
+	 * is (are) to be executed. These include:
+	 * <ul>
+	 * <li>Edges from statements terminating try/catch/else block normally, and
+	 * going into their corresponding finally block;</li>
+	 * <li>Edges from statements preceding execution-terminating statements
+	 * (e.g., returns or throws) to the enclosing finally blocks that must be
+	 * executed before leaving the current CFG, and then the edge back to the
+	 * statement itself;</li>
+	 * <li>Edges from control flow-altering statements (e.g., breaks or
+	 * continues) to the enclosing finally blocks that must be executed before
+	 * leaving the current control flow, and then the edge to their target.</li>
+	 * </ul>
+	 *
+	 * @param <E>              the type of exceptions this method can raise
+	 * @param cfg              the CFG to be tweaked
+	 * @param exceptionFactory a factory for exceptions to be raised in case of
+	 *                             errors
+	 */
+	public static <E extends RuntimeException> void addFinallyEdges(
+			CFG cfg,
+			Function<String, E> exceptionFactory) {
+		for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
+			ProtectedBlock fin = pb.getFinallyBlock();
+			if (fin == null || fin.getBody().isEmpty())
+				continue;
 
-            if (pb.getElseBlock() == null)
-                pathIdx = addNormalFinallyEdges(cfg, pb.getTryBlock(), fin, pb.getClosing(), pathIdx);
-            else
-                pathIdx = addNormalFinallyEdges(cfg, pb.getElseBlock(), fin, pb.getClosing(), pathIdx);
+			if (pb.getElseBlock() == null)
+				addNormalFinallyEdges(cfg, pb.getTryBlock(), fin, pb.getClosing());
+			else
+				addNormalFinallyEdges(cfg, pb.getElseBlock(), fin, pb.getClosing());
 
-            for (CatchBlock catchBody : pb.getCatchBlocks())
-                pathIdx = addNormalFinallyEdges(cfg, catchBody.getBody(), fin, pb.getClosing(), pathIdx);
-        }
+			for (CatchBlock catchBody : pb.getCatchBlocks())
+				addNormalFinallyEdges(cfg, catchBody.getBody(), fin, pb.getClosing());
+		}
 
-        // we sort them for deterministic processing
-        for (Statement yield : new TreeSet<>(cfg.getAllExitpoints())) {
-            List<ProtectedBlock> fins = new LinkedList<>();
-            for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
-                if (pb.getFinallyBlock() != null
-                        && !pb.getFinallyBlock().getBody().isEmpty()
-                        && pb.getFullBody(false).contains(yield))
-                    fins.add(pb.getFinallyBlock());
-            }
-            if (fins.isEmpty())
-                continue;
+		// we sort them for deterministic processing
+		for (Statement yield : new TreeSet<>(cfg.getAllExitpoints())) {
+			List<ProtectedBlock> fins = new LinkedList<>();
+			for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
+				if (pb.getFinallyBlock() != null
+						&& !pb.getFinallyBlock().getBody().isEmpty()
+						&& pb.getFullBody(false).contains(yield))
+					fins.add(pb.getFinallyBlock());
+			}
+			if (fins.isEmpty())
+				continue;
 
-            fins.sort(
-                    (
-                            a,
-                            b
-                    ) -> a.getStart().getLocation().compareTo(b.getStart().getLocation()));
-            for (Edge preEnd : cfg.getIngoingEdges(yield)) {
-                cfg.getNodeList().removeEdge(preEnd);
-                pathIdx = addFinallyPathInBetween(cfg, preEnd.getSource(), yield, fins, pathIdx);
-            }
-        }
+			fins.sort(
+					(
+							a,
+							b) -> a.getStart().getLocation().compareTo(b.getStart().getLocation()));
+			for (Edge preEnd : cfg.getIngoingEdges(yield)) {
+				cfg.getNodeList().removeEdge(preEnd);
+				addFinallyPathInBetween(cfg, preEnd.getSource(), yield, fins);
+			}
+		}
 
-        // we sort them for deterministic processing
-        for (Statement st : new TreeSet<>(cfg.getNodes()))
-            if (st.breaksControlFlow() || st.continuesControlFlow()) {
-                List<ProtectedBlock> fins = new LinkedList<>();
-                Collection<Edge> outs = cfg.getOutgoingEdges(st);
-                Collection<Edge> toReplace = new TreeSet<>();
-                for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
-                    if (pb.getFinallyBlock() == null || pb.getFinallyBlock().getBody().isEmpty())
-                        continue;
+		// we sort them for deterministic processing
+		for (Statement st : new TreeSet<>(cfg.getNodes()))
+			if (st.breaksControlFlow() || st.continuesControlFlow()) {
+				List<ProtectedBlock> fins = new LinkedList<>();
+				Collection<Edge> outs = cfg.getOutgoingEdges(st);
+				Collection<Edge> toReplace = new TreeSet<>();
+				for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
+					if (pb.getFinallyBlock() == null || pb.getFinallyBlock().getBody().isEmpty())
+						continue;
 
-                    AtomicBoolean found = new AtomicBoolean(false);
+					AtomicBoolean found = new AtomicBoolean(false);
 
-                    if (pb.getTryBlock().getBody().contains(st))
-                        outs.stream()
-                                .filter(e -> !pb.getTryBlock().getBody().contains(e.getDestination()))
-                                .forEach(e ->
-                                {
-                                    found.set(true);
-                                    toReplace.add(e);
-                                });
-                    if (pb.getElseBlock() != null && pb.getElseBlock().getBody().contains(st))
-                        outs.stream()
-                                .filter(e -> !pb.getElseBlock().getBody().contains(e.getDestination()))
-                                .forEach(e ->
-                                {
-                                    found.set(true);
-                                    toReplace.add(e);
-                                });
-                    for (CatchBlock catchBody : pb.getCatchBlocks())
-                        if (catchBody.getBody().getBody().contains(st))
-                            outs.stream()
-                                    .filter(e -> !catchBody.getBody().getBody().contains(e.getDestination()))
-                                    .forEach(e ->
-                                    {
-                                        found.set(true);
-                                        toReplace.add(e);
-                                    });
+					if (pb.getTryBlock().getBody().contains(st))
+						outs.stream()
+								.filter(e -> !pb.getTryBlock().getBody().contains(e.getDestination()))
+								.forEach(e -> {
+									found.set(true);
+									toReplace.add(e);
+								});
+					if (pb.getElseBlock() != null && pb.getElseBlock().getBody().contains(st))
+						outs.stream()
+								.filter(e -> !pb.getElseBlock().getBody().contains(e.getDestination()))
+								.forEach(e -> {
+									found.set(true);
+									toReplace.add(e);
+								});
+					for (CatchBlock catchBody : pb.getCatchBlocks())
+						if (catchBody.getBody().getBody().contains(st))
+							outs.stream()
+									.filter(e -> !catchBody.getBody().getBody().contains(e.getDestination()))
+									.forEach(e -> {
+										found.set(true);
+										toReplace.add(e);
+									});
 
-                    if (found.get())
-                        fins.add(pb.getFinallyBlock());
-                }
-                if (fins.isEmpty())
-                    continue;
+					if (found.get())
+						fins.add(pb.getFinallyBlock());
+				}
+				if (fins.isEmpty())
+					continue;
 
-                fins.sort(
-                        (
-                                a,
-                                b
-                        ) -> a.getStart().getLocation().compareTo(b.getStart().getLocation()));
-                for (Edge entry : toReplace) {
-                    cfg.getNodeList().removeEdge(entry);
-                    pathIdx = addFinallyPathInBetween(cfg, st, entry.getDestination(), fins, pathIdx);
-                }
-            }
-    }
-
-    private static int addNormalFinallyEdges(
-            CFG cfg,
-            ProtectedBlock pb,
-            ProtectedBlock fin,
-            Statement normalExit,
-            int pathIdx) {
-        // the edges are added as follows (BF: BeginFinallyEdge, EF:
-        // EndFinallyEdge):
-        // - if the block can be continued, a BF is added from the end of the
-        // block to the start of the finally
-        // - if both the block and the finally block can be continued, an EF is
-        // added
-        // from the end of the finally block to the closing
-        if (!pb.canBeContinued())
-            return pathIdx;
-        cfg.addEdge(new SequentialEdge(pb.getEnd(), fin.getStart()));
-        if (fin.canBeContinued())
+				fins.sort(
+						(
+								a,
+								b) -> a.getStart().getLocation().compareTo(b.getStart().getLocation()));
+				for (Edge entry : toReplace) {
+					cfg.getNodeList().removeEdge(entry);
+					addFinallyPathInBetween(cfg, st, entry.getDestination(), fins);
+				}
+			}
+	}
+	
+	private static void addNormalFinallyEdges(
+			CFG cfg,
+			ProtectedBlock pb,
+			ProtectedBlock fin,
+			Statement normalExit) {
+		// the edges are added as follows:
+		// - if the block can be continued, an edge is added from the end of the
+		// block to the start of the finally
+		// - if both the block and the finally block can be continued, an edge
+		// is added from the end of the finally block to the closing
+		if (!pb.canBeContinued())
+			return;
+		cfg.addEdge(new SequentialEdge(pb.getEnd(), fin.getStart()));
+		if (fin.canBeContinued())
 			cfg.addEdge(new SequentialEdge(fin.getEnd(), normalExit));
-        return pathIdx + 1;
-    }
+		return;
+	}
+	
+	private static void addFinallyPathInBetween(
+			CFG cfg,
+			Statement start,
+			Statement end,
+			List<ProtectedBlock> fins) {
+		// we add:
+		// - an edge from the predecessors of the yield to the
+		// start of the first finally block
+		// - an edge from the end each finally block to the beginning
+		// of the next one
+		// - an edge from the end of the last finally block to the
+		// yield if no yielders were found in the finally blocks
+		// - an edge from the end of the last finally block to the
+		// last yielders found in the finally blocks otherwise
+		if (fins.isEmpty())
+			return;
 
-    private static int addFinallyPathInBetween(
-            CFG cfg,
-            Statement start,
-            Statement end,
-            List<ProtectedBlock> fins,
-            int pathIdx) {
-        // we add:
-        // - a BeginFinallyEdge from the predecessors of the yield to the
-        // start of the first finally block
-        // - a BeginFinallyEdge from the end each finally block to the beginning
-        // of the next one
-        // - an EndFinallyEdge from the end of the last finally block to the
-        // yield if no yielders were found in the finally blocks
-        // - an EndFinallyEdge from the end of the last finally block to the
-        // last yielders found in the finally blocks otherwise
-        if (fins.isEmpty())
-            return pathIdx;
+		int idx = 0;
+		ProtectedBlock current = null;
+		ProtectedBlock next = fins.get(idx++);
+		Collection<Statement> lastYielders = Set.of(end);
+		boolean yieldersInCurrentBlock = false;
 
-        int idx = 0;
-        ProtectedBlock current = null;
-        ProtectedBlock next = fins.get(idx++);
-        Collection<Statement> lastYielders = Set.of(end);
-        boolean yieldersInCurrentBlock = false;
-
-        while (next != null) {
-            yieldersInCurrentBlock = false;
-            if (current == null)
+		while (next != null) {
+			yieldersInCurrentBlock = false;
+			if (current == null)
 				cfg.addEdge(new SequentialEdge(start, next.getStart()));
-            else {
-                if (current.alwaysContinues())
+			else {
+				if (current.alwaysContinues())
 					cfg.addEdge(new SequentialEdge(current.getEnd(), next.getStart()));
-                else
-                    for (Statement st : current.getBody())
-                        if (st.stopsExecution())
-                            for (Edge preEnd : cfg.getIngoingEdges(st)) {
+				else
+					for (Statement st : current.getBody())
+						if (st.stopsExecution())
+							for (Edge preEnd : cfg.getIngoingEdges(st)) {
 								cfg.addEdge(new SequentialEdge(preEnd.getSource(), next.getStart()));
-                                cfg.getNodeList().removeEdge(preEnd);
-                            }
-            }
+								cfg.getNodeList().removeEdge(preEnd);
+							}
+			}
 
-            if (!next.alwaysContinues())
-                if (!next.canBeContinued()) {
-                    lastYielders = next.getBody()
-                            .stream()
-                            .filter(Statement::stopsExecution)
-                            .collect(Collectors.toList());
-                    yieldersInCurrentBlock = true;
-                } else {
-                    lastYielders = new LinkedList<>(lastYielders);
-                    next.getBody().stream().filter(Statement::stopsExecution).forEach(lastYielders::add);
-                }
+			if (!next.alwaysContinues())
+				if (!next.canBeContinued()) {
+					lastYielders = next.getBody()
+							.stream()
+							.filter(Statement::stopsExecution)
+							.collect(Collectors.toList());
+					yieldersInCurrentBlock = true;
+				} else {
+					lastYielders = new LinkedList<>(lastYielders);
+					next.getBody().stream().filter(Statement::stopsExecution).forEach(lastYielders::add);
+				}
 
-            current = next;
-            next = idx < fins.size() ? fins.get(idx++) : null;
-        }
+			current = next;
+			next = idx < fins.size() ? fins.get(idx++) : null;
+		}
 
-        // current now holds the last finally block traversed:
-        // all we have to do is connect it to the last yielding
-        // block we found on our way there
-        if (!yieldersInCurrentBlock)
-            for (Statement st : lastYielders)
-                cfg.addEdge(new SequentialEdge(current.getEnd(), st));
-        return pathIdx + 1;
-    }
+		// current now holds the last finally block traversed:
+		// all we have to do is connect it to the last yielding
+		// block we found on our way there
+		if (!yieldersInCurrentBlock)
+			for (Statement st : lastYielders)
+				cfg.addEdge(new SequentialEdge(current.getEnd(), st));
+		return;
+	}
+
+    
 
     /**
      * Utility methods to split yields (i.e., returns, throws, or any
@@ -395,13 +401,14 @@ public class JavaCFGTweaker {
             // third and fourth cases
             NoOp noop = addNoOp(cfg, yielder, ingoing, locationManager);
             connectToCatches(cfg, noop, catches);
-            removeOutgoingErrorEdges(cfg, yielder);
+			removeOutgoingErrorEdges(cfg, yielder, null);
             updateBlocks(cfg, yielder, noop, null, blocks, false);
+			updateMetadata(cfg, noop, yielder, null);
         } else if (!isOnlyNode && !needsRewriting && !isBeginningOfBranch) {
             // fifth and sixth cases
             for (Edge in : ingoing)
                 connectToCatches(cfg, in.getSource(), catches);
-            removeOutgoingErrorEdges(cfg, yielder);
+			removeOutgoingErrorEdges(cfg, yielder, null);
         } else {
             // seventh and eighth cases
             YieldsValue vyielder = (YieldsValue) yielder;
@@ -421,12 +428,35 @@ public class JavaCFGTweaker {
             }
 
             connectToCatches(cfg, assign, catches);
-            removeOutgoingErrorEdges(cfg, yielder);
+			removeOutgoingErrorEdges(cfg, yielder, newYielder);
             updateBlocks(cfg, yielder, assign, newYielder, blocks, true);
+			updateMetadata(cfg, assign, yielder, newYielder);
 
             cfg.getNodeList().removeNode(yielder);
         }
     }
+    
+    private static void updateMetadata(
+			CFG cfg,
+			Statement added,
+			Statement original,
+			Statement replacement) {
+		for (ControlFlowStructure cfs : cfg.getDescriptor().getControlFlowStructures())
+			cfs.addWith(added, original);
+
+		if (replacement == null)
+			return;
+
+		for (ControlFlowStructure cfs : cfg.getDescriptor().getControlFlowStructures())
+			cfs.replace(original, replacement);
+
+		for (VariableTableEntry variable : cfg.getDescriptor().getVariables()) {
+			if (variable.getScopeStart() != null && variable.getScopeStart().equals(original))
+				variable.setScopeStart(replacement);
+			if (variable.getScopeEnd() != null && variable.getScopeEnd().equals(original))
+				variable.setScopeEnd(replacement);
+		}
+	}
 
     private static void updateBlocks(
             CFG cfg,
@@ -476,12 +506,26 @@ public class JavaCFGTweaker {
         for (CatchBlock cb : catches)
             cfg.addEdge(new ErrorEdge(target, cb.getBody().getStart(), cb.getIdentifier(), cb.getBody(), cb.getExceptions()));
     }
-
+    
     private static void removeOutgoingErrorEdges(
-            CFG cfg,
-            Statement yielder) {
-        for (Edge out : cfg.getOutgoingEdges(yielder))
-            if (out.isErrorHandling())
-                cfg.getNodeList().removeEdge(out);
-    }
+			CFG cfg,
+			Statement yielder,
+			Statement replacement) {
+		if (yielder.throwsError()) {
+			// throws are allowed to be connected to surrounding
+			// catch blocks in case they immediately catch the
+			// thrown error
+			if (replacement != null)
+				for (Edge out : cfg.getOutgoingEdges(yielder))
+					if (out.isErrorHandling()) {
+						cfg.addEdge(out.newInstance(replacement, out.getDestination()));
+						cfg.getNodeList().removeEdge(out);
+					}
+
+			return;
+		}
+		for (Edge out : cfg.getOutgoingEdges(yielder))
+			if (out.isErrorHandling())
+				cfg.getNodeList().removeEdge(out);
+	}
 }
