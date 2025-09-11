@@ -11,6 +11,7 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Identifier;
@@ -19,6 +20,12 @@ public class JavaThrow extends Throw {
 
 	public JavaThrow(CFG cfg, CodeLocation location, Expression expression) {
 		super(cfg, location, expression);
+	}
+	
+	@Override
+	public Statement withValue(
+			Expression value) {
+		return new JavaThrow(getCFG(), getLocation(), value);
 	}
 	
 	@Override
