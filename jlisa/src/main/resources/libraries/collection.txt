@@ -1,1 +1,6 @@
 class Collection extends Object:
+
+class Vector extends Collection:
+
+class Stack extends Vector:
+

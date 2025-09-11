@@ -27,7 +27,7 @@ public class ObjectConstructor extends NativeCFG {
             CodeLocation location,
             ClassUnit stringUnit) {
         super(new JavaCodeMemberDescriptor(location, stringUnit, true, "Object", VoidType.INSTANCE,
-                        new Parameter(location, "this", new JavaReferenceType(JavaClassType.lookup("Object", null)))),
+                        new Parameter(location, "this", new JavaReferenceType(JavaClassType.getObjectType()))),
                 ObjectConstructor.JavaObjectConstructor.class);
     }
 

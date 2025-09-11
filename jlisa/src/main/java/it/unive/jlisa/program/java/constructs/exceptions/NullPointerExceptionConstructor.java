@@ -26,7 +26,7 @@ public class NullPointerExceptionConstructor extends NaryExpression implements P
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		if (params[1] == null)
+		if (params.length == 1)
 			return new NullPointerExceptionConstructor(cfg, location, params[0]);
 		else
 			return new NullPointerExceptionConstructor(cfg, location, params[0], params[1]);
