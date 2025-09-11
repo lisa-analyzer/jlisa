@@ -64,6 +64,8 @@ public class JavaCastExpression extends UnaryExpression {
 				
 				// deletes the receiver of the constructor
 				state = state.forgetIdentifiers(call.getMetaVariables(), this);
+				// FIXME
+				state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 				return analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(ccExc.getReference(), this));
 			} else if (sat == Satisfiability.SATISFIED) {
 				BinaryExpression castExpression =  new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE, getLocation());
