@@ -1,24 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':1] on 'void Main::main(String*[] args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
     "message" : "['Main.java':15:6] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
   "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "104ms",
-    "end" : "2025-09-10T17:58:52.915+02:00",
+    "duration" : "100ms",
+    "end" : "2025-09-11T12:47:35.572+02:00",
     "expressions" : "47",
     "files" : "1",
     "globals" : "6",
     "members" : "125",
     "programs" : "1",
-    "start" : "2025-09-10T17:58:52.811+02:00",
+    "start" : "2025-09-11T12:47:35.472+02:00",
     "statements" : "25",
     "units" : "74",
     "version" : "0.1",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",

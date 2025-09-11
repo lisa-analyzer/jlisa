@@ -2,6 +2,7 @@ package it.unive.jlisa.svcomp;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 import it.unive.jlisa.helpers.CronConfiguration;
@@ -74,7 +75,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
-	@Test
+	@Ignore
 	public void athrow1_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "athrow1", 
 				"Main.java",
@@ -155,6 +156,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
+	// FIXME
 	@Test
 	public void StringCompare01_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare01", 

@@ -68,8 +68,9 @@ TypeEnvironment<TypeSet>>
 			} catch (SemanticException e) {
 				e.printStackTrace();
 			}
+		
 		// assert checker
-		else if (node instanceof AssertStatement)
+		if (node instanceof AssertStatement)
 			try {
 				checkAssert(tool, graph, (AssertStatement) node);
 			} catch (SemanticException e) {
@@ -92,7 +93,12 @@ TypeEnvironment<TypeSet>>
 			> state = result.getAnalysisStateBefore(node);
 
 			// checking if there exists at least one exception state
-			boolean hasExceptionState = !state.getErrors().isBottom() && !state.getErrors().isTop() && !state.getErrors().function.isEmpty();
+			boolean hasExceptionState = !state.getErrors().isBottom() && 
+					!state.getErrors().isTop() && 
+					!state.getErrors().function.isEmpty() &&
+					!state.getSmashedErrors().isBottom() && 
+					!state.getSmashedErrors().isTop() && 
+					!state.getSmashedErrors().function.isEmpty();
 
 			SimpleAbstractState<
 			HeapEnvironment<AllocationSites>, 
