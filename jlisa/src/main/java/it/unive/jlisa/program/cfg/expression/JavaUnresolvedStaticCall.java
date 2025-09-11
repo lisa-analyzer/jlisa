@@ -36,6 +36,8 @@ public class JavaUnresolvedStaticCall extends UnresolvedCall {
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
 			AnalysisState<A> state, InterproceduralAnalysis<A, D> interprocedural, StatementStore<A> expressions)
 			throws SemanticException {
+		if (state.getExecutionState().isBottom())
+			return state;
 		
 		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
 			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
