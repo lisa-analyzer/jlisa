@@ -12,7 +12,6 @@ public class SynchronizedTest extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testSynchronizedStatement1()  throws IOException {
-		// FIXME: after new snapshot
 		CronConfiguration conf = TestHelpers.constantPropagation("synchronized", "synchronized-stmt-1", "Main.java");
 		perform(conf);
 	}
