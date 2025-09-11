@@ -72,7 +72,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
             SymbolAliasing aliasing) throws CallResolutionException {
 
         CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier(), null).getUnit();
-        HierarcyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
+        HierarchyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
         Set<CompilationUnit> seen = new HashSet<>();
         int lowestDistance = Integer.MAX_VALUE;
         Collection<CFG> bestTargets = new LinkedHashSet<>();
@@ -154,7 +154,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
         for (Type recType : getPossibleTypesOfReceiver(receiver, types[0])) {
             CompilationUnit unit = getReceiverCompilationUnit(recType);
             if (unit == null) continue;
-            HierarcyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
+            HierarchyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
             Set<CompilationUnit> seen = new HashSet<>();
             int lowestDistance = Integer.MAX_VALUE;
             Collection<CFG> bestTargets = new LinkedHashSet<>();
