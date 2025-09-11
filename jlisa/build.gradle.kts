@@ -2,13 +2,15 @@ plugins {
     id("java")
     id("application")
     id("antlr")
+    id("com.diffplug.spotless") version "7.0.3"
 }
+apply(from = "code-style.gradle.kts")
 
 group = "it.unive.jlisa"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("it.unive.jlisa.Main") // Replace with your actual class if different
+    mainClass.set("it.unive.jlisa.Main")
 }
 
 repositories {
@@ -39,6 +41,7 @@ dependencies {
     implementation("io.github.lisa-analyzer:lisa-analyses:0.2-svcomp-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-program:0.2-svcomp-SNAPSHOT")
     implementation("io.github.classgraph:classgraph:4.8.175")
+    classpath 'com.diffplug.spotless:spotless-plugin-gradle:7.0.3'
 }
 
 
