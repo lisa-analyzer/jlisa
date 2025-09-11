@@ -147,7 +147,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
-	// FIXME: after new snapshot
 	@Test
 	public void NegativeArraySizeException1_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "NegativeArraySizeException1", 
@@ -156,7 +155,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
-	// FIXME: after new snapshot
 	@Test
 	public void StringCompare01_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare01", 
