@@ -88,7 +88,7 @@ public class JavaCastExpression extends UnaryExpression {
 				AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(ccExc.getReference(), this));	
 				return exceptionState.lub(noExceptionState);
 			} else {
-				return state.bottom();
+				return state.bottomExecution();
 			}
 		} else {
 			BinaryExpression castExpression =  new BinaryExpression(type, expr, typeConv, TypeConv.INSTANCE, getLocation());

@@ -217,4 +217,8 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
 		return lookup("ArrayIndexOutOfBoundsException", null);
 	}
+
+	public static JavaClassType getArithmeticExceptionType() {
+		return lookup("ArithmeticException", null);
+	}
 }
