@@ -1162,7 +1162,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		// exception param
 		Expression param = paramVisitor.getExpression();
-
+		VariableRef v = new VariableRef(param.getCFG(), param.getLocation(), ((VariableRef) param).getName(), type);
+		
 		StatementASTVisitor catchBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		node.getBody().accept(catchBody);
 		// body of the catch clause
@@ -1170,11 +1171,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 
 		CatchBlock catchBlock = new CatchBlock(
-				(VariableRef) param,
+				v,
 				new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
 				type);
 
-		tracker.addVariable(param.toString(), param, new Annotations());
+		tracker.addVariable(v.toString(), v, new Annotations());
 		tracker.exitScope(body.getEnd());
 		this.clBlock = catchBlock;
 		this.block = body;
