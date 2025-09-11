@@ -162,11 +162,19 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java",
 				"Verifier.java");
 		perform(conf);
-	}
+	}	
 	
 	@Test
 	public void exceptions6_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions6", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void exceptions16_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions16", 
 				"Main.java",
 				"Verifier.java");
 		perform(conf);
