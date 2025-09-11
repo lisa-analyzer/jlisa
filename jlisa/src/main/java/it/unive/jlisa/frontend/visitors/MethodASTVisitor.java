@@ -16,6 +16,7 @@ import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
+import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
@@ -29,6 +30,7 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.LocalVariableTracker;
 
 public class MethodASTVisitor extends JavaASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -47,56 +49,83 @@ public class MethodASTVisitor extends JavaASTVisitor {
         } else {
             codeMemberDescriptor = buildJavaCodeMemberDescriptor(node);
         }
+        
         boolean isMain = isMain(node);
-
+        
         int modifiers = node.getModifiers();
+		
 		this.cfg = new CFG(codeMemberDescriptor);
 		for (Parameter p : codeMemberDescriptor.getFormals()) {
 			it.unive.lisa.type.Type paramType = p.getStaticType();
-			parserContext.addVariableType(cfg, p.getName(), paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
+			parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null), paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
-		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg);
+		
+        this.cfg = new CFG(codeMemberDescriptor);
+ 
+        LocalVariableTracker tracker = new LocalVariableTracker(cfg, codeMemberDescriptor);
+        tracker.enterScope();
+        Parameter[] formalParams = codeMemberDescriptor.getFormals();
+        for (int i = 0; i < formalParams.length - 1; i++) {
+        	for (int j = i + 1; j < formalParams.length; j++) {
+        		if (formalParams[i].getName().equals(formalParams[j].getName()))		
+        			throw new ParsingException("parameter-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+        							"Parameter " + formalParams[j].getName() + " already exists in the cfg", getSourceCodeLocation(node));
+        	}
+        }
+		
+        for (Parameter p : formalParams) {
+            parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null), p.getStaticType());
+            // Not required add the parameter in the tracker because it is done in the tracker constructor given the descriptor.
+        }
+        
+    
+        BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source, compilationUnit, cfg, tracker);
 
 		if(node.getBody() == null) // e.g. abstract method declarations
 			return false;
 
-		node.getBody().accept(blockStatementASTVisitor);
-		cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
-		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
-			return false;
-		}
-		cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
-		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
-		Collection<Statement> entrypoints = cfg.getEntrypoints();
-		if (cfg.getAllExitpoints().isEmpty()) {
-			Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
-			if (cfg.getNodesCount() == 0) {
-				// empty method, so the ret is also the entrypoint
-				list.addNode(ret);
-				entrypoints.add(ret);
-			} else {
-				// every non-throwing instruction that does not have a follower
-				// is ending the method
-				Collection<Statement> preExits = new LinkedList<>();
-				for (Statement st : list.getNodes())
-					if (!st.stopsExecution() && list.followersOf(st).isEmpty())
-						preExits.add(st);
-				list.addNode(ret);
-				for (Statement st : preExits)
-					list.addEdge(new SequentialEdge(st, ret));
+        node.getBody().accept(blockStatementASTVisitor);
+		
+        cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
+        if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
+            return false;
+        }
+ 	
+        cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
+        NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
+        Collection<Statement> entrypoints = cfg.getEntrypoints();
+        if (cfg.getAllExitpoints().isEmpty()) {
+        	Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+            if (cfg.getNodesCount() == 0) {
+                // empty method, so the ret is also the entrypoint
+                list.addNode(ret);
+                entrypoints.add(ret);
+            } else {
+                // every non-throwing instruction that does not have a follower
+                // is ending the method
+                Collection<Statement> preExits = new LinkedList<>();
+                for (Statement st : list.getNodes())
+                    if (!st.stopsExecution() && list.followersOf(st).isEmpty())
+                        preExits.add(st);
+                list.addNode(ret);
+                for (Statement st : preExits)
+                    list.addEdge(new SequentialEdge(st, ret));
 
-				for (VariableTableEntry entry : cfg.getDescriptor().getVariables())
-					if (preExits.contains(entry.getScopeEnd()))
-						entry.setScopeEnd(ret);
-			}
-		}
-
-		boolean added;
-		if (!Modifier.isStatic(modifiers)) {
-			added = lisacompilationUnit.addInstanceCodeMember(cfg);
-		} else {
-			added = lisacompilationUnit.addCodeMember(cfg);
-		}
+                for (VariableTableEntry entry : cfg.getDescriptor().getVariables())
+                    if (preExits.contains(entry.getScopeEnd()))
+                        entry.setScopeEnd(ret);
+            }
+            
+        }
+        
+        boolean added = false;
+        
+        if (!Modifier.isStatic(modifiers)) {
+            added = lisacompilationUnit.addInstanceCodeMember(cfg);
+        } else {
+            added = lisacompilationUnit.addCodeMember(cfg);
+        }
+        
         if (!added) {
             parserContext.addException(new ParsingException("duplicated_method_descriptor",
                     ParsingException.Type.MALFORMED_SOURCE,
@@ -110,6 +139,8 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		JavaCFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
 		JavaCFGTweaker.addReturns(cfg, JavaSyntaxException::new, parserContext.getCurrentSyntheticCodeLocationManager(source));
 		cfg.simplify();
+        
+        tracker.exitScope(blockStatementASTVisitor.getLast());
 
 		return false;
 	}

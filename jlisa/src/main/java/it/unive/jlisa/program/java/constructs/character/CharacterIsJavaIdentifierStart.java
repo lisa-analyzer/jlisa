@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.character;
 
-import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierPartOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierStartOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -42,7 +42,7 @@ public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.st
 		UnaryExpression isJavaId = new UnaryExpression(
 				getProgram().getTypes().getBooleanType(), 
 				expr, 
-				JavaCharacterIsJavaIdentifierPartOperator.INSTANCE, 
+				JavaCharacterIsJavaIdentifierStartOperator.INSTANCE, 
 				getLocation());
 		
 		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, originating);

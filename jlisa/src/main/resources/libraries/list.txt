@@ -2,6 +2,5 @@ class List extends Object:
 		
 class LinkedList extends Object:
 	
-	
 class ArrayList extends Object:
 	

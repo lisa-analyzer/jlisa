@@ -1,0 +1,69 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':17:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':18:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':21:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':22:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':25:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':26:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':28:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':30:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':32:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':34:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':36:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':40:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':41:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':45:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':46:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  } ],
+  "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "5ms",
+    "end" : "2025-09-10T17:30:54.289+02:00",
+    "expressions" : "104",
+    "files" : "1",
+    "globals" : "6",
+    "members" : "125",
+    "programs" : "1",
+    "start" : "2025-09-10T17:30:54.284+02:00",
+    "statements" : "46",
+    "units" : "74",
+    "version" : "0.1",
+    "warnings" : "15"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/StringCompare01"
+  }
+}

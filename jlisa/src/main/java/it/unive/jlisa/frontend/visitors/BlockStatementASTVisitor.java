@@ -11,19 +11,23 @@ import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
+import it.unive.lisa.util.frontend.LocalVariableTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class BlockStatementASTVisitor extends JavaASTVisitor{
     private CFG cfg;
     private ParsedBlock block;
+    
+    LocalVariableTracker tracker;
 
-    public BlockStatementASTVisitor(ParserContext parserContext, String source,CompilationUnit compilationUnit) {
+    private BlockStatementASTVisitor(ParserContext parserContext, String source,CompilationUnit compilationUnit) {
         super(parserContext, source, compilationUnit);
     }
 
-    public BlockStatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg) {
+    public BlockStatementASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit, CFG cfg, LocalVariableTracker tracker) {
         this(parserContext, source, compilationUnit);
         this.cfg = cfg;
+        this.tracker = tracker;
     }
 
     public Statement getFirst() {
@@ -50,7 +54,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor{
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
-				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker());
+				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg, new ControlFlowTracker(), tracker);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 				
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();

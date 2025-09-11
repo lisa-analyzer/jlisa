@@ -11,53 +11,60 @@ import java.util.Collections;
 import java.util.Set;
 
 public class JavaIntType implements JavaNumericType {
-    public static final JavaIntType INSTANCE = new JavaIntType();
+	public static final JavaIntType INSTANCE = new JavaIntType();
 
-    protected JavaIntType() {}
+	protected JavaIntType() {}
 
-    @Override
-    public String toString() {
-        return "int";
-    }
+	@Override
+	public String toString() {
+		return "int";
+	}
 
-    @Override
-    public Set<Type> allInstances(TypeSystem types) {
-        return Collections.singleton(this);
-    }
+	@Override
+	public Set<Type> allInstances(TypeSystem types) {
+		return Collections.singleton(this);
+	}
 
-    @Override
-    public boolean is8Bits() {
-        return false;
-    }
+	@Override
+	public boolean is8Bits() {
+		return false;
+	}
 
-    @Override
-    public boolean is16Bits() {
-        return false;
-    }
+	@Override
+	public boolean is16Bits() {
+		return false;
+	}
 
-    @Override
-    public boolean is32Bits() {
-        return true;
-    }
+	@Override
+	public boolean is32Bits() {
+		return true;
+	}
 
-    @Override
-    public boolean is64Bits() {
-        return false;
-    }
+	@Override
+	public boolean is64Bits() {
+		return false;
+	}
 
-    @Override
-    public boolean isUnsigned() {
-        return false;
-    }
+	@Override
+	public boolean isUnsigned() {
+		return false;
+	}
 
-    @Override
-    public boolean isIntegral() {
-        return true;
-    }
-    
-    @Override
-    public Expression defaultValue(CFG cfg, CodeLocation location) {
-    	return new IntLiteral(cfg, location, 0);
-    }
+	@Override
+	public boolean isIntegral() {
+		return true;
+	}
+
+	@Override
+	public boolean canBeAssignedTo(Type other) {
+		if (other == JavaCharType.INSTANCE)
+			return true;
+		return JavaNumericType.super.canBeAssignedTo(other);
+	}
+
+	@Override
+	public Expression defaultValue(CFG cfg, CodeLocation location) {
+		return new IntLiteral(cfg, location, 0);
+	}
 
 }

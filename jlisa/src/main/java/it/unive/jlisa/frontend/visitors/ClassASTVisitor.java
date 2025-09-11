@@ -1,7 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
-
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,8 +20,11 @@ import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
@@ -48,12 +51,10 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.Call.CallType;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 
-public class ClassASTVisitor extends JavaASTVisitor{
+public class ClassASTVisitor extends JavaASTVisitor {
 
 	private boolean nested;
 
@@ -79,7 +80,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false, new JavaReferenceType(enumType));
 			enUnit.addGlobal(g);
 		}
-		
+
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
 
@@ -153,6 +154,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		if (nested)
 			computeNestedUnits(node);
 
+		// parsing superclass
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
 		if (node.getSuperclassType() != null) {
 			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
@@ -165,7 +167,18 @@ public class ClassASTVisitor extends JavaASTVisitor{
 				}
 			}
 		} else {
-			cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
+			cUnit.addAncestor(JavaClassType.getObjectType().getUnit());
+		}
+		
+		// parsing implemented interfaces
+		for (Object intf : node.superInterfaceTypes()) {
+			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+			((ASTNode) intf).accept(visitor);
+			Type intfType = visitor.getType();
+			it.unive.lisa.program.Unit intfUnit = getProgram().getUnit(intfType.toString());
+			if (intfUnit instanceof it.unive.lisa.program.CompilationUnit) {
+				cUnit.addAncestor((it.unive.lisa.program.CompilationUnit) intfUnit);
+			}
 		}
 
 		if (!node.permittedTypes().isEmpty()) {
@@ -180,8 +193,9 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		}
 
 		// all fields (static and non-static) are visited
+		Set<String> visitedFieldNames = new HashSet<>();
 		for (FieldDeclaration fd : node.getFields()) {
-			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit);
+			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit, visitedFieldNames);
 			fd.accept(visitor);
 		}
 
@@ -247,8 +261,8 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
-		parserContext.addVariableType(cfg, "name", new JavaReferenceType(getProgram().getTypes().getStringType()));
+		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+		parserContext.addVariableType(cfg, new VariableInfo("name", null), new JavaReferenceType(getProgram().getTypes().getStringType()));
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
 				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
@@ -292,10 +306,9 @@ public class ClassASTVisitor extends JavaASTVisitor{
 
 		// we can safely suppose that there exist a single superclass
 		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
-		UnresolvedCall superClassInit = new UnresolvedCall(
+		JavaUnresolvedStaticCall superClassInit = new JavaUnresolvedStaticCall(
 				cfg,
 				locationManager.nextLocation(),
-				CallType.STATIC,
 				superClass.toString(),
 				superClass.toString() + InitializedClassSet.SUFFIX_CLINIT,
 				new Expression[0]);
@@ -318,7 +331,7 @@ public class ClassASTVisitor extends JavaASTVisitor{
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
-					ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg);
+					ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, null);
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
@@ -360,10 +373,11 @@ public class ClassASTVisitor extends JavaASTVisitor{
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit, true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, "this", new JavaReferenceType(type));
-		String superClassName = classUnit.getImmediateAncestors().iterator().next().getName();
-
-		Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
+		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+		// we filter just the class unit, not interfaces
+		String superClassName = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get().getName();
+		
+		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
@@ -382,9 +396,10 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			throw new RuntimeException("The unit of a constructor must be a class unit");
 		}
 		ClassUnit classUnit = (ClassUnit) u;
-		Unit ancestor = classUnit.getImmediateAncestors().iterator().next();
+		// we filter just the class unit, not interfaces
+		Unit ancestor = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get();
 		boolean implicitlyCallSuper = true;
-		if (injectionPoint instanceof UnresolvedCall call) {
+		if (injectionPoint instanceof JavaUnresolvedCall call) {
 			if (ancestor.getName().equals(call.getConstructName())) {
 				implicitlyCallSuper = false;
 				List<Edge> outEdges = new ArrayList<>(cfg.getNodeList().getOutgoingEdges(injectionPoint));
@@ -394,14 +409,14 @@ public class ClassASTVisitor extends JavaASTVisitor{
 			}
 		}
 
-		if (injectionPoint instanceof UnresolvedCall &&
-				((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
+		if (injectionPoint instanceof JavaUnresolvedCall &&
+				((JavaUnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
 			return;
 		}
 		if (implicitlyCallSuper) {
 			// add a super() call to this constructor, as a first statement, before the field initializator.
 			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-			Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
+			JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
 			cfg.addNode(call);
 			cfg.addEdge(new SequentialEdge(call, injectionPoint));
 			cfg.getEntrypoints().clear();
