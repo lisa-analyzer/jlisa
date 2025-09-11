@@ -61,7 +61,9 @@ public class JavaNewArray extends UnaryExpression {
 			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oonExc.getReference(), this));
 		} else {
 			// TODO: UNKNOWN case

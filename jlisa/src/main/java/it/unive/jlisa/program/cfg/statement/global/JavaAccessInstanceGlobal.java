@@ -132,7 +132,9 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 					state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 					
 					// deletes the receiver of the constructor
+					// and all the metavariables from subexpressions
 					state = state.forgetIdentifiers(call.getMetaVariables(), this);
+					state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 					result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(npeType.getReference(), this)));
 					atLeastOne = true;
 					continue;

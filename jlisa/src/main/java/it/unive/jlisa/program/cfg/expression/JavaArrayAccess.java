@@ -63,7 +63,10 @@ public class JavaArrayAccess extends BinaryExpression {
 			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oonExc.getReference(), this));
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
@@ -82,7 +85,10 @@ public class JavaArrayAccess extends BinaryExpression {
 			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oobExc.getReference(), this));
 
 			return noExceptionState.lub(exceptionState);
