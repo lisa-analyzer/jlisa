@@ -158,9 +158,11 @@ TypeEnvironment<TypeSet>>
 						else
 							LOG.error("Cannot satisfy the expression");
 					} else
+						// FIXME: possible warning
 						LOG.error("The abstract state of assert's expression is TOP");
 
 				} else {
+					// FIXME: property proved
 					LOG.error("The abstract state of assert's expression is BOTTOM");
 				}
 			} 
