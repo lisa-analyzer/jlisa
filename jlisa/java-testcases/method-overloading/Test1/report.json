@@ -1,12 +1,12 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Test1.foo(double_doubleNumber)_-1611998036.json", "void_Test1.foo(double_doubleNumber)_-1611998067.json", "void_Test1.foo(long_longNumber)_-1611998067.json", "void_Test1.main(String_[]_args).json" ],
+  "files" : [ "report.json", "void_Test1.foo(double_doubleNumber)_-1611998036.json", "void_Test1.foo(long_longNumber)_-1611998067.json", "void_Test1.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "4",
     "duration" : "4ms",
     "end" : "2025-09-10T17:30:52.144+02:00",
     "expressions" : "11",
-    "files" : "4",
+    "files" : "3",
     "globals" : "6",
     "members" : "116",
     "programs" : "1",
