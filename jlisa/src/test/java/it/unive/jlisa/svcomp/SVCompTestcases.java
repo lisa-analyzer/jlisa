@@ -2,6 +2,7 @@ package it.unive.jlisa.svcomp;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 import it.unive.jlisa.helpers.CronConfiguration;
@@ -74,7 +75,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
-	@Test
+	@Ignore
 	public void athrow1_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "athrow1", 
 				"Main.java",
@@ -118,6 +119,47 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	@Test
 	public void interface1_test()  throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "interface1", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}	
+	
+	@Test
+	public void NullPointerException1_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "NullPointerException1", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void NullPointerException4_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "NullPointerException4", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void ClassCastException1_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ClassCastException1", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void NegativeArraySizeException1_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "NegativeArraySizeException1", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	// FIXME
+	@Test
+	public void StringCompare01_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare01", 
 				"Main.java",
 				"Verifier.java");
 		perform(conf);

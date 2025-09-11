@@ -57,19 +57,21 @@ import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaDivision;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
 import it.unive.jlisa.program.cfg.expression.PostfixAddition;
 import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
-import it.unive.jlisa.program.cfg.expression.UnresolvedStaticCall;
-import it.unive.jlisa.program.cfg.expression.UnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -78,6 +80,7 @@ import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -91,7 +94,6 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
@@ -104,7 +106,6 @@ import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.Addition;
-import it.unive.lisa.program.cfg.statement.numeric.Division;
 import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
@@ -222,7 +223,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "/=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
-					new Division(cfg, locationManager.nextColumn(), left, right));
+					new JavaDivision(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "%=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
@@ -429,7 +430,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "/":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
-			new Division(cfg, location, first, second));
+			new JavaDivision(cfg, location, first, second));
 			break;
 		case "%":
 			expression = buildExpression(operands, jdtOperands, (first, second, location) ->
@@ -587,9 +588,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 
 		if (isInstance)
-			expression = new UnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
 		else 
-			expression = new UnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(), node.getName().toString(), parameters.toArray(new Expression[0]));
 
 		return false;
 	}
@@ -681,7 +682,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(NullLiteral node) {
-		expression = new it.unive.lisa.program.cfg.statement.literal.NullLiteral(cfg, getSourceCodeLocation(node));
+		expression = new JavaNullLiteral(cfg, getSourceCodeLocation(node));
 		return false;
 	}
 
@@ -776,7 +777,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			parameters.add(expr);
 		}
 
-		expression = new UnresolvedSuperCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
+		expression = new JavaUnresolvedSuperCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(), Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(), parameters.toArray(new Expression[0]));
 		return false;
 	}
 

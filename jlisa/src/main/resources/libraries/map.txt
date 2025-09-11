@@ -1,6 +1,8 @@
 class Map extends Object:
 
 class HashMap extends Map:
+
+class TreeMap extends Map:
 		
 library Map:
 	location Map

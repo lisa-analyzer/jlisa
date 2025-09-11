@@ -18,7 +18,7 @@ public class JavaTypeSystem extends TypeSystem {
 
     @Override
     public StringType getStringType() {
-        return (StringType) JavaClassType.lookup("String", null);
+        return (StringType) JavaClassType.getStringType();
     }
 
     @Override

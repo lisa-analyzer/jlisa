@@ -23,6 +23,8 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
@@ -49,8 +51,6 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.Call.CallType;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 
@@ -167,7 +167,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 				}
 			}
 		} else {
-			cUnit.addAncestor(JavaClassType.lookup("Object", null).getUnit());
+			cUnit.addAncestor(JavaClassType.getObjectType().getUnit());
 		}
 		
 		// parsing implemented interfaces
@@ -306,10 +306,9 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		// we can safely suppose that there exist a single superclass
 		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
-		UnresolvedCall superClassInit = new UnresolvedCall(
+		JavaUnresolvedStaticCall superClassInit = new JavaUnresolvedStaticCall(
 				cfg,
 				locationManager.nextLocation(),
-				CallType.STATIC,
 				superClass.toString(),
 				superClass.toString() + InitializedClassSet.SUFFIX_CLINIT,
 				new Expression[0]);
@@ -378,7 +377,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		// we filter just the class unit, not interfaces
 		String superClassName = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get().getName();
 		
-		Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
+		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
@@ -400,7 +399,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		// we filter just the class unit, not interfaces
 		Unit ancestor = classUnit.getImmediateAncestors().stream().filter( s -> s instanceof ClassUnit).findFirst().get();
 		boolean implicitlyCallSuper = true;
-		if (injectionPoint instanceof UnresolvedCall call) {
+		if (injectionPoint instanceof JavaUnresolvedCall call) {
 			if (ancestor.getName().equals(call.getConstructName())) {
 				implicitlyCallSuper = false;
 				List<Edge> outEdges = new ArrayList<>(cfg.getNodeList().getOutgoingEdges(injectionPoint));
@@ -410,14 +409,14 @@ public class ClassASTVisitor extends JavaASTVisitor {
 			}
 		}
 
-		if (injectionPoint instanceof UnresolvedCall &&
-				((UnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
+		if (injectionPoint instanceof JavaUnresolvedCall &&
+				((JavaUnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
 			return;
 		}
 		if (implicitlyCallSuper) {
 			// add a super() call to this constructor, as a first statement, before the field initializator.
 			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-			Statement call = new UnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
+			JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE, null, ancestor.getName(), new VariableRef(cfg, locationManager.nextLocation(), "this"));
 			cfg.addNode(call);
 			cfg.addEdge(new SequentialEdge(call, injectionPoint));
 			cfg.getEntrypoints().clear();

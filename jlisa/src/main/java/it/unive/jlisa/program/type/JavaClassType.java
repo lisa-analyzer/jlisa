@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
@@ -185,12 +185,40 @@ public class JavaClassType implements UnitType {
         return instances;
     }
 
-	public Type getReference() {
+	public JavaReferenceType getReference() {
 		return new JavaReferenceType(this);
 	}
 	
 	@Override
 	public Expression defaultValue(CFG cfg, CodeLocation location) {
-		return new NullLiteral(cfg, location);
+		return new JavaNullLiteral(cfg, location);
+	}
+	
+	public static JavaClassType getClassCastExceptionType() {
+		return lookup("ClassCastException", null);
+	}
+	
+	public static JavaClassType getNullPoiterExceptionType() {
+		return lookup("NullPointerException", null);
+	}
+	
+	public static JavaClassType getNegativeArraySizeExceptionType() {
+		return lookup("NegativeArraySizeException", null);
+	}
+	
+	public static JavaClassType getObjectType() {
+		return lookup("Object", null);
+	}
+	
+	public static JavaClassType getStringType() {
+		return lookup("String", null);
+	}
+	
+	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
+		return lookup("ArrayIndexOutOfBoundsException", null);
+	}
+
+	public static JavaClassType getArithmeticExceptionType() {
+		return lookup("ArithmeticException", null);
 	}
 }

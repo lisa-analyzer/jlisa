@@ -20,6 +20,15 @@ class CloneNotSupportedException extends Exception:
 
 class ArithmeticException extends RuntimeException:
 
+	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArithmeticException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArithmeticException*
+		
 class NullPointerException extends RuntimeException:
 	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
@@ -33,15 +42,37 @@ class NullPointerException extends RuntimeException:
 		
 class ClassCastException extends RuntimeException:
 
+	instance method ClassCastException: it.unive.jlisa.program.java.constructs.exceptions.ClassCastExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ClassCastException*
+
 class IndexOutOfBoundsException extends RuntimeException:
 
 class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
+
+	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArrayIndexOutOfBoundsException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype ArrayIndexOutOfBoundsException*
 
 class IllegalArgumentException extends RuntimeException:
 
 class NumberFormatException extends IllegalArgumentException:
 
 class NegativeArraySizeException extends RuntimeException:
+
+	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NegativeArraySizeException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NegativeArraySizeException*
 
 class UnsupportedOperationException extends RuntimeException:
 

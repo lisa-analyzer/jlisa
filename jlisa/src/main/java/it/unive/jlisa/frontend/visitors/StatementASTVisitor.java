@@ -52,6 +52,7 @@ import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
@@ -60,11 +61,13 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -83,7 +86,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
@@ -242,7 +244,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				parameters.add(expr);
 			}
 		}
-		UnresolvedCall call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
+		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null,this.cfg.getDescriptor().getName(), parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -615,7 +617,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			}
 		}
 
-		Statement call = new UnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(), Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -877,7 +879,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		Expression syncTarget = synchTargetVisitor.getExpression();
 		
 		SyntheticCodeLocationManager syntheticLocMan = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		Statement syntheticCondition = new NotEqual(cfg, syntheticLocMan.nextLocation(), syncTarget, new NullLiteral(cfg, syntheticLocMan.nextLocation())); 
+		Statement syntheticCondition = new NotEqual(cfg, syntheticLocMan.nextLocation(), syncTarget, new JavaNullLiteral(cfg, syntheticLocMan.nextLocation())); 
 
 		adj.addNode(syntheticCondition);
 
@@ -1148,6 +1150,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	@Override
 	public boolean visit(CatchClause node) {
+		tracker.enterScope();
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
 		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
 		node.getException().getType().accept(typeVisitor);
@@ -1155,6 +1158,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		// type of the exception		
 		Type type = typeVisitor.getType();
+		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
+		
 		// exception param
 		Expression param = paramVisitor.getExpression();
 
@@ -1169,6 +1174,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
 				type);
 
+		tracker.addVariable(param.toString(), param, new Annotations());
+		tracker.exitScope(body.getEnd());
 		this.clBlock = catchBlock;
 		this.block = body;
 		return false;
