@@ -8,6 +8,10 @@ class FilterReader extends Reader:
 
 class StringReader extends Reader:
 
+class CharArrayReader extends Reader:
+
+class InputStreamReader extends Reader:
+
 class PushbackReader extends FilterReader:
 	instance method PushbackReader: it.unive.jlisa.program.java.constructs.reader.pushbackreader.PushbackReaderConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
