@@ -158,9 +158,7 @@ TypeEnvironment<TypeSet>>
 						else
 							LOG.error("Cannot satisfy the expression");
 					} else
-						// FIXME: possible warning
-						LOG.error("The abstract state of assert's expression is TOP");
-
+						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 				} else {
 					// FIXME: property proved
 					LOG.error("The abstract state of assert's expression is BOTTOM");
