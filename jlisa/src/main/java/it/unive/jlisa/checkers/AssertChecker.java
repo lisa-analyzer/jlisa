@@ -1,8 +1,5 @@
 package it.unive.jlisa.checkers;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
@@ -23,6 +20,8 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Assert Checker
@@ -68,7 +67,7 @@ TypeEnvironment<TypeSet>>
 			} catch (SemanticException e) {
 				e.printStackTrace();
 			}
-		
+
 		// assert checker
 		if (node instanceof AssertStatement)
 			try {
@@ -93,11 +92,11 @@ TypeEnvironment<TypeSet>>
 			> state = result.getAnalysisStateBefore(node);
 
 			// checking if there exists at least one exception state
-			boolean hasExceptionState = !state.getErrors().isBottom() && 
-					!state.getErrors().isTop() && 
+			boolean hasExceptionState = !state.getErrors().isBottom() &&
+					!state.getErrors().isTop() &&
 					!state.getErrors().function.isEmpty() &&
-					!state.getSmashedErrors().isBottom() && 
-					!state.getSmashedErrors().isTop() && 
+					!state.getSmashedErrors().isBottom() &&
+					!state.getSmashedErrors().isTop() &&
 					!state.getSmashedErrors().function.isEmpty();
 
 			SimpleAbstractState<
@@ -163,7 +162,7 @@ TypeEnvironment<TypeSet>>
 					// FIXME: property proved
 					LOG.error("The abstract state of assert's expression is BOTTOM");
 				}
-			} 
+			}
 		}
 	}
 }
