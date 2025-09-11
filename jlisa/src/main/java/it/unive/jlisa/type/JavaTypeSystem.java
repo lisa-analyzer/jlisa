@@ -3,8 +3,10 @@ package it.unive.jlisa.type;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.type.BooleanType;
 import it.unive.lisa.type.NumericType;
+import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.StringType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
@@ -24,6 +26,11 @@ public class JavaTypeSystem extends TypeSystem {
     @Override
     public NumericType getIntegerType() {
         return JavaIntType.INSTANCE;
+    }
+    
+    @Override
+    public ReferenceType getReference(Type type) {
+    	return new JavaReferenceType(type);
     }
 
     @Override

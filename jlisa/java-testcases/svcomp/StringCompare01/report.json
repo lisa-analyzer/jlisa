@@ -2,11 +2,7 @@
   "warnings" : [ {
     "message" : "['Main.java':17:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':18:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-  }, {
     "message" : "['Main.java':21:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':22:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   }, {
     "message" : "['Main.java':25:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
@@ -33,18 +29,18 @@
   "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "6ms",
-    "end" : "2025-09-11T17:09:31.649+02:00",
+    "duration" : "118ms",
+    "end" : "2025-09-11T18:23:33.661+02:00",
     "expressions" : "104",
     "files" : "1",
     "globals" : "6",
     "members" : "126",
     "programs" : "1",
-    "start" : "2025-09-11T17:09:31.643+02:00",
+    "start" : "2025-09-11T18:23:33.543+02:00",
     "statements" : "46",
     "units" : "80",
     "version" : "0.1",
-    "warnings" : "15"
+    "warnings" : "13"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",

@@ -57,7 +57,6 @@ public class JavaStringLiteral extends Literal<String> {
 			tmp = tmp.lub(sem);
 		}
 		
-		// FIXME: need to keep metavars on the stack (e.g., s != "hello")
 		getMetaVariables().addAll(call.getMetaVariables());		
 		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
