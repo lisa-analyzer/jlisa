@@ -97,7 +97,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
             Type other) {
     	if (other instanceof JavaArrayType)
     		return getInnerType().canBeAssignedTo(other.asArrayType().getInnerType());
-    	return other.toString().equals("Object");
+    	return other.equals(JavaClassType.getObjectType());
     }
 
     @Override

@@ -1,4 +1,4 @@
-package it.unive.jlisa.analysis;
+package it.unive.jlisa.analysis.value;
 
 import java.util.Set;
 
@@ -47,15 +47,15 @@ import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringGetBytesOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfCharFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
-import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
-import it.unive.jlisa.program.operator.JavaStringLastIndexOfCharFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
@@ -104,7 +104,6 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
-import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -134,7 +133,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			// anyway).
 			return true;
 
-		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch( t -> t.toString().equals("String"));
+		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch( t -> t.isStringType());
 	}
 
 	@Override
@@ -142,8 +141,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 					throws SemanticException {
-		// FIXME: remove constant
-		return new ConstantValue(new Constant(NullType.INSTANCE, null, pp.getLocation()));
+		throw new SemanticException("null value is not handled by the constant propagation domain");
 	}
 
 	@Override
