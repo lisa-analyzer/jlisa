@@ -1,12 +1,5 @@
 package it.unive.jlisa.checkers;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
@@ -16,7 +9,6 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.ProgramState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
-import it.unive.lisa.analysis.continuations.Exception;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
@@ -31,6 +23,12 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Assert Checker
@@ -103,8 +101,8 @@ TypeEnvironment<TypeSet>>
 			ProgramState<SimpleAbstractState<
 			HeapEnvironment<AllocationSites>, 
 			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>> exceptionState = state.getState(
-					new Exception(JavaClassType.lookup("RuntimeException", null), null));
+			TypeEnvironment<TypeSet>>> exceptionState = state.getErrors().getState(
+					new AnalysisState.Error(JavaClassType.lookup("RuntimeException", null), null));
 			SimpleAbstractState<
 			HeapEnvironment<AllocationSites>, 
 			ValueEnvironment<ConstantValue>, 
