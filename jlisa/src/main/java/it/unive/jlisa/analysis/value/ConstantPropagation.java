@@ -783,7 +783,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-<<<<<<< HEAD
 	public ConstantValue evalValueExpression(
 			ValueExpression expression,
 			ConstantValue[] subExpressions,
@@ -801,13 +800,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 	
 	@Override
-	public Satisfiability satisfiesAbstractValue(ConstantValue value, ProgramPoint pp, SemanticOracle oracle)
-=======
 	public Satisfiability satisfiesAbstractValue(
 			ConstantValue value,
 			ProgramPoint pp,
 			SemanticOracle oracle)
->>>>>>> refs/remotes/origin/master
 			throws SemanticException {
 		if (value.getValue() instanceof Boolean)
 			return ((Boolean) value.getValue()).booleanValue() ? Satisfiability.SATISFIED
