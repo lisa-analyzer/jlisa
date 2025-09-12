@@ -1,7 +1,6 @@
 import org.gradle.api.plugins.quality.Checkstyle
 import org.gradle.api.plugins.quality.CheckstyleExtension
 
-// Apply Checkstyle plugin imperatively
 apply<org.gradle.api.plugins.quality.CheckstylePlugin>()
 
 // --------------------
