@@ -24,7 +24,7 @@ public class StringEqualsIgnoreCase extends BinaryExpression implements Pluggabl
 	protected Statement originating;
 
 	public StringEqualsIgnoreCase(CFG cfg, CodeLocation location, Expression left, Expression right) {
-		super(cfg, location, "equals", left, right);
+		super(cfg, location, "equalsIgnoreCase", left, right);
 	}
 
 	public static StringEqualsIgnoreCase build(
@@ -63,6 +63,7 @@ public class StringEqualsIgnoreCase extends BinaryExpression implements Pluggabl
 				accessRight, 
 				JavaStringEqualsIgnoreCaseOperator.INSTANCE, 
 				getLocation());
+		
 		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
 	}
 }

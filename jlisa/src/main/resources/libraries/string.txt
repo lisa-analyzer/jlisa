@@ -24,15 +24,15 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param other libtype String*
 		
 	instance method equals: it.unive.jlisa.program.java.constructs.string.StringEquals
-		libtype String*
+		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		
 	instance method equalsIgnoreCase: it.unive.jlisa.program.java.constructs.string.StringEqualsIgnoreCase
-		libtype String*
+		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param this libtype String*
 		param other libtype String*
-		
+				
 	instance method toUpperCase: it.unive.jlisa.program.java.constructs.string.StringToUpperCase
 		libtype String*
 		param this libtype String*	
@@ -161,11 +161,5 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
-		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param this libtype String*
-		param thisoffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param other libtype String*
-		param otheroffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param otherlen type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
 		

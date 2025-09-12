@@ -874,6 +874,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
 		}
 		
+		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
+			String lv = ((String) left.getValue());
+			String rv = ((String) right.getValue());
+			return lv.equalsIgnoreCase(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+		}
+		
 		if (operator instanceof JavaStringMatchesOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
