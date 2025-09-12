@@ -1,2 +1,2 @@
 sealed class System extends Object:
-	field out type it.unive.lisa.type.Untyped::INSTANCE
+	field out libtype PrintStream*
