@@ -1,10 +1,9 @@
 package it.unive.jlisa.program.operator;
 
-import java.util.Set;
-
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import java.util.Set;
 
 public class JavaMathAbsOperator implements UnaryOperator {
 

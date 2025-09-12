@@ -1,10 +1,4 @@
 package it.unive.jlisa.program.type;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.CompilationUnit;
@@ -18,202 +12,211 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
 import it.unive.lisa.util.collections.workset.WorkingSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class JavaClassType implements UnitType {
 
-    protected static final Map<String, JavaClassType> types = new HashMap<>();
+	protected static final Map<String, JavaClassType> types = new HashMap<>();
 
-    /**
-     * Clears the cache of {@link JavaClassType}s created up to now.
-     */
-    public static void clearAll() {
-        types.clear();
-    }
+	/**
+	 * Clears the cache of {@link JavaClassType}s created up to now.
+	 */
+	public static void clearAll() {
+		types.clear();
+	}
 
-    /**
-     * Yields all the {@link JavaClassType}s defined up to now.
-     *
-     * @return the collection of all the class types
-     */
-    public static Collection<JavaClassType> all() {
-        return types.values();
-    }
+	/**
+	 * Yields all the {@link JavaClassType}s defined up to now.
+	 *
+	 * @return the collection of all the class types
+	 */
+	public static Collection<JavaClassType> all() {
+		return types.values();
+	}
 
-    /**
-     * Yields a unique instance (either an existing one or a fresh one) of
-     * {@link JavaClassType} representing a class with the given {@code name},
-     * representing the given {@code unit}.
-     *
-     * @param name the name of the class
-     * @param unit the unit underlying this type
-     *
-     * @return the unique instance of {@link JavaClassType} representing the class
-     *             with the given name
-     */
-    public static JavaClassType lookup(
-            String name,
-            CompilationUnit unit) {
-        return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
-    }
-    
-    public static boolean hasType(String name) {
-    	return types.containsKey(name);
-    }
+	/**
+	 * Yields a unique instance (either an existing one or a fresh one) of
+	 * {@link JavaClassType} representing a class with the given {@code name},
+	 * representing the given {@code unit}.
+	 *
+	 * @param name the name of the class
+	 * @param unit the unit underlying this type
+	 *
+	 * @return the unique instance of {@link JavaClassType} representing the
+	 *             class with the given name
+	 */
+	public static JavaClassType lookup(
+			String name,
+			CompilationUnit unit) {
+		return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
+	}
 
-    protected final String name;
+	public static boolean hasType(
+			String name) {
+		return types.containsKey(name);
+	}
 
-    protected final CompilationUnit unit;
+	protected final String name;
 
-    protected JavaClassType(
-            String name,
-            CompilationUnit unit) {
-        Objects.requireNonNull(name, "The name of a class type cannot be null");
-        Objects.requireNonNull(unit, "The unit of a class type cannot be null");
-        this.name = name;
-        this.unit = unit;
-    }
+	protected final CompilationUnit unit;
 
-    @Override
-    public CompilationUnit getUnit() {
-        return unit;
-    }
+	protected JavaClassType(
+			String name,
+			CompilationUnit unit) {
+		Objects.requireNonNull(name, "The name of a class type cannot be null");
+		Objects.requireNonNull(unit, "The unit of a class type cannot be null");
+		this.name = name;
+		this.unit = unit;
+	}
 
-    @Override
-    public final boolean canBeAssignedTo(
-            Type other) {
-        if (other instanceof JavaClassType)
-            return subclass((JavaClassType) other);
+	@Override
+	public CompilationUnit getUnit() {
+		return unit;
+	}
 
-        if (other instanceof JavaInterfaceType)
-            return subclass((JavaInterfaceType) other);
+	@Override
+	public final boolean canBeAssignedTo(
+			Type other) {
+		if (other instanceof JavaClassType)
+			return subclass((JavaClassType) other);
 
-        return false;
-    }
+		if (other instanceof JavaInterfaceType)
+			return subclass((JavaInterfaceType) other);
 
-    private boolean subclass(
-            JavaClassType other) {
-        return this == other || unit.isInstanceOf(other.unit);
-    }
+		return false;
+	}
 
-    private boolean subclass(
-            JavaInterfaceType other) {
-        return unit.isInstanceOf(other.getUnit());
-    }
+	private boolean subclass(
+			JavaClassType other) {
+		return this == other || unit.isInstanceOf(other.unit);
+	}
 
-    @Override
-    public Type commonSupertype(
-            Type other) {
-        if (other.isNullType())
-            return this;
+	private boolean subclass(
+			JavaInterfaceType other) {
+		return unit.isInstanceOf(other.getUnit());
+	}
 
-        if (!other.isUnitType())
-            return Untyped.INSTANCE;
+	@Override
+	public Type commonSupertype(
+			Type other) {
+		if (other.isNullType())
+			return this;
 
-        if (canBeAssignedTo(other))
-            return other;
+		if (!other.isUnitType())
+			return Untyped.INSTANCE;
 
-        if (other.canBeAssignedTo(this))
-            return this;
+		if (canBeAssignedTo(other))
+			return other;
 
-        return scanForSupertypeOf((UnitType) other);
-    }
+		if (other.canBeAssignedTo(this))
+			return this;
 
-    private Type scanForSupertypeOf(
-            UnitType other) {
-        WorkingSet<JavaClassType> ws = FIFOWorkingSet.mk();
-        Set<JavaClassType> seen = new HashSet<>();
-        ws.push(this);
-        JavaClassType current;
-        while (!ws.isEmpty()) {
-            current = ws.pop();
-            if (!seen.add(current))
-                continue;
+		return scanForSupertypeOf((UnitType) other);
+	}
 
-            if (other.canBeAssignedTo(current))
-                return current;
+	private Type scanForSupertypeOf(
+			UnitType other) {
+		WorkingSet<JavaClassType> ws = FIFOWorkingSet.mk();
+		Set<JavaClassType> seen = new HashSet<>();
+		ws.push(this);
+		JavaClassType current;
+		while (!ws.isEmpty()) {
+			current = ws.pop();
+			if (!seen.add(current))
+				continue;
 
-            // null since we do not want to create new types here
-            current.unit.getImmediateAncestors().forEach(u -> ws.push(lookup(u.getName(), null)));
-        }
+			if (other.canBeAssignedTo(current))
+				return current;
 
-        return Untyped.INSTANCE;
-    }
+			// null since we do not want to create new types here
+			current.unit.getImmediateAncestors().forEach(u -> ws.push(lookup(u.getName(), null)));
+		}
 
-    @Override
-    public String toString() {
-        return name;
-    }
+		return Untyped.INSTANCE;
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((unit == null) ? 0 : unit.hashCode());
-        return result;
-    }
+	@Override
+	public String toString() {
+		return name;
+	}
 
-    @Override
-    public boolean equals(
-            Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        JavaClassType other = (JavaClassType) obj;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
-        if (unit == null) {
-            if (other.unit != null)
-                return false;
-        } else if (!unit.equals(other.unit))
-            return false;
-        return true;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((unit == null) ? 0 : unit.hashCode());
+		return result;
+	}
 
-    @Override
-    public Set<Type> allInstances(
-            TypeSystem types) {
-        Set<Type> instances = new HashSet<>();
-        for (Unit in : unit.getInstances())
-            instances.add(lookup(in.getName(), null));
-        return instances;
-    }
+	@Override
+	public boolean equals(
+			Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JavaClassType other = (JavaClassType) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (unit == null) {
+			if (other.unit != null)
+				return false;
+		} else if (!unit.equals(other.unit))
+			return false;
+		return true;
+	}
+
+	@Override
+	public Set<Type> allInstances(
+			TypeSystem types) {
+		Set<Type> instances = new HashSet<>();
+		for (Unit in : unit.getInstances())
+			instances.add(lookup(in.getName(), null));
+		return instances;
+	}
 
 	public JavaReferenceType getReference() {
 		return new JavaReferenceType(this);
 	}
-	
+
 	@Override
-	public Expression defaultValue(CFG cfg, CodeLocation location) {
+	public Expression defaultValue(
+			CFG cfg,
+			CodeLocation location) {
 		return new JavaNullLiteral(cfg, location);
 	}
-	
+
 	public static JavaClassType getClassCastExceptionType() {
 		return lookup("ClassCastException", null);
 	}
-	
+
 	public static JavaClassType getNullPoiterExceptionType() {
 		return lookup("NullPointerException", null);
 	}
-	
+
 	public static JavaClassType getNegativeArraySizeExceptionType() {
 		return lookup("NegativeArraySizeException", null);
 	}
-	
+
 	public static JavaClassType getObjectType() {
 		return lookup("Object", null);
 	}
-	
+
 	public static JavaClassType getStringType() {
 		return lookup("String", null);
 	}
-	
+
 	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
 		return lookup("ArrayIndexOutOfBoundsException", null);
 	}

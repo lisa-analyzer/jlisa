@@ -6,14 +6,14 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
-
 import java.util.Collections;
 import java.util.Set;
 
 public class JavaIntType implements JavaNumericType {
 	public static final JavaIntType INSTANCE = new JavaIntType();
 
-	protected JavaIntType() {}
+	protected JavaIntType() {
+	}
 
 	@Override
 	public String toString() {
@@ -21,7 +21,8 @@ public class JavaIntType implements JavaNumericType {
 	}
 
 	@Override
-	public Set<Type> allInstances(TypeSystem types) {
+	public Set<Type> allInstances(
+			TypeSystem types) {
 		return Collections.singleton(this);
 	}
 
@@ -56,14 +57,17 @@ public class JavaIntType implements JavaNumericType {
 	}
 
 	@Override
-	public boolean canBeAssignedTo(Type other) {
+	public boolean canBeAssignedTo(
+			Type other) {
 		if (other == JavaCharType.INSTANCE)
 			return true;
 		return JavaNumericType.super.canBeAssignedTo(other);
 	}
 
 	@Override
-	public Expression defaultValue(CFG cfg, CodeLocation location) {
+	public Expression defaultValue(
+			CFG cfg,
+			CodeLocation location) {
 		return new IntLiteral(cfg, location, 0);
 	}
 

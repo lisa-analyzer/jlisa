@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -33,6 +30,8 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JavaAccessInstanceGlobal extends UnaryExpression {
 
@@ -107,11 +106,11 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression expr,
-			StatementStore<A> expressions)
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
 					throws SemanticException {
 		CodeLocation loc = getLocation();
 
@@ -126,18 +125,21 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 				if (inner.isNullType()) {
 					// builds the exception
 					JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
-					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException", npeType.getReference(), new Expression[0]);
+					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException",
+							npeType.getReference(), new Expression[0]);
 					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-					state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					state = analysis.assign(state, throwVar,
+							state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 					// deletes the receiver of the constructor
 					// and all the metavariables from subexpressions
 					state = state.forgetIdentifiers(call.getMetaVariables(), this);
 					state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-					result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(npeType.getReference(), this)));
+					result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+							new Error(npeType.getReference(), this)));
 					atLeastOne = true;
 					continue;
 				} else if (!inner.isUnitType())
@@ -154,17 +156,18 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 						if (global != null) {
 							GlobalVariable var = global.toSymbolicVariable(loc);
 							AccessChild access = new AccessChild(global.getStaticType(), container, var, loc);
-							if (getParentStatement() instanceof  Assignment) {
+							if (getParentStatement() instanceof Assignment) {
 								Assignment asg = (Assignment) getParentStatement();
 								if (asg.getLeft().equals(this))
 									result = result.lub(analysis.smallStepSemantics(state, access, this));
 								else
-									result = result.lub(analysis.smallStepSemantics(state, new HeapReference(global.getStaticType(), access, loc), this));
-							} else
-								if (global.getStaticType().isPointerType())
-									result = result.lub(analysis.smallStepSemantics(state, new HeapReference(global.getStaticType(), access, loc), this));
-								else
-									result = result.lub(analysis.smallStepSemantics(state, access, this));
+									result = result.lub(analysis.smallStepSemantics(state,
+											new HeapReference(global.getStaticType(), access, loc), this));
+							} else if (global.getStaticType().isPointerType())
+								result = result.lub(analysis.smallStepSemantics(state,
+										new HeapReference(global.getStaticType(), access, loc), this));
+							else
+								result = result.lub(analysis.smallStepSemantics(state, access, this));
 							atLeastOne = true;
 						}
 					}

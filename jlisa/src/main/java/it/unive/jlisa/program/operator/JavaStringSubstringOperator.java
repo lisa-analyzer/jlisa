@@ -1,13 +1,12 @@
 package it.unive.jlisa.program.operator;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.lisa.symbolic.value.operator.binary.StringOperation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import java.util.Collections;
+import java.util.Set;
 
-public class JavaStringSubstringOperator extends StringOperation{
+public class JavaStringSubstringOperator extends StringOperation {
 
 	/**
 	 * The singleton instance of this class.
@@ -21,22 +20,26 @@ public class JavaStringSubstringOperator extends StringOperation{
 	 */
 	protected JavaStringSubstringOperator() {
 	}
-	
+
 	@Override
 	public String toString() {
 		return "strsubstring";
 	}
-	
+
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type> left, Set<Type> right) {
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> left,
+			Set<Type> right) {
 		if (left.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		return Collections.singleton(types.getStringType());
 	}
 
 	@Override
-	protected Type resultType(TypeSystem types) {
+	protected Type resultType(
+			TypeSystem types) {
 		return types.getStringType();
 	}
-	
+
 }

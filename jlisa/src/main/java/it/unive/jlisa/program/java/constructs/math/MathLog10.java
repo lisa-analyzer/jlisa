@@ -19,7 +19,10 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 public class MathLog10 extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public MathLog10(CFG cfg, CodeLocation location, Expression arg) {
+	public MathLog10(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "log10", arg);
 	}
 
@@ -31,26 +34,30 @@ public class MathLog10 extends it.unive.lisa.program.cfg.statement.UnaryExpressi
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		UnaryExpression log10 = new UnaryExpression(
-				JavaDoubleType.INSTANCE, 
-				expr, 
-				JavaMathLog10Operator.INSTANCE, 
+				JavaDoubleType.INSTANCE,
+				expr,
+				JavaMathLog10Operator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, log10, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

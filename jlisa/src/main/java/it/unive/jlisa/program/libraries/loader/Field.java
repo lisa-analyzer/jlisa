@@ -3,7 +3,6 @@ package it.unive.jlisa.program.libraries.loader;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CodeLocation;
-
 import java.util.Objects;
 
 public class Field {

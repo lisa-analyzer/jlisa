@@ -28,7 +28,11 @@ import it.unive.lisa.type.Untyped;
 public class StringConcat extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringConcat(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public StringConcat(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "concat", left, right);
 	}
 
@@ -40,20 +44,25 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
@@ -65,11 +74,14 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
 
-		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(stringType, accessLeft, accessRight, JavaStringConcatOperator.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(
+				stringType, accessLeft, accessRight, JavaStringConcatOperator.INSTANCE, getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype, new Expression[0]);
-		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype,
+				new Expression[0]);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
@@ -78,7 +90,7 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 			tmp = tmp.lub(sem);
 		}
 
-		getMetaVariables().addAll(call.getMetaVariables());		
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());				
+		getMetaVariables().addAll(call.getMetaVariables());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 }

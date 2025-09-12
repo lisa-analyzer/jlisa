@@ -1,17 +1,18 @@
 package it.unive.jlisa.cron;
 
-import java.io.IOException;
-
-import org.junit.jupiter.api.Test;
-
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import it.unive.lisa.conf.LiSAConfiguration.GraphType;
+import java.io.IOException;
+import org.junit.jupiter.api.Test;
 
 public class VariableScopingTest extends JLiSAAnalysisExecutor {
 
-	private static CronConfiguration createConfiguration(String testDir, String subDir, String... programFiles) {
+	private static CronConfiguration createConfiguration(
+			String testDir,
+			String subDir,
+			String... programFiles) {
 		CronConfiguration configuration = TestHelpers.createConfiguration(testDir, subDir, programFiles);
 
 		configuration.serializeInputs = true;
@@ -22,21 +23,20 @@ public class VariableScopingTest extends JLiSAAnalysisExecutor {
 		return configuration;
 	}
 
-    
 	@Test
-	public void testVarScoping1()  throws IOException {
+	public void testVarScoping1() throws IOException {
 		CronConfiguration conf = createConfiguration("var-scoping", "vs1", "vs1.java");
 		perform(conf);
 	}
-	
+
 	@Test
-	public void testVarScoping2()  throws IOException {
+	public void testVarScoping2() throws IOException {
 		CronConfiguration conf = createConfiguration("var-scoping", "vs2", "vs2.java");
 		perform(conf);
 	}
-	
+
 	@Test
-	public void testVarScoping3()  throws IOException {
+	public void testVarScoping3() throws IOException {
 		CronConfiguration conf = createConfiguration("var-scoping", "vs3", "vs3.java");
 		perform(conf);
 	}

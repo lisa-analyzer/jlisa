@@ -1,15 +1,5 @@
 package it.unive.jlisa.frontend.util;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.VariableTableEntry;
@@ -29,78 +19,88 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.YieldsValue;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class JavaCFGTweaker {
 
-    private JavaCFGTweaker() {
-        // utility class, no instances allowed
-    }
+	private JavaCFGTweaker() {
+		// utility class, no instances allowed
+	}
 
-    /**
-     * Heuristics to add explicit return statements to paths that return
-     * implicitly. This is useful to ensure that all paths in a method return
-     * explicitly, and that the CFG has all exit nodes clearly marked by returns
-     * or throws. This method:
-     * <ul>
-     * <li>adds a {@link Ret} node to the CFG, if it does not contain any
-     * instruction;</li>
-     * <li>checks that either all return statements return a value, or none
-     * do;</li>
-     * <li>adds a {@link Ret} node to the CFG after each instruction that does
-     * not stop execution and does not have a follower, only if a value-less
-     * return is allowed.</li>
-     * </ul>
-     *
-     * @param <E>              the type of exceptions this method can raise
-     * @param cfg              the CFG to be tweaked
-     * @param exceptionFactory a factory for exceptions to be raised in case of
-     *                             errors
-     */
-    public static <E extends RuntimeException> void addReturns(
-            CFG cfg,
-            Function<String, E> exceptionFactory,
-            SyntheticCodeLocationManager syntheticLocationManager) {
-        Ret ret = new Ret(cfg, syntheticLocationManager.nextLocation());
+	/**
+	 * Heuristics to add explicit return statements to paths that return
+	 * implicitly. This is useful to ensure that all paths in a method return
+	 * explicitly, and that the CFG has all exit nodes clearly marked by returns
+	 * or throws. This method:
+	 * <ul>
+	 * <li>adds a {@link Ret} node to the CFG, if it does not contain any
+	 * instruction;</li>
+	 * <li>checks that either all return statements return a value, or none
+	 * do;</li>
+	 * <li>adds a {@link Ret} node to the CFG after each instruction that does
+	 * not stop execution and does not have a follower, only if a value-less
+	 * return is allowed.</li>
+	 * </ul>
+	 *
+	 * @param <E>              the type of exceptions this method can raise
+	 * @param cfg              the CFG to be tweaked
+	 * @param exceptionFactory a factory for exceptions to be raised in case of
+	 *                             errors
+	 */
+	public static <E extends RuntimeException> void addReturns(
+			CFG cfg,
+			Function<String, E> exceptionFactory,
+			SyntheticCodeLocationManager syntheticLocationManager) {
+		Ret ret = new Ret(cfg, syntheticLocationManager.nextLocation());
 
-        if (cfg.getNodesCount() == 0) {
-            // empty method, so the ret is also the entrypoint
-            cfg.addNode(ret, true);
-            return;
-        }
+		if (cfg.getNodesCount() == 0) {
+			// empty method, so the ret is also the entrypoint
+			cfg.addNode(ret, true);
+			return;
+		}
 
-        // every non-throwing instruction that does not have a follower
-        // is ending the method
-        Collection<Statement> preExits = new LinkedList<>();
-        for (Statement st : cfg.getNodes())
-            if (!st.stopsExecution() && cfg.followersOf(st).isEmpty())
-                preExits.add(st);
-        if (preExits.isEmpty())
-            return;
+		// every non-throwing instruction that does not have a follower
+		// is ending the method
+		Collection<Statement> preExits = new LinkedList<>();
+		for (Statement st : cfg.getNodes())
+			if (!st.stopsExecution() && cfg.followersOf(st).isEmpty())
+				preExits.add(st);
+		if (preExits.isEmpty())
+			return;
 
-        // if the other returns do return a value, we cannot add
-        // a ret as we should return a value as well
-        boolean returnsValue = false;
-        for (Statement st : cfg.getNormalExitpoints())
-            if (st instanceof Return)
-                returnsValue = true;
-            else if (returnsValue)
-                throw exceptionFactory.apply(
-                        "Return statement at " + st.getLocation() + " should return something, since other returns do it");
+		// if the other returns do return a value, we cannot add
+		// a ret as we should return a value as well
+		boolean returnsValue = false;
+		for (Statement st : cfg.getNormalExitpoints())
+			if (st instanceof Return)
+				returnsValue = true;
+			else if (returnsValue)
+				throw exceptionFactory.apply(
+						"Return statement at " + st.getLocation()
+								+ " should return something, since other returns do it");
 
-        cfg.addNode(ret);
-        for (Statement st : preExits) {
-            if (returnsValue)
-                throw exceptionFactory.apply("Missing return statement at " + st.getLocation());
-            cfg.addEdge(new SequentialEdge(st, ret));
-        }
+		cfg.addNode(ret);
+		for (Statement st : preExits) {
+			if (returnsValue)
+				throw exceptionFactory.apply("Missing return statement at " + st.getLocation());
+			cfg.addEdge(new SequentialEdge(st, ret));
+		}
 
-        // adjust scopes
-        for (VariableTableEntry entry : cfg.getDescriptor().getVariables())
-            if (preExits.contains(entry.getScopeEnd()))
-                entry.setScopeEnd(ret);
-    }
+		// adjust scopes
+		for (VariableTableEntry entry : cfg.getDescriptor().getVariables())
+			if (preExits.contains(entry.getScopeEnd()))
+				entry.setScopeEnd(ret);
+	}
 
-    /**
+	/**
 	 * Adds edges connecting each statement possibly needing to be followed by
 	 * the execution of a finally block to the (chain of) finally block(s) that
 	 * is (are) to be executed. These include:
@@ -211,7 +211,7 @@ public class JavaCFGTweaker {
 				}
 			}
 	}
-	
+
 	private static void addNormalFinallyEdges(
 			CFG cfg,
 			ProtectedBlock pb,
@@ -229,7 +229,7 @@ public class JavaCFGTweaker {
 			cfg.addEdge(new SequentialEdge(fin.getEnd(), normalExit));
 		return;
 	}
-	
+
 	private static void addFinallyPathInBetween(
 			CFG cfg,
 			Statement start,
@@ -294,149 +294,149 @@ public class JavaCFGTweaker {
 		return;
 	}
 
-    
+	/**
+	 * Utility methods to split yields (i.e., returns, throws, or any
+	 * {@link Statement} returned by {@link CFG#getAllExitpoints()}) that is (i)
+	 * composite (i.e., it yields an expression that is not a constant or a
+	 * variable) and (ii) is inside a {@link ProtectionBlock} (i.e., inside a
+	 * try/catch/else/finally block). This is useful since errors might be
+	 * raised during the computation of that expression, and thus the creation
+	 * of the yielded value should be protected by an error edge. Moreover, any
+	 * finally block must be executed after the expression is computed, but
+	 * before the yield is executed. <br>
+	 * <br>
+	 * If {@code ret} is a yield, {@code b} is a condition, and {@code A} is an
+	 * arbitrary block of statements, this method will apply the following
+	 * transformations:
+	 * <ul>
+	 * <li>{@code ret} -&gt; {@code noop; ret};</li>
+	 * <li>{@code ret 0} -&gt; {@code noop; ret 0};</li>
+	 * <li>{@code if (b) ret} -&gt; {@code if (b) noop; ret};</li>
+	 * <li>{@code if (b) ret 0} -&gt; {@code if (b) noop; ret 0};</li>
+	 * <li>{@code A; ret} -&gt; {@code A; ret};</li>
+	 * <li>{@code A; ret 0} -&gt; {@code A; ret 0};</li>
+	 * <li>{@code ret x+2} -&gt;
+	 * {@code $val_to_yield=x+2; ret $val_to_yield};</li>
+	 * <li>{@code A; ret x+2} -&gt;
+	 * {@code A; $val_to_yield=x+2; ret $val_to_yield}.</li>
+	 * </ul>
+	 *
+	 * @param <E>              the type of exceptions this method can raise
+	 * @param cfg              the CFG to be tweaked
+	 * @param exceptionFactory a factory for exceptions to be raised in case of
+	 *                             errors
+	 */
+	public static <E extends RuntimeException> void splitProtectedYields(
+			CFG cfg,
+			Function<String, E> exceptionFactory,
+			SyntheticCodeLocationManager locationManager) {
+		// we sort them for deterministic processing
+		for (Statement yield : new TreeSet<>(cfg.getAllExitpoints())) {
+			// the inner-most block containing the yield
+			ProtectedBlock block = null;
+			// all blocks containing the yield, to be updated if we add nodes
+			List<ProtectedBlock> blocks = new LinkedList<>();
+			// the catches that must be executed in case an error happens
+			List<CatchBlock> catches = new LinkedList<>();
 
-    /**
-     * Utility methods to split yields (i.e., returns, throws, or any
-     * {@link Statement} returned by {@link CFG#getAllExitpoints()}) that is (i)
-     * composite (i.e., it yields an expression that is not a constant or a
-     * variable) and (ii) is inside a {@link ProtectionBlock} (i.e., inside a
-     * try/catch/else/finally block). This is useful since errors might be
-     * raised during the computation of that expression, and thus the creation
-     * of the yielded value should be protected by an error edge. Moreover, any
-     * finally block must be executed after the expression is computed, but
-     * before the yield is executed. <br>
-     * <br>
-     * If {@code ret} is a yield, {@code b} is a condition, and {@code A} is an
-     * arbitrary block of statements, this method will apply the following
-     * transformations:
-     * <ul>
-     * <li>{@code ret} -&gt; {@code noop; ret};</li>
-     * <li>{@code ret 0} -&gt; {@code noop; ret 0};</li>
-     * <li>{@code if (b) ret} -&gt; {@code if (b) noop; ret};</li>
-     * <li>{@code if (b) ret 0} -&gt; {@code if (b) noop; ret 0};</li>
-     * <li>{@code A; ret} -&gt; {@code A; ret};</li>
-     * <li>{@code A; ret 0} -&gt; {@code A; ret 0};</li>
-     * <li>{@code ret x+2} -&gt;
-     * {@code $val_to_yield=x+2; ret $val_to_yield};</li>
-     * <li>{@code A; ret x+2} -&gt;
-     * {@code A; $val_to_yield=x+2; ret $val_to_yield}.</li>
-     * </ul>
-     *
-     * @param <E>              the type of exceptions this method can raise
-     * @param cfg              the CFG to be tweaked
-     * @param exceptionFactory a factory for exceptions to be raised in case of
-     *                             errors
-     */
-    public static <E extends RuntimeException> void splitProtectedYields(
-            CFG cfg,
-            Function<String, E> exceptionFactory,
-            SyntheticCodeLocationManager locationManager) {
-        // we sort them for deterministic processing
-        for (Statement yield : new TreeSet<>(cfg.getAllExitpoints())) {
-            // the inner-most block containing the yield
-            ProtectedBlock block = null;
-            // all blocks containing the yield, to be updated if we add nodes
-            List<ProtectedBlock> blocks = new LinkedList<>();
-            // the catches that must be executed in case an error happens
-            List<CatchBlock> catches = new LinkedList<>();
+			// here we find the inner-most protected block that contains the
+			// yield
+			// to decide whether to add a noop before it or not; we collect all
+			// catches
+			// that the yield or the possible noop should be connected to, and
+			// we
+			// collect all protected blocks that contain the yield to update
+			// them
+			for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
+				if (pb.getTryBlock().getBody().contains(yield)) {
+					blocks.add(pb.getTryBlock());
+					catches.addAll(pb.getCatchBlocks());
+					if (block == null || block.getBody().containsAll(pb.getTryBlock().getBody()))
+						block = pb.getTryBlock();
+				}
 
-            // here we find the inner-most protected block that contains the
-            // yield
-            // to decide whether to add a noop before it or not; we collect all
-            // catches
-            // that the yield or the possible noop should be connected to, and
-            // we
-            // collect all protected blocks that contain the yield to update
-            // them
-            for (ProtectionBlock pb : cfg.getDescriptor().getProtectionBlocks()) {
-                if (pb.getTryBlock().getBody().contains(yield)) {
-                    blocks.add(pb.getTryBlock());
-                    catches.addAll(pb.getCatchBlocks());
-                    if (block == null || block.getBody().containsAll(pb.getTryBlock().getBody()))
-                        block = pb.getTryBlock();
-                }
+				if (pb.getFinallyBlock() != null) {
+					if (pb.getElseBlock() != null && pb.getElseBlock().getBody().contains(yield)) {
+						blocks.add(pb.getElseBlock());
+						if (block == null || block.getBody().containsAll(pb.getElseBlock().getBody()))
+							block = pb.getElseBlock();
+					}
+					for (CatchBlock catchBody : pb.getCatchBlocks())
+						if (catchBody.getBody().getBody().contains(yield)) {
+							blocks.add(catchBody.getBody());
+							if (block == null || block.getBody().containsAll(catchBody.getBody().getBody()))
+								block = catchBody.getBody();
+						}
+				}
+			}
 
-                if (pb.getFinallyBlock() != null) {
-                    if (pb.getElseBlock() != null && pb.getElseBlock().getBody().contains(yield)) {
-                        blocks.add(pb.getElseBlock());
-                        if (block == null || block.getBody().containsAll(pb.getElseBlock().getBody()))
-                            block = pb.getElseBlock();
-                    }
-                    for (CatchBlock catchBody : pb.getCatchBlocks())
-                        if (catchBody.getBody().getBody().contains(yield)) {
-                            blocks.add(catchBody.getBody());
-                            if (block == null || block.getBody().containsAll(catchBody.getBody().getBody()))
-                                block = catchBody.getBody();
-                        }
-                }
-            }
+			if (block != null)
+				splitProtectedYield(cfg, yield, block.getBody().size() == 1, blocks, catches, locationManager);
+		}
+	}
 
-            if (block != null)
-                splitProtectedYield(cfg, yield, block.getBody().size() == 1, blocks, catches, locationManager);
-        }
-    }
+	private static <E extends RuntimeException> void splitProtectedYield(
+			CFG cfg,
+			Statement yielder,
+			boolean isOnlyNode,
+			List<ProtectedBlock> blocks,
+			Collection<CatchBlock> catches,
+			SyntheticCodeLocationManager locationManager) {
+		// ret -> noop; ret
+		// ret 0 -> noop; ret 0
+		// if (b) { ret } -> if (b) { noop; ret }
+		// if (b) { ret 0 } -> if (b) { noop; ret 0 }
+		// A; ret -> A; ret
+		// A; ret 0 -> A; ret 0
+		// ret x+2 -> t=x+2; ret t
+		// A; ret x+2 -> A; t=x+2; ret t
 
-    private static <E extends RuntimeException> void splitProtectedYield(
-            CFG cfg,
-            Statement yielder,
-            boolean isOnlyNode,
-            List<ProtectedBlock> blocks,
-            Collection<CatchBlock> catches,
-            SyntheticCodeLocationManager locationManager) {
-        // ret -> noop; ret
-        // ret 0 -> noop; ret 0
-        // if (b) { ret } -> if (b) { noop; ret }
-        // if (b) { ret 0 } -> if (b) { noop; ret 0 }
-        // A; ret -> A; ret
-        // A; ret 0 -> A; ret 0
-        // ret x+2 -> t=x+2; ret t
-        // A; ret x+2 -> A; t=x+2; ret t
-
-        Collection<Edge> ingoing = cfg.getIngoingEdges(yielder);
-        boolean isBeginningOfBranch = ingoing.stream().anyMatch(Predicate.not(Edge::isUnconditional));
-        boolean needsRewriting = yielder instanceof YieldsValue && !((YieldsValue) yielder).isAtomic();
-        if (!needsRewriting && (isOnlyNode || isBeginningOfBranch)) {
-            // first and second cases
-            // third and fourth cases
-            NoOp noop = addNoOp(cfg, yielder, ingoing, locationManager);
-            connectToCatches(cfg, noop, catches);
+		Collection<Edge> ingoing = cfg.getIngoingEdges(yielder);
+		boolean isBeginningOfBranch = ingoing.stream().anyMatch(Predicate.not(Edge::isUnconditional));
+		boolean needsRewriting = yielder instanceof YieldsValue && !((YieldsValue) yielder).isAtomic();
+		if (!needsRewriting && (isOnlyNode || isBeginningOfBranch)) {
+			// first and second cases
+			// third and fourth cases
+			NoOp noop = addNoOp(cfg, yielder, ingoing, locationManager);
+			connectToCatches(cfg, noop, catches);
 			removeOutgoingErrorEdges(cfg, yielder, null);
-            updateBlocks(cfg, yielder, noop, null, blocks, false);
+			updateBlocks(cfg, yielder, noop, null, blocks, false);
 			updateMetadata(cfg, noop, yielder, null);
-        } else if (!isOnlyNode && !needsRewriting && !isBeginningOfBranch) {
-            // fifth and sixth cases
-            for (Edge in : ingoing)
-                connectToCatches(cfg, in.getSource(), catches);
+		} else if (!isOnlyNode && !needsRewriting && !isBeginningOfBranch) {
+			// fifth and sixth cases
+			for (Edge in : ingoing)
+				connectToCatches(cfg, in.getSource(), catches);
 			removeOutgoingErrorEdges(cfg, yielder, null);
-        } else {
-            // seventh and eighth cases
-            YieldsValue vyielder = (YieldsValue) yielder;
-            Expression value = vyielder.yieldedValue();
-            needsRewriting = !(value instanceof VariableRef || value instanceof Literal);
-            VariableRef tmpVar1 = new VariableRef(cfg, locationManager.nextLocation(), "$val_to_yield", value.getStaticType());
-            VariableRef tmpVar2 = new VariableRef(cfg, locationManager.nextLocation(), "$val_to_yield", value.getStaticType());
-            Assignment assign = new Assignment(cfg, locationManager.nextLocation(), tmpVar1, value);
-            Statement newYielder = vyielder.withValue(tmpVar2);
+		} else {
+			// seventh and eighth cases
+			YieldsValue vyielder = (YieldsValue) yielder;
+			Expression value = vyielder.yieldedValue();
+			needsRewriting = !(value instanceof VariableRef || value instanceof Literal);
+			VariableRef tmpVar1 = new VariableRef(cfg, locationManager.nextLocation(), "$val_to_yield",
+					value.getStaticType());
+			VariableRef tmpVar2 = new VariableRef(cfg, locationManager.nextLocation(), "$val_to_yield",
+					value.getStaticType());
+			Assignment assign = new Assignment(cfg, locationManager.nextLocation(), tmpVar1, value);
+			Statement newYielder = vyielder.withValue(tmpVar2);
 
-            cfg.addNode(assign);
-            cfg.addNode(newYielder);
-            cfg.addEdge(new SequentialEdge(assign, newYielder));
-            for (Edge in : ingoing) {
-                cfg.addEdge(in.newInstance(in.getSource(), assign));
-                cfg.getNodeList().removeEdge(in);
-            }
+			cfg.addNode(assign);
+			cfg.addNode(newYielder);
+			cfg.addEdge(new SequentialEdge(assign, newYielder));
+			for (Edge in : ingoing) {
+				cfg.addEdge(in.newInstance(in.getSource(), assign));
+				cfg.getNodeList().removeEdge(in);
+			}
 
-            connectToCatches(cfg, assign, catches);
+			connectToCatches(cfg, assign, catches);
 			removeOutgoingErrorEdges(cfg, yielder, newYielder);
-            updateBlocks(cfg, yielder, assign, newYielder, blocks, true);
+			updateBlocks(cfg, yielder, assign, newYielder, blocks, true);
 			updateMetadata(cfg, assign, yielder, newYielder);
 
-            cfg.getNodeList().removeNode(yielder);
-        }
-    }
-    
-    private static void updateMetadata(
+			cfg.getNodeList().removeNode(yielder);
+		}
+	}
+
+	private static void updateMetadata(
 			CFG cfg,
 			Statement added,
 			Statement original,
@@ -458,56 +458,57 @@ public class JavaCFGTweaker {
 		}
 	}
 
-    private static void updateBlocks(
-            CFG cfg,
-            Statement yielder,
-            Statement first,
-            Statement second,
-            List<ProtectedBlock> blocks,
-            boolean removeYielder) {
-        if (cfg.getEntrypoints().contains(yielder)) {
-            cfg.getEntrypoints().remove(yielder);
-            cfg.getEntrypoints().add(first);
-        }
-        for (ProtectedBlock block : blocks) {
-            block.getBody().add(first);
-            if (second != null)
-                block.getBody().add(second);
-            if (removeYielder)
-                block.getBody().remove(yielder);
-            if (block.getStart() == yielder)
-                block.setStart(first);
-            if (second != null && block.getEnd() == yielder)
-                block.setEnd(second);
-        }
-    }
+	private static void updateBlocks(
+			CFG cfg,
+			Statement yielder,
+			Statement first,
+			Statement second,
+			List<ProtectedBlock> blocks,
+			boolean removeYielder) {
+		if (cfg.getEntrypoints().contains(yielder)) {
+			cfg.getEntrypoints().remove(yielder);
+			cfg.getEntrypoints().add(first);
+		}
+		for (ProtectedBlock block : blocks) {
+			block.getBody().add(first);
+			if (second != null)
+				block.getBody().add(second);
+			if (removeYielder)
+				block.getBody().remove(yielder);
+			if (block.getStart() == yielder)
+				block.setStart(first);
+			if (second != null && block.getEnd() == yielder)
+				block.setEnd(second);
+		}
+	}
 
-    private static NoOp addNoOp(
-            CFG cfg,
-            Statement yielder,
-            Collection<Edge> ingoing,
-            SyntheticCodeLocationManager locationManager) {
-        NoOp noop = new NoOp(cfg, locationManager.nextLocation());
-        cfg.addNode(noop);
-        cfg.addEdge(new SequentialEdge(noop, yielder));
-        for (Edge in : ingoing) {
-            cfg.addEdge(in.newInstance(in.getSource(), noop));
-            cfg.getNodeList().removeEdge(in);
-        }
-        return noop;
-    }
+	private static NoOp addNoOp(
+			CFG cfg,
+			Statement yielder,
+			Collection<Edge> ingoing,
+			SyntheticCodeLocationManager locationManager) {
+		NoOp noop = new NoOp(cfg, locationManager.nextLocation());
+		cfg.addNode(noop);
+		cfg.addEdge(new SequentialEdge(noop, yielder));
+		for (Edge in : ingoing) {
+			cfg.addEdge(in.newInstance(in.getSource(), noop));
+			cfg.getNodeList().removeEdge(in);
+		}
+		return noop;
+	}
 
-    private static void connectToCatches(
-            CFG cfg,
-            Statement target,
-            Collection<CatchBlock> catches) {
-        if (catches.isEmpty())
-            return;
-        for (CatchBlock cb : catches)
-            cfg.addEdge(new ErrorEdge(target, cb.getBody().getStart(), cb.getIdentifier(), cb.getBody(), cb.getExceptions()));
-    }
-    
-    private static void removeOutgoingErrorEdges(
+	private static void connectToCatches(
+			CFG cfg,
+			Statement target,
+			Collection<CatchBlock> catches) {
+		if (catches.isEmpty())
+			return;
+		for (CatchBlock cb : catches)
+			cfg.addEdge(new ErrorEdge(target, cb.getBody().getStart(), cb.getIdentifier(), cb.getBody(),
+					cb.getExceptions()));
+	}
+
+	private static void removeOutgoingErrorEdges(
 			CFG cfg,
 			Statement yielder,
 			Statement replacement) {

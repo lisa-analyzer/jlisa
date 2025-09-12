@@ -29,8 +29,12 @@ public class Switch extends ControlFlowStructure {
 	 *                          structure
 	 * @param defaultCase   the default case
 	 */
-	public Switch(NodeList<CFG, Statement, Edge> cfgMatrix, Statement condition, Statement firstFollower,
-			SwitchCase[] cases, DefaultSwitchCase defaultCase) {
+	public Switch(
+			NodeList<CFG, Statement, Edge> cfgMatrix,
+			Statement condition,
+			Statement firstFollower,
+			SwitchCase[] cases,
+			DefaultSwitchCase defaultCase) {
 		super(cfgMatrix, condition, firstFollower);
 		this.cases = cases;
 		this.defaultCase = defaultCase;
@@ -47,7 +51,8 @@ public class Switch extends ControlFlowStructure {
 	}
 
 	@Override
-	public boolean contains(Statement st) {
+	public boolean contains(
+			Statement st) {
 		return bodyStatements().contains(st);
 	}
 
@@ -73,7 +78,8 @@ public class Switch extends ControlFlowStructure {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(
+			Object obj) {
 		if (this == obj)
 			return true;
 		if (!super.equals(obj))
@@ -101,26 +107,30 @@ public class Switch extends ControlFlowStructure {
 	}
 
 	@Override
-	public void addWith(Statement toAdd, Statement reference) {
+	public void addWith(
+			Statement toAdd,
+			Statement reference) {
 		for (SwitchCase switchCase : cases)
 			if (switchCase.getBody().contains(reference))
 				switchCase.getBody().add(reference);
-		
+
 		if (defaultCase.getBody().contains(reference))
 			defaultCase.getBody().add(reference);
 	}
 
 	@Override
-	public void replace(Statement original, Statement replacement) {
+	public void replace(
+			Statement original,
+			Statement replacement) {
 		for (SwitchCase switchCase : cases)
 			if (switchCase.getBody().contains(original)) {
 				switchCase.getBody().remove(original);
 				switchCase.getBody().add(replacement);
 			}
-		
+
 		if (defaultCase.getBody().contains(original)) {
 			defaultCase.getBody().remove(original);
 			defaultCase.getBody().add(replacement);
-		}	
+		}
 	}
 }

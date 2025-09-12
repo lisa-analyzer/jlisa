@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -25,7 +23,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
-
+import org.apache.commons.lang3.ArrayUtils;
 
 public class JavaNewObj extends NaryExpression {
 
@@ -53,21 +51,22 @@ public class JavaNewObj extends NaryExpression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			ExpressionSet[] params,
-			StatementStore<A> expressions)
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					ExpressionSet[] params,
+					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
 
 		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
 			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
-		
+
 		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
-		if (!JavaClassType.lookup(className, null).getUnit().getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
+		if (!JavaClassType.lookup(className, null).getUnit()
+				.getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
 			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
@@ -76,8 +75,9 @@ public class JavaNewObj extends NaryExpression {
 						className,
 						className + InitializedClassSet.SUFFIX_CLINIT,
 						new Expression[0]);
-				
-				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className)) ;
+
+				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
+						state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className));
 				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
 			}
 		}
@@ -124,6 +124,6 @@ public class JavaNewObj extends NaryExpression {
 		// finally, we leave a reference to the newly created object on the
 		// stack; this correponds to the state after the constructor call
 		// but with the receiver left on the stack
-		return sem.withExecutionExpressions(callstate.getExecutionExpressions());				
+		return sem.withExecutionExpressions(callstate.getExecutionExpressions());
 	}
 }

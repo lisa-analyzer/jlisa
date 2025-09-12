@@ -1,12 +1,11 @@
 package it.unive.jlisa.program.operator;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaLongIntValueOperator implements UnaryOperator {
 
@@ -27,9 +26,11 @@ public class JavaLongIntValueOperator implements UnaryOperator {
 	public String toString() {
 		return "longintvalue";
 	}
-		
+
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> argument) {
 		if (argument.stream().noneMatch(t -> t.equals(JavaLongType.INSTANCE)))
 			return Collections.emptySet();
 		return Collections.singleton(types.getIntegerType());

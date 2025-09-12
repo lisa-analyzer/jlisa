@@ -19,7 +19,10 @@ import it.unive.lisa.type.Untyped;
 public class MathAbs extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public MathAbs(CFG cfg, CodeLocation location, Expression arg) {
+	public MathAbs(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "abs", arg);
 	}
 
@@ -31,26 +34,30 @@ public class MathAbs extends it.unive.lisa.program.cfg.statement.UnaryExpression
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		UnaryExpression abs = new UnaryExpression(
-				Untyped.INSTANCE, 
-				expr, 
-				JavaMathAbsOperator.INSTANCE, 
+				Untyped.INSTANCE,
+				expr,
+				JavaMathAbsOperator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, abs, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

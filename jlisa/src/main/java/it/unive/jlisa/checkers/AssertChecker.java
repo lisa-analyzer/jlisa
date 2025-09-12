@@ -24,40 +24,36 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Assert Checker
- * 
- * It checks whether an assertion's condition holds.
+ * Assert Checker It checks whether an assertion's condition holds.
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class AssertChecker 
-implements
-SemanticCheck<
-SimpleAbstractState<
-HeapEnvironment<AllocationSites>, 
-ValueEnvironment<ConstantValue>, 
-TypeEnvironment<TypeSet>>,
-SimpleAbstractDomain<
-HeapEnvironment<AllocationSites>, 
-ValueEnvironment<ConstantValue>, 
-TypeEnvironment<TypeSet>>
-> {
+public class AssertChecker
+		implements
+		SemanticCheck<
+				SimpleAbstractState<
+						HeapEnvironment<AllocationSites>,
+						ValueEnvironment<ConstantValue>,
+						TypeEnvironment<TypeSet>>,
+				SimpleAbstractDomain<
+						HeapEnvironment<AllocationSites>,
+						ValueEnvironment<ConstantValue>,
+						TypeEnvironment<TypeSet>>> {
 
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
 
 	@Override
 	public boolean visit(
 			CheckToolWithAnalysisResults<
-			SimpleAbstractState<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>,
-			SimpleAbstractDomain<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>
-			> tool,
-			CFG graph, 
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>> tool,
+			CFG graph,
 			Statement node) {
 
 		// RuntimeException property checker
@@ -80,16 +76,21 @@ TypeEnvironment<TypeSet>>
 	}
 
 	private void checkRuntimeException(
-			CheckToolWithAnalysisResults<SimpleAbstractState<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>, SimpleAbstractDomain<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>>> tool,
-			CFG graph, Statement node) throws SemanticException {
+			CheckToolWithAnalysisResults<
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>> tool,
+			CFG graph,
+			Statement node)
+			throws SemanticException {
 
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-			SimpleAbstractState<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>
-			> state = result.getAnalysisStateBefore(node);
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>> state = result.getAnalysisStateBefore(node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
@@ -100,16 +101,17 @@ TypeEnvironment<TypeSet>>
 					!state.getSmashedErrors().function.isEmpty();
 
 			SimpleAbstractState<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
+					HeapEnvironment<AllocationSites>,
+					ValueEnvironment<ConstantValue>,
+					TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
 
 			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)
 				// if the normal state is bottom, we raise a definite error
 				if (normaleState.isBottom())
 					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
-			// otherwise, we raise  a possible error (both normal and exception states are not bottom)
+				// otherwise, we raise a possible error (both normal and
+				// exception states are not bottom)
 				else
 					tool.warnOn((Statement) node, "POSSIBLE: uncaught runtime exception in main method");
 		}
@@ -117,25 +119,23 @@ TypeEnvironment<TypeSet>>
 
 	private void checkAssert(
 			CheckToolWithAnalysisResults<
-			SimpleAbstractState<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>,
-			SimpleAbstractDomain<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>
-			> tool,
-			CFG graph, 
-			AssertStatement node) 
-					throws SemanticException {
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>> tool,
+			CFG graph,
+			AssertStatement node)
+			throws SemanticException {
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-			SimpleAbstractState<
-			HeapEnvironment<AllocationSites>, 
-			ValueEnvironment<ConstantValue>, 
-			TypeEnvironment<TypeSet>>
-			> state = null;
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>> state = null;
 			if (node instanceof SimpleAssert)
 				state = result.getAnalysisStateAfter(((SimpleAssert) node).getSubExpression());
 			else if (node instanceof AssertionStatement) {

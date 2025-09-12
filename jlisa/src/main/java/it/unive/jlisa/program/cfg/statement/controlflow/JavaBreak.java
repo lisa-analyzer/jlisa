@@ -13,7 +13,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 
-
 /**
  * Break statement in Java
  * 
@@ -30,12 +29,16 @@ public class JavaBreak extends Expression {
 	 * @param location the location where this statement is defined within the
 	 *                     program
 	 */
-	public JavaBreak(CFG cfg, CodeLocation location) {
+	public JavaBreak(
+			CFG cfg,
+			CodeLocation location) {
 		super(cfg, location);
 	}
 
 	@Override
-	public <V> boolean accept(GraphVisitor<CFG, Statement, Edge, V> visitor, V tool) {
+	public <V> boolean accept(
+			GraphVisitor<CFG, Statement, Edge, V> visitor,
+			V tool) {
 		return visitor.visit(tool, getCFG(), this);
 	}
 
@@ -43,7 +46,7 @@ public class JavaBreak extends Expression {
 	public String toString() {
 		return "break";
 	}
-	
+
 	@Override
 	public boolean breaksControlFlow() {
 		return true;
@@ -51,13 +54,17 @@ public class JavaBreak extends Expression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
-			InterproceduralAnalysis<A, D> interprocedural, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+					AnalysisState<A> entryState,
+					InterproceduralAnalysis<A, D> interprocedural,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		return entryState; // do nothing
 	}
 
 	@Override
-	protected int compareSameClass(Statement o) {
+	protected int compareSameClass(
+			Statement o) {
 		return 0;
 	}
 

@@ -16,7 +16,10 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 public class Assume extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public Assume(CFG cfg, CodeLocation location, Expression arg) {
+	public Assume(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "assume", arg);
 	}
 
@@ -28,20 +31,24 @@ public class Assume extends it.unive.lisa.program.cfg.statement.UnaryExpression 
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		return interprocedural.getAnalysis().assume(state, expr, originating, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

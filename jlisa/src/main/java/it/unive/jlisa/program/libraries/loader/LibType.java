@@ -1,8 +1,7 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import java.util.Objects;
-
 import it.unive.jlisa.program.type.JavaClassType;
+import java.util.Objects;
 
 public class LibType implements Type {
 	private final String name;

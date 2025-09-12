@@ -25,54 +25,63 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringSubstring extends BinaryExpression implements PluggableStatement{
+public class StringSubstring extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	
-	protected StringSubstring(CFG cfg, CodeLocation location, Expression left,
+	protected StringSubstring(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
 			Expression right) {
 		super(cfg, location, "substring", left, right);
 	}
-	
+
 	public static StringSubstring build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
 		return new StringSubstring(cfg, location, params[0], params[1]);
 	}
-	
+
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-		
+
 		it.unive.lisa.symbolic.value.BinaryExpression substring = new it.unive.lisa.symbolic.value.BinaryExpression(
-				getProgram().getTypes().getBooleanType(), 
-				accessLeft, 
-				right, 
-				JavaStringSubstringOperator.INSTANCE, 
+				getProgram().getTypes().getBooleanType(),
+				accessLeft,
+				right,
+				JavaStringSubstringOperator.INSTANCE,
 				getLocation());
-		
+
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", new JavaReferenceType(stringType), new Expression[0]);
-		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",
+				new JavaReferenceType(stringType), new Expression[0]);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
@@ -81,10 +90,9 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			tmp = tmp.lub(sem);
 		}
 
-		getMetaVariables().addAll(call.getMetaVariables());		
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());				
+		getMetaVariables().addAll(call.getMetaVariables());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 
-		
 	}
-	
+
 }

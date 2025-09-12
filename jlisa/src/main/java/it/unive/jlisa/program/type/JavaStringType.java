@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.type;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -14,13 +11,16 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaStringType extends JavaClassType implements StringType, InMemoryType, UnitType {
 
-	public JavaStringType(CompilationUnit unit) {
+	public JavaStringType(
+			CompilationUnit unit) {
 		// TODO: this should work also with java.lang.String
 		super("String", unit);
-		
+
 		// we update the String unit if only if not already registered
 		if (!types.containsKey("String"))
 			types.put("String", this);
@@ -47,9 +47,11 @@ public class JavaStringType extends JavaClassType implements StringType, InMemor
 	public CompilationUnit getUnit() {
 		return this.unit;
 	}
-	
+
 	@Override
-	public Expression defaultValue(CFG cfg, CodeLocation location) {
+	public Expression defaultValue(
+			CFG cfg,
+			CodeLocation location) {
 		return new NullLiteral(cfg, location);
 	}
 }

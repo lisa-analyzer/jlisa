@@ -22,7 +22,10 @@ import it.unive.lisa.type.Untyped;
 public class StringBufferEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBufferEmptyConstructor(CFG cfg, CodeLocation location, Expression exp) {
+	public StringBufferEmptyConstructor(
+			CFG cfg,
+			CodeLocation location,
+			Expression exp) {
 		super(cfg, location, "StringBuffer", exp);
 	}
 
@@ -34,21 +37,24 @@ public class StringBufferEmptyConstructor extends UnaryExpression implements Plu
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Constant emptyString = new Constant(stringType, "", getLocation());
 

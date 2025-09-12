@@ -18,7 +18,11 @@ import it.unive.lisa.symbolic.value.PushAny;
 public class BitSetConstructor extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public BitSetConstructor(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public BitSetConstructor(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "BitSet", left, right);
 	}
 
@@ -30,22 +34,28 @@ public class BitSetConstructor extends BinaryExpression implements PluggableStat
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		// TODO: fix semantics
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()), originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
+				originating);
 
 	}
 }

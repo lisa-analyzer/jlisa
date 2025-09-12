@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.statement;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaShortType;
@@ -25,6 +22,8 @@ import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaAssignment extends Assignment {
 
@@ -38,28 +37,30 @@ public class JavaAssignment extends Assignment {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression left,
-			SymbolicExpression right,
-			StatementStore<A> expressions)
+			D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression left,
+					SymbolicExpression right,
+					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state.bottomExecution();
 		Type targetType = left.getStaticType();
-        Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
 
 		// int constants, if they fit the target type, can be assigned
-		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType || targetType instanceof JavaCharType)
+		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType
+				|| targetType instanceof JavaCharType)
 				&& right instanceof Constant c && c.getValue() instanceof Integer intVal) {
 
 			if (isIntegerFittableInType(targetType, intVal)) {
 				Constant newConst = new Constant(targetType, intVal, loc);
 				return super.fwdBinarySemantics(interprocedural, state, left, newConst, expressions);
-			} else 
-				return state.bottomExecution(); // cannot assign: int constant doesn't fit target type
+			} else
+				return state.bottomExecution(); // cannot assign: int constant
+												// doesn't fit target type
 		}
 
 		for (Type rType : rightTypes) {
@@ -67,13 +68,19 @@ public class JavaAssignment extends Assignment {
 				result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, right, expressions));
 			else if (rType.canBeAssignedTo(left.getStaticType())) {
 				if (left.getStaticType().isReferenceType()) { // type-cast
-					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
-					BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeConv, TypeCast.INSTANCE, loc);
-					result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
+							left.getStaticType(), loc);
+					BinaryExpression castExpression = new BinaryExpression(left.getStaticType(), right, typeConv,
+							TypeCast.INSTANCE, loc);
+					result = result
+							.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
 				} else { // type-conv
-					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())), left.getStaticType(), loc);
-					BinaryExpression castExpression =  new BinaryExpression(left.getStaticType(), right, typeConv, TypeConv.INSTANCE, loc);
-					result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
+							left.getStaticType(), loc);
+					BinaryExpression castExpression = new BinaryExpression(left.getStaticType(), right, typeConv,
+							TypeConv.INSTANCE, loc);
+					result = result
+							.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
 				}
 			}
 		}
@@ -83,7 +90,9 @@ public class JavaAssignment extends Assignment {
 	/**
 	 * Checks if an integer fits in a given Java type (byte, short, or char).
 	 */
-	private boolean isIntegerFittableInType(Type type, int value) {
+	private boolean isIntegerFittableInType(
+			Type type,
+			int value) {
 		if (type instanceof JavaShortType)
 			return JavaShortType.fitsInType(value);
 		if (type instanceof JavaCharType)

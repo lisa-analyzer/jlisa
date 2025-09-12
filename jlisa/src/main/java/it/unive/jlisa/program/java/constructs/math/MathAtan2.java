@@ -19,7 +19,11 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 public class MathAtan2 extends it.unive.lisa.program.cfg.statement.BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public MathAtan2(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public MathAtan2(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "atan2", left, right);
 	}
 
@@ -31,26 +35,32 @@ public class MathAtan2 extends it.unive.lisa.program.cfg.statement.BinaryExpress
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		BinaryExpression atan2 = new BinaryExpression(
-				JavaDoubleType.INSTANCE, 
+				JavaDoubleType.INSTANCE,
 				left,
 				right,
-				JavaMathAtan2Operator.INSTANCE, 
+				JavaMathAtan2Operator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, atan2, originating);
 	}
 }

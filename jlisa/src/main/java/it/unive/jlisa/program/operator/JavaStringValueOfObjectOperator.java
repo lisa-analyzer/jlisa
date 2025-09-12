@@ -1,12 +1,11 @@
 package it.unive.jlisa.program.operator;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaStringValueOfObjectOperator implements StringOperator, UnaryOperator {
 
@@ -27,9 +26,11 @@ public class JavaStringValueOfObjectOperator implements StringOperator, UnaryOpe
 	public String toString() {
 		return "strvalueof";
 	}
-		
+
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> argument) {
 		return Collections.singleton(types.getStringType());
 	}
 }

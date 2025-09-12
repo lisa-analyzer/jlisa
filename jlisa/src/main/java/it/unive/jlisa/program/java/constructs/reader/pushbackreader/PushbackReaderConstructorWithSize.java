@@ -18,7 +18,12 @@ import it.unive.lisa.symbolic.value.PushAny;
 public class PushbackReaderConstructorWithSize extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public PushbackReaderConstructorWithSize(CFG cfg, CodeLocation location, Expression left, Expression middle, Expression right) {
+	public PushbackReaderConstructorWithSize(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression middle,
+			Expression right) {
 		super(cfg, location, "PushbackReader", left, middle, right);
 	}
 
@@ -30,21 +35,28 @@ public class PushbackReaderConstructorWithSize extends TernaryExpression impleme
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
-	
+
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression middle, SymbolicExpression right,
-			StatementStore<A> expressions) throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()), originating);
+			D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression left,
+					SymbolicExpression middle,
+					SymbolicExpression right,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
+				originating);
 	}
 }
-

@@ -21,7 +21,11 @@ import it.unive.lisa.type.Untyped;
 public class IntegerConstructor extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public IntegerConstructor(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public IntegerConstructor(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "Integer", left, right);
 	}
 
@@ -33,23 +37,28 @@ public class IntegerConstructor extends BinaryExpression implements PluggableSta
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression right, StatementStore<A> expressions)
-			throws SemanticException {
-		 GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-         AccessChild access = new AccessChild(JavaIntType.INSTANCE, left, var, getLocation());
-         return interprocedural.getAnalysis().assign(state, access, right, originating);
+			D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression left,
+					SymbolicExpression right,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		AccessChild access = new AccessChild(JavaIntType.INSTANCE, left, var, getLocation());
+		return interprocedural.getAnalysis().assign(state, access, right, originating);
 	}
 }

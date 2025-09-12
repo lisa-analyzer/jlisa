@@ -13,7 +13,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 
-
 /**
  * Continue statement in Java
  * 
@@ -23,7 +22,6 @@ import it.unive.lisa.util.datastructures.graph.GraphVisitor;
  */
 public class JavaContinue extends Expression {
 
-
 	/**
 	 * Builds the continue, happening at the given location in the program.
 	 * 
@@ -31,12 +29,16 @@ public class JavaContinue extends Expression {
 	 * @param location the location where this statement is defined within the
 	 *                     program
 	 */
-	public JavaContinue(CFG cfg, CodeLocation location) {
+	public JavaContinue(
+			CFG cfg,
+			CodeLocation location) {
 		super(cfg, location);
 	}
 
 	@Override
-	public <V> boolean accept(GraphVisitor<CFG, Statement, Edge, V> visitor, V tool) {
+	public <V> boolean accept(
+			GraphVisitor<CFG, Statement, Edge, V> visitor,
+			V tool) {
 		return visitor.visit(tool, getCFG(), this);
 	}
 
@@ -44,7 +46,7 @@ public class JavaContinue extends Expression {
 	public String toString() {
 		return "continue";
 	}
-	
+
 	@Override
 	public boolean continuesControlFlow() {
 		return true;
@@ -52,15 +54,18 @@ public class JavaContinue extends Expression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
-			InterproceduralAnalysis<A, D> interprocedural, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+					AnalysisState<A> entryState,
+					InterproceduralAnalysis<A, D> interprocedural,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		return entryState;
 	}
 
 	@Override
-	protected int compareSameClass(Statement o) {
+	protected int compareSameClass(
+			Statement o) {
 		return 0;
 	}
-
 
 }

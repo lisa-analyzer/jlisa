@@ -20,20 +20,26 @@ public class JavaBitwiseExclusiveOr extends it.unive.lisa.program.cfg.statement.
 		super(cfg, location, "^", inferType(left, right), left, right);
 	}
 
-	private static Type inferType(Expression left, Expression right) {
+	private static Type inferType(
+			Expression left,
+			Expression right) {
 		Type leftType = left.getStaticType();
 		Type rightType = right.getStaticType();
 
 		if (leftType.isNumericType() && rightType.isNumericType()) {
 			return leftType;
-		}
-		else return Untyped.INSTANCE;
+		} else
+			return Untyped.INSTANCE;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isNumericType))
 			return state.bottom();
@@ -52,7 +58,8 @@ public class JavaBitwiseExclusiveOr extends it.unive.lisa.program.cfg.statement.
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

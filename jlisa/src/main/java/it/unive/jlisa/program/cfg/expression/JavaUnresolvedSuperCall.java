@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -17,18 +14,28 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JavaUnresolvedSuperCall extends UnresolvedCall {
 
-	public JavaUnresolvedSuperCall(CFG cfg, SourceCodeLocation location, CallType instance, String qualifier, String name,
+	public JavaUnresolvedSuperCall(
+			CFG cfg,
+			SourceCodeLocation location,
+			CallType instance,
+			String qualifier,
+			String name,
 			Expression[] parameters) {
 		super(cfg, location, instance, qualifier, name, parameters);
 	}
-	
+
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, ExpressionSet[] params,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			ExpressionSet[] params,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		ClassUnit superClass = (ClassUnit) JavaClassType.lookup(getQualifier(), null).getUnit();
 		boolean resolved = false;
 
@@ -51,7 +58,8 @@ public class JavaUnresolvedSuperCall extends UnresolvedCall {
 		if (!resolved)
 			throw new SemanticException("Cannot resolved super method invocation");
 
-		JavaUnresolvedCall call = new JavaUnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE, superClass.getName(), getTargetName(), getSubExpressions());
+		JavaUnresolvedCall call = new JavaUnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE,
+				superClass.getName(), getTargetName(), getSubExpressions());
 		return call.forwardSemantics(state, interprocedural, expressions);
 	}
 

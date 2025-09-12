@@ -18,16 +18,19 @@ import it.unive.lisa.symbolic.value.Identifier;
 
 public class JavaThrow extends Throw {
 
-	public JavaThrow(CFG cfg, CodeLocation location, Expression expression) {
+	public JavaThrow(
+			CFG cfg,
+			CodeLocation location,
+			Expression expression) {
 		super(cfg, location, expression);
 	}
-	
+
 	@Override
 	public Statement withValue(
 			Expression value) {
 		return new JavaThrow(getCFG(), getLocation(), value);
 	}
-	
+
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,

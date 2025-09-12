@@ -23,7 +23,10 @@ import it.unive.lisa.type.Untyped;
 public class LongEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public LongEmptyConstructor(CFG cfg, CodeLocation location, Expression exp) {
+	public LongEmptyConstructor(
+			CFG cfg,
+			CodeLocation location,
+			Expression exp) {
 		super(cfg, location, "Long", exp);
 	}
 
@@ -35,26 +38,29 @@ public class LongEmptyConstructor extends UnaryExpression implements PluggableSt
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type longType = JavaLongType.INSTANCE;
 		Constant defaultLong = new Constant(longType, (long) 0, getLocation());
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(longType, expr, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, defaultLong , originating);
+		return interprocedural.getAnalysis().assign(state, access, defaultLong, originating);
 	}
 }

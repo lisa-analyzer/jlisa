@@ -27,33 +27,38 @@ public class JavaUnsignedShiftRight extends it.unive.lisa.program.cfg.statement.
 		super(cfg, location, ">>>", inferType(left, right), left, right);
 	}
 
-	private static Type inferType(Expression left, Expression right) {
+	private static Type inferType(
+			Expression left,
+			Expression right) {
 		Type leftType = left.getStaticType();
 
-        NumericType integerType = left.getProgram().getTypes().getIntegerType();
+		NumericType integerType = left.getProgram().getTypes().getIntegerType();
 		if (leftType.canBeAssignedTo(integerType))
 			return integerType;
-		
+
 		if (leftType.canBeAssignedTo(JavaLongType.INSTANCE))
 			return JavaLongType.INSTANCE;
-		
-		else return Untyped.INSTANCE;
+
+		else
+			return Untyped.INSTANCE;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression left,
-			SymbolicExpression right,
-			StatementStore<A> expressions)
+			D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression left,
+					SymbolicExpression right,
+					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(t -> t.isNumericType()))
 			return state.bottom();
-		
-		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType()) || t.canBeAssignedTo(JavaLongType.INSTANCE)))
+
+		if (analysis.getRuntimeTypesOf(state, left, this).stream()
+				.noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType())
+						|| t.canBeAssignedTo(JavaLongType.INSTANCE)))
 			return state.bottom();
 
 		return analysis.smallStepSemantics(
@@ -64,10 +69,12 @@ public class JavaUnsignedShiftRight extends it.unive.lisa.program.cfg.statement.
 						right,
 						it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight.INSTANCE,
 						getLocation()),
-				this);	}
+				this);
+	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

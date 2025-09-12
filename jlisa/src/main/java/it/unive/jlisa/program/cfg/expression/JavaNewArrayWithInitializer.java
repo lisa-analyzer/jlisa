@@ -25,38 +25,46 @@ import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 
-public class JavaNewArrayWithInitializer extends NaryExpression{
-	
-	public JavaNewArrayWithInitializer(CFG cfg, CodeLocation location,
-			Expression[] subExpressions, Type type) {
+public class JavaNewArrayWithInitializer extends NaryExpression {
+
+	public JavaNewArrayWithInitializer(
+			CFG cfg,
+			CodeLocation location,
+			Expression[] subExpressions,
+			Type type) {
 		super(cfg, location, "new", type, subExpressions);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
-	
+
 	@Override
 	public String toString() {
 		String params = "";
 		Expression[] exprs = getSubExpressions();
-		
-		for(int i = 0; i < exprs.length; ++i) {
-			
+
+		for (int i = 0; i < exprs.length; ++i) {
+
 			params += exprs[i].toString();
-			
-			if( i < exprs.length - 1) {
+
+			if (i < exprs.length - 1) {
 				params += ", ";
 			}
 		}
-		return "new " + getStaticType() + "{" +  params + "}"; 
+		return "new " + getStaticType() + "{" + params + "}";
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, ExpressionSet[] params, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					ExpressionSet[] params,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType refType = (JavaReferenceType) getStaticType();
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
@@ -79,24 +87,24 @@ public class JavaNewArrayWithInitializer extends NaryExpression{
 		tmp = analysis.assign(tmp, lenAccess, length, this);
 
 		int i = 0;
-		
-		for(ExpressionSet exprs : params){
+
+		for (ExpressionSet exprs : params) {
 
 			for (SymbolicExpression expr : exprs) {
-				
+
 				Variable var = new Variable(contentType, "" + i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
-					
-				AnalysisState<A> init = state.bottom();	
-					
+
+				AnalysisState<A> init = state.bottom();
+
 				init = init.lub(analysis.assign(tmp, access, expr, getEvaluationPredecessor()));
-				
+
 				tmp = init;
-				
+
 			}
-			
+
 			i += 1;
-		} 
+		}
 
 		getMetaVariables().add(array);
 

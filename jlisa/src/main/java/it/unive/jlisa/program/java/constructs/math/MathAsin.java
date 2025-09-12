@@ -19,7 +19,10 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 public class MathAsin extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public MathAsin(CFG cfg, CodeLocation location, Expression arg) {
+	public MathAsin(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "asin", arg);
 	}
 
@@ -31,26 +34,30 @@ public class MathAsin extends it.unive.lisa.program.cfg.statement.UnaryExpressio
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		UnaryExpression asin = new UnaryExpression(
-				JavaDoubleType.INSTANCE, 
-				expr, 
-				JavaMathAsinOperator.INSTANCE, 
+				JavaDoubleType.INSTANCE,
+				expr,
+				JavaMathAsinOperator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, asin, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

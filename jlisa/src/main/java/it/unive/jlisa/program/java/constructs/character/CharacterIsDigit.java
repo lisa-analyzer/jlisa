@@ -15,10 +15,15 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 
-public class CharacterIsDigit extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
+public class CharacterIsDigit extends it.unive.lisa.program.cfg.statement.UnaryExpression
+		implements
+		PluggableStatement {
 	protected Statement originating;
 
-	public CharacterIsDigit(CFG cfg, CodeLocation location, Expression arg) {
+	public CharacterIsDigit(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "isDigit", arg);
 	}
 
@@ -30,26 +35,30 @@ public class CharacterIsDigit extends it.unive.lisa.program.cfg.statement.UnaryE
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		UnaryExpression un = new UnaryExpression(
-				getProgram().getTypes().getBooleanType(), 
-				expr, 
-				JavaCharacterIsDigitOperator.INSTANCE, 
+				getProgram().getTypes().getBooleanType(),
+				expr,
+				JavaCharacterIsDigitOperator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

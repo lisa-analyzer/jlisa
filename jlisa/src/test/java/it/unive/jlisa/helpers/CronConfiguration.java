@@ -1,8 +1,7 @@
 package it.unive.jlisa.helpers;
 
-import java.util.List;
-
 import it.unive.lisa.conf.LiSAConfiguration;
+import java.util.List;
 
 /**
  * An extended {@link LiSAConfiguration} that also holds test configuration
@@ -28,7 +27,8 @@ public class CronConfiguration extends LiSAConfiguration {
 	public String testSubDir;
 
 	/**
-	 * The list of names of the Java source file to be searched in {@link #testDir}.
+	 * The list of names of the Java source file to be searched in
+	 * {@link #testDir}.
 	 */
 	public List<String> programFiles;
 

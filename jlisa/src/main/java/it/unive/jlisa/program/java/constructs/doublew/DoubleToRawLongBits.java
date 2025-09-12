@@ -19,7 +19,10 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 public class DoubleToRawLongBits extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public DoubleToRawLongBits(CFG cfg, CodeLocation location, Expression expr) {
+	public DoubleToRawLongBits(
+			CFG cfg,
+			CodeLocation location,
+			Expression expr) {
 		super(cfg, location, "doubleToRawLongBits", expr);
 	}
 
@@ -31,21 +34,27 @@ public class DoubleToRawLongBits extends UnaryExpression implements PluggableSta
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(JavaLongType.INSTANCE, expr, JavaDoubleToRawLongBitsOperator.INSTANCE, getLocation());
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaLongType.INSTANCE, expr, JavaDoubleToRawLongBitsOperator.INSTANCE, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}
 }

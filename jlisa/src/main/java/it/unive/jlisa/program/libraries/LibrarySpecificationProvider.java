@@ -11,19 +11,16 @@ import it.unive.lisa.program.CodeUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class LibrarySpecificationProvider {
-
 
 	public static final String LIBS_FOLDER = "/libraries/";
 	private static final String STDLIB_FILE = "stdlib.txt";
@@ -54,14 +51,15 @@ public class LibrarySpecificationProvider {
 
 		// Load other libraries
 		try (ScanResult scanResult = new ClassGraph().acceptPaths(LIBS_FOLDER).scan()) {
-			List<Pair<Runtime, Collection<Library>>> parsedLibs =
-					readLibraries(scanResult.getAllResources().getPaths());
+			List<Pair<Runtime,
+					Collection<Library>>> parsedLibs = readLibraries(scanResult.getAllResources().getPaths());
 			fillUnits(program, parsedLibs, root);
 			populateProgram(program, parsedLibs);
 		}
 	}
 
-	private static void loadStdlib(Program program) {
+	private static void loadStdlib(
+			Program program) {
 		var stdlib = readFile(LIBS_FOLDER + STDLIB_FILE);
 		var root = new AtomicReference<CompilationUnit>();
 		stdlib.getLeft().fillProgram(program, root);
@@ -78,7 +76,8 @@ public class LibrarySpecificationProvider {
 		LOADED_LIBS.clear();
 	}
 
-	private static List<Pair<Runtime, Collection<Library>>> readLibraries(List<String> paths) {
+	private static List<Pair<Runtime, Collection<Library>>> readLibraries(
+			List<String> paths) {
 		List<Pair<Runtime, Collection<Library>>> result = new ArrayList<>();
 		for (String path : paths) {
 			if (!path.endsWith("/" + STDLIB_FILE)) {
@@ -88,13 +87,18 @@ public class LibrarySpecificationProvider {
 		return result;
 	}
 
-	private static void fillUnits(Program program, List<Pair<Runtime, Collection<Library>>> parsedLibs, AtomicReference<CompilationUnit> root) {
+	private static void fillUnits(
+			Program program,
+			List<Pair<Runtime, Collection<Library>>> parsedLibs,
+			AtomicReference<CompilationUnit> root) {
 		for (Pair<Runtime, Collection<Library>> libs : parsedLibs) {
 			libs.getLeft().fillProgram(program, root);
 		}
 	}
 
-	private static void populateProgram(Program program, List<Pair<Runtime, Collection<Library>>> parsedLibs) {
+	private static void populateProgram(
+			Program program,
+			List<Pair<Runtime, Collection<Library>>> parsedLibs) {
 		for (Pair<Runtime, Collection<Library>> libs : parsedLibs) {
 			libs.getLeft().populateProgram(program, init, hierarchyRoot);
 			for (Library lib : libs.getValue()) {

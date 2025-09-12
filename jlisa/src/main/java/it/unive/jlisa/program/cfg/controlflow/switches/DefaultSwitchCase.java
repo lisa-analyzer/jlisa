@@ -22,7 +22,9 @@ public class DefaultSwitchCase {
 	 * @param entry the first node of {@code body}
 	 * @param body  the body associated with this switch-case
 	 */
-	public DefaultSwitchCase(SwitchDefault entry, Collection<Statement> body) {
+	public DefaultSwitchCase(
+			SwitchDefault entry,
+			Collection<Statement> body) {
 		this.body = body;
 		this.entry = entry;
 	}
@@ -37,9 +39,11 @@ public class DefaultSwitchCase {
 	}
 
 	/**
-	 * Yields the entry of the default switch case, i.e., the first node of its body.
+	 * Yields the entry of the default switch case, i.e., the first node of its
+	 * body.
 	 * 
-	 * @return the entry of the default switch case, i.e., the first node of its body
+	 * @return the entry of the default switch case, i.e., the first node of its
+	 *             body
 	 */
 	public SwitchDefault getEntry() {
 		return entry;
@@ -66,7 +70,8 @@ public class DefaultSwitchCase {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(
+			Object obj) {
 		if (this == obj)
 			return true;
 		if (!super.equals(obj))

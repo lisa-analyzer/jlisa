@@ -6,19 +6,21 @@ import it.unive.lisa.type.Untyped;
 
 public interface JavaNumericType extends NumericType {
 
-    default Type commonSupertype(Type other) {
-        if (!(other instanceof JavaNumericType)) {
-            return Untyped.INSTANCE;
-        }
-        return supertype(other.asNumericType());
-    }
+	default Type commonSupertype(
+			Type other) {
+		if (!(other instanceof JavaNumericType)) {
+			return Untyped.INSTANCE;
+		}
+		return supertype(other.asNumericType());
+	}
 
-    default boolean canBeAssignedTo(Type other) {
-        if (other.isUntyped()) {
-            return true;
-        }
-        return commonSupertype(other).equals(other);
-    }
+	default boolean canBeAssignedTo(
+			Type other) {
+		if (other.isUntyped()) {
+			return true;
+		}
+		return commonSupertype(other).equals(other);
+	}
 
     private static int distanceFromSmallest(JavaNumericType type) {
         if (type.is8Bits()) { // byte
