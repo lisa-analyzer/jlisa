@@ -5,7 +5,7 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class JavaNullType extends NullType {
-	
+
 	/**
 	 * Unique instance of {@link JavaNullType}.
 	 */
@@ -16,7 +16,8 @@ public class JavaNullType extends NullType {
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaNullType() {}
+	protected JavaNullType() {
+	}
 
 	@Override
 	public boolean canBeAssignedTo(

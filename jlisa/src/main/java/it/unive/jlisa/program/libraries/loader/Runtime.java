@@ -8,7 +8,6 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.NativeCFG;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -23,7 +22,8 @@ public class Runtime {
 	private final Collection<ClassDef> classes = new HashSet<>();
 	private final SourceCodeLocationManager locationManager;
 
-	public Runtime(SourceCodeLocationManager locationManager) {
+	public Runtime(
+			SourceCodeLocationManager locationManager) {
 		this.locationManager = locationManager;
 	}
 

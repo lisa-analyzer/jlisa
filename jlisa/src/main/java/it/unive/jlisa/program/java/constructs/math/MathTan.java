@@ -19,7 +19,10 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 public class MathTan extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public MathTan(CFG cfg, CodeLocation location, Expression arg) {
+	public MathTan(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "tan", arg);
 	}
 
@@ -31,26 +34,30 @@ public class MathTan extends it.unive.lisa.program.cfg.statement.UnaryExpression
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		UnaryExpression tan = new UnaryExpression(
-				JavaDoubleType.INSTANCE, 
-				expr, 
-				JavaMathTanOperator.INSTANCE, 
+				JavaDoubleType.INSTANCE,
+				expr,
+				JavaMathTanOperator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, tan, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

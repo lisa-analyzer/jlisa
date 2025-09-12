@@ -1,24 +1,24 @@
 package it.unive.jlisa.program.libraries;
 
-
 import it.unive.jlisa.antlr.LibraryDefinitionParser.*;
 import it.unive.jlisa.antlr.LibraryDefinitionParserBaseVisitor;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.libraries.loader.*;
 import it.unive.jlisa.program.libraries.loader.Runtime;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Collection;
 import java.util.LinkedList;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 
 	private final String file;
 	private final SourceCodeLocationManager locationManager;
+
 	public LibrarySpecificationParser(
 			String file) {
 		this.file = file;
-		this.locationManager = new SourceCodeLocationManager("$java_runtime" + file.substring(0, file.lastIndexOf('.')));
+		this.locationManager = new SourceCodeLocationManager(
+				"$java_runtime" + file.substring(0, file.lastIndexOf('.')));
 	}
 
 	@Override

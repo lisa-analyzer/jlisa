@@ -27,7 +27,10 @@ import it.unive.lisa.type.Untyped;
 public class DoubleToString extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public DoubleToString(CFG cfg, CodeLocation location, Expression expr) {
+	public DoubleToString(
+			CFG cfg,
+			CodeLocation location,
+			Expression expr) {
 		super(cfg, location, "doubleToRawLongBits", expr);
 	}
 
@@ -39,34 +42,41 @@ public class DoubleToString extends UnaryExpression implements PluggableStatemen
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-		
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+
 		Type stringType = getProgram().getTypes().getStringType();
-		
+
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		
+
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE,
-				expr, 
-				JavaDoubleToStringOperator.INSTANCE, 
+				expr,
+				JavaDoubleToStringOperator.INSTANCE,
 				getLocation());
-		
+
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",  new JavaReferenceType(stringType), new Expression[0]);
-		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",
+				new JavaReferenceType(stringType), new Expression[0]);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottom();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
@@ -75,7 +85,7 @@ public class DoubleToString extends UnaryExpression implements PluggableStatemen
 			tmp = tmp.lub(sem);
 		}
 
-		getMetaVariables().addAll(call.getMetaVariables());		
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());	
+		getMetaVariables().addAll(call.getMetaVariables());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 }

@@ -23,7 +23,9 @@ public class SwitchCase {
 	 * @param condition the switch-case condition
 	 * @param body      the body associated with this switch-case
 	 */
-	public SwitchCase(Expression condition, Collection<Statement> body) {
+	public SwitchCase(
+			Expression condition,
+			Collection<Statement> body) {
 		this.condition = condition;
 		this.body = body;
 	}
@@ -64,7 +66,8 @@ public class SwitchCase {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(
+			Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

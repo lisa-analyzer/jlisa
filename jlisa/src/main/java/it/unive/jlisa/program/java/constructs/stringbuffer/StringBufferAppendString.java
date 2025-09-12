@@ -24,7 +24,11 @@ import it.unive.lisa.type.Untyped;
 public class StringBufferAppendString extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBufferAppendString(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public StringBufferAppendString(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "append", left, right);
 	}
 
@@ -36,34 +40,40 @@ public class StringBufferAppendString extends BinaryExpression implements Plugga
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-		
+
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
 
-		it.unive.lisa.symbolic.value.BinaryExpression append = new it.unive.lisa.symbolic.value.BinaryExpression(stringType, accessLeft, accessRight, JavaStringAppendStringOperator.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression append = new it.unive.lisa.symbolic.value.BinaryExpression(
+				stringType, accessLeft, accessRight, JavaStringAppendStringOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, originating);
-		
+
 		return analysis.smallStepSemantics(result, left, originating);
 	}
 }

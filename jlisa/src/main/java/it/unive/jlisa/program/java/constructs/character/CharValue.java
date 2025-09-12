@@ -21,7 +21,10 @@ import it.unive.lisa.type.Untyped;
 public class CharValue extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public CharValue(CFG cfg, CodeLocation location, Expression expr) {
+	public CharValue(
+			CFG cfg,
+			CodeLocation location,
+			Expression expr) {
 		super(cfg, location, "charValue", expr);
 	}
 
@@ -33,22 +36,27 @@ public class CharValue extends UnaryExpression implements PluggableStatement {
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-		 GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-         AccessChild access = new AccessChild(JavaCharType.INSTANCE, expr, var, getLocation());
-         return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		AccessChild access = new AccessChild(JavaCharType.INSTANCE, expr, var, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
 	}
 }

@@ -11,23 +11,23 @@ import it.unive.lisa.program.language.resolution.ParameterMatchingStrategy;
 import it.unive.lisa.program.language.validation.ProgramValidationLogic;
 
 public class JavaLanguageFeatures extends LanguageFeatures {
-    @Override
-    public ParameterMatchingStrategy getMatchingStrategy() {
-        return JavaLikeMatchingStrategy.INSTANCE;
-    }
+	@Override
+	public ParameterMatchingStrategy getMatchingStrategy() {
+		return JavaLikeMatchingStrategy.INSTANCE;
+	}
 
-    @Override
-    public HierarchyTraversalStrategy getTraversalStrategy() {
-        return SingleInheritanceTraversalStrategy.INSTANCE;
-    }
+	@Override
+	public HierarchyTraversalStrategy getTraversalStrategy() {
+		return SingleInheritanceTraversalStrategy.INSTANCE;
+	}
 
-    @Override
-    public ParameterAssigningStrategy getAssigningStrategy() {
-        return OrderPreservingAssigningStrategy.INSTANCE;
-    }
+	@Override
+	public ParameterAssigningStrategy getAssigningStrategy() {
+		return OrderPreservingAssigningStrategy.INSTANCE;
+	}
 
-    @Override
-    public ProgramValidationLogic getProgramValidationLogic() {
-        return new JavaValidationLogic();
-    }
+	@Override
+	public ProgramValidationLogic getProgramValidationLogic() {
+		return new JavaValidationLogic();
+	}
 }

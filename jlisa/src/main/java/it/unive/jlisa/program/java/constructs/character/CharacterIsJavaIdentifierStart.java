@@ -15,10 +15,15 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 
-public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
+public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.statement.UnaryExpression
+		implements
+		PluggableStatement {
 	protected Statement originating;
 
-	public CharacterIsJavaIdentifierStart(CFG cfg, CodeLocation location, Expression arg) {
+	public CharacterIsJavaIdentifierStart(
+			CFG cfg,
+			CodeLocation location,
+			Expression arg) {
 		super(cfg, location, "isJavaIdentifierStart", arg);
 	}
 
@@ -30,26 +35,30 @@ public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.st
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		UnaryExpression isJavaId = new UnaryExpression(
-				getProgram().getTypes().getBooleanType(), 
-				expr, 
-				JavaCharacterIsJavaIdentifierStartOperator.INSTANCE, 
+				getProgram().getTypes().getBooleanType(),
+				expr,
+				JavaCharacterIsJavaIdentifierStartOperator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 }

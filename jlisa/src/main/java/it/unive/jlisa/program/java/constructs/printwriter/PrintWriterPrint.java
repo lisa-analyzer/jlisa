@@ -17,7 +17,9 @@ import it.unive.lisa.program.cfg.statement.Statement;
 public class PrintWriterPrint extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public PrintWriterPrint(CFG cfg, CodeLocation location) {
+	public PrintWriterPrint(
+			CFG cfg,
+			CodeLocation location) {
 		super(cfg, location, "println");
 	}
 
@@ -29,19 +31,25 @@ public class PrintWriterPrint extends NaryExpression implements PluggableStateme
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
-	
+
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, ExpressionSet[] params, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					ExpressionSet[] params,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		// nothing to do
 		return state;
 	}

@@ -18,7 +18,9 @@ import it.unive.lisa.symbolic.value.PushAny;
 public class AssertionErrorEmptyConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public AssertionErrorEmptyConstructor(CFG cfg, CodeLocation location) {
+	public AssertionErrorEmptyConstructor(
+			CFG cfg,
+			CodeLocation location) {
 		super(cfg, location, "AssertionError");
 	}
 
@@ -30,19 +32,26 @@ public class AssertionErrorEmptyConstructor extends NaryExpression implements Pl
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
-	
+
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, ExpressionSet[] params, StatementStore<A> expressions) throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()), originating);
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					ExpressionSet[] params,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
+				originating);
 	}
 }

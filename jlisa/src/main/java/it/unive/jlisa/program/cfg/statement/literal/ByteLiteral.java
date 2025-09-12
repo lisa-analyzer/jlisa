@@ -5,12 +5,11 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 
-
 public class ByteLiteral extends Literal<Integer> {
-    public ByteLiteral(
-            CFG cfg,
-            CodeLocation location,
-            int value) {
-        super(cfg, location, value, JavaByteType.INSTANCE);
-    }
+	public ByteLiteral(
+			CFG cfg,
+			CodeLocation location,
+			int value) {
+		super(cfg, location, value, JavaByteType.INSTANCE);
+	}
 }

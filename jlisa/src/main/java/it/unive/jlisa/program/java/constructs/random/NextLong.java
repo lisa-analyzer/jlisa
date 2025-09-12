@@ -16,10 +16,13 @@ import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.PushAny;
 
-public  class NextLong extends UnaryExpression implements PluggableStatement {
+public class NextLong extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public NextLong(CFG cfg, CodeLocation location, Expression param) {
+	public NextLong(
+			CFG cfg,
+			CodeLocation location,
+			Expression param) {
 		super(cfg, location, "nextLong", param);
 	}
 
@@ -31,19 +34,26 @@ public  class NextLong extends UnaryExpression implements PluggableStatement {
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
-
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaLongType.INSTANCE, getLocation()), originating);
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushAny(JavaLongType.INSTANCE, getLocation()), originating);
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 }

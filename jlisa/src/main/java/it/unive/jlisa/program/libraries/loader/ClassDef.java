@@ -9,7 +9,6 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.NativeCFG;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;

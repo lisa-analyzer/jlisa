@@ -18,10 +18,13 @@ import it.unive.lisa.symbolic.value.PushAny;
 public class ArithmeticExceptionConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public ArithmeticExceptionConstructor(CFG cfg, CodeLocation location, Expression... params) {
+	public ArithmeticExceptionConstructor(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
 		super(cfg, location, "ArithmeticException", params);
 	}
-	
+
 	public static ArithmeticExceptionConstructor build(
 			CFG cfg,
 			CodeLocation location,
@@ -33,19 +36,24 @@ public class ArithmeticExceptionConstructor extends NaryExpression implements Pl
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, ExpressionSet[] params,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			ExpressionSet[] params,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
 				originating);
 	}

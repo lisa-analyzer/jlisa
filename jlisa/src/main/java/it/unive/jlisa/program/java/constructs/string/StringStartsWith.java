@@ -20,37 +20,44 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringStartsWith extends BinaryExpression implements PluggableStatement{
+public class StringStartsWith extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	
-	protected StringStartsWith(CFG cfg, CodeLocation location, Expression left,
+	protected StringStartsWith(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
 			Expression right) {
 		super(cfg, location, "startsWith", left, right);
 	}
-	
+
 	public static StringStartsWith build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
 		return new StringStartsWith(cfg, location, params[0], params[1]);
 	}
-	
+
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
@@ -59,14 +66,14 @@ public class StringStartsWith extends BinaryExpression implements PluggableState
 
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
-		
+
 		it.unive.lisa.symbolic.value.BinaryExpression startsWith = new it.unive.lisa.symbolic.value.BinaryExpression(
-				getProgram().getTypes().getBooleanType(), 
-				accessLeft, 
-				accessRight, 
-				JavaStringStartsWithOperator.INSTANCE, 
+				getProgram().getTypes().getBooleanType(),
+				accessLeft,
+				accessRight,
+				JavaStringStartsWithOperator.INSTANCE,
 				getLocation());
-		
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, startsWith, originating);
 	}
 

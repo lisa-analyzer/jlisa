@@ -24,7 +24,12 @@ import it.unive.lisa.type.Untyped;
 public class StringBufferInsertChar extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBufferInsertChar(CFG cfg, CodeLocation location, Expression left,  Expression middle, Expression right) {
+	public StringBufferInsertChar(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression middle,
+			Expression right) {
 		super(cfg, location, "insert", left, middle, right);
 	}
 
@@ -32,24 +37,29 @@ public class StringBufferInsertChar extends TernaryExpression implements Pluggab
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBufferInsertChar(cfg, location, params[0], params[1],  params[2]);
+		return new StringBufferInsertChar(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression middle, SymbolicExpression right, StatementStore<A> expressions)
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
@@ -58,10 +68,11 @@ public class StringBufferInsertChar extends TernaryExpression implements Pluggab
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		it.unive.lisa.symbolic.value.TernaryExpression append = new it.unive.lisa.symbolic.value.TernaryExpression(stringType, accessLeft, middle, right, JavaStringInsertCharOperator.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.TernaryExpression append = new it.unive.lisa.symbolic.value.TernaryExpression(
+				stringType, accessLeft, middle, right, JavaStringInsertCharOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, originating);
-		
+
 		return analysis.smallStepSemantics(result, left, originating);
 	}
 }

@@ -1,13 +1,5 @@
 package it.unive.jlisa.program.type;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -33,211 +25,225 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * A type representing an  array defined in an Java program. ArrayTypes are
+ * A type representing an array defined in an Java program. ArrayTypes are
  * instances of {@link it.unive.lisa.type.ArrayType}, have a {@link Type} and a
  * dimension. To ensure uniqueness of ArrayType objects,
  * {@link #lookup(Type, int)} must be used to retrieve existing instances (or
  * automatically create one if no matching instance exists).
- *
  */
 public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
-    private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
+	/**
+	 * byte[]*
+	 */
+	public static JavaReferenceType BYTE_ARRAY = new JavaReferenceType(new JavaArrayType(JavaByteType.INSTANCE, 1));
 
-    /**
-     * Clears the cache of {@link JavaArrayType}s created up to now.
-     */
-    public static void clearAll() {
-        types.clear();
-    }
+	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
 
-    /**
-     * Yields all the {@link JavaArrayType}s defined up to now.
-     *
-     * @return the collection of all the array types
-     */
-    public static Collection<JavaArrayType> all() {
-        return types.values();
-    }
+	/**
+	 * Clears the cache of {@link JavaArrayType}s created up to now.
+	 */
+	public static void clearAll() {
+		types.clear();
+	}
 
-    /**
-     * Yields a unique instance (either an existing one or a fresh one) of
-     * {@link JavaArrayType} representing an array with the given {@code base} type
-     * and the given {@code dimensions}.
-     *
-     * @param base       the base type of the array
-     * @param dimensions the number of dimensions of this array
-     *
-     * @return the unique instance of {@link JavaArrayType} representing the class
-     *             with the given name
-     */
-    public static JavaArrayType lookup(
-            Type base,
-            int dimensions) {
-        return types.computeIfAbsent(Pair.of(base, dimensions), x -> new JavaArrayType(base, dimensions));
-    }
+	/**
+	 * Yields all the {@link JavaArrayType}s defined up to now.
+	 *
+	 * @return the collection of all the array types
+	 */
+	public static Collection<JavaArrayType> all() {
+		return types.values();
+	}
 
-    private final Type base;
+	/**
+	 * Yields a unique instance (either an existing one or a fresh one) of
+	 * {@link JavaArrayType} representing an array with the given {@code base}
+	 * type and the given {@code dimensions}.
+	 *
+	 * @param base       the base type of the array
+	 * @param dimensions the number of dimensions of this array
+	 *
+	 * @return the unique instance of {@link JavaArrayType} representing the
+	 *             class with the given name
+	 */
+	public static JavaArrayType lookup(
+			Type base,
+			int dimensions) {
+		return types.computeIfAbsent(Pair.of(base, dimensions), x -> new JavaArrayType(base, dimensions));
+	}
 
-    private final int dimensions;
+	private final Type base;
 
-    private JavaArrayType(
-            Type base,
-            int dimensions) {
-        this.base = base;
-        if (dimensions < 0)
-            throw new IllegalArgumentException("Cannot create an array type with negative dimensions");
-        this.dimensions = dimensions;
-    }
+	private final int dimensions;
 
-    @Override
-    public final boolean canBeAssignedTo(
-            Type other) {
-    	if (other instanceof JavaArrayType)
-    		return getInnerType().canBeAssignedTo(other.asArrayType().getInnerType());
-    	return other.equals(JavaClassType.getObjectType());
-    }
+	private JavaArrayType(
+			Type base,
+			int dimensions) {
+		this.base = base;
+		if (dimensions < 0)
+			throw new IllegalArgumentException("Cannot create an array type with negative dimensions");
+		this.dimensions = dimensions;
+	}
 
-    @Override
-    public Type commonSupertype(
-            Type other) {
-        if (canBeAssignedTo(other))
-            return other;
+	@Override
+	public final boolean canBeAssignedTo(
+			Type other) {
+		if (other instanceof JavaArrayType)
+			return getInnerType().canBeAssignedTo(other.asArrayType().getInnerType());
+		return other.equals(JavaClassType.getObjectType());
+	}
 
-        if (other.canBeAssignedTo(this))
-            return this;
+	@Override
+	public Type commonSupertype(
+			Type other) {
+		if (canBeAssignedTo(other))
+			return other;
 
-        if (other.isNullType())
-            return this;
+		if (other.canBeAssignedTo(this))
+			return this;
 
-        if (!other.isArrayType())
-            return Untyped.INSTANCE;
+		if (other.isNullType())
+			return this;
 
-        // TODO not sure about this
-        return getInnerType().commonSupertype(other.asArrayType().getInnerType());
-    }
+		if (!other.isArrayType())
+			return Untyped.INSTANCE;
 
-    @Override
-    public String toString() {
-        return base + "[]".repeat(dimensions);
-    }
+		// TODO not sure about this
+		return getInnerType().commonSupertype(other.asArrayType().getInnerType());
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((base == null) ? 0 : base.hashCode());
-        result = prime * result + dimensions;
-        return result;
-    }
+	@Override
+	public String toString() {
+		return base + "[]".repeat(dimensions);
+	}
 
-    @Override
-    public boolean equals(
-            Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        JavaArrayType other = (JavaArrayType) obj;
-        if (base == null) {
-            if (other.base != null)
-                return false;
-        } else if (!base.equals(other.base))
-            return false;
-        if (dimensions != other.dimensions)
-            return false;
-        return true;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((base == null) ? 0 : base.hashCode());
+		result = prime * result + dimensions;
+		return result;
+	}
 
-    @Override
-    public Type getInnerType() {
-        if (dimensions <= 1)
-            return base;
-        return lookup(base, dimensions - 1);
-    }
+	@Override
+	public boolean equals(
+			Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JavaArrayType other = (JavaArrayType) obj;
+		if (base == null) {
+			if (other.base != null)
+				return false;
+		} else if (!base.equals(other.base))
+			return false;
+		if (dimensions != other.dimensions)
+			return false;
+		return true;
+	}
 
-    @Override
-    public Type getBaseType() {
-        return base;
-    }
+	@Override
+	public Type getInnerType() {
+		if (dimensions <= 1)
+			return base;
+		return lookup(base, dimensions - 1);
+	}
 
-    @Override
-    public int getDimensions() {
-        return dimensions;
-    }
+	@Override
+	public Type getBaseType() {
+		return base;
+	}
 
-    @Override
-    public Set<Type> allInstances(
-            TypeSystem types) {
-        return Collections.singleton(this);
-    }
-    
-    @Override
-    public Expression defaultValue(CFG cfg, CodeLocation location) {
-    	return new NullLiteral(cfg, location);
-    }
+	@Override
+	public int getDimensions() {
+		return dimensions;
+	}
 
-    @Override
-    public Expression unknownValue(
-            CFG cfg,
-            CodeLocation location) {
-        return new DefaultParamInitialization(cfg, location, this) {
-            @Override
-            public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
-                    AnalysisState<A> entryState,
-                    InterproceduralAnalysis<A, D> interprocedural,
-                    StatementStore<A> expressions)
-                    throws SemanticException {
-                Type type = getStaticType();
-                MemoryAllocation alloc = new MemoryAllocation(type, getLocation(), false);
-                Analysis<A, D> analysis = interprocedural.getAnalysis();
-                AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
-                ExpressionSet allocExps = allocSt.getExecutionExpressions();
+	@Override
+	public Set<Type> allInstances(
+			TypeSystem types) {
+		return Collections.singleton(this);
+	}
 
-                AnalysisState<A> initSt = entryState.bottom();
-                for (SymbolicExpression allocExp : allocExps) {
-                    AccessChild len = new AccessChild(
-                            JavaIntType.INSTANCE,
-                            allocExp,
-                            new Variable(Untyped.INSTANCE, "len", getLocation()),
-                            getLocation());
+	@Override
+	public Expression defaultValue(
+			CFG cfg,
+			CodeLocation location) {
+		return new NullLiteral(cfg, location);
+	}
 
-                    // TODO fix when we'll support multidimensional arrays
-                    // len > 0 
-                    Constant zero = new Constant(JavaIntType.INSTANCE, 0, getLocation());
+	@Override
+	public Expression unknownValue(
+			CFG cfg,
+			CodeLocation location) {
+		return new DefaultParamInitialization(cfg, location, this) {
+			@Override
+			public <A extends AbstractLattice<A>,
+					D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+							AnalysisState<A> entryState,
+							InterproceduralAnalysis<A, D> interprocedural,
+							StatementStore<A> expressions)
+							throws SemanticException {
+				Type type = getStaticType();
+				MemoryAllocation alloc = new MemoryAllocation(type, getLocation(), false);
+				Analysis<A, D> analysis = interprocedural.getAnalysis();
+				AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
+				ExpressionSet allocExps = allocSt.getExecutionExpressions();
+
+				AnalysisState<A> initSt = entryState.bottom();
+				for (SymbolicExpression allocExp : allocExps) {
+					AccessChild len = new AccessChild(
+							JavaIntType.INSTANCE,
+							allocExp,
+							new Variable(Untyped.INSTANCE, "len", getLocation()),
+							getLocation());
+
+					// TODO fix when we'll support multidimensional arrays
+					// len > 0
+					Constant zero = new Constant(JavaIntType.INSTANCE, 0, getLocation());
 					Variable v = new Variable(JavaIntType.INSTANCE, "v", getLocation());
-					BinaryExpression constraint = new BinaryExpression(Untyped.INSTANCE, zero, v, ComparisonLe.INSTANCE, location);
-					
-					initSt = initSt.lub(analysis.assign(allocSt, len, new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
-                }
+					BinaryExpression constraint = new BinaryExpression(Untyped.INSTANCE, zero, v, ComparisonLe.INSTANCE,
+							location);
 
-                AnalysisState<A> refSt = entryState.bottom();
-                for (SymbolicExpression loc : allocSt.getExecutionExpressions()) {
-                    JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
-                    HeapReference ref = new HeapReference(t, loc, getLocation());
-                    AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
-                    refSt = refSt.lub(refSem);
-                }
+					initSt = initSt.lub(analysis.assign(allocSt, len,
+							new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
+				}
 
-                return refSt;
-            }
+				AnalysisState<A> refSt = entryState.bottom();
+				for (SymbolicExpression loc : allocSt.getExecutionExpressions()) {
+					JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
+					HeapReference ref = new HeapReference(t, loc, getLocation());
+					AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
+					refSt = refSt.lub(refSem);
+				}
 
-            @Override
-            public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> backwardSemantics(
-                    AnalysisState<A> exitState,
-                    InterproceduralAnalysis<A, D> interprocedural,
-                    StatementStore<A> expressions)
-                    throws SemanticException {
-                // TODO implement this when backward analysis will be out of
-                // beta
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
+				return refSt;
+			}
+
+			@Override
+			public <A extends AbstractLattice<A>,
+					D extends AbstractDomain<A>> AnalysisState<A> backwardSemantics(
+							AnalysisState<A> exitState,
+							InterproceduralAnalysis<A, D> interprocedural,
+							StatementStore<A> expressions)
+							throws SemanticException {
+				// TODO implement this when backward analysis will be out of
+				// beta
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
 }

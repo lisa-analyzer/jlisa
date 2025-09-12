@@ -7,11 +7,13 @@ import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.type.BoolType;
 
 public class JavaBooleanType extends BoolType {
-	
+
 	public static final JavaBooleanType INSTANCE = new JavaBooleanType();
 
 	@Override
-	public Expression defaultValue(CFG cfg, CodeLocation location) {
+	public Expression defaultValue(
+			CFG cfg,
+			CodeLocation location) {
 		return new FalseLiteral(cfg, location);
 	}
 }

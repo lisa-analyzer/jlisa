@@ -30,24 +30,32 @@ import it.unive.lisa.type.Untyped;
 
 public class JavaArrayAccess extends BinaryExpression {
 
-
-	public JavaArrayAccess(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public JavaArrayAccess(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "[]", left, right);
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {		
-		if (!left.getStaticType().isReferenceType() || !left.getStaticType().asReferenceType().getInnerType().isArrayType())
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		if (!left.getStaticType().isReferenceType()
+				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
 			return state.bottom();
 
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
-		HeapDereference container = new HeapDereference(arrayType, left, getLocation()); 		    	
+		HeapDereference container = new HeapDereference(arrayType, left, getLocation());
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
 		AccessChild lenAccess = new AccessChild(Untyped.INSTANCE, container, lenProperty, getLocation());
-		Analysis<A, D> analysis = interprocedural.getAnalysis();        
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		it.unive.lisa.symbolic.value.BinaryExpression bin = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE, right, lenAccess, ComparisonGe.INSTANCE, getLocation());
 
@@ -55,19 +63,22 @@ public class JavaArrayAccess extends BinaryExpression {
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException", oonExc.getReference(), new Expression[0]);
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
+					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			state = analysis.assign(state, throwVar,
+					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oonExc.getReference(), this));
+			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+					new Error(oonExc.getReference(), this));
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
 			return analysis.smallStepSemantics(state, access, this);
@@ -77,31 +88,35 @@ public class JavaArrayAccess extends BinaryExpression {
 
 			// builds the exception
 			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException", oobExc.getReference(), new Expression[0]);
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
+					oobExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			state = analysis.assign(state, throwVar,
+					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oobExc.getReference(), this));
+			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+					new Error(oobExc.getReference(), this));
 
 			return noExceptionState.lub(exceptionState);
 		}
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 
 	@Override
 	public String toString() {
-		return getLeft() + "[" + getRight() +"]";
+		return getLeft() + "[" + getRight() + "]";
 	}
 }

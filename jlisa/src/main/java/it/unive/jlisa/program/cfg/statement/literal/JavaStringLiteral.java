@@ -36,10 +36,10 @@ public class JavaStringLiteral extends Literal<String> {
 	}
 
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
-			AnalysisState<A> entryState,
-			InterproceduralAnalysis<A, D> interprocedural,
-			StatementStore<A> expressions)
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+					AnalysisState<A> entryState,
+					InterproceduralAnalysis<A, D> interprocedural,
+					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		Type stringType = getProgram().getTypes().getStringType();
@@ -47,17 +47,19 @@ public class JavaStringLiteral extends Literal<String> {
 
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "String", reftype, new Expression[0]);
-		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0], expressions);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = entryState.bottom();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, access, new Constant(stringType, getValue(), getLocation()), this);
+			AnalysisState<A> sem = analysis.assign(callState, access,
+					new Constant(stringType, getValue(), getLocation()), this);
 			tmp = tmp.lub(sem);
 		}
-		
-		getMetaVariables().addAll(call.getMetaVariables());		
+
+		getMetaVariables().addAll(call.getMetaVariables());
 		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 }

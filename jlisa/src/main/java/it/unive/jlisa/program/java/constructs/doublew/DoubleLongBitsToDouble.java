@@ -19,7 +19,10 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 public class DoubleLongBitsToDouble extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public DoubleLongBitsToDouble(CFG cfg, CodeLocation location, Expression expr) {
+	public DoubleLongBitsToDouble(
+			CFG cfg,
+			CodeLocation location,
+			Expression expr) {
 		super(cfg, location, "longBitsToDouble", expr);
 	}
 
@@ -31,20 +34,25 @@ public class DoubleLongBitsToDouble extends UnaryExpression implements Pluggable
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE,
 				expr,

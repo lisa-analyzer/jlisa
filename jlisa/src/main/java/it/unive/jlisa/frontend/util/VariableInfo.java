@@ -1,16 +1,19 @@
 package it.unive.jlisa.frontend.util;
 
-import java.util.Objects;
-
 import it.unive.lisa.util.frontend.LocalVariableTracker.LocalVariable;
+import java.util.Objects;
 
 public class VariableInfo {
 	String name;
 	LocalVariable localVariable;
-	public VariableInfo(String name, LocalVariable localVariable) {
+
+	public VariableInfo(
+			String name,
+			LocalVariable localVariable) {
 		this.name = name;
 		this.localVariable = localVariable;
 	}
+
 	public String getName() {
 		return name;
 	}
@@ -18,12 +21,15 @@ public class VariableInfo {
 	public LocalVariable getLocalVariable() {
 		return localVariable;
 	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(localVariable, name);
 	}
+
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(
+			Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

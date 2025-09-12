@@ -6,7 +6,11 @@ import it.unive.lisa.program.cfg.CodeLocation;
 
 public class EnumUnit extends ClassUnit {
 
-	public EnumUnit(CodeLocation location, Program program, String name, boolean sealed) {
+	public EnumUnit(
+			CodeLocation location,
+			Program program,
+			String name,
+			boolean sealed) {
 		super(location, program, name, sealed);
 	}
 }

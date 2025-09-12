@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import java.util.Set;
-
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -22,6 +20,7 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.Set;
 
 public class JavaUnresolvedCall extends UnresolvedCall {
 
@@ -60,8 +59,11 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, ExpressionSet[] params,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			ExpressionSet[] params,
+			StatementStore<A> expressions)
+			throws SemanticException {
 
 		// get receiver
 		ExpressionSet receiver = params[0];
@@ -71,21 +73,24 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		for (SymbolicExpression rec : receiver) {
 			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, this);
 			for (Type recType : types) {
-				if (recType.isPointerType())  {
+				if (recType.isPointerType()) {
 					Type inner = recType.asPointerType().getInnerType();
 					if (inner.isNullType()) {
 						// builds the exception
 						JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
-						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException", npeType.getReference(), new Expression[0]);
+						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException",
+								npeType.getReference(), new Expression[0]);
 						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-						
+
 						// assign exception to variable thrower
 						CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-						state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-						
+						state = analysis.assign(state, throwVar,
+								state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
 						// deletes the receiver of the constructor
 						state = state.forgetIdentifiers(call.getMetaVariables(), this);
-						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(npeType.getReference(), this)));
+						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+								new Error(npeType.getReference(), this)));
 						continue;
 					} else if (!inner.isUnitType())
 						continue;
@@ -96,5 +101,5 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		}
 
 		return result;
-	}	
+	}
 }
