@@ -601,7 +601,16 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(QualifiedName node) {
 		String targetName = node.getName().getIdentifier();
-
+		
+		// need to resolve recursively
+		if (node.getQualifier() instanceof QualifiedName) {
+			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker);
+			node.getQualifier().accept(visitor);
+			Expression expr = visitor.getExpression();
+			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr, node.getName().getIdentifier());
+			return false;
+		}
+		
 		// FIXME: we are currently taking just the last name (the true name of the unit)
 		String unitName;
 		Name lastName = node.getQualifier();

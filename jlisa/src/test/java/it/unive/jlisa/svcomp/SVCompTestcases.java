@@ -189,6 +189,30 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
+	@Test
+	public void StringValueOf05_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf05", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void StringContains02_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringContains02", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void ArithmeticException6_test()  throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ArithmeticException6", 
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+	
 	// FIXME: need equalsIgnoreCase and regionMatches
 	@Test
 	public void StringCompare01_test()  throws IOException {

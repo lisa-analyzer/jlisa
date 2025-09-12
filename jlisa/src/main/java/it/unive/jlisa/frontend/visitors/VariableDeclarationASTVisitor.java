@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.ArrayType;
@@ -20,6 +21,7 @@ public class VariableDeclarationASTVisitor extends JavaASTVisitor {
         TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
         node.getType().accept(visitor);
         Type type = visitor.getType();
+        type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
         if (node.getExtraDimensions() != 0) {
             if (type instanceof ArrayType) {
                 ArrayType arrayType = (ArrayType) type;
@@ -29,6 +31,9 @@ public class VariableDeclarationASTVisitor extends JavaASTVisitor {
                 type = JavaArrayType.lookup(type, node.getExtraDimensions());
             }
         }
+        
+        type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
+
         String identifier = node.getName().getIdentifier();
         //TODO annotations
         Annotations annotations = new Annotations();

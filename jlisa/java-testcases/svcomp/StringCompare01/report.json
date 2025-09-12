@@ -1,42 +1,42 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':17:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':21:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':21:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':25:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':25:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':26:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':26:9] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   }, {
-    "message" : "['Main.java':28:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':28:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':30:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':30:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':32:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':32:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':34:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':34:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':36:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':36:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':40:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':40:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':41:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':41:9] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   }, {
-    "message" : "['Main.java':45:4] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':45:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':46:9] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':46:9] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "report.json", "void_Main.main(String_[]_args).json" ],
+  "files" : [ "report.json", "void_Main.main(String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "118ms",
-    "end" : "2025-09-11T18:23:33.661+02:00",
+    "duration" : "18ms",
+    "end" : "2025-09-12T12:05:49.648+02:00",
     "expressions" : "104",
     "files" : "1",
     "globals" : "6",
     "members" : "126",
     "programs" : "1",
-    "start" : "2025-09-11T18:23:33.543+02:00",
+    "start" : "2025-09-12T12:05:49.630+02:00",
     "statements" : "46",
     "units" : "80",
     "version" : "0.1",
