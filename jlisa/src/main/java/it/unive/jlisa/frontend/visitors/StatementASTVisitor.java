@@ -57,6 +57,7 @@ import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.JavaThrow;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
@@ -900,7 +901,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 		
 		JavaClassType npeType = JavaClassType.lookup("NullPointerException", null);
-		Statement nullPointerTrigger = new Throw(cfg, syntheticLocMan.nextLocation(),
+		Statement nullPointerTrigger = new JavaThrow(cfg, syntheticLocMan.nextLocation(),
 				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException", 
 						new JavaReferenceType(npeType), 
 						new JavaStringLiteral(cfg, 
@@ -1040,7 +1041,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
 		node.getExpression().accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();
-		Throw th = new Throw(cfg, getSourceCodeLocation(node), expr);
+		Throw th = new JavaThrow(cfg, getSourceCodeLocation(node), expr);
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(th);
@@ -1162,7 +1163,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		
 		// exception param
 		Expression param = paramVisitor.getExpression();
-
+		VariableRef v = new VariableRef(param.getCFG(), param.getLocation(), ((VariableRef) param).getName(), type);
+		
 		StatementASTVisitor catchBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit, this.cfg, this.control, this.tracker);
 		node.getBody().accept(catchBody);
 		// body of the catch clause
@@ -1170,11 +1172,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 
 		CatchBlock catchBlock = new CatchBlock(
-				(VariableRef) param,
+				v,
 				new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
 				type);
 
-		tracker.addVariable(param.toString(), param, new Annotations());
+		tracker.addVariable(v.toString(), v, new Annotations());
 		tracker.exitScope(body.getEnd());
 		this.clBlock = catchBlock;
 		this.block = body;
