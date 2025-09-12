@@ -19,6 +19,7 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
@@ -27,6 +28,7 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
@@ -126,11 +128,11 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 					JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
 					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException", npeType.getReference(), new Expression[0]);
 					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-					
+
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
 					state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-					
+
 					// deletes the receiver of the constructor
 					// and all the metavariables from subexpressions
 					state = state.forgetIdentifiers(call.getMetaVariables(), this);
@@ -151,8 +153,18 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 						Global global = cu.getInstanceGlobal(target, false);
 						if (global != null) {
 							GlobalVariable var = global.toSymbolicVariable(loc);
-							AccessChild access = new AccessChild(var.getStaticType(), container, var, loc);
-							result = result.lub(analysis.smallStepSemantics(state, access, this));
+							AccessChild access = new AccessChild(global.getStaticType(), container, var, loc);
+							if (getParentStatement() instanceof  Assignment) {
+								Assignment asg = (Assignment) getParentStatement();
+								if (asg.getLeft().equals(this))
+									result = result.lub(analysis.smallStepSemantics(state, access, this));
+								else
+									result = result.lub(analysis.smallStepSemantics(state, new HeapReference(global.getStaticType(), access, loc), this));
+							} else
+								if (global.getStaticType().isPointerType())
+									result = result.lub(analysis.smallStepSemantics(state, new HeapReference(global.getStaticType(), access, loc), this));
+								else
+									result = result.lub(analysis.smallStepSemantics(state, access, this));
 							atLeastOne = true;
 						}
 					}
