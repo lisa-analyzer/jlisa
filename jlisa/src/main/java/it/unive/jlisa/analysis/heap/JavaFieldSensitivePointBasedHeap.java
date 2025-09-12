@@ -51,16 +51,7 @@ FieldSensitivePointBasedHeap {
 					throws SemanticException {
 		return expression.accept(rewriter, state, pp);
 	}
-
-	// FIXME: this method can be removed with the new snapshot
-	@Override
-	public Pair<HeapEnvWithFields, List<HeapReplacement>> assign(HeapEnvWithFields state, Identifier id,
-			SymbolicExpression expression, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
-		if (state.isBottom())
-			return Pair.of(state, List.of());
-		return super.assign(state, id, expression, pp, oracle);
-	}
-
+	
 	@Override
 	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(HeapEnvWithFields state, SymbolicExpression expression,
 			ProgramPoint src, ProgramPoint dest, SemanticOracle oracle) throws SemanticException {	
