@@ -1,4 +1,4 @@
-package it.unive.jlisa.program.java.constructs.printwriter;
+package it.unive.jlisa.program.java.constructs.filteroutputstream;
 
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.*;
@@ -12,21 +12,20 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.value.PushAny;
 
-public class PrintWriterConstructor extends NaryExpression implements PluggableStatement {
+public class FilterOutputStreamConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-
-	public PrintWriterConstructor(
+	public FilterOutputStreamConstructor(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "PrintWriter", JavaClassType.lookup("PrintWriter", null));
+		super(cfg, location, "FilteredOutputStream", JavaClassType.lookup("FilteredOutputStream", null));
 	}
 
-	public static PrintWriterConstructor build(
+	public static FilterOutputStreamConstructor build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new PrintWriterConstructor(cfg, location);
+		return new FilterOutputStreamConstructor(cfg, location);
 	}
 
 	@Override

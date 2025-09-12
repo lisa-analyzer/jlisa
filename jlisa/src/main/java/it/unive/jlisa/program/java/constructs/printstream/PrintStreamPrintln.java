@@ -1,4 +1,4 @@
-package it.unive.jlisa.program.java.constructs.printwriter;
+package it.unive.jlisa.program.java.constructs.printstream;
 
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.*;
@@ -10,23 +10,21 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.symbolic.value.PushAny;
 
-public class PrintWriterConstructor extends NaryExpression implements PluggableStatement {
+public class PrintStreamPrintln extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-
-	public PrintWriterConstructor(
+	public PrintStreamPrintln(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "PrintWriter", JavaClassType.lookup("PrintWriter", null));
+		super(cfg, location, "println", JavaClassType.lookup("PrintStream", null));
 	}
 
-	public static PrintWriterConstructor build(
+	public static PrintStreamPrintln build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new PrintWriterConstructor(cfg, location);
+		return new PrintStreamPrintln(cfg, location);
 	}
 
 	@Override
@@ -49,7 +47,7 @@ public class PrintWriterConstructor extends NaryExpression implements PluggableS
 					ExpressionSet[] params,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+		// nothing to do
+		return state;
 	}
 }

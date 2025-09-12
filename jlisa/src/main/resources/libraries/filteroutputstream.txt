@@ -1,9 +1,4 @@
 class FilterOutputStream extends OutputStream:
-    method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrint
-    		type it.unive.lisa.type.VoidType::INSTANCE
-    		param self libtype FilterOutputStream*
-    		param p type it.unive.jlisa.program.type.JavaLongType::INSTANCE
-    method println: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrint
-            type it.unive.lisa.type.VoidType::INSTANCE
-            param self libtype FilterOutputStream*
-            param p type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+    instance method FilterOutputStream: it.unive.jlisa.program.java.constructs.filteroutputstream.FilterOutputStreamConstructor
+            libtype FilterOutputStream*
+            param this libtype FilterOutputStream*
