@@ -49,18 +49,9 @@ FieldSensitivePointBasedHeap {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 					throws SemanticException {
-		return expression.accept(rewriter, state);
+		return expression.accept(rewriter, state, pp);
 	}
-
-	// FIXME: this method can be removed with the new snapshot
-	@Override
-	public Pair<HeapEnvWithFields, List<HeapReplacement>> assign(HeapEnvWithFields state, Identifier id,
-			SymbolicExpression expression, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
-		if (state.isBottom())
-			return Pair.of(state, List.of());
-		return super.assign(state, id, expression, pp, oracle);
-	}
-
+	
 	@Override
 	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(HeapEnvWithFields state, SymbolicExpression expression,
 			ProgramPoint src, ProgramPoint dest, SemanticOracle oracle) throws SemanticException {	
@@ -97,14 +88,14 @@ FieldSensitivePointBasedHeap {
 				ExpressionSet rhsExps;
 				ExpressionSet lhsExps;
 				if (leftExpr instanceof Identifier) {
-					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr));
+					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr, pp));
 				} else if (expression.mightNeedRewriting())
 					lhsExps = rewrite(state, leftExpr, pp, oracle);
 				else
 					lhsExps = new ExpressionSet(leftExpr);
 
 				if (rightExpr instanceof Identifier) {
-					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr));
+					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr, pp));
 				} else if (expression.mightNeedRewriting())
 					rhsExps = rewrite(state, rightExpr, pp, oracle);
 				else
@@ -131,12 +122,16 @@ FieldSensitivePointBasedHeap {
 							else if (!rp.isWeak())
 								if (rp.equals(lp))
 									sat = sat.lub(Satisfiability.SATISFIED);
+								else if (!lp.isWeak())
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 								else
 									sat = sat.lub(Satisfiability.UNKNOWN);
 							// left is strong
 							else if (!lp.isWeak())
 								if (rp.equals(lp))
 									sat = sat.lub(Satisfiability.SATISFIED);
+								else if (!rp.isWeak())
+									sat = sat.lub(Satisfiability.NOT_SATISFIED);
 								else
 									sat = sat.lub(Satisfiability.UNKNOWN);
 						}

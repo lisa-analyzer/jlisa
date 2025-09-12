@@ -155,10 +155,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		expression = new JavaNewArrayWithInitializer(cfg, 
 				getSourceCodeLocation(node), 
 				parameters.toArray(new Expression[0]), 
-				new JavaReferenceType(JavaArrayType.lookup(contentType, node.expressions().size())));
-		return false;	
-
-
+				new JavaReferenceType(JavaArrayType.lookup(contentType, 1)));
+		return false;
 	}
 
 	@Override
@@ -169,6 +167,11 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 
+		if (node.dimensions().size() > 1)
+			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Multi-dimensional arrays are not supported are not supported.",
+					getSourceCodeLocation(node));
+		
 		// TODO: currently we handle single-dim arrays
 		if(node.dimensions().size() != 0) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
@@ -187,7 +190,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				Expression expr = argumentsVisitor.getExpression();
 				parameters.add(expr);
 			}
-			
+
 			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node), parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		}
 
@@ -321,7 +324,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 				parameters.add(expr);
 			}
 		}
-		
+
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),
@@ -598,7 +601,16 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(QualifiedName node) {
 		String targetName = node.getName().getIdentifier();
-
+		
+		// need to resolve recursively
+		if (node.getQualifier() instanceof QualifiedName) {
+			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker);
+			node.getQualifier().accept(visitor);
+			Expression expr = visitor.getExpression();
+			expression = new JavaAccessInstanceGlobal(cfg, getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr, node.getName().getIdentifier());
+			return false;
+		}
+		
 		// FIXME: we are currently taking just the last name (the true name of the unit)
 		String unitName;
 		Name lastName = node.getQualifier();

@@ -2,7 +2,7 @@ package it.unive.jlisa.program.language;
 
 import it.unive.jlisa.program.language.validation.JavaValidationLogic;
 import it.unive.lisa.program.language.LanguageFeatures;
-import it.unive.lisa.program.language.hierarchytraversal.HierarcyTraversalStrategy;
+import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
 import it.unive.lisa.program.language.hierarchytraversal.SingleInheritanceTraversalStrategy;
 import it.unive.lisa.program.language.parameterassignment.OrderPreservingAssigningStrategy;
 import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStrategy;
@@ -17,7 +17,7 @@ public class JavaLanguageFeatures extends LanguageFeatures {
     }
 
     @Override
-    public HierarcyTraversalStrategy getTraversalStrategy() {
+    public HierarchyTraversalStrategy getTraversalStrategy() {
         return SingleInheritanceTraversalStrategy.INSTANCE;
     }
 

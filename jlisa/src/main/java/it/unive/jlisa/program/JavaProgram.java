@@ -1,5 +1,6 @@
 package it.unive.jlisa.program;
 
+import it.unive.jlisa.program.java.constructs.object.ObjectClassInitializer;
 import it.unive.jlisa.program.java.constructs.object.ObjectConstructor;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
@@ -22,6 +23,7 @@ public class JavaProgram extends Program {
         SourceCodeLocationManager locationManager = new SourceCodeLocationManager("$java-runtime/Object");
         rootClassUnit = new ClassUnit(locationManager.getRoot(), this, "Object", false);
         JavaClassType.lookup("Object", rootClassUnit);
+        rootClassUnit.addCodeMember(new ObjectClassInitializer(locationManager.nextRow(), rootClassUnit));
         rootClassUnit.addInstanceCodeMember(new ObjectConstructor(locationManager.nextRow(), rootClassUnit));
         this.addUnit(rootClassUnit);
     }

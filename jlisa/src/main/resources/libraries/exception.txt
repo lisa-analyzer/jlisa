@@ -18,6 +18,8 @@ class ClassNotFoundException extends Exception:
 
 class CloneNotSupportedException extends Exception:
 
+class MalformedURLException extends IOException:
+
 class ArithmeticException extends RuntimeException:
 
 	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
