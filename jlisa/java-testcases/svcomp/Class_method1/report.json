@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':11:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "files" : [ "bool_Main.f(Class__c,_bool_b)_1707428854.json", "report.json", "void_Main.main(String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "112ms",
+    "end" : "2025-09-12T14:42:25.319+02:00",
+    "expressions" : "44",
+    "files" : "2",
+    "globals" : "6",
+    "members" : "127",
+    "programs" : "1",
+    "start" : "2025-09-12T14:42:25.207+02:00",
+    "statements" : "24",
+    "units" : "80",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Class_method1"
+  }
+}
