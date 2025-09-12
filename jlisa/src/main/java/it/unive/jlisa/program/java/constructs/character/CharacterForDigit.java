@@ -19,7 +19,11 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 public class CharacterForDigit extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public CharacterForDigit(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public CharacterForDigit(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "forDigit", left, right);
 	}
 
@@ -31,26 +35,31 @@ public class CharacterForDigit extends BinaryExpression implements PluggableStat
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-		
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
 		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaCharType.INSTANCE, 
-				left, 
-				right, 
-				JavaCharacterForDigitOperator.INSTANCE, 
+				JavaCharType.INSTANCE,
+				left,
+				right,
+				JavaCharacterForDigitOperator.INSTANCE,
 				getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
 	}

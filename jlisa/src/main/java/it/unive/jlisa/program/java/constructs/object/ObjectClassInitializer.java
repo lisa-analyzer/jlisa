@@ -29,11 +29,12 @@ public class ObjectClassInitializer extends NativeCFG {
 				ObjectClassInitializer.ObjectClassInitiliazer.class);
 	}
 
-
 	public static class ObjectClassInitiliazer extends NaryExpression implements PluggableStatement {
 		protected Statement originating;
 
-		public ObjectClassInitiliazer(CFG cfg, CodeLocation location) {
+		public ObjectClassInitiliazer(
+				CFG cfg,
+				CodeLocation location) {
 			super(cfg, location, "Object_clinit");
 		}
 
@@ -41,23 +42,28 @@ public class ObjectClassInitializer extends NativeCFG {
 				CFG cfg,
 				CodeLocation location,
 				Expression... params) {
-			return new  ObjectClassInitializer.ObjectClassInitiliazer(cfg, location);
+			return new ObjectClassInitializer.ObjectClassInitiliazer(cfg, location);
 		}
 
 		@Override
-		protected int compareSameClassAndParams(Statement o) {
+		protected int compareSameClassAndParams(
+				Statement o) {
 			return 0;
 		}
 
 		@Override
-		public void setOriginatingStatement(Statement st) {
+		public void setOriginatingStatement(
+				Statement st) {
 			originating = st;
 		}
 
 		@Override
 		public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
-				InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, ExpressionSet[] params,
-				StatementStore<A> expressions) throws SemanticException {
+				InterproceduralAnalysis<A, D> interprocedural,
+				AnalysisState<A> state,
+				ExpressionSet[] params,
+				StatementStore<A> expressions)
+				throws SemanticException {
 			return state; // do nothing.
 		}
 	}

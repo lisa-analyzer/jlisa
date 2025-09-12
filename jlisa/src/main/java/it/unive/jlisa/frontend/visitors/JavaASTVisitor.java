@@ -9,42 +9,54 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public abstract class JavaASTVisitor extends ASTVisitor {
-    protected String source;
-    protected CompilationUnit compilationUnit;
-    protected ParserContext parserContext;
-    public JavaASTVisitor(ParserContext parserContext, String source, CompilationUnit compilationUnit) {
-        this.parserContext = parserContext;
-        this.source = source;
-        this.compilationUnit = compilationUnit;
-    }
+	protected String source;
+	protected CompilationUnit compilationUnit;
+	protected ParserContext parserContext;
 
-    public SourceCodeLocation getSourceCodeLocation(ASTNode node) {
-        int startPos = node.getStartPosition();
-        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
-    }
+	public JavaASTVisitor(
+			ParserContext parserContext,
+			String source,
+			CompilationUnit compilationUnit) {
+		this.parserContext = parserContext;
+		this.source = source;
+		this.compilationUnit = compilationUnit;
+	}
 
-    public SourceCodeLocationManager getSourceCodeLocationManager(ASTNode node) {
-        int startPos = node.getStartPosition();
-        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos));
-    }
+	public SourceCodeLocation getSourceCodeLocation(
+			ASTNode node) {
+		int startPos = node.getStartPosition();
+		return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
+				compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
+	}
 
-    public SourceCodeLocationManager getSourceCodeLocationManager(ASTNode node, boolean end) {
-        int startPos = node.getStartPosition();
-        if (end) {
-            return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos) + node.getLength());
-        }
-        return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos), compilationUnit.getColumnNumber(startPos));
-    }
+	public SourceCodeLocationManager getSourceCodeLocationManager(
+			ASTNode node) {
+		int startPos = node.getStartPosition();
+		return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
+				compilationUnit.getColumnNumber(startPos));
+	}
 
-    public Program getProgram() {
-        return parserContext.getProgram();
-    }
+	public SourceCodeLocationManager getSourceCodeLocationManager(
+			ASTNode node,
+			boolean end) {
+		int startPos = node.getStartPosition();
+		if (end) {
+			return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
+					compilationUnit.getColumnNumber(startPos) + node.getLength());
+		}
+		return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
+				compilationUnit.getColumnNumber(startPos));
+	}
 
-    public int getApiLevel() {
-        return parserContext.getApiLevel();
-    }
+	public Program getProgram() {
+		return parserContext.getProgram();
+	}
 
-    public ParserContext getParserContext() {
-        return parserContext;
-    }
+	public int getApiLevel() {
+		return parserContext.getApiLevel();
+	}
+
+	public ParserContext getParserContext() {
+		return parserContext;
+	}
 }

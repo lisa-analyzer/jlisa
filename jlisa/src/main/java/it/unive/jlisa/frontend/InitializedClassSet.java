@@ -1,25 +1,24 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.lattices.InverseSetLattice;
+import it.unive.lisa.util.representation.StringRepresentation;
+import it.unive.lisa.util.representation.StructuredRepresentation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.lattices.InverseSetLattice;
-import it.unive.lisa.util.representation.StringRepresentation;
-import it.unive.lisa.util.representation.StructuredRepresentation;
-
 public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, String> {
 
 	public static final String INFO_KEY = "clinit";
-	
+
 	public static final String SUFFIX_CLINIT = "_clinit";
-	
+
 	public InitializedClassSet() {
 		super(new TreeSet<String>(), false);
 	}
-	
+
 	public InitializedClassSet(
 			Set<String> elements) {
 		super(elements, elements.isEmpty());
@@ -62,8 +61,8 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 	}
 
 	/**
-	 * Adds a new String to this set. This method has no side
-	 * effect: a new {@link InitializedClassSet} is created, modified and returned.
+	 * Adds a new String to this set. This method has no side effect: a new
+	 * {@link InitializedClassSet} is created, modified and returned.
 	 * 
 	 * @param id the identifier to add
 	 * 

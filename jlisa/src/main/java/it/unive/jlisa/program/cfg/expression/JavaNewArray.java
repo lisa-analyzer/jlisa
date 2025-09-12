@@ -31,40 +31,52 @@ import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 
-
 public class JavaNewArray extends UnaryExpression {
 
-	public JavaNewArray(CFG cfg, CodeLocation location, Expression subExpression, Type type) {
+	public JavaNewArray(
+			CFG cfg,
+			CodeLocation location,
+			Expression subExpression,
+			Type type) {
 		super(cfg, location, "new", type, subExpression);
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {	
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType refType = (JavaReferenceType) getStaticType();
 
 		// check for negative size
 		it.unive.lisa.symbolic.value.BinaryExpression bin = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE, expr, new Constant(getProgram().getTypes().getIntegerType(), 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
+				JavaBooleanType.INSTANCE, expr,
+				new Constant(getProgram().getTypes().getIntegerType(), 0, getLocation()), ComparisonLt.INSTANCE,
+				getLocation());
 
 		Satisfiability sat = analysis.satisfies(state, bin, this);
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getNegativeArraySizeExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NegativeArraySizeException", oonExc.getReference(), new Expression[0]);
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NegativeArraySizeException",
+					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar, state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			state = analysis.assign(state, throwVar,
+					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar), new Error(oonExc.getReference(), this));
+			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+					new Error(oonExc.getReference(), this));
 		} else {
 			// TODO: UNKNOWN case
 		}
@@ -72,7 +84,7 @@ public class JavaNewArray extends UnaryExpression {
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);	
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
 
@@ -88,34 +100,36 @@ public class JavaNewArray extends UnaryExpression {
 
 		// first case: the size is constant
 		if (expr instanceof Constant) {
-			for (int i = 0; i < (Integer)((Constant) expr).getValue(); i++) {
+			for (int i = 0; i < (Integer) ((Constant) expr).getValue(); i++) {
 				Variable var = new Variable(JavaIntType.INSTANCE, "" + i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
-				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp, interprocedural, expressions);
+				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp,
+						interprocedural, expressions);
 				AnalysisState<A> init = state.bottom();
 
-				for(SymbolicExpression v : tmp2.getExecutionExpressions()) {
+				for (SymbolicExpression v : tmp2.getExecutionExpressions()) {
 					init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
 				}
 
 				tmp = init;
-			} 
+			}
 		}
 
 		// FIXME: second case: the size is not constant, return the 'top' array
 		// this is a temporary solution
 		getMetaVariables().add(array);
-		return analysis.smallStepSemantics(tmp, array, this);	
+		return analysis.smallStepSemantics(tmp, array, this);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 
 	@Override
 	public String toString() {
-		return "new " + getStaticType() + "[" + getSubExpression() +"]"; 
+		return "new " + getStaticType() + "[" + getSubExpression() + "]";
 	}
 }

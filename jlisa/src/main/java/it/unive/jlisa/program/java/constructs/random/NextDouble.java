@@ -23,11 +23,13 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.Untyped;
 
-
-public  class NextDouble extends UnaryExpression implements PluggableStatement {
+public class NextDouble extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public NextDouble(CFG cfg, CodeLocation location, Expression param) {
+	public NextDouble(
+			CFG cfg,
+			CodeLocation location,
+			Expression param) {
 		super(cfg, location, "nextDouble", param);
 	}
 
@@ -39,14 +41,19 @@ public  class NextDouble extends UnaryExpression implements PluggableStatement {
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
-
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, getLocation());
 		Constant one = new Constant(JavaIntType.INSTANCE, 1, getLocation());
 		Variable v = new Variable(JavaIntType.INSTANCE, "v", getLocation());
@@ -55,11 +62,13 @@ public  class NextDouble extends UnaryExpression implements PluggableStatement {
 		// 1 >= v
 		BinaryExpression const2 = new BinaryExpression(Untyped.INSTANCE, one, v, ComparisonGe.INSTANCE, getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushFromConstraints(JavaDoubleType.INSTANCE, getLocation(), const1, const2), originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushFromConstraints(JavaDoubleType.INSTANCE, getLocation(), const1, const2), originating);
 	}
 
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 }

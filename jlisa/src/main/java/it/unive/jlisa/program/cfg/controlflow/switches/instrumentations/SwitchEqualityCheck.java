@@ -15,8 +15,9 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 
 /**
- * Instrumentation for switch statements: Java 8, the switch apply == for literals, and equals for strings
- * It is unknown at parsing time (no reasoning on types)
+ * Instrumentation for switch statements: Java 8, the switch apply == for
+ * literals, and equals for strings It is unknown at parsing time (no reasoning
+ * on types)
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
@@ -29,17 +30,25 @@ public class SwitchEqualityCheck extends it.unive.lisa.program.cfg.statement.Bin
 	 * @param location the location where this statement is defined within the
 	 *                     program
 	 */
-	public SwitchEqualityCheck(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public SwitchEqualityCheck(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "==/equals", left, right);
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state, SymbolicExpression left, SymbolicExpression right, StatementStore<A> expressions)
-			throws SemanticException {
-		//TODO: handle case with equals
-		
+			D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression left,
+					SymbolicExpression right,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		// TODO: handle case with equals
+
 		return interprocedural.getAnalysis().smallStepSemantics(
 				state,
 				new BinaryExpression(
@@ -52,7 +61,8 @@ public class SwitchEqualityCheck extends it.unive.lisa.program.cfg.statement.Bin
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 

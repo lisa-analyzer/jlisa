@@ -1,13 +1,12 @@
 package it.unive.jlisa.program.operator;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaStringValueOfFloatOperator implements StringOperator, UnaryOperator {
 
@@ -28,9 +27,11 @@ public class JavaStringValueOfFloatOperator implements StringOperator, UnaryOper
 	public String toString() {
 		return "strvalueof";
 	}
-		
+
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type> argument) {
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> argument) {
 		if (argument.stream().noneMatch(t -> t.equals(JavaFloatType.INSTANCE)))
 			return Collections.emptySet();
 		return Collections.singleton(types.getStringType());

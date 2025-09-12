@@ -24,7 +24,11 @@ import it.unive.lisa.type.Untyped;
 public class StringIndexOfCharFromIndex extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	protected StringIndexOfCharFromIndex(CFG cfg, CodeLocation location, Expression left, Expression middle,
+	protected StringIndexOfCharFromIndex(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression middle,
 			Expression right) {
 		super(cfg, location, "replaceAll", left, middle, right);
 	}
@@ -37,36 +41,41 @@ public class StringIndexOfCharFromIndex extends TernaryExpression implements Plu
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression middle, SymbolicExpression right, StatementStore<A> expressions)
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		
+
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-		
+
 		it.unive.lisa.symbolic.value.TernaryExpression indexOf = new it.unive.lisa.symbolic.value.TernaryExpression(
-				getProgram().getTypes().getStringType(), 
+				getProgram().getTypes().getStringType(),
 				accessLeft,
 				middle,
-				right, 
-				JavaStringIndexOfCharFromIndexOperator.INSTANCE, 
+				right,
+				JavaStringIndexOfCharFromIndexOperator.INSTANCE,
 				getLocation());
-		
+
 		return analysis.smallStepSemantics(state, indexOf, originating);
 
 	}

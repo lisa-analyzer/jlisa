@@ -12,6 +12,7 @@ import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
+
 /**
  * Instrumentation for switch statements: represent the default case check
  * 
@@ -26,12 +27,16 @@ public class SwitchDefault extends Expression {
 	 * @param location the location where this statement is defined within the
 	 *                     program
 	 */
-	public SwitchDefault(CFG cfg, CodeLocation location) {
+	public SwitchDefault(
+			CFG cfg,
+			CodeLocation location) {
 		super(cfg, location);
 	}
 
 	@Override
-	public <V> boolean accept(GraphVisitor<CFG, Statement, Edge, V> visitor, V tool) {
+	public <V> boolean accept(
+			GraphVisitor<CFG, Statement, Edge, V> visitor,
+			V tool) {
 		return visitor.visit(tool, getCFG(), this);
 	}
 
@@ -42,13 +47,17 @@ public class SwitchDefault extends Expression {
 
 	@Override
 	public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(AnalysisState<A> entryState,
-			InterproceduralAnalysis<A, D> interprocedural, StatementStore<A> expressions) throws SemanticException {
+			D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+					AnalysisState<A> entryState,
+					InterproceduralAnalysis<A, D> interprocedural,
+					StatementStore<A> expressions)
+					throws SemanticException {
 		return entryState;
 	}
 
 	@Override
-	protected int compareSameClass(Statement o) {
+	protected int compareSameClass(
+			Statement o) {
 		return 0;
 	}
 }

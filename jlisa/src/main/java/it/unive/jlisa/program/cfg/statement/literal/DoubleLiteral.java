@@ -6,10 +6,10 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 
 public class DoubleLiteral extends Literal<Double> {
-    public DoubleLiteral(
-            CFG cfg,
-            CodeLocation location,
-            double value) {
-        super(cfg, location, value, JavaDoubleType.INSTANCE);
-    }
+	public DoubleLiteral(
+			CFG cfg,
+			CodeLocation location,
+			double value) {
+		super(cfg, location, value, JavaDoubleType.INSTANCE);
+	}
 }

@@ -1,9 +1,5 @@
 package it.unive.jlisa.analysis.heap;
 
-import java.util.List;
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import it.unive.jlisa.analysis.JavaNullConstant;
 import it.unive.jlisa.program.type.JavaNullType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -13,7 +9,9 @@ import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.Satisfiability;
+import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
+import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapExpression;
@@ -21,10 +19,14 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.HeapLocation;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.MemoryPointer;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
+import it.unive.lisa.type.Type;
+import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A field-insensitive program point-based {@link AllocationSiteBasedAnalysis}.
@@ -37,8 +39,8 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
  *          "https://mitpress.mit.edu/books/introduction-static-analysis">https://mitpress.mit.edu/books/introduction-static-analysis</a>
  */
 public class JavaFieldSensitivePointBasedHeap
-extends
-FieldSensitivePointBasedHeap {
+		extends
+		FieldSensitivePointBasedHeap {
 
 	private final Rewriter rewriter = new Rewriter();
 
@@ -48,23 +50,32 @@ FieldSensitivePointBasedHeap {
 			SymbolicExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		return expression.accept(rewriter, state, pp);
-	}
-	
-	@Override
-	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(HeapEnvWithFields state, SymbolicExpression expression,
-			ProgramPoint src, ProgramPoint dest, SemanticOracle oracle) throws SemanticException {	
-		Satisfiability sat = satisfies(state, expression, dest, oracle);
-		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
-			return Pair.of(state, List.of());
-		else 
-			return Pair.of(state.bottom(), List.of());		
 	}
 
 	@Override
-	public Satisfiability satisfies(HeapEnvWithFields state, SymbolicExpression expression, ProgramPoint pp,
-			SemanticOracle oracle) throws SemanticException {
+	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(
+			HeapEnvWithFields state,
+			SymbolicExpression expression,
+			ProgramPoint src,
+			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Satisfiability sat = satisfies(state, expression, dest, oracle);
+		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
+			return Pair.of(state, List.of());
+		else
+			return Pair.of(state.bottom(), List.of());
+	}
+
+	@Override
+	public Satisfiability satisfies(
+			HeapEnvWithFields state,
+			SymbolicExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 
 		// negation
 		if (expression instanceof UnaryExpression un) {
@@ -76,7 +87,8 @@ FieldSensitivePointBasedHeap {
 
 			// !=
 			if (bin.getOperator() == ComparisonNe.INSTANCE) {
-				BinaryExpression negatedBin = new BinaryExpression(bin.getStaticType(), bin.getLeft(), bin.getRight(), ComparisonEq.INSTANCE, expression.getCodeLocation());
+				BinaryExpression negatedBin = new BinaryExpression(bin.getStaticType(), bin.getLeft(), bin.getRight(),
+						ComparisonEq.INSTANCE, expression.getCodeLocation());
 				return satisfies(state, negatedBin, pp, oracle).negate();
 			}
 
@@ -137,7 +149,7 @@ FieldSensitivePointBasedHeap {
 						}
 					}
 				}
-				
+
 				// FIXME: we may improve this check
 				return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
 			}
@@ -153,13 +165,16 @@ FieldSensitivePointBasedHeap {
 	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
 	 */
 	public class Rewriter
-	extends
-	FieldSensitivePointBasedHeap.Rewriter {
+			extends
+			FieldSensitivePointBasedHeap.Rewriter {
 
 		// TODO: access child and dereference with null receiver
 
 		@Override
-		public ExpressionSet visit(HeapExpression expression, ExpressionSet[] subExpressions, Object... params)
+		public ExpressionSet visit(
+				HeapExpression expression,
+				ExpressionSet[] subExpressions,
+				Object... params)
 				throws SemanticException {
 			if (expression instanceof JavaNullConstant) {
 				MemoryPointer mp = new MemoryPointer(
@@ -168,9 +183,22 @@ FieldSensitivePointBasedHeap {
 						NullAllocationSite.INSTANCE.getCodeLocation());
 				return new ExpressionSet(mp);
 
-			}
-			else
+			} else
 				return super.visit(expression, subExpressions, params);
+		}
+
+		@Override
+		public ExpressionSet visit(
+				PushAny expression,
+				Object... params)
+				throws SemanticException {
+			if (expression.getStaticType().isPointerType()) {
+				Type inner = expression.getStaticType().asPointerType().getInnerType();
+				CodeLocation loc = expression.getCodeLocation();
+				HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
+				return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
+			}
+			return new ExpressionSet(expression);
 		}
 	}
 }

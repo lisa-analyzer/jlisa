@@ -19,38 +19,38 @@ import it.unive.lisa.type.Untyped;
 
 public class BitwiseNot extends UnaryExpression {
 
-    public BitwiseNot(
-            CFG cfg,
-            CodeLocation loc,
-            Expression expression) {
-        super(cfg, loc, "~", Untyped.INSTANCE, expression);
-    }
+	public BitwiseNot(
+			CFG cfg,
+			CodeLocation loc,
+			Expression expression) {
+		super(cfg, loc, "~", Untyped.INSTANCE, expression);
+	}
 
-    @Override
-    protected int compareSameClassAndParams(
-            Statement o) {
-        return 0;
-    }
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
 
-    @Override
-    public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-            InterproceduralAnalysis<A, D> interprocedural,
-            AnalysisState<A> state,
-            SymbolicExpression expr,
-            StatementStore<A> expressions)
-            throws SemanticException {
-        Analysis<A, D> analysis = interprocedural.getAnalysis();
-        if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
-            return state.bottom();
-        //TODO: check that the type is numeric and integral
-        return analysis.smallStepSemantics(
-                state,
-                new it.unive.lisa.symbolic.value.UnaryExpression(
-                        Untyped.INSTANCE,
-                        expr,
-                        BitwiseNegation.INSTANCE,
-                        getLocation()),
-                this);
-    }
+	@Override
+	public <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
+			return state.bottom();
+		// TODO: check that the type is numeric and integral
+		return analysis.smallStepSemantics(
+				state,
+				new it.unive.lisa.symbolic.value.UnaryExpression(
+						Untyped.INSTANCE,
+						expr,
+						BitwiseNegation.INSTANCE,
+						getLocation()),
+				this);
+	}
 }

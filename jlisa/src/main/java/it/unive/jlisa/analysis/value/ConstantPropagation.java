@@ -1,7 +1,5 @@
 package it.unive.jlisa.analysis.value;
 
-import java.util.Set;
-
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
@@ -105,6 +103,7 @@ import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -133,14 +132,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			// anyway).
 			return true;
 
-		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch( t -> t.isStringType());
+		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType());
 	}
 
 	@Override
 	public ConstantValue evalNullConstant(
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		throw new SemanticException("null value is not handled by the constant propagation domain");
 	}
 
@@ -149,14 +148,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		return new ConstantValue(constant.getValue());
 	}
 
-
 	@Override
-	public ConstantValue evalUnaryExpression(UnaryExpression expression, ConstantValue arg, ProgramPoint pp,
-			SemanticOracle oracle) throws SemanticException {
+	public ConstantValue evalUnaryExpression(
+			UnaryExpression expression,
+			ConstantValue arg,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 		// if arg is top, top is returned
 		if (arg.isTop())
 			return top();
@@ -177,11 +179,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaCharacterToLowerCaseOperator)
 			if (arg.getValue() instanceof Integer v)
-				return new ConstantValue( (char) Character.toLowerCase(v));
+				return new ConstantValue((char) Character.toLowerCase(v));
 
 		if (operator instanceof JavaCharacterToUpperCaseOperator)
 			if (arg.getValue() instanceof Integer v)
-				return new ConstantValue( (char) Character.toUpperCase(v));
+				return new ConstantValue((char) Character.toUpperCase(v));
 
 		if (operator instanceof JavaCharacterIsJavaIdentifierPartOperator)
 			if (arg.getValue() instanceof Integer v)
@@ -345,11 +347,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Double.longBitsToDouble(v));
 
 		if (operator instanceof JavaDoubleToStringOperator)
-			if(arg.getValue() instanceof Double d)
+			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
 
 		if (operator instanceof JavaDoubleParseDoubleOperator)
-			if(arg.getValue() instanceof String s)
+			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Double.parseDouble(s));
 
 		// strings
@@ -452,7 +454,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).longValue() >>> ((Number) rVal).longValue());
 			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() >>> ((Number) rVal).intValue());
-			} 
+			}
 		}
 
 		if (operator instanceof BitwiseShiftLeft) {
@@ -463,7 +465,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).longValue() << ((Number) rVal).longValue());
 			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() << ((Number) rVal).intValue());
-			} 
+			}
 		}
 
 		if (operator instanceof BitwiseXor) {
@@ -560,14 +562,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) lVal).longValue() < ((Number) rVal).longValue());
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() < ((Number) rVal).intValue());
-			}	
+			}
 		}
 
 		if (operator instanceof JavaMathPowOperator) {
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer || lVal instanceof Float || rVal instanceof Float) {
+			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
+					|| lVal instanceof Float || rVal instanceof Float) {
 				return new ConstantValue(Math.pow(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
@@ -576,7 +579,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer || lVal instanceof Float || rVal instanceof Float) {
+			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
+					|| lVal instanceof Float || rVal instanceof Float) {
 				return new ConstantValue(Math.atan2(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
@@ -588,61 +592,61 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.contains(rv));			
+			return new ConstantValue(lv.contains(rv));
 		}
 
 		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.equals(rv));			
+			return new ConstantValue(lv.equals(rv));
 		}
 
 		if (operator instanceof JavaStringCharAtOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.charAt(rv));			
+			return new ConstantValue(lv.charAt(rv));
 		}
 
 		if (operator instanceof JavaStringStartsWithOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.startsWith(rv));			
+			return new ConstantValue(lv.startsWith(rv));
 		}
 
 		if (operator instanceof JavaStringEndsWithOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.endsWith(rv));			
+			return new ConstantValue(lv.endsWith(rv));
 		}
 
 		if (operator instanceof JavaStringMatchesOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.matches(rv));			
+			return new ConstantValue(lv.matches(rv));
 		}
 
 		if (operator instanceof JavaStringSubstringOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.substring(rv));			
+			return new ConstantValue(lv.substring(rv));
 		}
 
 		if (operator instanceof JavaStringCompareToOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.compareTo(rv));			
+			return new ConstantValue(lv.compareTo(rv));
 		}
 
 		if (operator instanceof JavaStringIndexOfOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.indexOf(rv));			
+			return new ConstantValue(lv.indexOf(rv));
 		}
 
 		if (operator instanceof JavaStringIndexOfCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.indexOf(rv));			
+			return new ConstantValue(lv.indexOf(rv));
 		}
 
 		if (operator instanceof JavaStringLastIndexOfOperator) {
@@ -660,19 +664,19 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringAppendCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv + ((char) rv.intValue()));			
-		}	
+			return new ConstantValue(lv + ((char) rv.intValue()));
+		}
 
 		if (operator instanceof JavaStringAppendStringOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv + rv);			
+			return new ConstantValue(lv + rv);
 		}
 
 		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.equalsIgnoreCase(rv));			
+			return new ConstantValue(lv.equalsIgnoreCase(rv));
 		}
 
 		// char
@@ -685,21 +689,27 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaCharacterForDigitOperator) {
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(Character.forDigit(lv,rv));		
+			return new ConstantValue(Character.forDigit(lv, rv));
 		}
 
 		if (operator instanceof JavaCharacterDigitOperator) {
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(Character.digit(lv,rv));	
+			return new ConstantValue(Character.digit(lv, rv));
 		}
 
 		return top();
 	}
 
 	@Override
-	public ConstantValue evalTernaryExpression(TernaryExpression expression, ConstantValue left, ConstantValue middle,
-			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+	public ConstantValue evalTernaryExpression(
+			TernaryExpression expression,
+			ConstantValue left,
+			ConstantValue middle,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 		// if left, middle or right is top, top is returned
 		if (left.isTop() || middle.isTop() || right.isTop())
 			return top();
@@ -709,63 +719,63 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (char)rv.intValue()).toString());
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (char) rv.intValue()).toString());
 		}
 
 		if (operator instanceof JavaStringReplaceAllOperator) {
 			String lv = ((String) left.getValue());
 			String mv = ((String) middle.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.replaceAll(mv,rv));	
+			return new ConstantValue(lv.replaceAll(mv, rv));
 		}
 
 		if (operator instanceof JavaStringReplaceOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.replace( (char) mv.intValue(),(char) rv.intValue()));	
+			return new ConstantValue(lv.replace((char) mv.intValue(), (char) rv.intValue()));
 		}
 
 		if (operator instanceof JavaStringIndexOfCharFromIndexOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.indexOf( (char) mv.intValue(), rv));	
+			return new ConstantValue(lv.indexOf((char) mv.intValue(), rv));
 		}
 
 		if (operator instanceof JavaStringLastIndexOfCharFromIndexOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.lastIndexOf( (char) mv.intValue(), rv));	
+			return new ConstantValue(lv.lastIndexOf((char) mv.intValue(), rv));
 		}
 
 		if (operator instanceof JavaStringLastIndexOfStringFromIndexOperator) {
 			String lv = ((String) left.getValue());
 			String mv = ((String) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.lastIndexOf(mv, rv));	
+			return new ConstantValue(lv.lastIndexOf(mv, rv));
 		}
 
 		if (operator instanceof JavaStringSubstringFromToOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.substring(mv, rv));	
+			return new ConstantValue(lv.substring(mv, rv));
 		}
 
 		if (operator instanceof JavaStringStartsWithFromIndexOperator) {
 			String lv = ((String) left.getValue());
 			String mv = ((String) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.startsWith(mv, rv));	
+			return new ConstantValue(lv.startsWith(mv, rv));
 		}
 
 		if (operator instanceof JavaStringIndexOfStringFromIndexOperator) {
 			String lv = ((String) left.getValue());
 			String mv = ((String) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv.indexOf(mv, rv));	
+			return new ConstantValue(lv.indexOf(mv, rv));
 		}
 
 		return top();
@@ -773,6 +783,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
+<<<<<<< HEAD
 	public ConstantValue evalValueExpression(
 			ValueExpression expression,
 			ConstantValue[] subExpressions,
@@ -791,22 +802,36 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	
 	@Override
 	public Satisfiability satisfiesAbstractValue(ConstantValue value, ProgramPoint pp, SemanticOracle oracle)
+=======
+	public Satisfiability satisfiesAbstractValue(
+			ConstantValue value,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+>>>>>>> refs/remotes/origin/master
 			throws SemanticException {
 		if (value.getValue() instanceof Boolean)
-			return ((Boolean) value.getValue()).booleanValue() ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+			return ((Boolean) value.getValue()).booleanValue() ? Satisfiability.SATISFIED
+					: Satisfiability.NOT_SATISFIED;
 
 		return Satisfiability.UNKNOWN;
 	}
 
 	@Override
-	public Satisfiability satisfiesNullConstant(ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+	public Satisfiability satisfiesNullConstant(
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 		// this method should not be never called
 		return Satisfiability.UNKNOWN;
 	}
 
 	@Override
-	public Satisfiability satisfiesUnaryExpression(UnaryExpression expression, ConstantValue arg, ProgramPoint pp,
-			SemanticOracle oracle) throws SemanticException {
+	public Satisfiability satisfiesUnaryExpression(
+			UnaryExpression expression,
+			ConstantValue arg,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 		if (arg.isTop())
 			return Satisfiability.UNKNOWN;
 
@@ -847,8 +872,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public Satisfiability satisfiesBinaryExpression(BinaryExpression expression, ConstantValue left,
-			ConstantValue right, ProgramPoint pp, SemanticOracle oracle) throws SemanticException {
+	public Satisfiability satisfiesBinaryExpression(
+			BinaryExpression expression,
+			ConstantValue left,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 		BinaryOperator operator = expression.getOperator();
 		if (left.isTop() || right.isTop())
 			return Satisfiability.UNKNOWN;
@@ -865,13 +895,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.contains(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof JavaStringEqualsOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 		
 		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
@@ -910,18 +940,24 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			if (lVal instanceof Number || rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
-					return ((Number) lVal).doubleValue() == ((Number) rVal).doubleValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+					return ((Number) lVal).doubleValue() == ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
 				} else if (lVal instanceof Float || rVal instanceof Float) {
-					return ((Number) lVal).floatValue() == ((Number) rVal).floatValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+					return ((Number) lVal).floatValue() == ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
 				} else if (lVal instanceof Long || rVal instanceof Long) {
-					return ((Number) lVal).longValue() == ((Number) rVal).longValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+					return ((Number) lVal).longValue() == ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
 				} else {
-					return ((Number) lVal).intValue() == ((Number) rVal).intValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+					return ((Number) lVal).intValue() == ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
 				}
 			else if (lVal instanceof Boolean && rVal instanceof Boolean)
-				return ((Boolean) lVal).booleanValue() == ((Boolean) rVal).booleanValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+				return ((Boolean) lVal).booleanValue() == ((Boolean) rVal).booleanValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
 			else if (lVal instanceof Character && rVal instanceof Character)
-				return ((Character) lVal).charValue() == ((Character) rVal).charValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+				return ((Character) lVal).charValue() == ((Character) rVal).charValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof ComparisonLt) {
@@ -929,64 +965,81 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
-				return ((Number) lVal).doubleValue() < ((Number) rVal).doubleValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+				return ((Number) lVal).doubleValue() < ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
 			} else if (lVal instanceof Float || rVal instanceof Float) {
-				return ((Number) lVal).floatValue() < ((Number) rVal).floatValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+				return ((Number) lVal).floatValue() < ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
 			} else if (lVal instanceof Long || rVal instanceof Long) {
-				return ((Number) lVal).longValue() < ((Number) rVal).longValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
+				return ((Number) lVal).longValue() < ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
 			} else {
-				return ((Number) lVal).intValue() < ((Number) rVal).intValue() ?  Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;	
-			}	
+				return ((Number) lVal).intValue() < ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			}
 		}
 
 		if (operator instanceof JavaStringStartsWithOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.startsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.startsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof JavaStringEndsWithOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.endsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.endsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof JavaStringMatchesOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 
 	@Override
-	public Satisfiability satisfiesTernaryExpression(TernaryExpression expression, ConstantValue left,
-			ConstantValue middle, ConstantValue right, ProgramPoint pp, SemanticOracle oracle)
-					throws SemanticException {
+	public Satisfiability satisfiesTernaryExpression(
+			TernaryExpression expression,
+			ConstantValue left,
+			ConstantValue middle,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
 		// TODO Auto-generated method stub
-		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp, oracle);
+		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp,
+				oracle);
 	}
 
 	@Override
-	public Satisfiability satisfiesNonNullConstant(Constant constant, ProgramPoint pp, SemanticOracle oracle)
+	public Satisfiability satisfiesNonNullConstant(
+			Constant constant,
+			ProgramPoint pp,
+			SemanticOracle oracle)
 			throws SemanticException {
 		if (constant.getValue() instanceof Boolean)
-			return ((Boolean) constant.getValue()).booleanValue() ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-
+			return ((Boolean) constant.getValue()).booleanValue() ? Satisfiability.SATISFIED
+					: Satisfiability.NOT_SATISFIED;
 
 		return Satisfiability.UNKNOWN;
 	}
 
 	@Override
-	public ValueEnvironment<ConstantValue> assume(ValueEnvironment<ConstantValue> environment,
-			ValueExpression expression, ProgramPoint src, ProgramPoint dest, SemanticOracle oracle)
-					throws SemanticException {
+	public ValueEnvironment<ConstantValue> assume(
+			ValueEnvironment<ConstantValue> environment,
+			ValueExpression expression,
+			ProgramPoint src,
+			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
 		Satisfiability sat = satisfies(environment, expression, dest, oracle);
 		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
 			return environment;
-		else 
-			return new ValueEnvironment<>(new ConstantValue()).bottom();			
+		else
+			return new ValueEnvironment<>(new ConstantValue()).bottom();
 	}
 
 	@Override

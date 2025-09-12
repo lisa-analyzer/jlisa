@@ -1,12 +1,11 @@
 package it.unive.jlisa.program.operator;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.symbolic.value.operator.binary.StringOperation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaStringLastIndexOfStringOperator extends StringOperation {
 
@@ -29,14 +28,17 @@ public class JavaStringLastIndexOfStringOperator extends StringOperation {
 	}
 
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type> left, Set<Type> right) {
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> left,
+			Set<Type> right) {
 		if (left.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		if (right.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
-	
+
 	@Override
 	protected Type resultType(
 			TypeSystem types) {

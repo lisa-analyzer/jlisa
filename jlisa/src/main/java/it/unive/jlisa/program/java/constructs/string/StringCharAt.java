@@ -25,7 +25,11 @@ import it.unive.lisa.type.Untyped;
 public class StringCharAt extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringCharAt(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	public StringCharAt(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "charAt", left, right);
 	}
 
@@ -37,33 +41,38 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-		
+
 		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaCharType.INSTANCE, 
-				accessLeft, 
-				right, 
-				JavaStringCharAtOperator.INSTANCE, 
+				JavaCharType.INSTANCE,
+				accessLeft,
+				right,
+				JavaStringCharAtOperator.INSTANCE,
 				getLocation());
-		
+
 		return analysis.smallStepSemantics(state, concat, originating);
 	}
 }

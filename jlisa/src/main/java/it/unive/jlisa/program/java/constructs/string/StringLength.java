@@ -21,11 +21,13 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-
 public class StringLength extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringLength(CFG cfg, CodeLocation location, Expression exp) {
+	public StringLength(
+			CFG cfg,
+			CodeLocation location,
+			Expression exp) {
 		super(cfg, location, "length", exp);
 	}
 
@@ -37,29 +39,32 @@ public class StringLength extends UnaryExpression implements PluggableStatement 
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
-		return 0; 
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
 	}
 
-
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
 	}
 
-
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
 		AccessChild access = new AccessChild(stringType, deref, var, getLocation());
 		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE, 
-				access, 
-				JavaStringLengthOperator.INSTANCE, 
+				JavaIntType.INSTANCE,
+				access,
+				JavaStringLengthOperator.INSTANCE,
 				getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, length, originating);
 	}

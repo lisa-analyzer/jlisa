@@ -1,10 +1,8 @@
 package it.unive.jlisa.program.libraries.loader;
 
+import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
 import java.lang.reflect.Field;
 import java.util.Objects;
-
-import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
-
 
 public class LiSAType implements Type {
 	private final String name;

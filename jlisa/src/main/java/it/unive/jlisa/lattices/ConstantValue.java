@@ -6,18 +6,18 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
 
-public class ConstantValue 
-        implements
-        BaseLattice<ConstantValue> {
-    
-    public static final ConstantValue TOP = new ConstantValue(false);
-    public static final ConstantValue BOTTOM = new ConstantValue(true);
+public class ConstantValue
+		implements
+		BaseLattice<ConstantValue> {
 
-    private final boolean isBottom;
+	public static final ConstantValue TOP = new ConstantValue(false);
+	public static final ConstantValue BOTTOM = new ConstantValue(true);
 
-    private final Object value;
+	private final boolean isBottom;
 
-    public ConstantValue() {
+	private final Object value;
+
+	public ConstantValue() {
 		this(null, false);
 	}
 
@@ -43,26 +43,26 @@ public class ConstantValue
 		this(value, false);
 	}
 
-    public Object getValue() {
-        return value;
-    }
+	public Object getValue() {
+		return value;
+	}
 
-    public <T> boolean is(
-            Class<T> type) {
-        return type.isInstance(getValue());
-    }
+	public <T> boolean is(
+			Class<T> type) {
+		return type.isInstance(getValue());
+	}
 
-    public <T> T as(
-            Class<T> type) {
-        return type.cast(getValue());
-    }
+	public <T> T as(
+			Class<T> type) {
+		return type.cast(getValue());
+	}
 
-    @Override
-    public String toString() {
-        return representation().toString();
-    }
+	@Override
+	public String toString() {
+		return representation().toString();
+	}
 
-    @Override
+	@Override
 	public StructuredRepresentation representation() {
 		if (isBottom())
 			return Lattice.bottomRepresentation();
@@ -72,46 +72,46 @@ public class ConstantValue
 		return new StringRepresentation(value.toString());
 	}
 
-    @Override
-    public ConstantValue top() {
-        return TOP;
-    }
+	@Override
+	public ConstantValue top() {
+		return TOP;
+	}
 
-    @Override
-    public boolean isTop() {
+	@Override
+	public boolean isTop() {
 		return value == null && !isBottom;
-    }
+	}
 
-    @Override
-    public ConstantValue bottom() {
-        return BOTTOM;
-    }
+	@Override
+	public ConstantValue bottom() {
+		return BOTTOM;
+	}
 
-    @Override
-    public boolean isBottom() {
+	@Override
+	public boolean isBottom() {
 		return value == null && isBottom;
-    }
+	}
 
-    @Override
-    public ConstantValue lubAux(
-            ConstantValue other)
-            throws SemanticException {
-        return TOP;
-    }
+	@Override
+	public ConstantValue lubAux(
+			ConstantValue other)
+			throws SemanticException {
+		return TOP;
+	}
 
-    @Override
-    public ConstantValue wideningAux(
-            ConstantValue other)
-            throws SemanticException {
-        return lubAux(other);
-    }
+	@Override
+	public ConstantValue wideningAux(
+			ConstantValue other)
+			throws SemanticException {
+		return lubAux(other);
+	}
 
-    @Override
-    public boolean lessOrEqualAux(
-            ConstantValue other)
-            throws SemanticException {
-        return false;
-    }
+	@Override
+	public boolean lessOrEqualAux(
+			ConstantValue other)
+			throws SemanticException {
+		return false;
+	}
 
 	@Override
 	public int hashCode() {
@@ -141,9 +141,9 @@ public class ConstantValue
 			return false;
 		return true;
 	}
-	
-	
+
 	public boolean isNumeric() {
-		return value instanceof Long || value instanceof Integer || value instanceof Double || value instanceof Float || value instanceof Short;
+		return value instanceof Long || value instanceof Integer || value instanceof Double || value instanceof Float
+				|| value instanceof Short;
 	}
 }

@@ -1,5 +1,9 @@
 package it.unive.jlisa.helpers;
 
+import static java.nio.file.Files.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.helpers.JsonReportComparer.BaseDiffAlgorithm;
@@ -12,7 +16,6 @@ import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.outputs.json.JsonReport;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.util.file.FileManager;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -22,10 +25,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.nio.file.Files.*;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public abstract class JLiSAAnalysisExecutor {
 
@@ -54,7 +53,8 @@ public abstract class JLiSAAnalysisExecutor {
 	 * @throws IOException
 	 */
 	public void perform(
-			CronConfiguration conf) throws IOException {
+			CronConfiguration conf)
+			throws IOException {
 		perform(conf, false);
 	}
 
@@ -84,7 +84,8 @@ public abstract class JLiSAAnalysisExecutor {
 	 */
 	public void perform(
 			CronConfiguration conf,
-			boolean allMethods) throws IOException {
+			boolean allMethods)
+			throws IOException {
 		String testMethod = getCaller();
 		System.out.println("### Testing " + testMethod);
 		Objects.requireNonNull(conf);
@@ -98,7 +99,6 @@ public abstract class JLiSAAnalysisExecutor {
 			expectedPath = Paths.get(expectedPath.toString(), conf.testSubDir);
 			actualPath = Paths.get(actualPath.toString(), conf.testSubDir);
 		}
-
 
 		List<Path> targets = new ArrayList<Path>();
 		for (String p : conf.programFiles) {
@@ -242,7 +242,7 @@ public abstract class JLiSAAnalysisExecutor {
 			File expFile,
 			File actFile,
 			Accumulator acc)
-					throws IOException {
+			throws IOException {
 		boolean updateReport = acc.changedWarnings || acc.changedConf || acc.changedInfos
 				|| !acc.addedFilePaths.isEmpty() || !acc.removedFilePaths.isEmpty()
 				|| !acc.changedFileName.isEmpty();
@@ -274,8 +274,11 @@ public abstract class JLiSAAnalysisExecutor {
 //		return new JavaFrontend().parseFromFile(target.toString());
 //	}
 
-	private Program readProgram(List<Path> targets) throws IOException {
-		return new JavaFrontend().parseFromListOfFile(targets.stream().map(t -> t.toString()).collect(Collectors.toList()));
+	private Program readProgram(
+			List<Path> targets)
+			throws IOException {
+		return new JavaFrontend()
+				.parseFromListOfFile(targets.stream().map(t -> t.toString()).collect(Collectors.toList()));
 	}
 
 	private void run(

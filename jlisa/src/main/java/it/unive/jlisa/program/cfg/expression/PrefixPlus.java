@@ -14,22 +14,32 @@ import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
 public class PrefixPlus extends UnaryExpression {
-    public PrefixPlus(CFG cfg, CodeLocation location, Expression subExpression) {
-        super(cfg, location, "+", subExpression);
-    }
+	public PrefixPlus(
+			CFG cfg,
+			CodeLocation location,
+			Expression subExpression) {
+		super(cfg, location, "+", subExpression);
+	}
 
-    @Override
-    public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-        return state;
-    }
+	@Override
+	public <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		return state;
+	}
 
-    @Override
-    protected int compareSameClassAndParams(Statement o) {
-        return 0;
-    }
-    @Override
-    public String toString() {
-        return getConstructName() + getSubExpression();
-    }
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return getConstructName() + getSubExpression();
+	}
 }

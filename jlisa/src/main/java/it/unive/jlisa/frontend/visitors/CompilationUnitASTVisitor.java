@@ -1,12 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -17,17 +10,27 @@ import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
+import java.util.List;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends JavaASTVisitor {
 	private boolean visitUnit;
-	
-	public CompilationUnitASTVisitor(ParserContext parserContext, String source, CompilationUnit unit, boolean visitUnit) {
+
+	public CompilationUnitASTVisitor(
+			ParserContext parserContext,
+			String source,
+			CompilationUnit unit,
+			boolean visitUnit) {
 		super(parserContext, source, unit);
 		this.visitUnit = visitUnit;
 	}
 
 	@Override
-	public boolean visit(CompilationUnit node) {    	
+	public boolean visit(
+			CompilationUnit node) {
 		if (visitUnit) {
 			visitUnits(node);
 		} else {
@@ -36,7 +39,8 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		return false;
 	}
 
-	private void addUnits(CompilationUnit unit) {
+	private void addUnits(
+			CompilationUnit unit) {
 		List<?> types = unit.types();
 		for (Object type : types) {
 			if (type instanceof TypeDeclaration) {
@@ -56,7 +60,8 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		}
 	}
 
-	private void visitUnits(CompilationUnit unit) {
+	private void visitUnits(
+			CompilationUnit unit) {
 		List<?> types = unit.types();
 		for (Object type : types) {
 			if (type instanceof TypeDeclaration) {
@@ -76,12 +81,17 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 
 	}
 
-	private InterfaceUnit buildInterfaceUnit(String source, CompilationUnit unit, Program program, TypeDeclaration typeDecl) {
+	private InterfaceUnit buildInterfaceUnit(
+			String source,
+			CompilationUnit unit,
+			Program program,
+			TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
 		if (Modifier.isFinal(modifiers)) {
-			throw new RuntimeException(new ProgramValidationException("Illegal combination of modifiers: interface and final"));
+			throw new RuntimeException(
+					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
 		}
 
 		InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
@@ -89,17 +99,23 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		return iUnit;
 	}
 
-	private ClassUnit buildClassUnit(String source, CompilationUnit unit, Program program, TypeDeclaration typeDecl) {
+	private ClassUnit buildClassUnit(
+			String source,
+			CompilationUnit unit,
+			Program program,
+			TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
 		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit)) {
-			throw new RuntimeException(new ProgramValidationException("Modifier private not allowed in a top-level class"));
+			throw new RuntimeException(
+					new ProgramValidationException("Modifier private not allowed in a top-level class"));
 		}
 		ClassUnit cUnit;
 		if (Modifier.isAbstract(modifiers)) {
 			if (Modifier.isFinal(modifiers)) {
-				throw new RuntimeException(new ProgramValidationException("illegal combination of modifiers: abstract and final"));
+				throw new RuntimeException(
+						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			}
 			cUnit = new AbstractClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
 		} else {
@@ -115,12 +131,15 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 				JavaClassType.lookup(emUnit.getName(), emUnit);
 			}
 		}
-		
-        program.addUnit(cUnit);
+
+		program.addUnit(cUnit);
 		return cUnit;
 	}
-	
-	private EnumUnit buildEnumUnit(String source, Program program, EnumDeclaration typeDecl) {
+
+	private EnumUnit buildEnumUnit(
+			String source,
+			Program program,
+			EnumDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 		EnumUnit enUnit = new EnumUnit(loc, program, typeDecl.getName().toString(), true);
 		program.addUnit(enUnit);

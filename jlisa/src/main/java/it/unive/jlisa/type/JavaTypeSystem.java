@@ -13,28 +13,30 @@ import it.unive.lisa.type.TypeSystem;
 
 public class JavaTypeSystem extends TypeSystem {
 
-    @Override
-    public BooleanType getBooleanType() {
-        return JavaBooleanType.INSTANCE;
-    }
+	@Override
+	public BooleanType getBooleanType() {
+		return JavaBooleanType.INSTANCE;
+	}
 
-    @Override
-    public StringType getStringType() {
-        return (StringType) JavaClassType.getStringType();
-    }
+	@Override
+	public StringType getStringType() {
+		return (StringType) JavaClassType.getStringType();
+	}
 
-    @Override
-    public NumericType getIntegerType() {
-        return JavaIntType.INSTANCE;
-    }
-    
-    @Override
-    public ReferenceType getReference(Type type) {
-    	return new JavaReferenceType(type);
-    }
+	@Override
+	public NumericType getIntegerType() {
+		return JavaIntType.INSTANCE;
+	}
 
-    @Override
-    public boolean canBeReferenced(Type type) {
-        return type.isInMemoryType();
-    }
+	@Override
+	public ReferenceType getReference(
+			Type type) {
+		return new JavaReferenceType(type);
+	}
+
+	@Override
+	public boolean canBeReferenced(
+			Type type) {
+		return type.isInMemoryType();
+	}
 }

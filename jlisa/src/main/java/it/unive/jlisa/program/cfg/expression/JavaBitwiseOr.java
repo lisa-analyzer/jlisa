@@ -18,38 +18,42 @@ import it.unive.lisa.type.Untyped;
 
 public class JavaBitwiseOr extends BinaryExpression {
 
-    public JavaBitwiseOr(
-            CFG cfg,
-            CodeLocation loc,
-            Expression left,
-            Expression right) {
-        super(cfg, loc, "|", Untyped.INSTANCE, left, right);
-    }
+	public JavaBitwiseOr(
+			CFG cfg,
+			CodeLocation loc,
+			Expression left,
+			Expression right) {
+		super(cfg, loc, "|", Untyped.INSTANCE, left, right);
+	}
 
-    @Override
-    protected int compareSameClassAndParams(
-            Statement o) {
-        return 0;
-    }
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-        Analysis<A, D> analysis = interprocedural.getAnalysis();
-        if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isNumericType))
-            return state.bottom();
-        if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(Type::isNumericType))
-            return state.bottom();
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isNumericType))
+			return state.bottom();
+		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(Type::isNumericType))
+			return state.bottom();
 
-        return analysis.smallStepSemantics(
-                state,
-                new it.unive.lisa.symbolic.value.BinaryExpression(
-                        Untyped.INSTANCE,
-                        left,
-                        right,
-                        it.unive.lisa.symbolic.value.operator.binary.BitwiseOr.INSTANCE,
-                        getLocation()),
-                this);
+		return analysis.smallStepSemantics(
+				state,
+				new it.unive.lisa.symbolic.value.BinaryExpression(
+						Untyped.INSTANCE,
+						left,
+						right,
+						it.unive.lisa.symbolic.value.operator.binary.BitwiseOr.INSTANCE,
+						getLocation()),
+				this);
 	}
 }

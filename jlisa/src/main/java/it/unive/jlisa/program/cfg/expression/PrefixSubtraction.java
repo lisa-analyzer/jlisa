@@ -22,47 +22,57 @@ import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
 import it.unive.lisa.type.Type;
 
-public class PrefixSubtraction extends UnaryExpression implements MetaVariableCreator{
-    public PrefixSubtraction(CFG cfg, CodeLocation location, Expression subExpression) {
-        super(cfg, location, "--", subExpression);
-    }
+public class PrefixSubtraction extends UnaryExpression implements MetaVariableCreator {
+	public PrefixSubtraction(
+			CFG cfg,
+			CodeLocation location,
+			Expression subExpression) {
+		super(cfg, location, "--", subExpression);
+	}
 
-    @Override
-    public Identifier getMetaVariable() {
-        Expression e = getSubExpression();
-        String name = "ret_value@" + this.getLocation();
-        Variable var = new Variable(e.getStaticType(), name, getLocation());
-        return var;
-    }
+	@Override
+	public Identifier getMetaVariable() {
+		Expression e = getSubExpression();
+		String name = "ret_value@" + this.getLocation();
+		Variable var = new Variable(e.getStaticType(), name, getLocation());
+		return var;
+	}
 
-    @Override
-    public <A extends AbstractLattice<A>,
-		D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression expr, StatementStore<A> expressions) throws SemanticException {
-        Analysis<A, D> analysis = interprocedural.getAnalysis();
-        if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
-            return state.bottom();
+	@Override
+	public <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
+			return state.bottom();
 
-        state = analysis.assign(
-                state,
-                expr,
-                new BinaryExpression(
-                        getStaticType(),
-                        expr,
-                        new Constant(JavaIntType.INSTANCE, 1, getLocation()),
-                        NumericNonOverflowingSub.INSTANCE,
-                        getLocation()),
-                this);
-        //state = state.assign(meta, expr, this);
-        return analysis.smallStepSemantics(state, expr, this);
+		state = analysis.assign(
+				state,
+				expr,
+				new BinaryExpression(
+						getStaticType(),
+						expr,
+						new Constant(JavaIntType.INSTANCE, 1, getLocation()),
+						NumericNonOverflowingSub.INSTANCE,
+						getLocation()),
+				this);
+		// state = state.assign(meta, expr, this);
+		return analysis.smallStepSemantics(state, expr, this);
 
-    }
+	}
 
-    @Override
-    protected int compareSameClassAndParams(Statement o) {
-        return 0;
-    }
-    @Override
-    public String toString() {
-        return getConstructName() + getSubExpression();
-    }
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return getConstructName() + getSubExpression();
+	}
 }

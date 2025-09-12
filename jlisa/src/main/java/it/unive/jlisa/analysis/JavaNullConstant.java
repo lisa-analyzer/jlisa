@@ -8,13 +8,17 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapExpression;
 
 public class JavaNullConstant extends HeapExpression {
-	
-	public JavaNullConstant(CodeLocation location) {
+
+	public JavaNullConstant(
+			CodeLocation location) {
 		super(JavaNullType.INSTANCE, location);
 	}
 
 	@Override
-	public <T> T accept(ExpressionVisitor<T> visitor, Object... params) throws SemanticException {
+	public <T> T accept(
+			ExpressionVisitor<T> visitor,
+			Object... params)
+			throws SemanticException {
 		return visitor.visit(this, null, params);
 	}
 
@@ -22,14 +26,16 @@ public class JavaNullConstant extends HeapExpression {
 	public String toString() {
 		return "null";
 	}
-	
+
 	@Override
 	public SymbolicExpression removeTypingExpressions() {
 		return this;
 	}
 
 	@Override
-	public SymbolicExpression replace(SymbolicExpression source, SymbolicExpression target) {
+	public SymbolicExpression replace(
+			SymbolicExpression source,
+			SymbolicExpression target) {
 		if (this.equals(source))
 			return target;
 		return this;

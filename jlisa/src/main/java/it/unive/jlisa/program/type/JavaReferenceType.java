@@ -9,17 +9,22 @@ import it.unive.lisa.type.Type;
 
 public class JavaReferenceType extends ReferenceType {
 
-	public JavaReferenceType(Type t) {
+	public JavaReferenceType(
+			Type t) {
 		super(t);
 	}
 
 	@Override
-	public Expression defaultValue(CFG cfg, CodeLocation location) {
+	public Expression defaultValue(
+			CFG cfg,
+			CodeLocation location) {
 		return new JavaNullLiteral(cfg, location);
 	}
-	
+
 	@Override
-	public Expression unknownValue(CFG cfg, CodeLocation location) {
+	public Expression unknownValue(
+			CFG cfg,
+			CodeLocation location) {
 		return getInnerType().unknownValue(cfg, location);
 	}
 }
