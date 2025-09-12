@@ -1,14 +1,25 @@
-checkstyle {
-    configFile = file(File(rootProject.projectDir, "checkstyle-config.xml"))
+import org.gradle.api.plugins.quality.Checkstyle
+import org.gradle.api.plugins.quality.CheckstyleExtension
+
+// Apply Checkstyle plugin imperatively
+apply<org.gradle.api.plugins.quality.CheckstylePlugin>()
+
+// --------------------
+// Checkstyle configuration
+// --------------------
+configure<CheckstyleExtension> {
+    configFile = file("${rootProject.projectDir}/checkstyle-config.xml")
     sourceSets = emptyList()
     isShowViolations = true
     toolVersion = "8.38"
 }
 
+// Disable checkstyleTest
 tasks.named<Checkstyle>("checkstyleTest") {
     isEnabled = false
 }
 
+// Configure checkstyleMain
 tasks.named<Checkstyle>("checkstyleMain") {
     finalizedBy("checkstyleErrorMessage")
     reports {
@@ -17,71 +28,23 @@ tasks.named<Checkstyle>("checkstyleMain") {
     }
 }
 
+// Task to show Checkstyle errors
 tasks.register("checkstyleErrorMessage") {
     onlyIf {
         val checkstyleMain = tasks.named("checkstyleMain").get()
         checkstyleMain.state.failure != null
     }
     doLast {
-        logger.error("Checkstyle plugin thrown an error. This means that the javadoc is not correctly setup. Inspect console output to find problematic javadocs.")
+        logger.error("Checkstyle plugin thrown an error. Javadoc may be incorrectly set up.")
         logger.error("To reproduce locally, execute './gradlew checkstyleMain'")
     }
 }
 
-spotless {
-    enforceCheck = false
-    encoding = "UTF-8"
-    lineEndings = com.diffplug.spotless.LineEnding.UNIX
-
-    java {
-        leadingSpacesToTabs()
-
-        importOrder()
-        removeUnusedImports()
-
-        eclipse().configFile(File(rootProject.projectDir, "spotless-formatting.xml"))
-
-        target("src/**/*.java")
-
-        targetExclude("**/build/generated/**/*.java")
-        targetExclude("**/build/generated-src/**/*.java")
-        targetExclude("**/target/generated-sources/**/*.java")
-        targetExclude("**/VersionInfo.java")
-    }
-
-    antlr4 {
-        target("src/*/antlr/**/*.g4")
-        antlr4Formatter()
-    }
-}
-
-tasks.named("spotlessJava") {
-    dependsOn("compileJava", "compileTestJava", "processTestResources", "spotlessAntlr4")
-}
-
-tasks.named("spotlessJavaCheck") {
-    finalizedBy("spotlessErrorMessage")
-}
-
-tasks.named("spotlessAntlr4Check") {
-    finalizedBy("spotlessErrorMessage")
-}
-
-tasks.register("spotlessErrorMessage") {
-    onlyIf {
-        val spotlessJavaCheck = tasks.named("spotlessJavaCheck").get()
-        val spotlessAntlr4Check = tasks.named("spotlessAntlr4Check").get()
-        spotlessJavaCheck.state.failure != null || spotlessAntlr4Check.state.failure != null
-    }
-    doLast {
-        logger.error("Spotless plugin thrown an error. This means that the code is not correctly formatted.")
-        logger.error("To reproduce locally, execute './gradlew spotlessCheck'")
-        logger.error("To automatically fix all the problems, execute './gradlew spotlessApply'")
-    }
-}
-
+// --------------------
+// Combined code style check
+// --------------------
 tasks.register("checkCodeStyle") {
     group = "verification"
-    description = "Execute spotless and checkstyle to ensure code and javadoc formatting"
+    description = "Execute Spotless and Checkstyle to ensure code and Javadoc formatting"
     dependsOn("spotlessCheck", "checkstyleMain", "checkstyleTest")
 }
