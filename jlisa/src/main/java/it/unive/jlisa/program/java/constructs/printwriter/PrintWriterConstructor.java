@@ -15,7 +15,6 @@ import it.unive.lisa.symbolic.value.PushAny;
 public class PrintWriterConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-
 	public PrintWriterConstructor(
 			CFG cfg,
 			CodeLocation location) {
