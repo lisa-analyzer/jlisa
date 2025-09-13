@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -17,7 +18,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 	private CFG cfg;
 	private ParsedBlock block;
 
-	LocalVariableTracker tracker;
+	JavaLocalVariableTracker tracker;
 
 	private BlockStatementASTVisitor(
 			ParserContext parserContext,
@@ -31,7 +32,7 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 			String source,
 			CompilationUnit compilationUnit,
 			CFG cfg,
-			LocalVariableTracker tracker) {
+			JavaLocalVariableTracker tracker) {
 		this(parserContext, source, compilationUnit);
 		this.cfg = cfg;
 		this.tracker = tracker;

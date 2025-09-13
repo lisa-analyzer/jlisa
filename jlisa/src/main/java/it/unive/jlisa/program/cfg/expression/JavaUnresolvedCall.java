@@ -13,9 +13,9 @@ import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
 import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+
 import java.util.Set;
 
 public class JavaUnresolvedCall extends UnresolvedCall {
@@ -95,49 +95,6 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				}
 			}
 		}
-		for (SymbolicExpression e : result.getExecution().getComputedExpressions()) {
-			if (isOpenCallRetValue(e)) {
-				// MethodOverloading1
-				// 1. System.out.println(...) -> out is Untyped.
-				// 2. this call is seen as an INSTANCE UnresolvedCall
-				// 3. The Qualifier is null.
-				// 4. Should we get the qualifier from the first paramater's
-				// static type (if the parameter
-				// is a JavaAccessGlobal, should the JavaAccessGlobal static
-				// type be the type of the Target?
-				// JavaAcessGlobal(System.out).staticType is Untyped (and also
-				// JavaAcessGlobal(System.out).target.staticType).
-
-				String staticQualifier = getQualifier() == null ? "PrintStream" : getQualifier(); // TODO
-																									// FIX
-																									// THIS.
-																									// THIS
-																									// IS
-																									// NOT
-																									// CORRECT.
-																									// PLACED
-																									// JUST
-																									// FOR
-																									// TESTING
-																									// PURPOSES.
-				// At least one call is open call (we should have all open calls
-				// or no open calls at all). We need to try to resolve the
-				// static.
-				JavaUnresolvedStaticCall staticCall = new JavaUnresolvedStaticCall(getCFG(), getLocation(),
-						staticQualifier, getTargetName(), getParameters());
-				state.lub(staticCall.forwardSemanticsAux(interprocedural, state, params, expressions));
-				result.lub(state);
-				break;
-			}
-		}
 		return result;
-	}
-
-	public boolean isOpenCallRetValue(
-			SymbolicExpression expression) {
-		if (expression instanceof Variable v && v.getName().startsWith("open_call_ret_value@")) {
-			return true;
-		}
-		return false;
 	}
 }

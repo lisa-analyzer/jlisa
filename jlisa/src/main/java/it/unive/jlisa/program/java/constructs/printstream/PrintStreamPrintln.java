@@ -10,6 +10,8 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.type.VoidType;
 
 public class PrintStreamPrintln extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -48,6 +50,7 @@ public class PrintStreamPrintln extends NaryExpression implements PluggableState
 					StatementStore<A> expressions)
 					throws SemanticException {
 		// nothing to do
-		return state;
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(VoidType.INSTANCE, getLocation()),
+				originating);
 	}
 }

@@ -4,6 +4,7 @@ import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
+import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -18,17 +19,12 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import it.unive.lisa.util.frontend.LocalVariableTracker;
+import org.eclipse.jdt.core.dom.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
 
 public class MethodASTVisitor extends JavaASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -66,7 +62,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 
 		this.cfg = new CFG(codeMemberDescriptor);
 
-		LocalVariableTracker tracker = new LocalVariableTracker(cfg, codeMemberDescriptor);
+		JavaLocalVariableTracker tracker = new JavaLocalVariableTracker(cfg, codeMemberDescriptor);
 		tracker.enterScope();
 		Parameter[] formalParams = codeMemberDescriptor.getFormals();
 		for (int i = 0; i < formalParams.length - 1; i++) {
