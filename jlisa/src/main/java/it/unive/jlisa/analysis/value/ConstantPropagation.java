@@ -789,13 +789,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-				
-		if(subExpressions.length == 4) {
-			
-		} else if (subExpressions.length == 5) {
-			
-		}
-		
 		return top();
 	}
 	
