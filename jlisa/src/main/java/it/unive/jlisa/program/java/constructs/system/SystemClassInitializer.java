@@ -32,7 +32,8 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			CodeLocation location,
 			ClassUnit objectUnit) {
 
-		super(new JavaCodeMemberDescriptor(location, objectUnit, false, "System" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE,
+		super(new JavaCodeMemberDescriptor(location, objectUnit, false, "System" + InitializedClassSet.SUFFIX_CLINIT,
+				VoidType.INSTANCE,
 				new Parameter[0]),
 				SystemClassInitializer.SystemClInit.class);
 	}
@@ -100,7 +101,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			AnalysisState<A> accessGlobalState = accessGlobal.forwardSemantics(state, interprocedural, expressions);
 			AnalysisState<A> tmp = state.bottom();
 			for (SymbolicExpression callExpr : callState.getExecutionExpressions()) {
-				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions()) 
+				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions())
 					tmp = tmp.lub(interprocedural.getAnalysis().assign(callState, accessGlobalExpr, callExpr, this));
 			}
 

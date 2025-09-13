@@ -9,6 +9,7 @@ import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.JavaSubtraction;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.*;
@@ -32,10 +33,11 @@ import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.*;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -154,7 +156,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			break;
 		case "-=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
-					new Subtraction(cfg, locationManager.nextColumn(), left, right));
+					new JavaSubtraction(cfg, locationManager.nextColumn(), left, right));
 			break;
 		case "*=":
 			expression = new JavaAssignment(cfg, locationManager.getCurrentLocation(), left,
@@ -403,7 +405,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			expression = buildExpression(operands, jdtOperands, (
 					first,
 					second,
-					location) -> new Subtraction(cfg, location, first, second));
+					location) -> new JavaSubtraction(cfg, location, first, second));
 			break;
 		case ">>":
 			expression = buildExpression(operands, jdtOperands, (
@@ -653,7 +655,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			SimpleName node) {
 		String identifier = node.getIdentifier();
 		expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(
-				cfg, new VariableInfo(identifier, tracker != null ? tracker.getLocalVariable(identifier) : null)));
+				cfg, new VariableInfo(identifier, tracker != null ? tracker.getLatestScope().get(identifier) : null)));
 		return false;
 	}
 

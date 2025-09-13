@@ -224,11 +224,11 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getArithmeticExceptionType() {
 		return lookup("ArithmeticException", null);
 	}
-	
+
 	public static JavaClassType getSystemType() {
 		return lookup("System", null);
 	}
-	
+
 	public static JavaClassType getPrintStreamType() {
 		return lookup("PrintStream", null);
 	}
