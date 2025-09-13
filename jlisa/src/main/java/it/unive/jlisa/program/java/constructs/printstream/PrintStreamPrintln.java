@@ -19,7 +19,7 @@ public class PrintStreamPrintln extends NaryExpression implements PluggableState
 	public PrintStreamPrintln(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "println", JavaClassType.lookup("PrintStream", null));
+		super(cfg, location, "println", JavaClassType.getPrintStreamType());
 	}
 
 	public static PrintStreamPrintln build(

@@ -18,7 +18,7 @@ public class PrintStreamConstructor extends NaryExpression implements PluggableS
 	public PrintStreamConstructor(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "PrintStream", JavaClassType.lookup("PrintStream", null));
+		super(cfg, location, "PrintStream", JavaClassType.getPrintStreamType());
 	}
 
 	public static PrintStreamConstructor build(
