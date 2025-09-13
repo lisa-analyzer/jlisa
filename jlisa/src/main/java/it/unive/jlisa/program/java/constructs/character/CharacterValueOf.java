@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.java.constructs.character;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -54,7 +54,7 @@ public class CharacterValueOf extends it.unive.lisa.program.cfg.statement.UnaryE
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type charType = JavaCharType.INSTANCE;
+		Type charType = JavaClassType.lookup("Character", null);
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 
