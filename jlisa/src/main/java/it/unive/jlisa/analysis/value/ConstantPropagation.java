@@ -791,7 +791,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			throws SemanticException {
 		return top();
 	}
-	
+
 	@Override
 	public Satisfiability satisfiesAbstractValue(
 			ConstantValue value,
@@ -832,15 +832,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaCharacterIsDigitOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isDigit(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
+
 		if (operator instanceof JavaCharacterIsDefinedOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isDefined(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
+
 		if (operator instanceof JavaCharacterIsLetterOrDigitOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isLetterOrDigit(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
+
 		if (operator instanceof JavaCharacterIsLowerCaseOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isLowerCase(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
@@ -848,15 +848,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaCharacterIsUpperCaseOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isUpperCase(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
+
 		if (operator instanceof JavaCharacterIsJavaIdentifierStartOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isJavaIdentifierStart(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
+
 		if (operator instanceof JavaCharacterIsJavaIdentifierPartOperator)
 			if (arg.getValue() instanceof Integer v)
 				return Character.isJavaIdentifierPart(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		
+
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}
 
@@ -871,15 +871,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		BinaryOperator operator = expression.getOperator();
 		if (left.isTop() || right.isTop())
 			return Satisfiability.UNKNOWN;
-		
+
 		// character
-			
+
 		if (operator instanceof JavaCharacterEqualsOperator) {
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
-		
+
 		// string
 		if (operator instanceof JavaStringContainsOperator) {
 			String lv = ((String) left.getValue());
@@ -892,35 +892,35 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String rv = ((String) right.getValue());
 			return lv.equals(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
-		
+
 		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.equalsIgnoreCase(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.equalsIgnoreCase(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
-		
+
 		if (operator instanceof JavaStringMatchesOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
-		
+
 		if (operator instanceof JavaStringEndsWithOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.endsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.endsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
-		
+
 		if (operator instanceof JavaStringStartsWithOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.startsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.startsWith(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
-		
+
 		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
-			return lv.equalsIgnoreCase(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;			
+			return lv.equalsIgnoreCase(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof ComparisonEq) {

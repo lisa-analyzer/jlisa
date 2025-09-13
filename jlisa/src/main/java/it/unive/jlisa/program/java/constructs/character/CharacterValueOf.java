@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.character;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
