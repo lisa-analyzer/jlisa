@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.system;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -22,9 +23,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.VoidType;
 
 public class SystemClassInitializer extends NativeCFG implements PluggableStatement {
-	private static final String CODE_MEMBER_DESCRIPTOR = "System_clinit";
-	private static final String GLOBAL_OUT = "out";
-	private static final String GLOBAL_OUT_CLASS_NAME = "PrintStream";
+//	private static final String GLOBAL_OUT = "out";
+//	private static final String GLOBAL_OUT_CLASS_NAME = "PrintStream";
 
 	protected Statement originating;
 
@@ -32,7 +32,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			CodeLocation location,
 			ClassUnit objectUnit) {
 
-		super(new JavaCodeMemberDescriptor(location, objectUnit, false, CODE_MEMBER_DESCRIPTOR, VoidType.INSTANCE,
+		super(new JavaCodeMemberDescriptor(location, objectUnit, false, "System" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE,
 				new Parameter[0]),
 				SystemClassInitializer.SystemClInit.class);
 	}
@@ -56,7 +56,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 		public SystemClInit(
 				CFG cfg,
 				CodeLocation location) {
-			super(cfg, location, CODE_MEMBER_DESCRIPTOR, JavaClassType.lookup("System", null));
+			super(cfg, location, "System" + InitializedClassSet.SUFFIX_CLINIT, JavaClassType.getSystemType());
 		}
 
 		@Override
@@ -78,15 +78,16 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			JavaClassType printWriterClassType = JavaClassType.lookup(GLOBAL_OUT_CLASS_NAME, null);
+			JavaClassType printWriterClassType = JavaClassType.getPrintStreamType();
+			JavaClassType systemType = JavaClassType.getSystemType();
 			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(
 					getCFG(),
 					getLocation(),
-					getUnit(),
+					systemType.getUnit(),
 					new Global(
 							getLocation(),
 							getUnit(),
-							GLOBAL_OUT,
+							"out",
 							false,
 							printWriterClassType));
 			JavaNewObj newOut = new JavaNewObj(
@@ -99,14 +100,10 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			AnalysisState<A> accessGlobalState = accessGlobal.forwardSemantics(state, interprocedural, expressions);
 			AnalysisState<A> tmp = state.bottom();
 			for (SymbolicExpression callExpr : callState.getExecutionExpressions()) {
-				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions()) {
-					AnalysisState<
-							A> sem = interprocedural.getAnalysis().assign(callState, accessGlobalExpr, callExpr, this);
-					tmp = tmp.lub(sem);
-				}
+				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions()) 
+					tmp = tmp.lub(interprocedural.getAnalysis().assign(callState, accessGlobalExpr, callExpr, this));
 			}
 
-			// getMetaVariables().addAll(call.getMetaVariables());
 			return tmp.withExecutionExpressions(state.getExecutionExpressions());
 		}
 	}
