@@ -15,7 +15,6 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-
 import java.util.Set;
 
 public class JavaUnresolvedCall extends UnresolvedCall {

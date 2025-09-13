@@ -47,10 +47,9 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
+import java.util.*;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.*;
-
-import java.util.*;
 
 public class StatementASTVisitor extends JavaASTVisitor {
 

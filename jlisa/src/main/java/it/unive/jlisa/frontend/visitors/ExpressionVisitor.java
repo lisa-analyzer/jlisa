@@ -32,11 +32,10 @@ import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.*;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import org.apache.commons.lang3.function.TriFunction;
-import org.eclipse.jdt.core.dom.*;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.function.TriFunction;
+import org.eclipse.jdt.core.dom.*;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
