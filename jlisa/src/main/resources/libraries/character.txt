@@ -64,3 +64,7 @@ class Character extends Object:
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.character.CharacterValueOf
+		libtype Character*
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE

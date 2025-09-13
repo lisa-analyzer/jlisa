@@ -24,20 +24,20 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param other libtype String*
 		
 	instance method contains: it.unive.jlisa.program.java.constructs.string.StringContains
-		type it.unive.lisa.program.type.BoolType::INSTANCE
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		
 	instance method equals: it.unive.jlisa.program.java.constructs.string.StringEquals
-		libtype String*
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		
 	instance method equalsIgnoreCase: it.unive.jlisa.program.java.constructs.string.StringEqualsIgnoreCase
-		libtype String*
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
-		
+				
 	instance method toUpperCase: it.unive.jlisa.program.java.constructs.string.StringToUpperCase
 		libtype String*
 		param this libtype String*	
@@ -60,24 +60,24 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param this libtype String*	
 		
 	instance method startsWith: it.unive.jlisa.program.java.constructs.string.StringStartsWith
-		type it.unive.lisa.program.type.BoolType::INSTANCE
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		
 	instance method startsWith: it.unive.jlisa.program.java.constructs.string.StringStartsWithFromIndex
-		type it.unive.lisa.program.type.BoolType::INSTANCE
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 		
 	instance method endsWith: it.unive.jlisa.program.java.constructs.string.StringEndsWith
-		type it.unive.lisa.program.type.BoolType::INSTANCE
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		
 	instance method matches: it.unive.jlisa.program.java.constructs.string.StringMatches
-		type it.unive.lisa.program.type.BoolType::INSTANCE
+		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype String*
 		param other libtype String*
 		
@@ -106,8 +106,8 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 			
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfBoolean
 		libtype String*
-		param other type it.unive.lisa.program.type.BoolType::INSTANCE
-			
+		param other type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+	
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
 		libtype String*
 		param other type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
@@ -165,3 +165,4 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param this libtype String*
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	
