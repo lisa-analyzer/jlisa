@@ -30,7 +30,10 @@ import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
 import it.unive.lisa.program.cfg.statement.logic.Or;
-import it.unive.lisa.program.cfg.statement.numeric.*;
+import it.unive.lisa.program.cfg.statement.numeric.Addition;
+import it.unive.lisa.program.cfg.statement.numeric.Modulo;
+import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
+import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.ArrayList;
@@ -653,8 +656,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			parserContext.addException(new ParsingException("missing_globals", ParsingException.Type.MALFORMED_SOURCE,
 					"Global " + targetName + " not found in unit " + unit.getName() + ".",
 					getSourceCodeLocation(node)));
-			// global = new Global(getSourceCodeLocation(node), unit,
-			// targetName, false);
+			global = new Global(getSourceCodeLocation(node), unit,
+					targetName, false);
 		}
 		expression = new JavaAccessGlobal(cfg,
 				getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), unit, global);

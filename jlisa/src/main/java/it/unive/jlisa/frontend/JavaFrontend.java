@@ -11,6 +11,12 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,11 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class JavaFrontend {
 	private ParserContext parserContext;
@@ -157,6 +158,7 @@ public class JavaFrontend {
 		List<String> expandedPaths = expandFilePaths(filePaths);
 		populateUnits(expandedPaths);
 		setRelationships(expandedPaths);
+		setGlobals(expandedPaths);
 		registerTypes();
 
 		for (String filePath : expandedPaths) {
@@ -190,6 +192,18 @@ public class JavaFrontend {
 			CompilationUnit cu = getCompilationUnit(source);
 			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
 					CompilationUnitASTVisitor.VisitorType.SET_RELATIONSHIPS));
+		}
+	}
+
+	public void setGlobals(
+			List<String> filePaths)
+			throws IOException {
+		for (String filePath : filePaths) {
+			Path path = Paths.get(filePath);
+			String source = Files.readString(path);
+			CompilationUnit cu = getCompilationUnit(source);
+			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
+					CompilationUnitASTVisitor.VisitorType.ADD_GLOBALS));
 		}
 	}
 

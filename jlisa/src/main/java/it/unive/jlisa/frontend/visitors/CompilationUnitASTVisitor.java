@@ -16,6 +16,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 	public enum VisitorType {
 		ADD_UNITS,
 		VISIT_UNIT,
+		ADD_GLOBALS,
 		SET_RELATIONSHIPS
 	}
 
@@ -39,6 +40,8 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 			addUnits(node);
 		} else if (visitorType == VisitorType.SET_RELATIONSHIPS) {
 			setRelationships(node);
+		} else if (visitorType == VisitorType.ADD_GLOBALS) {
+			addGlobals(node);
 		}
 		return false;
 	}
@@ -81,6 +84,23 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		}
 	}
 
+	private void addGlobals(
+			CompilationUnit unit) {
+		List<?> types = unit.types();
+		for (Object type : types) {
+			if (type instanceof TypeDeclaration) {
+				TypeDeclaration typeDecl = (TypeDeclaration) type;
+				if ((typeDecl.isInterface())) {
+					JavaInterfaceType interfaceType = JavaInterfaceType.lookup(typeDecl.getName().toString(), null);
+					populateClassUnit(interfaceType.getUnit(), typeDecl);
+				} else {
+					JavaClassType classType = JavaClassType.lookup(typeDecl.getName().toString(), null);
+					populateClassUnit(classType.getUnit(), typeDecl);
+				}
+			}
+		}
+	}
+
 	private void addUnits(
 			CompilationUnit unit) {
 		List<?> types = unit.types();
@@ -93,7 +113,6 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 				} else {
 					ClassUnit cUnit = buildClassUnit(source, unit, getProgram(), typeDecl);
 					JavaClassType.lookup(cUnit.getName(), cUnit);
-					populateClassUnit(cUnit, typeDecl);
 				}
 
 			} else if (type instanceof EnumDeclaration) {
