@@ -15,7 +15,6 @@ import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -363,9 +362,10 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				} else {
 					return -1;
 				}
-			} else if(paramType.isBooleanType() && formalType.isBooleanType()) {
+			} else if (paramType.isBooleanType() && formalType.isBooleanType()) {
 				return 0;
-			} else if (paramType instanceof ReferenceType refTypeParam && formalType instanceof ReferenceType refTypeFormal) {
+			} else if (paramType instanceof ReferenceType refTypeParam
+					&& formalType instanceof ReferenceType refTypeFormal) {
 				if (refTypeParam.getInnerType().isNullType()) {
 					return 0;
 				}

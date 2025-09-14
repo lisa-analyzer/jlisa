@@ -6,12 +6,11 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.*;
 import it.unive.lisa.type.UnitType;
-import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class CompilationUnitASTVisitor extends JavaASTVisitor {
 	public enum VisitorType {
@@ -19,7 +18,9 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		VISIT_UNIT,
 		SET_RELATIONSHIPS
 	}
+
 	public VisitorType visitorType;
+
 	public CompilationUnitASTVisitor(
 			ParserContext parserContext,
 			String source,
@@ -36,13 +37,14 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 			visitUnits(node);
 		} else if (visitorType == VisitorType.ADD_UNITS) {
 			addUnits(node);
-		} else if(visitorType == VisitorType.SET_RELATIONSHIPS) {
+		} else if (visitorType == VisitorType.SET_RELATIONSHIPS) {
 			setRelationships(node);
 		}
 		return false;
 	}
 
-	private void setRelationships(CompilationUnit unit) {
+	private void setRelationships(
+			CompilationUnit unit) {
 		List<?> types = unit.types();
 		for (Object type : types) {
 			if (type instanceof TypeDeclaration) {
@@ -50,8 +52,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 				it.unive.lisa.program.CompilationUnit lisaCU = null;
 				if (typeDecl.isInterface()) {
 					lisaCU = JavaInterfaceType.lookup(typeDecl.getName().getIdentifier(), null).getUnit();
-				}
-				else {
+				} else {
 					lisaCU = JavaClassType.lookup(typeDecl.getName().getIdentifier(), null).getUnit();
 				}
 				if (typeDecl.getSuperclassType() != null) {
@@ -67,7 +68,7 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 				}
 				for (Object oInterfaceType : typeDecl.superInterfaceTypes()) {
 					TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, unit);
-					((ASTNode)oInterfaceType).accept(typeVisitor);
+					((ASTNode) oInterfaceType).accept(typeVisitor);
 					it.unive.lisa.type.Type superInterfaceClassType = typeVisitor.getType();
 					if (superInterfaceClassType != null) {
 						UnitType unitType = superInterfaceClassType.asUnitType();
@@ -79,7 +80,6 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 			}
 		}
 	}
-
 
 	private void addUnits(
 			CompilationUnit unit) {
@@ -169,7 +169,9 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 		return cUnit;
 	}
 
-	private void populateClassUnit(it.unive.lisa.program.CompilationUnit unit, TypeDeclaration typeDecl) {
+	private void populateClassUnit(
+			it.unive.lisa.program.CompilationUnit unit,
+			TypeDeclaration typeDecl) {
 		// iterates over inner declarations
 		for (Object decl : typeDecl.bodyDeclarations()) {
 			// enum inner declaration
@@ -181,13 +183,13 @@ public class CompilationUnitASTVisitor extends JavaASTVisitor {
 
 			Set<String> visitedFieldNames = new HashSet<>();
 			if (decl instanceof FieldDeclaration fdecl) {
-				FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, unit, compilationUnit,
+				FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, unit,
+						compilationUnit,
 						visitedFieldNames);
 				fdecl.accept(visitor);
 			}
 		}
 	}
-
 
 	private EnumUnit buildEnumUnit(
 			String source,

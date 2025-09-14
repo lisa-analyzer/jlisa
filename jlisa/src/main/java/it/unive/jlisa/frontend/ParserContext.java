@@ -38,7 +38,9 @@ import java.util.Map;
  */
 public class ParserContext {
 
-	public Global getGlobal(Unit unit, String targetName) {
+	public Global getGlobal(
+			Unit unit,
+			String targetName) {
 		Global global = unit.getGlobal(targetName);
 		if (global == null) {
 			if (unit instanceof CompilationUnit cu) {
