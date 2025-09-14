@@ -1,5 +1,5 @@
 class OutputStream extends Object:
 
-    instance method OutputStream: it.unive.jlisa.program.java.constructs.outputstream.OutputStreamConstructor
-            libtype OutputStream*
-            param this libtype OutputStream*
+instance method OutputStream: it.unive.jlisa.program.java.constructs.outputstream.OutputStreamConstructor
+        libtype OutputStream*
+        param this libtype OutputStream*

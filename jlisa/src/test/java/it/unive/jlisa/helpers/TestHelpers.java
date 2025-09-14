@@ -11,7 +11,6 @@ import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.FullStackToken;
-
 import java.util.ArrayList;
 
 public class TestHelpers {
