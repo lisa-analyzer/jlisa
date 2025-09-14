@@ -162,6 +162,9 @@ public class ParserContext {
 		Map<VariableInfo, Type> cfgVariables = variableTypes.get(cfg);
 		if (cfgVariables != null) {
 			type = cfgVariables.get(variableInfo);
+			if (type == null) {
+				type = cfgVariables.get(new VariableInfo(variableInfo.getName(), null));
+			}
 		}
 		if (type == null) {
 			String name = variableInfo.getName();
