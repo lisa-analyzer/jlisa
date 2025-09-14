@@ -1,4 +1,7 @@
 class Long extends Object:
+	field MAX_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+    field MIN_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
 	instance field value type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 			
 	instance method longValue: it.unive.jlisa.program.java.constructs.longw.LongValue

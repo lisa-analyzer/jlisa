@@ -1,4 +1,7 @@
 class Integer extends Object:
+	field MAX_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+    field MIN_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
 	instance field value type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	instance method Integer: it.unive.jlisa.program.java.constructs.integer.IntegerConstructor

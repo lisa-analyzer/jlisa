@@ -11,9 +11,11 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
 import it.unive.lisa.program.language.resolution.ParameterMatchingStrategy;
+import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -361,15 +363,25 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				} else {
 					return -1;
 				}
-			} else if (paramType instanceof UnitType unitParam) {
-				if (formalType instanceof UnitType unitFormal) {
-					int paramDist = distanceBetweenCompilationUnits(unitFormal.getUnit(), unitParam.getUnit());
-					if (paramDist < 0)
+			} else if(paramType.isBooleanType() && formalType.isBooleanType()) {
+				return 0;
+			} else if (paramType instanceof ReferenceType refTypeParam && formalType instanceof ReferenceType refTypeFormal) {
+				if (refTypeParam.getInnerType().isNullType()) {
+					return 0;
+				}
+				UnitType paramUnitType = refTypeParam.getInnerType().asUnitType();
+				UnitType formalUnitType = refTypeFormal.getInnerType().asUnitType();
+				if (paramUnitType != null && formalUnitType != null) {
+					int paramDist = distanceBetweenCompilationUnits(formalUnitType.getUnit(), paramUnitType.getUnit());
+					if (paramDist < 0) {
 						return -1;
+					}
 					distance += paramDist;
 				} else {
 					return -1;
 				}
+			} else {
+				return -1;
 			}
 		}
 		return distance;
@@ -393,8 +405,8 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			CompilationUnit unit2) {
 		if (unit1.equals(unit2))
 			return 0;
-		for (CompilationUnit ancestor : unit1.getImmediateAncestors()) {
-			int dist = distanceBetweenCompilationUnits(ancestor, unit2);
+		for (CompilationUnit ancestor : unit2.getImmediateAncestors()) {
+			int dist = distanceBetweenCompilationUnits(unit1, ancestor);
 			if (dist < 0)
 				continue;
 			return 1 + dist;

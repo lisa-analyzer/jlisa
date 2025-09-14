@@ -38,6 +38,18 @@ import java.util.Map;
  */
 public class ParserContext {
 
+	public Global getGlobal(Unit unit, String targetName) {
+		Global global = unit.getGlobal(targetName);
+		if (global == null) {
+			if (unit instanceof CompilationUnit cu) {
+				for (CompilationUnit ancestor : cu.getImmediateAncestors()) {
+					return getGlobal(ancestor, targetName);
+				}
+			}
+		}
+		return global;
+	}
+
 	/**
 	 * Enumeration defining strategies for handling parsing exceptions.
 	 * <ul>
@@ -149,7 +161,6 @@ public class ParserContext {
 		if (cfgVariables != null) {
 			type = cfgVariables.get(variableInfo);
 		}
-
 		if (type == null) {
 			String name = variableInfo.getName();
 			type = getVariableStaticTypeFromUnitAndGlobals(cfg, name);
