@@ -47,13 +47,15 @@ public class InstanceOf extends UnaryExpression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
 		AnalysisState<A> result = state.bottomExecution();
-		
-		for (Type t : types) 
+
+		for (Type t : types)
 			if (t.isReferenceType() && t.asReferenceType().getInnerType().isNullType())
-				result = result.lub(analysis.smallStepSemantics(state, new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), this));
+				result = result.lub(analysis.smallStepSemantics(state,
+						new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), this));
 			else {
 				TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
-				BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr, new Constant(typeToken, 0, getLocation()),
+				BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
+						new Constant(typeToken, 0, getLocation()),
 						TypeCheck.INSTANCE, getLocation());
 				result = result.lub(analysis.smallStepSemantics(state, tc, this));
 			}

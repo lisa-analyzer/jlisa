@@ -1,7 +1,5 @@
 package it.unive.jlisa.analysis.value;
 
-import java.util.Set;
-
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
@@ -107,6 +105,7 @@ import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -142,7 +141,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	public ConstantValue evalNullConstant(
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		throw new SemanticException("null value is not handled by the constant propagation domain");
 	}
 
@@ -151,7 +150,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		return new ConstantValue(constant.getValue());
 	}
 
@@ -161,7 +160,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue arg,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		// if arg is top, top is returned
 		if (arg.isTop())
 			return top();
@@ -712,7 +711,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		// if left, middle or right is top, top is returned
 		if (left.isTop() || middle.isTop() || right.isTop())
 			return top();
@@ -791,7 +790,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue[] subExpressions,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		return top();
 	}
 
@@ -800,7 +799,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue value,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		if (value.getValue() instanceof Boolean)
 			return ((Boolean) value.getValue()).booleanValue() ? Satisfiability.SATISFIED
 					: Satisfiability.NOT_SATISFIED;
@@ -812,7 +811,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	public Satisfiability satisfiesNullConstant(
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		// this method should not be never called
 		return Satisfiability.UNKNOWN;
 	}
@@ -823,7 +822,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue arg,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		if (arg.isTop())
 			return Satisfiability.UNKNOWN;
 
@@ -861,7 +860,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return Character.isJavaIdentifierPart(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 
 		if (operator instanceof JavaIsDoubleParsableOperator) {
-			if (arg.getValue() instanceof String v) 
+			if (arg.getValue() instanceof String v)
 				try {
 					Double.parseDouble(v);
 				} catch (NumberFormatException e) {
@@ -880,7 +879,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		BinaryOperator operator = expression.getOperator();
 		if (left.isTop() || right.isTop())
 			return Satisfiability.UNKNOWN;
@@ -1029,7 +1028,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		// TODO Auto-generated method stub
 		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp,
 				oracle);
@@ -1040,7 +1039,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		if (constant.getValue() instanceof Boolean)
 			return ((Boolean) constant.getValue()).booleanValue() ? Satisfiability.SATISFIED
 					: Satisfiability.NOT_SATISFIED;
@@ -1055,7 +1054,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-					throws SemanticException {
+			throws SemanticException {
 		Satisfiability sat = satisfies(environment, expression, dest, oracle);
 		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
 			return environment;

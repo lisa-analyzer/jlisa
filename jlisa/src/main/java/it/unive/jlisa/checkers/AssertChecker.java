@@ -96,10 +96,10 @@ public class AssertChecker
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
 					!state.getErrors().isTop() &&
-					!state.getErrors().function.isEmpty() || 
+					!state.getErrors().function.isEmpty() ||
 					(!state.getSmashedErrors().isBottom() &&
-					!state.getSmashedErrors().isTop() &&
-					!state.getSmashedErrors().function.isEmpty());
+							!state.getSmashedErrors().isTop() &&
+							!state.getSmashedErrors().function.isEmpty());
 
 			SimpleAbstractState<
 					HeapEnvironment<AllocationSites>,

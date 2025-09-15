@@ -9,9 +9,9 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
@@ -60,18 +60,17 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 
 	@Override
 	public <A extends AbstractLattice<A>,
-	D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression expr,
-			StatementStore<A> expressions)
+			D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
 					throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefExpr = new HeapDereference(stringType, expr, getLocation());
 		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
-
 
 		// need to check for NumberFormatExcetion
 
