@@ -1,2 +1,3 @@
 class Locale extends Object:
     field UK libtype Locale*
+    field ENGLISH libtype Locale*

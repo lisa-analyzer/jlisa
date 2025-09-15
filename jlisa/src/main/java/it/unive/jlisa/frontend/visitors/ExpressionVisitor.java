@@ -36,11 +36,12 @@ import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -649,15 +650,14 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			}
 		}
 
-		Global g = new Global(getSourceCodeLocation(node), unit, targetName, false);
 		Global global = parserContext.getGlobal(unit, targetName);
 		if (global == null) {
 			LOG.warn("Global " + targetName + " not found in unit " + unit.getName() + ".");
-			parserContext.addException(new ParsingException("missing_globals", ParsingException.Type.MALFORMED_SOURCE,
-					"Global " + targetName + " not found in unit " + unit.getName() + ".",
-					getSourceCodeLocation(node)));
-			global = new Global(getSourceCodeLocation(node), unit,
-					targetName, false);
+			/*parserContext.addException(new ParsingException("missing_globals",
+					ParsingException.Type.MALFORMED_SOURCE, "Global " + targetName +
+							" not found in unit " + unit.getName() + ".",
+					getSourceCodeLocation(node)));*/
+			global = new Global(getSourceCodeLocation(node), unit, targetName, false);
 		}
 		expression = new JavaAccessGlobal(cfg,
 				getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), unit, global);
