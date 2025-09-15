@@ -228,6 +228,10 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getSystemType() {
 		return lookup("System", null);
 	}
+	
+	public static JavaClassType getNumberFormatException() {
+		return lookup("NumberFormatException", null);
+	}
 
 	public static JavaClassType getPrintStreamType() {
 		return lookup("PrintStream", null);
