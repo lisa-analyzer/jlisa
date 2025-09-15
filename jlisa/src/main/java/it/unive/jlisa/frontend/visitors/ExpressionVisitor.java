@@ -653,10 +653,13 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		Global global = parserContext.getGlobal(unit, targetName);
 		if (global == null) {
 			LOG.warn("Global " + targetName + " not found in unit " + unit.getName() + ".");
-			/*parserContext.addException(new ParsingException("missing_globals",
-					ParsingException.Type.MALFORMED_SOURCE, "Global " + targetName +
-							" not found in unit " + unit.getName() + ".",
-					getSourceCodeLocation(node)));*/
+			/*
+			 * parserContext.addException(new
+			 * ParsingException("missing_globals",
+			 * ParsingException.Type.MALFORMED_SOURCE, "Global " + targetName +
+			 * " not found in unit " + unit.getName() + ".",
+			 * getSourceCodeLocation(node)));
+			 */
 			global = new Global(getSourceCodeLocation(node), unit, targetName, false);
 		}
 		expression = new JavaAccessGlobal(cfg,
