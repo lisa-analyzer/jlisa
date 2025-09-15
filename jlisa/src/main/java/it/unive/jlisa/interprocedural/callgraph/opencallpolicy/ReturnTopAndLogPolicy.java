@@ -7,7 +7,6 @@ import it.unive.lisa.program.cfg.statement.call.OpenCall;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Skip;
-
 import java.util.logging.Logger;
 
 public class ReturnTopAndLogPolicy implements OpenCallPolicy {
@@ -22,8 +21,8 @@ public class ReturnTopAndLogPolicy implements OpenCallPolicy {
 			ExpressionSet[] params)
 			throws SemanticException {
 		LOG.info("Failed to find a target for " + call.toString());
-		 //throw new SemanticException("Failed to find a target for " +
-		//	call.toString());
+		// throw new SemanticException("Failed to find a target for " +
+		// call.toString());
 		if (call.getStaticType().isVoidType())
 			return analysis.smallStepSemantics(entryState, new Skip(call.getLocation()), call);
 		else {

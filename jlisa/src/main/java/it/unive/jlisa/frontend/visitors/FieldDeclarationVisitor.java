@@ -9,12 +9,11 @@ import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
+import java.util.Set;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
-import java.util.Set;
 
 public class FieldDeclarationVisitor extends JavaASTVisitor {
 	it.unive.lisa.program.CompilationUnit unit;

@@ -354,7 +354,8 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				return 0;
 			}
 			if (paramType instanceof Untyped) {
-				return 0; // It is being evaluated with the CustomJavaLikeMatchingStrategy for now.
+				return 0; // It is being evaluated with the
+							// CustomJavaLikeMatchingStrategy for now.
 			}
 			if (paramType instanceof JavaNumericType numericParam) {
 				if (formalType instanceof JavaNumericType numericFormal) {
