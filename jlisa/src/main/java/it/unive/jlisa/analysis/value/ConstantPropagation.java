@@ -1,5 +1,7 @@
 package it.unive.jlisa.analysis.value;
 
+import java.util.Set;
+
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
@@ -18,7 +20,10 @@ import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
 import it.unive.jlisa.program.operator.JavaDoubleParseDoubleOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToStringOperator;
+import it.unive.jlisa.program.operator.JavaFloatParseFloatOperator;
+import it.unive.jlisa.program.operator.JavaFloatToStringOperator;
 import it.unive.jlisa.program.operator.JavaIsDoubleParsableOperator;
+import it.unive.jlisa.program.operator.JavaIsFloatParsableOperator;
 import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
@@ -105,7 +110,6 @@ import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
-import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -351,10 +355,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaDoubleToStringOperator)
 			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
+		
+		if (operator instanceof JavaFloatToStringOperator)
+			if (arg.getValue() instanceof Float d)
+				return new ConstantValue(d.toString());
 
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Double.parseDouble(s));
+		
+		if (operator instanceof JavaFloatParseFloatOperator)
+			if (arg.getValue() instanceof String s)
+				return new ConstantValue(Float.parseFloat(s));
 
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
@@ -863,6 +875,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof String v)
 				try {
 					Double.parseDouble(v);
+				} catch (NumberFormatException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+			return Satisfiability.SATISFIED;
+		}
+		
+		if (operator instanceof JavaIsFloatParsableOperator) {
+			if (arg.getValue() instanceof String v)
+				try {
+					Float.parseFloat(v);
 				} catch (NumberFormatException e) {
 					return Satisfiability.NOT_SATISFIED;
 				}
