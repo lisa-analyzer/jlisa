@@ -1,5 +1,7 @@
 package it.unive.jlisa.analysis.value;
 
+import java.util.Set;
+
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
@@ -99,12 +101,12 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
-import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -979,24 +981,24 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
-		//		if (operator instanceof ComparisonGe) {
-		//			Object lVal = left.getValue();
-		//			Object rVal = right.getValue();
-		//
-		//			if (lVal instanceof Double || rVal instanceof Double) {
-		//				return ((Number) lVal).doubleValue() >= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
-		//						: Satisfiability.NOT_SATISFIED;
-		//			} else if (lVal instanceof Float || rVal instanceof Float) {
-		//				return ((Number) lVal).floatValue() >= ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
-		//						: Satisfiability.NOT_SATISFIED;
-		//			} else if (lVal instanceof Long || rVal instanceof Long) {
-		//				return ((Number) lVal).longValue() >= ((Number) rVal).longValue() ? Satisfiability.SATISFIED
-		//						: Satisfiability.NOT_SATISFIED;
-		//			} else {
-		//				return ((Number) lVal).intValue() >= ((Number) rVal).intValue() ? Satisfiability.SATISFIED
-		//						: Satisfiability.NOT_SATISFIED;
-		//			}
-		//		}
+		if (operator instanceof ComparisonGe) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return ((Number) lVal).doubleValue() >= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return ((Number) lVal).floatValue() >= ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return ((Number) lVal).longValue() >= ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else {
+				return ((Number) lVal).intValue() >= ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			}
+		}
 
 		if (operator instanceof JavaStringStartsWithOperator) {
 			String lv = ((String) left.getValue());
