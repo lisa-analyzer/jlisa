@@ -7,17 +7,24 @@ import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
-import it.unive.jlisa.interprocedural.callgraph.opencallpolicy.ReturnTopAndLogPolicy;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
+import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
+import it.unive.lisa.interprocedural.context.FullStackToken;
 import it.unive.lisa.program.Program;
 import java.io.IOException;
 import java.util.Arrays;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -236,9 +243,9 @@ public class Main {
 		conf.serializeResults = false;
 		conf.jsonOutput = true;
 		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
+		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		conf.callGraph = new JavaRTACallGraph();
-		conf.openCallPolicy = ReturnTopAndLogPolicy.INSTANCE;
+		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.optimize = false;
 		switch (checkerName) {
 		case "Assert":
