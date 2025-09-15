@@ -1,7 +1,5 @@
 package it.unive.jlisa.analysis.value;
 
-import java.util.Set;
-
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
@@ -110,6 +108,7 @@ import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -355,7 +354,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaDoubleToStringOperator)
 			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
-		
+
 		if (operator instanceof JavaFloatToStringOperator)
 			if (arg.getValue() instanceof Float d)
 				return new ConstantValue(d.toString());
@@ -363,7 +362,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Double.parseDouble(s));
-		
+
 		if (operator instanceof JavaFloatParseFloatOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Float.parseFloat(s));
@@ -880,7 +879,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				}
 			return Satisfiability.SATISFIED;
 		}
-		
+
 		if (operator instanceof JavaIsFloatParsableOperator) {
 			if (arg.getValue() instanceof String v)
 				try {
