@@ -99,7 +99,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			AnalysisState<A> callState = newOut.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					expressions);
 			AnalysisState<A> accessGlobalState = accessGlobal.forwardSemantics(state, interprocedural, expressions);
-			AnalysisState<A> tmp = state.bottom();
+			AnalysisState<A> tmp = state.bottomExecution();
 			for (SymbolicExpression callExpr : callState.getExecutionExpressions()) {
 				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions())
 					tmp = tmp.lub(interprocedural.getAnalysis().assign(callState, accessGlobalExpr, callExpr, this));

@@ -48,7 +48,7 @@ public class PrefixSubtraction extends UnaryExpression implements MetaVariableCr
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
-			return state.bottom();
+			return state.bottomExecution();
 
 		state = analysis.assign(
 				state,
@@ -60,9 +60,7 @@ public class PrefixSubtraction extends UnaryExpression implements MetaVariableCr
 						NumericNonOverflowingSub.INSTANCE,
 						getLocation()),
 				this);
-		// state = state.assign(meta, expr, this);
 		return analysis.smallStepSemantics(state, expr, this);
-
 	}
 
 	@Override

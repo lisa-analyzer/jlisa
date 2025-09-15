@@ -66,7 +66,7 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 		case NOT_SATISFIED:
 			return analysis.smallStepSemantics(result, right, this);
 		case BOTTOM:
-			return result.bottom();
+			return result.bottomExecution();
 		case UNKNOWN:
 		default:
 			return analysis.smallStepSemantics(result, middle, this)

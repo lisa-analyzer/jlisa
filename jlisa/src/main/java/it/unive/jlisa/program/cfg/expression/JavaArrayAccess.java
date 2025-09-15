@@ -48,7 +48,7 @@ public class JavaArrayAccess extends BinaryExpression {
 			throws SemanticException {
 		if (!left.getStaticType().isReferenceType()
 				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
-			return state.bottom();
+			return state.bottomExecution();
 
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();

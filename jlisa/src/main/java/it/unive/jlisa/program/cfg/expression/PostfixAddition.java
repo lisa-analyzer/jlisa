@@ -46,7 +46,7 @@ public class PostfixAddition extends UnaryExpression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
-			return state.bottom();
+			return state.bottomExecution();
 
 		Identifier meta = getMetaVariable();
 		state = analysis.assign(state, meta, expr, this);

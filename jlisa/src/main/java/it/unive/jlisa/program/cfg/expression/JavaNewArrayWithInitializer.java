@@ -95,10 +95,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 				Variable var = new Variable(contentType, "" + i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
-				AnalysisState<A> init = state.bottom();
-
-				init = init.lub(analysis.assign(tmp, access, expr, getEvaluationPredecessor()));
-
+				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());
 				tmp = init;
 
 			}

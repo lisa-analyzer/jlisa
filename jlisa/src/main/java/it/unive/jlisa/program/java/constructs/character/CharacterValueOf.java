@@ -67,7 +67,7 @@ public class CharacterValueOf extends it.unive.lisa.program.cfg.statement.UnaryE
 				A> callState = call.forwardSemanticsAux(interprocedural, state,
 						new ExpressionSet[] { new ExpressionSet(expr) }, expressions);
 
-		AnalysisState<A> tmp = state.bottom();
+		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(charType, ref, var, getLocation());
 			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, expr, this);
