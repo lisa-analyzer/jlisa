@@ -241,6 +241,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Verifier.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void StringConcatenation01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringConcatenation01",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
 
 	// FIXME: need equalsIgnoreCase and regionMatches
 	@Test
