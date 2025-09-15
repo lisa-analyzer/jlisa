@@ -11,6 +11,7 @@ import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
@@ -1023,6 +1024,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 					assignment = new JavaAssignment(cfg,
 							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref,
 							initializer);
+				} else if (initializer instanceof JavaNewArrayWithInitializer) {
+					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref,
+							((JavaNewArrayWithInitializer) initializer).withStaticType(variableType));
 				} else {
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, initializer);
 				}

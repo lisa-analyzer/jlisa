@@ -51,6 +51,15 @@ class ClassCastException extends RuntimeException:
 
 class IndexOutOfBoundsException extends RuntimeException:
 
+	instance method IndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.IndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype IndexOutOfBoundsException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method IndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.IndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype IndexOutOfBoundsException*
+
 class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
 
 	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor

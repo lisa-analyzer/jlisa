@@ -240,4 +240,8 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getUnsupportedEncodingExceptionType() {
 		return lookup("UnsupportedEncodingException", null);
 	}
+
+	public static JavaClassType getIndexOutOfBoundsExceptionType() {
+		return lookup("IndexOutOfBoundsException", null);
+	}
 }
