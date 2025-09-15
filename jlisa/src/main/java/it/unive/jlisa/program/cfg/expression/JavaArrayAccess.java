@@ -45,7 +45,7 @@ public class JavaArrayAccess extends BinaryExpression {
 			SymbolicExpression left,
 			SymbolicExpression right,
 			StatementStore<A> expressions)
-					throws SemanticException {
+			throws SemanticException {
 		if (!left.getStaticType().isReferenceType()
 				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
 			return state.bottomExecution();
@@ -81,7 +81,7 @@ public class JavaArrayAccess extends BinaryExpression {
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
 						new Error(oonExc.getReference(), this)));
 			}
-			
+
 			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
@@ -94,7 +94,8 @@ public class JavaArrayAccess extends BinaryExpression {
 			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
 					oobExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], new StatementStore<A>(state));
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+					new StatementStore<A>(state));
 
 			AnalysisState<A> exceptionState = state.bottomExecution();
 

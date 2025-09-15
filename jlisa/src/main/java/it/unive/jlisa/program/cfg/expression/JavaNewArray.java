@@ -79,7 +79,7 @@ public class JavaNewArray extends UnaryExpression {
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
 						new Error(oonExc.getReference(), this)));
 			}
-			
+
 			return exceptionState;
 		} else {
 			// TODO: UNKNOWN case
