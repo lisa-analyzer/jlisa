@@ -84,6 +84,10 @@ class NegativeArraySizeException extends RuntimeException:
 class UnsupportedOperationException extends RuntimeException:
 
 class UnsupportedEncodingException extends IOException:
+	
+	instance method UnsupportedEncodingException: it.unive.jlisa.program.java.constructs.exceptions.UnsupportedEncodingExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype UnsupportedEncodingException*
 
 class AssertionError extends Error:
 

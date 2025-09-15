@@ -236,4 +236,8 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getPrintStreamType() {
 		return lookup("PrintStream", null);
 	}
+	
+	public static JavaClassType getUnsupportedEncodingExceptionType() {
+		return lookup("UnsupportedEncodingException", null);
+	}
 }
