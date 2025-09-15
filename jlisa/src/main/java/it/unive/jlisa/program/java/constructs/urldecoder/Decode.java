@@ -7,9 +7,9 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -32,7 +32,8 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 	public Decode(
 			CFG cfg,
 			CodeLocation location,
-			Expression left, Expression right) {
+			Expression left,
+			Expression right) {
 		super(cfg, location, "decode", left, right);
 	}
 
@@ -57,8 +58,12 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		// as no-exception state, we return the top string
@@ -76,7 +81,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			AnalysisState<A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
 			tmp = tmp.lub(sem);
 		}
-		
+
 		AnalysisState<A> noExceptionState = tmp;
 
 		// builds the exception
