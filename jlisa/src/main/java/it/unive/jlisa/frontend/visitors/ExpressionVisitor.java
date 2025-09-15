@@ -36,12 +36,11 @@ import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
