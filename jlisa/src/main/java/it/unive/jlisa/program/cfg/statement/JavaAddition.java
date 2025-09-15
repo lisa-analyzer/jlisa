@@ -1,15 +1,7 @@
 package it.unive.jlisa.program.cfg.statement;
 
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaShortType;
-import it.unive.lisa.analysis.AbstractDomain;
-import it.unive.lisa.analysis.AbstractLattice;
-import it.unive.lisa.analysis.Analysis;
-import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.StatementStore;
+import it.unive.jlisa.program.type.*;
+import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -26,6 +18,7 @@ import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
+import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
@@ -49,11 +42,15 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		Type rightType = right.getStaticType();
 
 		if (!(leftType.isNumericType() || leftType.isStringType() || rightType.isNumericType()
-				|| rightType.isStringType())) {
+				|| rightType.isStringType()
+				|| (leftType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType()) ||
+				(rightType instanceof JavaReferenceType rRef && rRef.getInnerType().isStringType()))) {
 			return Untyped.INSTANCE;
 		}
-		if (leftType.isStringType() || rightType.isStringType()) {
-			return StringType.INSTANCE;
+		if (leftType.isStringType() || rightType.isStringType()
+				|| (leftType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType()) ||
+				(rightType instanceof JavaReferenceType rRef && rRef.getInnerType().isStringType())) {
+			return new ReferenceType(JavaClassType.lookup("String", null));
 		}
 		if (leftType.isNumericType() && rightType.isNumericType()) {
 			// small types promoted to int for addition operation
@@ -100,7 +97,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					expressionSet[1] = new ExpressionSet(actualRight);
 					partialResult = call.forwardSemanticsAux(interprocedural, state, expressionSet, expressions);
 					getMetaVariables().addAll(call.getMetaVariables());
-				} else if (lType.isStringType()) {
+				} else if (lType.isStringType()
+						|| (lType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType())) {
 					// TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
 					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)),

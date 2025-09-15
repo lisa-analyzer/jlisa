@@ -18,6 +18,7 @@ import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.types.TypeSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import org.apache.logging.log4j.LogManager;
@@ -57,7 +58,7 @@ public class AssertChecker
 			Statement node) {
 
 		// RuntimeException property checker
-		if (graph.getProgram().getEntryPoints().contains(graph) && node.stopsExecution())
+		if (graph.getProgram().getEntryPoints().contains(graph) && node instanceof Ret)
 			try {
 				checkRuntimeException(tool, graph, node);
 			} catch (SemanticException e) {
@@ -90,15 +91,15 @@ public class AssertChecker
 					SimpleAbstractState<
 							HeapEnvironment<AllocationSites>,
 							ValueEnvironment<ConstantValue>,
-							TypeEnvironment<TypeSet>>> state = result.getAnalysisStateBefore(node);
+							TypeEnvironment<TypeSet>>> state = result.getAnalysisStateAfter(node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
 					!state.getErrors().isTop() &&
-					!state.getErrors().function.isEmpty() &&
-					!state.getSmashedErrors().isBottom() &&
-					!state.getSmashedErrors().isTop() &&
-					!state.getSmashedErrors().function.isEmpty();
+					!state.getErrors().function.isEmpty() ||
+					(!state.getSmashedErrors().isBottom() &&
+							!state.getSmashedErrors().isTop() &&
+							!state.getSmashedErrors().function.isEmpty());
 
 			SimpleAbstractState<
 					HeapEnvironment<AllocationSites>,

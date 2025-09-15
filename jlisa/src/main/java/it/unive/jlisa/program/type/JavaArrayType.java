@@ -203,7 +203,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 				AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
 				ExpressionSet allocExps = allocSt.getExecutionExpressions();
 
-				AnalysisState<A> initSt = entryState.bottom();
+				AnalysisState<A> initSt = entryState.bottomExecution();
 				for (SymbolicExpression allocExp : allocExps) {
 					AccessChild len = new AccessChild(
 							JavaIntType.INSTANCE,
@@ -222,7 +222,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 							new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
 				}
 
-				AnalysisState<A> refSt = entryState.bottom();
+				AnalysisState<A> refSt = entryState.bottomExecution();
 				for (SymbolicExpression loc : allocSt.getExecutionExpressions()) {
 					JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
 					HeapReference ref = new HeapReference(t, loc, getLocation());

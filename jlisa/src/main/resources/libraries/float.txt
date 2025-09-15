@@ -1,0 +1,24 @@
+class Float extends Object:
+	field NaN type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+    instance field value type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	
+	instance method Float: it.unive.jlisa.program.java.constructs.floatw.FloatConstructor
+		libtype Float*
+		param this libtype Float*
+		param c type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	
+	instance method floatValue: it.unive.jlisa.program.java.constructs.floatw.FloatValue
+		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		param this libtype Float*
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.floatw.FloatValueOf
+		libtype Float* 
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE 
+
+	method toString: it.unive.jlisa.program.java.constructs.floatw.FloatToString
+		libtype String*
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	method parseFloat: it.unive.jlisa.program.java.constructs.floatw.FloatParseFloat
+		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		param v libtype String* 

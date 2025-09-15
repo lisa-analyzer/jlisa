@@ -18,6 +18,10 @@ import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
 import it.unive.jlisa.program.operator.JavaDoubleParseDoubleOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaDoubleToStringOperator;
+import it.unive.jlisa.program.operator.JavaFloatParseFloatOperator;
+import it.unive.jlisa.program.operator.JavaFloatToStringOperator;
+import it.unive.jlisa.program.operator.JavaIsDoubleParsableOperator;
+import it.unive.jlisa.program.operator.JavaIsFloatParsableOperator;
 import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathAcosOperator;
@@ -98,6 +102,7 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
@@ -350,9 +355,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
 
+		if (operator instanceof JavaFloatToStringOperator)
+			if (arg.getValue() instanceof Float d)
+				return new ConstantValue(d.toString());
+
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Double.parseDouble(s));
+
+		if (operator instanceof JavaFloatParseFloatOperator)
+			if (arg.getValue() instanceof String s)
+				return new ConstantValue(Float.parseFloat(s));
 
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
@@ -857,6 +870,26 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Integer v)
 				return Character.isJavaIdentifierPart(v) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 
+		if (operator instanceof JavaIsDoubleParsableOperator) {
+			if (arg.getValue() instanceof String v)
+				try {
+					Double.parseDouble(v);
+				} catch (NumberFormatException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+			return Satisfiability.SATISFIED;
+		}
+
+		if (operator instanceof JavaIsFloatParsableOperator) {
+			if (arg.getValue() instanceof String v)
+				try {
+					Float.parseFloat(v);
+				} catch (NumberFormatException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+			return Satisfiability.SATISFIED;
+		}
+
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}
 
@@ -964,6 +997,25 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 						: Satisfiability.NOT_SATISFIED;
 			} else {
 				return ((Number) lVal).intValue() < ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			}
+		}
+
+		if (operator instanceof ComparisonGe) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return ((Number) lVal).doubleValue() >= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return ((Number) lVal).floatValue() >= ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return ((Number) lVal).longValue() >= ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else {
+				return ((Number) lVal).intValue() >= ((Number) rVal).intValue() ? Satisfiability.SATISFIED
 						: Satisfiability.NOT_SATISFIED;
 			}
 		}

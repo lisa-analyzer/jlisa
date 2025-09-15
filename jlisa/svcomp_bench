@@ -23,7 +23,7 @@ cd ../..
 echo "[sv-comp] Setup complete."
 
 echo "[jlisa] building..."
-./gradlew distZip
+./gradlew distZip -x spotlessJavaCheck -x test
 echo "[jlisa] unzipping jar..."
 unzip -o build/distributions/*.zip -d jlisa_dist
 JLISA_JAR=$(pwd)/$(find jlisa_dist -name "jlisa*.jar" | head -n 1)

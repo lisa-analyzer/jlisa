@@ -1,10 +1,7 @@
 package it.unive.jlisa.program.java.constructs.printwriter;
 
-import it.unive.lisa.analysis.AbstractDomain;
-import it.unive.lisa.analysis.AbstractLattice;
-import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.StatementStore;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
@@ -21,7 +18,7 @@ public class PrintWriterConstructor extends NaryExpression implements PluggableS
 	public PrintWriterConstructor(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "PrintWriter");
+		super(cfg, location, "PrintWriter", JavaClassType.lookup("PrintWriter", null));
 	}
 
 	public static PrintWriterConstructor build(

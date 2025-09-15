@@ -32,6 +32,7 @@ class ArithmeticException extends RuntimeException:
 		param this libtype ArithmeticException*
 		
 class NullPointerException extends RuntimeException:
+
 	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype NullPointerException*
@@ -65,6 +66,10 @@ class IllegalArgumentException extends RuntimeException:
 
 class NumberFormatException extends IllegalArgumentException:
 
+	instance method NumberFormatException: it.unive.jlisa.program.java.constructs.exceptions.NumberFormatExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype NumberFormatException*
+		
 class NegativeArraySizeException extends RuntimeException:
 
 	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
@@ -79,6 +84,10 @@ class NegativeArraySizeException extends RuntimeException:
 class UnsupportedOperationException extends RuntimeException:
 
 class UnsupportedEncodingException extends IOException:
+	
+	instance method UnsupportedEncodingException: it.unive.jlisa.program.java.constructs.exceptions.UnsupportedEncodingExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype UnsupportedEncodingException*
 
 class AssertionError extends Error:
 

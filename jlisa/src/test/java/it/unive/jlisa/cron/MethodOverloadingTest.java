@@ -16,7 +16,7 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
 		assert !frontend.getParserContext().getExceptions().stream()
 				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
 
-		perform(TestHelpers.createConfiguration("method-overloading", "Test1", "Test1.java"));
+		perform(TestHelpers.constantPropagation("method-overloading", "Test1", "Test1.java"));
 	}
 
 	@Test

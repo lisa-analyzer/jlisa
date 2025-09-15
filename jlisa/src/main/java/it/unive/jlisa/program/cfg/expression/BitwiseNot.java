@@ -42,7 +42,7 @@ public class BitwiseNot extends UnaryExpression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
-			return state.bottom();
+			return state.bottomExecution();
 		// TODO: check that the type is numeric and integral
 		return analysis.smallStepSemantics(
 				state,

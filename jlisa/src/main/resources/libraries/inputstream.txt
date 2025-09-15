@@ -1,1 +1,1 @@
-		class InputStream extends Object:
+class InputStream extends Object:

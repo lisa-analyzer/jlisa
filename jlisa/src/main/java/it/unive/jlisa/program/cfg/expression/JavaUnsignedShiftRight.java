@@ -54,12 +54,12 @@ public class JavaUnsignedShiftRight extends it.unive.lisa.program.cfg.statement.
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(t -> t.isNumericType()))
-			return state.bottom();
+			return state.bottomExecution();
 
 		if (analysis.getRuntimeTypesOf(state, left, this).stream()
 				.noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType())
 						|| t.canBeAssignedTo(JavaLongType.INSTANCE)))
-			return state.bottom();
+			return state.bottomExecution();
 
 		return analysis.smallStepSemantics(
 				state,
