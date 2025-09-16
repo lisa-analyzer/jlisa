@@ -13,5 +13,4 @@ public class SynchronizedTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.constantPropagation("synchronized", "synchronized-stmt-1", "Main.java");
 		perform(conf);
 	}
-
 }
