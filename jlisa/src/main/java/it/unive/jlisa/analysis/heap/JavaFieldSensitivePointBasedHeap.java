@@ -29,17 +29,11 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/heads/master
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/heads/master
 import org.apache.commons.lang3.tuple.Pair;
 
 /**

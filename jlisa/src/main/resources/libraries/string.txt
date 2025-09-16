@@ -169,7 +169,6 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param this libtype String*
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-<<<<<<< HEAD
 		
 	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
@@ -187,8 +186,6 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param other libtype String*
 		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-	
-=======
 
 	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
 	    type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
@@ -206,4 +203,3 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
         param other libtype String*
         param ooffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
->>>>>>> refs/heads/master

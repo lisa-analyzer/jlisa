@@ -51,12 +51,8 @@ public class StringTest {
 		boolean b8 = s4.startsWith("World", 6);
 		int i8 = s4.indexOf("o", 6);
 		int i9 = ("ABCABABCAB").lastIndexOf('C', 5);
-<<<<<<< HEAD
 		//byte[] by1 = s4.getBytes();
 		boolean b9 = s4.regionMatches(0, s2, 0, 5);
 		boolean b10 = s4.regionMatches(true, 0, "HELLO WORlD", 0, 5);
-=======
-		
->>>>>>> refs/heads/master
 	}
 }
