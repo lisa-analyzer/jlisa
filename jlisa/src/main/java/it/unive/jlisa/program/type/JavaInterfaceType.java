@@ -74,6 +74,10 @@ public final class JavaInterfaceType implements UnitType {
 		return unit;
 	}
 
+	public JavaReferenceType getReference() {
+		return new JavaReferenceType(this);
+	}
+
 	@Override
 	public final boolean canBeAssignedTo(
 			Type other) {
