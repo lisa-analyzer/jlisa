@@ -64,6 +64,11 @@ public class NaryExpression extends ValueExpression{
 		return this.operands[i];
 	}
 	
+	
+	public SymbolicExpression[] getAllOperand(int i) {
+		return operands;
+	}
+	
 	/**
 	 * Yields the operator that is applied to {@link #getFirst()},
 	 * {@link #getSecond()}, {@link #getThird()} and {@link #getFourth()}.
