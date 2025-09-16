@@ -3,9 +3,10 @@ package it.unive.jlisa.svcomp;
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
-import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 
 public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
@@ -272,6 +273,13 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare01",
 				"Main.java",
 				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void Inheritance1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "inheritance1",
+				"Main.java");
 		perform(conf);
 	}
 }
