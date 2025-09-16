@@ -60,6 +60,7 @@ public class JavaUnresolvedSuperCall extends UnresolvedCall {
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(getCFG(), getLocation(), Call.CallType.INSTANCE,
 				superClass.getName(), getTargetName(), getSubExpressions());
+		call.setSource(this);
 		return call.forwardSemantics(state, interprocedural, expressions);
 	}
 

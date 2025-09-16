@@ -114,7 +114,7 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 					throws SemanticException {
 		CodeLocation loc = getLocation();
 
-		AnalysisState<A> result = state.bottom();
+		AnalysisState<A> result = state.bottomExecution();
 		boolean atLeastOne = false;
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
@@ -183,7 +183,7 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 				rectypes.add(t.asPointerType().getInnerType());
 
 		if (rectypes.isEmpty())
-			return state.bottom();
+			return state.bottomExecution();
 
 		Type rectype = Type.commonSupertype(rectypes, Untyped.INSTANCE);
 		Variable var = new Variable(Untyped.INSTANCE, target, new Annotations(), getLocation());

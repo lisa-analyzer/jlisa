@@ -48,7 +48,7 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
-			return state.bottom();
+			return state.bottomExecution();
 
 		state = analysis.assign(
 				state,

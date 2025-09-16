@@ -48,7 +48,7 @@ public class JavaArrayAccess extends BinaryExpression {
 			throws SemanticException {
 		if (!left.getStaticType().isReferenceType()
 				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
-			return state.bottom();
+			return state.bottomExecution();
 
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
@@ -66,19 +66,23 @@ public class JavaArrayAccess extends BinaryExpression {
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			AnalysisState<A> exceptionState = state.bottomExecution();
 
-			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			for (SymbolicExpression th : state.getExecutionExpressions()) {
+				// assign exception to variable thrower
+				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
+				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
 
-			// deletes the receiver of the constructor
-			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
-			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(oonExc.getReference(), this));
+				// deletes the receiver of the constructor
+				// and all the metavariables from subexpressions
+				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
+						.forgetIdentifiers(getLeft().getMetaVariables(), this)
+						.forgetIdentifiers(getRight().getMetaVariables(), this);
+				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
+						new Error(oonExc.getReference(), this)));
+			}
+
+			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
 			return analysis.smallStepSemantics(state, access, this);
@@ -90,20 +94,24 @@ public class JavaArrayAccess extends BinaryExpression {
 			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
 					oobExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+					new StatementStore<A>(state));
 
-			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			AnalysisState<A> exceptionState = state.bottomExecution();
 
-			// deletes the receiver of the constructor
-			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
-			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(oobExc.getReference(), this));
+			for (SymbolicExpression th : state.getExecutionExpressions()) {
+				// assign exception to variable thrower
+				CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
+				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+
+				// deletes the receiver of the constructor
+				// and all the metavariables from subexpressions
+				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
+						.forgetIdentifiers(getLeft().getMetaVariables(), this)
+						.forgetIdentifiers(getRight().getMetaVariables(), this);
+				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
+						new Error(oobExc.getReference(), this)));
+			}
 
 			return noExceptionState.lub(exceptionState);
 		}

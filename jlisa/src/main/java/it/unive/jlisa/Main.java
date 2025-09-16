@@ -14,6 +14,7 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
+import it.unive.lisa.interprocedural.context.FullStackToken;
 import it.unive.lisa.program.Program;
 import java.io.IOException;
 import java.util.Arrays;
@@ -242,7 +243,7 @@ public class Main {
 		conf.serializeResults = false;
 		conf.jsonOutput = true;
 		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>();
+		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.optimize = false;

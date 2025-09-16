@@ -57,6 +57,18 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		return "new " + getStaticType() + "{" + params + "}";
 	}
 
+	/**
+	 * Yields a copy of {@this} with static type {@code type}.
+	 * 
+	 * @param type the type
+	 * 
+	 * @return a copy of {@this} with static type {@code type}
+	 */
+	public JavaNewArrayWithInitializer withStaticType(
+			Type type) {
+		return new JavaNewArrayWithInitializer(getCFG(), getLocation(), getSubExpressions(), type);
+	}
+
 	@Override
 	public <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
@@ -95,10 +107,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 				Variable var = new Variable(contentType, "" + i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
-				AnalysisState<A> init = state.bottom();
-
-				init = init.lub(analysis.assign(tmp, access, expr, getEvaluationPredecessor()));
-
+				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());
 				tmp = init;
 
 			}

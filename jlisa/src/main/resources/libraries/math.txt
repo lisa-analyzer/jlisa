@@ -1,4 +1,6 @@
 class Math extends Object:
+    field E type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+    field PI type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 
 	method sin: it.unive.jlisa.program.java.constructs.math.MathSin
 		type  it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

@@ -57,6 +57,7 @@ public class StringConstructorFromByteArray extends BinaryExpression implements 
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		// in this case, we always return the top string
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());

@@ -65,18 +65,22 @@ public class JavaNewArray extends UnaryExpression {
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NegativeArraySizeException",
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			AnalysisState<A> exceptionState = state.bottomExecution();
 
-			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			for (SymbolicExpression th : state.getExecutionExpressions()) {
+				// assign exception to variable thrower
+				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
+				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
 
-			// deletes the receiver of the constructor
-			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(oonExc.getReference(), this));
+				// deletes the receiver of the constructor
+				// and all the metavariables from subexpressions
+				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
+						.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
+						new Error(oonExc.getReference(), this)));
+			}
+
+			return exceptionState;
 		} else {
 			// TODO: UNKNOWN case
 		}
@@ -106,7 +110,7 @@ public class JavaNewArray extends UnaryExpression {
 
 				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp,
 						interprocedural, expressions);
-				AnalysisState<A> init = state.bottom();
+				AnalysisState<A> init = state.bottomExecution();
 
 				for (SymbolicExpression v : tmp2.getExecutionExpressions()) {
 					init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));

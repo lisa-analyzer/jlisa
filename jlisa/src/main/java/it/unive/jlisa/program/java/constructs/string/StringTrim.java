@@ -78,7 +78,7 @@ public class StringTrim extends UnaryExpression implements PluggableStatement {
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-		AnalysisState<A> tmp = state.bottom();
+		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, trim, this);

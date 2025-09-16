@@ -1,6 +1,6 @@
 package it.unive.jlisa.frontend.util;
 
-import it.unive.lisa.util.frontend.LocalVariableTracker.LocalVariable;
+import it.unive.jlisa.frontend.util.JavaLocalVariableTracker.LocalVariable;
 import java.util.Objects;
 
 public class VariableInfo {

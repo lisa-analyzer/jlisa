@@ -10,11 +10,13 @@ import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.Satisfiability;
+import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.HeapLocation;
@@ -27,11 +29,17 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/heads/master
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/heads/master
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -175,7 +183,45 @@ public class JavaFieldSensitivePointBasedHeap
 			extends
 			FieldSensitivePointBasedHeap.Rewriter {
 
-		// TODO: access child and dereference with null receiver
+		// TODO: dereference with null receiver
+
+		@Override
+		public ExpressionSet visit(
+				AccessChild expression,
+				ExpressionSet receiver,
+				ExpressionSet child,
+				Object... params)
+				throws SemanticException {
+			// needed to define the access child's visit just to propagate
+			// the null allocation site; in all the other cases, we rely on the
+			// super visit method
+			HeapEnvWithFields state = (HeapEnvWithFields) params[0];
+			ProgramPoint pp = (ProgramPoint) params[1];
+
+			Set<SymbolicExpression> toProcess = new HashSet<>();
+			for (SymbolicExpression rec : receiver) {
+				rec = rec.removeTypingExpressions();
+				if (rec instanceof Identifier)
+					toProcess.addAll(resolveIdentifier(state, (Identifier) rec, pp));
+				else
+					toProcess.add(rec);
+			}
+
+			for (SymbolicExpression rec : toProcess) {
+				if (rec instanceof MemoryPointer) {
+					AllocationSite site = (AllocationSite) ((MemoryPointer) rec).getReferencedLocation();
+					if (site.equals(NullAllocationSite.INSTANCE))
+						return new ExpressionSet(site);
+
+				} else if (rec instanceof AllocationSite) {
+					AllocationSite site = (AllocationSite) rec;
+					if (site.equals(NullAllocationSite.INSTANCE))
+						return new ExpressionSet(site);
+				}
+			}
+
+			return super.visit(expression, receiver, child, params);
+		}
 
 		@Override
 		public ExpressionSet visit(

@@ -153,10 +153,12 @@ public class JavaFrontend {
 	public Program parseFromListOfFile(
 			List<String> filePaths)
 			throws IOException {
+		LibrarySpecificationProvider.load(getProgram());
 		List<String> expandedPaths = expandFilePaths(filePaths);
 		populateUnits(expandedPaths);
+		setRelationships(expandedPaths);
+		setGlobals(expandedPaths);
 		registerTypes();
-		LibrarySpecificationProvider.load(getProgram());
 
 		for (String filePath : expandedPaths) {
 			Path path = Paths.get(filePath);
@@ -175,7 +177,32 @@ public class JavaFrontend {
 			Path path = Paths.get(filePath);
 			String source = Files.readString(path);
 			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu, false));
+			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
+					CompilationUnitASTVisitor.VisitorType.ADD_UNITS));
+		}
+	}
+
+	public void setRelationships(
+			List<String> filePaths)
+			throws IOException {
+		for (String filePath : filePaths) {
+			Path path = Paths.get(filePath);
+			String source = Files.readString(path);
+			CompilationUnit cu = getCompilationUnit(source);
+			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
+					CompilationUnitASTVisitor.VisitorType.SET_RELATIONSHIPS));
+		}
+	}
+
+	public void setGlobals(
+			List<String> filePaths)
+			throws IOException {
+		for (String filePath : filePaths) {
+			Path path = Paths.get(filePath);
+			String source = Files.readString(path);
+			CompilationUnit cu = getCompilationUnit(source);
+			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
+					CompilationUnitASTVisitor.VisitorType.ADD_GLOBALS));
 		}
 	}
 
@@ -199,7 +226,8 @@ public class JavaFrontend {
 			String fileName,
 			boolean module) {
 		CompilationUnit cu = getCompilationUnit(source);
-		CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(parserContext, fileName, cu, true);
+		CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(parserContext, fileName, cu,
+				CompilationUnitASTVisitor.VisitorType.VISIT_UNIT);
 
 		if (module) {
 			parserContext.addException(new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT,

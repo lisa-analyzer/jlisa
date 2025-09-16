@@ -1,1 +1,8 @@
 class Socket extends Object:
+
+class URLDecoder extends Object:
+
+	method decode: it.unive.jlisa.program.java.constructs.urldecoder.Decode
+		libtype String* 
+		param s libtype String* 
+		param enc libtype String* 

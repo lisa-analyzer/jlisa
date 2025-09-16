@@ -186,7 +186,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Test
 	public void StringValueOf05_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf05",
 				"Main.java",
@@ -213,6 +213,70 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	@Test
 	public void Class_method1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Class_method1",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void instanceof8_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "instanceof8",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void StringValueOf08_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf08",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void StringValueOf09_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf09",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void StringConcatenation01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringConcatenation01",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void exceptions9_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions9",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void StringValueOf02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf02",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void SubString02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "SubString02",
+				"Main.java",
+				"Verifier.java");
+		perform(conf);
+	}
+
+	@Test
+	public void SubString03_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "SubString03",
 				"Main.java",
 				"Verifier.java");
 		perform(conf);

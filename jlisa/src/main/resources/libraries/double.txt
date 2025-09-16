@@ -1,5 +1,6 @@
 class Double extends Object:
-	instance field value type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+	field NaN type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+    instance field value type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 	
 	instance method Double: it.unive.jlisa.program.java.constructs.doublew.DoubleConstructor
 		libtype Double*

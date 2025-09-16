@@ -2,18 +2,16 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
-import it.unive.jlisa.program.cfg.controlflow.loops.DoWhileLoop;
-import it.unive.jlisa.program.cfg.controlflow.loops.ForEachLoop;
-import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
-import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
-import it.unive.jlisa.program.cfg.controlflow.loops.WhileLoop;
+import it.unive.jlisa.program.cfg.controlflow.loops.*;
 import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
@@ -34,21 +32,13 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
-import it.unive.lisa.program.cfg.edge.Edge;
-import it.unive.lisa.program.cfg.edge.ErrorEdge;
-import it.unive.lisa.program.cfg.edge.FalseEdge;
-import it.unive.lisa.program.cfg.edge.SequentialEdge;
-import it.unive.lisa.program.cfg.edge.TrueEdge;
+import it.unive.lisa.program.cfg.edge.*;
 import it.unive.lisa.program.cfg.protection.CatchBlock;
 import it.unive.lisa.program.cfg.protection.ProtectedBlock;
 import it.unive.lisa.program.cfg.protection.ProtectionBlock;
+import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.NoOp;
-import it.unive.lisa.program.cfg.statement.Ret;
-import it.unive.lisa.program.cfg.statement.Return;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.Throw;
-import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
@@ -57,43 +47,10 @@ import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
-import it.unive.lisa.util.frontend.LocalVariableTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.AssertStatement;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.BreakStatement;
-import org.eclipse.jdt.core.dom.CatchClause;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ConstructorInvocation;
-import org.eclipse.jdt.core.dom.ContinueStatement;
-import org.eclipse.jdt.core.dom.DoStatement;
-import org.eclipse.jdt.core.dom.EmptyStatement;
-import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.LabeledStatement;
-import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
-import org.eclipse.jdt.core.dom.SwitchCase;
-import org.eclipse.jdt.core.dom.SwitchStatement;
-import org.eclipse.jdt.core.dom.SynchronizedStatement;
-import org.eclipse.jdt.core.dom.ThrowStatement;
-import org.eclipse.jdt.core.dom.TryStatement;
-import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.*;
 
 public class StatementASTVisitor extends JavaASTVisitor {
 
@@ -105,7 +62,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 	private final ControlFlowTracker control;
 
-	private LocalVariableTracker tracker;
+	private JavaLocalVariableTracker tracker;
 
 	public StatementASTVisitor(
 			ParserContext parserContext,
@@ -113,7 +70,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			CompilationUnit compilationUnit,
 			CFG cfg,
 			ControlFlowTracker control,
-			LocalVariableTracker tracker) {
+			JavaLocalVariableTracker tracker) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
 		this.tracker = tracker;
@@ -127,7 +84,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			CFG cfg,
 			ControlFlowTracker control,
 			Expression switchItem,
-			LocalVariableTracker tracker) {
+			JavaLocalVariableTracker tracker) {
 		super(parserContext, source, compilationUnit);
 		this.cfg = cfg;
 		this.control = control;
@@ -1067,6 +1024,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 					assignment = new JavaAssignment(cfg,
 							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref,
 							initializer);
+				} else if (initializer instanceof JavaNewArrayWithInitializer) {
+					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref,
+							((JavaNewArrayWithInitializer) initializer).withStaticType(variableType));
 				} else {
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, initializer);
 				}
@@ -1086,7 +1046,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 			tracker.addVariable(variableName, assignment, ref.getAnnotations());
 			parserContext.addVariableType(cfg,
-					new VariableInfo(variableName, tracker.getLatestScope().get(variableName)), variableType);
+					new VariableInfo(variableName, tracker.getLocalVariable(variableName)), variableType);
 
 			last = assignment;
 		}

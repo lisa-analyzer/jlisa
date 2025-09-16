@@ -83,7 +83,7 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-		AnalysisState<A> tmp = state.bottom();
+		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, concat, this);
