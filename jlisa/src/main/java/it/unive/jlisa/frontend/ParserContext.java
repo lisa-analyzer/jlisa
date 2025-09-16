@@ -173,6 +173,39 @@ public class ParserContext {
 		return type;
 	}
 
+	public Global getGlobal(
+			CFG cfg,
+			String name) {
+		Unit unit = cfg.getDescriptor().getUnit();
+		while (unit != null) {
+			if (unit instanceof CompilationUnit) {
+				CompilationUnit cu = (CompilationUnit) unit;
+				for (Global g : cu.getGlobals()) {
+					if (g.getName().equals(name)) {
+						return g;
+					}
+				}
+				for (Global g : cu.getInstanceGlobals(false)) {
+					if (g.getName().equals(name)) {
+						return g;
+					}
+				}
+				if (cu.getImmediateAncestors().isEmpty()) {
+					unit = null;
+				} else {
+					unit = cu.getImmediateAncestors().iterator().next();
+				}
+			} else {
+				for (Global g : unit.getGlobals()) {
+					if (g.getName().equals(name)) {
+						return g;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	public Type getVariableStaticTypeFromUnitAndGlobals(
 			CFG cfg,
 			String name) {
