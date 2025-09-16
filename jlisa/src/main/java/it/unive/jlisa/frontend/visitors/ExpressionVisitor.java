@@ -671,7 +671,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(
 			SimpleName node) {
 		String identifier = node.getIdentifier();
-		if (tracker.getLocalVariable(identifier) == null) {
+		if (tracker != null && tracker.getLocalVariable(identifier) == null) {
 			// if the tracker does not have information about the actual
 			// variable, it means that it is a global.
 			Global global = parserContext.getGlobal(cfg, identifier);
