@@ -15,6 +15,7 @@ import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.*;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -36,11 +37,12 @@ import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExpressionVisitor extends JavaASTVisitor {
 	private CFG cfg;
@@ -670,6 +672,33 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(
 			SimpleName node) {
 		String identifier = node.getIdentifier();
+		if (tracker.getLocalVariable(identifier) == null) {
+			// if the tracker does not have information about the actual
+			// variable, it means that it is a global.
+			Global global = parserContext.getGlobal(cfg, identifier);
+			if (global != null) {
+				if (global.isInstance()) {
+					JavaReferenceType type = null;
+					if (cfg.getUnit() instanceof ClassUnit cu) {
+						type = JavaClassType.lookup(cfg.getUnit().getName(), null).getReference();
+					} else {
+						type = JavaInterfaceType.lookup(cfg.getUnit().getName(), null).getReference();
+					}
+					expression = new JavaAccessInstanceGlobal(cfg,
+							getSourceCodeLocationManager(node).getCurrentLocation(), new VariableRef(
+									cfg,
+									parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+									"this",
+									type),
+							identifier);
+				} else {
+					expression = new JavaAccessGlobal(cfg,
+							getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
+				}
+
+				return false;
+			}
+		}
 		expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(
 				cfg, new VariableInfo(identifier, tracker != null ? tracker.getLocalVariable(identifier) : null)));
 		return false;
