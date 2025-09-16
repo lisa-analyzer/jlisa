@@ -56,6 +56,8 @@ import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOpera
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
+import it.unive.jlisa.program.operator.JavaStringRegionMatchesIgnoreCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringRegionMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
@@ -72,6 +74,8 @@ import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
+import it.unive.jlisa.program.operator.NaryExpression;
+import it.unive.jlisa.program.operator.NaryOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -781,7 +785,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return top();
 
 	}
-
+	
 	@Override
 	public ConstantValue evalValueExpression(
 			ValueExpression expression,
@@ -789,6 +793,34 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		
+		NaryOperator operator = ((NaryExpression)expression).getOperator();
+		
+		if ( subExpressions.length == 5 ) {
+			
+			if(operator instanceof JavaStringRegionMatchesOperator) {
+				String f = ((String) subExpressions[0].getValue());
+				Integer s = ((Integer) subExpressions[1].getValue());
+				String t = ((String) subExpressions[2].getValue());
+				Integer fo = ((Integer) subExpressions[3].getValue());
+				Integer fi = ((Integer) subExpressions[4].getValue());
+				return new ConstantValue(f.regionMatches(s, t, fo, fi));
+			}
+			
+		} else if ( subExpressions.length == 6 ) {
+			
+			if(operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
+				String f = ((String) subExpressions[0].getValue());
+				Boolean s = ((Boolean) subExpressions[1].getValue());
+				Integer t = ((Integer) subExpressions[2].getValue());
+				String fo = ((String) subExpressions[3].getValue());
+				Integer fi = ((Integer) subExpressions[4].getValue());
+				Integer si = ((Integer) subExpressions[5].getValue());
+				return new ConstantValue(f.regionMatches(s, t, fo, fi, si));
+			}
+			
+		}
+		
 		return top();
 	}
 
