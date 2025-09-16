@@ -281,4 +281,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java");
 		perform(conf);
 	}
+
+	// @Test
+	public void BinaryTreeSearchMemSat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
+				"Main.java", "Verifier.java");
+		perform(conf);
+	}
 }
