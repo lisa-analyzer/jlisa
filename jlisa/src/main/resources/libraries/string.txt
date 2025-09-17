@@ -158,6 +158,12 @@ class String extends Object: it.unive.jlisa.program.type.JavaStringType
 		param other type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
+	instance method replaceFirst: it.unive.jlisa.program.java.constructs.string.StringReplaceFirst
+		libtype String*
+		param this libtype String*
+		param regex libtype String*
+		param other libtype String*
+		
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfCharFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*

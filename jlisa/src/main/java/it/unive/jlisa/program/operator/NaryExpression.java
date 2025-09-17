@@ -1,21 +1,13 @@
 package it.unive.jlisa.program.operator;
 
 import java.lang.reflect.Array;
-import java.util.List;
-
-import it.unive.lisa.analysis.Lattice;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.ExpressionVisitor;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.type.Type;
 
 public class NaryExpression extends ValueExpression{

@@ -1,0 +1,43 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':18:4] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':33:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "report.json", "void_Main.main(String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "46ms",
+    "end" : "2025-09-16T16:24:40.099+02:00",
+    "expressions" : "116",
+    "files" : "1",
+    "globals" : "19",
+    "members" : "148",
+    "programs" : "1",
+    "start" : "2025-09-16T16:24:40.053+02:00",
+    "statements" : "44",
+    "units" : "84",
+    "version" : "0.1",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/RegexSubstitution01"
+  }
+}

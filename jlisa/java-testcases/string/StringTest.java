@@ -54,5 +54,6 @@ public class StringTest {
 		//byte[] by1 = s4.getBytes();
 		boolean b9 = s4.regionMatches(0, s2, 0, 5);
 		boolean b10 = s4.regionMatches(true, 0, "HELLO WORlD", 0, 5);
+		String s23 = s4.replaceFirst("H", "D");
 	}
 }

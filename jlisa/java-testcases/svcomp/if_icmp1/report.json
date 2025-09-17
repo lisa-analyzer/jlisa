@@ -1,0 +1,53 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':14:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':17:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':20:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':22:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':25:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':28:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':30:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "files" : [ "int_Verifier.nondetInt()_1707439208.json", "report.json", "void_Main.f(int_i,_int_j)_1707422933.json", "void_Main.main(String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "11ms",
+    "end" : "2025-09-16T16:24:41.217+02:00",
+    "expressions" : "67",
+    "files" : "3",
+    "globals" : "19",
+    "members" : "149",
+    "programs" : "1",
+    "start" : "2025-09-16T16:24:41.206+02:00",
+    "statements" : "39",
+    "units" : "84",
+    "version" : "0.1",
+    "warnings" : "7"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/if_icmp1"
+  }
+}

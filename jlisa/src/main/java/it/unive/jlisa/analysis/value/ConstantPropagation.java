@@ -63,6 +63,7 @@ import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringRegionMatchesIgnoreCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringRegionMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceFirstOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
@@ -751,6 +752,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.replace((char) mv.intValue(), (char) rv.intValue()));
+		}
+		
+		if (operator instanceof JavaStringReplaceFirstOperator) {
+			String lv = ((String) left.getValue());
+			String mv = ((String) middle.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.replaceFirst(mv,  rv));
 		}
 
 		if (operator instanceof JavaStringIndexOfCharFromIndexOperator) {
