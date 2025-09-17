@@ -109,6 +109,7 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
@@ -1083,6 +1084,32 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 						: Satisfiability.NOT_SATISFIED;
 			else if (lVal instanceof Character && rVal instanceof Character)
 				return ((Character) lVal).charValue() == ((Character) rVal).charValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof ComparisonNe) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Number || rVal instanceof Number)
+				if (lVal instanceof Double || rVal instanceof Double) {
+					return ((Number) lVal).doubleValue() != ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
+				} else if (lVal instanceof Float || rVal instanceof Float) {
+					return ((Number) lVal).floatValue() != ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
+				} else if (lVal instanceof Long || rVal instanceof Long) {
+					return ((Number) lVal).longValue() != ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
+				} else {
+					return ((Number) lVal).intValue() != ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+							: Satisfiability.NOT_SATISFIED;
+				}
+			else if (lVal instanceof Boolean && rVal instanceof Boolean)
+				return ((Boolean) lVal).booleanValue() != ((Boolean) rVal).booleanValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			else if (lVal instanceof Character && rVal instanceof Character)
+				return ((Character) lVal).charValue() != ((Character) rVal).charValue() ? Satisfiability.SATISFIED
 						: Satisfiability.NOT_SATISFIED;
 		}
 

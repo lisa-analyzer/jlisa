@@ -179,4 +179,8 @@ public final class JavaInterfaceType implements UnitType {
 			CodeLocation location) {
 		return new NullLiteral(cfg, location);
 	}
+
+	public JavaReferenceType getReference() {
+		return new JavaReferenceType(this);
+	}
 }
