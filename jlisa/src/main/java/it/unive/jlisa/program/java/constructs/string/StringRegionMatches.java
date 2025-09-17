@@ -21,9 +21,9 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringRegionMatches extends NaryExpression implements PluggableStatement{
+public class StringRegionMatches extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
-	
+
 	protected StringRegionMatches(
 			CFG cfg,
 			CodeLocation location,
@@ -37,51 +37,56 @@ public class StringRegionMatches extends NaryExpression implements PluggableStat
 			Expression... params) {
 		return new StringRegionMatches(cfg, location, params);
 	}
-	
+
 	@Override
-	public void setOriginatingStatement(Statement st) {
-		originating = st;		
+	public void setOriginatingStatement(
+			Statement st) {
+		originating = st;
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, ExpressionSet[] params,
-			StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			ExpressionSet[] params,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		SymbolicExpression[] exprs = new SymbolicExpression[params.length];
 
-		for(int i = 0; i < params.length; ++i) {
+		for (int i = 0; i < params.length; ++i) {
 			ExpressionSet set = params[i];
-			if( set.size() > 1 || set.size() <= 0)
+			if (set.size() > 1 || set.size() <= 0)
 				throw new IllegalArgumentException("Number of operands is incorrect!");
-			for(SymbolicExpression expr : set) {
+			for (SymbolicExpression expr : set) {
 				exprs[i] = expr;
 			}
 		}
-		
+
 		Type stringType = getProgram().getTypes().getStringType();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefThisString = new HeapDereference(stringType, exprs[0], getLocation());
 		AccessChild accessThisString = new AccessChild(stringType, derefThisString, var, getLocation());
-		
+
 		exprs[0] = accessThisString;
-		
+
 		HeapDereference derefOtherString = new HeapDereference(stringType, exprs[2], getLocation());
 		AccessChild accessOtherString = new AccessChild(stringType, derefOtherString, var, getLocation());
-		
+
 		exprs[2] = accessOtherString;
-		
+
 		it.unive.jlisa.program.operator.NaryExpression matches = new it.unive.jlisa.program.operator.NaryExpression(
 				getProgram().getTypes().getBooleanType(),
 				exprs,
 				JavaStringRegionMatchesOperator.INSTANCE,
 				getLocation());
-				
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, matches, originating);
 	}
 }

@@ -29,11 +29,9 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -165,8 +163,7 @@ public class JavaFieldSensitivePointBasedHeap
 
 		return super.satisfies(state, expression, pp, oracle);
 	}
-	
-	
+
 	/**
 	 * A {@link it.unive.lisa.analysis.heap.BaseHeapDomain.Rewriter} for the
 	 * {@link FieldSensitivePointBasedHeap} domain.
@@ -247,15 +244,18 @@ public class JavaFieldSensitivePointBasedHeap
 			}
 			return new ExpressionSet(expression);
 		}
-		
+
 		@Override
-		public ExpressionSet visit(ValueExpression expression, ExpressionSet[] subExpressions, Object... params)
+		public ExpressionSet visit(
+				ValueExpression expression,
+				ExpressionSet[] subExpressions,
+				Object... params)
 				throws SemanticException {
 			Set<SymbolicExpression> result = new HashSet<>();
 			SymbolicExpression[] res = new SymbolicExpression[subExpressions.length];
-			for(int i = 0; i < subExpressions.length; ++i) {
+			for (int i = 0; i < subExpressions.length; ++i) {
 				ExpressionSet set = subExpressions[i];
-				for(SymbolicExpression expr : set) {
+				for (SymbolicExpression expr : set) {
 					res[i] = expr;
 				}
 			}

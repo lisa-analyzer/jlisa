@@ -753,12 +753,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(lv.replace((char) mv.intValue(), (char) rv.intValue()));
 		}
-		
+
 		if (operator instanceof JavaStringReplaceFirstOperator) {
 			String lv = ((String) left.getValue());
 			String mv = ((String) middle.getValue());
 			String rv = ((String) right.getValue());
-			return new ConstantValue(lv.replaceFirst(mv,  rv));
+			return new ConstantValue(lv.replaceFirst(mv, rv));
 		}
 
 		if (operator instanceof JavaStringIndexOfCharFromIndexOperator) {
@@ -806,7 +806,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return top();
 
 	}
-	
+
 	@Override
 	public ConstantValue evalValueExpression(
 			ValueExpression expression,
@@ -814,12 +814,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		
-		NaryOperator operator = ((NaryExpression)expression).getOperator();
-		
-		if ( subExpressions.length == 5 ) {
-			
-			if(operator instanceof JavaStringRegionMatchesOperator) {
+
+		NaryOperator operator = ((NaryExpression) expression).getOperator();
+
+		if (subExpressions.length == 5) {
+
+			if (operator instanceof JavaStringRegionMatchesOperator) {
 				String f = ((String) subExpressions[0].getValue());
 				Integer s = ((Integer) subExpressions[1].getValue());
 				String t = ((String) subExpressions[2].getValue());
@@ -827,10 +827,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				Integer fi = ((Integer) subExpressions[4].getValue());
 				return new ConstantValue(f.regionMatches(s, t, fo, fi));
 			}
-			
-		} else if ( subExpressions.length == 6 ) {
-			
-			if(operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
+
+		} else if (subExpressions.length == 6) {
+
+			if (operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
 				String f = ((String) subExpressions[0].getValue());
 				Boolean s = ((Boolean) subExpressions[1].getValue());
 				Integer t = ((Integer) subExpressions[2].getValue());
@@ -839,33 +839,36 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				Integer si = ((Integer) subExpressions[5].getValue());
 				return new ConstantValue(f.regionMatches(s, t, fo, fi, si));
 			}
-			
+
 		}
-		
+
 		return top();
 	}
 
-	
 	@Override
-	public Satisfiability satisfies(ValueEnvironment<ConstantValue> state, ValueExpression expression, ProgramPoint pp,
-			SemanticOracle oracle) throws SemanticException {
-		if(expression instanceof NaryExpression) {
+	public Satisfiability satisfies(
+			ValueEnvironment<ConstantValue> state,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (expression instanceof NaryExpression) {
 			SymbolicExpression[] exprs = ((NaryExpression) expression).getAllOperand(0);
 			ConstantValue[] args = new ConstantValue[exprs.length];
-			
-			for(int i = 0; i < exprs.length; ++i) {
+
+			for (int i = 0; i < exprs.length; ++i) {
 				ConstantValue left = eval(state, (ValueExpression) exprs[i], pp, oracle);
 				if (left.isBottom())
 					return Satisfiability.BOTTOM;
 				args[i] = left;
 			}
-			
-			return satisfiesNaryExpression( (NaryExpression) expression, args , pp, oracle);
+
+			return satisfiesNaryExpression((NaryExpression) expression, args, pp, oracle);
 		}
-		
+
 		return BaseNonRelationalValueDomain.super.satisfies(state, expression, pp, oracle);
 	}
-	
+
 	public Satisfiability satisfiesNaryExpression(
 			NaryExpression expression,
 			ConstantValue[] arg,
@@ -873,15 +876,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			SemanticOracle oracle)
 			throws SemanticException {
 
-		for(ConstantValue val : arg) {
-			if(val.isTop())
+		for (ConstantValue val : arg) {
+			if (val.isTop())
 				return Satisfiability.UNKNOWN;
 		}
-		
+
 		NaryOperator operator = expression.getOperator();
-		
+
 		if (arg.length == 5) {
-			
+
 			if (operator instanceof JavaStringRegionMatchesOperator) {
 				String f = ((String) arg[0].getValue());
 				Integer s = ((Integer) arg[1].getValue());
@@ -891,8 +894,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return f.regionMatches(s, t, fo, fi) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 			}
 		} else if (arg.length == 6) {
-			
-			if(operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
+
+			if (operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
 				String f = ((String) arg[0].getValue());
 				Boolean s = ((Boolean) arg[1].getValue());
 				Integer t = ((Integer) arg[2].getValue());
@@ -902,10 +905,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return f.regionMatches(s, t, fo, fi, si) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 			}
 		}
-		
+
 		return Satisfiability.UNKNOWN;
 	}
-	
+
 	@Override
 	public Satisfiability satisfiesAbstractValue(
 			ConstantValue value,

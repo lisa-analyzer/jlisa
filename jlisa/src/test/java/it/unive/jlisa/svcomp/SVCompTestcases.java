@@ -289,7 +289,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Verifier.java");
 		perform(conf);
 	}
-	
+
 	// Cannot be proven with Constant Propagation
 	@Test
 	public void if_icmp1_test() throws IOException {
@@ -298,7 +298,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Verifier.java");
 		perform(conf);
 	}
-	
+
 	// FIXME: Check runtime exception (ArrayIndexOutOfBoundsException)
 	@Test
 	public void RegexSubstitution01_test() throws IOException {
