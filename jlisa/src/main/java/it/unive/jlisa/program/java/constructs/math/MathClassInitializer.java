@@ -79,7 +79,7 @@ public class MathClassInitializer extends NativeCFG implements PluggableStatemen
 				AnalysisState<A> state,
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
-				throws SemanticException {	
+				throws SemanticException {
 			GlobalVariable idPI = new GlobalVariable(JavaDoubleType.INSTANCE, "Math::PI", getLocation());
 			GlobalVariable idE = new GlobalVariable(JavaDoubleType.INSTANCE, "Math::E", getLocation());
 			Constant piConst = new Constant(JavaDoubleType.INSTANCE, 3.141592653589793, getLocation());
