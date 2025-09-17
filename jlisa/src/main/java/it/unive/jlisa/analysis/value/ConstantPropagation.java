@@ -76,6 +76,10 @@ import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -1081,6 +1085,34 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return environment;
 		else
 			return new ValueEnvironment<>(new ConstantValue()).bottom();
+	}
+
+	public ConstantValue evalTypeConv(
+			BinaryExpression conv,
+			ConstantValue left,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle.getRuntimeTypesOf(conv, pp).isEmpty()) {
+			return left.bottom();
+		}
+		if (left.getValue() instanceof Number) {
+			if (right.getValue() instanceof JavaByteType) {
+				return new ConstantValue(((Number) left.getValue()).byteValue());
+			}
+			if (right.getValue() instanceof JavaShortType) {
+				return new ConstantValue(((Number) left.getValue()).shortValue());
+			}
+			if (right.getValue() instanceof JavaIntType) {
+				return new ConstantValue(((Number) left.getValue()).intValue());
+			}
+			if (right.getValue() instanceof JavaLongType) {
+				return new ConstantValue(((Number) left.getValue()).longValue());
+			}
+
+		}
+		return left;
 	}
 
 	@Override

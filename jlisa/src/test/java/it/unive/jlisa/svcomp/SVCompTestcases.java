@@ -326,4 +326,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "Verifier.java");
 		perform(conf);
 	}
+
+	@Test
+	public void swap1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "swap1",
+				"Main.java");
+		perform(conf);
+	}
 }
