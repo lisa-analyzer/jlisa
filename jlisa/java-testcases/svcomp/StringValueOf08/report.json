@@ -1,51 +1,43 @@
 {
-  "warnings": [
-    {
-      "message": "['$Main.java':1] on 'void Main::main(String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-    },
-    {
-      "message": "['Main.java':16:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    }
-  ],
-  "files": [
-    "String__Verifier.nondetString()_1707443331.json",
-    "report.json",
-    "void_Main.main(String_[]__args).json",
-    "void_Verifier.assume(bool_condition)_1320444868.json"
-  ],
-  "info": {
-    "cfgs": "13",
-    "duration": "12ms",
-    "end": "2025-09-15T23:22:40.227+02:00",
-    "expressions": "51",
-    "files": "3",
-    "globals": "19",
-    "members": "146",
-    "programs": "1",
-    "start": "2025-09-15T23:22:40.215+02:00",
-    "statements": "26",
-    "units": "85",
-    "version": "0.1",
-    "warnings": "2"
+  "warnings" : [ {
+    "message" : "['$Main.java':1] on 'void Main::main(String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':16:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "String__Verifier.nondetString()_1707443331.json", "report.json", "void_Main.main(String_[]__args).json", "void_Verifier.assume(bool_condition)_1320444868.json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "9ms",
+    "end" : "2025-09-17T11:23:59.070+02:00",
+    "expressions" : "51",
+    "files" : "3",
+    "globals" : "19",
+    "members" : "147",
+    "programs" : "1",
+    "start" : "2025-09-17T11:23:59.061+02:00",
+    "statements" : "26",
+    "units" : "85",
+    "version" : "0.1",
+    "warnings" : "2"
   },
-  "configuration": {
-    "analysisGraphs": "NONE",
-    "descendingPhaseType": "NONE",
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "jsonOutput": "true",
-    "openCallPolicy": "ReturnTopPolicy",
-    "optimize": "false",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "serializeInputs": "false",
-    "serializeResults": "true",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/StringValueOf08"
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/StringValueOf08"
   }
 }

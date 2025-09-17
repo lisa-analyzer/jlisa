@@ -2,5 +2,6 @@ sealed class System extends Object:
 	field out libtype PrintStream*
     field in libtype InputStream*
     field err libtype PrintStream*
+    
     method System_clinit: it.unive.jlisa.program.java.constructs.system.SystemClassInitializer
         type it.unive.lisa.type.VoidType::INSTANCE
