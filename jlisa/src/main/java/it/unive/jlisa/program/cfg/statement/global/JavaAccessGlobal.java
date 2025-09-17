@@ -183,6 +183,7 @@ public class JavaAccessGlobal extends Expression {
 			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);
 
 		// unit globals are unique, we can directly access those
+
 		return analysis.smallStepSemantics(
 				state,
 				new GlobalVariable(target.getStaticType(), classInit.getName() + "::" + target.getName(),

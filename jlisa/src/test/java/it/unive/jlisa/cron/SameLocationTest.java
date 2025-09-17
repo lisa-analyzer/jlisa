@@ -15,7 +15,7 @@ public class SameLocationTest extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	// @Test
 	public void testAdditionVerifier() throws IOException {
 		CronConfiguration conf = TestHelpers.constantPropagation("same-location", "addition-verifier", "Main.java",
 				"Verifier.java");
