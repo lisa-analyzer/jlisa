@@ -3,7 +3,7 @@ package it.unive.jlisa.program.java.constructs.integer;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -80,10 +80,10 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			GlobalVariable maxId = new GlobalVariable(JavaDoubleType.INSTANCE, "Integer::MAX_VALUE", getLocation());
-			GlobalVariable minId = new GlobalVariable(JavaDoubleType.INSTANCE, "Integer::MIN_VALUE", getLocation());
-			Constant maxConst = new Constant(JavaDoubleType.INSTANCE, 0x7fffffff, getLocation());
-			Constant minConst = new Constant(JavaDoubleType.INSTANCE, 0x80000000, getLocation());
+			GlobalVariable maxId = new GlobalVariable(JavaIntType.INSTANCE, "Integer::MAX_VALUE", getLocation());
+			GlobalVariable minId = new GlobalVariable(JavaIntType.INSTANCE, "Integer::MIN_VALUE", getLocation());
+			Constant maxConst = new Constant(JavaIntType.INSTANCE, 0x7fffffff, getLocation());
+			Constant minConst = new Constant(JavaIntType.INSTANCE, 0x80000000, getLocation());
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			state = analysis.assign(state, maxId, maxConst, this);
 			state = analysis.assign(state, minId, minConst, this);
