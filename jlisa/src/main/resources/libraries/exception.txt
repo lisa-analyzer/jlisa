@@ -73,6 +73,8 @@ class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
 
 class IllegalArgumentException extends RuntimeException:
 
+class IllegalStateExpression extends RuntimeException:
+
 class NumberFormatException extends IllegalArgumentException:
 
 	instance method NumberFormatException: it.unive.jlisa.program.java.constructs.exceptions.NumberFormatExceptionConstructor

@@ -1,41 +1,48 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':14:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "String__Verifier.nondetString()_1707443331.json", "report.json", "void_Main.main(String_[]__args).json", "void_Verifier.assume(bool_condition)_1320444868.json" ],
-  "info" : {
-    "cfgs" : "13",
-    "duration" : "9ms",
-    "end" : "2025-09-15T23:22:40.115+02:00",
-    "expressions" : "45",
-    "files" : "3",
-    "globals" : "19",
-    "members" : "146",
-    "programs" : "1",
-    "start" : "2025-09-15T23:22:40.106+02:00",
-    "statements" : "24",
-    "units" : "84",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':14:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "files": [
+    "String__Verifier.nondetString()_1707443331.json",
+    "report.json",
+    "void_Main.main(String_[]__args).json",
+    "void_Verifier.assume(bool_condition)_1320444868.json"
+  ],
+  "info": {
+    "cfgs": "13",
+    "duration": "9ms",
+    "end": "2025-09-15T23:22:40.115+02:00",
+    "expressions": "45",
+    "files": "3",
+    "globals": "19",
+    "members": "146",
+    "programs": "1",
+    "start": "2025-09-15T23:22:40.106+02:00",
+    "statements": "24",
+    "units": "85",
+    "version": "0.1",
+    "warnings": "1"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/StringContains02"
+  "configuration": {
+    "analysisGraphs": "NONE",
+    "descendingPhaseType": "NONE",
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "jsonOutput": "true",
+    "openCallPolicy": "ReturnTopPolicy",
+    "optimize": "false",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "serializeInputs": "false",
+    "serializeResults": "true",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/StringContains02"
   }
 }
