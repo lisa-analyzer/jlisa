@@ -73,7 +73,7 @@ class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
 
 class IllegalArgumentException extends RuntimeException:
 
-class IllegalStateExpression extends RuntimeException:
+class IllegalStateException extends RuntimeException:
 
 class NumberFormatException extends IllegalArgumentException:
 
