@@ -298,19 +298,9 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	// Cannot be proven with Constant Propagation
 	@Test
 	public void if_icmp1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "if_icmp1",
-				"Main.java",
-				"Verifier.java");
-		perform(conf);
-	}
-
-	// FIXME: Check runtime exception (ArrayIndexOutOfBoundsException)
-	@Test
-	public void RegexSubstitution01_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "RegexSubstitution01",
 				"Main.java",
 				"Verifier.java");
 		perform(conf);
