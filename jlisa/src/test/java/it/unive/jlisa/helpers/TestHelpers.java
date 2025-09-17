@@ -1,6 +1,7 @@
 package it.unive.jlisa.helpers;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
@@ -46,7 +47,7 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new InferredTypes();
+		InferredTypes type = new JavaInferredTypes();
 		Interval domain = new Interval();
 
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
@@ -76,7 +77,7 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new InferredTypes();
+		InferredTypes type = new JavaInferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
 
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
@@ -107,7 +108,7 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new InferredTypes();
+		InferredTypes type = new JavaInferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
 
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);

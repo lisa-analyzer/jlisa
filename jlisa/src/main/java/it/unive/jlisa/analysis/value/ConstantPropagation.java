@@ -60,7 +60,10 @@ import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOpera
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
+import it.unive.jlisa.program.operator.JavaStringRegionMatchesIgnoreCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringRegionMatchesOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceFirstOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
@@ -76,6 +79,8 @@ import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
+import it.unive.jlisa.program.operator.NaryExpression;
+import it.unive.jlisa.program.operator.NaryOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -749,6 +754,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(lv.replace((char) mv.intValue(), (char) rv.intValue()));
 		}
 
+		if (operator instanceof JavaStringReplaceFirstOperator) {
+			String lv = ((String) left.getValue());
+			String mv = ((String) middle.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(lv.replaceFirst(mv, rv));
+		}
+
 		if (operator instanceof JavaStringIndexOfCharFromIndexOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
@@ -802,7 +814,99 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+
+		NaryOperator operator = ((NaryExpression) expression).getOperator();
+
+		if (subExpressions.length == 5) {
+
+			if (operator instanceof JavaStringRegionMatchesOperator) {
+				String f = ((String) subExpressions[0].getValue());
+				Integer s = ((Integer) subExpressions[1].getValue());
+				String t = ((String) subExpressions[2].getValue());
+				Integer fo = ((Integer) subExpressions[3].getValue());
+				Integer fi = ((Integer) subExpressions[4].getValue());
+				return new ConstantValue(f.regionMatches(s, t, fo, fi));
+			}
+
+		} else if (subExpressions.length == 6) {
+
+			if (operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
+				String f = ((String) subExpressions[0].getValue());
+				Boolean s = ((Boolean) subExpressions[1].getValue());
+				Integer t = ((Integer) subExpressions[2].getValue());
+				String fo = ((String) subExpressions[3].getValue());
+				Integer fi = ((Integer) subExpressions[4].getValue());
+				Integer si = ((Integer) subExpressions[5].getValue());
+				return new ConstantValue(f.regionMatches(s, t, fo, fi, si));
+			}
+
+		}
+
 		return top();
+	}
+
+	@Override
+	public Satisfiability satisfies(
+			ValueEnvironment<ConstantValue> state,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (expression instanceof NaryExpression) {
+			SymbolicExpression[] exprs = ((NaryExpression) expression).getAllOperand(0);
+			ConstantValue[] args = new ConstantValue[exprs.length];
+
+			for (int i = 0; i < exprs.length; ++i) {
+				ConstantValue left = eval(state, (ValueExpression) exprs[i], pp, oracle);
+				if (left.isBottom())
+					return Satisfiability.BOTTOM;
+				args[i] = left;
+			}
+
+			return satisfiesNaryExpression((NaryExpression) expression, args, pp, oracle);
+		}
+
+		return BaseNonRelationalValueDomain.super.satisfies(state, expression, pp, oracle);
+	}
+
+	public Satisfiability satisfiesNaryExpression(
+			NaryExpression expression,
+			ConstantValue[] arg,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+
+		for (ConstantValue val : arg) {
+			if (val.isTop())
+				return Satisfiability.UNKNOWN;
+		}
+
+		NaryOperator operator = expression.getOperator();
+
+		if (arg.length == 5) {
+
+			if (operator instanceof JavaStringRegionMatchesOperator) {
+				String f = ((String) arg[0].getValue());
+				Integer s = ((Integer) arg[1].getValue());
+				String t = ((String) arg[2].getValue());
+				Integer fo = ((Integer) arg[3].getValue());
+				Integer fi = ((Integer) arg[4].getValue());
+				return f.regionMatches(s, t, fo, fi) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+			}
+		} else if (arg.length == 6) {
+
+			if (operator instanceof JavaStringRegionMatchesIgnoreCaseOperator) {
+				String f = ((String) arg[0].getValue());
+				Boolean s = ((Boolean) arg[1].getValue());
+				Integer t = ((Integer) arg[2].getValue());
+				String fo = ((String) arg[3].getValue());
+				Integer fi = ((Integer) arg[4].getValue());
+				Integer si = ((Integer) arg[5].getValue());
+				return f.regionMatches(s, t, fo, fi, si) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+			}
+		}
+
+		return Satisfiability.UNKNOWN;
 	}
 
 	@Override
