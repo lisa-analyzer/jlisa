@@ -1,12 +1,11 @@
 package it.unive.jlisa.program.operator;
 
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.TypeSystem;
-
-public class JavaStringRegionMatchesOperator implements NaryOperator{
+public class JavaStringRegionMatchesOperator implements NaryOperator {
 
 	/**
 	 * The singleton instance of this class.
@@ -20,17 +19,19 @@ public class JavaStringRegionMatchesOperator implements NaryOperator{
 	 */
 	protected JavaStringRegionMatchesOperator() {
 	}
-	
+
 	@Override
 	public String toString() {
 		return "str-region-matches";
 	}
-	
+
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type>[] operands) {
-		if( operands.length != 5)
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type>[] operands) {
+		if (operands.length != 5)
 			throw new IllegalArgumentException("Incorrect number of operands!!");
-		
+
 		if (operands[0].stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		if (operands[1].stream().noneMatch(t -> t.equals(types.getIntegerType())))
@@ -41,7 +42,7 @@ public class JavaStringRegionMatchesOperator implements NaryOperator{
 			return Collections.emptySet();
 		if (operands[4].stream().noneMatch(t -> t.equals(types.getIntegerType())))
 			return Collections.emptySet();
-		
+
 		return Collections.singleton(types.getBooleanType());
 	}
 

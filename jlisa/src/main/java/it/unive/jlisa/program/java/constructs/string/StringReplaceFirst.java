@@ -69,10 +69,10 @@ public class StringReplaceFirst extends TernaryExpression implements PluggableSt
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-		
+
 		HeapDereference derefMiddle = new HeapDereference(stringType, middle, getLocation());
 		AccessChild accessMiddle = new AccessChild(stringType, derefMiddle, var, getLocation());
-		
+
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
 
