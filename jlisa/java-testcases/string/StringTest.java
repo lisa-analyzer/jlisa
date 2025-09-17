@@ -40,7 +40,6 @@ public class StringTest {
 		int i4 = s4.indexOf('o');
 		Object o1 = new String("Nuovo Oggetto");
 		String s18 = String.valueOf(o1);
-		//byte[] by1 = s4.getBytes();
 		boolean b7 = s4.equalsIgnoreCase("HELLO WORlD");
 		String s19 = s4.replace('o', 'a');
 		int i5 = s4.indexOf('o', 6);
@@ -52,6 +51,9 @@ public class StringTest {
 		boolean b8 = s4.startsWith("World", 6);
 		int i8 = s4.indexOf("o", 6);
 		int i9 = ("ABCABABCAB").lastIndexOf('C', 5);
-		
+		//byte[] by1 = s4.getBytes();
+		boolean b9 = s4.regionMatches(0, s2, 0, 5);
+		boolean b10 = s4.regionMatches(true, 0, "HELLO WORlD", 0, 5);
+		String s23 = s4.replaceFirst("H", "D");
 	}
 }

@@ -4,6 +4,16 @@ import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.lisa.type.BooleanType;
+import it.unive.lisa.type.NumericType;
+import it.unive.lisa.type.ReferenceType;
+import it.unive.lisa.type.StringType;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeSystem;
+import it.unive.lisa.type.TypeTokenType;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import it.unive.lisa.type.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -62,12 +72,11 @@ public class JavaTypeSystem extends TypeSystem {
 				.collect(Collectors.toSet());
 
 		for (Type token : filtered)
-			for (Type t : types)
-				// note assuming compiling code and no reflection, all
-				// conversions can be done.
-				//
-				// if (t.canBeAssignedTo(token))
-				result.add(token);
+			// note assuming compiling code and no reflection, all
+			// conversions can be done.
+			//
+			// if (t.canBeAssignedTo(token))
+			result.add(token);
 
 		return result;
 	}

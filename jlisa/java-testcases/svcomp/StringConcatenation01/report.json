@@ -1,59 +1,47 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':20:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    },
-    {
-      "message": "['Main.java':21:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    },
-    {
-      "message": "['Main.java':24:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    },
-    {
-      "message": "['Main.java':27:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    }
-  ],
-  "files": [
-    "String__Verifier.nondetString()_1707440479.json",
-    "String__Verifier.nondetString()_1707440510.json",
-    "report.json",
-    "void_Main.main(String_[]__args).json",
-    "void_Verifier.assume(bool_condition)_1320356456.json",
-    "void_Verifier.assume(bool_condition)_1320357417.json"
-  ],
-  "info": {
-    "cfgs": "13",
-    "duration": "20ms",
-    "end": "2025-09-17T11:23:58.252+02:00",
-    "expressions": "89",
-    "files": "5",
-    "globals": "19",
-    "members": "147",
-    "programs": "1",
-    "start": "2025-09-17T11:23:58.232+02:00",
-    "statements": "33",
-    "units": "85",
-    "version": "0.1",
-    "warnings": "4"
+  "warnings" : [ {
+    "message" : "['Main.java':20:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':21:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':24:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':27:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "String__Verifier.nondetString()_1707440479.json", "String__Verifier.nondetString()_1707440510.json", "report.json", "void_Main.main(String_[]__args).json", "void_Verifier.assume(bool_condition)_1320356456.json", "void_Verifier.assume(bool_condition)_1320357417.json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "16ms",
+    "end" : "2025-09-17T15:40:28.995+02:00",
+    "expressions" : "89",
+    "files" : "5",
+    "globals" : "19",
+    "members" : "149",
+    "programs" : "1",
+    "start" : "2025-09-17T15:40:28.979+02:00",
+    "statements" : "33",
+    "units" : "84",
+    "version" : "0.1",
+    "warnings" : "4"
   },
-  "configuration": {
-    "analysisGraphs": "NONE",
-    "descendingPhaseType": "NONE",
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "jsonOutput": "true",
-    "openCallPolicy": "ReturnTopPolicy",
-    "optimize": "false",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "serializeInputs": "false",
-    "serializeResults": "true",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/StringConcatenation01"
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/StringConcatenation01"
   }
 }

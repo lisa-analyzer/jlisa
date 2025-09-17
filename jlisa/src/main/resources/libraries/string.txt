@@ -14,6 +14,10 @@ class String extends CharSequence: it.unive.jlisa.program.type.JavaStringType
 		param this libtype String*
 		param val type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
 		
+	instance method getBytes: it.unive.jlisa.program.java.constructs.string.StringGetBytes
+		type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
+		param this libtype String*
+		
 	instance method length: it.unive.jlisa.program.java.constructs.string.StringLength
 		type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*
@@ -106,7 +110,7 @@ class String extends CharSequence: it.unive.jlisa.program.type.JavaStringType
 			
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfBoolean
 		libtype String*
-		param other type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param other type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 	
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
 		libtype String*
@@ -154,6 +158,12 @@ class String extends CharSequence: it.unive.jlisa.program.type.JavaStringType
 		param other type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
+	instance method replaceFirst: it.unive.jlisa.program.java.constructs.string.StringReplaceFirst
+		libtype String*
+		param this libtype String*
+		param regex libtype String*
+		param other libtype String*
+		
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfCharFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype String*
@@ -165,6 +175,23 @@ class String extends CharSequence: it.unive.jlisa.program.type.JavaStringType
 		param this libtype String*
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype String*
+		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param other libtype String*
+		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatchesIgnoreCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype String*
+		param case type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param other libtype String*
+		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
 	    type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE

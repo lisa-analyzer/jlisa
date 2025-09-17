@@ -1,6 +1,7 @@
 package it.unive.jlisa.analysis.heap;
 
 import it.unive.jlisa.analysis.JavaNullConstant;
+import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.type.JavaNullType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.SemanticException;
@@ -23,6 +24,7 @@ import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.MemoryPointer;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
@@ -241,6 +243,29 @@ public class JavaFieldSensitivePointBasedHeap
 				return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
 			}
 			return new ExpressionSet(expression);
+		}
+
+		@Override
+		public ExpressionSet visit(
+				ValueExpression expression,
+				ExpressionSet[] subExpressions,
+				Object... params)
+				throws SemanticException {
+			Set<SymbolicExpression> result = new HashSet<>();
+			SymbolicExpression[] res = new SymbolicExpression[subExpressions.length];
+			for (int i = 0; i < subExpressions.length; ++i) {
+				ExpressionSet set = subExpressions[i];
+				for (SymbolicExpression expr : set) {
+					res[i] = expr;
+				}
+			}
+			NaryExpression e = new NaryExpression(
+					expression.getStaticType(),
+					res,
+					((NaryExpression) expression).getOperator(),
+					expression.getCodeLocation());
+			result.add(e);
+			return new ExpressionSet(result);
 		}
 	}
 }
