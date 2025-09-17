@@ -311,4 +311,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "Verifier.java", "MathSin.java");
 		perform(conf);
 	}
+
+	// @Test
+	public void VelocityTracker_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "VelocityTracker_true",
+				"Main.java", "Verifier.java");
+		perform(conf);
+	}
 }

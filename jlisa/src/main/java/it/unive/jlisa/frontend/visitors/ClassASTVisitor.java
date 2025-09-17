@@ -16,14 +16,7 @@ import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.AbstractClassUnit;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.ProgramValidationException;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.*;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
@@ -36,21 +29,12 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ClassASTVisitor extends JavaASTVisitor {
 
@@ -372,7 +356,8 @@ public class ClassASTVisitor extends JavaASTVisitor {
 						unit,
 						fragment.getName().getIdentifier(),
 						false,
-						type,
+						Untyped.INSTANCE, // fixme: check how to get type for
+											// arrays (use extraDimensions).
 						new Annotations());
 				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
 				JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
