@@ -47,7 +47,7 @@ public class LibType implements Type {
 
 	@Override
 	public it.unive.lisa.type.Type toLiSAType() {
-		it.unive.lisa.type.Type t = JavaClassType.lookup(this.name, null);
+		it.unive.lisa.type.Type t = JavaClassType.lookup(this.name);
 		if (this.pointer)
 			t = ((JavaClassType) t).getReference();
 		return t;

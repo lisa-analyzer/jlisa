@@ -49,7 +49,7 @@ public class DoubleValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpr
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type doubleType = JavaClassType.lookup("Double", null);
+		Type doubleType = JavaClassType.lookup("java.lang.Double");
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(doubleType);
 
 		// allocate the value

@@ -25,7 +25,7 @@ public class JavaProgram extends Program {
 		super(features, types);
 		SourceCodeLocationManager locationManager = new SourceCodeLocationManager("$java-runtime/Object");
 		rootClassUnit = new ClassUnit(locationManager.getRoot(), this, "Object", false);
-		JavaClassType.lookup("Object", rootClassUnit);
+		JavaClassType.register("java.lang.Object", rootClassUnit);
 		rootClassUnit.addCodeMember(new ObjectClassInitializer(locationManager.nextRow(), rootClassUnit));
 		rootClassUnit.addInstanceCodeMember(new ObjectConstructor(locationManager.nextRow(), rootClassUnit));
 		this.addUnit(rootClassUnit);

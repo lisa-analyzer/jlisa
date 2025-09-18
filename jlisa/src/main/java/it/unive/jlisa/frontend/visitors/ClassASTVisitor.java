@@ -103,11 +103,11 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			TypeDeclaration typeDecl) {
 		if ((typeDecl.isInterface())) {
 			InterfaceUnit iUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
-			getProgram().getTypes().registerType(JavaInterfaceType.lookup(iUnit.getName(), iUnit));
+			getProgram().getTypes().registerType(JavaInterfaceType.lookup(iUnit.getName()));
 			getProgram().addUnit(iUnit);
 		} else {
 			ClassUnit cUnit = buildClassUnit(source, getProgram(), typeDecl);
-			getProgram().getTypes().registerType(JavaClassType.lookup(cUnit.getName(), cUnit));
+			getProgram().getTypes().registerType(JavaClassType.lookup(cUnit.getName()));
 			getProgram().addUnit(cUnit);
 		}
 	}

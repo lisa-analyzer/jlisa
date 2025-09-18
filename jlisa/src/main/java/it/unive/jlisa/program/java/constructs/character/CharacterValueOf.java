@@ -54,7 +54,7 @@ public class CharacterValueOf extends it.unive.lisa.program.cfg.statement.UnaryE
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type charType = JavaClassType.lookup("Character", null);
+		Type charType = JavaClassType.lookup("java.lang.Character");
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		// allocate the character

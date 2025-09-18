@@ -995,7 +995,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			adj.addEdge(new SequentialEdge(synchronizedBody.getEnd(), noop));
 		}
 
-		JavaClassType npeType = JavaClassType.lookup("NullPointerException", null);
+		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
 		Statement nullPointerTrigger = new JavaThrow(cfg, syntheticLocMan.nextLocation(),
 				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException",
 						new JavaReferenceType(npeType),

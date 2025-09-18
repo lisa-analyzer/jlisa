@@ -50,7 +50,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		if (leftType.isStringType() || rightType.isStringType()
 				|| (leftType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType()) ||
 				(rightType instanceof JavaReferenceType rRef && rRef.getInnerType().isStringType())) {
-			return new ReferenceType(JavaClassType.lookup("String", null));
+			return new ReferenceType(JavaClassType.lookup("java.lang.String"));
 		}
 		if (leftType.isNumericType() && rightType.isNumericType()) {
 			// small types promoted to int for addition operation

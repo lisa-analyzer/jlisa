@@ -41,8 +41,11 @@ public class JavaClassType implements UnitType {
 
 	/**
 	 * Yields a unique instance (either an existing one or a fresh one) of
+	 * Yields a unique instance of
 	 * {@link JavaClassType} representing a class with the given {@code name},
 	 * representing the given {@code unit}.
+	 * representing the given {@code unit}. If no unit with the given name exits, 
+	 * the given unit is returned after updating the internal map.
 	 *
 	 * @param name the name of the class
 	 * @param unit the unit underlying this type
@@ -50,10 +53,31 @@ public class JavaClassType implements UnitType {
 	 * @return the unique instance of {@link JavaClassType} representing the
 	 *             class with the given name
 	 */
-	public static JavaClassType lookup(
+	public static JavaClassType register(
 			String name,
 			CompilationUnit unit) {
 		return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
+	}
+
+	/**
+	 * Yields a unique instance of
+	 * {@link JavaClassType} representing a class with the given {@code name}.
+	 * If no class with the given name has been registered yet, an 
+	 * {@link IllegalStateException} is thrown.
+	 *
+	 * @param name the name of the class
+	 *
+	 * @return the unique instance of {@link JavaClassType} representing the
+	 *             class with the given name
+	 * @throws IllegalStateException if no class with the given name has been
+	 *                                     registered yet
+	 */
+	public static JavaClassType lookup(
+			String name) {
+		JavaClassType type = types.get(name);
+		if (type == null)
+			throw new IllegalStateException("No class type " + name + " has been registered");
+		return type;
 	}
 
 	public static boolean hasType(
@@ -134,7 +158,7 @@ public class JavaClassType implements UnitType {
 				return current;
 
 			// null since we do not want to create new types here
-			current.unit.getImmediateAncestors().forEach(u -> ws.push(lookup(u.getName(), null)));
+			current.unit.getImmediateAncestors().forEach(u -> ws.push(lookup(u.getName())));
 		}
 
 		return Untyped.INSTANCE;
@@ -182,7 +206,7 @@ public class JavaClassType implements UnitType {
 			TypeSystem types) {
 		Set<Type> instances = new HashSet<>();
 		for (Unit in : unit.getInstances())
-			instances.add(lookup(in.getName(), null));
+			instances.add(lookup(in.getName()));
 		return instances;
 	}
 
@@ -198,50 +222,50 @@ public class JavaClassType implements UnitType {
 	}
 
 	public static JavaClassType getClassCastExceptionType() {
-		return lookup("java.lang.ClassCastException", null);
+		return lookup("java.lang.ClassCastException");
 	}
 
 	public static JavaClassType getNullPointerExceptionType() {
-		return lookup("java.lang.NullPointerException", null);
+		return lookup("java.lang.NullPointerException");
 	}
 
 	public static JavaClassType getNegativeArraySizeExceptionType() {
-		return lookup("java.lang.NegativeArraySizeException", null);
+		return lookup("java.lang.NegativeArraySizeException");
 	}
 
 	public static JavaClassType getObjectType() {
-		return lookup("java.lang.Object", null);
+		return lookup("java.lang.Object");
 	}
 
 	public static JavaClassType getStringType() {
-		return lookup("java.lang.String", null);
+		return lookup("java.lang.String");
 	}
 
 	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
-		return lookup("java.lang.ArrayIndexOutOfBoundsException", null);
+		return lookup("java.lang.ArrayIndexOutOfBoundsException");
 	}
 
 	public static JavaClassType getArithmeticExceptionType() {
-		return lookup("java.lang.ArithmeticException", null);
+		return lookup("java.lang.ArithmeticException");
 	}
 
 	public static JavaClassType getSystemType() {
-		return lookup("java.lang.System", null);
+		return lookup("java.lang.System");
 	}
 
 	public static JavaClassType getNumberFormatException() {
-		return lookup("java.lang.NumberFormatException", null);
+		return lookup("java.lang.NumberFormatException");
 	}
 
 	public static JavaClassType getPrintStreamType() {
-		return lookup("java.lang.PrintStream", null);
+		return lookup("java.lang.PrintStream");
 	}
 
 	public static JavaClassType getUnsupportedEncodingExceptionType() {
-		return lookup("java.lang.UnsupportedEncodingException", null);
+		return lookup("java.lang.UnsupportedEncodingException");
 	}
 
 	public static JavaClassType getIndexOutOfBoundsExceptionType() {
-		return lookup("java.lang.IndexOutOfBoundsException", null);
+		return lookup("java.lang.IndexOutOfBoundsException");
 	}
 }

@@ -27,7 +27,7 @@ public class JavaStringLiteral extends Literal<String> {
 			CFG cfg,
 			CodeLocation location,
 			String value) {
-		super(cfg, location, value, new JavaReferenceType(JavaClassType.lookup("String", null)));
+		super(cfg, location, value, new JavaReferenceType(JavaClassType.lookup("java.lang.String")));
 	}
 
 	@Override

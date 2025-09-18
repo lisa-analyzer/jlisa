@@ -107,10 +107,10 @@ public class ClassDef {
 			SourceCodeLocationManager locationManager,
 			CFG init,
 			CompilationUnit root) {
-		ClassUnit unit = (ClassUnit) JavaClassType.lookup(this.name, null).getUnit();
+		ClassUnit unit = (ClassUnit) JavaClassType.lookup(this.name).getUnit();
 
 		if (this.base != null)
-			unit.addAncestor(JavaClassType.lookup(this.base, null).getUnit());
+			unit.addAncestor(JavaClassType.lookup(this.base).getUnit());
 		else if (root != null && unit != root)
 			unit.addAncestor(root);
 

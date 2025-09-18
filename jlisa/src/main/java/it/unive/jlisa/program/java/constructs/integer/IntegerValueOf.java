@@ -49,7 +49,7 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type intType = JavaClassType.lookup("Integer", null);
+		Type intType = JavaClassType.lookup("java.lang.Integer");
 		JavaReferenceType reftype = new JavaReferenceType(intType);
 
 		// allocate the value

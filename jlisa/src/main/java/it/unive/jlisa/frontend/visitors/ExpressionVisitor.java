@@ -629,7 +629,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			// if instance, we add this as parameter
 			if (isInstance)
 				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this",
-						new JavaReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
+						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
 		} else {
 			node.getExpression().accept(receiver);
 			if (JavaClassType.hasType(node.getExpression().toString()))
@@ -877,7 +877,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			SuperMethodInvocation node) {
 		ClassUnit superClass = (ClassUnit) this.cfg.getUnit();
-		JavaClassType superType = JavaClassType.lookup(superClass.getName(), null);
+		JavaClassType superType = JavaClassType.lookup(superClass.getName());
 
 		// craft the call to superclass
 		List<Expression> parameters = new ArrayList<>();
@@ -937,7 +937,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		node.getType().accept(visitor);
 
 		// FIXME: we erase the type parameter
-		JavaClassType classType = JavaClassType.lookup("Class", null);
+		JavaClassType classType = JavaClassType.lookup("java.lang.Class");
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),

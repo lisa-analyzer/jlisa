@@ -43,17 +43,45 @@ public final class JavaInterfaceType implements UnitType {
 	 * Yields a unique instance (either an existing one or a fresh one) of
 	 * {@link JavaInterfaceType} representing an interface with the given
 	 * {@code name}, representing the given {@code unit}.
+	 * Yields a unique instance of
+	 * {@link JavaInterfaceType} representing a class with the given {@code name},
+	 * representing the given {@code unit}. If no unit with the given name exits,
+	 * the given unit is returned after updating the internal map.
 	 *
 	 * @param name the name of the interface
+	 * @param name the name of the class
 	 * @param unit the unit underlying this type
 	 *
 	 * @return the unique instance of {@link JavaInterfaceType} representing the
 	 *             interface with the given name
+	 * @return the unique instance of {@link JavaClassType} representing the
+	 *             class with the given name
 	 */
-	public static JavaInterfaceType lookup(
+	public static JavaInterfaceType register(
 			String name,
 			InterfaceUnit unit) {
 		return types.computeIfAbsent(name, x -> new JavaInterfaceType(name, unit));
+	}
+
+	/**
+	 * Yields a unique instance of
+	 * {@link JavaInterfaceType} representing a class with the given {@code name}.
+	 * If no class with the given name has been registered yet, an
+	 * {@link IllegalStateException} is thrown.
+	 *
+	 * @param name the name of the class
+	 *
+	 * @return the unique instance of {@link JavaClassType} representing the
+	 *             class with the given name
+	 * @throws IllegalStateException if no class with the given name has been
+	 *                                     registered yet
+	 */
+	public static JavaInterfaceType lookup(
+			String name) {
+		JavaInterfaceType type = types.get(name);
+		if (type == null)
+			throw new IllegalStateException("No interface type " + name + " has been registered");
+		return type;
 	}
 
 	private final String name;
@@ -118,7 +146,7 @@ public final class JavaInterfaceType implements UnitType {
 				return current;
 
 			// null since we do not want to create new types here
-			current.unit.getImmediateAncestors().forEach(u -> ws.push(lookup(u.getName(), null)));
+			current.unit.getImmediateAncestors().forEach(u -> ws.push(lookup(u.getName())));
 		}
 
 		return Untyped.INSTANCE;
@@ -167,9 +195,9 @@ public final class JavaInterfaceType implements UnitType {
 		Set<Type> instances = new HashSet<>();
 		for (Unit un : unit.getInstances())
 			if (un instanceof InterfaceUnit)
-				instances.add(lookup(un.getName(), null));
+				instances.add(lookup(un.getName()));
 			else
-				instances.add(JavaClassType.lookup(un.getName(), null));
+				instances.add(JavaClassType.lookup(un.getName()));
 		return instances;
 	}
 

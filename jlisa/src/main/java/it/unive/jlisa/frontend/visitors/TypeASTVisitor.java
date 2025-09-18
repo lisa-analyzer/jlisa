@@ -139,7 +139,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		if (!(u instanceof ClassUnit))
 			throw new UnsupportedStatementException(qName + " is not a class unit.");
 
-		JavaClassType javaClassType = JavaClassType.lookup(qName, (ClassUnit) u);
+		JavaClassType javaClassType = JavaClassType.lookup(qName);
 		if (javaClassType == null) {
 			type = Untyped.INSTANCE;
 		} else {
@@ -182,10 +182,10 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 					node.getFullyQualifiedName() + " does not exist in the program (referenced at " + getSourceCodeLocation(node) + ")");
 
 		type = Untyped.INSTANCE;
-		if (u instanceof ClassUnit cu) 
-			type = JavaClassType.lookup(u.getName(), cu);
-		else if (u instanceof InterfaceUnit iu)
-			type = JavaInterfaceType.lookup(u.getName(), iu);
+		if (u instanceof ClassUnit) 
+			type = JavaClassType.lookup(u.getName());
+		else if (u instanceof InterfaceUnit)
+			type = JavaInterfaceType.lookup(u.getName());
 		else 
 			throw new UnsupportedStatementException(
 					node.getFullyQualifiedName() + " is not a class or interface unit");

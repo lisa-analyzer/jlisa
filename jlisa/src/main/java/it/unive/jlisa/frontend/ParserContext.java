@@ -205,7 +205,7 @@ public class ParserContext {
 
 		Unit u = program.getUnit(name);
 		if (u instanceof CompilationUnit) {
-			return JavaClassType.lookup(name, (CompilationUnit) u);
+			return JavaClassType.lookup(name);
 		}
 		return Untyped.INSTANCE;
 	}

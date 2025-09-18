@@ -76,8 +76,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			Collection<NativeCFG> natives,
 			SymbolAliasing aliasing)
 			throws CallResolutionException {
-
-		CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier(), null).getUnit();
+		CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier()).getUnit();
 		HierarchyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
 		Set<CompilationUnit> seen = new HashSet<>();
 		int lowestDistance = Integer.MAX_VALUE;

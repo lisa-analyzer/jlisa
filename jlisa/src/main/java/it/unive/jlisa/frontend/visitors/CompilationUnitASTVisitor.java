@@ -119,9 +119,9 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				it.unive.lisa.program.CompilationUnit lisaCU = null;
 				if (typeDecl.isInterface()) {
-					lisaCU = JavaInterfaceType.lookup(typeDecl.getName().getIdentifier(), null).getUnit();
+					lisaCU = JavaInterfaceType.lookup(typeDecl.getName().getIdentifier()).getUnit();
 				} else {
-					lisaCU = JavaClassType.lookup(typeDecl.getName().getIdentifier(), null).getUnit();
+					lisaCU = JavaClassType.lookup(typeDecl.getName().getIdentifier()).getUnit();
 				}
 				if (typeDecl.getSuperclassType() != null) {
 					TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, unit, this);
@@ -156,10 +156,10 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (type instanceof TypeDeclaration) {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				if ((typeDecl.isInterface())) {
-					JavaInterfaceType interfaceType = JavaInterfaceType.lookup(typeDecl.getName().toString(), null);
+					JavaInterfaceType interfaceType = JavaInterfaceType.lookup(typeDecl.getName().toString());
 					populateClassUnit(interfaceType.getUnit(), typeDecl);
 				} else {
-					JavaClassType classType = JavaClassType.lookup(typeDecl.getName().toString(), null);
+					JavaClassType classType = JavaClassType.lookup(typeDecl.getName().toString());
 					populateClassUnit(classType.getUnit(), typeDecl);
 				}
 			}
@@ -174,15 +174,15 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				if ((typeDecl.isInterface())) {
 					InterfaceUnit iUnit = buildInterfaceUnit(source, unit, getProgram(), typeDecl);
-					JavaInterfaceType.lookup(iUnit.getName(), iUnit);
+					JavaInterfaceType.register(iUnit.getName(), iUnit);
 				} else {
 					ClassUnit cUnit = buildClassUnit(source, unit, getProgram(), typeDecl);
-					JavaClassType.lookup(cUnit.getName(), cUnit);
+					JavaClassType.register(cUnit.getName(), cUnit);
 				}
 
 			} else if (type instanceof EnumDeclaration) {
 				EnumUnit emUnit = buildEnumUnit(source, getProgram(), (EnumDeclaration) type);
-				JavaClassType.lookup(emUnit.getName(), emUnit);
+				JavaClassType.register(emUnit.getName(), emUnit);
 			}
 		}
 	}
@@ -262,7 +262,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (decl instanceof EnumDeclaration) {
 				EnumDeclaration innerEnum = (EnumDeclaration) decl;
 				EnumUnit emUnit = buildEnumUnit(source, getProgram(), innerEnum);
-				JavaClassType.lookup(getPackage() + emUnit.getName(), emUnit);
+				JavaClassType.lookup(getPackage() + emUnit.getName());
 			}
 
 			Set<String> visitedFieldNames = new HashSet<>();

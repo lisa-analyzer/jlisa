@@ -44,7 +44,7 @@ public class JavaUnresolvedStaticCall extends UnresolvedCall {
 
 		// we need to check whether to call the clinit of the container unit or
 		// to call the one of its superclass
-		ClassUnit classInit = (ClassUnit) JavaClassType.lookup(getQualifier(), null).getUnit();
+		ClassUnit classInit = (ClassUnit) JavaClassType.lookup(getQualifier()).getUnit();
 		if (classInit.getCodeMembersByName(getTargetName()).isEmpty()) {
 			Set<it.unive.lisa.program.CompilationUnit> superClasses = classInit
 					.getImmediateAncestors().stream()
@@ -57,7 +57,7 @@ public class JavaUnresolvedStaticCall extends UnresolvedCall {
 		}
 
 		// if needed, calling the class initializer
-		if (!JavaClassType.lookup(classInit.toString(), null).getUnit()
+		if (!JavaClassType.lookup(classInit.toString()).getUnit()
 				.getCodeMembersByName(classInit.toString() + InitializedClassSet.SUFFIX_CLINIT).isEmpty())
 			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class)
 					.contains(classInit.toString())) {

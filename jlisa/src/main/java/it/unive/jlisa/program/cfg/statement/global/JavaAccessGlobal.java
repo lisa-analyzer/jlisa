@@ -161,7 +161,7 @@ public class JavaAccessGlobal extends Expression {
 		}
 
 		// if needed, calling the class initializer
-		if (!JavaClassType.lookup(classInit.toString(), null).getUnit()
+		if (!JavaClassType.lookup(classInit.toString()).getUnit()
 				.getCodeMembersByName(classInit.toString() + InitializedClassSet.SUFFIX_CLINIT).isEmpty())
 			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class)
 					.contains(classInit.toString())) {

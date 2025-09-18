@@ -67,7 +67,7 @@ public class Runtime {
 			program.addUnit(c);
 			// create the corresponding type
 			if (cls.getTypeName() == null)
-				JavaClassType.lookup(c.getName(), c);
+				JavaClassType.register(c.getName(), c);
 			else
 				try {
 					Class<?> type = Class.forName(cls.getTypeName());
