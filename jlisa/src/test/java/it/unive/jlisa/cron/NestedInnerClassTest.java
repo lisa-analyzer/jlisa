@@ -4,7 +4,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import java.io.IOException;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 public class NestedInnerClassTest extends JLiSAAnalysisExecutor {
 
