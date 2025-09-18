@@ -68,7 +68,9 @@ public class ConstantPropWithInterval
 		Satisfiability intervalsSatisfiability = intervals.satisfies(state.second, expression, pp, oracle);
 
 		if (constantPropSatisfiability.isTop() || constantPropSatisfiability.isBottom()) {
-			return intervalsSatisfiability;
+			if (!intervalsSatisfiability.isBottom()) {
+				return intervalsSatisfiability;
+			}
 		}
 		return constantPropSatisfiability;
 	}
