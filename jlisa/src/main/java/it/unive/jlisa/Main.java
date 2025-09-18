@@ -1,9 +1,9 @@
 package it.unive.jlisa;
 
+import it.unive.jlisa.analysis.ConstantPropWithInterval;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
-import it.unive.jlisa.analysis.value.ConstantPropagation;
-import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.checkers.AssertCheckerCPInterval;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -249,7 +249,7 @@ public class Main {
 		conf.optimize = false;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(new AssertChecker());
+			conf.semanticChecks.add(new AssertCheckerCPInterval());
 			break;
 		case "":
 			break;
@@ -259,15 +259,25 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
-			domain = new ConstantPropagation();
+			// domain = new ConstantPropWithIntervalLattice();
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
 
+		/*
+		 * conf.analysis = DefaultConfiguration.simpleState(
+		 * DefaultConfiguration.defaultHeapDomain(), new Pentagon(),
+		 * DefaultConfiguration.defaultTypeDomain());
+		 */
+		/*
+		 * DefaultConfiguration.simpleDomain(new
+		 * JavaFieldSensitivePointBasedHeap(), new
+		 * ConstantPropWithIntervalLattice(), new JavaInferredTypes());
+		 */
 		conf.analysis = new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
-				domain,
+				new ConstantPropWithInterval(),
 				new JavaInferredTypes());
 
 		LiSA lisa = new LiSA(conf);
