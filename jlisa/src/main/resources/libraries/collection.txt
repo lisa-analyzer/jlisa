@@ -1,6 +1,6 @@
-class Collection extends Object:
+class java.util.Collection extends java.util.Object:
 
-class Vector extends Collection:
+class java.util.Vector extends java.util.Collection:
 
-class Stack extends Vector:
+class java.util.Stack extends java.util.Vector:
 

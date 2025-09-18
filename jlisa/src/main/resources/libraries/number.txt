@@ -1,1 +1,1 @@
-class Number extends Object:
+class java.lang.Number extends java.lang.Object:

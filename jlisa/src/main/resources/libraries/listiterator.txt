@@ -1,1 +1,1 @@
-class ListIterator extends Object:
+class java.util.ListIterator extends java.util.Iterator:

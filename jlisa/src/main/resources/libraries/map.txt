@@ -1,11 +1,9 @@
-class Map extends Object:
+class java.util.Map extends java.lang.Object:
 
-class HashMap extends Map:
+class java.util.HashMap extends java.util.Map:
 
-class TreeMap extends Map:
+class java.util.TreeMap extends java.util.Map:
 		
-library Map:
-	location Map
-	class Entry extends Object:
+class java.util.Map.Entry extends java.lang.Object:
 	
 	

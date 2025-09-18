@@ -198,50 +198,50 @@ public class JavaClassType implements UnitType {
 	}
 
 	public static JavaClassType getClassCastExceptionType() {
-		return lookup("ClassCastException", null);
+		return lookup("java.lang.ClassCastException", null);
 	}
 
-	public static JavaClassType getNullPoiterExceptionType() {
-		return lookup("NullPointerException", null);
+	public static JavaClassType getNullPointerExceptionType() {
+		return lookup("java.lang.NullPointerException", null);
 	}
 
 	public static JavaClassType getNegativeArraySizeExceptionType() {
-		return lookup("NegativeArraySizeException", null);
+		return lookup("java.lang.NegativeArraySizeException", null);
 	}
 
 	public static JavaClassType getObjectType() {
-		return lookup("Object", null);
+		return lookup("java.lang.Object", null);
 	}
 
 	public static JavaClassType getStringType() {
-		return lookup("String", null);
+		return lookup("java.lang.String", null);
 	}
 
 	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
-		return lookup("ArrayIndexOutOfBoundsException", null);
+		return lookup("java.lang.ArrayIndexOutOfBoundsException", null);
 	}
 
 	public static JavaClassType getArithmeticExceptionType() {
-		return lookup("ArithmeticException", null);
+		return lookup("java.lang.ArithmeticException", null);
 	}
 
 	public static JavaClassType getSystemType() {
-		return lookup("System", null);
+		return lookup("java.lang.System", null);
 	}
 
 	public static JavaClassType getNumberFormatException() {
-		return lookup("NumberFormatException", null);
+		return lookup("java.lang.NumberFormatException", null);
 	}
 
 	public static JavaClassType getPrintStreamType() {
-		return lookup("PrintStream", null);
+		return lookup("java.lang.PrintStream", null);
 	}
 
 	public static JavaClassType getUnsupportedEncodingExceptionType() {
-		return lookup("UnsupportedEncodingException", null);
+		return lookup("java.lang.UnsupportedEncodingException", null);
 	}
 
 	public static JavaClassType getIndexOutOfBoundsExceptionType() {
-		return lookup("IndexOutOfBoundsException", null);
+		return lookup("java.lang.IndexOutOfBoundsException", null);
 	}
 }

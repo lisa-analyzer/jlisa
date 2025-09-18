@@ -1,1 +1,1 @@
-class File extends Object:
+class java.io.File extends java.lang.Object:

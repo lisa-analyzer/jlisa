@@ -1,1 +1,1 @@
-class Comparator extends Object:
+class java.util.Comparator extends java.lang.Object:

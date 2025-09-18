@@ -1,105 +1,105 @@
-class Exception extends Object:
+class java.lang.Exception extends java.lang.Object:
 
-class IOException extends Exception:
+class java.io.IOException extends java.lang.Exception:
 
-class ParseException extends Exception:
+class java.text.ParseException extends java.lang.Exception:
 
-class FileNotFoundException extends IOException:
+class java.io.FileNotFoundException extends java.io.IOException:
 
-class Throwable extends Object:
+class java.lang.Throwable extends java.lang.Object:
 
-class Error extends Throwable:
+class java.lang.Error extends java.lang.Throwable:
 
-class RuntimeException extends Exception:
+class java.lang.RuntimeException extends java.lang.Exception:
 
-class InterruptedException extends Exception:
+class java.lang.InterruptedException extends java.lang.Exception:
 
-class ClassNotFoundException extends Exception:
+class java.lang.ClassNotFoundException extends java.lang.Exception:
 
-class CloneNotSupportedException extends Exception:
+class java.lang.CloneNotSupportedException extends java.lang.Exception:
 
-class MalformedURLException extends IOException:
+class java.net.MalformedURLException extends java.io.IOException:
 
-class ArithmeticException extends RuntimeException:
+class java.lang.ArithmeticException extends java.lang.RuntimeException:
 
 	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype ArithmeticException*
+		param this libtype java.lang.ArithmeticException*
 		param str type it.unive.lisa.type.Untyped::INSTANCE
 		
 	instance method ArithmeticException: it.unive.jlisa.program.java.constructs.exceptions.ArithmeticExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype ArithmeticException*
+		param this libtype java.lang.ArithmeticException*
 		
-class NullPointerException extends RuntimeException:
+class java.lang.NullPointerException extends java.lang.RuntimeException:
 
 	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype NullPointerException*
+		param this libtype java.lang.NullPointerException*
 		
 	instance method NullPointerException: it.unive.jlisa.program.java.constructs.exceptions.NullPointerExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype NullPointerException*
+		param this libtype java.lang.NullPointerException*
 		param str type it.unive.lisa.type.Untyped::INSTANCE
 		
 		
-class ClassCastException extends RuntimeException:
+class java.lang.ClassCastException extends java.lang.RuntimeException:
 
 	instance method ClassCastException: it.unive.jlisa.program.java.constructs.exceptions.ClassCastExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype ClassCastException*
+		param this libtype java.lang.ClassCastException*
 
-class IndexOutOfBoundsException extends RuntimeException:
+class java.lang.IndexOutOfBoundsException extends java.lang.RuntimeException:
 
 	instance method IndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.IndexOutOfBoundsExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype IndexOutOfBoundsException*
+		param this libtype java.lang.IndexOutOfBoundsException*
 		param str type it.unive.lisa.type.Untyped::INSTANCE
 		
 	instance method IndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.IndexOutOfBoundsExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype IndexOutOfBoundsException*
+		param this libtype java.lang.IndexOutOfBoundsException*
 
-class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException:
+class java.lang.ArrayIndexOutOfBoundsException extends java.lang.IndexOutOfBoundsException:
 
 	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype ArrayIndexOutOfBoundsException*
+		param this libtype java.lang.ArrayIndexOutOfBoundsException*
 		param str type it.unive.lisa.type.Untyped::INSTANCE
 		
 	instance method ArrayIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.ArrayIndexOutOfBoundsExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype ArrayIndexOutOfBoundsException*
+		param this libtype java.lang.ArrayIndexOutOfBoundsException*
 
-class IllegalArgumentException extends RuntimeException:
+class java.lang.IllegalArgumentException extends java.lang.RuntimeException:
 
-class NumberFormatException extends IllegalArgumentException:
+class java.lang.NumberFormatException extends java.lang.IllegalArgumentException:
 
 	instance method NumberFormatException: it.unive.jlisa.program.java.constructs.exceptions.NumberFormatExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype NumberFormatException*
+		param this libtype java.lang.NumberFormatException*
 		
-class NegativeArraySizeException extends RuntimeException:
+class java.lang.NegativeArraySizeException extends java.lang.RuntimeException:
 
 	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype NegativeArraySizeException*
+		param this libtype java.lang.NegativeArraySizeException*
 		param str type it.unive.lisa.type.Untyped::INSTANCE
 		
 	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype NegativeArraySizeException*
+		param this libtype java.lang.NegativeArraySizeException*
 
-class UnsupportedOperationException extends RuntimeException:
+class java.lang.UnsupportedOperationException extends java.lang.RuntimeException:
 
-class UnsupportedEncodingException extends IOException:
+class java.io.UnsupportedEncodingException extends java.io.IOException:
 	
 	instance method UnsupportedEncodingException: it.unive.jlisa.program.java.constructs.exceptions.UnsupportedEncodingExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype UnsupportedEncodingException*
+		param this libtype java.io.UnsupportedEncodingException*
 
-class AssertionError extends Error:
+class java.lang.AssertionError extends java.lang.Error:
 
 	instance method AssertionError: it.unive.jlisa.program.java.constructs.assertionerror.AssertionErrorEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype AssertionError*
+		param self libtype java.lang.AssertionError*

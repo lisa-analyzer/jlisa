@@ -1,1 +1,1 @@
-class URL extends Serializable:
+class java.net.URL extends java.io.Serializable:

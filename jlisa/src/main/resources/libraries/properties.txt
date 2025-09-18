@@ -1,1 +1,1 @@
-class Properties extends Object:
+class java.util.Properties extends java.lang.Object:

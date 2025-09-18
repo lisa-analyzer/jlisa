@@ -1,6 +1,6 @@
-class List extends Object:
+class java.util.List extends java.lang.Object:
 		
-class LinkedList extends Object:
+class java.util.LinkedList extends java.util.List:
 	
-class ArrayList extends Object:
+class java.util.ArrayList extends java.util.List:
 	

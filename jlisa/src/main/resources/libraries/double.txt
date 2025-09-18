@@ -1,18 +1,18 @@
-class Double extends Object:
+class java.lang.Double extends java.lang.Number:
 	field NaN type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
     instance field value type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 	
 	instance method Double: it.unive.jlisa.program.java.constructs.doublew.DoubleConstructor
-		libtype Double*
-		param this libtype Double*
+		libtype java.lang.Double*
+		param this libtype java.lang.Double*
 		param c type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 	
 	instance method doubleValue: it.unive.jlisa.program.java.constructs.doublew.DoubleValue
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
-		param this libtype Double*
+		param this libtype java.lang.Double*
 		
 	method valueOf: it.unive.jlisa.program.java.constructs.doublew.DoubleValueOf
-		libtype Double* 
+		libtype java.lang.Double* 
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE 
 		
 	method doubleToRawLongBits: it.unive.jlisa.program.java.constructs.doublew.DoubleToRawLongBits
@@ -20,7 +20,7 @@ class Double extends Object:
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
 	method toString: it.unive.jlisa.program.java.constructs.doublew.DoubleToString
-		libtype String*
+		libtype java.lang.String*
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
 	method longBitsToDouble: it.unive.jlisa.program.java.constructs.doublew.DoubleLongBitsToDouble
@@ -29,4 +29,4 @@ class Double extends Object:
 		
 	method parseDouble: it.unive.jlisa.program.java.constructs.doublew.DoubleParseDouble
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
-		param v libtype String* 
+		param v libtype java.lang.String* 

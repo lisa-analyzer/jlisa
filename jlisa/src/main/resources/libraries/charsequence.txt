@@ -1,2 +1,2 @@
-class CharSequence extends Object:
+class java.lang.CharSequence extends java.lang.Object:
 		

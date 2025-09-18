@@ -1,4 +1,4 @@
-class FilterOutputStream extends OutputStream:
+class java.io.FilterOutputStream extends java.io.OutputStream:
     instance method FilterOutputStream: it.unive.jlisa.program.java.constructs.filteroutputstream.FilterOutputStreamConstructor
-            libtype FilterOutputStream*
-            param this libtype FilterOutputStream*
+            libtype java.io.FilterOutputStream*
+            param this libtype java.io.FilterOutputStream*

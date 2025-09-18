@@ -1,8 +1,8 @@
-class Socket extends Object:
+class java.net.Socket extends java.lang.Object:
 
-class URLDecoder extends Object:
+class java.net.URLDecoder extends java.lang.Object:
 
 	method decode: it.unive.jlisa.program.java.constructs.urldecoder.Decode
-		libtype String* 
-		param s libtype String* 
-		param enc libtype String* 
+		libtype java.lang.String* 
+		param s libtype java.lang.String* 
+		param enc libtype java.lang.String* 

@@ -1,11 +1,11 @@
-class BitSet extends Object:
+class java.lang.BitSet extends java.lang.Object:
 
 	instance method BitSet: it.unive.jlisa.program.java.constructs.bitset.BitSetEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype BitSet*	
+		param this libtype java.lang.BitSet*	
 		
 	instance method BitSet: it.unive.jlisa.program.java.constructs.bitset.BitSetConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype BitSet*		
+		param this libtype java.lang.BitSet*		
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
