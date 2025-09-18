@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class FieldInitializationVisitor extends JavaASTVisitor {
+public class FieldInitializationVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
 	private it.unive.lisa.program.cfg.statement.Statement first;
 	private it.unive.lisa.program.cfg.statement.Statement last;
@@ -28,14 +28,15 @@ public class FieldInitializationVisitor extends JavaASTVisitor {
 			ParserContext parserContext,
 			String source,
 			CompilationUnit compilationUnit,
-			CFG cfg) {
-		super(parserContext, source, compilationUnit);
+			CFG cfg,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
 	}
 
 	public boolean visit(
 			FieldDeclaration node) {
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
@@ -56,7 +57,7 @@ public class FieldInitializationVisitor extends JavaASTVisitor {
 			it.unive.lisa.program.cfg.statement.Expression initializer = null;
 			if (fragment.getInitializer() != null) {
 				ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit,
-						cfg, null);
+						cfg, null, container);
 				Expression expression = fragment.getInitializer();
 				expression.accept(initializerVisitor);
 				if (initializerVisitor.getExpression() != null) {

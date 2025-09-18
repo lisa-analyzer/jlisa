@@ -8,6 +8,9 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.*;
+
+import java.util.Collection;
+
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IntersectionType;
@@ -19,14 +22,15 @@ import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.UnionType;
 
-public class TypeASTVisitor extends JavaASTVisitor {
+public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	private Type type;
 
 	public TypeASTVisitor(
 			ParserContext parserContext,
 			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			CompilationUnit compilationUnit,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 	}
 
 	@Override
@@ -65,7 +69,7 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ArrayType node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getElementType().accept(visitor);
 		Type _type = visitor.getType();
 		if (_type == null) {
@@ -148,20 +152,43 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			SimpleName node) {
-		Unit u = getProgram().getUnit(node.getFullyQualifiedName());
+		Unit u = null;
+		Collection<Unit> units = getProgram().getUnits();
+
+		// check in the file/package
+		for (Unit unit : units) {
+			// - if the container has no package, the 
+			// class we are looking must have no package as well
+			// and the name must exactly match what we are referencing
+			// - if the container does have a package, the 
+			// class we are looking for must have the same package
+			// followed by the name we are referencing
+			if ((container.pkg == null && unit.getName().equals(node.getFullyQualifiedName()))
+					|| (container.pkg != null && unit.getName().equals(container.pkg + "." + node.getFullyQualifiedName())))
+				u = unit;
+		}
+
+		// imports
 		if (u == null) {
-			throw new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " not exists in program, location: ." + getSourceCodeLocation(node));
+			String imported = container.imports.get(node.getFullyQualifiedName());
+			if (imported != null)
+				u = getProgram().getUnit(imported);
 		}
+
+		// TODO lneg wildcard imports are not supported for now
+
+		if (u == null) 
+			throw new UnsupportedStatementException(
+					node.getFullyQualifiedName() + " does not exist in the program (referenced at " + getSourceCodeLocation(node) + ")");
+
 		type = Untyped.INSTANCE;
-		if (u instanceof ClassUnit cu) {
+		if (u instanceof ClassUnit cu) 
 			type = JavaClassType.lookup(u.getName(), cu);
-		} else if (u instanceof InterfaceUnit iu) {
+		else if (u instanceof InterfaceUnit iu)
 			type = JavaInterfaceType.lookup(u.getName(), iu);
-		} else {
+		else 
 			throw new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " is not a class or interface unit.");
-		}
+					node.getFullyQualifiedName() + " is not a class or interface unit");
 
 		return false;
 	}
@@ -169,7 +196,7 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ParameterizedType node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 		Type rawType = visitor.getType();
 

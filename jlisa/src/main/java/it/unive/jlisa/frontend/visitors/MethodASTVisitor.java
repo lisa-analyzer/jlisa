@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.eclipse.jdt.core.dom.*;
 
-public class MethodASTVisitor extends JavaASTVisitor {
+public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
 	CFG cfg;
 
@@ -33,8 +33,9 @@ public class MethodASTVisitor extends JavaASTVisitor {
 			ParserContext parserContext,
 			String source,
 			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
-			CompilationUnit astCompilationUnit) {
-		super(parserContext, source, astCompilationUnit);
+			CompilationUnit astCompilationUnit,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, astCompilationUnit, container);
 		this.lisacompilationUnit = lisacompilationUnit;
 	}
 
@@ -80,7 +81,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		}
 
 		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source,
-				compilationUnit, cfg, tracker);
+				compilationUnit, cfg, tracker, container);
 
 		if (node.getBody() == null) // e.g. abstract method declarations
 			return false;
@@ -153,7 +154,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getReturnType2().accept(typeVisitor);
 
 		it.unive.lisa.type.Type returnType = typeVisitor.getType();
@@ -167,7 +168,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,
-					compilationUnit);
+					compilationUnit, container);
 			sd.accept(vd);
 			parameters.add(vd.getParameter());
 		}
@@ -201,7 +202,7 @@ public class MethodASTVisitor extends JavaASTVisitor {
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,
-					compilationUnit);
+					compilationUnit, container);
 			sd.accept(vd);
 			parameters.add(vd.getParameter());
 		}

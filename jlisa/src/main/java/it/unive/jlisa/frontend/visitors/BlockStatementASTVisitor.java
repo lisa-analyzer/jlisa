@@ -13,7 +13,7 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-public class BlockStatementASTVisitor extends JavaASTVisitor {
+public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
 	private ParsedBlock block;
 
@@ -22,8 +22,9 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 	private BlockStatementASTVisitor(
 			ParserContext parserContext,
 			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			CompilationUnit compilationUnit,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 	}
 
 	public BlockStatementASTVisitor(
@@ -31,8 +32,9 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 			String source,
 			CompilationUnit compilationUnit,
 			CFG cfg,
-			JavaLocalVariableTracker tracker) {
-		this(parserContext, source, compilationUnit);
+			JavaLocalVariableTracker tracker,
+			BaseUnitASTVisitor container) {
+		this(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
 		this.tracker = tracker;
 	}
@@ -62,8 +64,14 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
-				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg,
-						new ControlFlowTracker(), tracker);
+				StatementASTVisitor stmtVisitor = new StatementASTVisitor(
+					parserContext, 
+					source, 
+					compilationUnit, 
+					cfg,
+					new ControlFlowTracker(), 
+					tracker,
+					container);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();

@@ -1,18 +1,23 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
+import java.util.Map;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-public class InterfaceASTVisitor extends JavaASTVisitor {
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+
+public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 
 	public InterfaceASTVisitor(
 			ParserContext parserContext,
 			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			CompilationUnit compilationUnit,
+			String pkg,
+			Map<String, String> imports) {
+		super(parserContext, source, pkg, imports, compilationUnit);
 	}
 
 	@Override
