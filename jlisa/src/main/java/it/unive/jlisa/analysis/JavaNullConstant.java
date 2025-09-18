@@ -1,8 +1,10 @@
 package it.unive.jlisa.analysis;
 
 import it.unive.jlisa.program.type.JavaNullType;
+import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.ExpressionVisitor;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapExpression;
@@ -38,6 +40,22 @@ public class JavaNullConstant extends HeapExpression {
 			SymbolicExpression target) {
 		if (this.equals(source))
 			return target;
+		return this;
+	}
+
+	@Override
+	public SymbolicExpression pushScope(
+			ScopeToken token,
+			ProgramPoint pp)
+			throws SemanticException {
+		return this;
+	}
+
+	@Override
+	public SymbolicExpression popScope(
+			ScopeToken token,
+			ProgramPoint pp)
+			throws SemanticException {
 		return this;
 	}
 }
