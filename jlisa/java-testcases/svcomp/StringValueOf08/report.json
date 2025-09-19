@@ -1,10 +1,10 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':1] on 'void Main::main(String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    "message" : "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
   }, {
-    "message" : "['Main.java':16:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':16:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "String__Verifier.nondetString()_1707443331.json", "report.json", "void_Main.main(String_[]__args).json", "void_Verifier.assume(bool_condition)_1320444868.json" ],
+  "files" : [ "java.lang.String__Verifier.nondetjava.lang.String()_1707443331.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_Verifier.assume(bool_condition)_1320444868.json" ],
   "info" : {
     "cfgs" : "13",
     "duration" : "8ms",
@@ -38,6 +38,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/StringValueOf08"
+    "workdir" : "java-outputs/svcomp/java.lang.StringValueOf08"
   }
 }

@@ -1,19 +1,16 @@
 package it.unive.jlisa.program.libraries.loader;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.NativeCFG;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Runtime {
 
@@ -58,46 +55,19 @@ public class Runtime {
 				&& Objects.equals(methods, other.methods);
 	}
 
-	public void fillProgram(
-			Program program,
-			AtomicReference<CompilationUnit> rootHolder) {
-
-		for (ClassDef cls : this.classes) {
-			CompilationUnit c = cls.toLiSAUnit(program, rootHolder);
-			program.addUnit(c);
-			// create the corresponding type
-			if (cls.getTypeName() == null)
-				JavaClassType.register(c.getName(), c);
-			else
-				try {
-					Class<?> type = Class.forName(cls.getTypeName());
-					Constructor<?> constructor = type.getConstructor(CompilationUnit.class);
-					constructor.newInstance(c);
-				} catch (ClassNotFoundException
-						| SecurityException
-						| IllegalArgumentException
-						| IllegalAccessException
-						| NoSuchMethodException
-						| InstantiationException
-						| InvocationTargetException e) {
-					throw new LibraryCreationException(e);
-				}
-		}
-	}
-
 	public void addRuntimeMembers(
 			Program program,
 			CFG init,
 			CompilationUnit root) {
 		for (Method mtd : this.methods) {
-			NativeCFG construct = mtd.toLiSACfg(locationManager.nextRow(), init, program);
+			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextRow(), init, program);
 			if (construct.getDescriptor().isInstance())
 				throw new LibraryCreationException();
 			program.addCodeMember(construct);
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(locationManager.nextRow(), program);
+			Global field = fld.toLiSAObject(program, locationManager.nextRow(), program);
 			if (field.isInstance())
 				throw new LibraryCreationException();
 			program.addGlobal(field);

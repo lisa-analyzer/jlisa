@@ -110,9 +110,6 @@ public class LibrarySpecificationProvider {
 		if (library == null)
 			throw new IllegalArgumentException("Class " + name + " is not available in the loaded libraries");
 
-		if (library.getBase() != null && !LOADED_LIB_CLASSES.contains(library.getBase()))
-			importClass(program, library.getBase());
-
 		AtomicReference<CompilationUnit> root = new AtomicReference<>(hierarchyRoot);
 		ClassUnit lib = library.toLiSAUnit(program, root);
 		if (hierarchyRoot == null)
@@ -137,8 +134,8 @@ public class LibrarySpecificationProvider {
 				throw new LibraryCreationException(e);
 			}
 			
-		library.populateUnit(init, hierarchyRoot);
 		LOADED_LIB_CLASSES.add(name);
+		library.populateUnit(program, init, hierarchyRoot);
 	}
 
 	public static boolean isLibraryAvailable(

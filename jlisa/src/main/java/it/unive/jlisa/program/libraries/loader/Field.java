@@ -1,9 +1,11 @@
 package it.unive.jlisa.program.libraries.loader;
 
+import java.util.Objects;
+
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CodeLocation;
-import java.util.Objects;
 
 public class Field {
 
@@ -56,9 +58,10 @@ public class Field {
 	}
 
 	public Global toLiSAObject(
+			Program program,
 			CodeLocation location,
 			Unit container) {
-		it.unive.lisa.type.Type type = this.type.toLiSAType();
+		it.unive.lisa.type.Type type = this.type.toLiSAType(program);
 		return new Global(location, container, name, this.instance, type);
 	}
 }

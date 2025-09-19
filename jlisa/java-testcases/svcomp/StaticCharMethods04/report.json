@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:4] on 'void Main::main(String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "char_Verifier.nondetChar()_1707439487.json", "report.json", "void_Main.main(String_[]__args).json" ],
+  "files" : [ "char_Verifier.nondetChar()_1707439487.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
     "duration" : "2ms",

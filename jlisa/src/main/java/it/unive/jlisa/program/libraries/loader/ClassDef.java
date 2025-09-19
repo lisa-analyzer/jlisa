@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
@@ -106,17 +107,19 @@ public class ClassDef {
 	}
 
 	public ClassUnit populateUnit(
+			Program program,
 			CFG init,
 			CompilationUnit root) {
 		ClassUnit unit = (ClassUnit) JavaClassType.lookup(this.name).getUnit();
 
-		if (this.base != null)
+		if (this.base != null) {
+			LibrarySpecificationProvider.importClass(program, this.base);
 			unit.addAncestor(JavaClassType.lookup(this.base).getUnit());
-		else if (root != null && unit != root)
+		} else if (root != null && unit != root)
 			unit.addAncestor(root);
 
 		for (Method mtd : this.methods) {
-			NativeCFG construct = mtd.toLiSACfg(locationManager.nextRow(), init, unit);
+			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextRow(), init, unit);
 			if (construct.getDescriptor().isInstance())
 				unit.addInstanceCodeMember(construct);
 			else
@@ -124,7 +127,7 @@ public class ClassDef {
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(locationManager.nextRow(), unit);
+			Global field = fld.toLiSAObject(program, locationManager.nextRow(), unit);
 			if (field.isInstance())
 				unit.addInstanceGlobal(field);
 			else

@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -23,7 +25,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
-import org.apache.commons.lang3.ArrayUtils;
 
 public class JavaNewObj extends NaryExpression {
 
@@ -51,7 +52,7 @@ public class JavaNewObj extends NaryExpression {
 
 	@Override
 	public String toString() {
-		return "new " + super.toString();
+		return /*"new " +*/ super.toString();
 	}
 
 	@Override

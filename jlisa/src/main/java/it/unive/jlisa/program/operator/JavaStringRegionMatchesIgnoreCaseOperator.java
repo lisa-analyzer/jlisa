@@ -22,7 +22,7 @@ public class JavaStringRegionMatchesIgnoreCaseOperator implements NaryOperator {
 
 	@Override
 	public String toString() {
-		return "str-region-matches";
+		return "str-region-matches-ignore-case";
 	}
 
 	@Override

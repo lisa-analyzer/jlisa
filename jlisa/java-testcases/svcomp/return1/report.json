@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':27:68] on 'void Main::main(String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':27:68] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "bool_Main.bool_value()_1707437999.json", "long_Main.long_value()_1707455297.json", "report.json", "short_Main.short_value()_1707432202.json", "void_Main.main(String_[]__args).json" ],
+  "files" : [ "bool_Main.bool_value()_1707437999.json", "long_Main.long_value()_1707455297.json", "report.json", "short_Main.short_value()_1707432202.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "16",
     "duration" : "3ms",

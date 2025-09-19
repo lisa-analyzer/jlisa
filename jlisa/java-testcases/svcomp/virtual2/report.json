@@ -2,7 +2,7 @@
   "warnings" : [ {
     "message" : "['Main.java':16:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "report.json", "void_A.A(A__this)_318508480.json", "void_B.B(B__this)_1707427304.json", "void_B.f(B__this)_1707424452.json", "void_Main.main(String_[]__args).json" ],
+  "files" : [ "report.json", "void_A.A(A__this)_318508480.json", "void_B.B(B__this)_1707427304.json", "void_B.f(B__this)_1707424452.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "17",
     "duration" : "3ms",

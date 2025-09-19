@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Main.main(String_[]__args).json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
     "duration" : "2ms",

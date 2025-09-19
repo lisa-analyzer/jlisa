@@ -36,14 +36,14 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 		super(new JavaCodeMemberDescriptor(location, objectUnit, false, "Integer" + InitializedClassSet.SUFFIX_CLINIT,
 				VoidType.INSTANCE,
 				new Parameter[0]),
-				IntegerClassInitializer.SystemClInit.class);
+				IntegerClassInitializer.IntegerClInit.class);
 	}
 
-	public static IntegerClassInitializer.SystemClInit build(
+	public static IntegerClassInitializer.IntegerClInit build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new IntegerClassInitializer.SystemClInit(cfg, location);
+		return new IntegerClassInitializer.IntegerClInit(cfg, location);
 	}
 
 	@Override
@@ -52,10 +52,10 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 		originating = st;
 	}
 
-	public static class SystemClInit extends NaryExpression implements PluggableStatement {
+	public static class IntegerClInit extends NaryExpression implements PluggableStatement {
 		protected Statement originating;
 
-		public SystemClInit(
+		public IntegerClInit(
 				CFG cfg,
 				CodeLocation location) {
 			super(cfg, location, "Integer" + InitializedClassSet.SUFFIX_CLINIT, JavaClassType.getSystemType());
@@ -80,8 +80,8 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			GlobalVariable maxId = new GlobalVariable(JavaIntType.INSTANCE, "Integer::MAX_VALUE", getLocation());
-			GlobalVariable minId = new GlobalVariable(JavaIntType.INSTANCE, "Integer::MIN_VALUE", getLocation());
+			GlobalVariable maxId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MAX_VALUE", getLocation());
+			GlobalVariable minId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MIN_VALUE", getLocation());
 			Constant maxConst = new Constant(JavaIntType.INSTANCE, 0x7fffffff, getLocation());
 			Constant minConst = new Constant(JavaIntType.INSTANCE, 0x80000000, getLocation());
 			Analysis<A, D> analysis = interprocedural.getAnalysis();

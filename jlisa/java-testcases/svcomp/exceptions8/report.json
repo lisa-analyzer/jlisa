@@ -1,7 +1,7 @@
 {
   "warnings": [
     {
-      "message": "['Main.java':31:6] on 'void Main::main(String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+      "message": "['Main.java':31:6] on 'void Main::main(java.lang.String*[] args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
     }
   ],
   "files": [
@@ -10,7 +10,7 @@
     "void_A.A(A__this)_476072636.json",
     "void_B.B(B__this)_-1196983952.json",
     "void_Main.foo()_1707424576.json",
-    "void_Main.main(String_[]_args).json"
+    "void_Main.main(java.lang.String_[]_args).json"
   ],
   "info": {
     "cfgs": "17",

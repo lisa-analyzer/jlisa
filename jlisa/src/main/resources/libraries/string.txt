@@ -76,7 +76,7 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		
 	instance method endsWith: it.unive.jlisa.program.java.constructs.string.StringEndsWith
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype Sjava.lang.tring*
+		param this libtype java.lang.String*
 		param other libtype java.lang.String*
 		
 	instance method matches: it.unive.jlisa.program.java.constructs.string.StringMatches
@@ -181,15 +181,6 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		param other libtype java.lang.String*
 		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		
-	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatchesIgnoreCase
-		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype java.lang.String*
-		param case type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param other libtype java.lang.String*
-		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
 	    type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
@@ -199,7 +190,7 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
         param ooffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
+	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatchesIgnoreCase
 	    type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 	    param this libtype java.lang.String*
         param ignoreCase type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE

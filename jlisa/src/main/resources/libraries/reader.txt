@@ -2,7 +2,7 @@ class java.io.Reader extends java.lang.Object:
 		
 	instance method read: it.unive.jlisa.program.java.constructs.reader.ReaderRead
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param self libtype Reader*
+		param self libtype java.io.Reader*
 		
 class java.io.FilterReader extends java.io.Reader:
 

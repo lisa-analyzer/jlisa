@@ -262,11 +262,11 @@ public class JavaClassType implements UnitType {
 	}
 
 	public static JavaClassType getPrintStreamType() {
-		return lookup("java.lang.PrintStream");
+		return lookup("java.io.PrintStream");
 	}
 
 	public static JavaClassType getUnsupportedEncodingExceptionType() {
-		return lookup("java.lang.UnsupportedEncodingException");
+		return lookup("java.io.UnsupportedEncodingException");
 	}
 
 	public static JavaClassType getIndexOutOfBoundsExceptionType() {
