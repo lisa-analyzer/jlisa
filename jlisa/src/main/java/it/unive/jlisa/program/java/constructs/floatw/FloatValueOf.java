@@ -53,7 +53,7 @@ public class FloatValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(floatType);
 
 		// allocate the value
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "Float", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[] { getSubExpression() });
 		ExpressionSet set = new ExpressionSet(expr);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] { set },

@@ -53,7 +53,7 @@ public class DoubleValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpr
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(doubleType);
 
 		// allocate the value
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "Double", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[] { getSubExpression() });
 		ExpressionSet set = new ExpressionSet(expr);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] { set },

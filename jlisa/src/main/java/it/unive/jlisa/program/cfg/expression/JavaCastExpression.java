@@ -63,7 +63,7 @@ public class JavaCastExpression extends UnaryExpression {
 			if (sat == Satisfiability.NOT_SATISFIED) {
 				// builds the exception
 				JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
-				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ClassCastException", ccExc.getReference(),
+				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
 						new Expression[0]);
 				state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
@@ -89,7 +89,7 @@ public class JavaCastExpression extends UnaryExpression {
 
 				// builds the exception
 				JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
-				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ClassCastException", ccExc.getReference(),
+				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
 						new Expression[0]);
 				state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 

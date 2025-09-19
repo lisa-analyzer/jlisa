@@ -1000,7 +1000,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
 		Statement nullPointerTrigger = new JavaThrow(cfg, syntheticLocMan.nextLocation(),
-				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException",
+				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), 
 						new JavaReferenceType(npeType),
 						new JavaStringLiteral(cfg,
 								syntheticLocMan.nextLocation(),

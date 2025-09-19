@@ -344,7 +344,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),
-				((JavaClassType) type).getUnit().getName(),
 				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
@@ -956,7 +955,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),
-				classType.getUnit().getName(),
 				new JavaReferenceType(classType),
 				new Expression[0]);
 		return false;

@@ -60,7 +60,6 @@ public class CharacterValueOf extends it.unive.lisa.program.cfg.statement.UnaryE
 		// allocate the character
 		JavaNewObj call = new JavaNewObj(getCFG(),
 				(SourceCodeLocation) getLocation(),
-				"Character",
 				new JavaReferenceType(charType),
 				this.getSubExpressions());
 		AnalysisState<

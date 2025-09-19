@@ -38,10 +38,9 @@ public class JavaNewObj extends NaryExpression {
 	public JavaNewObj(
 			CFG cfg,
 			CodeLocation location,
-			String constructName,
 			JavaReferenceType type,
 			Expression... parameters) {
-		super(cfg, location, constructName, type, parameters);
+		super(cfg, location, type.getInnerType().toString(), type, parameters);
 	}
 
 	@Override

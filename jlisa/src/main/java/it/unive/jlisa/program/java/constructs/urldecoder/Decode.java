@@ -69,7 +69,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		// as no-exception state, we return the top string
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -86,7 +86,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		// builds the exception
 		JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
-		call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
+		call = new JavaNewObj(getCFG(), getLocation(), 
 				oobExc.getReference(), new Expression[0]);
 		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 				new StatementStore<A>(state));

@@ -53,7 +53,7 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 		JavaReferenceType reftype = new JavaReferenceType(intType);
 
 		// allocate the value
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "Integer", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[] { getSubExpression() });
 		ExpressionSet set = new ExpressionSet(expr);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] { set },

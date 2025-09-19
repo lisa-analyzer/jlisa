@@ -50,7 +50,7 @@ public class JavaDivision extends Division {
 
 		if (analysis.satisfies(state, expr, this) == Satisfiability.SATISFIED) {
 			JavaClassType arithExc = JavaClassType.getArithmeticExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArithmeticException", arithExc.getReference(),
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), arithExc.getReference(),
 					new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
@@ -73,7 +73,7 @@ public class JavaDivision extends Division {
 					A> noExceptionState = super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 
 			JavaClassType arithExc = JavaClassType.getArithmeticExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArithmeticException", arithExc.getReference(),
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), arithExc.getReference(),
 					new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 

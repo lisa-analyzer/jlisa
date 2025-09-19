@@ -93,7 +93,7 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NumberFormatException",
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
 					nfeType.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
@@ -119,7 +119,7 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NumberFormatException",
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
 					nfeType.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 

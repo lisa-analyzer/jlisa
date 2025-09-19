@@ -281,7 +281,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		Statement init = null, last = null;
 		for (Global target : enumUnit.getGlobals()) {
 			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), enumUnit, target);
-			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), enumUnit.getName(),
+			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(),
 					new JavaReferenceType(enumType),
 					new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
 			JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
