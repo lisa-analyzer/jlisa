@@ -4,19 +4,19 @@
   }, {
     "message" : "['Main.java':20:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "java.lang.String__Verifier.nondetjava.lang.String()_1707443331.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_Verifier.assume(bool_condition)_1320444868.json" ],
+  "files" : [ "java.lang.String__Verifier.nondetString()_1707443331.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_Verifier.assume(bool_condition)_1320444868.json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "11ms",
-    "end" : "2025-09-17T15:40:29.635+02:00",
+    "duration" : "3s 386ms",
+    "end" : "2025-09-19T18:03:09.990+02:00",
     "expressions" : "74",
     "files" : "3",
-    "globals" : "19",
-    "members" : "149",
+    "globals" : "17",
+    "members" : "140",
     "programs" : "1",
-    "start" : "2025-09-17T15:40:29.624+02:00",
+    "start" : "2025-09-19T18:03:06.604+02:00",
     "statements" : "26",
-    "units" : "84",
+    "units" : "42",
     "version" : "0.1",
     "warnings" : "2"
   },
@@ -38,6 +38,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/java.lang.StringValueOf02"
+    "workdir" : "java-outputs/svcomp/StringValueOf02"
   }
 }

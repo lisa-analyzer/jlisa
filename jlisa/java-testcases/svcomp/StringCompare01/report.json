@@ -23,16 +23,16 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "116ms",
-    "end" : "2025-09-17T15:39:07.146+02:00",
+    "duration" : "4s 291ms",
+    "end" : "2025-09-19T18:03:15.059+02:00",
     "expressions" : "104",
     "files" : "1",
-    "globals" : "19",
-    "members" : "149",
+    "globals" : "17",
+    "members" : "140",
     "programs" : "1",
-    "start" : "2025-09-17T15:39:07.030+02:00",
+    "start" : "2025-09-19T18:03:10.768+02:00",
     "statements" : "46",
-    "units" : "84",
+    "units" : "42",
     "version" : "0.1",
     "warnings" : "10"
   },
@@ -54,6 +54,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/java.lang.StringCompare01"
+    "workdir" : "java-outputs/svcomp/StringCompare01"
   }
 }
