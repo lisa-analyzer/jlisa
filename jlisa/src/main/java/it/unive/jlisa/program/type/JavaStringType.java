@@ -17,12 +17,11 @@ public class JavaStringType extends JavaClassType implements StringType {
 
 	public JavaStringType(
 			CompilationUnit unit) {
-		// TODO: this should work also with java.lang.String
-		super("String", unit);
+		super("java.lang.String", unit);
 
 		// we update the String unit if only if not already registered
-		if (!types.containsKey("String"))
-			types.put("String", this);
+		if (!types.containsKey("java.lang.String"))
+			types.put("java.lang.String", this);
 	}
 
 	@Override
@@ -33,7 +32,7 @@ public class JavaStringType extends JavaClassType implements StringType {
 
 	@Override
 	public String toString() {
-		return "String";
+		return "java.lang.String";
 	}
 
 	@Override

@@ -40,13 +40,11 @@ public final class JavaInterfaceType implements UnitType {
 	}
 
 	/**
-	 * Yields a unique instance (either an existing one or a fresh one) of
-	 * {@link JavaInterfaceType} representing an interface with the given
-	 * {@code name}, representing the given {@code unit}.
-	 * Yields a unique instance of
-	 * {@link JavaInterfaceType} representing a class with the given {@code name},
-	 * representing the given {@code unit}. If no unit with the given name exits,
-	 * the given unit is returned after updating the internal map.
+	 * Yields a unique instance of {@link JavaInterfaceType} representing a
+	 * class with the given {@code name}, representing the given {@code unit}.
+	 * If no unit with the given name exits, the given unit is returned after
+	 * updating the internal map. If a unit with the given name has already been
+	 * registered, an {@link IllegalArgumentException} is thrown.
 	 *
 	 * @param name the name of the interface
 	 * @param name the name of the class
@@ -54,33 +52,36 @@ public final class JavaInterfaceType implements UnitType {
 	 *
 	 * @return the unique instance of {@link JavaInterfaceType} representing the
 	 *             interface with the given name
-	 * @return the unique instance of {@link JavaClassType} representing the
-	 *             class with the given name
+	 * 
+	 * @throws IllegalArgumentException if an interface with the given name has
+	 *                                      already been registered
 	 */
 	public static JavaInterfaceType register(
 			String name,
 			InterfaceUnit unit) {
+		if (types.containsKey(name))
+			throw new IllegalArgumentException("An interface type " + name + " has already been registered");
 		return types.computeIfAbsent(name, x -> new JavaInterfaceType(name, unit));
 	}
 
 	/**
-	 * Yields a unique instance of
-	 * {@link JavaInterfaceType} representing a class with the given {@code name}.
-	 * If no class with the given name has been registered yet, an
-	 * {@link IllegalStateException} is thrown.
+	 * Yields a unique instance of {@link JavaInterfaceType} representing a
+	 * class with the given {@code name}. If no class with the given name has
+	 * been registered yet, an {@link IllegalStateException} is thrown.
 	 *
 	 * @param name the name of the class
 	 *
 	 * @return the unique instance of {@link JavaClassType} representing the
 	 *             class with the given name
-	 * @throws IllegalStateException if no class with the given name has been
+	 * 
+	 * @throws IllegalArgumentException if no class with the given name has been
 	 *                                     registered yet
 	 */
 	public static JavaInterfaceType lookup(
 			String name) {
 		JavaInterfaceType type = types.get(name);
 		if (type == null)
-			throw new IllegalStateException("No interface type " + name + " has been registered");
+			throw new IllegalArgumentException("No interface type " + name + " has been registered");
 		return type;
 	}
 

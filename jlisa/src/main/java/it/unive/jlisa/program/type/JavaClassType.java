@@ -40,43 +40,47 @@ public class JavaClassType implements UnitType {
 	}
 
 	/**
-	 * Yields a unique instance (either an existing one or a fresh one) of
-	 * Yields a unique instance of
-	 * {@link JavaClassType} representing a class with the given {@code name},
-	 * representing the given {@code unit}.
-	 * representing the given {@code unit}. If no unit with the given name exits, 
-	 * the given unit is returned after updating the internal map.
+	 * Yields a unique instance of {@link JavaClassType} representing a class
+	 * with the given {@code name}, representing the given {@code unit}. If no
+	 * unit with the given name exits, the given unit is returned after updating
+	 * the internal map. If a unit with the given name has already been
+	 * registered, an {@link IllegalArgumentException} is thrown.
 	 *
 	 * @param name the name of the class
 	 * @param unit the unit underlying this type
 	 *
 	 * @return the unique instance of {@link JavaClassType} representing the
 	 *             class with the given name
+	 * 
+	 * @throws IllegalArgumentException if a class with the given name has
+	 *                                      already been registered
 	 */
 	public static JavaClassType register(
 			String name,
 			CompilationUnit unit) {
+		if (types.containsKey(name))
+			throw new IllegalArgumentException("A class type " + name + " has already been registered");
 		return types.computeIfAbsent(name, x -> new JavaClassType(name, unit));
 	}
 
 	/**
-	 * Yields a unique instance of
-	 * {@link JavaClassType} representing a class with the given {@code name}.
-	 * If no class with the given name has been registered yet, an 
-	 * {@link IllegalStateException} is thrown.
+	 * Yields a unique instance of {@link JavaClassType} representing a class
+	 * with the given {@code name}. If no class with the given name has been
+	 * registered yet, an {@link IllegalArgumentException} is thrown.
 	 *
 	 * @param name the name of the class
 	 *
 	 * @return the unique instance of {@link JavaClassType} representing the
 	 *             class with the given name
-	 * @throws IllegalStateException if no class with the given name has been
-	 *                                     registered yet
+	 * 
+	 * @throws IllegalArgumentException if no class with the given name has been
+	 *                                      registered yet
 	 */
 	public static JavaClassType lookup(
 			String name) {
 		JavaClassType type = types.get(name);
 		if (type == null)
-			throw new IllegalStateException("No class type " + name + " has been registered");
+			throw new IllegalArgumentException("No class type " + name + " has been registered");
 		return type;
 	}
 

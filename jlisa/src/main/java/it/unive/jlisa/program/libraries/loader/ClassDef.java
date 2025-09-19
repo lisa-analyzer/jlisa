@@ -1,5 +1,10 @@
 package it.unive.jlisa.program.libraries.loader;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
@@ -7,14 +12,10 @@ import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.NativeCFG;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ClassDef {
+	private final SourceCodeLocationManager locationManager;
 	private final boolean root;
 	private final boolean sealed;
 	private final String typeName;
@@ -24,11 +25,13 @@ public class ClassDef {
 	private final Collection<Field> fields = new HashSet<>();
 
 	public ClassDef(
+			SourceCodeLocationManager locationManager,
 			boolean root,
 			boolean sealed,
 			String typeName,
 			String name,
 			String base) {
+		this.locationManager = locationManager;
 		this.root = root;
 		this.sealed = sealed;
 		this.typeName = typeName;
@@ -91,10 +94,9 @@ public class ClassDef {
 	}
 
 	public ClassUnit toLiSAUnit(
-			CodeLocation location,
 			Program program,
 			AtomicReference<CompilationUnit> rootHolder) {
-		ClassUnit unit = new ClassUnit(location, program, name, this.sealed);
+		ClassUnit unit = new ClassUnit(locationManager.nextRow(), program, name, this.sealed);
 		if (this.root)
 			if (rootHolder.get() != null)
 				throw new IllegalStateException("More than one root class defined as hierarchy root");
@@ -104,7 +106,6 @@ public class ClassDef {
 	}
 
 	public ClassUnit populateUnit(
-			SourceCodeLocationManager locationManager,
 			CFG init,
 			CompilationUnit root) {
 		ClassUnit unit = (ClassUnit) JavaClassType.lookup(this.name).getUnit();

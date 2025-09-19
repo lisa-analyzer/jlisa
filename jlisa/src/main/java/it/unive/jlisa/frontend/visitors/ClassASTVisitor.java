@@ -101,15 +101,19 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	private void computeNestedUnits(
 			TypeDeclaration typeDecl) {
+		it.unive.lisa.program.CompilationUnit cUnit;
+		Type t;
 		if ((typeDecl.isInterface())) {
-			InterfaceUnit iUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
-			getProgram().getTypes().registerType(JavaInterfaceType.lookup(iUnit.getName()));
-			getProgram().addUnit(iUnit);
+			cUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
+			t = JavaInterfaceType.register(cUnit.getName(), (InterfaceUnit) cUnit);
 		} else {
-			ClassUnit cUnit = buildClassUnit(source, getProgram(), typeDecl);
-			getProgram().getTypes().registerType(JavaClassType.lookup(cUnit.getName()));
-			getProgram().addUnit(cUnit);
+			cUnit = buildClassUnit(source, getProgram(), typeDecl);
+			t = JavaClassType.register(cUnit.getName(), cUnit);
 		}
+
+		getProgram().getTypes().registerType(t);
+		getProgram().addUnit(cUnit);
+		imports.put(typeDecl.getName().toString(), cUnit.getName());
 	}
 
 	private InterfaceUnit buildInterfaceUnit(

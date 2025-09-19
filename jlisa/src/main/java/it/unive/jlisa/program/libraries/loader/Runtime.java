@@ -63,7 +63,7 @@ public class Runtime {
 			AtomicReference<CompilationUnit> rootHolder) {
 
 		for (ClassDef cls : this.classes) {
-			CompilationUnit c = cls.toLiSAUnit(locationManager.nextRow(), program, rootHolder);
+			CompilationUnit c = cls.toLiSAUnit(program, rootHolder);
 			program.addUnit(c);
 			// create the corresponding type
 			if (cls.getTypeName() == null)
@@ -85,7 +85,7 @@ public class Runtime {
 		}
 	}
 
-	public void populateProgram(
+	public void addRuntimeMembers(
 			Program program,
 			CFG init,
 			CompilationUnit root) {
@@ -102,8 +102,5 @@ public class Runtime {
 				throw new LibraryCreationException();
 			program.addGlobal(field);
 		}
-
-		for (ClassDef cls : this.classes)
-			cls.populateUnit(locationManager, init, root);
 	}
 }

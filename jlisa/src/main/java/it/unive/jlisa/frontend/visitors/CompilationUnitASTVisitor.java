@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.AbstractClassUnit;
@@ -104,11 +105,16 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			else if (i.toString().contains("*"))
 				parserContext.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Wildcard imports are not supported.", getSourceCodeLocation(i)));
-			else if (i.getName().isSimpleName())
-				this.imports.put(i.getName().getFullyQualifiedName(), i.getName().getFullyQualifiedName());
-			else
-				this.imports.put(((QualifiedName) i.getName()).getName().getFullyQualifiedName(), 
-					i.getName().getFullyQualifiedName());
+			else {
+				String importName = i.getName().getFullyQualifiedName();
+				if (i.getName().isSimpleName())
+					this.imports.put(i.getName().getFullyQualifiedName(), importName);
+				else
+					this.imports.put(((QualifiedName) i.getName()).getName().getFullyQualifiedName(), importName);
+
+				if (LibrarySpecificationProvider.isLibraryAvailable(importName))
+					LibrarySpecificationProvider.importClass(getProgram(), importName);
+			}
 	}
 
 	private void setRelationships(
@@ -287,7 +293,6 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 	}
 
 	private void addJavaLangImports() {
-		// TODO lneg might make this more efficient
 		imports.put("Appendable", "java.lang.Appendable");
 		imports.put("AutoCloseable", "java.lang.AutoCloseable");
 		imports.put("CharSequence", "java.lang.CharSequence");
