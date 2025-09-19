@@ -1,5 +1,10 @@
 package it.unive.jlisa.helpers;
 
+import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.lisa.AnalysisExecutionException;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.util.testing.AnalysisTestExecutor;
+import it.unive.lisa.util.testing.TestConfiguration;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -7,12 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import it.unive.jlisa.frontend.JavaFrontend;
-import it.unive.lisa.AnalysisExecutionException;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.util.testing.AnalysisTestExecutor;
-import it.unive.lisa.util.testing.TestConfiguration;
 
 public abstract class JLiSAAnalysisExecutor extends AnalysisTestExecutor {
 
@@ -24,7 +23,9 @@ public abstract class JLiSAAnalysisExecutor extends AnalysisTestExecutor {
 	}
 
 	@Override
-	public Program readProgram(TestConfiguration conf, Path target) {
+	public Program readProgram(
+			TestConfiguration conf,
+			Path target) {
 		CronConfiguration cc = (CronConfiguration) conf;
 		Objects.requireNonNull(cc.programFiles);
 
@@ -46,8 +47,8 @@ public abstract class JLiSAAnalysisExecutor extends AnalysisTestExecutor {
 
 		try {
 			return new JavaFrontend().parseFromListOfFile(targets.stream()
-				.map(t -> t.toString())
-				.collect(Collectors.toList()));
+					.map(t -> t.toString())
+					.collect(Collectors.toList()));
 		} catch (IOException e) {
 			throw new AnalysisExecutionException("Cannot parse the input program", e);
 		}

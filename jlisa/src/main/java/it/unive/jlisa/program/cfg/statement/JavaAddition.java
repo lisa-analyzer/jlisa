@@ -100,7 +100,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 						|| (lType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType())) {
 					// TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
-					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
+					Constant typeCast = new Constant(
+							new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
 							JavaClassType.getStringType(), this.getLocation());
 					actualRight = new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE,
 							this.getLocation());
@@ -117,7 +118,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 				} else if (rType.isStringType()) {
 					// TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
-					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
+					Constant typeCast = new Constant(
+							new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
 							JavaClassType.getStringType(), this.getLocation());
 					actualLeft = new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE,
 							this.getLocation());

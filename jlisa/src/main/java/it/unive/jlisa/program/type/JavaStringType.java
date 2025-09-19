@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.type;
 
-import java.util.Collections;
-import java.util.Set;
-
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -12,6 +9,8 @@ import it.unive.lisa.type.StringType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
+import java.util.Collections;
+import java.util.Set;
 
 public class JavaStringType extends JavaClassType implements StringType {
 

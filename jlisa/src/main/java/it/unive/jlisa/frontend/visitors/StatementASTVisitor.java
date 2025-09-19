@@ -1000,7 +1000,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
 		Statement nullPointerTrigger = new JavaThrow(cfg, syntheticLocMan.nextLocation(),
-				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), 
+				new JavaNewObj(cfg, syntheticLocMan.nextLocation(),
 						new JavaReferenceType(npeType),
 						new JavaStringLiteral(cfg,
 								syntheticLocMan.nextLocation(),
@@ -1152,7 +1152,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ThrowStatement node) {
-		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getExpression().accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();
 		Throw th = new JavaThrow(cfg, getSourceCodeLocation(node), expr);
@@ -1271,7 +1272,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			CatchClause node) {
 		tracker.enterScope();
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
-		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getException().getType().accept(typeVisitor);
 		node.getException().getName().accept(paramVisitor);
 

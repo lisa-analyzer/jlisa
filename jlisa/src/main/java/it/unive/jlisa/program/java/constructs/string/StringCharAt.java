@@ -101,7 +101,7 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			AnalysisState<A> exceptionState = state.bottomExecution();
@@ -142,7 +142,7 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			AnalysisState<A> exceptionState = state.bottomExecution();

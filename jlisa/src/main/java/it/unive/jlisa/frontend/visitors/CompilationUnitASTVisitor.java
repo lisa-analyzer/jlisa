@@ -1,21 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -29,6 +13,20 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.type.UnitType;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -53,7 +51,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 	}
 
 	@Override
-	public boolean visit(PackageDeclaration node) {
+	public boolean visit(
+			PackageDeclaration node) {
 		this.pkg = node != null ? node.getName().getFullyQualifiedName() : null;
 		return false;
 	}
@@ -67,7 +66,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 		// java.lang is always imported
 		addJavaLangImports();
-		
+
 		// java.lang imports can be overwritten
 		visit(node.imports());
 
@@ -97,14 +96,17 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 		for (ImportDeclaration i : imports)
 			if (i.isStatic())
-				parserContext.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Static imports are not supported.", getSourceCodeLocation(i)));
+				parserContext
+						.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
+								"Static imports are not supported.", getSourceCodeLocation(i)));
 			else if (i.isOnDemand())
-				parserContext.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"On-demand imports are not supported.", getSourceCodeLocation(i)));
+				parserContext
+						.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
+								"On-demand imports are not supported.", getSourceCodeLocation(i)));
 			else if (i.toString().contains("*"))
-				parserContext.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Wildcard imports are not supported.", getSourceCodeLocation(i)));
+				parserContext
+						.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
+								"Wildcard imports are not supported.", getSourceCodeLocation(i)));
 			else {
 				String importName = i.getName().getFullyQualifiedName();
 				if (i.getName().isSimpleName())
@@ -194,7 +196,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (type instanceof TypeDeclaration) {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				if ((typeDecl.isInterface())) {
-					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, unit, pkg, imports);
+					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, unit, pkg,
+							imports);
 					typeDecl.accept(interfaceVisitor);
 				} else {
 					ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports);
@@ -244,9 +247,11 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			else
-				cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+				cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
+						Modifier.isFinal(modifiers));
 		else
-			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
+					Modifier.isFinal(modifiers));
 
 		program.addUnit(cUnit);
 		JavaClassType.register(cUnit.getName(), cUnit);
@@ -267,7 +272,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (decl instanceof FieldDeclaration fdecl) {
 				FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, unit,
 						compilationUnit,
-						visitedFieldNames, 
+						visitedFieldNames,
 						this);
 				fdecl.accept(visitor);
 			}

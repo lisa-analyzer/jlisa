@@ -1,9 +1,5 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
 import it.unive.lisa.program.CompilationUnit;
@@ -11,6 +7,9 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.NativeCFG;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
 
 public class Runtime {
 

@@ -134,8 +134,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ArrayAccess node) {
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getArray().accept(leftVisitor);
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -172,7 +174,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			ArrayCreation node) {
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
-		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
@@ -213,8 +216,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			Assignment node) {
 		Assignment.Operator operator = node.getOperator();
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getLeftHandSide().accept(leftVisitor);
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -299,7 +304,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			CastExpression node) {
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		TypeASTVisitor leftVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(leftVisitor);
 		node.getExpression().accept(rightVisitor);
@@ -364,7 +370,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 							getSourceCodeLocation(node)));
 		}
 
-		ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getThenExpression().accept(thenExprVisitor);
 		Expression thenExpr = thenExprVisitor.getExpression();
 		if (thenExpr == null) {
@@ -374,7 +381,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 							getSourceCodeLocation(node)));
 		}
 
-		ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getElseExpression().accept(elseExprVisitor);
 		Expression elseExpr = elseExprVisitor.getExpression();
 		if (elseExpr == null) {
@@ -414,7 +422,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			FieldAccess node) {
-		ExpressionVisitor visitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor visitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		expression = new JavaAccessInstanceGlobal(cfg,
@@ -427,8 +436,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			InfixExpression node) {
 		InfixExpression.Operator operator = node.getOperator();
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getLeftOperand().accept(leftVisitor);
 		node.getRightOperand().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -590,7 +601,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			InstanceofExpression node) {
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		TypeASTVisitor rightVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getLeftOperand().accept(leftVisitor);
 		node.getRightOperand().accept(rightVisitor);
@@ -615,7 +627,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			MethodInvocation node) {
-		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		List<Expression> parameters = new ArrayList<>();
 		String methodName = node.getName().toString();
 		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
@@ -663,19 +676,19 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 		if (isInstance)
 			expression = new JavaUnresolvedCall(
-				cfg, 
-				getSourceCodeLocationManager(node.getName()).nextColumn(),
-				Call.CallType.INSTANCE, 
-				null, 
-				node.getName().toString(), 
-				parameters.toArray(new Expression[0]));
+					cfg,
+					getSourceCodeLocationManager(node.getName()).nextColumn(),
+					Call.CallType.INSTANCE,
+					null,
+					node.getName().toString(),
+					parameters.toArray(new Expression[0]));
 		else
 			expression = new JavaUnresolvedStaticCall(
-				cfg, 
-				getSourceCodeLocationManager(node.getName()).nextColumn(),
-				name == null ? classUnit.getName() : name,
-				node.getName().toString(), 
-				parameters.toArray(new Expression[0]));
+					cfg,
+					getSourceCodeLocationManager(node.getName()).nextColumn(),
+					name == null ? classUnit.getName() : name,
+					node.getName().toString(),
+					parameters.toArray(new Expression[0]));
 
 		return false;
 	}
@@ -810,7 +823,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ParenthesizedExpression node) {
-		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker, container);
+		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getExpression().accept(visitor);
 		expression = visitor.getExpression();
 		return false;
@@ -899,7 +913,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 		for (Object args : node.arguments()) {
 			ASTNode e = (ASTNode) args;
-			ExpressionVisitor argVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
+			ExpressionVisitor argVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+					container);
 			e.accept(argVisitor);
 			Expression expr = argVisitor.getExpression();
 			parameters.add(expr);

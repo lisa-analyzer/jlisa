@@ -63,7 +63,7 @@ public class JavaArrayAccess extends BinaryExpression {
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			AnalysisState<A> exceptionState = state.bottomExecution();
@@ -92,7 +92,7 @@ public class JavaArrayAccess extends BinaryExpression {
 
 			// builds the exception
 			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oobExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					new StatementStore<A>(state));

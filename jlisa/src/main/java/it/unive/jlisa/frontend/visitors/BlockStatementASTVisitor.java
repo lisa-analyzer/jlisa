@@ -65,13 +65,13 @@ public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 		} else {
 			for (Object o : node.statements()) {
 				StatementASTVisitor stmtVisitor = new StatementASTVisitor(
-					parserContext, 
-					source, 
-					compilationUnit, 
-					cfg,
-					new ControlFlowTracker(), 
-					tracker,
-					container);
+						parserContext,
+						source,
+						compilationUnit,
+						cfg,
+						new ControlFlowTracker(),
+						tracker,
+						container);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();

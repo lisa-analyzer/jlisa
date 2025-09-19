@@ -147,9 +147,11 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			}
-			cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+			cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
+					Modifier.isFinal(modifiers));
 		} else {
-			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
+					Modifier.isFinal(modifiers));
 		}
 		return cUnit;
 	}
@@ -165,20 +167,20 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				if ((typeDecl.isInterface())) {
 					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
-						parserContext, 
-						source,
-						compilationUnit, 
-						pkg, 
-						imports);
+							parserContext,
+							source,
+							compilationUnit,
+							pkg,
+							imports);
 					typeDecl.accept(interfaceVisitor);
 				} else {
 					ClassASTVisitor classVisitor = new ClassASTVisitor(
-						parserContext, 
-						source, 
-						compilationUnit, 
-						pkg, 
-						imports, 
-						true);
+							parserContext,
+							source,
+							compilationUnit,
+							pkg,
+							imports,
+							true);
 					typeDecl.accept(classVisitor);
 				}
 			}
@@ -230,12 +232,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		Set<String> visitedFieldNames = new HashSet<>();
 		for (FieldDeclaration fd : node.getFields()) {
 			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(
-				parserContext, 
-				source, 
-				cUnit, 
-				compilationUnit,
-				visitedFieldNames,
-				this);
+					parserContext,
+					source,
+					cUnit,
+					compilationUnit,
+					visitedFieldNames,
+					this);
 			fd.accept(visitor);
 		}
 
@@ -402,12 +404,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
 					ExpressionVisitor exprVisitor = new ExpressionVisitor(
-						parserContext, 
-						source, 
-						compilationUnit, 
-						cfg,
-						null,
-						this);
+							parserContext,
+							source,
+							compilationUnit,
+							cfg,
+							null,
+							this);
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else

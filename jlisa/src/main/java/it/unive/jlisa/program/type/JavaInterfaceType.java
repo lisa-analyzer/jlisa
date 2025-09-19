@@ -75,7 +75,7 @@ public final class JavaInterfaceType implements UnitType {
 	 *             class with the given name
 	 * 
 	 * @throws IllegalArgumentException if no class with the given name has been
-	 *                                     registered yet
+	 *                                      registered yet
 	 */
 	public static JavaInterfaceType lookup(
 			String name) {

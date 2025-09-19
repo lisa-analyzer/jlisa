@@ -80,8 +80,10 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			GlobalVariable maxId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MAX_VALUE", getLocation());
-			GlobalVariable minId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MIN_VALUE", getLocation());
+			GlobalVariable maxId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MAX_VALUE",
+					getLocation());
+			GlobalVariable minId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MIN_VALUE",
+					getLocation());
 			Constant maxConst = new Constant(JavaIntType.INSTANCE, 0x7fffffff, getLocation());
 			Constant minConst = new Constant(JavaIntType.INSTANCE, 0x80000000, getLocation());
 			Analysis<A, D> analysis = interprocedural.getAnalysis();

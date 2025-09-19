@@ -4,5 +4,6 @@ import it.unive.lisa.program.Program;
 
 public interface Type {
 
-	it.unive.lisa.type.Type toLiSAType(Program program);
+	it.unive.lisa.type.Type toLiSAType(
+			Program program);
 }

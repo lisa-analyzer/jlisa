@@ -125,7 +125,7 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 				if (inner.isNullType()) {
 					// builds the exception
 					JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
-					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), 
+					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 							npeType.getReference(), new Expression[0]);
 					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 

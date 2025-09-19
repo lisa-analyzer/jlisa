@@ -1,10 +1,5 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
-
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -14,6 +9,10 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.NativeCFG;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ClassDef {
 	private final SourceCodeLocationManager locationManager;

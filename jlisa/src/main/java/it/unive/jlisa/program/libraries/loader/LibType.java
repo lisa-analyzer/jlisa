@@ -1,10 +1,9 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import java.util.Objects;
-
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.Program;
+import java.util.Objects;
 
 public class LibType implements Type {
 	private final String name;
@@ -49,7 +48,8 @@ public class LibType implements Type {
 	}
 
 	@Override
-	public it.unive.lisa.type.Type toLiSAType(Program program) {
+	public it.unive.lisa.type.Type toLiSAType(
+			Program program) {
 		LibrarySpecificationProvider.importClass(program, this.name);
 		it.unive.lisa.type.Type t = JavaClassType.lookup(this.name);
 		if (this.pointer)

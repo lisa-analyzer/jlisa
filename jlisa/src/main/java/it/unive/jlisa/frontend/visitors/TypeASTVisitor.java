@@ -8,9 +8,7 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.*;
-
 import java.util.Collection;
-
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IntersectionType;
@@ -157,14 +155,15 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 
 		// check in the file/package
 		for (Unit unit : units) {
-			// - if the container has no package, the 
+			// - if the container has no package, the
 			// class we are looking must have no package as well
 			// and the name must exactly match what we are referencing
-			// - if the container does have a package, the 
+			// - if the container does have a package, the
 			// class we are looking for must have the same package
 			// followed by the name we are referencing
 			if ((container.pkg == null && unit.getName().equals(node.getFullyQualifiedName()))
-					|| (container.pkg != null && unit.getName().equals(container.pkg + "." + node.getFullyQualifiedName())))
+					|| (container.pkg != null
+							&& unit.getName().equals(container.pkg + "." + node.getFullyQualifiedName())))
 				u = unit;
 		}
 
@@ -177,16 +176,17 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 
 		// TODO lneg wildcard imports are not supported for now
 
-		if (u == null) 
+		if (u == null)
 			throw new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " does not exist in the program (referenced at " + getSourceCodeLocation(node) + ")");
+					node.getFullyQualifiedName() + " does not exist in the program (referenced at "
+							+ getSourceCodeLocation(node) + ")");
 
 		type = Untyped.INSTANCE;
-		if (u instanceof ClassUnit) 
+		if (u instanceof ClassUnit)
 			type = JavaClassType.lookup(u.getName());
 		else if (u instanceof InterfaceUnit)
 			type = JavaInterfaceType.lookup(u.getName());
-		else 
+		else
 			throw new UnsupportedStatementException(
 					node.getFullyQualifiedName() + " is not a class or interface unit");
 

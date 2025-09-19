@@ -1,13 +1,11 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import java.util.Map;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-
-import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
 
 public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 

@@ -86,7 +86,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		// builds the exception
 		JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
-		call = new JavaNewObj(getCFG(), getLocation(), 
+		call = new JavaNewObj(getCFG(), getLocation(),
 				oobExc.getReference(), new Expression[0]);
 		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 				new StatementStore<A>(state));

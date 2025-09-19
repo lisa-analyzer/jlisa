@@ -1,10 +1,5 @@
 package it.unive.jlisa.frontend;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
@@ -17,6 +12,10 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Central context for parsing operations that manages program state, variable

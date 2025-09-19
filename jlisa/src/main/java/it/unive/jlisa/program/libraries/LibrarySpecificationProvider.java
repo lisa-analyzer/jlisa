@@ -1,19 +1,5 @@
 package it.unive.jlisa.program.libraries;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import it.unive.jlisa.antlr.LibraryDefinitionLexer;
@@ -29,6 +15,18 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SyntheticLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 public class LibrarySpecificationProvider {
 
@@ -133,7 +131,7 @@ public class LibrarySpecificationProvider {
 					| InvocationTargetException e) {
 				throw new LibraryCreationException(e);
 			}
-			
+
 		LOADED_LIB_CLASSES.add(name);
 		library.populateUnit(program, init, hierarchyRoot);
 	}
