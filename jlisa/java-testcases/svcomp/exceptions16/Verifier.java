@@ -6,7 +6,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.sosy_lab.sv_benchmarks;
+// package org.sosy_lab.sv_benchmarks;
 
 import java.util.Random;
 
