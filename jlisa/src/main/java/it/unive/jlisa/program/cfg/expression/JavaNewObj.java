@@ -52,7 +52,7 @@ public class JavaNewObj extends NaryExpression {
 
 	@Override
 	public String toString() {
-		return /*"new " +*/ super.toString();
+		return "new " + super.toString();
 	}
 
 	@Override
