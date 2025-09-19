@@ -622,6 +622,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
 
 		boolean isInstance;
+		String name = null;
 		// we do not have a receiver
 		if (node.getExpression() == null) {
 			isInstance = !classUnit.getInstanceCodeMembersByName(methodName, true).isEmpty();
@@ -632,9 +633,13 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
 		} else {
 			node.getExpression().accept(receiver);
-			if (JavaClassType.hasType(node.getExpression().toString()))
+			name = container.imports.get(node.getExpression().toString());
+			if (name != null && JavaClassType.hasType(name)) {
 				isInstance = false;
-			else {
+			} else if (JavaClassType.hasType(node.getExpression().toString())) {
+				name = node.getExpression().toString();
+				isInstance = false;
+			} else {
 				parameters.add(receiver.getExpression());
 				isInstance = true;
 			}
@@ -658,12 +663,20 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		}
 
 		if (isInstance)
-			expression = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(),
-					Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedCall(
+				cfg, 
+				getSourceCodeLocationManager(node.getName()).nextColumn(),
+				Call.CallType.INSTANCE, 
+				null, 
+				node.getName().toString(), 
+				parameters.toArray(new Expression[0]));
 		else
-			expression = new JavaUnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(),
-					node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(),
-					node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedStaticCall(
+				cfg, 
+				getSourceCodeLocationManager(node.getName()).nextColumn(),
+				name == null ? classUnit.getName() : name,
+				node.getName().toString(), 
+				parameters.toArray(new Expression[0]));
 
 		return false;
 	}
@@ -685,18 +698,20 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			return false;
 		}
 
-		// FIXME: we are currently taking just the last name (the true name of
-		// the unit)
 		String unitName;
 		Name lastName = node.getQualifier();
 
-		if (node.getQualifier() instanceof SimpleName)
-			unitName = lastName.toString();
-		else {
-			while (lastName instanceof QualifiedName)
-				lastName = ((QualifiedName) lastName).getQualifier();
-			unitName = lastName.toString();
-		}
+		unitName = container.imports.get(lastName.toString());
+
+		if (unitName == null)
+			// fallback: take the last part of the name
+			if (node.getQualifier() instanceof SimpleName)
+				unitName = lastName.toString();
+			else {
+				while (lastName instanceof QualifiedName)
+					lastName = ((QualifiedName) lastName).getQualifier();
+				unitName = lastName.toString();
+			}
 
 		Unit unit = getProgram().getUnit(unitName);
 		if (unit == null) {

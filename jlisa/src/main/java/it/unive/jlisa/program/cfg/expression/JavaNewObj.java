@@ -50,6 +50,11 @@ public class JavaNewObj extends NaryExpression {
 	}
 
 	@Override
+	public String toString() {
+		return "new " + super.toString();
+	}
+
+	@Override
 	public <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -65,15 +70,19 @@ public class JavaNewObj extends NaryExpression {
 
 		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
+		String simpleName = className.contains(".")
+				? className.substring(className.lastIndexOf(".") + 1)
+				: className;
+		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
 		if (!JavaClassType.lookup(className).getUnit()
-				.getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
+				.getCodeMembersByName(name).isEmpty()) {
 			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
 						CallType.STATIC,
 						className,
-						className + InitializedClassSet.SUFFIX_CLINIT,
+						name,
 						new Expression[0]);
 
 				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
@@ -103,12 +112,13 @@ public class JavaNewObj extends NaryExpression {
 		expressions.put(paramThis, tmp);
 
 		// constructor call
+		String clazz = reftype.getInnerType().toString();
 		UnresolvedCall call = new UnresolvedCall(
 				getCFG(),
 				getLocation(),
 				CallType.INSTANCE,
-				reftype.getInnerType().toString(),
-				getConstructName(),
+				clazz,
+				simpleName,
 				fullExpressions);
 		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
 

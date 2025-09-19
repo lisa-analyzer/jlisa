@@ -129,7 +129,6 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		}
 
 		InterfaceUnit iUnit = new InterfaceUnit(loc, program, getPackage() + typeDecl.getName().toString(), false);
-		program.addUnit(iUnit);
 		return iUnit;
 	}
 
@@ -152,7 +151,6 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		} else {
 			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
 		}
-		program.addUnit(cUnit);
 		return cUnit;
 	}
 
@@ -264,8 +262,16 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			EnumUnit enumUnit) {
 
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, false,
-				enumUnit.getName() + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE, new Annotations(),
+		String simpleName = enumUnit.getName().contains(".")
+				? enumUnit.getName().substring(enumUnit.getName().lastIndexOf(".") + 1)
+				: enumUnit.getName();
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(
+				locationManager.nextLocation(),
+				enumUnit,
+				false,
+				simpleName + InitializedClassSet.SUFFIX_CLINIT,
+				VoidType.INSTANCE,
+				new Annotations(),
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
@@ -347,8 +353,16 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		// create the CFG corresponding to the class initializer
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false,
-				unit.getName() + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE, new Annotations(),
+		String simpleName = unit.getName().contains(".")
+				? unit.getName().substring(unit.getName().lastIndexOf(".") + 1)
+				: unit.getName();
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(
+				locationManager.nextLocation(),
+				unit,
+				false,
+				simpleName + InitializedClassSet.SUFFIX_CLINIT,
+				VoidType.INSTANCE,
+				new Annotations(),
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
@@ -360,11 +374,14 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		// we can safely suppose that there exist a single superclass
 		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
+		String superSimpleName = superClass.getName().contains(".")
+				? superClass.getName().substring(superClass.getName().lastIndexOf(".") + 1)
+				: superClass.getName();
 		JavaUnresolvedStaticCall superClassInit = new JavaUnresolvedStaticCall(
 				cfg,
 				locationManager.nextLocation(),
 				superClass.toString(),
-				superClass.toString() + InitializedClassSet.SUFFIX_CLINIT,
+				superSimpleName + InitializedClassSet.SUFFIX_CLINIT,
 				new Expression[0]);
 
 		cfg.addNode(superClassInit);
@@ -437,9 +454,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		// we filter just the class unit, not interfaces
 		String superClassName = classUnit.getImmediateAncestors().stream().filter(s -> s instanceof ClassUnit)
 				.findFirst().get().getName();
+		String superClassSimpleName = superClassName.contains(".")
+				? superClassName.substring(superClassName.lastIndexOf(".") + 1)
+				: superClassName;
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE,
-				null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
+				superClassName, superClassSimpleName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
@@ -463,9 +483,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		// we filter just the class unit, not interfaces
 		Unit ancestor = classUnit.getImmediateAncestors().stream().filter(s -> s instanceof ClassUnit).findFirst()
 				.get();
+		String ancestorSimpleName = ancestor.getName().contains(".")
+				? ancestor.getName().substring(ancestor.getName().lastIndexOf(".") + 1)
+				: ancestor.getName();
 		boolean implicitlyCallSuper = true;
 		if (injectionPoint instanceof JavaUnresolvedCall call) {
-			if (ancestor.getName().equals(call.getConstructName())) {
+			if (ancestor.getName().equals(call.getQualifier()) && ancestorSimpleName.equals(call.getTargetName())) {
 				implicitlyCallSuper = false;
 				List<Edge> outEdges = new ArrayList<>(cfg.getNodeList().getOutgoingEdges(injectionPoint));
 				if (outEdges.size() == 1) {
@@ -475,7 +498,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		}
 
 		if (injectionPoint instanceof JavaUnresolvedCall &&
-				((JavaUnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
+				((JavaUnresolvedCall) injectionPoint).getTargetName().equals(cfg.getDescriptor().getName())) {
 			return;
 		}
 		if (implicitlyCallSuper) {
@@ -483,7 +506,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			// before the field initializator.
 			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 			JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(),
-					Call.CallType.INSTANCE, null, ancestor.getName(),
+					Call.CallType.INSTANCE, ancestor.getName(), ancestorSimpleName,
 					new VariableRef(cfg, locationManager.nextLocation(), "this"));
 			cfg.addNode(call);
 			cfg.addEdge(new SequentialEdge(call, injectionPoint));

@@ -660,6 +660,9 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		}
 		ClassUnit classUnit = (ClassUnit) unit;
 		String superclassName = classUnit.getImmediateAncestors().iterator().next().getName();
+		String simpleName = superclassName.contains(".")
+				? superclassName.substring(superclassName.lastIndexOf(".") + 1)
+				: superclassName;
 
 		Expression thisExpression = new VariableRef(cfg, getSourceCodeLocation(node), "this",
 				parserContext.getVariableStaticTypeFromUnitAndGlobals(cfg, "this"));
@@ -678,7 +681,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		}
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(),
-				Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+				Call.CallType.INSTANCE, superclassName, simpleName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);

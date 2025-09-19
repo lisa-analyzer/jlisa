@@ -178,18 +178,12 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		for (Object type : types) {
 			if (type instanceof TypeDeclaration) {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				if ((typeDecl.isInterface())) {
-					InterfaceUnit iUnit = buildInterfaceUnit(source, unit, getProgram(), typeDecl);
-					JavaInterfaceType.register(iUnit.getName(), iUnit);
-				} else {
-					ClassUnit cUnit = buildClassUnit(source, unit, getProgram(), typeDecl);
-					JavaClassType.register(cUnit.getName(), cUnit);
-				}
-
-			} else if (type instanceof EnumDeclaration) {
-				EnumUnit emUnit = buildEnumUnit(source, getProgram(), (EnumDeclaration) type);
-				JavaClassType.register(emUnit.getName(), emUnit);
-			}
+				if ((typeDecl.isInterface()))
+					buildInterfaceUnit(source, unit, getProgram(), typeDecl);
+				else
+					buildClassUnit(source, unit, getProgram(), typeDecl);
+			} else if (type instanceof EnumDeclaration)
+				buildEnumUnit(source, getProgram(), (EnumDeclaration) type);
 		}
 	}
 
@@ -214,7 +208,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 	}
 
-	private InterfaceUnit buildInterfaceUnit(
+	private void buildInterfaceUnit(
 			String source,
 			CompilationUnit unit,
 			Program program,
@@ -229,10 +223,10 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 		InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
 		program.addUnit(iUnit);
-		return iUnit;
+		JavaInterfaceType.register(iUnit.getName(), iUnit);
 	}
 
-	private ClassUnit buildClassUnit(
+	private void buildClassUnit(
 			String source,
 			CompilationUnit unit,
 			Program program,
@@ -240,23 +234,22 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit)) {
+		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit))
 			throw new RuntimeException(
 					new ProgramValidationException("Modifier private not allowed in a top-level class"));
-		}
+
 		ClassUnit cUnit;
-		if (Modifier.isAbstract(modifiers)) {
-			if (Modifier.isFinal(modifiers)) {
+		if (Modifier.isAbstract(modifiers))
+			if (Modifier.isFinal(modifiers))
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
-			}
-			cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
-		} else {
+			else
+				cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
+		else
 			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(), Modifier.isFinal(modifiers));
-		}
 
 		program.addUnit(cUnit);
-		return cUnit;
+		JavaClassType.register(cUnit.getName(), cUnit);
 	}
 
 	private void populateClassUnit(
@@ -267,8 +260,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			// enum inner declaration
 			if (decl instanceof EnumDeclaration) {
 				EnumDeclaration innerEnum = (EnumDeclaration) decl;
-				EnumUnit emUnit = buildEnumUnit(source, getProgram(), innerEnum);
-				JavaClassType.lookup(getPackage() + emUnit.getName());
+				buildEnumUnit(source, getProgram(), innerEnum);
 			}
 
 			Set<String> visitedFieldNames = new HashSet<>();
@@ -282,14 +274,14 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		}
 	}
 
-	private EnumUnit buildEnumUnit(
+	private void buildEnumUnit(
 			String source,
 			Program program,
 			EnumDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-		EnumUnit enUnit = new EnumUnit(loc, program, typeDecl.getName().toString(), true);
+		EnumUnit enUnit = new EnumUnit(loc, program, getPackage() + typeDecl.getName().toString(), true);
 		program.addUnit(enUnit);
-		return enUnit;
+		JavaClassType.register(enUnit.getName(), enUnit);
 	}
 
 	private void addJavaLangImports() {

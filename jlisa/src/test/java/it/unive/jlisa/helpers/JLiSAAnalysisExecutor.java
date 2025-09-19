@@ -1,96 +1,32 @@
 package it.unive.jlisa.helpers;
 
-import static java.nio.file.Files.*;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import it.unive.jlisa.frontend.JavaFrontend;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.helpers.JsonReportComparer.BaseDiffAlgorithm;
-import it.unive.jlisa.helpers.JsonReportComparer.DiffAlgorithm;
-import it.unive.jlisa.helpers.JsonReportComparer.REPORTED_COMPONENT;
-import it.unive.jlisa.helpers.JsonReportComparer.REPORT_TYPE;
-import it.unive.lisa.AnalysisException;
-import it.unive.lisa.LiSA;
-import it.unive.lisa.conf.LiSAConfiguration;
-import it.unive.lisa.outputs.json.JsonReport;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.util.file.FileManager;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class JLiSAAnalysisExecutor {
+import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.lisa.AnalysisExecutionException;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.util.testing.AnalysisTestExecutor;
+import it.unive.lisa.util.testing.TestConfiguration;
+
+public abstract class JLiSAAnalysisExecutor extends AnalysisTestExecutor {
 
 	protected static final String EXPECTED_RESULTS_DIR = "java-testcases";
 	protected static final String ACTUAL_RESULTS_DIR = "java-outputs";
 
-	/**
-	 * Performs a test, running an analysis. The test will fail if:
-	 * <ul>
-	 * <li>The Java file cannot be parsed (i.e. a {@link ParsingException} is
-	 * thrown)</li>
-	 * <li>The previous working directory using for the test execution cannot be
-	 * deleted</li>
-	 * <li>The analysis run terminates with an {@link AnalysisException}</li>
-	 * <li>One of the json reports (either the one generated during the test
-	 * execution or the one used as baseline) cannot be found or cannot be
-	 * opened</li>
-	 * <li>The two json reports are different</li>
-	 * <li>The external files mentioned in the reports are different</li>
-	 * </ul>
-	 * 
-	 * @param conf the configuration of the test to run (note that the workdir
-	 *                 present into the configuration will be ignored, as it
-	 *                 will be overwritten by the computed workdir)
-	 * 
-	 * @throws IOException
-	 */
-	public void perform(
-			CronConfiguration conf)
-			throws IOException {
-		perform(conf, false);
+	public JLiSAAnalysisExecutor() {
+		super(EXPECTED_RESULTS_DIR, ACTUAL_RESULTS_DIR);
 	}
 
-	/**
-	 * Performs a test, running an analysis. The test will fail if:
-	 * <ul>
-	 * <li>The Java file cannot be parsed (i.e. a {@link ParsingException} is
-	 * thrown)</li>
-	 * <li>The previous working directory using for the test execution cannot be
-	 * deleted</li>
-	 * <li>The analysis run terminates with an {@link AnalysisException}</li>
-	 * <li>One of the json reports (either the one generated during the test
-	 * execution or the one used as baseline) cannot be found or cannot be
-	 * opened</li>
-	 * <li>The two json reports are different</li>
-	 * <li>The external files mentioned in the reports are different</li>
-	 * </ul>
-	 * 
-	 * @param conf       the configuration of the test to run (note that the
-	 *                       workdir present into the configuration will be
-	 *                       ignored, as it will be overwritten by the computed
-	 *                       workdir)
-	 * @param allMethods whether or not all Java methods should be added as
-	 *                       entrypoints
-	 * 
-	 * @throws IOException
-	 */
-	public void perform(
-			CronConfiguration conf,
-			boolean allMethods)
-			throws IOException {
-		String testMethod = getCaller();
-		System.out.println("### Testing " + testMethod);
-		Objects.requireNonNull(conf);
-		Objects.requireNonNull(conf.testDir);
-		Objects.requireNonNull(conf.programFiles);
+	@Override
+	public Program readProgram(TestConfiguration conf, Path target) {
+		CronConfiguration cc = (CronConfiguration) conf;
+		Objects.requireNonNull(cc.programFiles);
 
 		Path expectedPath = Paths.get(EXPECTED_RESULTS_DIR, conf.testDir);
 		Path actualPath = Paths.get(ACTUAL_RESULTS_DIR, conf.testDir);
@@ -101,319 +37,20 @@ public abstract class JLiSAAnalysisExecutor {
 		}
 
 		List<Path> targets = new ArrayList<Path>();
-		for (String p : conf.programFiles) {
-			Path target = Paths.get(expectedPath.toString(), conf.testDir);
-			if (conf.testSubDir != null)
-				target = Paths.get(target.toString(), conf.testSubDir);
+		for (String p : cc.programFiles) {
+			Path path = Paths.get(expectedPath.toString(), cc.testDir);
+			if (cc.testSubDir != null)
+				path = Paths.get(path.toString(), cc.testSubDir);
 			targets.add(Paths.get(expectedPath.toString(), p));
 		}
 
-		Program program = null;
 		try {
-			program = readProgram(targets);
+			return new JavaFrontend().parseFromListOfFile(targets.stream()
+				.map(t -> t.toString())
+				.collect(Collectors.toList()));
 		} catch (IOException e) {
-			throw new RuntimeException("Unable to read program: " + e.getMessage(), e);
-		}
-
-		setupWorkdir(conf, actualPath);
-
-		conf.jsonOutput = true;
-
-		// save disk space!
-		System.clearProperty("lisa.json.indent");
-
-		run(conf, program);
-
-		File expFile = Paths.get(expectedPath.toString(), LiSA.REPORT_NAME).toFile();
-		File actFile = Paths.get(actualPath.toString(), LiSA.REPORT_NAME).toFile();
-
-		if (!expFile.exists()) {
-			boolean update = "true".equals(System.getProperty("lisa.cron.update")) || conf.forceUpdate;
-			if (!update) {
-				System.err.println("No '" + LiSA.REPORT_NAME + "' found in the expected folder, exiting...");
-				assertTrue(false);
-			} else {
-				System.out.println("No '" + LiSA.REPORT_NAME + "' found in the expected folder, copying results...");
-				copyFiles(expectedPath, actualPath, expFile, actFile);
-			}
-		}
-
-		compare(conf, expectedPath, actualPath, expFile, actFile, false);
-
-		if (conf.compareWithOptimization && !conf.optimize) {
-			System.out.println("### Testing " + testMethod + " with optimization enabled");
-
-			// we parse the program again since the analysis might have
-			// finalized it or modified it, and we want to start from scratch
-			program = readProgram(targets);
-
-			conf.optimize = true;
-			actualPath = Paths.get(actualPath.toString(), "optimized");
-			conf.workdir = actualPath.toFile().toString();
-			conf.dumpForcesUnwinding = true;
-
-			run(conf, program);
-
-			actFile = Paths.get(actualPath.toString(), LiSA.REPORT_NAME).toFile();
-			compare(conf, expectedPath, actualPath, expFile, actFile, true);
+			throw new AnalysisExecutionException("Cannot parse the input program", e);
 		}
 	}
 
-	private void compare(
-			CronConfiguration conf,
-			Path expectedPath,
-			Path actualPath,
-			File expFile,
-			File actFile,
-			boolean optimized) {
-		boolean update = "true".equals(System.getProperty("lisa.cron.update")) || conf.forceUpdate;
-		try (FileReader l = new FileReader(expFile); FileReader r = new FileReader(actFile)) {
-			JsonReport expected = JsonReport.read(l);
-			JsonReport actual = JsonReport.read(r);
-			Accumulator acc = new Accumulator(expectedPath);
-			if (optimized)
-				assertTrue("Optimized results are different",
-						JsonReportComparer.compare(
-								expected,
-								actual,
-								expectedPath.toFile(),
-								actualPath.toFile(),
-								new OptimizedRunDiff()));
-			else if (!update)
-				assertTrue("Results are different",
-						JsonReportComparer.compare(
-								expected,
-								actual,
-								expectedPath.toFile(),
-								actualPath.toFile()));
-			else if (!JsonReportComparer.compare(
-					expected,
-					actual,
-					expectedPath.toFile(),
-					actualPath.toFile(),
-					acc)) {
-				System.err.println("Results are different, regenerating differences");
-				regen(expectedPath, actualPath, expFile, actFile, acc);
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace(System.err);
-			fail("File not found: " + e.getMessage());
-		} catch (IOException e) {
-			e.printStackTrace(System.err);
-			fail("Unable to compare reports: " + e.getMessage());
-		}
-	}
-
-	private void copyFiles(
-			Path expectedPath,
-			Path actualPath,
-			File expFile,
-			File actFile) {
-		try (FileReader r = new FileReader(actFile)) {
-			JsonReport actual = JsonReport.read(r);
-
-			createDirectories(expectedPath);
-
-			copy(actFile.toPath(), expFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.err.println("- Copied " + LiSA.REPORT_NAME);
-
-			for (String file : actual.getFiles()) {
-				Path f = Paths.get(file);
-				if (!f.getFileName().toString().equals(LiSA.REPORT_NAME)) {
-					Path path = Paths.get(expectedPath.toString(), f.toString());
-					createDirectories(path.getParent());
-					copy(Paths.get(actualPath.toString(), f.toString()), path);
-					System.err.println("- Copied (new) " + f);
-				}
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace(System.err);
-			fail("File not found: " + e.getMessage());
-		} catch (IOException e) {
-			e.printStackTrace(System.err);
-			fail("Unable to compare reports: " + e.getMessage());
-		}
-	}
-
-	private void regen(
-			Path expectedPath,
-			Path actualPath,
-			File expFile,
-			File actFile,
-			Accumulator acc)
-			throws IOException {
-		boolean updateReport = acc.changedWarnings || acc.changedConf || acc.changedInfos
-				|| !acc.addedFilePaths.isEmpty() || !acc.removedFilePaths.isEmpty()
-				|| !acc.changedFileName.isEmpty();
-		if (updateReport) {
-			copy(actFile.toPath(), expFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.err.println("- Updated " + LiSA.REPORT_NAME);
-		}
-		for (Path f : acc.removedFilePaths) {
-			delete(Paths.get(expectedPath.toString(), f.toString()));
-			System.err.println("- Deleted " + f);
-		}
-		for (Path f : acc.addedFilePaths)
-			if (!f.getFileName().toString().equals(LiSA.REPORT_NAME)) {
-				Path path = Paths.get(expectedPath.toString(), f.toString());
-				createDirectories(path.getParent());
-				copy(Paths.get(actualPath.toString(), f.toString()), path);
-				System.err.println("- Copied (new) " + f);
-			}
-		for (Path f : acc.changedFileName) {
-			Path fresh = Paths.get(expectedPath.toString(), f.toString());
-			copy(Paths.get(actualPath.toString(), f.toString()),
-					fresh,
-					StandardCopyOption.REPLACE_EXISTING);
-			System.err.println("- Copied (update) " + fresh);
-		}
-	}
-
-//	private Program readProgram(Path target) throws IOException {
-//		return new JavaFrontend().parseFromFile(target.toString());
-//	}
-
-	private Program readProgram(
-			List<Path> targets)
-			throws IOException {
-		return new JavaFrontend()
-				.parseFromListOfFile(targets.stream().map(t -> t.toString()).collect(Collectors.toList()));
-	}
-
-	private void run(
-			LiSAConfiguration configuration,
-			Program program) {
-		LiSA lisa = new LiSA(configuration);
-		try {
-			lisa.run(program);
-		} catch (AnalysisException e) {
-			e.printStackTrace(System.err);
-			fail("Analysis terminated with errors");
-		}
-	}
-
-	private void setupWorkdir(
-			LiSAConfiguration configuration,
-			Path actualPath) {
-		File workdir = actualPath.toFile();
-		try {
-			FileManager.forceDeleteFolder(workdir.toString());
-		} catch (IOException e) {
-			e.printStackTrace(System.err);
-			fail("Cannot delete working directory '" + workdir + "': " + e.getMessage());
-		}
-		configuration.workdir = workdir.toString();
-	}
-
-	private class Accumulator implements DiffAlgorithm {
-
-		private final Collection<Path> changedFileName = new HashSet<>();
-		private final Collection<Path> addedFilePaths = new HashSet<>();
-		private final Collection<Path> removedFilePaths = new HashSet<>();
-		private boolean changedInfos = false;
-		private boolean changedConf = false;
-		private boolean changedWarnings = false;
-
-		private final Path exp;
-
-		public Accumulator(
-				Path exp) {
-			this.exp = exp;
-		}
-
-		@Override
-		public void report(
-				REPORTED_COMPONENT component,
-				REPORT_TYPE type,
-				Collection<?> reported) {
-			switch (type) {
-			case ONLY_FIRST:
-				switch (component) {
-				case FILES:
-					reported.forEach(e -> removedFilePaths.add(Paths.get((String) e)));
-					break;
-				case WARNINGS:
-					changedWarnings = true;
-					break;
-				case INFO:
-					changedInfos = true;
-					break;
-				case CONFIGURATION:
-					changedConf = true;
-					break;
-				default:
-					break;
-				}
-				break;
-			case ONLY_SECOND:
-				switch (component) {
-				case FILES:
-					reported.forEach(e -> addedFilePaths.add(Paths.get((String) e)));
-					break;
-				case WARNINGS:
-					changedWarnings = true;
-					break;
-				case INFO:
-					changedInfos = true;
-					break;
-				case CONFIGURATION:
-					changedConf = true;
-					break;
-				default:
-					break;
-				}
-				break;
-			case COMMON:
-			default:
-				break;
-
-			}
-		}
-
-		@Override
-		public void fileDiff(
-				String first,
-				String second,
-				String message) {
-			Path file = Paths.get(first);
-			changedFileName.add(exp.relativize(file));
-		}
-
-		@Override
-		public void infoDiff(
-				String key,
-				String first,
-				String second) {
-			changedInfos = true;
-		}
-
-		@Override
-		public void configurationDiff(
-				String key,
-				String first,
-				String second) {
-			changedConf = true;
-		}
-	}
-
-	private static class OptimizedRunDiff extends BaseDiffAlgorithm {
-		@Override
-		public boolean shouldCompareConfigurations() {
-			// optimized runs use the same configuration except for
-			// optimize and workdir. Is fine to skip these as they
-			// have already been checked in the regular test execution
-			return false;
-		}
-	}
-
-	private String getCaller() {
-		StackTraceElement[] trace = Thread.getAllStackTraces().get(Thread.currentThread());
-		// 0: java.lang.Thread.dumpThreads()
-		// 1: java.lang.Thread.getAllStackTraces()
-		// 2: it.unive.lisa.test.AnalysisTest.getCaller()
-		// 3: it.unive.lisa.test.AnalysisTest.perform()
-		// 4: caller
-		return trace[4].getClassName() + "::" + trace[4].getMethodName();
-	}
 }
