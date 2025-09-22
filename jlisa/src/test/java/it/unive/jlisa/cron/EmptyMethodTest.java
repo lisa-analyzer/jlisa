@@ -25,7 +25,7 @@ public class EmptyMethodTest extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testEmptyMethod() throws IOException {
-		CronConfiguration conf = createConfiguration("empty-method", "", "empty-method");
+		CronConfiguration conf = createConfiguration("empty-method", "", "empty-method.java");
 		perform(conf);
 	}
 }

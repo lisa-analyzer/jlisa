@@ -18,7 +18,6 @@ import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEq
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
-import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
@@ -191,9 +190,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 		Statement first = null, last = null;
 		if (node.statements().isEmpty()) { // empty block
-
-			EmptyBody emptyBlock = null;
-			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+			NoOp emptyBlock = new NoOp(cfg, getSourceCodeLocation(node));
 			nodeList.addNode(emptyBlock);
 			first = emptyBlock;
 			last = emptyBlock;
@@ -743,10 +740,10 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 			ParsedBlock caseBlock = statementASTVisitor.getBlock();
 			boolean isEmptyBlock = caseBlock == null || caseBlock.getBody().getNodes().isEmpty();
-			EmptyBody emptyBlock = null;
+			NoOp emptyBlock = null;
 
 			if (isEmptyBlock) {
-				emptyBlock = new EmptyBody(cfg,
+				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 			} else {
@@ -777,7 +774,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 					if (follower != null) {
 						adj.addEdge(new SequentialEdge(switchDefault, follower));
 					} else {
-						emptyBlock = new EmptyBody(cfg,
+						emptyBlock = new NoOp(cfg,
 								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 						adj.addNode(emptyBlock);
 						adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
@@ -798,7 +795,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			last = caseBlock.getEnd();
 		}
 
-		EmptyBody emptyBlock = null;
+		NoOp emptyBlock = null;
 
 		if (switchDefault != null && defaultCase == null) {
 			defaultCase = new DefaultSwitchCase(switchDefault, caseInstrs);
@@ -807,7 +804,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
 				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
 			} else {
-				emptyBlock = new EmptyBody(cfg,
+				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
@@ -820,7 +817,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			if (caseInstrs.size() > 1) {
 				adj.addEdge(new TrueEdge(switchCondition, caseInstrs.get(1)));
 			} else {
-				emptyBlock = new EmptyBody(cfg,
+				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(), emptyBlock));
@@ -838,7 +835,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
 
 		if (node.statements().isEmpty() || (cases.isEmpty() && defaultCase == null)) {
-			emptyBlock = new EmptyBody(cfg,
+			emptyBlock = new NoOp(cfg,
 					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			adj.addNode(emptyBlock);
 			adj.addEdge(new SequentialEdge(emptyBlock, noop));

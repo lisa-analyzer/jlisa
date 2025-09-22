@@ -3,6 +3,7 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.*;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.InterfaceUnit;
@@ -126,7 +127,10 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			QualifiedName node) {
 		// get the qualifier
-		String qName = node.getName().toString();
+		String qName = node.getFullyQualifiedName();
+
+		if (LibrarySpecificationProvider.isLibraryAvailable(qName))
+			LibrarySpecificationProvider.importClass(getProgram(), qName);
 
 		// look up the unit in the program (e.g., Map.Entry, we lookup Entry)
 		Unit u = getProgram().getUnit(qName);

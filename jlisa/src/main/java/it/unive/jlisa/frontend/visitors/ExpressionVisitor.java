@@ -41,6 +41,7 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -645,7 +646,17 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
 		} else {
 			node.getExpression().accept(receiver);
-			name = container.imports.get(node.getExpression().toString());
+			Expression rec = receiver.getExpression();
+			name = container.imports.get(rec.toString());
+			Expression tmp = rec;
+			while (tmp instanceof JavaAccessInstanceGlobal)
+				tmp = ((JavaAccessInstanceGlobal) tmp).getReceiver();
+			if (name == null && tmp instanceof VariableRef && !tracker.hasVariable(((VariableRef) tmp).getName())) {
+				// this might be a fully qualified name instead
+				name = rec.toString().replace("::", ".");
+				if (LibrarySpecificationProvider.isLibraryAvailable(name))
+					LibrarySpecificationProvider.importClass(getProgram(), name);
+			}
 			if (name != null && JavaClassType.hasType(name)) {
 				isInstance = false;
 			} else if (JavaClassType.hasType(node.getExpression().toString())) {

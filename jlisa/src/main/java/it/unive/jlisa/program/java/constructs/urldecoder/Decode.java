@@ -79,7 +79,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
-			tmp = tmp.lub(sem);
+			tmp = tmp.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 		}
 
 		AnalysisState<A> noExceptionState = tmp;

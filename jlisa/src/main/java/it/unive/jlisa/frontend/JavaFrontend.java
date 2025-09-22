@@ -19,6 +19,8 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -153,6 +155,8 @@ public class JavaFrontend {
 				}
 			} else if (Files.isRegularFile(path) && path.toString().endsWith(".java")) {
 				expandedPaths.add(path.toString());
+			} else {
+				throw new FileNotFoundException(pathStr);
 			}
 		}
 		return expandedPaths;

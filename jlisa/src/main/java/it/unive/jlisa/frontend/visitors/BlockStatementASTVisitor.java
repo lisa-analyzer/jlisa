@@ -2,10 +2,10 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
-import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
@@ -57,8 +57,7 @@ public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 
 		Statement first = null, last = null;
 		if (node.statements().isEmpty()) { // empty block
-			EmptyBody emptyBlock = null;
-			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+			NoOp emptyBlock = new NoOp(cfg, getSourceCodeLocation(node));
 			nodeList.addNode(emptyBlock);
 			first = emptyBlock;
 			last = emptyBlock;
