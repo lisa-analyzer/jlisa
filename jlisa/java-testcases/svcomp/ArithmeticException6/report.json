@@ -2,7 +2,7 @@
   "warnings" : [ {
     "message" : "['Main.java':17:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "int_Verifier.nondetInt()_1707442370.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707442370.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
     "duration" : "19ms",

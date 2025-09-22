@@ -127,9 +127,9 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				it.unive.lisa.program.CompilationUnit lisaCU = null;
 				if (typeDecl.isInterface()) {
-					lisaCU = JavaInterfaceType.lookup(typeDecl.getName().getIdentifier()).getUnit();
+					lisaCU = JavaInterfaceType.lookup(getPackage() + typeDecl.getName().getIdentifier()).getUnit();
 				} else {
-					lisaCU = JavaClassType.lookup(typeDecl.getName().getIdentifier()).getUnit();
+					lisaCU = JavaClassType.lookup(getPackage() + typeDecl.getName().getIdentifier()).getUnit();
 				}
 				if (typeDecl.getSuperclassType() != null) {
 					TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, unit, this);
@@ -164,10 +164,10 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (type instanceof TypeDeclaration) {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				if ((typeDecl.isInterface())) {
-					JavaInterfaceType interfaceType = JavaInterfaceType.lookup(typeDecl.getName().toString());
+					JavaInterfaceType interfaceType = JavaInterfaceType.lookup(getPackage() + typeDecl.getName().toString());
 					populateClassUnit(interfaceType.getUnit(), typeDecl);
 				} else {
-					JavaClassType classType = JavaClassType.lookup(typeDecl.getName().toString());
+					JavaClassType classType = JavaClassType.lookup(getPackage() + typeDecl.getName().toString());
 					populateClassUnit(classType.getUnit(), typeDecl);
 				}
 			}

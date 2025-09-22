@@ -144,7 +144,7 @@ public class JavaFrontend {
 			throws IOException {
 		List<String> expandedPaths = new ArrayList<>();
 		for (String pathStr : paths) {
-			Path path = Paths.get(pathStr);
+			Path path = Paths.get(pathStr).normalize();
 			if (Files.isDirectory(path)) {
 				try (Stream<Path> stream = Files.walk(path)) {
 					stream.filter(Files::isRegularFile)
