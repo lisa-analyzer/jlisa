@@ -104,7 +104,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 					.forgetIdentifiers(getLeft().getMetaVariables(), this)
 					.forgetIdentifiers(getRight().getMetaVariables(), this);
 			exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-					new Error(oobExc.getReference(), this)));
+					new Error(oobExc.getReference(), originating)));
 		}
 
 		return noExceptionState.lub(exceptionState);

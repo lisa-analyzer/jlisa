@@ -117,7 +117,7 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), originating)));
 			}
 
 			return exceptionState;
@@ -158,7 +158,7 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), originating)));
 			}
 
 			return exceptionState.lub(noExceptionState);

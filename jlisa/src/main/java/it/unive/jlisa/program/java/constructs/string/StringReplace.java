@@ -33,7 +33,7 @@ public class StringReplace extends TernaryExpression implements PluggableStateme
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "replaceAll", left, middle, right);
+		super(cfg, location, "replace", left, middle, right);
 	}
 
 	public static StringReplace build(

@@ -45,7 +45,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "replaceAll", left, middle, right);
+		super(cfg, location, "substring", left, middle, right);
 	}
 
 	public static StringSubstringFromTo build(
@@ -132,7 +132,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), originating)));
 			}
 
 			return exceptionState;
@@ -203,7 +203,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), originating)));
 			}
 			return exceptionState.lub(noExceptionState);
 		}

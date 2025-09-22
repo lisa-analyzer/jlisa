@@ -108,7 +108,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), this));
+					new Error(nfeType.getReference(), originating));
 		} else {
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
@@ -134,7 +134,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), this));
+					new Error(nfeType.getReference(), originating));
 			return exceptionState.lub(noExceptionState);
 		}
 	}
