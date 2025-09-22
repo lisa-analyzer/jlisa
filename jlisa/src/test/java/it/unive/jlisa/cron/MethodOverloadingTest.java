@@ -1,6 +1,9 @@
 package it.unive.jlisa.cron;
 
+import static org.junit.Assert.assertThrows;
+
 import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import java.io.IOException;
@@ -13,9 +16,6 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
 	public void testMethodOverloading1() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
 		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test1/Test1.java"));
-		assert !frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
-
 		perform(TestHelpers.constantPropagation("method-overloading", "Test1", "Test1.java"));
 	}
 
@@ -23,9 +23,6 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
 	public void testMethodOverloading2() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
 		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test2/Test2.java"));
-		assert !frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
-
 		perform(TestHelpers.createConfiguration("method-overloading", "Test2", "Test2.java"));
 	}
 
@@ -33,35 +30,27 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
 	public void testMethodOverloading3() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
 		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test3/Test3.java"));
-		assert !frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
-
 		perform(TestHelpers.createConfiguration("method-overloading", "Test3", "Test3.java"));
 	}
 
 	@Test
 	public void testMethodOverloading4() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
-		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test4/Test4.java"));
-		assert frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+		assertThrows(ParsingException.class,
+				() -> frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test4/Test4.java")));
 	}
 
 	@Test
 	public void testMethodOverloading5() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
-		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test5/Test5.java"));
-		assert frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+		assertThrows(ParsingException.class,
+				() -> frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test5/Test5.java")));
 	}
 
 	@Test
 	public void testMethodOverloading6() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
 		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test6/Test6.java"));
-		assert !frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
-
 		perform(TestHelpers.createConfiguration("method-overloading", "Test6", "Test6.java"));
 	}
 
@@ -82,25 +71,19 @@ public class MethodOverloadingTest extends JLiSAAnalysisExecutor {
 		// Once varargs are implemented, this test will correctly fail, and we
 		// will only need
 		// to invert the assert condition.
-		assert !frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
 	}
 
 	@Test
 	public void testMethodOverloading8() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
-		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test8/Test8.java"));
-		assert frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
+		assertThrows(ParsingException.class,
+				() -> frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test8/Test8.java")));
 	}
 
 	@Test
 	public void testMethodOverloading9() throws IOException {
 		JavaFrontend frontend = new JavaFrontend();
 		frontend.parseFromListOfFile(List.of("java-testcases/method-overloading/Test9/Test9.java"));
-		assert !frontend.getParserContext().getExceptions().stream()
-				.anyMatch(exception -> exception.getName().equals("duplicated_method_descriptor"));
-
 		perform(TestHelpers.createConfiguration("method-overloading", "Test9", "Test9.java"));
 	}
 }

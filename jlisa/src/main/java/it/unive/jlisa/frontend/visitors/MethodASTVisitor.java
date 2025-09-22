@@ -128,12 +128,12 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			added = lisacompilationUnit.addCodeMember(cfg);
 		}
 
-		if (!added) {
-			parserContext.addException(new ParsingException("duplicated_method_descriptor",
+		if (!added)
+			throw new ParsingException("duplicated_method_descriptor",
 					ParsingException.Type.MALFORMED_SOURCE,
 					"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
-					getSourceCodeLocation(node)));
-		}
+					getSourceCodeLocation(node));
+
 		if (isMain)
 			getProgram().addEntryPoint(cfg);
 

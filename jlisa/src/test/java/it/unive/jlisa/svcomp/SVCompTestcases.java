@@ -313,7 +313,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"../org/sosy_lab/sv_benchmarks/Verifier.java");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void urldecoder2_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder02",

@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend;
 
-import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -12,9 +11,7 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,36 +45,14 @@ public class ParserContext {
 		return global;
 	}
 
-	/**
-	 * Enumeration defining strategies for handling parsing exceptions.
-	 * <ul>
-	 * <li>{@code FAIL} - Immediately throw a RuntimeException when a parsing
-	 * exception occurs</li>
-	 * <li>{@code COLLECT} - Collect parsing exceptions for later analysis
-	 * without stopping the parsing process</li>
-	 * </ul>
-	 */
-	public enum EXCEPTION_HANDLING_STRATEGY {
-		/** Fail immediately when a parsing exception occurs */
-		FAIL,
-		/** Collect exceptions and continue parsing */
-		COLLECT
-	}
-
 	/** The program being parsed and analyzed */
 	private Program program;
 
 	/** The API level for the parsing context */
 	private int apiLevel;
 
-	/** Collection of parsing exceptions encountered during processing */
-	private List<ParsingException> exceptions;
-
 	/** Map of synthetic code location managers indexed by file name */
 	private Map<String, SyntheticCodeLocationManager> syntheticCodeLocationManagers = new HashMap<>();
-
-	/** The strategy used for handling parsing exceptions */
-	private EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy;
 
 	/**
 	 * Map storing variable types for each CFG, organized as CFG -> (variable
@@ -96,12 +71,9 @@ public class ParserContext {
 	 */
 	public ParserContext(
 			Program program,
-			int apiLevel,
-			EXCEPTION_HANDLING_STRATEGY exceptionHandlingStrategy) {
+			int apiLevel) {
 		this.program = program;
 		this.apiLevel = apiLevel;
-		this.exceptions = new ArrayList<>();
-		this.exceptionHandlingStrategy = exceptionHandlingStrategy;
 	}
 
 	/**
@@ -225,37 +197,6 @@ public class ParserContext {
 	 */
 	public int getApiLevel() {
 		return apiLevel;
-	}
-
-	/**
-	 * Returns the list of parsing exceptions collected during parsing. This
-	 * list will only contain exceptions if the exception handling strategy is
-	 * set to COLLECT.
-	 *
-	 * @return the list of collected parsing exceptions
-	 */
-	public List<ParsingException> getExceptions() {
-		return exceptions;
-	}
-
-	/**
-	 * Adds a parsing exception to the context. The behavior depends on the
-	 * configured exception handling strategy:
-	 * <ul>
-	 * <li>FAIL: throws a RuntimeException immediately</li>
-	 * <li>COLLECT: adds the exception to the collection for later analysis</li>
-	 * </ul>
-	 *
-	 * @param e the parsing exception to handle
-	 * 
-	 * @throws RuntimeException if the exception handling strategy is FAIL
-	 */
-	public void addException(
-			ParsingException e) {
-		if (exceptionHandlingStrategy == EXCEPTION_HANDLING_STRATEGY.FAIL) {
-			throw new RuntimeException(e);
-		}
-		exceptions.add(e);
 	}
 
 	/**

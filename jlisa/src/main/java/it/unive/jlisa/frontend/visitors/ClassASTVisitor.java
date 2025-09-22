@@ -216,10 +216,9 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			}
 		}
 
-		if (!node.permittedTypes().isEmpty()) {
-			parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Permits is not supported.", getSourceCodeLocation(node)));
-		}
+		if (!node.permittedTypes().isEmpty())
+			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Permits is not supported.", getSourceCodeLocation(node));
 
 		// iterates over inner declarations (just enums)
 		for (Object decl : node.bodyDeclarations()) {

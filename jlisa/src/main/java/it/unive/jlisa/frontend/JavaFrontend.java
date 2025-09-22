@@ -19,7 +19,6 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,8 +42,7 @@ public class JavaFrontend {
 		// We are creating a new Program. We need to start from a blank state.
 		clearAll();
 
-		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL,
-				ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
 	}
 
 	public JavaFrontend(
@@ -52,8 +50,7 @@ public class JavaFrontend {
 		clearAll();
 
 		this.API_LEVEL = apiLevel;
-		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL,
-				ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
 	}
 
 	public JavaFrontend(
@@ -63,14 +60,14 @@ public class JavaFrontend {
 			p = createProgram();
 		}
 		p = program;
-		this.parserContext = new ParserContext(p, this.API_LEVEL, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+		this.parserContext = new ParserContext(p, this.API_LEVEL);
 	}
 
 	public JavaFrontend(
 			Program program,
 			int apiLevel) {
 		this.API_LEVEL = apiLevel;
-		this.parserContext = new ParserContext(program, apiLevel, ParserContext.EXCEPTION_HANDLING_STRATEGY.COLLECT);
+		this.parserContext = new ParserContext(program, apiLevel);
 	}
 
 	public Program getProgram() {
@@ -242,10 +239,9 @@ public class JavaFrontend {
 		CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(parserContext, fileName, cu,
 				CompilationUnitASTVisitor.VisitorType.VISIT_UNIT);
 
-		if (module) {
-			parserContext.addException(new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Java modules are not supported.", new SourceCodeLocation(source, -1, -1)));
-		}
+		if (module)
+			throw new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Java modules are not supported.", new SourceCodeLocation(source, -1, -1));
 		IProblem[] problems = cu.getProblems();
 		for (IProblem problem : problems) {
 			if (problem.isError()) {

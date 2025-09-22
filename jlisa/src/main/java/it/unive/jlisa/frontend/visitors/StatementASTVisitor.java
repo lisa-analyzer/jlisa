@@ -236,12 +236,11 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ConstructorInvocation node) {
-		if (!node.typeArguments().isEmpty()) {
-			parserContext.addException(
-					new ParsingException("constructor-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Constructor invocation statements with type arguments are not supported.",
-							getSourceCodeLocation(node)));
-		}
+		if (!node.typeArguments().isEmpty())
+			throw new ParsingException("constructor-invocation",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Constructor invocation statements with type arguments are not supported.",
+					getSourceCodeLocation(node));
 
 		// get the type from the descriptor
 		Expression thisExpression = new VariableRef(cfg,
@@ -618,11 +617,10 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			LabeledStatement node) {
-		parserContext.addException(
-				new ParsingException("labeled-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Labeled statements are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("labeled-statement",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Labeled statements are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -1024,11 +1022,10 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			TypeDeclarationStatement node) {
-		parserContext.addException(
-				new ParsingException("type-declaration-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type declaration statements are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("type-declaration-statement",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Type declaration statements are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override

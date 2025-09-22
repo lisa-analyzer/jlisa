@@ -96,17 +96,14 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 		for (ImportDeclaration i : imports)
 			if (i.isStatic())
-				parserContext
-						.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"Static imports are not supported.", getSourceCodeLocation(i)));
+				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Static imports are not supported.", getSourceCodeLocation(i));
 			else if (i.isOnDemand())
-				parserContext
-						.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"On-demand imports are not supported.", getSourceCodeLocation(i)));
+				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"On-demand imports are not supported.", getSourceCodeLocation(i));
 			else if (i.toString().contains("*"))
-				parserContext
-						.addException(new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"Wildcard imports are not supported.", getSourceCodeLocation(i)));
+				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Wildcard imports are not supported.", getSourceCodeLocation(i));
 			else {
 				String importName = i.getName().getFullyQualifiedName();
 				if (i.getName().isSimpleName())
@@ -164,7 +161,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (type instanceof TypeDeclaration) {
 				TypeDeclaration typeDecl = (TypeDeclaration) type;
 				if ((typeDecl.isInterface())) {
-					JavaInterfaceType interfaceType = JavaInterfaceType.lookup(getPackage() + typeDecl.getName().toString());
+					JavaInterfaceType interfaceType = JavaInterfaceType
+							.lookup(getPackage() + typeDecl.getName().toString());
 					populateClassUnit(interfaceType.getUnit(), typeDecl);
 				} else {
 					JavaClassType classType = JavaClassType.lookup(getPackage() + typeDecl.getName().toString());

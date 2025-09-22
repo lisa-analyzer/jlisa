@@ -87,41 +87,38 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			UnionType node) {
-		parserContext.addException(new ParsingException(
+		throw new ParsingException(
 				"union-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Union type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			IntersectionType node) {
-		parserContext.addException(new ParsingException(
-				"intersection-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+		throw new ParsingException(
+				"intersection-type",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Intersection type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			QualifiedType node) {
-		parserContext.addException(new ParsingException(
+		throw new ParsingException(
 				"qualified-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Qualified type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			NameQualifiedType node) {
-		parserContext.addException(new ParsingException(
+		throw new ParsingException(
 				"qualified-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Name-qualified type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	public boolean visit(

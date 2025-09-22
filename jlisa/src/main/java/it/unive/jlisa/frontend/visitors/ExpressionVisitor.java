@@ -295,11 +295,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			CaseDefaultExpression node) {
-		parserContext.addException(
-				new ParsingException("case-default", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Case Default Expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("case-default",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Case Default Expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -330,12 +329,12 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 
-		if (!(type instanceof JavaClassType)) {
-			parserContext.addException(
-					new ParsingException("arguments-constructor", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"A ClassInstanceCreation Type should be a JavaClassType; got: " + type.getClass().getName(),
-							getSourceCodeLocation(node)));
-		}
+		if (!(type instanceof JavaClassType))
+			throw new ParsingException("arguments-constructor",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"A ClassInstanceCreation Type should be a JavaClassType; got: " + type.getClass().getName(),
+					getSourceCodeLocation(node));
+
 		List<Expression> parameters = new ArrayList<>();
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
@@ -365,33 +364,31 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		node.getExpression().accept(conditionVisitor);
 		Expression conditionExpr = conditionVisitor.getExpression();
 		if (conditionExpr == null) {
-			parserContext.addException(
-					new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
-							"The condition is missing.",
-							getSourceCodeLocation(node)));
+			throw new ParsingException("conditional-expression",
+					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+					"The condition is missing.",
+					getSourceCodeLocation(node));
 		}
 
 		ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
 				container);
 		node.getThenExpression().accept(thenExprVisitor);
 		Expression thenExpr = thenExprVisitor.getExpression();
-		if (thenExpr == null) {
-			parserContext.addException(
-					new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
-							"The then expression is missing.",
-							getSourceCodeLocation(node)));
-		}
+		if (thenExpr == null)
+			throw new ParsingException("conditional-expression",
+					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+					"The then expression is missing.",
+					getSourceCodeLocation(node));
 
 		ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
 				container);
 		node.getElseExpression().accept(elseExprVisitor);
 		Expression elseExpr = elseExprVisitor.getExpression();
-		if (elseExpr == null) {
-			parserContext.addException(
-					new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
-							"The else expression is missing.",
-							getSourceCodeLocation(node)));
-		}
+		if (elseExpr == null)
+			throw new ParsingException("conditional-expression",
+					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+					"The else expression is missing.",
+					getSourceCodeLocation(node));
 
 		expression = new JavaConditionalExpression(cfg,
 				getSourceCodeLocationManager(node.getExpression(), true).getCurrentLocation(), conditionExpr, thenExpr,
@@ -403,21 +400,19 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			CreationReference node) {
-		parserContext.addException(
-				new ParsingException("creation-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Creation References are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("creation-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Creation References are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			ExpressionMethodReference node) {
-		parserContext.addException(
-				new ParsingException("expression-method-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Expression Method References are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("expression-method-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Expression Method References are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -618,11 +613,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			LambdaExpression node) {
-		parserContext.addException(
-				new ParsingException("lambda-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Lambda expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("lambda-expression",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Lambda expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -668,12 +662,12 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			}
 		}
 
-		if (!node.typeArguments().isEmpty()) {
-			parserContext.addException(
-					new ParsingException("method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Method Invocation expressions with type arguments are not supported.",
-							getSourceCodeLocation(node)));
-		}
+		if (!node.typeArguments().isEmpty())
+			throw new ParsingException("method-invocation",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Method Invocation expressions with type arguments are not supported.",
+					getSourceCodeLocation(node));
+
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
@@ -740,10 +734,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		if (unit == null) {
 			// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
 			if (Character.isUpperCase(unitName.charAt(0)))
-				parserContext.addException(
-						new ParsingException("missing-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"Missing unit " + unitName,
-								getSourceCodeLocation(node)));
+				throw new ParsingException("missing-type",
+						ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Missing unit " + unitName,
+						getSourceCodeLocation(node));
 			else {
 				// it is a field access
 				ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
@@ -904,12 +898,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SuperFieldAccess node) {
-
-		parserContext.addException(
-				new ParsingException("super-field-access", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Super Field Access expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("super-field-access",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Super Field Access expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -940,32 +932,30 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SuperMethodReference node) {
-		parserContext.addException(
-				new ParsingException("super-method-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Super Method Reference expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("super-method-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Super Method Reference expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			SwitchExpression node) {
-		parserContext.addException(
-				new ParsingException("switch-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Switch Expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("switch-expression",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Switch Expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			ThisExpression node) {
-		if (node.getQualifier() != null) {
-			parserContext.addException(
-					new ParsingException("this-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Qualified This Expressions are not supported.",
-							getSourceCodeLocation(node)));
-		}
+		if (node.getQualifier() != null)
+			throw new ParsingException("this-expression",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Qualified This Expressions are not supported.",
+					getSourceCodeLocation(node));
+
 		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this");
 		return false;
 	}
@@ -989,11 +979,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			TypeMethodReference node) {
-		parserContext.addException(
-				new ParsingException("type-method-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type Method References are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("type-method-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Type Method References are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
