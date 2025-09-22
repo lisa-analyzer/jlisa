@@ -321,4 +321,16 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"../org/sosy_lab/sv_benchmarks/Verifier.java");
 		perform(conf);
 	}
+
+	// FIXME: this test fails due to unsupported on-demand imports
+	@Ignore
+	public void Basic1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "test",
+				"Main.java",
+				"../org/sosy_lab/sv_benchmarks/Verifier.java",
+				"../mockx/servlet/http/HttpServletRequest.java",
+				"../mockx/servlet/http/HttpServletResponse.java",
+				"../securibench/micro/basic/Basic1.java");
+		perform(conf);
+	}
 }
