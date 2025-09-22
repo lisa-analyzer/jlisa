@@ -42,7 +42,7 @@ public class TestHelpers {
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		// conf.forceUpdate = true;
-		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
+		conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
 		// the abstract domain
