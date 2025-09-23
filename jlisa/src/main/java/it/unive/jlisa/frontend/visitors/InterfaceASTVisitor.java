@@ -9,17 +9,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 
-	private String outer;
-
-	public InterfaceASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			String pkg,
-			Map<String, String> imports) {
-		super(parserContext, source, pkg, imports, compilationUnit);
-		outer = null;
-	}
+	private final String fullName;
 
 	public InterfaceASTVisitor(
 			ParserContext parserContext,
@@ -27,9 +17,9 @@ public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 			CompilationUnit compilationUnit,
 			String pkg,
 			Map<String, String> imports,
-			String outer) {
+			String fullName) {
 		super(parserContext, source, pkg, imports, compilationUnit);
-		this.outer = outer;
+		this.fullName = fullName;
 	}
 
 	@Override
