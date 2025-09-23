@@ -6,12 +6,15 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.AbstractClassUnit;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import java.util.Collection;
 import java.util.HashSet;
@@ -71,21 +74,27 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		// java.lang imports can be overwritten
 		visit(node.imports());
 
-		if (visitorType == VisitorType.VISIT_UNIT) {
-			visitUnits(node);
-		} else if (visitorType == VisitorType.ADD_UNITS) {
+		// process imports from nested declarations
+		addLocalImports(node);
+
+		if (visitorType == VisitorType.ADD_UNITS) {
+			// phase 1
 			addUnits(node);
 		} else if (visitorType == VisitorType.SET_RELATIONSHIPS) {
+			// phase 2
 			setRelationships(node);
 		} else if (visitorType == VisitorType.ADD_GLOBALS) {
+			// phase 3
 			addGlobals(node);
+		} else if (visitorType == VisitorType.VISIT_UNIT) {
+			// phase 4
+			visitUnits(node);
 		}
 		return false;
 	}
 
 	private void visit(
 			List<ImportDeclaration> imports) {
-
 		for (int l = 0; l < imports.size() - 1; l++) {
 			for (int k = l + 1; k < imports.size(); k++) {
 				if (imports.get(l).getName().getFullyQualifiedName()
@@ -134,58 +143,38 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			}
 	}
 
-	private void setRelationships(
+	private void addLocalImports(
 			CompilationUnit unit) {
 		List<?> types = unit.types();
 		for (Object type : types) {
-			if (type instanceof TypeDeclaration) {
-				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				it.unive.lisa.program.CompilationUnit lisaCU = null;
-				if (typeDecl.isInterface()) {
-					lisaCU = JavaInterfaceType.lookup(getPackage() + typeDecl.getName().getIdentifier()).getUnit();
-				} else {
-					lisaCU = JavaClassType.lookup(getPackage() + typeDecl.getName().getIdentifier()).getUnit();
-				}
-				if (typeDecl.getSuperclassType() != null) {
-					TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, unit, this);
-					typeDecl.getSuperclassType().accept(typeVisitor);
-					it.unive.lisa.type.Type superClassType = typeVisitor.getType();
-					if (superClassType != null) {
-						UnitType unitType = superClassType.asUnitType();
-						if (unitType != null) {
-							lisaCU.addAncestor(unitType.getUnit());
-						}
-					}
-				}
-				for (Object oInterfaceType : typeDecl.superInterfaceTypes()) {
-					TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, unit, this);
-					((ASTNode) oInterfaceType).accept(typeVisitor);
-					it.unive.lisa.type.Type superInterfaceClassType = typeVisitor.getType();
-					if (superInterfaceClassType != null) {
-						UnitType unitType = superInterfaceClassType.asUnitType();
-						if (unitType != null) {
-							lisaCU.addAncestor(unitType.getUnit());
-						}
-					}
-				}
+			if (type instanceof TypeDeclaration)
+				addLocalImportsInDeclaration((TypeDeclaration) type, null);
+			else if (type instanceof EnumDeclaration) {
+				EnumDeclaration typeDecl = (EnumDeclaration) type;
+				String name = getPackage() + typeDecl.getName().toString();
+				imports.put(typeDecl.getName().toString(), name);
 			}
 		}
 	}
 
-	private void addGlobals(
-			CompilationUnit unit) {
-		List<?> types = unit.types();
-		for (Object type : types) {
-			if (type instanceof TypeDeclaration) {
-				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				if ((typeDecl.isInterface())) {
-					JavaInterfaceType interfaceType = JavaInterfaceType
-							.lookup(getPackage() + typeDecl.getName().toString());
-					populateClassUnit(interfaceType.getUnit(), typeDecl);
-				} else {
-					JavaClassType classType = JavaClassType.lookup(getPackage() + typeDecl.getName().toString());
-					populateClassUnit(classType.getUnit(), typeDecl);
-				}
+	private void addLocalImportsInDeclaration(
+			TypeDeclaration typeDecl,
+			String outer) {
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		imports.put(typeDecl.getName().toString(), name);
+		if (outer != null)
+			imports.put((outer == null ? "" : outer + ".") + typeDecl.getName().toString(), name);
+
+		// nested types (e.g., nested inner classes)
+		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
+		for (TypeDeclaration nested : typeDecl.getTypes())
+			addLocalImportsInDeclaration(nested, newOuter);
+		for (Object decl : typeDecl.bodyDeclarations()) {
+			if (decl instanceof EnumDeclaration) {
+				EnumDeclaration enumDecl = (EnumDeclaration) decl;
+				name = getPackage() + (newOuter == null ? "" : newOuter + ".") + enumDecl.getName().toString();
+				imports.put(enumDecl.getName().toString(), name);
+				imports.put(newOuter + "." + enumDecl.getName().toString(), name);
 			}
 		}
 	}
@@ -193,44 +182,36 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 	private void addUnits(
 			CompilationUnit unit) {
 		List<?> types = unit.types();
-		for (Object type : types) {
-			if (type instanceof TypeDeclaration) {
-				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				if ((typeDecl.isInterface()))
-					buildInterfaceUnit(source, unit, getProgram(), typeDecl);
-				else
-					buildClassUnit(source, unit, getProgram(), typeDecl);
-			} else if (type instanceof EnumDeclaration)
-				buildEnumUnit(source, getProgram(), (EnumDeclaration) type);
-		}
+		for (Object type : types)
+			if (type instanceof TypeDeclaration)
+				addUnitsInDeclaration((TypeDeclaration) type, null);
+			else if (type instanceof EnumDeclaration)
+				buildEnumUnit(source, getProgram(), null, (EnumDeclaration) type);
 	}
 
-	private void visitUnits(
-			CompilationUnit unit) {
-		List<?> types = unit.types();
-		for (Object type : types) {
-			if (type instanceof TypeDeclaration) {
-				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				if ((typeDecl.isInterface())) {
-					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source, unit, pkg,
-							imports);
-					typeDecl.accept(interfaceVisitor);
-				} else {
-					ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports);
-					typeDecl.accept(classVisitor);
-				}
-			} else if (type instanceof EnumDeclaration) {
-				ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports);
-				((EnumDeclaration) type).accept(classVisitor);
-			}
-		}
+	private void addUnitsInDeclaration(
+			TypeDeclaration typeDecl,
+			String outer) {
+		if ((typeDecl.isInterface()))
+			buildInterfaceUnit(source, compilationUnit, getProgram(), outer, typeDecl);
+		else
+			buildClassUnit(source, compilationUnit, getProgram(), outer, typeDecl);
 
+		// nested types (e.g., nested inner classes)
+		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
+		for (TypeDeclaration nested : typeDecl.getTypes())
+			addUnitsInDeclaration(nested, newOuter);
+		for (Object decl : typeDecl.bodyDeclarations()) {
+			if (decl instanceof EnumDeclaration)
+				buildEnumUnit(source, getProgram(), newOuter, (EnumDeclaration) decl);
+		}
 	}
 
 	private void buildInterfaceUnit(
 			String source,
 			CompilationUnit unit,
 			Program program,
+			String outer,
 			TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
@@ -240,7 +221,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
 		}
 
-		InterfaceUnit iUnit = new InterfaceUnit(loc, program, getPackage() + typeDecl.getName().toString(), false);
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		InterfaceUnit iUnit = new InterfaceUnit(loc, program, name, false);
 		program.addUnit(iUnit);
 		JavaInterfaceType.register(iUnit.getName(), iUnit);
 	}
@@ -249,6 +231,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			String source,
 			CompilationUnit unit,
 			Program program,
+			String outer,
 			TypeDeclaration typeDecl) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
@@ -258,32 +241,112 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					new ProgramValidationException("Modifier private not allowed in a top-level class"));
 
 		ClassUnit cUnit;
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
 		if (Modifier.isAbstract(modifiers))
 			if (Modifier.isFinal(modifiers))
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			else
-				cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
-						Modifier.isFinal(modifiers));
+				cUnit = new AbstractClassUnit(loc, program, name, Modifier.isFinal(modifiers));
 		else
-			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
-					Modifier.isFinal(modifiers));
+			cUnit = new ClassUnit(loc, program, name, Modifier.isFinal(modifiers));
 
 		program.addUnit(cUnit);
 		JavaClassType.register(cUnit.getName(), cUnit);
 	}
 
-	private void populateClassUnit(
+	private void buildEnumUnit(
+			String source,
+			Program program,
+			String outer,
+			EnumDeclaration typeDecl) {
+		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		EnumUnit enUnit = new EnumUnit(loc, program, name, true);
+		program.addUnit(enUnit);
+		JavaClassType.register(enUnit.getName(), enUnit);
+	}
+
+	private void setRelationships(
+			CompilationUnit unit) {
+		List<?> types = unit.types();
+		for (Object type : types)
+			if (type instanceof TypeDeclaration)
+				setRelationshipsInDeclaration(unit, null, (TypeDeclaration) type);
+	}
+
+	private void setRelationshipsInDeclaration(
+			CompilationUnit unit,
+			String outer,
+			TypeDeclaration typeDecl) {
+		it.unive.lisa.program.CompilationUnit lisaCU = null;
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		if (typeDecl.isInterface())
+			lisaCU = JavaInterfaceType.lookup(name).getUnit();
+		else
+			lisaCU = JavaClassType.lookup(name).getUnit();
+
+		if (typeDecl.getSuperclassType() != null)
+			setSupertype(unit, typeDecl.getSuperclassType(), lisaCU);
+
+		for (Object oInterfaceType : typeDecl.superInterfaceTypes())
+			setSupertype(unit, (ASTNode) oInterfaceType, lisaCU);
+
+		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
+		for (TypeDeclaration nested : typeDecl.getTypes())
+			setRelationshipsInDeclaration(unit, newOuter, nested);
+	}
+
+	private void setSupertype(
+			CompilationUnit unit,
+			ASTNode typeDecl,
+			it.unive.lisa.program.CompilationUnit lisaCU) {
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, unit, this);
+		typeDecl.accept(typeVisitor);
+		it.unive.lisa.type.Type superClassType = typeVisitor.getType();
+		if (superClassType != null) {
+			UnitType unitType = superClassType.asUnitType();
+			if (unitType != null)
+				lisaCU.addAncestor(unitType.getUnit());
+		}
+	}
+
+	private void addGlobals(
+			CompilationUnit unit) {
+		List<?> types = unit.types();
+		for (Object type : types)
+			if (type instanceof TypeDeclaration)
+				addGlobalsInDeclaration((TypeDeclaration) type, null);
+			else if (type instanceof EnumDeclaration)
+				addEnumConstants((EnumDeclaration) type, null);
+	}
+
+	private void addGlobalsInDeclaration(
+			TypeDeclaration typeDecl,
+			String outer) {
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		if ((typeDecl.isInterface())) {
+			JavaInterfaceType interfaceType = JavaInterfaceType.lookup(name);
+			addFields(interfaceType.getUnit(), typeDecl);
+		} else {
+			JavaClassType classType = JavaClassType.lookup(name);
+			addFields(classType.getUnit(), typeDecl);
+		}
+		// nested types (e.g., nested inner classes)
+		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
+		TypeDeclaration[] nested = typeDecl.getTypes();
+		for (TypeDeclaration n : nested)
+			addGlobalsInDeclaration(n, newOuter);
+		for (Object decl : typeDecl.bodyDeclarations())
+			if (decl instanceof EnumDeclaration)
+				addEnumConstants((EnumDeclaration) decl, newOuter);
+	}
+
+	private void addFields(
 			it.unive.lisa.program.CompilationUnit unit,
 			TypeDeclaration typeDecl) {
 		// iterates over inner declarations
 		for (Object decl : typeDecl.bodyDeclarations()) {
-			// enum inner declaration
-			if (decl instanceof EnumDeclaration) {
-				EnumDeclaration innerEnum = (EnumDeclaration) decl;
-				buildEnumUnit(source, getProgram(), innerEnum);
-			}
-
 			Set<String> visitedFieldNames = new HashSet<>();
 			if (decl instanceof FieldDeclaration fdecl) {
 				FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, unit,
@@ -295,14 +358,75 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		}
 	}
 
-	private void buildEnumUnit(
-			String source,
-			Program program,
-			EnumDeclaration typeDecl) {
-		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-		EnumUnit enUnit = new EnumUnit(loc, program, getPackage() + typeDecl.getName().toString(), true);
-		program.addUnit(enUnit);
-		JavaClassType.register(enUnit.getName(), enUnit);
+	private void addEnumConstants(
+			EnumDeclaration node,
+			String outer) {
+		String name = getPackage() + (outer == null ? "" : outer + ".") + node.getName().toString();
+		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);
+		Type enumType = JavaClassType.lookup(enUnit.getName());
+
+		// adding static fields corresponding to enum constants
+		for (Object con : node.enumConstants()) {
+			Global g = new Global(
+					getSourceCodeLocation((ASTNode) con),
+					enUnit,
+					con.toString(),
+					false,
+					new JavaReferenceType(enumType));
+			enUnit.addGlobal(g);
+		}
+	}
+
+	private void visitUnits(
+			CompilationUnit unit) {
+		List<?> types = unit.types();
+		for (Object type : types)
+			if (type instanceof TypeDeclaration)
+				visitUnitsInDeclaration(unit, (TypeDeclaration) type, null);
+			else if (type instanceof EnumDeclaration) {
+				EnumDeclaration enumDecl = (EnumDeclaration) type;
+				ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports,
+						getPackage() + enumDecl.getName().toString());
+				enumDecl.accept(classVisitor);
+			}
+	}
+
+	private void visitUnitsInDeclaration(
+			CompilationUnit unit,
+			TypeDeclaration typeDecl,
+			String outer) {
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		if ((typeDecl.isInterface())) {
+			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
+					parserContext,
+					source,
+					unit,
+					pkg,
+					imports,
+					name);
+			typeDecl.accept(interfaceVisitor);
+		} else {
+			ClassASTVisitor classVisitor = new ClassASTVisitor(
+					parserContext,
+					source,
+					unit,
+					pkg,
+					imports,
+					name);
+			typeDecl.accept(classVisitor);
+		}
+
+		// nested types (e.g., nested inner classes)
+		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
+		for (TypeDeclaration nested : typeDecl.getTypes())
+			visitUnitsInDeclaration(unit, nested, newOuter);
+		for (Object decl : typeDecl.bodyDeclarations()) {
+			if (decl instanceof EnumDeclaration) {
+				name = getPackage() + newOuter + "." + ((EnumDeclaration) decl).getName().toString();
+				ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports, name);
+				((EnumDeclaration) decl).accept(classVisitor);
+			}
+		}
 	}
 
 	private void addJavaLangImports() {

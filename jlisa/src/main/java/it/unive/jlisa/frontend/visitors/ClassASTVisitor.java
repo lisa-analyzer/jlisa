@@ -14,15 +14,9 @@ import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.AbstractClassUnit;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.ProgramValidationException;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -55,17 +49,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
-	private String outer;
-
-	public ClassASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			String pkg,
-			Map<String, String> imports) {
-		super(parserContext, source, pkg, imports, compilationUnit);
-		outer = null;
-	}
+	private final String fullName;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
@@ -73,23 +57,15 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			CompilationUnit compilationUnit,
 			String pkg,
 			Map<String, String> imports,
-			String outer) {
+			String fullName) {
 		super(parserContext, source, pkg, imports, compilationUnit);
-		this.outer = outer;
+		this.fullName = fullName;
 	}
 
 	@Override
 	public boolean visit(
 			EnumDeclaration node) {
-		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(getPackage() + node.getName().toString());
-		Type enumType = getProgram().getTypes().getType(enUnit.getName());
-
-		// adding static fields corresponding to enum constants
-		for (Object con : node.enumConstants()) {
-			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false,
-					new JavaReferenceType(enumType));
-			enUnit.addGlobal(g);
-		}
+		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(fullName);
 
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
@@ -99,102 +75,11 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		return false;
 	}
 
-	private void computeNestedUnits(
-			TypeDeclaration typeDecl) {
-		it.unive.lisa.program.CompilationUnit cUnit;
-		Type t;
-		if ((typeDecl.isInterface())) {
-			cUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
-			t = JavaInterfaceType.register(cUnit.getName(), (InterfaceUnit) cUnit);
-		} else {
-			cUnit = buildClassUnit(source, getProgram(), typeDecl);
-			t = JavaClassType.register(cUnit.getName(), cUnit);
-		}
-
-		getProgram().getTypes().registerType(t);
-		getProgram().addUnit(cUnit);
-		imports.put(typeDecl.getName().toString(), cUnit.getName());
-		imports.put(outer + "." + typeDecl.getName().toString(), cUnit.getName());
-	}
-
-	private InterfaceUnit buildInterfaceUnit(
-			String source,
-			Program program,
-			TypeDeclaration typeDecl) {
-		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-
-		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isFinal(modifiers)) {
-			throw new RuntimeException(
-					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
-		}
-
-		InterfaceUnit iUnit = new InterfaceUnit(loc, program,
-				getPackage() + outer + "." + typeDecl.getName().toString(), false);
-		return iUnit;
-	}
-
-	private ClassUnit buildClassUnit(
-			String source,
-			Program program,
-			TypeDeclaration typeDecl) {
-		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-
-		int modifiers = typeDecl.getModifiers();
-		// FIXME: nested inner class can be private, but we currently do not
-		// model it (treated as public)
-		ClassUnit cUnit;
-		if (Modifier.isAbstract(modifiers)) {
-			if (Modifier.isFinal(modifiers)) {
-				throw new RuntimeException(
-						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
-			}
-			cUnit = new AbstractClassUnit(loc, program, getPackage() + outer + "." + typeDecl.getName().toString(),
-					Modifier.isFinal(modifiers));
-		} else {
-			cUnit = new ClassUnit(loc, program, getPackage() + outer + "." + typeDecl.getName().toString(),
-					Modifier.isFinal(modifiers));
-		}
-		return cUnit;
-	}
-
 	@Override
 	public boolean visit(
 			TypeDeclaration node) {
-		TypeDeclaration[] types = node.getTypes(); // nested types (e.g., nested
-													// inner classes)
-
-		for (TypeDeclaration type : types) {
-			if (type instanceof TypeDeclaration) {
-				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				if ((typeDecl.isInterface())) {
-					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
-							parserContext,
-							source,
-							compilationUnit,
-							pkg,
-							imports,
-							node.getName().toString());
-					typeDecl.accept(interfaceVisitor);
-				} else {
-					ClassASTVisitor classVisitor = new ClassASTVisitor(
-							parserContext,
-							source,
-							compilationUnit,
-							pkg,
-							imports,
-							node.getName().toString());
-					typeDecl.accept(classVisitor);
-				}
-			}
-		}
-
-		if (outer != null)
-			computeNestedUnits(node);
-
 		// parsing superclass
-		String name = getPackage() + (outer != null ? outer + "." : "") + node.getName().toString();
-		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(name);
+		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
 		if (node.getSuperclassType() != null) {
 			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
 			node.getSuperclassType().accept(visitor);
@@ -223,13 +108,6 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		if (!node.permittedTypes().isEmpty())
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
-
-		// iterates over inner declarations (just enums)
-		for (Object decl : node.bodyDeclarations()) {
-			// enum inner declaration
-			if (decl instanceof EnumDeclaration)
-				visit((EnumDeclaration) decl);
-		}
 
 		// all fields (static and non-static) are visited
 		Set<String> visitedFieldNames = new HashSet<>();
@@ -320,8 +198,11 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		String simpleName = enumUnit.getName().contains(".")
+				? enumUnit.getName().substring(enumUnit.getName().lastIndexOf(".") + 1)
+				: enumUnit.getName();
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit,
-				true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+				true, simpleName, VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
 		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
 		parserContext.addVariableType(cfg, new VariableInfo("name", null),
