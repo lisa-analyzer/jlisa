@@ -21,9 +21,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -32,20 +32,20 @@ public class LibrarySpecificationProvider {
 
 	public static final String LIBS_FOLDER = "/libraries/";
 
-	private static final Map<String, ClassDef> AVAILABLE_LIB_CLASSES = new HashMap<>();
+	private static final Map<String, ClassDef> AVAILABLE_LIB_CLASSES = new TreeMap<>();
 
 	public static CompilationUnit hierarchyRoot;
 
 	private static CFG init;
 
-	private static final Collection<String> LOADED_LIB_CLASSES = new HashSet<>();
+	private static final Collection<String> LOADED_LIB_CLASSES = new TreeSet<>();
 
 	public static void load(
 			Program program)
 			throws AnalysisSetupException {
 		reset();
 		init = new CFG(new CodeMemberDescriptor(SyntheticLocation.INSTANCE, program, false, "param_init"));
-		Map<String, Runtime> parsedLibs = new HashMap<>();
+		Map<String, Runtime> parsedLibs = new TreeMap<>();
 
 		try (ScanResult scanResult = new ClassGraph().acceptPaths(LIBS_FOLDER).scan()) {
 			for (String path : scanResult.getAllResources().getPaths())
@@ -94,8 +94,21 @@ public class LibrarySpecificationProvider {
 		importClass(program, "java.lang.Object");
 		importClass(program, "java.lang.String");
 		for (String lib : AVAILABLE_LIB_CLASSES.keySet())
-			if (lib.startsWith("java.lang."))
+			if (getPackage(lib).equals("java.lang"))
 				importClass(program, lib);
+	}
+
+	private static String getPackage(
+			String name) {
+		int idx = name.lastIndexOf('.');
+		if (idx < 0)
+			return "";
+		String pkg = name.substring(0, idx);
+		if (isLibraryAvailable(pkg))
+			// name points to an inner class, so
+			// we have to return the package of the outer class
+			return getPackage(pkg);
+		return pkg;
 	}
 
 	public static void importClass(
@@ -134,6 +147,9 @@ public class LibrarySpecificationProvider {
 
 		LOADED_LIB_CLASSES.add(name);
 		library.populateUnit(program, init, hierarchyRoot);
+		// nested classes should be loaded as well
+		for (String n : getNestedUnits(name))
+			importClass(program, n);
 	}
 
 	public static boolean isLibraryAvailable(
@@ -142,6 +158,11 @@ public class LibrarySpecificationProvider {
 	}
 
 	public static Collection<String> getLibrariesOfPackage(
+			String name) {
+		return AVAILABLE_LIB_CLASSES.keySet().stream().filter(n -> getPackage(n).equals(name)).toList();
+	}
+
+	public static Collection<String> getNestedUnits(
 			String name) {
 		return AVAILABLE_LIB_CLASSES.keySet().stream().filter(n -> n.startsWith(name + ".")).toList();
 	}

@@ -129,7 +129,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
 		}
 
-		InterfaceUnit iUnit = new InterfaceUnit(loc, program, getPackage() + outer + "." + typeDecl.getName().toString(), false);
+		InterfaceUnit iUnit = new InterfaceUnit(loc, program,
+				getPackage() + outer + "." + typeDecl.getName().toString(), false);
 		return iUnit;
 	}
 

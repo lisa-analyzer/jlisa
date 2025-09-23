@@ -1,22 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -30,6 +13,21 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.type.UnitType;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -92,7 +90,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			for (int k = l + 1; k < imports.size(); k++) {
 				if (imports.get(l).getName().getFullyQualifiedName()
 						.equals(imports.get(k).getName().getFullyQualifiedName()))
-					LOG.error("Duplicated import " + imports.get(k).getName().getFullyQualifiedName() + " at " + getSourceCodeLocation(imports.get(l)) + " and "
+					LOG.error("Duplicated import " + imports.get(k).getName().getFullyQualifiedName() + " at "
+							+ getSourceCodeLocation(imports.get(l)) + " and "
 							+ getSourceCodeLocation(imports.get(k)));
 			}
 		}
@@ -102,20 +101,36 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Static imports are not supported.", getSourceCodeLocation(i));
 			else if (i.isOnDemand()) {
-				Collection<String> libs = LibrarySpecificationProvider.getLibrariesOfPackage(i.getName().getFullyQualifiedName());
+				Collection<String> libs = LibrarySpecificationProvider
+						.getLibrariesOfPackage(i.getName().getFullyQualifiedName());
 				for (String lib : libs) {
 					this.imports.put(lib.substring(lib.lastIndexOf(".") + 1), lib);
 					LibrarySpecificationProvider.importClass(getProgram(), lib);
 				}
 			} else {
 				String importName = i.getName().getFullyQualifiedName();
+				String shortName;
 				if (i.getName().isSimpleName())
-					this.imports.put(i.getName().getFullyQualifiedName(), importName);
+					shortName = i.getName().getFullyQualifiedName();
 				else
-					this.imports.put(((QualifiedName) i.getName()).getName().getFullyQualifiedName(), importName);
+					shortName = ((QualifiedName) i.getName()).getName().getFullyQualifiedName();
 
-				if (LibrarySpecificationProvider.isLibraryAvailable(importName))
+				this.imports.put(shortName, importName);
+
+				if (LibrarySpecificationProvider.isLibraryAvailable(importName)) {
 					LibrarySpecificationProvider.importClass(getProgram(), importName);
+					for (String lib : LibrarySpecificationProvider.getNestedUnits(importName)) {
+						LibrarySpecificationProvider.importClass(getProgram(), lib);
+						// eg we are importing "java.util.Map", we want to
+						// include also "java.util.Map.Entry"
+						// - "java.util.Map.Entry".replace("java.util.Map", "")
+						// = ".Entry"
+						// - ".Entry".substring(1) = "Entry"
+						// so the short name is Map.Entry
+						String libname = shortName + "." + lib.replace(importName, "").substring(1);
+						this.imports.put(libname, lib);
+					}
+				}
 			}
 	}
 

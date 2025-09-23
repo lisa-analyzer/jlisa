@@ -103,3 +103,13 @@ class java.lang.AssertionError extends java.lang.Error:
 	instance method AssertionError: it.unive.jlisa.program.java.constructs.assertionerror.AssertionErrorEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param self libtype java.lang.AssertionError*
+
+class java.lang.SecurityException extends java.lang.RuntimeException:
+
+class java.lang.IllegalAccessException extends java.lang.Exception:
+
+class java.lang.reflect.InvocationTargetException extends java.lang.Exception:
+
+class java.lang.InstantiationException extends java.lang.Exception:
+
+class java.lang.NoSuchFieldException extends java.lang.Exception:

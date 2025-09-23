@@ -130,20 +130,22 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 			LibrarySpecificationProvider.importClass(getProgram(), qName);
 
 		// look up the unit in the program (e.g., Map.Entry, we lookup Entry)
-		Unit u = getProgram().getUnit(qName);
+		String imported = container.imports.get(qName);
+		String name = imported != null ? imported : qName;
+
+		Unit u = getProgram().getUnit(name);
 		if (u == null)
 			throw new UnsupportedStatementException(
-					qName + " not exists in program, location: " + getSourceCodeLocation(node));
+					name + " does not exist in the program, location: " + getSourceCodeLocation(node));
 
 		if (!(u instanceof ClassUnit))
-			throw new UnsupportedStatementException(qName + " is not a class unit.");
+			throw new UnsupportedStatementException(name + " is not a class unit.");
 
-		JavaClassType javaClassType = JavaClassType.lookup(qName);
-		if (javaClassType == null) {
+		JavaClassType javaClassType = JavaClassType.lookup(name);
+		if (javaClassType == null)
 			type = Untyped.INSTANCE;
-		} else {
+		else
 			type = javaClassType;
-		}
 
 		return false;
 	}
