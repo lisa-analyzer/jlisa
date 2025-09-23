@@ -322,9 +322,8 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	// FIXME: this test fails due to multidim array
-	@Ignore
-	public void basic1_test() throws IOException {
+	@Test
+	public void Basic1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
 				"Main.java",
 				"../common/",

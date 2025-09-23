@@ -682,8 +682,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaStringAppendCharOperator) {
 			String lv = ((String) left.getValue());
-			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv + ((char) rv.intValue()));
+			if (right.getValue() instanceof Character) {
+				Character rv = ((Character) right.getValue());
+				return new ConstantValue(lv + (rv.charValue()));
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(lv + ((char) rv.intValue()));
+			}
 		}
 
 		if (operator instanceof JavaStringAppendStringOperator) {
@@ -1065,7 +1070,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Number || rVal instanceof Number)
+			if (lVal instanceof Number && rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
 					return ((Number) lVal).doubleValue() == ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
 							: Satisfiability.NOT_SATISFIED;

@@ -73,13 +73,17 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		Type _type = visitor.getType();
 		if (_type == null) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have a type"));
-		}
-		if (node.getDimensions() == 0) {
+		} else if (node.getDimensions() == 0) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
+		} else if (node.getDimensions() == 2) {
+			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+					node.getDimensions());
+			type = JavaArrayType.lookup(new JavaReferenceType(_type), 0);
+		} else {
+			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+					node.getDimensions());
+			type = _type;
 		}
-		_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
-				node.getDimensions());
-		type = _type;
 		return false;
 
 	}

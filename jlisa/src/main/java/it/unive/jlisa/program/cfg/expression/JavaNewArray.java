@@ -37,7 +37,7 @@ public class JavaNewArray extends UnaryExpression {
 			CFG cfg,
 			CodeLocation location,
 			Expression subExpression,
-			Type type) {
+			JavaReferenceType type) {
 		super(cfg, location, "new", type, subExpression);
 	}
 
@@ -95,6 +95,7 @@ public class JavaNewArray extends UnaryExpression {
 		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
+		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
 

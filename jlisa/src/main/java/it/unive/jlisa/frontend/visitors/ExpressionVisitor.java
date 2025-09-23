@@ -181,16 +181,36 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 
-		if (node.dimensions().size() > 1)
+		// currently we handle just single-dim and bi-dim arrays
+		if (node.dimensions().size() > 2)
 			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Multi-dimensional arrays are not supported are not supported.",
 					getSourceCodeLocation(node));
 
-		// TODO: currently we handle single-dim arrays
-		if (node.dimensions().size() != 0) {
+		// single-dimension arrays
+		if (node.dimensions().size() == 1) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 			Expression length = lengthVisitor.getExpression();
 			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new JavaReferenceType(type));
+		}
+		// bi-dimension arrays
+		else if (node.dimensions().size() == 2) {
+			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
+			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
+			ExpressionVisitor sndDimVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
+					tracker,
+					container);
+			((ASTNode) node.dimensions().get(1)).accept(sndDimVisitor);
+			List<Expression> parameters = new ArrayList<>();
+			for (int i = 0; i < fstDim; i++) {
+				Expression expr = new JavaNewArray(cfg,
+						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+						sndDimVisitor.getExpression(), (JavaReferenceType) type.asArrayType().getInnerType());
+				parameters.add(expr);
+			}
+
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node),
+					parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		} else {
 			ArrayInitializer initializer = node.getInitializer();
 
