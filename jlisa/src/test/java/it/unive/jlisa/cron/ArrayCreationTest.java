@@ -21,7 +21,7 @@ public class ArrayCreationTest extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
-	public void twoDimArraytest() throws IOException {
+	public void testTwoDimArray() throws IOException {
 		CronConfiguration conf = TestHelpers.constantPropagation("2dim-array", "", "Main.java");
 		perform(conf);
 	}
