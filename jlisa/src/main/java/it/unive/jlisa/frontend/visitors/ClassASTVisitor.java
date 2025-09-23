@@ -452,8 +452,11 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		String simpleName = classUnit.getName().contains(".")
+				? classUnit.getName().substring(classUnit.getName().lastIndexOf(".") + 1)
+				: classUnit.getName();
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit,
-				true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+				true, simpleName, VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
 		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
 		// we filter just the class unit, not interfaces
