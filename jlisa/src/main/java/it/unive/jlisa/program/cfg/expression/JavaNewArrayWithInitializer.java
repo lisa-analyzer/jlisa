@@ -89,6 +89,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
+		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
 

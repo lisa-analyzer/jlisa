@@ -26,6 +26,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class JavaArrayAccess extends BinaryExpression {
@@ -84,10 +85,14 @@ public class JavaArrayAccess extends BinaryExpression {
 
 			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
-			AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
+			Type accessType = arrayType.getInnerType();
+			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
+			AccessChild access = new AccessChild(accessType, container, right, getLocation());
 			return analysis.smallStepSemantics(state, access, this);
 		} else {
-			AccessChild access = new AccessChild(arrayType.getInnerType(), container, right, getLocation());
+			Type accessType = arrayType.getInnerType();
+			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
+			AccessChild access = new AccessChild(accessType, container, right, getLocation());
 			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, access, this);
 
 			// builds the exception

@@ -123,7 +123,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
 	@Override
 	public String toString() {
-		return base + "[]".repeat(dimensions);
+		return base + "[]";
 	}
 
 	@Override
