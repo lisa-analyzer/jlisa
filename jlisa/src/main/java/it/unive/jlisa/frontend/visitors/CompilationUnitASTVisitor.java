@@ -1,5 +1,22 @@
 package it.unive.jlisa.frontend.visitors;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -13,20 +30,6 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.type.UnitType;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -46,7 +49,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			String source,
 			CompilationUnit unit,
 			VisitorType visitorType) {
-		super(parserContext, source, null, new HashMap<>(), unit);
+		super(parserContext, source, null, new TreeMap<>(), unit);
 		this.visitorType = visitorType;
 	}
 
@@ -86,10 +89,10 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			List<ImportDeclaration> imports) {
 
 		for (int l = 0; l < imports.size() - 1; l++) {
-			for (int k = 1; k < imports.size(); k++) {
+			for (int k = l + 1; k < imports.size(); k++) {
 				if (imports.get(l).getName().getFullyQualifiedName()
 						.equals(imports.get(k).getName().getFullyQualifiedName()))
-					LOG.error("Duplicated imports at " + getSourceCodeLocation(imports.get(l)) + " and "
+					LOG.error("Duplicated import " + imports.get(k).getName().getFullyQualifiedName() + " at " + getSourceCodeLocation(imports.get(l)) + " and "
 							+ getSourceCodeLocation(imports.get(k)));
 			}
 		}
@@ -98,13 +101,13 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (i.isStatic())
 				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Static imports are not supported.", getSourceCodeLocation(i));
-			else if (i.isOnDemand())
-				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"On-demand imports are not supported.", getSourceCodeLocation(i));
-			else if (i.toString().contains("*"))
-				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Wildcard imports are not supported.", getSourceCodeLocation(i));
-			else {
+			else if (i.isOnDemand()) {
+				Collection<String> libs = LibrarySpecificationProvider.getLibrariesOfPackage(i.getName().getFullyQualifiedName());
+				for (String lib : libs) {
+					this.imports.put(lib.substring(lib.lastIndexOf(".") + 1), lib);
+					LibrarySpecificationProvider.importClass(getProgram(), lib);
+				}
+			} else {
 				String importName = i.getName().getFullyQualifiedName();
 				if (i.getName().isSimpleName())
 					this.imports.put(i.getName().getFullyQualifiedName(), importName);
@@ -222,7 +225,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
 		}
 
-		InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
+		InterfaceUnit iUnit = new InterfaceUnit(loc, program, getPackage() + typeDecl.getName().toString(), false);
 		program.addUnit(iUnit);
 		JavaInterfaceType.register(iUnit.getName(), iUnit);
 	}

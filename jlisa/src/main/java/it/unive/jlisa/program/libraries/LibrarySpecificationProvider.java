@@ -140,4 +140,9 @@ public class LibrarySpecificationProvider {
 			String name) {
 		return AVAILABLE_LIB_CLASSES.containsKey(name);
 	}
+
+	public static Collection<String> getLibrariesOfPackage(
+			String name) {
+		return AVAILABLE_LIB_CLASSES.keySet().stream().filter(n -> n.startsWith(name + ".")).toList();
+	}
 }

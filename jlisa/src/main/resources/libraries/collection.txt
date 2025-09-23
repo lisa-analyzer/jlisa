@@ -1,4 +1,4 @@
-class java.util.Collection extends java.util.Object:
+class java.util.Collection extends java.lang.Object:
 
 class java.util.Vector extends java.util.Collection:
 

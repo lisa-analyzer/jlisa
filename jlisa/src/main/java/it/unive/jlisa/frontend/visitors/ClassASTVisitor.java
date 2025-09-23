@@ -55,7 +55,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
-	private boolean nested;
+	private String outer;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
@@ -64,7 +64,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			String pkg,
 			Map<String, String> imports) {
 		super(parserContext, source, pkg, imports, compilationUnit);
-		nested = false;
+		outer = null;
 	}
 
 	public ClassASTVisitor(
@@ -73,9 +73,9 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			CompilationUnit compilationUnit,
 			String pkg,
 			Map<String, String> imports,
-			boolean nested) {
+			String outer) {
 		super(parserContext, source, pkg, imports, compilationUnit);
-		this.nested = nested;
+		this.outer = outer;
 	}
 
 	@Override
@@ -114,6 +114,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		getProgram().getTypes().registerType(t);
 		getProgram().addUnit(cUnit);
 		imports.put(typeDecl.getName().toString(), cUnit.getName());
+		imports.put(outer + "." + typeDecl.getName().toString(), cUnit.getName());
 	}
 
 	private InterfaceUnit buildInterfaceUnit(
@@ -128,7 +129,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
 		}
 
-		InterfaceUnit iUnit = new InterfaceUnit(loc, program, getPackage() + typeDecl.getName().toString(), false);
+		InterfaceUnit iUnit = new InterfaceUnit(loc, program, getPackage() + outer + "." + typeDecl.getName().toString(), false);
 		return iUnit;
 	}
 
@@ -147,10 +148,10 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			}
-			cUnit = new AbstractClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
+			cUnit = new AbstractClassUnit(loc, program, getPackage() + outer + "." + typeDecl.getName().toString(),
 					Modifier.isFinal(modifiers));
 		} else {
-			cUnit = new ClassUnit(loc, program, getPackage() + typeDecl.getName().toString(),
+			cUnit = new ClassUnit(loc, program, getPackage() + outer + "." + typeDecl.getName().toString(),
 					Modifier.isFinal(modifiers));
 		}
 		return cUnit;
@@ -171,7 +172,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 							source,
 							compilationUnit,
 							pkg,
-							imports);
+							imports,
+							node.getName().toString());
 					typeDecl.accept(interfaceVisitor);
 				} else {
 					ClassASTVisitor classVisitor = new ClassASTVisitor(
@@ -180,17 +182,18 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 							compilationUnit,
 							pkg,
 							imports,
-							true);
+							node.getName().toString());
 					typeDecl.accept(classVisitor);
 				}
 			}
 		}
 
-		if (nested)
+		if (outer != null)
 			computeNestedUnits(node);
 
 		// parsing superclass
-		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(getPackage() + node.getName().toString());
+		String name = getPackage() + (outer != null ? outer + "." : "") + node.getName().toString();
+		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(name);
 		if (node.getSuperclassType() != null) {
 			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
 			node.getSuperclassType().accept(visitor);

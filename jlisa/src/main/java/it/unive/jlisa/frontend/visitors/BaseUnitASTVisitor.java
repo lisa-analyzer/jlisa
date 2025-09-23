@@ -1,9 +1,10 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
-import java.util.HashMap;
 import java.util.Map;
+
 import org.eclipse.jdt.core.dom.CompilationUnit;
+
+import it.unive.jlisa.frontend.ParserContext;
 
 public class BaseUnitASTVisitor extends JavaASTVisitor {
 
@@ -22,7 +23,7 @@ public class BaseUnitASTVisitor extends JavaASTVisitor {
 			CompilationUnit compilationUnit) {
 		super(parserContext, source, compilationUnit);
 		this.pkg = pkg;
-		this.imports = new HashMap<>(imports);
+		this.imports = imports;
 	}
 
 	public String getPackage() {

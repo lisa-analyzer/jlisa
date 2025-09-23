@@ -175,8 +175,6 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 				u = getProgram().getUnit(imported);
 		}
 
-		// TODO lneg wildcard imports are not supported for now
-
 		if (u == null)
 			throw new UnsupportedStatementException(
 					node.getFullyQualifiedName() + " does not exist in the program (referenced at "
