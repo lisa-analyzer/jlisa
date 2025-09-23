@@ -323,19 +323,8 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
-	public void basic1_test() throws IOException {
+	public void Basic1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
-				"Main.java",
-				"../common/",
-				"../mock/",
-				"../mockx/",
-				"../securibench/");
-		perform(conf);
-	}
-
-	@Ignore
-	public void basic5_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic5",
 				"Main.java",
 				"../common/",
 				"../mock/",
