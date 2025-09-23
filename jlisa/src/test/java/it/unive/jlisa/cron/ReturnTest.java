@@ -16,22 +16,19 @@ public class ReturnTest extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void testReturnIf1ControlFlow() throws IOException {
-		CronConfiguration conf = TestHelpers.createConfiguration("return", "control-flow/if-1", "if1.java",
-				"Main.java");
+		CronConfiguration conf = TestHelpers.createConfiguration("return", "control-flow/if-1", "if1.java");
 		perform(conf);
 	}
 
 	@Test
 	public void testReturnIf2ControlFlow() throws IOException {
-		CronConfiguration conf = TestHelpers.createConfiguration("return", "control-flow/if-2", "if2.java",
-				"Main.java");
+		CronConfiguration conf = TestHelpers.createConfiguration("return", "control-flow/if-2", "if2.java");
 		perform(conf);
 	}
 
 	@Test
 	public void testReturnDoWhileControlFlow() throws IOException {
-		CronConfiguration conf = TestHelpers.createConfiguration("return", "control-flow/do-while", "do-while.java",
-				"Main.java");
+		CronConfiguration conf = TestHelpers.createConfiguration("return", "control-flow/do-while", "do-while.java");
 		perform(conf);
 	}
 }

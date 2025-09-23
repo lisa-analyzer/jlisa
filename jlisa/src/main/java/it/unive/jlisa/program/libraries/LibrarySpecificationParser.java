@@ -1,13 +1,28 @@
 package it.unive.jlisa.program.libraries;
 
-import it.unive.jlisa.antlr.LibraryDefinitionParser.*;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.FileContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.LibtypeContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.LisatypeContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.MethodContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.ParamContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.TypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParserBaseVisitor;
 import it.unive.jlisa.program.SourceCodeLocationManager;
-import it.unive.jlisa.program.libraries.loader.*;
+import it.unive.jlisa.program.libraries.loader.BooleanValue;
+import it.unive.jlisa.program.libraries.loader.ClassDef;
+import it.unive.jlisa.program.libraries.loader.Field;
+import it.unive.jlisa.program.libraries.loader.LiSAType;
+import it.unive.jlisa.program.libraries.loader.LibType;
+import it.unive.jlisa.program.libraries.loader.Method;
+import it.unive.jlisa.program.libraries.loader.NoneValue;
+import it.unive.jlisa.program.libraries.loader.NumberValue;
+import it.unive.jlisa.program.libraries.loader.Parameter;
 import it.unive.jlisa.program.libraries.loader.Runtime;
-import java.util.Collection;
-import java.util.LinkedList;
-import org.apache.commons.lang3.tuple.Pair;
+import it.unive.jlisa.program.libraries.loader.StringValue;
+import it.unive.jlisa.program.libraries.loader.Type;
+import it.unive.jlisa.program.libraries.loader.Value;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 
@@ -25,6 +40,7 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	public ClassDef visitClassDef(
 			ClassDefContext ctx) {
 		ClassDef cls = new ClassDef(
+				locationManager,
 				ctx.ROOT() != null,
 				ctx.SEALED() != null,
 				ctx.type_name == null ? null : ctx.type_name.getText(),
@@ -106,35 +122,17 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	}
 
 	@Override
-	public Library visitLibrary(
-			LibraryContext ctx) {
-		Library lib = new Library(ctx.name.getText(), locationManager);
-		for (MethodContext mtd : ctx.method())
-			lib.getMethods().add(visitMethod(mtd));
-
-		for (FieldContext fld : ctx.field())
-			lib.getFields().add(visitField(fld));
-
-		for (ClassDefContext cls : ctx.classDef())
-			lib.getClasses().add(visitClassDef(cls));
-
-		return lib;
-	}
-
-	@Override
-	public Pair<Runtime, Collection<Library>> visitFile(
+	public Runtime visitFile(
 			FileContext ctx) {
 		Runtime runtime = new Runtime(locationManager);
-		Collection<Library> libraries = new LinkedList<>();
 
 		for (ClassDefContext cls : ctx.classDef())
 			runtime.getClasses().add(visitClassDef(cls));
-		for (LibraryContext lib : ctx.library())
-			libraries.add(visitLibrary(lib));
-		for (MethodContext meth : ctx.method()) {
+		for (FieldContext fld : ctx.field())
+			runtime.getFields().add(visitField(fld));
+		for (MethodContext meth : ctx.method())
 			runtime.getMethods().add(visitMethod(meth));
-		}
-		return Pair.of(runtime, libraries);
+		return runtime;
 	}
 
 	public static class LibraryParsingException extends RuntimeException {

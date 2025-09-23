@@ -1,1 +1,1 @@
-class StringTokenizer extends Object:
+class java.util.StringTokenizer extends java.lang.Object:

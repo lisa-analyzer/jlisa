@@ -18,7 +18,7 @@ public class OutputStreamConstructor extends NaryExpression implements Pluggable
 	public OutputStreamConstructor(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "OutputStream", JavaClassType.lookup("OutputStream", null));
+		super(cfg, location, "OutputStream", JavaClassType.lookup("java.io.OutputStream"));
 	}
 
 	public static OutputStreamConstructor build(

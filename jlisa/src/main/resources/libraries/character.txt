@@ -1,14 +1,14 @@
-class Character extends Object:
+class java.lang.Character extends java.lang.Object:
 	instance field value type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 
 	instance method Character: it.unive.jlisa.program.java.constructs.character.CharacterConstructor
-		libtype Character*
-		param this libtype Character*
+		libtype java.lang.Character*
+		param this libtype java.lang.Character*
 		param c type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	instance method charValue: it.unive.jlisa.program.java.constructs.character.CharValue
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		param this libtype Character*
+		param this libtype java.lang.Character*
 
 	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
 		type it.unive.lisa.program.type.BoolType::INSTANCE
@@ -20,8 +20,8 @@ class Character extends Object:
 		
 	instance method equals: it.unive.jlisa.program.java.constructs.character.CharacterEquals
 		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param this libtype Character*
-		param other libtype Character*
+		param this libtype java.lang.Character*
+		param other libtype java.lang.Character*
 		
 	method isDefined: it.unive.jlisa.program.java.constructs.character.CharacterIsDefined
 		type it.unive.lisa.program.type.BoolType::INSTANCE
@@ -66,5 +66,5 @@ class Character extends Object:
 		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	method valueOf: it.unive.jlisa.program.java.constructs.character.CharacterValueOf
-		libtype Character*
+		libtype java.lang.Character*
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE

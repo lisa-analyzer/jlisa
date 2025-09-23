@@ -11,7 +11,7 @@ public class ConstructorsTest extends JLiSAAnalysisExecutor {
 	@Test
 	public void testThisConstructor() throws IOException {
 		CronConfiguration conf = TestHelpers.createConfiguration("constructors", "this-constructors", "Main.java",
-				"B.java", "C.java");
+				"B.java");
 		perform(conf);
 	}
 

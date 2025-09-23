@@ -72,8 +72,8 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 					Type inner = recType.asPointerType().getInnerType();
 					if (inner.isNullType()) {
 						// builds the exception
-						JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
-						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException",
+						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
+						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 								npeType.getReference(), new Expression[0]);
 						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 

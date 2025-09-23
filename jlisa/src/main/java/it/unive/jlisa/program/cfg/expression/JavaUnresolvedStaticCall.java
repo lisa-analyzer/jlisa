@@ -44,37 +44,41 @@ public class JavaUnresolvedStaticCall extends UnresolvedCall {
 
 		// we need to check whether to call the clinit of the container unit or
 		// to call the one of its superclass
-		ClassUnit classInit = (ClassUnit) JavaClassType.lookup(getQualifier(), null).getUnit();
-		if (classInit.getCodeMembersByName(getTargetName()).isEmpty()) {
-			Set<it.unive.lisa.program.CompilationUnit> superClasses = classInit
+		ClassUnit classUnit = (ClassUnit) JavaClassType.lookup(getQualifier()).getUnit();
+		if (classUnit.getCodeMembersByName(getTargetName()).isEmpty()) {
+			Set<it.unive.lisa.program.CompilationUnit> superClasses = classUnit
 					.getImmediateAncestors().stream()
 					.filter(u -> u instanceof ClassUnit)
 					.collect(Collectors.toSet());
 
 			// we can safely suppose that there exist a single superclass
-			// if classInit is Object, we keep object
-			classInit = (ClassUnit) superClasses.stream().findFirst().orElse(classInit);
+			// if classUnit is Object, we keep object
+			classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
 		}
 
 		// if needed, calling the class initializer
-		if (!JavaClassType.lookup(classInit.toString(), null).getUnit()
-				.getCodeMembersByName(classInit.toString() + InitializedClassSet.SUFFIX_CLINIT).isEmpty())
+		String simpleName = classUnit.getName().contains(".")
+				? classUnit.getName().substring(classUnit.getName().lastIndexOf(".") + 1)
+				: classUnit.getName();
+		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
+		if (!JavaClassType.lookup(classUnit.toString()).getUnit()
+				.getCodeMembersByName(name).isEmpty())
 			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class)
-					.contains(classInit.toString())) {
+					.contains(classUnit.toString())) {
 				JavaUnresolvedStaticCall clinit = new JavaUnresolvedStaticCall(
 						getCFG(),
 						getLocation(),
-						classInit.toString(),
-						classInit.toString() + InitializedClassSet.SUFFIX_CLINIT,
+						classUnit.toString(),
+						name,
 						new Expression[0]);
 
 				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
 						state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class)
-								.add(classInit.toString()));
+								.add(classUnit.toString()));
 				state = clinit.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			}
 
-		UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.STATIC, classInit.toString(),
+		UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.STATIC, classUnit.toString(),
 				getTargetName(), getParameters());
 		call.setSource(this);
 		AnalysisState<A> callState = call.forwardSemantics(state, interprocedural, expressions);

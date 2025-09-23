@@ -27,7 +27,7 @@ public class JavaStringLiteral extends Literal<String> {
 			CFG cfg,
 			CodeLocation location,
 			String value) {
-		super(cfg, location, value, new JavaReferenceType(JavaClassType.lookup("String", null)));
+		super(cfg, location, value, new JavaReferenceType(JavaClassType.lookup("java.lang.String")));
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class JavaStringLiteral extends Literal<String> {
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "String", reftype, new Expression[0]);
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), reftype, new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0], expressions);
 

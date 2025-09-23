@@ -69,7 +69,7 @@ public class StringToString extends UnaryExpression implements PluggableStatemen
 		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);

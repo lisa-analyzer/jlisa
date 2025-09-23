@@ -7,6 +7,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A switch control flow structure.
@@ -57,11 +58,12 @@ public class Switch extends ControlFlowStructure {
 	}
 
 	@Override
-	public void simplify() {
+	public void simplify(
+			Set<Statement> targets) {
 		for (SwitchCase case_ : cases)
-			case_.simplify();
+			case_.simplify(targets);
 		if (defaultCase != null)
-			defaultCase.simplify();
+			defaultCase.simplify(targets);
 	}
 
 	@Override

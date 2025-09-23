@@ -94,7 +94,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NumberFormatException",
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					nfeType.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
@@ -108,7 +108,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), this));
+					new Error(nfeType.getReference(), originating));
 		} else {
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
@@ -120,7 +120,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NumberFormatException",
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					nfeType.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
@@ -134,7 +134,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), this));
+					new Error(nfeType.getReference(), originating));
 			return exceptionState.lub(noExceptionState);
 		}
 	}

@@ -94,7 +94,6 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			JavaNewObj newOut = new JavaNewObj(
 					getCFG(),
 					getLocation(),
-					printWriterClassType.getUnit().getName(),
 					new JavaReferenceType(printWriterClassType));
 			AnalysisState<A> callState = newOut.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					expressions);

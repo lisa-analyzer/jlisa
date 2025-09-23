@@ -18,7 +18,6 @@ import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEq
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
-import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
@@ -29,7 +28,6 @@ import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
@@ -97,7 +95,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-public class StatementASTVisitor extends JavaASTVisitor {
+public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(StatementASTVisitor.class);
 
@@ -115,8 +113,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			CompilationUnit compilationUnit,
 			CFG cfg,
 			ControlFlowTracker control,
-			JavaLocalVariableTracker tracker) {
-		super(parserContext, source, compilationUnit);
+			JavaLocalVariableTracker tracker,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
 		this.tracker = tracker;
 		this.control = control;
@@ -129,8 +128,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			CFG cfg,
 			ControlFlowTracker control,
 			Expression switchItem,
-			JavaLocalVariableTracker tracker) {
-		super(parserContext, source, compilationUnit);
+			JavaLocalVariableTracker tracker,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
 		this.control = control;
 		this.tracker = tracker;
@@ -157,14 +157,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		org.eclipse.jdt.core.dom.Expression msg = node.getMessage();
 
 		ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		expr.accept(exprVisitor);
 		Expression expression1 = exprVisitor.getExpression();
 
 		Statement assrt = null;
 		if (msg != null) {
 			ExpressionVisitor messageVisitor = new ExpressionVisitor(this.parserContext, this.source,
-					this.compilationUnit, this.cfg, this.tracker);
+					this.compilationUnit, this.cfg, this.tracker, container);
 			msg.accept(messageVisitor);
 			Expression expression2 = messageVisitor.getExpression();
 			assrt = new AssertionStatement(cfg, getSourceCodeLocation(node), expression1, expression2);
@@ -189,16 +189,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		Statement first = null, last = null;
 		if (node.statements().isEmpty()) { // empty block
-
-			EmptyBody emptyBlock = null;
-			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+			NoOp emptyBlock = new NoOp(cfg, getSourceCodeLocation(node));
 			nodeList.addNode(emptyBlock);
 			first = emptyBlock;
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
 				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg,
-						this.control, this.tracker);
+						this.control, this.tracker, container);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();
@@ -237,12 +235,11 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ConstructorInvocation node) {
-		if (!node.typeArguments().isEmpty()) {
-			parserContext.addException(
-					new ParsingException("constructor-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Constructor invocation statements with type arguments are not supported.",
-							getSourceCodeLocation(node)));
-		}
+		if (!node.typeArguments().isEmpty())
+			throw new ParsingException("constructor-invocation",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Constructor invocation statements with type arguments are not supported.",
+					getSourceCodeLocation(node));
 
 		// get the type from the descriptor
 		Expression thisExpression = new VariableRef(cfg,
@@ -254,7 +251,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-						tracker);
+						tracker, container);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
 				parameters.add(expr);
@@ -293,7 +290,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		tracker.enterScope();
 
 		StatementASTVisitor doBodyVisitor = new StatementASTVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.control, this.tracker);
+				this.compilationUnit, this.cfg, this.control, this.tracker, container);
 		if (node.getBody() == null)
 			return false; // parsing error
 
@@ -307,7 +304,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		entry = loopBody.getBegin();
 
 		ExpressionVisitor whileCondition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		node.getExpression().accept(whileCondition);
 		Expression expression = whileCondition.getExpression();
 		Statement noop = new NoOp(this.cfg, expression.getLocation());
@@ -358,12 +355,12 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		tracker.enterScope();
 
 		ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		node.getParameter().accept(itemVisitor);
 		Expression item = itemVisitor.getExpression();
 
 		ExpressionVisitor collectionVisitor = new ExpressionVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.tracker);
+				this.compilationUnit, this.cfg, this.tracker, container);
 		node.getExpression().accept(collectionVisitor);
 		Expression collection = collectionVisitor.getExpression();
 
@@ -379,7 +376,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		block.addEdge(new TrueEdge(condition, assignment));
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.control, this.tracker);
+				this.compilationUnit, this.cfg, this.control, this.tracker, container);
 
 		node.getBody().accept(loopBodyVisitor);
 
@@ -413,7 +410,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(
 			ExpressionStatement node) {
 		ExpressionVisitor expressionVisitor = new ExpressionVisitor(parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		node.getExpression().accept(expressionVisitor);
 		Expression expr = expressionVisitor.getExpression();
 
@@ -448,7 +445,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 
 		ExpressionVisitor conditionExpr = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		if (node.getExpression() != null)
 			node.getExpression().accept(conditionExpr);
 		Expression condition = conditionExpr.getExpression();
@@ -467,7 +464,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.control, this.tracker);
+				this.compilationUnit, this.cfg, this.control, this.tracker, container);
 
 		node.getBody().accept(loopBodyVisitor);
 
@@ -522,7 +519,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		Statement first = null;
 		for (int i = 0; i < stmts.length; i++) {
 			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-					this.cfg, this.tracker);
+					this.cfg, this.tracker, container);
 			stmts[i].accept(visitor);
 			Expression expr = visitor.getExpression();
 			nodeList.addNode(expr);
@@ -542,7 +539,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			IfStatement node) {
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 		ExpressionVisitor conditionVisitor = new ExpressionVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.tracker);
+				this.compilationUnit, this.cfg, this.tracker, container);
 
 		tracker.enterScope();
 		node.getExpression().accept(conditionVisitor);
@@ -551,7 +548,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		nodeList.addNode(condition);
 
 		StatementASTVisitor trueVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.control, this.tracker);
+				this.cfg, this.control, this.tracker, container);
 
 		node.getThenStatement().accept(trueVisitor);
 		ParsedBlock trueBlock = trueVisitor.getBlock();
@@ -570,7 +567,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 
 		StatementASTVisitor falseVisitor = new StatementASTVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.control, this.tracker);
+				this.compilationUnit, this.cfg, this.control, this.tracker, container);
 
 		ParsedBlock falseBlock = null;
 
@@ -619,18 +616,17 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			LabeledStatement node) {
-		parserContext.addException(
-				new ParsingException("labeled-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Labeled statements are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("labeled-statement",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Labeled statements are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			ReturnStatement node) {
 		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		if (node.getExpression() != null) {
 			node.getExpression().accept(visitor);
 		}
@@ -658,6 +654,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 		ClassUnit classUnit = (ClassUnit) unit;
 		String superclassName = classUnit.getImmediateAncestors().iterator().next().getName();
+		String simpleName = superclassName.contains(".")
+				? superclassName.substring(superclassName.lastIndexOf(".") + 1)
+				: superclassName;
 
 		Expression thisExpression = new VariableRef(cfg, getSourceCodeLocation(node), "this",
 				parserContext.getVariableStaticTypeFromUnitAndGlobals(cfg, "this"));
@@ -668,7 +667,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-						tracker);
+						tracker, container);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
 				parameters.add(expr);
@@ -676,7 +675,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		}
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(),
-				Call.CallType.INSTANCE, null, superclassName, parameters.toArray(new Expression[0]));
+				Call.CallType.INSTANCE, superclassName, simpleName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
 		this.block = new ParsedBlock(call, adj, call);
@@ -688,7 +687,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(
 			SwitchCase node) {
 		ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		node.accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();
 
@@ -711,7 +710,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 
 		ExpressionVisitor itemVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		node.getExpression().accept(itemVisitor);
 		switchItem = itemVisitor.getExpression();
 		Statement noop = new NoOp(this.cfg,
@@ -733,15 +732,15 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		Statement first = null, last = null;
 		for (Object o : node.statements()) {
 			StatementASTVisitor statementASTVisitor = new StatementASTVisitor(parserContext, source, compilationUnit,
-					cfg, control, switchItem, tracker);
+					cfg, control, switchItem, tracker, container);
 			((org.eclipse.jdt.core.dom.Statement) o).accept(statementASTVisitor);
 
 			ParsedBlock caseBlock = statementASTVisitor.getBlock();
 			boolean isEmptyBlock = caseBlock == null || caseBlock.getBody().getNodes().isEmpty();
-			EmptyBody emptyBlock = null;
+			NoOp emptyBlock = null;
 
 			if (isEmptyBlock) {
-				emptyBlock = new EmptyBody(cfg,
+				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 			} else {
@@ -772,7 +771,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 					if (follower != null) {
 						adj.addEdge(new SequentialEdge(switchDefault, follower));
 					} else {
-						emptyBlock = new EmptyBody(cfg,
+						emptyBlock = new NoOp(cfg,
 								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 						adj.addNode(emptyBlock);
 						adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
@@ -793,7 +792,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			last = caseBlock.getEnd();
 		}
 
-		EmptyBody emptyBlock = null;
+		NoOp emptyBlock = null;
 
 		if (switchDefault != null && defaultCase == null) {
 			defaultCase = new DefaultSwitchCase(switchDefault, caseInstrs);
@@ -802,7 +801,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
 				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
 			} else {
-				emptyBlock = new EmptyBody(cfg,
+				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
@@ -815,7 +814,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			if (caseInstrs.size() > 1) {
 				adj.addEdge(new TrueEdge(switchCondition, caseInstrs.get(1)));
 			} else {
-				emptyBlock = new EmptyBody(cfg,
+				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(), emptyBlock));
@@ -833,7 +832,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
 
 		if (node.statements().isEmpty() || (cases.isEmpty() && defaultCase == null)) {
-			emptyBlock = new EmptyBody(cfg,
+			emptyBlock = new NoOp(cfg,
 					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			adj.addNode(emptyBlock);
 			adj.addEdge(new SequentialEdge(emptyBlock, noop));
@@ -966,7 +965,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 
 		ExpressionVisitor synchTargetVisitor = new ExpressionVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.tracker);
+				this.compilationUnit, this.cfg, this.tracker, container);
 		node.getExpression().accept(synchTargetVisitor);
 		Expression syncTarget = synchTargetVisitor.getExpression();
 
@@ -977,7 +976,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		adj.addNode(syntheticCondition);
 
 		StatementASTVisitor bodyVisitor = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.control, this.tracker);
+				this.cfg, this.control, this.tracker, container);
 		node.getBody().accept(bodyVisitor);
 
 		ParsedBlock synchronizedBody = bodyVisitor.getBlock();
@@ -993,9 +992,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			adj.addEdge(new SequentialEdge(synchronizedBody.getEnd(), noop));
 		}
 
-		JavaClassType npeType = JavaClassType.lookup("NullPointerException", null);
+		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
 		Statement nullPointerTrigger = new JavaThrow(cfg, syntheticLocMan.nextLocation(),
-				new JavaNewObj(cfg, syntheticLocMan.nextLocation(), "NullPointerException",
+				new JavaNewObj(cfg, syntheticLocMan.nextLocation(),
 						new JavaReferenceType(npeType),
 						new JavaStringLiteral(cfg,
 								syntheticLocMan.nextLocation(),
@@ -1022,11 +1021,10 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			TypeDeclarationStatement node) {
-		parserContext.addException(
-				new ParsingException("type-declaration-statement", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type declaration statements are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("type-declaration-statement",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Type declaration statements are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -1034,7 +1032,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 			VariableDeclarationStatement node) {
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		Statement first = null, last = null;
-		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 
 		Type type = visitor.getType();
@@ -1044,10 +1042,6 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
-
-			if (fragment.getExtraDimensions() != 0)
-				type = new JavaReferenceType(JavaArrayType.lookup(type, fragment.getExtraDimensions()));
-
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, type);
@@ -1064,7 +1058,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);
 				org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 				ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
-						tracker);
+						tracker, container);
 				expr.accept(exprVisitor);
 				initializer = exprVisitor.getExpression();
 				if (initializer == null) {
@@ -1111,14 +1105,14 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		tracker.enterScope();
 
 		ExpressionVisitor condition = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker);
+				this.cfg, this.tracker, container);
 		node.getExpression().accept(condition);
 		Expression expression = condition.getExpression();
 
 		adj.addNode(expression);
 
 		StatementASTVisitor loopBodyVisitor = new StatementASTVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.control, this.tracker);
+				this.compilationUnit, this.cfg, this.control, this.tracker, container);
 		node.getBody().accept(loopBodyVisitor);
 
 		ParsedBlock loopBody = loopBodyVisitor.getBlock();
@@ -1147,7 +1141,8 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ThrowStatement node) {
-		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getExpression().accept(exprVisitor);
 		Expression expr = exprVisitor.getExpression();
 		Throw th = new JavaThrow(cfg, getSourceCodeLocation(node), expr);
@@ -1171,7 +1166,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 
 		// we parse the body of the try block normally
 		StatementASTVisitor blockVisitor = new StatementASTVisitor(this.parserContext, this.source,
-				this.compilationUnit, this.cfg, this.control, this.tracker);
+				this.compilationUnit, this.cfg, this.control, this.tracker, container);
 		node.getBody().accept(blockVisitor);
 		// body of the try
 		ParsedBlock body = blockVisitor.getBlock();
@@ -1190,7 +1185,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		for (int i = 0; i < node.catchClauses().size(); i++) {
 			CatchClause cl = (CatchClause) node.catchClauses().get(i);
 			StatementASTVisitor clVisitor = new StatementASTVisitor(this.parserContext, this.source,
-					this.compilationUnit, this.cfg, this.control, this.tracker);
+					this.compilationUnit, this.cfg, this.control, this.tracker, container);
 			cl.accept(clVisitor);
 
 			CatchBlock block = clVisitor.clBlock;
@@ -1219,7 +1214,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		ParsedBlock finallyBlock = null;
 		if (node.getFinally() != null) {
 			StatementASTVisitor finallyVisitor = new StatementASTVisitor(this.parserContext, this.source,
-					this.compilationUnit, this.cfg, this.control, this.tracker);
+					this.compilationUnit, this.cfg, this.control, this.tracker, container);
 			node.getFinally().accept(finallyVisitor);
 			finallyBlock = finallyVisitor.getBlock();
 			trycatch.mergeWith(finallyBlock.getBody());
@@ -1265,8 +1260,9 @@ public class StatementASTVisitor extends JavaASTVisitor {
 	public boolean visit(
 			CatchClause node) {
 		tracker.enterScope();
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
-		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getException().getType().accept(typeVisitor);
 		node.getException().getName().accept(paramVisitor);
 
@@ -1279,7 +1275,7 @@ public class StatementASTVisitor extends JavaASTVisitor {
 		VariableRef v = new VariableRef(param.getCFG(), param.getLocation(), ((VariableRef) param).getName(), type);
 
 		StatementASTVisitor catchBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.control, this.tracker);
+				this.cfg, this.control, this.tracker, container);
 		node.getBody().accept(catchBody);
 		// body of the catch clause
 		ParsedBlock body = catchBody.getBlock();

@@ -3,11 +3,13 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.*;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.*;
+import java.util.Collection;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IntersectionType;
@@ -19,14 +21,15 @@ import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.UnionType;
 
-public class TypeASTVisitor extends JavaASTVisitor {
+public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	private Type type;
 
 	public TypeASTVisitor(
 			ParserContext parserContext,
 			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			CompilationUnit compilationUnit,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 	}
 
 	@Override
@@ -65,18 +68,22 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ArrayType node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getElementType().accept(visitor);
 		Type _type = visitor.getType();
 		if (_type == null) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have a type"));
-		}
-		if (node.getDimensions() == 0) {
+		} else if (node.getDimensions() == 0) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
+		} else if (node.getDimensions() == 2) {
+			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+					node.getDimensions());
+			type = JavaArrayType.lookup(new JavaReferenceType(_type), 0);
+		} else {
+			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+					node.getDimensions());
+			type = _type;
 		}
-		_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
-				node.getDimensions());
-		type = _type;
 		return false;
 
 	}
@@ -84,63 +91,65 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			UnionType node) {
-		parserContext.addException(new ParsingException(
+		throw new ParsingException(
 				"union-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Union type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			IntersectionType node) {
-		parserContext.addException(new ParsingException(
-				"intersection-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
+		throw new ParsingException(
+				"intersection-type",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Intersection type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			QualifiedType node) {
-		parserContext.addException(new ParsingException(
+		throw new ParsingException(
 				"qualified-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Qualified type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			NameQualifiedType node) {
-		parserContext.addException(new ParsingException(
+		throw new ParsingException(
 				"qualified-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Name-qualified type not supported",
-				getSourceCodeLocation(node)));
-		return false;
+				getSourceCodeLocation(node));
 	}
 
 	public boolean visit(
 			QualifiedName node) {
 		// get the qualifier
-		String qName = node.getName().toString();
+		String qName = node.getFullyQualifiedName();
+
+		if (LibrarySpecificationProvider.isLibraryAvailable(qName))
+			LibrarySpecificationProvider.importClass(getProgram(), qName);
 
 		// look up the unit in the program (e.g., Map.Entry, we lookup Entry)
-		Unit u = getProgram().getUnit(qName);
+		String imported = container.imports.get(qName);
+		String name = imported != null ? imported : qName;
+
+		Unit u = getProgram().getUnit(name);
 		if (u == null)
 			throw new UnsupportedStatementException(
-					qName + " not exists in program, location: " + getSourceCodeLocation(node));
+					name + " does not exist in the program, location: " + getSourceCodeLocation(node));
 
 		if (!(u instanceof ClassUnit))
-			throw new UnsupportedStatementException(qName + " is not a class unit.");
+			throw new UnsupportedStatementException(name + " is not a class unit.");
 
-		JavaClassType javaClassType = JavaClassType.lookup(qName, (ClassUnit) u);
-		if (javaClassType == null) {
+		JavaClassType javaClassType = JavaClassType.lookup(name);
+		if (javaClassType == null)
 			type = Untyped.INSTANCE;
-		} else {
+		else
 			type = javaClassType;
-		}
 
 		return false;
 	}
@@ -148,20 +157,43 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			SimpleName node) {
-		Unit u = getProgram().getUnit(node.getFullyQualifiedName());
+		Unit u = null;
+		Collection<Unit> units = getProgram().getUnits();
+
+		// check in the file/package
+		for (Unit unit : units) {
+			// - if the container has no package, the
+			// class we are looking must have no package as well
+			// and the name must exactly match what we are referencing
+			// - if the container does have a package, the
+			// class we are looking for must have the same package
+			// followed by the name we are referencing
+			if ((container.pkg == null && unit.getName().equals(node.getFullyQualifiedName()))
+					|| (container.pkg != null
+							&& unit.getName().equals(container.pkg + "." + node.getFullyQualifiedName())))
+				u = unit;
+		}
+
+		// imports
 		if (u == null) {
-			throw new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " not exists in program, location: ." + getSourceCodeLocation(node));
+			String imported = container.imports.get(node.getFullyQualifiedName());
+			if (imported != null)
+				u = getProgram().getUnit(imported);
 		}
+
+		if (u == null)
+			throw new UnsupportedStatementException(
+					node.getFullyQualifiedName() + " does not exist in the program (referenced at "
+							+ getSourceCodeLocation(node) + ")");
+
 		type = Untyped.INSTANCE;
-		if (u instanceof ClassUnit cu) {
-			type = JavaClassType.lookup(u.getName(), cu);
-		} else if (u instanceof InterfaceUnit iu) {
-			type = JavaInterfaceType.lookup(u.getName(), iu);
-		} else {
+		if (u instanceof ClassUnit)
+			type = JavaClassType.lookup(u.getName());
+		else if (u instanceof InterfaceUnit)
+			type = JavaInterfaceType.lookup(u.getName());
+		else
 			throw new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " is not a class or interface unit.");
-		}
+					node.getFullyQualifiedName() + " is not a class or interface unit");
 
 		return false;
 	}
@@ -169,7 +201,7 @@ public class TypeASTVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ParameterizedType node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 		Type rawType = visitor.getType();
 

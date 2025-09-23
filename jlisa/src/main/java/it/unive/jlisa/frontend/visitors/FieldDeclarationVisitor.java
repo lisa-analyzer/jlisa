@@ -15,7 +15,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class FieldDeclarationVisitor extends JavaASTVisitor {
+public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit unit;
 
 	Set<String> visitedFieldNames;
@@ -25,8 +25,9 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 			String source,
 			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
 			CompilationUnit astCompilationUnit,
-			Set<String> visitedFieldNames) {
-		super(parserContext, source, astCompilationUnit);
+			Set<String> visitedFieldNames,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, astCompilationUnit, container);
 		this.unit = lisacompilationUnit;
 		this.visitedFieldNames = visitedFieldNames;
 	}
@@ -35,7 +36,7 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 	public boolean visit(
 			FieldDeclaration node) {
 		int modifiers = node.getModifiers();
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())

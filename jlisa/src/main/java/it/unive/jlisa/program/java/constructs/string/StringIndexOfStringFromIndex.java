@@ -30,7 +30,7 @@ public class StringIndexOfStringFromIndex extends TernaryExpression implements P
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "replaceAll", left, middle, right);
+		super(cfg, location, "indexOf", left, middle, right);
 	}
 
 	public static StringIndexOfStringFromIndex build(

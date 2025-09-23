@@ -18,7 +18,7 @@ public class PrintWriterConstructor extends NaryExpression implements PluggableS
 	public PrintWriterConstructor(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "PrintWriter", JavaClassType.lookup("PrintWriter", null));
+		super(cfg, location, "PrintWriter", JavaClassType.lookup("java.io.PrintWriter"));
 	}
 
 	public static PrintWriterConstructor build(

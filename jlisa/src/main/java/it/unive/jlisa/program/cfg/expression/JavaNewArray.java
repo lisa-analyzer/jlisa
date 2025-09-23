@@ -37,7 +37,7 @@ public class JavaNewArray extends UnaryExpression {
 			CFG cfg,
 			CodeLocation location,
 			Expression subExpression,
-			Type type) {
+			JavaReferenceType type) {
 		super(cfg, location, "new", type, subExpression);
 	}
 
@@ -62,7 +62,7 @@ public class JavaNewArray extends UnaryExpression {
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getNegativeArraySizeExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NegativeArraySizeException",
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			AnalysisState<A> exceptionState = state.bottomExecution();
@@ -95,6 +95,7 @@ public class JavaNewArray extends UnaryExpression {
 		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
+		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
 

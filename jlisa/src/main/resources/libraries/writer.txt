@@ -1,29 +1,28 @@
-class Writer extends Object:
+class java.io.Writer extends java.lang.Object:
 
-class PrintWriter extends Writer:
+class java.io.PrintWriter extends java.io.Writer:
 
 	instance method PrintWriter: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype PrintWriter*
-		param out libtype Writer*
-		
+		param self libtype java.io.PrintWriter*
+		param out libtype java.io.Writer*
 		
 	instance method PrintWriter: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterConstructorWithAutoFlush
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype PrintWriter*
-		param out libtype Writer*
+		param self libtype java.io.PrintWriter*
+		param out libtype java.io.Writer*
 		param autoflush type it.unive.lisa.program.type.BoolType::INSTANCE
 		
 	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrint
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype PrintWriter*
+		param self libtype java.io.PrintWriter*
 		param p type it.unive.lisa.type.Untyped::INSTANCE
 		
 	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrintln
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype PrintWriter*
+		param self libtype java.io.PrintWriter*
 		param p type it.unive.lisa.type.Untyped::INSTANCE
 		
 	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterFlush
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype PrintWriter*
+		param self libtype java.io.PrintWriter*

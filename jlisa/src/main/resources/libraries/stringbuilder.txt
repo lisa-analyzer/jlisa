@@ -1,2 +1,2 @@
-class StringBuilder extends Object:
+class java.lang.StringBuilder extends java.lang.Object:
 		

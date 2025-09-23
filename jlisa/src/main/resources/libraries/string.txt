@@ -1,211 +1,200 @@
-class String extends CharSequence: it.unive.jlisa.program.type.JavaStringType
+class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.type.JavaStringType
 
 	instance method String: it.unive.jlisa.program.java.constructs.string.StringEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 				
 	instance method String: it.unive.jlisa.program.java.constructs.string.StringCopyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype String*
-		param val libtype String*
+		param this libtype java.lang.String*
+		param val libtype java.lang.String*
 		
 	instance method String: it.unive.jlisa.program.java.constructs.string.StringConstructorFromByteArray
 		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param val type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
 		
 	instance method getBytes: it.unive.jlisa.program.java.constructs.string.StringGetBytes
 		type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
-		param this libtype String*
+		param this libtype java.lang.String*
 		
 	instance method length: it.unive.jlisa.program.java.constructs.string.StringLength
 		type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		
 	instance method concat: it.unive.jlisa.program.java.constructs.string.StringConcat
-		libtype String*
-		param this libtype String*
-		param other libtype String*
+		libtype java.lang.String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method contains: it.unive.jlisa.program.java.constructs.string.StringContains
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method equals: it.unive.jlisa.program.java.constructs.string.StringEquals
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method equalsIgnoreCase: it.unive.jlisa.program.java.constructs.string.StringEqualsIgnoreCase
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 				
 	instance method toUpperCase: it.unive.jlisa.program.java.constructs.string.StringToUpperCase
-		libtype String*
-		param this libtype String*	
+		libtype java.lang.String*
+		param this libtype java.lang.String*	
 				
 	instance method toLowerCase: it.unive.jlisa.program.java.constructs.string.StringToLowerCase
-		libtype String*
-		param this libtype String*	
+		libtype java.lang.String*
+		param this libtype java.lang.String*	
 						
 	instance method toString: it.unive.jlisa.program.java.constructs.string.StringToString
-		libtype String*
-		param this libtype String*		
+		libtype java.lang.String*
+		param this libtype java.lang.String*		
 		
 	instance method charAt: it.unive.jlisa.program.java.constructs.string.StringCharAt
 		type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method trim: it.unive.jlisa.program.java.constructs.string.StringTrim
-		libtype String*
-		param this libtype String*	
+		libtype java.lang.String*
+		param this libtype java.lang.String*	
 		
 	instance method startsWith: it.unive.jlisa.program.java.constructs.string.StringStartsWith
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method startsWith: it.unive.jlisa.program.java.constructs.string.StringStartsWithFromIndex
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		
 		
 	instance method endsWith: it.unive.jlisa.program.java.constructs.string.StringEndsWith
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method matches: it.unive.jlisa.program.java.constructs.string.StringMatches
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method substring: it.unive.jlisa.program.java.constructs.string.StringSubstring
-		libtype String*
-		param this libtype String*
+		libtype java.lang.String*
+		param this libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method substring: it.unive.jlisa.program.java.constructs.string.StringSubstringFromTo
-		libtype String*
-		param this libtype String*
+		libtype java.lang.String*
+		param this libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-		
 	instance method compareTo: it.unive.jlisa.program.java.constructs.string.StringCompareTo
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method replaceAll: it.unive.jlisa.program.java.constructs.string.StringReplaceAll
-		libtype String*
-		param this libtype String*
-		param other libtype String*
-		param pattern libtype String*
+		libtype java.lang.String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
+		param pattern libtype java.lang.String*
 			
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfBoolean
-		libtype String*
+		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 	
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
-		libtype String*
+		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 			
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfObject
-		libtype String*
-		param other libtype Object*
+		libtype java.lang.String*
+		param other libtype java.lang.Object*
 								
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOf
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOf
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param other type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfStringFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
-		param other libtype String*
-		param idx type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
+		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 	
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOf
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOfString
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOfStringFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
-		param other libtype String*
+		param this libtype java.lang.String*
+		param other libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method replace: it.unive.jlisa.program.java.constructs.string.StringReplace
-		libtype String*
-		param this libtype String*
+		libtype java.lang.String*
+		param this libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	instance method replaceFirst: it.unive.jlisa.program.java.constructs.string.StringReplaceFirst
-		libtype String*
-		param this libtype String*
-		param regex libtype String*
-		param other libtype String*
+		libtype java.lang.String*
+		param this libtype java.lang.String*
+		param regex libtype java.lang.String*
+		param other libtype java.lang.String*
 		
 	instance method indexOf: it.unive.jlisa.program.java.constructs.string.StringIndexOfCharFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOfCharFromIndex
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
+		param this libtype java.lang.String*
 		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param other libtype String*
-		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		
-	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatchesIgnoreCase
-		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param this libtype String*
-		param case type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param other libtype String*
+		param other libtype java.lang.String*
 		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param dst type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
 	    type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-	    param this libtype String*
+	    param this libtype java.lang.String*
 	    param toffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-        param other libtype String*
+        param other libtype java.lang.String*
         param ooffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatches
+	instance method regionMatches: it.unive.jlisa.program.java.constructs.string.StringRegionMatchesIgnoreCase
 	    type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
-	    param this libtype String*
+	    param this libtype java.lang.String*
         param ignoreCase type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 	    param toffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-        param other libtype String*
+        param other libtype java.lang.String*
         param ooffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE

@@ -37,16 +37,20 @@ public class JavaNewObj extends NaryExpression {
 	public JavaNewObj(
 			CFG cfg,
 			CodeLocation location,
-			String constructName,
 			JavaReferenceType type,
 			Expression... parameters) {
-		super(cfg, location, constructName, type, parameters);
+		super(cfg, location, type.getInnerType().toString(), type, parameters);
 	}
 
 	@Override
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return "new " + super.toString();
 	}
 
 	@Override
@@ -65,15 +69,19 @@ public class JavaNewObj extends NaryExpression {
 
 		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
-		if (!JavaClassType.lookup(className, null).getUnit()
-				.getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
+		String simpleName = className.contains(".")
+				? className.substring(className.lastIndexOf(".") + 1)
+				: className;
+		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
+		if (!JavaClassType.lookup(className).getUnit()
+				.getCodeMembersByName(name).isEmpty()) {
 			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
 				UnresolvedCall clinit = new UnresolvedCall(
 						getCFG(),
 						getLocation(),
 						CallType.STATIC,
 						className,
-						className + InitializedClassSet.SUFFIX_CLINIT,
+						name,
 						new Expression[0]);
 
 				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
@@ -103,12 +111,13 @@ public class JavaNewObj extends NaryExpression {
 		expressions.put(paramThis, tmp);
 
 		// constructor call
+		String clazz = reftype.getInnerType().toString();
 		UnresolvedCall call = new UnresolvedCall(
 				getCFG(),
 				getLocation(),
 				CallType.INSTANCE,
-				reftype.getInnerType().toString(),
-				getConstructName(),
+				clazz,
+				simpleName,
 				fullExpressions);
 		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
 

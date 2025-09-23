@@ -70,7 +70,7 @@ public class LongValueOf extends UnaryExpression implements PluggableStatement {
 				getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 				new JavaReferenceType(longType), new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);

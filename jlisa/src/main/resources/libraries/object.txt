@@ -1,0 +1,7 @@
+root class java.lang.Object:
+	method Object_clinit: it.unive.jlisa.program.java.constructs.object.ObjectClassInitializer
+		type it.unive.lisa.type.VoidType::INSTANCE
+		
+	instance method Object: it.unive.jlisa.program.java.constructs.object.ObjectConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.Object*

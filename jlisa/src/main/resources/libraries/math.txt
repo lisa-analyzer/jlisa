@@ -1,4 +1,4 @@
-class Math extends Object:
+class java.lang.Math extends java.lang.Object:
     field E type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
     field PI type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 

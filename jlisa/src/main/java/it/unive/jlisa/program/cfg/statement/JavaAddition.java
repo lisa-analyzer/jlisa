@@ -10,7 +10,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
-import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
@@ -50,7 +49,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		if (leftType.isStringType() || rightType.isStringType()
 				|| (leftType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType()) ||
 				(rightType instanceof JavaReferenceType rRef && rRef.getInnerType().isStringType())) {
-			return new ReferenceType(JavaClassType.lookup("String", null));
+			return new ReferenceType(JavaClassType.lookup("java.lang.String"));
 		}
 		if (leftType.isNumericType() && rightType.isNumericType()) {
 			// small types promoted to int for addition operation
@@ -101,11 +100,12 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 						|| (lType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType())) {
 					// TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
-					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)),
-							StringType.INSTANCE, this.getLocation());
+					Constant typeCast = new Constant(
+							new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
+							JavaClassType.getStringType(), this.getLocation());
 					actualRight = new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE,
 							this.getLocation());
-					type = StringType.INSTANCE;
+					type = JavaClassType.getStringType();
 					partialResult = analysis.smallStepSemantics(
 							state,
 							new BinaryExpression(
@@ -118,11 +118,12 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 				} else if (rType.isStringType()) {
 					// TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
-					Constant typeCast = new Constant(new TypeTokenType(Collections.singleton(StringType.INSTANCE)),
-							StringType.INSTANCE, this.getLocation());
+					Constant typeCast = new Constant(
+							new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
+							JavaClassType.getStringType(), this.getLocation());
 					actualLeft = new BinaryExpression(getStaticType(), left, typeCast, TypeConv.INSTANCE,
 							this.getLocation());
-					type = StringType.INSTANCE;
+					type = JavaClassType.getStringType();
 					partialResult = analysis.smallStepSemantics(
 							state,
 							new BinaryExpression(

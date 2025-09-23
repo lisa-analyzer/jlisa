@@ -1,4 +1,4 @@
-import java.io.PrintWriter;
+import java.io.Writer;import java.io.PrintWriter;
 
 public class Main {
 	public static void main(String[] args) {

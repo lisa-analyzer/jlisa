@@ -1,1 +1,1 @@
-class Thread extends Object:
+class java.lang.Thread extends java.lang.Object:

@@ -1,1 +1,1 @@
-class InputStream extends Object:
+class java.io.InputStream extends java.lang.Object:

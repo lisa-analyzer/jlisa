@@ -1,9 +1,9 @@
 package it.unive.jlisa.program.cfg.controlflow.switches;
 
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
-import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * A default switch-case control flow structure.
@@ -52,8 +52,9 @@ public class DefaultSwitchCase {
 	/**
 	 * Simplifies the switch case.
 	 */
-	public void simplify() {
-		body.removeIf(NoOp.class::isInstance);
+	public void simplify(
+			Set<Statement> targets) {
+		body.removeIf(targets::contains);
 	}
 
 	@Override
