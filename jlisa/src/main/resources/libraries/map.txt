@@ -5,5 +5,6 @@ class java.util.HashMap extends java.util.Map:
 class java.util.TreeMap extends java.util.Map:
 		
 class java.util.Map.Entry extends java.lang.Object:
-	
+
+class java.util.Hashtable extends java.lang.Object:
 	

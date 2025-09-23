@@ -1,2 +1,2 @@
-class java.lang.BufferedReader extends java.lang.Object:
+class java.io.BufferedReader extends java.lang.Object:
 		

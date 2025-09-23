@@ -1,0 +1,1 @@
+class java.lang.thread.State extends java.lang.Object:

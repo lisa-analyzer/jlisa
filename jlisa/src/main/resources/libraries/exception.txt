@@ -113,3 +113,5 @@ class java.lang.reflect.InvocationTargetException extends java.lang.Exception:
 class java.lang.InstantiationException extends java.lang.Exception:
 
 class java.lang.NoSuchFieldException extends java.lang.Exception:
+
+class java.lang.IllegalStateException extends java.lang.RuntimeException:
