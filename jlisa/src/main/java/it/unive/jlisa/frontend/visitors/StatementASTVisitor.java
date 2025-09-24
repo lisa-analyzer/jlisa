@@ -30,6 +30,7 @@ import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
@@ -1075,6 +1076,22 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
+
+			// we do not currently support k-dim arrays, with k > 2
+			if (fragment.getExtraDimensions() > 2)
+				throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Multi-dimensional arrays are not supported are not supported.",
+						getSourceCodeLocation(node));
+
+			// single-dim array
+			if (fragment.getExtraDimensions() == 1)
+				type = new JavaReferenceType(JavaArrayType.lookup(type, 1));
+
+			// bidim array
+			else if (fragment.getExtraDimensions() == 2)
+				type = new JavaReferenceType(
+						JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(type, 1)), 2));
+
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, type);
