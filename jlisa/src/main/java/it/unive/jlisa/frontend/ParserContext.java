@@ -31,20 +31,6 @@ import java.util.Map;
  */
 public class ParserContext {
 
-	public Global getGlobal(
-			Unit unit,
-			String targetName) {
-		Global global = unit.getGlobal(targetName);
-		if (global == null) {
-			if (unit instanceof CompilationUnit cu) {
-				for (CompilationUnit ancestor : cu.getImmediateAncestors()) {
-					return getGlobal(ancestor, targetName);
-				}
-			}
-		}
-		return global;
-	}
-
 	/** The program being parsed and analyzed */
 	private Program program;
 
@@ -232,5 +218,33 @@ public class ParserContext {
 	public SyntheticCodeLocationManager getCurrentSyntheticCodeLocationManager(
 			String fileName) {
 		return syntheticCodeLocationManagers.computeIfAbsent(fileName, SyntheticCodeLocationManager::new);
+	}
+
+	public Global getGlobal(
+			Unit unit,
+			String targetName,
+			boolean allowInstance) {
+		Global global = null;
+		
+		if (allowInstance && unit instanceof CompilationUnit) {
+			global = ((CompilationUnit) unit).getInstanceGlobal(targetName, true);
+			if (global != null)
+				return global;
+		}
+		
+		global = unit.getGlobal(targetName);
+		if (global != null)
+			return global;
+
+		if (unit instanceof CompilationUnit) {
+			CompilationUnit cu = (CompilationUnit) unit;
+			for (Unit ancestor : cu.getImmediateAncestors()) {
+				global = getGlobal(ancestor, targetName, allowInstance);
+				if (global != null)
+					return global;
+			}
+		}
+
+		return null;
 	}
 }
