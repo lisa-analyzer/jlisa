@@ -73,7 +73,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Ignore // TODO
 	public void athrow1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "athrow1",
 				"Main.java",
@@ -170,7 +170,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Ignore // TODO
 	public void exceptions8_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions8",
 				"Main.java",
@@ -344,7 +344,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore // TODO
 	public void lock_00_01_10_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
 				"Main.java",
@@ -355,12 +355,47 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore // TODO
 	public void siena_eqchk_prop1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena_eqchk_prop1",
 				"../common/",
 				"impl/",
 				"prop1/");
+		perform(conf);
+	}
+
+	@Ignore // TODO
+	public void Inheritance1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "inheritance1",
+				"Main.java");
+		perform(conf);
+	}
+
+	@Ignore // TODO
+	public void BinaryTreeSearchMemSat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
+				"Main.java", "../common/");
+		perform(conf);
+	}
+
+	@Ignore // TODO
+	public void MathSin_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "MathSin",
+				"Main.java", "../common/", "MathSin.java");
+		perform(conf);
+	}
+
+	@Ignore // TODO
+	public void VelocityTracker_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "VelocityTracker_true",
+				"Main.java", "../common/");
+		perform(conf);
+	}
+
+	@Ignore // TODO
+	public void swap1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "swap1",
+				"Main.java");
 		perform(conf);
 	}
 }

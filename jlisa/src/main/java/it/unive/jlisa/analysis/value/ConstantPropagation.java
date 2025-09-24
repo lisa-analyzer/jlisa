@@ -81,6 +81,10 @@ import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.operator.NaryOperator;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -386,7 +390,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringTrimOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.trim());
 
-		if (operator instanceof JavaStringValueOfLongOperator && arg.getValue() instanceof Integer l)
+		if (operator instanceof JavaStringValueOfLongOperator && arg.getValue() instanceof Long l)
 			return new ConstantValue(String.valueOf(l));
 
 		if (operator instanceof JavaStringValueOfBooleanOperator && arg.getValue() instanceof Boolean b)
@@ -1217,6 +1221,29 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return environment;
 		else
 			return new ValueEnvironment<>(new ConstantValue()).bottom();
+	}
+
+	public ConstantValue evalTypeConv(
+			BinaryExpression conv,
+			ConstantValue left,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle.getRuntimeTypesOf(conv, pp).isEmpty()) 
+			return left.bottom();
+		
+		if (left.getValue() instanceof Number) 
+			if (right.getValue() instanceof JavaByteType) 
+				return new ConstantValue(((Number) left.getValue()).byteValue());
+			else if (right.getValue() instanceof JavaShortType) 
+				return new ConstantValue(((Number) left.getValue()).shortValue());
+			else if (right.getValue() instanceof JavaIntType) 
+				return new ConstantValue(((Number) left.getValue()).intValue());
+			else if (right.getValue() instanceof JavaLongType) 
+				return new ConstantValue(((Number) left.getValue()).longValue());
+
+		return left;
 	}
 
 	@Override

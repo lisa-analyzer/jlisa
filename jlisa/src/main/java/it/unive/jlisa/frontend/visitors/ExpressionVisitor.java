@@ -813,8 +813,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			return false;
 		}
 
-		// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
-		// if (Character.isUpperCase(node.getQualifier().toString().charAt(0)))
 		throw new ParsingException("missing-type",
 				ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Missing unit " + node.getQualifier(),
