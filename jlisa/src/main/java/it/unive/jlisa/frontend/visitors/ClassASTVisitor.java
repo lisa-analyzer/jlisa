@@ -210,7 +210,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
 				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
-						new VariableRef(cfg, locationManager.nextLocation(), "this"),
+						new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type)),
 						"name"),
 				new VariableRef(cfg, locationManager.nextLocation(), "name"));
 

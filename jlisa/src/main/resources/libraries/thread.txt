@@ -1,1 +1,3 @@
 class java.lang.Thread extends java.lang.Object:
+
+class java.lang.Thread.State extends java.lang.Object:

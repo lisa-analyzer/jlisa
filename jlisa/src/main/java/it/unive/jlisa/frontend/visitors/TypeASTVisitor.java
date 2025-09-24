@@ -1,15 +1,8 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
-import it.unive.jlisa.program.type.*;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Unit;
-import it.unive.lisa.type.*;
 import java.util.Collection;
+import java.util.Map;
+
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IntersectionType;
@@ -20,6 +13,30 @@ import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.UnionType;
+
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
+import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.program.Program;
+import it.unive.lisa.program.Unit;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
+import it.unive.lisa.type.VoidType;
 
 public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	private Type type;
@@ -125,27 +142,45 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 				getSourceCodeLocation(node));
 	}
 
+	public static Unit getUnit(String qName, Program program, String pkg, Map<String, String> imports) {
+		if (LibrarySpecificationProvider.isLibraryAvailable(qName))
+			LibrarySpecificationProvider.importClass(program, qName);
+
+		Collection<Unit> units = program.getUnits();
+
+		// check in the file/package
+		for (Unit unit : units) {
+			// - if the container has no package, the
+			// class we are looking must have no package as well
+			// and the name must exactly match what we are referencing
+			// - if the container does have a package, the
+			// class we are looking for must have the same package
+			// followed by the name we are referencing
+			if ((pkg == null && unit.getName().equals(qName))
+					|| (pkg != null && unit.getName().equals(pkg + "." + qName)))
+				return unit;
+		}
+
+		// look up the unit in the program (e.g., Map.Entry, we lookup Entry)
+		String imported = imports.get(qName);
+		String name = imported != null ? imported : qName;
+
+		return program.getUnit(name);
+	}
+
 	public boolean visit(
 			QualifiedName node) {
 		// get the qualifier
 		String qName = node.getFullyQualifiedName();
 
-		if (LibrarySpecificationProvider.isLibraryAvailable(qName))
-			LibrarySpecificationProvider.importClass(getProgram(), qName);
-
-		// look up the unit in the program (e.g., Map.Entry, we lookup Entry)
-		String imported = container.imports.get(qName);
-		String name = imported != null ? imported : qName;
-
-		Unit u = getProgram().getUnit(name);
+		Unit u = getUnit(qName, getProgram(), container.pkg, container.imports);
 		if (u == null)
 			throw new UnsupportedStatementException(
-					name + " does not exist in the program, location: " + getSourceCodeLocation(node));
-
+					qName + " does not exist in the program, location: " + getSourceCodeLocation(node));
 		if (!(u instanceof ClassUnit))
-			throw new UnsupportedStatementException(name + " is not a class unit.");
+			throw new UnsupportedStatementException(u.getName() + " is not a class unit.");
 
-		JavaClassType javaClassType = JavaClassType.lookup(name);
+		JavaClassType javaClassType = JavaClassType.lookup(u.getName());
 		if (javaClassType == null)
 			type = Untyped.INSTANCE;
 		else
@@ -157,29 +192,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SimpleName node) {
-		Unit u = null;
-		Collection<Unit> units = getProgram().getUnits();
-
-		// check in the file/package
-		for (Unit unit : units) {
-			// - if the container has no package, the
-			// class we are looking must have no package as well
-			// and the name must exactly match what we are referencing
-			// - if the container does have a package, the
-			// class we are looking for must have the same package
-			// followed by the name we are referencing
-			if ((container.pkg == null && unit.getName().equals(node.getFullyQualifiedName()))
-					|| (container.pkg != null
-							&& unit.getName().equals(container.pkg + "." + node.getFullyQualifiedName())))
-				u = unit;
-		}
-
-		// imports
-		if (u == null) {
-			String imported = container.imports.get(node.getFullyQualifiedName());
-			if (imported != null)
-				u = getProgram().getUnit(imported);
-		}
+		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), container.pkg, container.imports);
 
 		if (u == null)
 			throw new UnsupportedStatementException(

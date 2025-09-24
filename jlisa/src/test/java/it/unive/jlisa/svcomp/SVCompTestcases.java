@@ -343,4 +343,24 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"MinePumpSystem/MinePump.java");
 		perform(conf);
 	}
+
+	@Test
+	public void lock_00_01_10_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
+				"Main.java",
+				"../common/",
+				"rtems/",
+				"harness/",
+				"base/");
+		perform(conf);
+	}
+
+	@Test
+	public void siena_eqchk_prop1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena_eqchk_prop1",
+				"../common/",
+				"impl/",
+				"prop1/");
+		perform(conf);
+	}
 }

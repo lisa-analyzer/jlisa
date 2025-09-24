@@ -365,6 +365,15 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);
 		Type enumType = JavaClassType.lookup(enUnit.getName());
 
+		// we add the name field
+		Global nameField = new Global(
+					getSourceCodeLocation(node.getName()),
+					enUnit,
+					"name",
+					true,
+					JavaClassType.getStringType().getReference());
+			enUnit.addInstanceGlobal(nameField);
+
 		// adding static fields corresponding to enum constants
 		for (Object con : node.enumConstants()) {
 			Global g = new Global(

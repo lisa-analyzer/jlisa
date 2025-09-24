@@ -43,7 +43,7 @@ public class Main {
 
 		switch (s) {
 			case "DOG":
-				System.out.println(doggo);
+				System.out.println("doggo");
 			case "CAT":
 				System.out.println(s);
 				System.out.println("domestic animal");

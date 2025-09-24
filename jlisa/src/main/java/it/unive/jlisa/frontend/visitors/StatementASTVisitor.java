@@ -84,6 +84,7 @@ import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.SwitchStatement;
@@ -1260,20 +1261,19 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			CatchClause node) {
 		tracker.enterScope();
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
-		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
-				container);
-		node.getException().getType().accept(typeVisitor);
-		node.getException().getName().accept(paramVisitor);
 
 		// type of the exception
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+		node.getException().getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 
-		// exception param
-		Expression param = paramVisitor.getExpression();
-		VariableRef v = new VariableRef(param.getCFG(), param.getLocation(), ((VariableRef) param).getName(), type);
+		// exception variable
+		SingleVariableDeclaration exc = node.getException();
+		VariableRef v = new VariableRef(cfg, getSourceCodeLocation(exc), exc.getName().getIdentifier(), type);
+		tracker.addVariable(v.toString(), v, new Annotations());
 
+		// exception body
 		StatementASTVisitor catchBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit,
 				this.cfg, this.control, this.tracker, container);
 		node.getBody().accept(catchBody);
@@ -1285,7 +1285,6 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
 				type);
 
-		tracker.addVariable(v.toString(), v, new Annotations());
 		tracker.exitScope(body.getEnd());
 		this.clBlock = catchBlock;
 		this.block = body;
