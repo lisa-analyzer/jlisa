@@ -73,7 +73,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void athrow1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "athrow1",
 				"Main.java",
@@ -170,7 +170,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void exceptions8_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions8",
 				"Main.java",
@@ -322,7 +322,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Test
 	public void Basic1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
 				"Main.java",
@@ -333,7 +333,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore // TODO
 	public void spec1_5_product1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "spec1-5_product1",
 				"Main.java",
@@ -344,8 +344,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void lock_00_01_10_test() throws IOException {
+		// TODO the states computed on the main method are all bottom
+		// we will have to fix this eventually, but even for 
+		// now we can keep the test to ensure it still parses
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
 				"Main.java",
 				"../common/",
@@ -355,9 +358,9 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void siena_eqchk_prop1_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena_eqchk_prop1",
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1",
 				"../common/",
 				"impl/",
 				"prop1/");

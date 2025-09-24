@@ -841,7 +841,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		// we did not find a field access or a fqn matching the node
 		throw new ParsingException("missing-type",
 				ParsingException.Type.UNSUPPORTED_STATEMENT,
-				"Missing unit " + node.getQualifier(),
+				"Missing unit " + node,
 				getSourceCodeLocation(node));
 	}
 
