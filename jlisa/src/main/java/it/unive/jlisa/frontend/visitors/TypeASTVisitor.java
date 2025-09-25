@@ -233,7 +233,9 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		return type;
 	}
 
-	public Type liftToArray(Type t, VariableDeclarationFragment fragment) {
+	public Type liftToArray(
+			Type t,
+			VariableDeclarationFragment fragment) {
 		Type type = t;
 		// we do not currently support k-dim arrays, with k > 2
 		if (fragment.getExtraDimensions() > 2)
@@ -249,7 +251,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		else if (fragment.getExtraDimensions() == 2)
 			type = new JavaReferenceType(
 					JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(type, 1)), 2));
-		
+
 		return type;
 	}
 }

@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -24,6 +21,8 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * An access to a {@link Global} of a {@link Unit}.
@@ -156,7 +155,8 @@ public class JavaAccessGlobal extends Expression {
 			classUnit = (ClassUnit) superClasses.stream().findFirst().get();
 		}
 
-		state = InitializedClassSet.initialize(state, JavaClassType.lookup(classUnit.getName()).getReference(), this, interprocedural);
+		state = InitializedClassSet.initialize(state, JavaClassType.lookup(classUnit.getName()).getReference(), this,
+				interprocedural);
 
 		if (target instanceof ConstantGlobal)
 			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);

@@ -1,10 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
@@ -17,6 +12,10 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class FieldInitializationVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
@@ -49,7 +48,7 @@ public class FieldInitializationVisitor extends BaseCodeElementASTVisitor {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String identifier = fragment.getName().getIdentifier();
 			type = typeVisitor.liftToArray(type, fragment);
-			
+
 			it.unive.lisa.program.cfg.statement.Expression initializer = null;
 			if (fragment.getInitializer() != null) {
 				ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit,

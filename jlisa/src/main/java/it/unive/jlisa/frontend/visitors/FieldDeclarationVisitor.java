@@ -1,12 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.Set;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -14,6 +7,11 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.Type;
+import java.util.Set;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit unit;

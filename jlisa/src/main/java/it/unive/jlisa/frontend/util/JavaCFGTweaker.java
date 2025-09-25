@@ -21,7 +21,6 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.YieldsValue;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;

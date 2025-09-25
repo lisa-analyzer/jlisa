@@ -1,11 +1,5 @@
 package it.unive.jlisa.frontend;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
-
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -20,10 +14,15 @@ import it.unive.lisa.program.cfg.CodeMember;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
-import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, String> {
 
@@ -102,7 +101,8 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 			AnalysisState<A> state,
 			JavaReferenceType reftype,
 			Statement init,
-			InterproceduralAnalysis<A, D> interprocedural) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural)
+			throws SemanticException {
 		AnalysisState<A> result = state;
 		InitializedClassSet info = state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class);
 		if (info == null)
@@ -116,10 +116,12 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
 
 		Collection<CodeMember> target = JavaClassType.lookup(className).getUnit().getCodeMembersByName(name);
-		// we perform the call if (i) the clinit exits, (ii) we are not already executing
+		// we perform the call if (i) the clinit exits, (ii) we are not already
+		// executing
 		// it (to avoid recursion) and (iii) it has not been executed yet
-		// condition (ii) might happen if the state goes to bottom 
-		// within the clinit, and we lose the information that we are executing it
+		// condition (ii) might happen if the state goes to bottom
+		// within the clinit, and we lose the information that we are executing
+		// it
 		if (!target.isEmpty() && target.iterator().next() != init.getCFG() && !info.contains(className)) {
 			UnresolvedCall clinit = new UnresolvedCall(
 					init.getCFG(),
@@ -131,7 +133,8 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 
 			result = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, info.add(className));
 			result.withExecutionExpression(new Skip(init.getLocation()));
-			result = clinit.forwardSemanticsAux(interprocedural, result, new ExpressionSet[0], new StatementStore<>(result.bottom()));
+			result = clinit.forwardSemanticsAux(interprocedural, result, new ExpressionSet[0],
+					new StatementStore<>(result.bottom()));
 		}
 
 		return result;

@@ -1,20 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
@@ -45,6 +30,19 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
@@ -248,7 +246,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			for (Object f : fd.fragments()) {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 				type = typeVisitor.liftToArray(type, fragment);
-				
+
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
 					ExpressionVisitor exprVisitor = new ExpressionVisitor(

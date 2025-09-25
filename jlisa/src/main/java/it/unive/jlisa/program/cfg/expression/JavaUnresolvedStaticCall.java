@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -19,6 +16,8 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.type.Untyped;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JavaUnresolvedStaticCall extends UnresolvedCall {
 
@@ -54,7 +53,8 @@ public class JavaUnresolvedStaticCall extends UnresolvedCall {
 			classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
 		}
 
-		state = InitializedClassSet.initialize(state, JavaClassType.lookup(classUnit.getName()).getReference(), this, interprocedural);
+		state = InitializedClassSet.initialize(state, JavaClassType.lookup(classUnit.getName()).getReference(), this,
+				interprocedural);
 
 		UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.STATIC, classUnit.toString(),
 				getTargetName(), getParameters());
