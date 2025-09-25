@@ -6,6 +6,7 @@ import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.ErrorEdge;
+import it.unive.lisa.program.cfg.edge.FalseEdge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.protection.CatchBlock;
 import it.unive.lisa.program.cfg.protection.ProtectedBlock;
@@ -19,6 +20,8 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.YieldsValue;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
+import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +92,14 @@ public class JavaCFGTweaker {
 
 		cfg.addNode(ret);
 		for (Statement st : preExits) {
-			if (returnsValue)
+			// we avoid giving an error if this is the point after a loop exit
+			// of an infinite loop
+			boolean safe = false;
+			Collection<Edge> ins = cfg.getIngoingEdges(st);
+			if (ins.size() == 1 && ins.iterator().next() instanceof FalseEdge &&
+					ins.iterator().next().getSource() instanceof TrueLiteral)
+				safe = true;
+			if (!safe && returnsValue)
 				throw exceptionFactory.apply("Missing return statement at " + st.getLocation());
 			cfg.addEdge(new SequentialEdge(st, ret));
 		}
