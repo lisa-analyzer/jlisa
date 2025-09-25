@@ -319,7 +319,9 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			lisaCU = JavaClassType.lookup(name).getUnit();
 
 		if (typeDecl.getSuperclassType() != null)
-			setSupertype(unit, typeDecl.getSuperclassType(), lisaCU);
+			setSupertype(unit, typeDecl.getSuperclassType(), lisaCU); 
+		else
+			lisaCU.addAncestor(JavaClassType.getObjectType().getUnit());
 
 		for (Object oInterfaceType : typeDecl.superInterfaceTypes())
 			setSupertype(unit, (ASTNode) oInterfaceType, lisaCU);

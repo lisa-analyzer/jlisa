@@ -1,11 +1,12 @@
 package it.unive.jlisa.svcomp;
 
+import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
+
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
-import java.io.IOException;
-import org.junit.Ignore;
-import org.junit.jupiter.api.Test;
 
 public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
@@ -324,6 +325,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void Basic1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
 				"Main.java",
 				"../common/",
@@ -333,8 +339,13 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void spec1_5_product1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "spec1-5_product1",
 				"Main.java",
 				"Actions.java",
@@ -346,9 +357,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void lock_00_01_10_test() throws IOException {
-		// TODO the states computed on the main method are all bottom
-		// we will have to fix this eventually, but even for 
-		// now we can keep the test to ensure it still parses
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
 				"Main.java",
 				"../common/",
@@ -360,6 +373,10 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void siena_eqchk_prop1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1",
 				"../common/",
 				"impl/",
@@ -367,35 +384,40 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void Inheritance1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "inheritance1",
 				"Main.java");
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void BinaryTreeSearchMemSat01_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
 				"Main.java", "../common/");
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void MathSin_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "MathSin",
 				"Main.java", "../common/", "MathSin.java");
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void VelocityTracker_true_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "VelocityTracker_true",
 				"Main.java", "../common/");
 		perform(conf);
 	}
 
-	@Ignore // TODO
+	@Test
 	public void swap1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "swap1",
 				"Main.java");

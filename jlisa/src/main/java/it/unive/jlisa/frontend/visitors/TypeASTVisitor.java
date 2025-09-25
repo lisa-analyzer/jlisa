@@ -35,6 +35,7 @@ import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.UnionType;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	private Type type;
@@ -229,6 +230,26 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	}
 
 	public Type getType() {
+		return type;
+	}
+
+	public Type liftToArray(Type t, VariableDeclarationFragment fragment) {
+		Type type = t;
+		// we do not currently support k-dim arrays, with k > 2
+		if (fragment.getExtraDimensions() > 2)
+			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Multi-dimensional arrays are not supported are not supported.",
+					getSourceCodeLocation(fragment));
+
+		// single-dim array
+		if (fragment.getExtraDimensions() == 1)
+			type = new JavaReferenceType(JavaArrayType.lookup(type, 1));
+
+		// bidim array
+		else if (fragment.getExtraDimensions() == 2)
+			type = new JavaReferenceType(
+					JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(type, 1)), 2));
+		
 		return type;
 	}
 }

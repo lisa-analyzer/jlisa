@@ -1163,21 +1163,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
-
-			// we do not currently support k-dim arrays, with k > 2
-			if (fragment.getExtraDimensions() > 2)
-				throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Multi-dimensional arrays are not supported are not supported.",
-						getSourceCodeLocation(node));
-
-			// single-dim array
-			if (fragment.getExtraDimensions() == 1)
-				varType = new JavaReferenceType(JavaArrayType.lookup(varType, 1));
-
-			// bidim array
-			else if (fragment.getExtraDimensions() == 2)
-				varType = new JavaReferenceType(
-						JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(varType, 1)), 2));
+			varType = visitor.liftToArray(varType, fragment);
 
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
