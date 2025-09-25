@@ -536,7 +536,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					unit,
 					pkg,
 					imports,
-					name);
+					name,
+					outer == null ? null : JavaClassType.lookup(getPackage() + outer));
 			typeDecl.accept(classVisitor);
 		}
 
@@ -555,7 +556,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		String name = getPackage() + (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
 		if (!processed.add(name))
 			return;
-		ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports, name);
+		ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports, name, null);
 		enumDecl.accept(classVisitor);
 
 		// nested types (e.g., nested inner classes)

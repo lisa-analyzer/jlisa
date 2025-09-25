@@ -252,6 +252,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
 
+		// TODO enclosing
+
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
@@ -653,6 +655,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SuperConstructorInvocation node) {
+		// TODO enclosing
 		Unit unit = cfg.getDescriptor().getUnit();
 		if (!(unit instanceof ClassUnit)) {
 			throw new RuntimeException("The unit must be a ClassUnit when dealing with SuperConstructorInvocation");
