@@ -14,6 +14,7 @@ import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import java.util.Collection;
@@ -110,12 +111,20 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				throw new ParsingException("java-import", ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Static imports are not supported.", getSourceCodeLocation(i));
 			else if (i.isOnDemand()) {
+				String importName = i.getName().getFullyQualifiedName();
 				Collection<String> libs = LibrarySpecificationProvider
-						.getLibrariesOfPackage(i.getName().getFullyQualifiedName());
+						.getLibrariesOfPackage(importName);
 				for (String lib : libs) {
 					this.imports.put(lib.substring(lib.lastIndexOf(".") + 1), lib);
 					LibrarySpecificationProvider.importClass(getProgram(), lib);
 				}
+
+				if (visitorType != VisitorType.ADD_UNITS)
+					// we do this only after the first phase,
+					// as units get added in that phase
+					for (Unit unit : getProgram().getUnits())
+						if (getPackage(unit).equals(importName))
+							this.imports.put(unit.getName().replace(getPackage(unit), ""), unit.getName());
 			} else {
 				String importName = i.getName().getFullyQualifiedName();
 				String shortName;
@@ -126,21 +135,44 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 				this.imports.put(shortName, importName);
 
+				// if we are importing eg "java.util.Map", we want to
+				// include also "java.util.Map.Entry"
+				// - "java.util.Map.Entry".replace("java.util.Map", "")
+				// = ".Entry"
+				// - ".Entry".substring(1) = "Entry"
+				// so the short name is Map.Entry
+				if (visitorType != VisitorType.ADD_UNITS)
+					// we do this only after the first phase,
+					// as units get added in that phase
+					for (Unit unit : getProgram().getUnits())
+						if (unit.getName().startsWith(importName + ".")) {
+							String libname = shortName + "." + unit.getName().replace(importName, "").substring(1);
+							this.imports.put(libname, unit.getName());
+						}
 				if (LibrarySpecificationProvider.isLibraryAvailable(importName)) {
 					LibrarySpecificationProvider.importClass(getProgram(), importName);
 					for (String lib : LibrarySpecificationProvider.getNestedUnits(importName)) {
 						LibrarySpecificationProvider.importClass(getProgram(), lib);
-						// eg we are importing "java.util.Map", we want to
-						// include also "java.util.Map.Entry"
-						// - "java.util.Map.Entry".replace("java.util.Map", "")
-						// = ".Entry"
-						// - ".Entry".substring(1) = "Entry"
-						// so the short name is Map.Entry
 						String libname = shortName + "." + lib.replace(importName, "").substring(1);
 						this.imports.put(libname, lib);
 					}
 				}
 			}
+	}
+
+	private String getPackage(
+			Unit unit) {
+		String name = unit.getName();
+		int idx = name.lastIndexOf('.');
+		if (idx < 0)
+			return "";
+		String pkg = name.substring(0, idx);
+		Unit outer = getProgram().getUnit(pkg);
+		if (outer != null)
+			// name points to an inner class, so
+			// we have to return the package of the outer class
+			return getPackage(outer);
+		return pkg;
 	}
 
 	private void addLocalImports(
@@ -236,7 +268,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit))
+		if (Modifier.isPrivate(modifiers) && outer == null)
 			throw new RuntimeException(
 					new ProgramValidationException("Modifier private not allowed in a top-level class"));
 
@@ -288,6 +320,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 		if (typeDecl.getSuperclassType() != null)
 			setSupertype(unit, typeDecl.getSuperclassType(), lisaCU);
+		else
+			lisaCU.addAncestor(JavaClassType.getObjectType().getUnit());
 
 		for (Object oInterfaceType : typeDecl.superInterfaceTypes())
 			setSupertype(unit, (ASTNode) oInterfaceType, lisaCU);
@@ -364,6 +398,15 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		String name = getPackage() + (outer == null ? "" : outer + ".") + node.getName().toString();
 		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);
 		Type enumType = JavaClassType.lookup(enUnit.getName());
+
+		// we add the name field
+		Global nameField = new Global(
+				getSourceCodeLocation(node.getName()),
+				enUnit,
+				"name",
+				true,
+				JavaClassType.getStringType().getReference());
+		enUnit.addInstanceGlobal(nameField);
 
 		// adding static fields corresponding to enum constants
 		for (Object con : node.enumConstants()) {

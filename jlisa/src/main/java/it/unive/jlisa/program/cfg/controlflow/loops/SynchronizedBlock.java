@@ -73,7 +73,7 @@ public class SynchronizedBlock extends ControlFlowStructure {
 			Statement original,
 			Statement replacement) {
 		if (body.contains(original)) {
-			body.remove(replacement);
+			body.remove(original);
 			body.add(replacement);
 		}
 	}

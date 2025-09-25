@@ -1,0 +1,3 @@
+class java.util.Set extends java.util.Collection:
+
+class java.util.HashSet extends java.util.Set:

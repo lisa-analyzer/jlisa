@@ -44,6 +44,7 @@ import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -70,10 +71,12 @@ import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import it.unive.lisa.util.collections.workset.LIFOWorkingSet;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -101,6 +104,7 @@ import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -117,8 +121,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	private Expression expression;
 
 	private JavaLocalVariableTracker tracker;
-
-	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(ExpressionVisitor.class);
 
 	public ExpressionVisitor(
 			ParserContext parserContext,
@@ -642,8 +644,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			MethodInvocation node) {
-		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
-				container);
 		List<Expression> parameters = new ArrayList<>();
 		String methodName = node.getName().toString();
 		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
@@ -659,27 +659,30 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this",
 						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
 		} else {
-			node.getExpression().accept(receiver);
-			Expression rec = receiver.getExpression();
-			name = container.imports.get(rec.toString());
-			Expression tmp = rec;
-			while (tmp instanceof JavaAccessInstanceGlobal)
-				tmp = ((JavaAccessInstanceGlobal) tmp).getReceiver();
-			if (name == null && tmp instanceof VariableRef && !tracker.hasVariable(((VariableRef) tmp).getName())) {
-				// this might be a fully qualified name instead
-				name = rec.toString().replace("::", ".");
-				if (LibrarySpecificationProvider.isLibraryAvailable(name))
-					LibrarySpecificationProvider.importClass(getProgram(), name);
-			}
-			if (name != null && JavaClassType.hasType(name)) {
-				isInstance = false;
-			} else if (JavaClassType.hasType(node.getExpression().toString())) {
+			// this might be a fqn instead
+			name = container.imports.get(node.getExpression().toString());
+			if (name == null)
 				name = node.getExpression().toString();
-				isInstance = false;
-			} else {
-				parameters.add(receiver.getExpression());
-				isInstance = true;
+			if (LibrarySpecificationProvider.isLibraryAvailable(name))
+				LibrarySpecificationProvider.importClass(getProgram(), name);
+
+			Expression rec = null;
+			try {
+				ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+						container);
+				node.getExpression().accept(receiver);
+				rec = receiver.getExpression();
+			} catch (ParsingException e) {
+				if (!e.getName().equals("missing-variable"))
+					throw e;
+				// missing var is fine: we will use the fqn
 			}
+
+			if (rec != null) {
+				parameters.add(rec);
+				isInstance = true;
+			} else
+				isInstance = false;
 		}
 
 		if (!node.typeArguments().isEmpty())
@@ -721,73 +724,196 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			QualifiedName node) {
-		String targetName = node.getName().getIdentifier();
+		/*
+		 * From the javadoc of FieldAccess: An expression like "foo.this" can
+		 * only be represented as a this expression (ThisExpression) containing
+		 * a simple name. "this" is a keyword, and therefore invalid as an
+		 * identifier. An expression like "this.foo" can only be represented as
+		 * a field access expression (FieldAccess) containing a this expression
+		 * and a simple name. Again, this is because "this" is a keyword, and
+		 * therefore invalid as an identifier. An expression with "super" can
+		 * only be represented as a super field access expression
+		 * (SuperFieldAccess). "super" is a also keyword, and therefore invalid
+		 * as an identifier. An expression like "foo.bar" can be represented
+		 * either as a qualified name (QualifiedName) or as a field access
+		 * expression (FieldAccess) containing simple names. Either is
+		 * acceptable, and there is no way to choose between them without
+		 * information about what the names resolve to (ASTParser may return
+		 * either). Other expressions ending in an identifier, such as
+		 * "foo().bar" can only be represented as field access expressions
+		 * (FieldAccess).
+		 */
 
-		// need to resolve recursively
-		if (node.getQualifier() instanceof QualifiedName) {
-			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
-					tracker, container);
-			node.getQualifier().accept(visitor);
-			Expression expr = visitor.getExpression();
-			expression = new JavaAccessInstanceGlobal(cfg,
-					getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr,
-					node.getName().getIdentifier());
-			return false;
-		}
-
-		String unitName;
-		Name lastName = node.getQualifier();
-
-		unitName = container.imports.get(lastName.toString());
-
-		if (unitName == null)
-			// fallback: take the last part of the name
-			if (node.getQualifier() instanceof SimpleName)
-				unitName = lastName.toString();
-			else {
-				while (lastName instanceof QualifiedName)
-					lastName = ((QualifiedName) lastName).getQualifier();
-				unitName = lastName.toString();
-			}
-
-		Unit unit = getProgram().getUnit(unitName);
-		if (unit == null) {
-			// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
-			if (Character.isUpperCase(unitName.charAt(0)))
-				throw new ParsingException("missing-type",
-						ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Missing unit " + unitName,
-						getSourceCodeLocation(node));
-			else {
-				// it is a field access
-				ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
-						tracker, container);
-				lastName.accept(visitor);
-				Expression expr = visitor.getExpression();
-				expression = new JavaAccessInstanceGlobal(cfg,
-						getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr,
-						node.getName().getIdentifier());
+		// based on tests, field accesses have precedence over fqns
+		try {
+			Expression fa = solveAsFieldAccess(node);
+			if (fa != null) {
+				expression = fa;
 				return false;
 			}
+		} catch (ParsingException e) {
+			if (!e.getName().equals("missing-global"))
+				throw e;
 		}
 
-		Global global = parserContext.getGlobal(unit, targetName);
-		if (global == null) {
-			LOG.warn("Global " + targetName + " not found in unit " + unit.getName() + ".");
-			global = new Global(getSourceCodeLocation(node), unit, targetName, false);
+		// we were not able to solve it as a field access,
+		// so we might have:
+		// - some.qualified.or.not.class.name.StaticField
+		// - some.qualified.or.not.class.name.StaticField.SomeOtherField
+		// - some.qualified.or.not.class.name (?)
+
+		// we try to find a unit by starting at the first token
+		// ("some") and going right ("some.qualified", "some.qualified.or", ...)
+		// until we find a unit or we exhaust all the possibilities
+		List<SimpleName> fields = new LinkedList<>();
+		SimpleName firstField = null;
+		Name current = node;
+		// each element in names holds:
+		// - the fqn to try
+		// - the static field to access in the fqn
+		// - the remaining fields to access from the static field
+		LIFOWorkingSet<Triple<String, SimpleName, List<SimpleName>>> names = LIFOWorkingSet.mk();
+		while (current != null) {
+			names.push(Triple.of(current.toString(), firstField, new LinkedList<>(fields)));
+			if (current instanceof QualifiedName) {
+				if (firstField != null)
+					fields.addFirst(firstField);
+				firstField = ((QualifiedName) current).getName();
+				current = ((QualifiedName) current).getQualifier();
+			} else
+				current = null;
 		}
-		expression = new JavaAccessGlobal(cfg,
-				getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), unit, global);
-		return false;
+
+		Unit candidate = null;
+		while (!names.isEmpty()) {
+			Triple<String, SimpleName, List<SimpleName>> tentative = names.pop();
+			candidate = TypeASTVisitor.getUnit(tentative.getLeft(), getProgram(), container.pkg, container.imports);
+			if (candidate == null)
+				continue;
+
+			// unit found, search for the global
+			if (tentative.getMiddle() == null)
+				// if we got a unit with no field to access, we do nothing:
+				// the caller has to handle the fqn as a type (eg, in a static
+				// call)
+				return false;
+			Global global = parserContext.getGlobal(candidate, tentative.getMiddle().getIdentifier(), false);
+			if (global == null)
+				// we got the unit, but we have to access the global before
+				// returning
+				// if we cannot find it, we try the next candidate
+				continue;
+
+			Expression access = new JavaAccessGlobal(
+					cfg,
+					getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+					candidate,
+					global);
+
+			if (tentative.getRight().isEmpty()) {
+				// no more fields to access, we are done
+				expression = access;
+				return false;
+			}
+
+			// we have more fields to access
+			for (SimpleName f : tentative.getRight()) {
+				try {
+					access = new JavaAccessInstanceGlobal(cfg,
+							getSourceCodeLocationManager(f).nextColumn(),
+							access,
+							f.getIdentifier());
+				} catch (ParsingException e) {
+					if (!e.getName().equals("missing-global"))
+						throw e;
+					// no global found, we stop here and we try the next
+					// candidate
+					break;
+				}
+			}
+		}
+
+		// we did not find a field access or a fqn matching the node
+		throw new ParsingException("missing-type",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Missing unit " + node,
+				getSourceCodeLocation(node));
+	}
+
+	private Expression solveAsFieldAccess(
+			QualifiedName node) {
+		// we try to resolve node as a field access (y.x or y.x.z.w)
+		String targetName = node.getName().getIdentifier();
+		Name qualifier = node.getQualifier();
+
+		Expression receiver = null;
+		if (qualifier instanceof SimpleName) {
+			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
+					tracker, container);
+			try {
+				((SimpleName) qualifier).accept(visitor);
+				receiver = visitor.getExpression();
+			} catch (ParsingException e) {
+				if (!e.getName().equals("missing-variable"))
+					throw e;
+				receiver = null;
+			}
+		} else if (qualifier instanceof QualifiedName)
+			receiver = solveAsFieldAccess((QualifiedName) qualifier);
+
+		if (receiver == null)
+			return null;
+
+		return new JavaAccessInstanceGlobal(cfg,
+				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
+				receiver,
+				targetName);
 	}
 
 	@Override
 	public boolean visit(
 			SimpleName node) {
 		String identifier = node.getIdentifier();
-		expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(
-				cfg, new VariableInfo(identifier, tracker != null ? tracker.getLocalVariable(identifier) : null)));
-		return false;
+		if (tracker != null && tracker.hasVariable(identifier)) {
+			expression = new VariableRef(
+					cfg,
+					getSourceCodeLocation(node),
+					identifier,
+					parserContext.getVariableStaticType(cfg, new VariableInfo(identifier,
+							tracker != null ? tracker.getLocalVariable(identifier) : null)));
+			return false;
+		}
+
+		// if the tracker does not have information about the actual
+		// variable, this might be a global
+		Global global = parserContext.getGlobal(cfg.getDescriptor().getUnit(), identifier, true);
+		if (global != null) {
+			if (global.isInstance()) {
+				JavaReferenceType type = null;
+				if (cfg.getUnit() instanceof ClassUnit)
+					type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
+				else
+					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+
+				expression = new JavaAccessInstanceGlobal(cfg,
+						getSourceCodeLocationManager(node).getCurrentLocation(),
+						new VariableRef(
+								cfg,
+								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+								"this",
+								type),
+						identifier);
+			} else
+				expression = new JavaAccessGlobal(cfg,
+						getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
+
+			return false;
+		}
+
+		throw new ParsingException("missing-variable",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Variable " + identifier + " not defined before its use",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -969,7 +1095,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 					"Qualified This Expressions are not supported.",
 					getSourceCodeLocation(node));
 
-		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this");
+		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(
+				JavaClassType.lookup(((ClassUnit) cfg.getUnit()).getName())));
 		return false;
 	}
 
@@ -1000,6 +1127,33 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 	@Override
 	public boolean visit(
+			SingleVariableDeclaration node) {
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+		node.getType().accept(visitor);
+		it.unive.lisa.type.Type varType = visitor.getType();
+		varType = varType.isInMemoryType() ? new JavaReferenceType(varType) : varType;
+
+		String variableName = node.getName().getIdentifier();
+		VariableRef ref = new VariableRef(cfg,
+				getSourceCodeLocation(node.getName()),
+				variableName, varType);
+
+		if (tracker != null && tracker.hasVariable(variableName))
+			throw new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+					"Variable " + variableName + " already exists in the cfg", getSourceCodeLocation(node));
+
+		if (tracker != null)
+			tracker.addVariable(variableName, ref, ref.getAnnotations());
+		parserContext.addVariableType(cfg,
+				new VariableInfo(variableName, tracker != null ? tracker.getLocalVariable(variableName) : null),
+				varType);
+
+		expression = ref;
+		return false;
+	}
+
+	@Override
+	public boolean visit(
 			VariableDeclarationExpression node) {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
@@ -1009,6 +1163,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
+			varType = visitor.liftToArray(varType, fragment);
+
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, varType);

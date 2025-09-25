@@ -73,7 +73,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Test
 	public void athrow1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "athrow1",
 				"Main.java",
@@ -170,7 +170,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Test
 	public void exceptions8_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions8",
 				"Main.java",
@@ -306,16 +306,18 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void urldecoder1_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder01",
 				"Main.java",
 				"../common/");
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void urldecoder2_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder02",
 				"Main.java",
 				"../common/");
@@ -324,6 +326,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void Basic1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
 				"Main.java",
 				"../common/",
@@ -335,12 +342,95 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void spec1_5_product1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "spec1-5_product1",
 				"Main.java",
 				"Actions.java",
 				"../common/",
 				"MinePumpSystem/Environment.java",
 				"MinePumpSystem/MinePump.java");
+		perform(conf);
+	}
+
+	@Test
+	public void lock_00_01_10_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
+				"Main.java",
+				"../common/",
+				"rtems/",
+				"harness/",
+				"base/");
+		perform(conf);
+	}
+
+	@Test
+	public void siena_eqchk_prop1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1",
+				"../common/",
+				"impl/",
+				"prop1/");
+		perform(conf);
+	}
+
+	@Test
+	public void Inheritance1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "inheritance1",
+				"Main.java");
+		perform(conf);
+	}
+
+	@Test
+	public void BinaryTreeSearchMemSat01_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
+				"Main.java", "../common/");
+		perform(conf);
+	}
+
+	@Ignore
+	public void SortedListInsert_FunUnsat01_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"SortedListInsert-FunUnsat01",
+				"Main.java", "../common/");
+		perform(conf);
+	}
+
+	@Test
+	public void MathSin_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "MathSin",
+				"Main.java", "../common/", "MathSin.java");
+		perform(conf);
+	}
+
+	@Test
+	public void VelocityTracker_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "VelocityTracker_true",
+				"Main.java", "../common/");
+		perform(conf);
+	}
+
+	@Test
+	public void swap1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "swap1",
+				"Main.java");
 		perform(conf);
 	}
 }

@@ -1,1 +1,9 @@
 class java.lang.Thread extends java.lang.Object:
+
+class java.lang.Thread.State extends java.lang.Object:
+    field NEW libtype java.lang.Thread.State*
+    field RUNNABLE libtype java.lang.Thread.State*
+    field BLOCKED libtype java.lang.Thread.State*
+    field WAITING libtype java.lang.Thread.State*
+    field TIMED_WAITING libtype java.lang.Thread.State*
+    field TERMINATED libtype java.lang.Thread.State*

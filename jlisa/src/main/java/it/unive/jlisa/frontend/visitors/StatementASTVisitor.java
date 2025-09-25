@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.visitors;
 
+import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
@@ -26,11 +27,13 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
 import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -84,6 +87,8 @@ import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.SwitchStatement;
@@ -686,13 +691,43 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SwitchCase node) {
-		ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
-				this.cfg, this.tracker, container);
-		node.accept(exprVisitor);
-		Expression expr = exprVisitor.getExpression();
+		Expression expr;
+		if (switchItem.getStaticType().isReferenceType()
+				&& switchItem.getStaticType().asReferenceType().getInnerType().isUnitType()
+				&& switchItem.getStaticType().asReferenceType().getInnerType().asUnitType()
+						.getUnit() instanceof EnumUnit) {
+			// we are switching over an enum, so we check it against its fields
+			if (node.expressions().size() != 1)
+				throw new ParsingException("switch-case",
+						ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Enum switch cases with multiple items are not supported.",
+						getSourceCodeLocation(node));
+			Object arg = node.expressions().iterator().next();
+			if (!(arg instanceof SimpleName))
+				throw new ParsingException("switch-case",
+						ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Enum switch cases with non-simple names are not supported.",
+						getSourceCodeLocation(node));
+			SimpleName name = (SimpleName) arg;
+			EnumUnit switchType = (EnumUnit) switchItem.getStaticType().asReferenceType().getInnerType().asUnitType()
+					.getUnit();
+			Global global = switchType.getGlobal(name.getIdentifier());
+			if (global == null)
+				throw new ParsingException("switch-case",
+						ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Enum switch case " + name.getIdentifier() + " not found in enum " + switchType.getName(),
+						getSourceCodeLocation(node));
+			expr = new JavaAccessGlobal(cfg, getSourceCodeLocation(node), switchType, global);
+		} else {
+			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, this.source, this.compilationUnit,
+					this.cfg, this.tracker, container);
+			node.accept(exprVisitor);
+			expr = exprVisitor.getExpression();
+		}
 
-		Statement st = expr != null ? new SwitchEqualityCheck(cfg, getSourceCodeLocation(node), switchItem, expr)
-				: new SwitchDefault(cfg, getSourceCodeLocation(node));
+		SourceCodeLocationManager mgr = getSourceCodeLocationManager(node);
+		Statement st = expr != null ? new SwitchEqualityCheck(cfg, mgr.nextColumn(), switchItem, expr)
+				: new SwitchDefault(cfg, mgr.nextColumn());
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(st);
@@ -1042,6 +1077,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
+			type = visitor.liftToArray(type, fragment);
+
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, type);
@@ -1260,20 +1297,22 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			CatchClause node) {
 		tracker.enterScope();
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
-		ExpressionVisitor paramVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
-				container);
-		node.getException().getType().accept(typeVisitor);
-		node.getException().getName().accept(paramVisitor);
 
 		// type of the exception
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+		node.getException().getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 
-		// exception param
-		Expression param = paramVisitor.getExpression();
-		VariableRef v = new VariableRef(param.getCFG(), param.getLocation(), ((VariableRef) param).getName(), type);
+		// exception variable
+		SingleVariableDeclaration exc = node.getException();
+		VariableRef v = new VariableRef(cfg, getSourceCodeLocation(exc), exc.getName().getIdentifier(), type);
+		tracker.addVariable(v.toString(), v, new Annotations());
+		parserContext.addVariableType(cfg,
+				new VariableInfo(v.toString(), tracker != null ? tracker.getLocalVariable(v.toString()) : null),
+				type);
 
+		// exception body
 		StatementASTVisitor catchBody = new StatementASTVisitor(this.parserContext, this.source, this.compilationUnit,
 				this.cfg, this.control, this.tracker, container);
 		node.getBody().accept(catchBody);
@@ -1285,7 +1324,6 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes()),
 				type);
 
-		tracker.addVariable(v.toString(), v, new Annotations());
 		tracker.exitScope(body.getEnd());
 		this.clBlock = catchBlock;
 		this.block = body;

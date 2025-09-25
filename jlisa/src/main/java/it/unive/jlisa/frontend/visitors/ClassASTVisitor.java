@@ -13,7 +13,6 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -32,13 +31,11 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -80,47 +77,10 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			TypeDeclaration node) {
 		// parsing superclass
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
-		if (node.getSuperclassType() != null) {
-			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
-			node.getSuperclassType().accept(visitor);
-			Type superType = visitor.getType();
-			if (superType != null) {
-				it.unive.lisa.program.Unit superUnit = getProgram().getUnit(superType.toString());
-				if (superUnit instanceof it.unive.lisa.program.CompilationUnit) {
-					cUnit.addAncestor((it.unive.lisa.program.CompilationUnit) superUnit);
-				}
-			}
-		} else {
-			cUnit.addAncestor(JavaClassType.getObjectType().getUnit());
-		}
-
-		// parsing implemented interfaces
-		for (Object intf : node.superInterfaceTypes()) {
-			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
-			((ASTNode) intf).accept(visitor);
-			Type intfType = visitor.getType();
-			it.unive.lisa.program.Unit intfUnit = getProgram().getUnit(intfType.toString());
-			if (intfUnit instanceof it.unive.lisa.program.CompilationUnit) {
-				cUnit.addAncestor((it.unive.lisa.program.CompilationUnit) intfUnit);
-			}
-		}
 
 		if (!node.permittedTypes().isEmpty())
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
-
-		// all fields (static and non-static) are visited
-		Set<String> visitedFieldNames = new HashSet<>();
-		for (FieldDeclaration fd : node.getFields()) {
-			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(
-					parserContext,
-					source,
-					cUnit,
-					compilationUnit,
-					visitedFieldNames,
-					this);
-			fd.accept(visitor);
-		}
 
 		createClassInitializer(cUnit, node);
 
@@ -210,7 +170,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
 				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
-						new VariableRef(cfg, locationManager.nextLocation(), "this"),
+						new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type)),
 						"name"),
 				new VariableRef(cfg, locationManager.nextLocation(), "name"));
 
@@ -285,6 +245,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 			for (Object f : fd.fragments()) {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
+				type = typeVisitor.liftToArray(type, fragment);
+
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
 					ExpressionVisitor exprVisitor = new ExpressionVisitor(

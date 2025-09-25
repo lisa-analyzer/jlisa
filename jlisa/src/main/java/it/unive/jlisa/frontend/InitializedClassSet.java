@@ -1,9 +1,24 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.InverseSetLattice;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call.CallType;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -80,5 +95,48 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 		if (isTop())
 			return new StringRepresentation("{}");
 		return super.representation();
+	}
+
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> initialize(
+			AnalysisState<A> state,
+			JavaReferenceType reftype,
+			Statement init,
+			InterproceduralAnalysis<A, D> interprocedural)
+			throws SemanticException {
+		AnalysisState<A> result = state;
+		InitializedClassSet info = state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class);
+		if (info == null)
+			info = new InitializedClassSet();
+
+		// if needed, calling the class initializer (if the class has one)
+		String className = reftype.getInnerType().toString();
+		String simpleName = className.contains(".")
+				? className.substring(className.lastIndexOf(".") + 1)
+				: className;
+		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
+
+		Collection<CodeMember> target = JavaClassType.lookup(className).getUnit().getCodeMembersByName(name);
+		// we perform the call if (i) the clinit exits, (ii) we are not already
+		// executing
+		// it (to avoid recursion) and (iii) it has not been executed yet
+		// condition (ii) might happen if the state goes to bottom
+		// within the clinit, and we lose the information that we are executing
+		// it
+		if (!target.isEmpty() && target.iterator().next() != init.getCFG() && !info.contains(className)) {
+			UnresolvedCall clinit = new UnresolvedCall(
+					init.getCFG(),
+					init.getLocation(),
+					CallType.STATIC,
+					className,
+					name,
+					new Expression[0]);
+
+			result = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, info.add(className));
+			result.withExecutionExpression(new Skip(init.getLocation()));
+			result = clinit.forwardSemanticsAux(interprocedural, result, new ExpressionSet[0],
+					new StatementStore<>(result.bottom()));
+		}
+
+		return result;
 	}
 }
