@@ -1230,17 +1230,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		if (oracle.getRuntimeTypesOf(conv, pp).isEmpty()) 
+		if (oracle.getRuntimeTypesOf(conv, pp).isEmpty())
 			return left.bottom();
-		
-		if (left.getValue() instanceof Number) 
-			if (right.getValue() instanceof JavaByteType) 
+
+		if (left.getValue() instanceof Number)
+			if (right.getValue() instanceof JavaByteType)
 				return new ConstantValue(((Number) left.getValue()).byteValue());
-			else if (right.getValue() instanceof JavaShortType) 
+			else if (right.getValue() instanceof JavaShortType)
 				return new ConstantValue(((Number) left.getValue()).shortValue());
-			else if (right.getValue() instanceof JavaIntType) 
+			else if (right.getValue() instanceof JavaIntType)
 				return new ConstantValue(((Number) left.getValue()).intValue());
-			else if (right.getValue() instanceof JavaLongType) 
+			else if (right.getValue() instanceof JavaLongType)
 				return new ConstantValue(((Number) left.getValue()).longValue());
 
 		return left;

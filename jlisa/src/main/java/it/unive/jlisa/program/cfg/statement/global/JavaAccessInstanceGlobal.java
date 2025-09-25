@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -35,6 +32,8 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JavaAccessInstanceGlobal extends UnaryExpression {
 
@@ -67,10 +66,10 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 			return JavaIntType.INSTANCE;
 
 		throw new ParsingException(
-			"missing-global",
-			ParsingException.Type.UNSUPPORTED_STATEMENT,
-			"Cannot access instance global " + target + " from an expression of type " + receiver.getStaticType(),
-			location);
+				"missing-global",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Cannot access instance global " + target + " from an expression of type " + receiver.getStaticType(),
+				location);
 	}
 
 	/**

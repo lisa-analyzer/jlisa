@@ -695,7 +695,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		Expression expr;
 		if (switchItem.getStaticType().isReferenceType()
 				&& switchItem.getStaticType().asReferenceType().getInnerType().isUnitType()
-				&& switchItem.getStaticType().asReferenceType().getInnerType().asUnitType().getUnit() instanceof EnumUnit) {
+				&& switchItem.getStaticType().asReferenceType().getInnerType().asUnitType()
+						.getUnit() instanceof EnumUnit) {
 			// we are switching over an enum, so we check it against its fields
 			if (node.expressions().size() != 1)
 				throw new ParsingException("switch-case",
@@ -709,7 +710,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 						"Enum switch cases with non-simple names are not supported.",
 						getSourceCodeLocation(node));
 			SimpleName name = (SimpleName) arg;
-			EnumUnit switchType = (EnumUnit) switchItem.getStaticType().asReferenceType().getInnerType().asUnitType().getUnit();
+			EnumUnit switchType = (EnumUnit) switchItem.getStaticType().asReferenceType().getInnerType().asUnitType()
+					.getUnit();
 			Global global = switchType.getGlobal(name.getIdentifier());
 			if (global == null)
 				throw new ParsingException("switch-case",

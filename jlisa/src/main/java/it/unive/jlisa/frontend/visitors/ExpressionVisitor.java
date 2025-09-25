@@ -1,50 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang3.function.TriFunction;
-import org.apache.commons.lang3.tuple.Triple;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.ArrayCreation;
-import org.eclipse.jdt.core.dom.ArrayInitializer;
-import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.BooleanLiteral;
-import org.eclipse.jdt.core.dom.CaseDefaultExpression;
-import org.eclipse.jdt.core.dom.CastExpression;
-import org.eclipse.jdt.core.dom.CharacterLiteral;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ConditionalExpression;
-import org.eclipse.jdt.core.dom.CreationReference;
-import org.eclipse.jdt.core.dom.ExpressionMethodReference;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.InstanceofExpression;
-import org.eclipse.jdt.core.dom.LambdaExpression;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.NullLiteral;
-import org.eclipse.jdt.core.dom.NumberLiteral;
-import org.eclipse.jdt.core.dom.ParenthesizedExpression;
-import org.eclipse.jdt.core.dom.PostfixExpression;
-import org.eclipse.jdt.core.dom.PrefixExpression;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.StringLiteral;
-import org.eclipse.jdt.core.dom.SuperFieldAccess;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.SuperMethodReference;
-import org.eclipse.jdt.core.dom.SwitchExpression;
-import org.eclipse.jdt.core.dom.ThisExpression;
-import org.eclipse.jdt.core.dom.TypeLiteral;
-import org.eclipse.jdt.core.dom.TypeMethodReference;
-import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
@@ -117,6 +72,49 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.LIFOWorkingSet;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import org.apache.commons.lang3.function.TriFunction;
+import org.apache.commons.lang3.tuple.Triple;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CaseDefaultExpression;
+import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.CreationReference;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodReference;
+import org.eclipse.jdt.core.dom.SwitchExpression;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.TypeLiteral;
+import org.eclipse.jdt.core.dom.TypeMethodReference;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
@@ -727,29 +725,23 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			QualifiedName node) {
 		/*
-		 * From the javadoc of FieldAccess:
-		 * 
-		 * An expression like "foo.this" can only be represented as a 
-		 * this expression (ThisExpression) containing a simple name. 
-		 * "this" is a keyword, and therefore invalid as an identifier.
-		 * 
-		 * An expression like "this.foo" can only be represented as a 
-		 * field access expression (FieldAccess) containing a this expression
-		 *  and a simple name. Again, this is because "this" is a keyword, 
-		 * and therefore invalid as an identifier.
-		 * 
-		 * An expression with "super" can only be represented as a super field 
-		 * access expression (SuperFieldAccess). "super" is a also keyword, 
-		 * and therefore invalid as an identifier.
-		 * 
-		 * An expression like "foo.bar" can be represented either as a 
-		 * qualified name (QualifiedName) or as a field access expression 
-		 * (FieldAccess) containing simple names. Either is acceptable, 
-		 * and there is no way to choose between them without information 
-		 * about what the names resolve to (ASTParser may return either).
-		 * 
-		 * Other expressions ending in an identifier, such as "foo().bar" 
-		 * can only be represented as field access expressions (FieldAccess).
+		 * From the javadoc of FieldAccess: An expression like "foo.this" can
+		 * only be represented as a this expression (ThisExpression) containing
+		 * a simple name. "this" is a keyword, and therefore invalid as an
+		 * identifier. An expression like "this.foo" can only be represented as
+		 * a field access expression (FieldAccess) containing a this expression
+		 * and a simple name. Again, this is because "this" is a keyword, and
+		 * therefore invalid as an identifier. An expression with "super" can
+		 * only be represented as a super field access expression
+		 * (SuperFieldAccess). "super" is a also keyword, and therefore invalid
+		 * as an identifier. An expression like "foo.bar" can be represented
+		 * either as a qualified name (QualifiedName) or as a field access
+		 * expression (FieldAccess) containing simple names. Either is
+		 * acceptable, and there is no way to choose between them without
+		 * information about what the names resolve to (ASTParser may return
+		 * either). Other expressions ending in an identifier, such as
+		 * "foo().bar" can only be represented as field access expressions
+		 * (FieldAccess).
 		 */
 
 		// based on tests, field accesses have precedence over fqns
@@ -763,14 +755,14 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			if (!e.getName().equals("missing-global"))
 				throw e;
 		}
-		
+
 		// we were not able to solve it as a field access,
 		// so we might have:
 		// - some.qualified.or.not.class.name.StaticField
 		// - some.qualified.or.not.class.name.StaticField.SomeOtherField
 		// - some.qualified.or.not.class.name (?)
 
-		// we try to find a unit by starting at the first token 
+		// we try to find a unit by starting at the first token
 		// ("some") and going right ("some.qualified", "some.qualified.or", ...)
 		// until we find a unit or we exhaust all the possibilities
 		List<SimpleName> fields = new LinkedList<>();
@@ -798,23 +790,25 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			candidate = TypeASTVisitor.getUnit(tentative.getLeft(), getProgram(), container.pkg, container.imports);
 			if (candidate == null)
 				continue;
-				
+
 			// unit found, search for the global
 			if (tentative.getMiddle() == null)
 				// if we got a unit with no field to access, we do nothing:
-				// the caller has to handle the fqn as a type (eg, in a static call)
+				// the caller has to handle the fqn as a type (eg, in a static
+				// call)
 				return false;
 			Global global = parserContext.getGlobal(candidate, tentative.getMiddle().getIdentifier(), false);
-			if (global == null) 
-				// we got the unit, but we have to access the global before returning
+			if (global == null)
+				// we got the unit, but we have to access the global before
+				// returning
 				// if we cannot find it, we try the next candidate
 				continue;
-			
+
 			Expression access = new JavaAccessGlobal(
-				cfg,
-				getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), 
-				candidate, 
-				global);
+					cfg,
+					getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+					candidate,
+					global);
 
 			if (tentative.getRight().isEmpty()) {
 				// no more fields to access, we are done
@@ -826,18 +820,19 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			for (SimpleName f : tentative.getRight()) {
 				try {
 					access = new JavaAccessInstanceGlobal(cfg,
-							getSourceCodeLocationManager(f).nextColumn(), 
+							getSourceCodeLocationManager(f).nextColumn(),
 							access,
 							f.getIdentifier());
 				} catch (ParsingException e) {
 					if (!e.getName().equals("missing-global"))
 						throw e;
-					// no global found, we stop here and we try the next candidate
+					// no global found, we stop here and we try the next
+					// candidate
 					break;
 				}
 			}
 		}
-		
+
 		// we did not find a field access or a fqn matching the node
 		throw new ParsingException("missing-type",
 				ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -845,7 +840,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				getSourceCodeLocation(node));
 	}
 
-	private Expression solveAsFieldAccess(QualifiedName node) {
+	private Expression solveAsFieldAccess(
+			QualifiedName node) {
 		// we try to resolve node as a field access (y.x or y.x.z.w)
 		String targetName = node.getName().getIdentifier();
 		Name qualifier = node.getQualifier();
@@ -869,9 +865,9 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			return null;
 
 		return new JavaAccessInstanceGlobal(cfg,
-			getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), 
-			receiver,
-			targetName);
+				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
+				receiver,
+				targetName);
 	}
 
 	@Override
@@ -880,10 +876,11 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		String identifier = node.getIdentifier();
 		if (tracker != null && tracker.hasVariable(identifier)) {
 			expression = new VariableRef(
-				cfg, 
-				getSourceCodeLocation(node), 
-				identifier, 
-				parserContext.getVariableStaticType(cfg, new VariableInfo(identifier, tracker != null ? tracker.getLocalVariable(identifier) : null)));
+					cfg,
+					getSourceCodeLocation(node),
+					identifier,
+					parserContext.getVariableStaticType(cfg, new VariableInfo(identifier,
+							tracker != null ? tracker.getLocalVariable(identifier) : null)));
 			return false;
 		}
 
@@ -893,30 +890,30 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		if (global != null) {
 			if (global.isInstance()) {
 				JavaReferenceType type = null;
-				if (cfg.getUnit() instanceof ClassUnit) 
+				if (cfg.getUnit() instanceof ClassUnit)
 					type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
-				else 
+				else
 					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
-				
+
 				expression = new JavaAccessInstanceGlobal(cfg,
-						getSourceCodeLocationManager(node).getCurrentLocation(), 
+						getSourceCodeLocationManager(node).getCurrentLocation(),
 						new VariableRef(
-							cfg,
-							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-							"this",
-							type),
+								cfg,
+								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+								"this",
+								type),
 						identifier);
-			} else 
+			} else
 				expression = new JavaAccessGlobal(cfg,
 						getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
 
 			return false;
 		}
 
-		throw new ParsingException("missing-variable", 
-			ParsingException.Type.UNSUPPORTED_STATEMENT, 
-			"Variable " + identifier + " not defined before its use", 
-			getSourceCodeLocation(node));
+		throw new ParsingException("missing-variable",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Variable " + identifier + " not defined before its use",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -1128,10 +1125,9 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				getSourceCodeLocation(node));
 	}
 
-
-	
 	@Override
-	public boolean visit(SingleVariableDeclaration node) {
+	public boolean visit(
+			SingleVariableDeclaration node) {
 		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 		it.unive.lisa.type.Type varType = visitor.getType();

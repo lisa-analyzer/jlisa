@@ -17,14 +17,14 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.VoidType;
 
-public class RuntimeHalt  extends BinaryExpression implements PluggableStatement {
+public class RuntimeHalt extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	public RuntimeHalt(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
-            Expression right) {
+			Expression right) {
 		super(cfg, location, "halt", VoidType.INSTANCE, left, right);
 	}
 
@@ -55,7 +55,8 @@ public class RuntimeHalt  extends BinaryExpression implements PluggableStatement
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		AnalysisState<A> asg = interprocedural.getAnalysis().assign(state, new Variable(JavaIntType.INSTANCE,"$exit_code", getLocation()), right, originating);
-        return interprocedural.getAnalysis().moveExecutionToHalting(asg);
+		AnalysisState<A> asg = interprocedural.getAnalysis().assign(state,
+				new Variable(JavaIntType.INSTANCE, "$exit_code", getLocation()), right, originating);
+		return interprocedural.getAnalysis().moveExecutionToHalting(asg);
 	}
 }

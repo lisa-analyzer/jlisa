@@ -225,13 +225,13 @@ public class ParserContext {
 			String targetName,
 			boolean allowInstance) {
 		Global global = null;
-		
+
 		if (allowInstance && unit instanceof CompilationUnit) {
 			global = ((CompilationUnit) unit).getInstanceGlobal(targetName, true);
 			if (global != null)
 				return global;
 		}
-		
+
 		global = unit.getGlobal(targetName);
 		if (global != null)
 			return global;

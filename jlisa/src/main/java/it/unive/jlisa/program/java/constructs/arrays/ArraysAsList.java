@@ -22,7 +22,7 @@ public class ArraysAsList extends UnaryExpression implements PluggableStatement 
 	public ArraysAsList(
 			CFG cfg,
 			CodeLocation location,
-            Expression arg) {
+			Expression arg) {
 		super(cfg, location, "asList", JavaClassType.lookup("java.util.List").getReference(), arg);
 	}
 

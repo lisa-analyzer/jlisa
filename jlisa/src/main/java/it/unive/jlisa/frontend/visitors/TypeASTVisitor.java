@@ -1,19 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.Collection;
-import java.util.Map;
-
-import org.eclipse.jdt.core.dom.ArrayType;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IntersectionType;
-import org.eclipse.jdt.core.dom.NameQualifiedType;
-import org.eclipse.jdt.core.dom.ParameterizedType;
-import org.eclipse.jdt.core.dom.PrimitiveType;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.QualifiedType;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.UnionType;
-
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
@@ -37,6 +23,18 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
+import java.util.Collection;
+import java.util.Map;
+import org.eclipse.jdt.core.dom.ArrayType;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IntersectionType;
+import org.eclipse.jdt.core.dom.NameQualifiedType;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.PrimitiveType;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.QualifiedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.UnionType;
 
 public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	private Type type;
@@ -142,7 +140,11 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 				getSourceCodeLocation(node));
 	}
 
-	public static Unit getUnit(String qName, Program program, String pkg, Map<String, String> imports) {
+	public static Unit getUnit(
+			String qName,
+			Program program,
+			String pkg,
+			Map<String, String> imports) {
 		if (LibrarySpecificationProvider.isLibraryAvailable(qName))
 			LibrarySpecificationProvider.importClass(program, qName);
 
