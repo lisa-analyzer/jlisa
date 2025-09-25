@@ -1,0 +1,5 @@
+class java.util.Arrays extends java.lang.Object:
+
+    method asList: it.unive.jlisa.program.java.constructs.arrays.ArraysAsList
+        libtype java.util.List*
+        param array type it.unive.lisa.type.Untyped::INSTANCE

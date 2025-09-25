@@ -6,7 +6,7 @@
  *     root directory: benchmarks/recursive
  * The benchmark was taken from the repo: 24 January 2018
  */
-import org.sosy_lab.sv_benchmarks.Verifier;
+// import org.sosy_lab.sv_benchmarks.Verifier;
 
 public class Main {
     static int addition(int m, int n) {

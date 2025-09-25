@@ -1,7 +1,9 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -42,9 +44,32 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 			CodeLocation location,
 			Expression receiver,
 			String target) {
-		super(cfg, location, "::", Untyped.INSTANCE, receiver);
+		super(cfg, location, "::", getType(receiver, target, location), receiver);
 		this.target = target;
 		receiver.setParentStatement(this);
+	}
+
+	private static Type getType(
+			Expression receiver,
+			String target,
+			CodeLocation location) {
+		Type recType = receiver.getStaticType();
+		if (recType.isReferenceType())
+			recType = recType.asReferenceType().getInnerType();
+		if (recType.isUnitType()) {
+			CompilationUnit unit = recType.asUnitType().getUnit();
+			Global global = unit.getInstanceGlobal(target, true);
+			if (global != null)
+				return global.getStaticType();
+		} else if (recType.isArrayType() && target.equals("length"))
+			// the only instance global of an array type is "length"
+			return JavaIntType.INSTANCE;
+
+		throw new ParsingException(
+				"missing-global",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Cannot access instance global " + target + " from an expression of type " + receiver.getStaticType(),
+				location);
 	}
 
 	/**

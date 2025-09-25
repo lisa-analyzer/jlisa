@@ -2,12 +2,10 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
 import java.util.Set;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -44,16 +42,6 @@ public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
-			if (fragment.getExtraDimensions() != 0) {
-				if (type instanceof ArrayType) {
-					ArrayType arrayType = (ArrayType) type;
-					int dim = arrayType.getDimensions();
-					type = JavaArrayType.lookup(arrayType.getBaseType(), dim + fragment.getExtraDimensions());
-				} else {
-					type = JavaArrayType.lookup(type, fragment.getExtraDimensions());
-				}
-			}
-
 			String identifier = fragment.getName().getIdentifier();
 
 			if (visitedFieldNames.contains(identifier))
@@ -62,6 +50,7 @@ public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 			else
 				visitedFieldNames.add(identifier);
 
+			type = typeVisitor.liftToArray(type, fragment);
 			boolean isStatic = Modifier.isStatic(modifiers) || (unit instanceof InterfaceUnit);
 			Global global = new Global(getSourceCodeLocation(fragment), unit, identifier, !isStatic, type,
 					new Annotations());
