@@ -268,7 +268,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
 		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isPrivate(modifiers) && !(typeDecl.getParent() instanceof CompilationUnit))
+		if (Modifier.isPrivate(modifiers) && outer == null)
 			throw new RuntimeException(
 					new ProgramValidationException("Modifier private not allowed in a top-level class"));
 
