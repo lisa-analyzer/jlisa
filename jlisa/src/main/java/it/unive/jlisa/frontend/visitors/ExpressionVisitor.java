@@ -450,6 +450,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				container);
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
+		// TODO enclosing
 		expression = new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr,
 				node.getName().getIdentifier());
@@ -825,6 +826,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			// we have more fields to access
 			for (SimpleName f : tentative.getRight()) {
 				try {
+		// TODO enclosing
 					access = new JavaAccessInstanceGlobal(cfg,
 							getSourceCodeLocationManager(f).nextColumn(),
 							access,
@@ -870,6 +872,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		if (receiver == null)
 			return null;
 
+		// TODO enclosing
 		return new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
 				receiver,
@@ -901,6 +904,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				else
 					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
 
+		// TODO enclosing
 				expression = new JavaAccessInstanceGlobal(cfg,
 						getSourceCodeLocationManager(node).getCurrentLocation(),
 						new VariableRef(
@@ -1095,6 +1099,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ThisExpression node) {
+		// TODO enclosing
 		if (node.getQualifier() != null)
 			throw new ParsingException("this-expression",
 					ParsingException.Type.UNSUPPORTED_STATEMENT,

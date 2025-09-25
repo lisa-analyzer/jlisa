@@ -7,6 +7,7 @@ import it.unive.jlisa.frontend.util.JavaCFGTweaker;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.*;
@@ -26,6 +27,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
 	CFG cfg;
 	boolean createMethodSignature;
+	private final JavaClassType enclosing;
 
 	public MethodASTVisitor(
 			ParserContext parserContext,
@@ -33,10 +35,12 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
 			CompilationUnit astCompilationUnit,
 			boolean createMethodSignature,
-			BaseUnitASTVisitor container) {
+			BaseUnitASTVisitor container,
+			JavaClassType enclosing) {
 		super(parserContext, source, astCompilationUnit, container);
 		this.lisacompilationUnit = lisacompilationUnit;
 		this.createMethodSignature = createMethodSignature;
+		this.enclosing = enclosing;
 	}
 
 	@Override
@@ -216,6 +220,11 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
+
+		if (enclosing != null) 
+			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing", enclosing.getReference(),
+					null, new Annotations()));
+
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,

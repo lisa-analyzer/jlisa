@@ -13,6 +13,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -47,6 +48,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	private final String fullName;
+	private final JavaClassType enclosing;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
@@ -54,9 +56,11 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			CompilationUnit compilationUnit,
 			String pkg,
 			Map<String, String> imports,
-			String fullName) {
+			String fullName,
+			JavaClassType enclosing) {
 		super(parserContext, source, pkg, imports, compilationUnit);
 		this.fullName = fullName;
+		this.enclosing = enclosing;
 	}
 
 	@Override
@@ -85,12 +89,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		createClassInitializer(cUnit, node);
 
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, true, this);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, true, this, enclosing);
 			md.accept(visitor);
 		}
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this, enclosing);
 			md.accept(visitor);
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -296,6 +300,10 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
+
+		if (enclosing != null) 
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", enclosing.getReference(),
+					null, new Annotations()));
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
