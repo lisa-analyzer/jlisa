@@ -1,7 +1,8 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -23,7 +24,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Identifier;
-import org.apache.commons.lang3.ArrayUtils;
 
 public class JavaNewObj extends NaryExpression {
 
@@ -63,32 +63,12 @@ public class JavaNewObj extends NaryExpression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
-
-		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
-			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
-
-		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
 		String simpleName = className.contains(".")
 				? className.substring(className.lastIndexOf(".") + 1)
 				: className;
-		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
-		if (!JavaClassType.lookup(className).getUnit()
-				.getCodeMembersByName(name).isEmpty()) {
-			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
-				UnresolvedCall clinit = new UnresolvedCall(
-						getCFG(),
-						getLocation(),
-						CallType.STATIC,
-						className,
-						name,
-						new Expression[0]);
 
-				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
-						state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className));
-				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
-			}
-		}
+		state = InitializedClassSet.initialize(state, reftype, this, interprocedural);
 
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());

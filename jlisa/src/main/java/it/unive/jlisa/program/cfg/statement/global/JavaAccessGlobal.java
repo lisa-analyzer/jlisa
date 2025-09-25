@@ -1,5 +1,8 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -8,9 +11,9 @@ import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Unit;
@@ -19,12 +22,8 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.call.Call.CallType;
-import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * An access to a {@link Global} of a {@link Unit}.
@@ -144,14 +143,11 @@ public class JavaAccessGlobal extends Expression {
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
-			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
-
 		// we need to check whether to call the clinit of the container unit or
 		// to call the one of its superclass
-		Unit classUnit = container;
-		if (((ClassUnit) container).getGlobal(target.getName()) == null) {
-			Set<it.unive.lisa.program.CompilationUnit> superClasses = ((ClassUnit) container)
+		ClassUnit classUnit = (ClassUnit) container;
+		if (classUnit.getGlobal(target.getName()) == null) {
+			Set<CompilationUnit> superClasses = classUnit
 					.getImmediateAncestors().stream()
 					.filter(u -> u instanceof ClassUnit)
 					.collect(Collectors.toSet());
@@ -160,28 +156,7 @@ public class JavaAccessGlobal extends Expression {
 			classUnit = (ClassUnit) superClasses.stream().findFirst().get();
 		}
 
-		// if needed, calling the class initializer
-		String simpleName = classUnit.getName().contains(".")
-				? classUnit.getName().substring(classUnit.getName().lastIndexOf(".") + 1)
-				: classUnit.getName();
-		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
-		if (!JavaClassType.lookup(classUnit.toString()).getUnit()
-				.getCodeMembersByName(name).isEmpty())
-			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class)
-					.contains(classUnit.toString())) {
-				UnresolvedCall clinit = new UnresolvedCall(
-						getCFG(),
-						getLocation(),
-						CallType.STATIC,
-						classUnit.toString(),
-						name,
-						new Expression[0]);
-
-				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
-						state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class)
-								.add(classUnit.toString()));
-				state = clinit.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			}
+		state = InitializedClassSet.initialize(state, JavaClassType.lookup(classUnit.getName()).getReference(), this, interprocedural);
 
 		if (target instanceof ConstantGlobal)
 			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);
