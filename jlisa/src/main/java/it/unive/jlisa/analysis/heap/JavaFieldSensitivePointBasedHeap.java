@@ -13,6 +13,8 @@ import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
+import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
+import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -198,20 +200,73 @@ public class JavaFieldSensitivePointBasedHeap
 					toProcess.add(rec);
 			}
 
+			Set<SymbolicExpression> result = new HashSet<>();
 			for (SymbolicExpression rec : toProcess) {
 				if (rec instanceof MemoryPointer) {
 					AllocationSite site = (AllocationSite) ((MemoryPointer) rec).getReferencedLocation();
 					if (site.equals(NullAllocationSite.INSTANCE))
-						return new ExpressionSet(site);
-
+						result.add(site);
+					else
+						populate(expression, child, result, site);
 				} else if (rec instanceof AllocationSite) {
 					AllocationSite site = (AllocationSite) rec;
 					if (site.equals(NullAllocationSite.INSTANCE))
-						return new ExpressionSet(site);
+						result.add(site);
+					else
+						populate(expression, child, result, site);
 				}
 			}
 
-			return super.visit(expression, receiver, child, params);
+			return new ExpressionSet(result);
+
+//
+//			for (SymbolicExpression rec : toProcess) {
+//				if (rec instanceof MemoryPointer) {
+//					AllocationSite site = (AllocationSite) ((MemoryPointer) rec).getReferencedLocation();
+//					if (site.equals(NullAllocationSite.INSTANCE))
+//						result.add(new ExpressionSet(site));
+//
+//				} else if (rec instanceof AllocationSite) {
+//					AllocationSite site = (AllocationSite) rec;
+//					if (site.equals(NullAllocationSite.INSTANCE))
+//						return new ExpressionSet(site);
+//				}
+//			}
+//
+//			return super.visit(expression, receiver, child, params);
+		}
+
+		private void populate(
+				AccessChild expression,
+				ExpressionSet child,
+				Set<SymbolicExpression> result,
+				AllocationSite site) {
+			for (SymbolicExpression target : child) {
+				AllocationSite e;
+
+				if (site instanceof StackAllocationSite)
+					e = new StackAllocationSite(
+							expression.getStaticType(),
+							site.getLocationName(),
+							target,
+							site.isWeak(),
+							site.getCodeLocation());
+				else
+					e = new HeapAllocationSite(
+							expression.getStaticType(),
+							site.getLocationName(),
+							target,
+							site.isWeak(),
+							site.getCodeLocation());
+
+				// propagates the annotations of the child value expression to
+				// the newly created allocation site
+				if (target instanceof Identifier)
+					for (Annotation ann : e.getAnnotations())
+						e.addAnnotation(ann);
+
+				result.add(e);
+			}
 		}
 
 		@Override

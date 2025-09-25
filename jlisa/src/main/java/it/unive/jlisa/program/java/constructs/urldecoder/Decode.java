@@ -83,9 +83,9 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			tmp = tmp.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 		}
 
-		
 		// ... and null
-		AnalysisState<A> nullState = analysis.smallStepSemantics(state, new JavaNullConstant(getLocation()), originating);
+		AnalysisState<
+				A> nullState = analysis.smallStepSemantics(state, new JavaNullConstant(getLocation()), originating);
 		AnalysisState<A> noExceptionState = tmp.lub(nullState);
 
 		// builds the exception

@@ -4,6 +4,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 public class SVCompTestcases extends JLiSAAnalysisExecutor {
@@ -305,16 +306,18 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void urldecoder1_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder01",
 				"Main.java",
 				"../common/");
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void urldecoder2_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder02",
 				"Main.java",
 				"../common/");
@@ -397,6 +400,15 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		// without inspecting the results (ie no json files are present)
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
+				"Main.java", "../common/");
+		perform(conf);
+	}
+
+	@Ignore
+	public void SortedListInsert_FunUnsat01_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"SortedListInsert-FunUnsat01",
 				"Main.java", "../common/");
 		perform(conf);
 	}

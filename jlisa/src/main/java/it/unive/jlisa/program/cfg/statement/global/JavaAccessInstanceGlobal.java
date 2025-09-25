@@ -156,15 +156,16 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-					state = analysis.assign(state, throwVar,
-							state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					for (SymbolicExpression th : state.getExecutionExpressions()) {
+						state = analysis.assign(state, throwVar, th, this);
 
-					// deletes the receiver of the constructor
-					// and all the metavariables from subexpressions
-					state = state.forgetIdentifiers(call.getMetaVariables(), this);
-					state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-					result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-							new Error(npeType.getReference(), this)));
+						// deletes the receiver of the constructor
+						// and all the metavariables from subexpressions
+						state = state.forgetIdentifiers(call.getMetaVariables(), this);
+						state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+								new Error(npeType.getReference(), this)));
+					}
 					atLeastOne = true;
 					continue;
 				} else if (!inner.isUnitType())
