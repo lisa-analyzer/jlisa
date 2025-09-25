@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.urldecoder;
 
+import it.unive.jlisa.analysis.JavaNullConstant;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -66,7 +67,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		// as no-exception state, we return the top string
+		// as no-exception state, we return the top string...
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
@@ -82,7 +83,10 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			tmp = tmp.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 		}
 
-		AnalysisState<A> noExceptionState = tmp;
+		
+		// ... and null
+		AnalysisState<A> nullState = analysis.smallStepSemantics(state, new JavaNullConstant(getLocation()), originating);
+		AnalysisState<A> noExceptionState = tmp.lub(nullState);
 
 		// builds the exception
 		JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
@@ -96,7 +100,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		for (SymbolicExpression th : state.getExecutionExpressions()) {
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-			tmp = analysis.assign(state, throwVar, th, this);
+			tmp = analysis.assign(state, throwVar, th, originating);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
