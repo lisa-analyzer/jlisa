@@ -91,6 +91,12 @@ public class Main {
 				.required(false)
 				.build();
 
+		Option version = Option.builder("v")
+				.longOpt("version")
+				.desc("Version of the tool")
+				.required(false)
+				.build();
+
 		options.addOption(helpOption);
 		options.addOption(sourceOption);
 		options.addOption(outdirOption);
@@ -98,6 +104,8 @@ public class Main {
 		options.addOption(checker);
 		options.addOption(numericalDomainOption);
 		options.addOption(mode);
+		options.addOption(version);
+
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -110,6 +118,13 @@ public class Main {
 			// Handle help
 			if (cmd.hasOption("h") || args.length == 0) {
 				formatter.printHelp("jlisa", options, true);
+				System.exit(0);
+			}
+
+			if (cmd.hasOption("v")) {
+				Package jlisaPkg = Main.class.getPackage();
+				String implementationVersion = jlisaPkg.getImplementationVersion();
+				System.out.println("JLiSA version: " + implementationVersion);
 				System.exit(0);
 			}
 
