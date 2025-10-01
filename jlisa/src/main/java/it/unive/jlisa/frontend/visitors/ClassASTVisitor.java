@@ -90,7 +90,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, this, enclosing);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, this,
+					enclosing);
 			md.accept(visitor);
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -259,7 +260,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 							compilationUnit,
 							cfg,
 							null,
-							this);
+							this,
+							enclosing);
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
@@ -297,7 +299,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
-		if (enclosing != null) 
+		if (enclosing != null)
 			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", enclosing.getReference(),
 					null, new Annotations()));
 
@@ -380,7 +382,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			if (Modifier.isStatic(field.getModifiers()))
 				continue;
 			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(parserContext, source,
-					compilationUnit, cfg, this);
+					compilationUnit, cfg, this, enclosing);
 			field.accept(initVisitor);
 
 			if (initVisitor.getBlock() != null) {

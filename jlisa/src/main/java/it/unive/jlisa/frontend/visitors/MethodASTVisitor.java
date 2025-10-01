@@ -36,7 +36,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			String source,
 			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
 			CompilationUnit astCompilationUnit,
-			BaseUnitASTVisitor container, 
+			BaseUnitASTVisitor container,
 			JavaClassType enclosing) {
 		super(parserContext, source, astCompilationUnit, container);
 		this.lisacompilationUnit = lisacompilationUnit;
@@ -85,7 +85,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		}
 
 		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source,
-				compilationUnit, cfg, tracker, container);
+				compilationUnit, cfg, tracker, container, enclosing);
 
 		if (node.getBody() == null) // e.g. abstract method declarations
 			return false;
@@ -204,8 +204,9 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
-		if (enclosing != null) 
-			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing", enclosing.getReference(),
+		if (enclosing != null)
+			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+					enclosing.getReference(),
 					null, new Annotations()));
 
 		for (Object o : node.parameters()) {

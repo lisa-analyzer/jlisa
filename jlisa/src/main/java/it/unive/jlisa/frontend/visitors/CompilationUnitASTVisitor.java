@@ -1,23 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -35,6 +17,22 @@ import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -552,7 +550,11 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, processed);
 	}
 
-	private void visitEnumUnit(CompilationUnit unit, EnumDeclaration enumDecl, String outer, Set<String> processed) {
+	private void visitEnumUnit(
+			CompilationUnit unit,
+			EnumDeclaration enumDecl,
+			String outer,
+			Set<String> processed) {
 		String name = getPackage() + (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
 		if (!processed.add(name))
 			return;

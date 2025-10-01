@@ -3,6 +3,7 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -19,6 +20,9 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class FieldInitializationVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
+
+	private final JavaClassType enclosing;
+
 	private it.unive.lisa.program.cfg.statement.Statement first;
 	private it.unive.lisa.program.cfg.statement.Statement last;
 	private NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
@@ -28,9 +32,11 @@ public class FieldInitializationVisitor extends BaseCodeElementASTVisitor {
 			String source,
 			CompilationUnit compilationUnit,
 			CFG cfg,
-			BaseUnitASTVisitor container) {
+			BaseUnitASTVisitor container,
+			JavaClassType enclosing) {
 		super(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
+		this.enclosing = enclosing;
 	}
 
 	public boolean visit(
@@ -52,7 +58,7 @@ public class FieldInitializationVisitor extends BaseCodeElementASTVisitor {
 			it.unive.lisa.program.cfg.statement.Expression initializer = null;
 			if (fragment.getInitializer() != null) {
 				ExpressionVisitor initializerVisitor = new ExpressionVisitor(parserContext, source, compilationUnit,
-						cfg, null, container);
+						cfg, null, container, enclosing);
 				Expression expression = fragment.getInitializer();
 				expression.accept(initializerVisitor);
 				if (initializerVisitor.getExpression() != null) {

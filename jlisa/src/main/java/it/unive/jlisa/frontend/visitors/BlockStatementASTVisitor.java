@@ -2,6 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
@@ -15,6 +16,8 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
+
+	private final JavaClassType enclosing;
 	private ParsedBlock block;
 
 	JavaLocalVariableTracker tracker;
@@ -23,8 +26,10 @@ public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 			ParserContext parserContext,
 			String source,
 			CompilationUnit compilationUnit,
-			BaseUnitASTVisitor container) {
+			BaseUnitASTVisitor container,
+			JavaClassType enclosing) {
 		super(parserContext, source, compilationUnit, container);
+		this.enclosing = enclosing;
 	}
 
 	public BlockStatementASTVisitor(
@@ -33,8 +38,9 @@ public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 			CompilationUnit compilationUnit,
 			CFG cfg,
 			JavaLocalVariableTracker tracker,
-			BaseUnitASTVisitor container) {
-		this(parserContext, source, compilationUnit, container);
+			BaseUnitASTVisitor container,
+			JavaClassType enclosing) {
+		this(parserContext, source, compilationUnit, container, enclosing);
 		this.cfg = cfg;
 		this.tracker = tracker;
 	}
@@ -70,7 +76,8 @@ public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 						cfg,
 						new ControlFlowTracker(),
 						tracker,
-						container);
+						container,
+						enclosing);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();
