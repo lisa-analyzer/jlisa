@@ -4,6 +4,7 @@ import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
@@ -14,6 +15,13 @@ import it.unive.lisa.interprocedural.context.FullStackToken;
 import java.util.ArrayList;
 
 public class TestHelpers {
+
+	public static LiSA getLiSA(
+			String outDir) {
+		CronConfiguration conf = constantPropagation("", "");
+		conf.workdir = outDir;
+		return new LiSA(conf);
+	}
 
 	/**
 	 * Creates and returns a {@link CronConfiguration} instance for running
