@@ -82,6 +82,8 @@ import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.operator.NaryOperator;
 import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
@@ -118,6 +120,7 @@ import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -426,7 +429,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue left,
 			ConstantValue right,
 			ProgramPoint pp,
-			SemanticOracle oracle) {
+			SemanticOracle oracle)
+			throws SemanticException {
 		// if left or right is top, top is returned
 		if (left.isTop() || right.isTop())
 			return top();
@@ -436,13 +440,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).doubleValue() + ((Number) rVal).doubleValue());
-			} else if (lVal instanceof Float || rVal instanceof Float) {
+			} else if (isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).floatValue() + ((Number) rVal).floatValue());
-			} else if (lVal instanceof Long || rVal instanceof Long) {
+			} else if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() + ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() + ((Number) rVal).intValue());
 			}
 		}
@@ -451,9 +460,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() | ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() | ((Number) rVal).intValue());
 			}
 		}
@@ -462,9 +476,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() >> ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() >> ((Number) rVal).intValue());
 			}
 		}
@@ -473,9 +492,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() >>> ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() >>> ((Number) rVal).intValue());
 			}
 		}
@@ -484,9 +508,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() << ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() << ((Number) rVal).intValue());
 			}
 		}
@@ -495,9 +524,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() ^ ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() ^ ((Number) rVal).intValue());
 			}
 		}
@@ -506,9 +540,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() & ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).intValue() & ((Number) rVal).intValue());
 			}
 		}
@@ -517,11 +556,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).doubleValue() - ((Number) rVal).doubleValue());
-			} else if (lVal instanceof Float || rVal instanceof Float) {
+			} else if (isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).floatValue() - ((Number) rVal).floatValue());
-			} else if (lVal instanceof Long || rVal instanceof Long) {
+			} else if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() - ((Number) rVal).longValue());
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() - ((Number) rVal).intValue());
@@ -532,11 +576,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).doubleValue() * ((Number) rVal).doubleValue());
-			} else if (lVal instanceof Float || rVal instanceof Float) {
+			} else if (isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).floatValue() * ((Number) rVal).floatValue());
-			} else if (lVal instanceof Long || rVal instanceof Long) {
+			} else if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() * ((Number) rVal).longValue());
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() * ((Number) rVal).intValue());
@@ -547,11 +596,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).doubleValue() / ((Number) rVal).doubleValue());
-			} else if (lVal instanceof Float || rVal instanceof Float) {
+			} else if (isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).floatValue() / ((Number) rVal).floatValue());
-			} else if (lVal instanceof Long || rVal instanceof Long) {
+			} else if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() / ((Number) rVal).longValue());
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() / ((Number) rVal).intValue());
@@ -562,11 +616,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).doubleValue() % ((Number) rVal).doubleValue());
-			} else if (lVal instanceof Float || rVal instanceof Float) {
+			} else if (isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).floatValue() % ((Number) rVal).floatValue());
-			} else if (lVal instanceof Long || rVal instanceof Long) {
+			} else if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() % ((Number) rVal).longValue());
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() % ((Number) rVal).intValue());
@@ -577,11 +636,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).doubleValue() < ((Number) rVal).doubleValue());
-			} else if (lVal instanceof Float || rVal instanceof Float) {
+			} else if (isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).floatValue() < ((Number) rVal).floatValue());
-			} else if (lVal instanceof Long || rVal instanceof Long) {
+			} else if (isLong(lStaticType, lDynamicType, lVal) || isLong(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(((Number) lVal).longValue() < ((Number) rVal).longValue());
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() < ((Number) rVal).intValue());
@@ -592,8 +656,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)
+					|| isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)
+					|| isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(Math.pow(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
@@ -602,8 +672,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
+			Type lStaticType = expression.getLeft().getStaticType();
+			Type rStaticType = expression.getRight().getStaticType();
+			Type lDynamicType = oracle.getDynamicTypeOf(expression.getLeft(), pp);
+			Type rDynamicType = oracle.getDynamicTypeOf(expression.getRight(), pp);
+
+			if (isDouble(lStaticType, lDynamicType, lVal) || isDouble(rStaticType, rDynamicType, rVal)
+					|| isInt(lStaticType, lDynamicType, lVal) || isInt(rStaticType, rDynamicType, rVal)
+					|| isFloat(lStaticType, lDynamicType, lVal) || isFloat(rStaticType, rDynamicType, rVal)) {
 				return new ConstantValue(Math.atan2(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
@@ -727,6 +803,38 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		}
 
 		return top();
+	}
+
+	private boolean isDouble(
+			Type staticType,
+			Type dynamicType,
+			Object val) {
+		return staticType == JavaDoubleType.INSTANCE || dynamicType == JavaDoubleType.INSTANCE
+				|| (staticType == Untyped.INSTANCE && dynamicType == Untyped.INSTANCE && val instanceof Double);
+	}
+
+	private boolean isFloat(
+			Type staticType,
+			Type dynamicType,
+			Object val) {
+		return staticType == JavaFloatType.INSTANCE || dynamicType == JavaFloatType.INSTANCE
+				|| (staticType == Untyped.INSTANCE && dynamicType == Untyped.INSTANCE && val instanceof Float);
+	}
+
+	private boolean isLong(
+			Type staticType,
+			Type dynamicType,
+			Object val) {
+		return staticType == JavaLongType.INSTANCE || dynamicType == JavaLongType.INSTANCE
+				|| (staticType == Untyped.INSTANCE && dynamicType == Untyped.INSTANCE && val instanceof Long);
+	}
+
+	private boolean isInt(
+			Type staticType,
+			Type dynamicType,
+			Object val) {
+		return staticType == JavaIntType.INSTANCE || dynamicType == JavaIntType.INSTANCE
+				|| (staticType == Untyped.INSTANCE && dynamicType == Untyped.INSTANCE && val instanceof Integer);
 	}
 
 	@Override
