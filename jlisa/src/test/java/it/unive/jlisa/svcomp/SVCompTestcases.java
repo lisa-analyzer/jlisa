@@ -203,6 +203,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void ArithmeticException5_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ArithmeticException5",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
+
+	@Test
 	public void ArithmeticException6_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ArithmeticException6",
 				"Main.java",

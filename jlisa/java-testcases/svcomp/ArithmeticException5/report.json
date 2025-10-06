@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "2s 174ms",
+    "end" : "2025-10-06T12:45:41.970+02:00",
+    "expressions" : "46",
+    "files" : "1",
+    "globals" : "25",
+    "members" : "141",
+    "programs" : "1",
+    "start" : "2025-10-06T12:45:39.796+02:00",
+    "statements" : "25",
+    "units" : "48",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/ArithmeticException5"
+  }
+}
