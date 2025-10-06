@@ -31,7 +31,7 @@ spotless {
     }
 }
 
-
+// A change!
 // Apply code-style tasks
 apply(from = "code-style.gradle.kts")
 
