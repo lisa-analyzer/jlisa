@@ -47,6 +47,7 @@ java -jar target/jlisa.jar -s <source-files> -o <output-directory> [-l <log-leve
 | `-s`   | `--source`  | Files    | Java source files to analyze |
 | `-o`   | `--outdir`  | Path     | Output directory for results |
 | `-l`   | `--log-level` | Level | Logging level (e.g., INFO, DEBUG, ERROR) |
+| `-v`   | `--version` | None | Version of current jlisa's implementation |
 
 ## Architecture
 
