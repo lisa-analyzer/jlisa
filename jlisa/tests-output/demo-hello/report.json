@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "assets/d3-graphviz.min.js", "assets/d3.v7.min.js", "java.lang.String__com.example.demo.DemoApplication.hello(java.lang.String__name)_571726518.html", "java.lang.String__com.example.demo.DemoApplication.hello(java.lang.String__name)_829929012.html", "report.json", "void_com.example.demo.DemoApplication.main(java.lang.String_[]__args).html", "void_com.example.demo.DemoApplication.main(java.lang.String_[]__args)_1393802435.html", "void_com.example.demo.Runner.main(java.lang.String_[]__args).html" ],
+  "info" : {
+    "cfgs" : "5",
+    "duration" : "2s 5ms",
+    "end" : "2025-10-06T14:55:14.865+02:00",
+    "expressions" : "13",
+    "files" : "7",
+    "globals" : "23",
+    "members" : "127",
+    "programs" : "1",
+    "start" : "2025-10-06T14:55:12.860+02:00",
+    "statements" : "10",
+    "units" : "47",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "HTML_WITH_SUBNODES",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "false",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "tests-output/demo-hello/"
+  }
+}
