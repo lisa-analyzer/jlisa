@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
@@ -13,6 +14,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -52,14 +54,10 @@ public class JavaDivision extends Division {
 
 		if (analysis.satisfies(state, expr, this) == Satisfiability.SATISFIED) {
 
-			if (left.getStaticType() == JavaFloatType.INSTANCE
+			if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
+					|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE
 					|| analysis.getDynamicTypeOf(state, left, this) == JavaFloatType.INSTANCE
-					|| left.getStaticType() == JavaDoubleType.INSTANCE
-					|| analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
-					|| right.getStaticType() == JavaFloatType.INSTANCE
-					|| analysis.getDynamicTypeOf(state, right, this) == JavaFloatType.INSTANCE
-					|| right.getStaticType() == JavaDoubleType.INSTANCE
-					|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE) { // no
+					|| analysis.getDynamicTypeOf(state, right, this) == JavaFloatType.INSTANCE) { // no
 																									// division
 																									// by
 																									// zero
@@ -68,7 +66,33 @@ public class JavaDivision extends Division {
 																									// floating
 																									// point
 																									// numbers
-				return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
+
+				JavaAccessGlobal accessGlobal;
+				if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
+						|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE) {
+					accessGlobal = new JavaAccessGlobal(
+							getCFG(),
+							getLocation(),
+							getProgram().getUnit("java.lang.Double"),
+							new Global(
+									getLocation(),
+									getProgram().getUnit("java.lang.Double"),
+									"POSITIVE_INFINITY",
+									false,
+									JavaDoubleType.INSTANCE));
+				} else
+					accessGlobal = new JavaAccessGlobal(
+							getCFG(),
+							getLocation(),
+							getProgram().getUnit("java.lang.Float"),
+							new Global(
+									getLocation(),
+									getProgram().getUnit("java.lang.Float"),
+									"POSITIVE_INFINITY",
+									false,
+									JavaDoubleType.INSTANCE));
+
+				return accessGlobal.forwardSemantics(state, interprocedural, expressions);
 			} else {
 				JavaClassType arithExc = JavaClassType.getArithmeticExceptionType();
 				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), arithExc.getReference(),

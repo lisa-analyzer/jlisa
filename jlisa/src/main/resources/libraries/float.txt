@@ -1,5 +1,7 @@
 class java.lang.Float extends java.lang.Number:
 	field NaN type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	field POSITIVE_INFINITY type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	
     instance field value type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 	
 	instance method Float: it.unive.jlisa.program.java.constructs.floatw.FloatConstructor
