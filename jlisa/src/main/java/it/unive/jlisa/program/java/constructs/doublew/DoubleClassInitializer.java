@@ -1,8 +1,8 @@
-package it.unive.jlisa.program.java.constructs.integer;
+package it.unive.jlisa.program.java.constructs.doublew;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
-import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -24,25 +24,26 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.VoidType;
 
-public class IntegerClassInitializer extends NativeCFG implements PluggableStatement {
+public class DoubleClassInitializer extends NativeCFG implements PluggableStatement {
 
 	protected Statement originating;
 
-	public IntegerClassInitializer(
+	public DoubleClassInitializer(
 			CodeLocation location,
 			ClassUnit objectUnit) {
 
-		super(new JavaCodeMemberDescriptor(location, objectUnit, false, "Integer" + InitializedClassSet.SUFFIX_CLINIT,
+		super(new JavaCodeMemberDescriptor(location, objectUnit, false,
+				"Double" + InitializedClassSet.SUFFIX_CLINIT,
 				VoidType.INSTANCE,
 				new Parameter[0]),
-				IntegerClassInitializer.IntegerClInit.class);
+				DoubleClassInitializer.DoubleClInit.class);
 	}
 
-	public static IntegerClassInitializer.IntegerClInit build(
+	public static DoubleClassInitializer.DoubleClInit build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new IntegerClassInitializer.IntegerClInit(cfg, location);
+		return new DoubleClassInitializer.DoubleClInit(cfg, location);
 	}
 
 	@Override
@@ -51,13 +52,13 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 		originating = st;
 	}
 
-	public static class IntegerClInit extends NaryExpression implements PluggableStatement {
+	public static class DoubleClInit extends NaryExpression implements PluggableStatement {
 		protected Statement originating;
 
-		public IntegerClInit(
+		public DoubleClInit(
 				CFG cfg,
 				CodeLocation location) {
-			super(cfg, location, "Integer" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE);
+			super(cfg, location, "Double" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE);
 		}
 
 		@Override
@@ -79,15 +80,23 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			GlobalVariable maxId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MAX_VALUE",
+			GlobalVariable maxId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.Double::MAX_VALUE",
 					getLocation());
-			GlobalVariable minId = new GlobalVariable(JavaIntType.INSTANCE, "java.lang.Integer::MIN_VALUE",
+			Constant maxConst = new Constant(JavaDoubleType.INSTANCE, Double.MAX_VALUE, getLocation());
+
+			GlobalVariable minId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.Double::MIN_VALUE",
 					getLocation());
-			Constant maxConst = new Constant(JavaIntType.INSTANCE, 0x7fffffff, getLocation());
-			Constant minConst = new Constant(JavaIntType.INSTANCE, 0x80000000, getLocation());
+			Constant minConst = new Constant(JavaDoubleType.INSTANCE, Double.MIN_VALUE, getLocation());
+
+			GlobalVariable posInfId = new GlobalVariable(JavaDoubleType.INSTANCE,
+					"java.lang.Double::POSITIVE_INFINITY",
+					getLocation());
+			Constant posInfConst = new Constant(JavaDoubleType.INSTANCE, Double.POSITIVE_INFINITY, getLocation());
+
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			state = analysis.assign(state, maxId, maxConst, this);
 			state = analysis.assign(state, minId, minConst, this);
+			state = analysis.assign(state, posInfId, posInfConst, this);
 			return state;
 		}
 	}

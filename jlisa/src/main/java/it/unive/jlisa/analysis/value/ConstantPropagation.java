@@ -82,6 +82,7 @@ import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.operator.NaryOperator;
 import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
@@ -1242,6 +1243,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) left.getValue()).intValue());
 			else if (right.getValue() instanceof JavaLongType)
 				return new ConstantValue(((Number) left.getValue()).longValue());
+			else if (right.getValue() instanceof JavaDoubleType)
+				return new ConstantValue(((Number) left.getValue()).doubleValue());
 
 		return left;
 	}
