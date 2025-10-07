@@ -258,7 +258,6 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
 
-		// TODO enclosing
 
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
@@ -274,8 +273,15 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				Call.CallType.INSTANCE, null, this.cfg.getDescriptor().getName(),
 				parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
-		adj.addNode(call);
-		this.block = new ParsedBlock(call, adj, call);
+		
+		if(enclosing != null) { // TODO: check if the enclosing assignment is correct
+			JavaAssignment syntheticEnclosingAssignment = new JavaAssignment(cfg,  getSourceCodeLocationManager(node, true).nextColumn(), 
+					new VariableRef(cfg, getSourceCodeLocationManager(node, true).nextColumn(), "this.$"+enclosing),new VariableRef(cfg, getSourceCodeLocationManager(node, true).nextColumn(), "enclosing"));
+			adj.addNode(syntheticEnclosingAssignment);
+			adj.addEdge(new SequentialEdge(call, syntheticEnclosingAssignment));
+			this.block = new ParsedBlock(call, adj, syntheticEnclosingAssignment);
+		} else 
+			this.block = new ParsedBlock(call, adj, call);
 
 		return false;
 	}
@@ -661,7 +667,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SuperConstructorInvocation node) {
-		// TODO enclosing
+
 		Unit unit = cfg.getDescriptor().getUnit();
 		if (!(unit instanceof ClassUnit)) {
 			throw new RuntimeException("The unit must be a ClassUnit when dealing with SuperConstructorInvocation");
@@ -690,9 +696,18 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node, true).nextColumn(),
 				Call.CallType.INSTANCE, superclassName, simpleName, parameters.toArray(new Expression[0]));
+
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
-		this.block = new ParsedBlock(call, adj, call);
+		
+		if(enclosing != null) {  // TODO: check if the enclosing assignment is correct
+			JavaAssignment syntheticEnclosingAssignment = new JavaAssignment(cfg,  getSourceCodeLocationManager(node, true).nextColumn(), 
+					new VariableRef(cfg, getSourceCodeLocationManager(node, true).nextColumn(), "this.$"+enclosing),new VariableRef(cfg, getSourceCodeLocationManager(node, true).nextColumn(), "enclosing"));
+			adj.addNode(syntheticEnclosingAssignment);
+			adj.addEdge(new SequentialEdge(call, syntheticEnclosingAssignment));
+			this.block = new ParsedBlock(call, adj, syntheticEnclosingAssignment);
+		} else 
+			this.block = new ParsedBlock(call, adj, call);
 
 		return false;
 	}

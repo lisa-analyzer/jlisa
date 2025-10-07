@@ -449,9 +449,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 
-		String targetName = enclosing != null && enclosing.getUnit().getGlobal(node.getName().getIdentifier()) != null
-				? "this." + enclosing + "." + node.getName().getIdentifier()
-				: node.getName().getIdentifier();
+		// TODO enclosing
+		String targetName = node.getName().getIdentifier();
 		expression = new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr,
 				targetName);
@@ -827,9 +826,9 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			// we have more fields to access
 			for (SimpleName f : tentative.getRight()) {
 				try {
-					String targetName = enclosing != null && enclosing.getUnit().getGlobal(f.getIdentifier()) != null
-							? "this." + enclosing + "." + f.getIdentifier()
-							: f.getIdentifier();
+					
+					// TODO enclosing
+					String targetName =  f.getIdentifier();
 					access = new JavaAccessInstanceGlobal(cfg,
 							getSourceCodeLocationManager(f).nextColumn(),
 							access,
@@ -874,10 +873,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 		if (receiver == null)
 			return null;
-
-		targetName = enclosing != null && enclosing.getUnit().getGlobal(targetName) != null
-				? "this." + enclosing + "." + targetName
-				: targetName;
+		// TODO enclosing
 
 		return new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
@@ -902,6 +898,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		// if the tracker does not have information about the actual
 		// variable, this might be a global
 		Global global = parserContext.getGlobal(cfg.getDescriptor().getUnit(), identifier, true);
+		
+		
 		if (global != null) {
 			if (global.isInstance()) {
 				JavaReferenceType type = null;
@@ -910,9 +908,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				else
 					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
 
-				String targetName = enclosing != null && enclosing.getUnit().getGlobal(identifier) != null
-						? "this." + enclosing + "." + identifier
-						: identifier;
 				expression = new JavaAccessInstanceGlobal(cfg,
 						getSourceCodeLocationManager(node).getCurrentLocation(),
 						new VariableRef(
@@ -920,11 +915,34 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
 								"this",
 								type),
-						targetName);
+						identifier);
 			} else
 				expression = new JavaAccessGlobal(cfg,
 						getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
 
+			return false;
+		} else if(enclosing != null) { // TODO: checks if enclosing handling is correct
+			global = parserContext.getGlobal(enclosing.getUnit(), identifier, true);
+			if (global != null) {
+				if (global.isInstance()) {
+					JavaReferenceType type = null;
+					if (enclosing.getUnit() instanceof ClassUnit)
+						type = JavaClassType.lookup(enclosing.getUnit().getName()).getReference();
+					else
+						type = JavaInterfaceType.lookup(enclosing.getUnit().getName()).getReference();
+
+					expression = new JavaAccessInstanceGlobal(cfg,
+							getSourceCodeLocationManager(node).getCurrentLocation(),
+							new VariableRef(
+									cfg,
+									parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+									"this.$enclosing."+identifier,
+									type),
+							identifier);
+				} else
+					expression = new JavaAccessGlobal(cfg,
+							getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
+			}
 			return false;
 		}
 
