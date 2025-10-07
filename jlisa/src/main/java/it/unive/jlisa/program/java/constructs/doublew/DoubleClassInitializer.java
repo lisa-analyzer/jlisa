@@ -34,7 +34,7 @@ public class DoubleClassInitializer extends NativeCFG implements PluggableStatem
 			ClassUnit objectUnit) {
 
 		super(new JavaCodeMemberDescriptor(location, objectUnit, false,
-				"DoubleClInit" + InitializedClassSet.SUFFIX_CLINIT,
+				"Double" + InitializedClassSet.SUFFIX_CLINIT,
 				VoidType.INSTANCE,
 				new Parameter[0]),
 				DoubleClassInitializer.DoubleClInit.class);
@@ -81,16 +81,16 @@ public class DoubleClassInitializer extends NativeCFG implements PluggableStatem
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			GlobalVariable maxId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.DoubleClInit::MAX_VALUE",
+			GlobalVariable maxId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.Double::MAX_VALUE",
 					getLocation());
 			Constant maxConst = new Constant(JavaDoubleType.INSTANCE, Double.MAX_VALUE, getLocation());
 
-			GlobalVariable minId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.DoubleClInit::MIN_VALUE",
+			GlobalVariable minId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.Double::MIN_VALUE",
 					getLocation());
 			Constant minConst = new Constant(JavaDoubleType.INSTANCE, Double.MIN_VALUE, getLocation());
 
 			GlobalVariable posInfId = new GlobalVariable(JavaDoubleType.INSTANCE,
-					"java.lang.DoubleClInit::POSITIVE_INFINITY",
+					"java.lang.Double::POSITIVE_INFINITY",
 					getLocation());
 			Constant posInfConst = new Constant(JavaDoubleType.INSTANCE, Double.POSITIVE_INFINITY, getLocation());
 
