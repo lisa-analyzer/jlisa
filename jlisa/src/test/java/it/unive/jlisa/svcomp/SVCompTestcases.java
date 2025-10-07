@@ -441,10 +441,10 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 	
-//	@Test
-//	public void SortedListInsert_MemUnsat01_test() throws IOException {
-//		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "SortedListInsert-MemUnsat01",
-//				"Main.java", "../common");
-//		perform(conf);
-//	}
+	@Test
+	public void SortedListInsert_MemUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "SortedListInsert-MemUnsat01",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }
