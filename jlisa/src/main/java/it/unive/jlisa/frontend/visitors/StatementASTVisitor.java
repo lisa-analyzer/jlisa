@@ -16,6 +16,7 @@ import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchEqualityCheck;
+import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
@@ -1107,10 +1108,15 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				} else if (initializer instanceof JavaNewArrayWithInitializer) {
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref,
 							((JavaNewArrayWithInitializer) initializer).withStaticType(type));
-				} else {
+				} else if (initializer.getStaticType().canBeAssignedTo(type)
+						&& !type.equals(initializer.getStaticType())) {
+					// implicit cast
+					JavaCastExpression cast = new JavaCastExpression(cfg,
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), initializer,
+							type);
+					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, cast);
+				} else
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, initializer);
-				}
-
 			}
 
 			adj.addNode(assignment);
