@@ -78,14 +78,15 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 						// assign exception to variable thrower
-						CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-						state = analysis.assign(state, throwVar,
-								state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+						for (SymbolicExpression th : state.getExecutionExpressions()) {
+							CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
+							state = analysis.assign(state, throwVar, th, this);
 
-						// deletes the receiver of the constructor
-						state = state.forgetIdentifiers(call.getMetaVariables(), this);
-						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), this)));
+							// deletes the receiver of the constructor
+							state = state.forgetIdentifiers(call.getMetaVariables(), this);
+							result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+									new Error(npeType.getReference(), this)));
+						}
 						continue;
 					} else if (!inner.isUnitType())
 						continue;
