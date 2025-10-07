@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.floatw;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -34,7 +33,7 @@ public class FloatClassInitializer extends NativeCFG implements PluggableStateme
 			ClassUnit objectUnit) {
 
 		super(new JavaCodeMemberDescriptor(location, objectUnit, false,
-				"FloatClInit" + InitializedClassSet.SUFFIX_CLINIT,
+				"Float" + InitializedClassSet.SUFFIX_CLINIT,
 				VoidType.INSTANCE,
 				new Parameter[0]),
 				FloatClassInitializer.FloatClInit.class);
@@ -59,7 +58,7 @@ public class FloatClassInitializer extends NativeCFG implements PluggableStateme
 		public FloatClInit(
 				CFG cfg,
 				CodeLocation location) {
-			super(cfg, location, "Float" + InitializedClassSet.SUFFIX_CLINIT, JavaClassType.getSystemType());
+			super(cfg, location, "Float" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE);
 		}
 
 		@Override
@@ -81,16 +80,16 @@ public class FloatClassInitializer extends NativeCFG implements PluggableStateme
 				ExpressionSet[] params,
 				StatementStore<A> expressions)
 				throws SemanticException {
-			GlobalVariable maxId = new GlobalVariable(JavaFloatType.INSTANCE, "java.lang.FloatClInit::MAX_VALUE",
+			GlobalVariable maxId = new GlobalVariable(JavaFloatType.INSTANCE, "java.lang.Float::MAX_VALUE",
 					getLocation());
 			Constant maxConst = new Constant(JavaFloatType.INSTANCE, Float.MAX_VALUE, getLocation());
 
-			GlobalVariable minId = new GlobalVariable(JavaFloatType.INSTANCE, "java.lang.FloatClInit::MIN_VALUE",
+			GlobalVariable minId = new GlobalVariable(JavaFloatType.INSTANCE, "java.lang.Float::MIN_VALUE",
 					getLocation());
 			Constant minConst = new Constant(JavaFloatType.INSTANCE, Float.MIN_VALUE, getLocation());
 
 			GlobalVariable posInfId = new GlobalVariable(JavaFloatType.INSTANCE,
-					"java.lang.FloatClInit::POSITIVE_INFINITY",
+					"java.lang.Float::POSITIVE_INFINITY",
 					getLocation());
 			Constant posInfConst = new Constant(JavaFloatType.INSTANCE, Float.POSITIVE_INFINITY, getLocation());
 

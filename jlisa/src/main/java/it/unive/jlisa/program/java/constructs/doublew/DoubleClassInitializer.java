@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.doublew;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -59,7 +58,7 @@ public class DoubleClassInitializer extends NativeCFG implements PluggableStatem
 		public DoubleClInit(
 				CFG cfg,
 				CodeLocation location) {
-			super(cfg, location, "Double" + InitializedClassSet.SUFFIX_CLINIT, JavaClassType.getSystemType());
+			super(cfg, location, "Double" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE);
 		}
 
 		@Override

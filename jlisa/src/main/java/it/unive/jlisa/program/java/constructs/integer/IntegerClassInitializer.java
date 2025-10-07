@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -58,7 +57,7 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 		public IntegerClInit(
 				CFG cfg,
 				CodeLocation location) {
-			super(cfg, location, "Integer" + InitializedClassSet.SUFFIX_CLINIT, JavaClassType.getSystemType());
+			super(cfg, location, "Integer" + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE);
 		}
 
 		@Override

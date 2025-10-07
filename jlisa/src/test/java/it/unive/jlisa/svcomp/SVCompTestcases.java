@@ -430,6 +430,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
 	public void VelocityTracker_true_test() throws IOException {
+		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "VelocityTracker_true",
 				"Main.java", "../common/");
 		perform(conf);
