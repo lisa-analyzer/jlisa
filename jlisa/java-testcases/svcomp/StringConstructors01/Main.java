@@ -15,7 +15,6 @@ public class Main {
     String s2 = new String(s);
     String s3 = new String(charArray);
     String s4 = new String(charArray, 4, 4);
-    String s5 = new String (new byte[] {70,70,70});
 
     assert s1.equals("");
     assert s2.equals("test");
