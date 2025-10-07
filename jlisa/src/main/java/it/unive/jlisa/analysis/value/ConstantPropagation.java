@@ -150,7 +150,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType());
 	}
-	
+
 	@Override
 	public ConstantValue evalNullConstant(
 			ProgramPoint pp,
@@ -1245,7 +1245,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) left.getValue()).longValue());
 			else if (right.getValue() instanceof JavaDoubleType)
 				return new ConstantValue(((Number) left.getValue()).doubleValue());
-
 
 		return left;
 	}

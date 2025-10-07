@@ -57,7 +57,7 @@ public class JavaDivision extends Division {
 			if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
 					|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE
 					|| analysis.getDynamicTypeOf(state, left, this) == JavaFloatType.INSTANCE
-					|| analysis.getDynamicTypeOf(state, right, this) == JavaFloatType.INSTANCE) { 
+					|| analysis.getDynamicTypeOf(state, right, this) == JavaFloatType.INSTANCE) {
 
 				JavaAccessGlobal accessGlobal;
 				if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE

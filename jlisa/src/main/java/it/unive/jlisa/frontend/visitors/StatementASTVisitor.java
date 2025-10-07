@@ -1089,7 +1089,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 
 			if (fragment.getInitializer() == null) {
 				initializer = type.defaultValue(cfg,
-						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());				
+						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				assignment = new JavaAssignment(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), ref, initializer);
 			} else {
@@ -1108,11 +1108,14 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				} else if (initializer instanceof JavaNewArrayWithInitializer) {
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref,
 							((JavaNewArrayWithInitializer) initializer).withStaticType(type));
-				} else if (initializer.getStaticType().canBeAssignedTo(type) && !type.equals(initializer.getStaticType())) {
+				} else if (initializer.getStaticType().canBeAssignedTo(type)
+						&& !type.equals(initializer.getStaticType())) {
 					// implicit cast
-					JavaCastExpression cast = new JavaCastExpression(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), initializer, type);
+					JavaCastExpression cast = new JavaCastExpression(cfg,
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), initializer,
+							type);
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, cast);
-				} else 
+				} else
 					assignment = new JavaAssignment(cfg, loc.getCurrentLocation(), ref, initializer);
 			}
 
