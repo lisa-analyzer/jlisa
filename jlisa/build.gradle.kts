@@ -106,7 +106,7 @@ tasks.jar {
         configurations.runtimeClasspath.get().map { file ->
             if (file.isDirectory) file
             else zipTree(file).matching {
-                exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+                exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.EC")
             }
         }
     })
