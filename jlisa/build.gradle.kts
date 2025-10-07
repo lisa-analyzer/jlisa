@@ -95,24 +95,17 @@ tasks.test {
 
 // JAR (FAT JAR)
 tasks.jar {
-
     manifest {
-        attributes["Main-Class"] = application.mainClass.get()
+        attributes(
+            "Main-Class" to application.mainClass.get(),
+            "Implementation-Version" to project.version
+        )
     }
 
-    from({
-        configurations.runtimeClasspath.get().map { file ->
-            if (file.isDirectory) file
-            else zipTree(file).matching {
-                exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.EC")
-            }
-        }
-    })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // Run code style checks before packaging
     dependsOn("checkCodeStyle")
 }
+
 
 // DISTZIP
 tasks.named<Zip>("distZip") {
