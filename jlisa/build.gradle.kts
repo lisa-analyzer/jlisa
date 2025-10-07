@@ -95,13 +95,6 @@ tasks.test {
 
 // JAR (FAT JAR)
 tasks.jar {
-    manifest {
-        attributes(
-            "Main-Class" to application.mainClass.get(),
-            "Implementation-Version" to project.version
-        )
-    }
-
     from({
         configurations.runtimeClasspath.get().map { file ->
             if (file.isDirectory) file
