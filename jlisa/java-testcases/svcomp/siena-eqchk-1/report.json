@@ -1,0 +1,43 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':19:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "bool_ByteBuf.equals(ByteBuf__this,_java.lang.Object__o)_1707433907.json", "byte[]__ByteBuf.bytes(ByteBuf__this)_-2061334657.json", "byte[]__ByteBuf.bytes(ByteBuf__this)_-2061337571.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440231.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440262.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440293.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440324.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440355.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440386.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440417.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440448.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440479.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_SENPDriver.SENPDriver(SENPDriver__this)_1707435736.json" ],
+  "info" : {
+    "cfgs" : "133",
+    "duration" : "138ms",
+    "end" : "2025-10-07T15:43:43.265+02:00",
+    "expressions" : "3235",
+    "files" : "14",
+    "globals" : "138",
+    "members" : "263",
+    "programs" : "1",
+    "start" : "2025-10-07T15:43:43.127+02:00",
+    "statements" : "1107",
+    "units" : "67",
+    "version" : "0.1",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/siena-eqchk-1"
+  }
+}

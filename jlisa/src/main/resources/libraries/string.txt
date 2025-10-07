@@ -14,6 +14,18 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		param this libtype java.lang.String*
 		param val type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
 		
+	instance method String: it.unive.jlisa.program.java.constructs.string.StringCharArrayConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		
+	instance method String: it.unive.jlisa.program.java.constructs.string.StringCharArrayFromToConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
 	instance method getBytes: it.unive.jlisa.program.java.constructs.string.StringGetBytes
 		type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
 		param this libtype java.lang.String*
