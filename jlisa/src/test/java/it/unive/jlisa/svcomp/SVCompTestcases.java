@@ -442,4 +442,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java");
 		perform(conf);
 	}
+
+	@Test
+	public void long1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "long1",
+				"Main.java", "../common/");
+		perform(conf);
+	}
 }
