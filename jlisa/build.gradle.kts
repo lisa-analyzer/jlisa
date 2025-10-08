@@ -102,14 +102,6 @@ tasks.jar {
         )
     }
 
-    from({
-        configurations.runtimeClasspath.get().map { file ->
-            if (file.isDirectory) file
-            else zipTree(file).matching {
-                exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-            }
-        }
-    })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     // Run code style checks before packaging
