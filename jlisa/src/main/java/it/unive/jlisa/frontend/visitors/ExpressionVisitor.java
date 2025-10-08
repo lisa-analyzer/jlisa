@@ -347,6 +347,12 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ClassInstanceCreation node) {
+		if (node.getAnonymousClassDeclaration() != null) {
+			throw new ParsingException("anonymous-class",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Anonymous classes are not supported.",
+					getSourceCodeLocation(node));
+		}
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();

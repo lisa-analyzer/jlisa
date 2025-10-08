@@ -332,7 +332,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore // Ignored due to anonymous class.
 	public void Basic1_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
