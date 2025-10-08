@@ -456,4 +456,18 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+	
+	@Test
+	public void RegexSubstitution02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "RegexSubstitution02",
+				"Main.java", "../common");
+		perform(conf);
+	}
+		
+	@Test
+	public void StringValueOf01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf01",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }

@@ -406,8 +406,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringValueOfIntOperator && arg.getValue() instanceof Integer i)
 			return new ConstantValue(String.valueOf(i));
 
-		if (operator instanceof JavaStringValueOfCharOperator && arg.getValue() instanceof Character c)
-			return new ConstantValue(String.valueOf(c));
+		if (operator instanceof JavaStringValueOfCharOperator && arg.getValue() instanceof Integer i)
+			return new ConstantValue(String.valueOf(i));
 
 		if (operator instanceof JavaStringValueOfObjectOperator && arg.getValue() instanceof Object o)
 			return new ConstantValue(String.valueOf(o));
@@ -707,7 +707,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.equalsIgnoreCase(rv));
 		}
-
+		
 		// char
 		if (operator instanceof JavaCharacterEqualsOperator) {
 			Integer lv = ((Integer) left.getValue());
