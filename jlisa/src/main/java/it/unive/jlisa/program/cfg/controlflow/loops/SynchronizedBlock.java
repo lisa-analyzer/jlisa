@@ -3,11 +3,11 @@ package it.unive.jlisa.program.cfg.controlflow.loops;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
 import it.unive.lisa.program.cfg.edge.Edge;
-import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Synchronized block
@@ -43,8 +43,9 @@ public class SynchronizedBlock extends ControlFlowStructure {
 	}
 
 	@Override
-	public void simplify() {
-		body.removeIf(NoOp.class::isInstance);
+	public void simplify(
+			Set<Statement> targets) {
+		body.removeIf(targets::contains);
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class SynchronizedBlock extends ControlFlowStructure {
 			Statement original,
 			Statement replacement) {
 		if (body.contains(original)) {
-			body.remove(replacement);
+			body.remove(original);
 			body.add(replacement);
 		}
 	}

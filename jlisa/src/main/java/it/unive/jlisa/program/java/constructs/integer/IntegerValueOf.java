@@ -49,11 +49,11 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type intType = JavaClassType.lookup("Integer", null);
+		Type intType = JavaClassType.lookup("java.lang.Integer");
 		JavaReferenceType reftype = new JavaReferenceType(intType);
 
 		// allocate the value
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "Integer", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[] { getSubExpression() });
 		ExpressionSet set = new ExpressionSet(expr);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] { set },

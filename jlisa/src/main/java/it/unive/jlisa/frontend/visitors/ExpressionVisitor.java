@@ -41,8 +41,10 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -69,10 +71,12 @@ import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import it.unive.lisa.util.collections.workset.LIFOWorkingSet;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -100,6 +104,7 @@ import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -111,21 +116,20 @@ import org.eclipse.jdt.core.dom.TypeMethodReference;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class ExpressionVisitor extends JavaASTVisitor {
+public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
 	private Expression expression;
 
 	private JavaLocalVariableTracker tracker;
-
-	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(ExpressionVisitor.class);
 
 	public ExpressionVisitor(
 			ParserContext parserContext,
 			String source,
 			CompilationUnit compilationUnit,
 			CFG cfg,
-			JavaLocalVariableTracker tracker) {
-		super(parserContext, source, compilationUnit);
+			JavaLocalVariableTracker tracker,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
 		this.tracker = tracker;
 	}
@@ -133,8 +137,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ArrayAccess node) {
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getArray().accept(leftVisitor);
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -153,7 +159,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		for (Object args : node.expressions()) {
 			ASTNode e = (ASTNode) args;
 			ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-					tracker);
+					tracker, container);
 			e.accept(argumentsVisitor);
 			Expression expr = argumentsVisitor.getExpression();
 			parameters.add(expr);
@@ -170,22 +176,43 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ArrayCreation node) {
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
-		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+		ExpressionVisitor lengthVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 
-		if (node.dimensions().size() > 1)
+		// currently we handle just single-dim and bi-dim arrays
+		if (node.dimensions().size() > 2)
 			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Multi-dimensional arrays are not supported are not supported.",
 					getSourceCodeLocation(node));
 
-		// TODO: currently we handle single-dim arrays
-		if (node.dimensions().size() != 0) {
+		// single-dimension arrays
+		if (node.dimensions().size() == 1) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 			Expression length = lengthVisitor.getExpression();
 			expression = new JavaNewArray(cfg, getSourceCodeLocation(node), length, new JavaReferenceType(type));
+		}
+		// bi-dimension arrays
+		else if (node.dimensions().size() == 2) {
+			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
+			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
+			ExpressionVisitor sndDimVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
+					tracker,
+					container);
+			((ASTNode) node.dimensions().get(1)).accept(sndDimVisitor);
+			List<Expression> parameters = new ArrayList<>();
+			for (int i = 0; i < fstDim; i++) {
+				Expression expr = new JavaNewArray(cfg,
+						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+						sndDimVisitor.getExpression(), (JavaReferenceType) type.asArrayType().getInnerType());
+				parameters.add(expr);
+			}
+
+			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node),
+					parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		} else {
 			ArrayInitializer initializer = node.getInitializer();
 
@@ -195,7 +222,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			for (Object args : initializer.expressions()) {
 				ASTNode e = (ASTNode) args;
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-						tracker);
+						tracker, container);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
 				parameters.add(expr);
@@ -212,8 +239,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(
 			Assignment node) {
 		Assignment.Operator operator = node.getOperator();
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getLeftHandSide().accept(leftVisitor);
 		node.getRightHandSide().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -288,18 +317,18 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			CaseDefaultExpression node) {
-		parserContext.addException(
-				new ParsingException("case-default", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Case Default Expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("case-default",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Case Default Expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			CastExpression node) {
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
-		TypeASTVisitor leftVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		TypeASTVisitor leftVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(leftVisitor);
 		node.getExpression().accept(rightVisitor);
 		Expression left = rightVisitor.getExpression();
@@ -318,22 +347,28 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ClassInstanceCreation node) {
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		if (node.getAnonymousClassDeclaration() != null) {
+			throw new ParsingException("anonymous-class",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Anonymous classes are not supported.",
+					getSourceCodeLocation(node));
+		}
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 
-		if (!(type instanceof JavaClassType)) {
-			parserContext.addException(
-					new ParsingException("arguments-constructor", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"A ClassInstanceCreation Type should be a JavaClassType; got: " + type.getClass().getName(),
-							getSourceCodeLocation(node)));
-		}
+		if (!(type instanceof JavaClassType))
+			throw new ParsingException("arguments-constructor",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"A ClassInstanceCreation Type should be a JavaClassType; got: " + type.getClass().getName(),
+					getSourceCodeLocation(node));
+
 		List<Expression> parameters = new ArrayList<>();
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-						tracker);
+						tracker, container);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
 				parameters.add(expr);
@@ -343,7 +378,6 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),
-				((JavaClassType) type).getUnit().getName(),
 				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
@@ -354,35 +388,35 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			ConditionalExpression node) {
 
 		ExpressionVisitor conditionVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-				tracker);
+				tracker, container);
 		node.getExpression().accept(conditionVisitor);
 		Expression conditionExpr = conditionVisitor.getExpression();
 		if (conditionExpr == null) {
-			parserContext.addException(
-					new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
-							"The condition is missing.",
-							getSourceCodeLocation(node)));
+			throw new ParsingException("conditional-expression",
+					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+					"The condition is missing.",
+					getSourceCodeLocation(node));
 		}
 
-		ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor thenExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getThenExpression().accept(thenExprVisitor);
 		Expression thenExpr = thenExprVisitor.getExpression();
-		if (thenExpr == null) {
-			parserContext.addException(
-					new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
-							"The then expression is missing.",
-							getSourceCodeLocation(node)));
-		}
+		if (thenExpr == null)
+			throw new ParsingException("conditional-expression",
+					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+					"The then expression is missing.",
+					getSourceCodeLocation(node));
 
-		ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor elseExprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getElseExpression().accept(elseExprVisitor);
 		Expression elseExpr = elseExprVisitor.getExpression();
-		if (elseExpr == null) {
-			parserContext.addException(
-					new ParsingException("conditional-expression", ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
-							"The else expression is missing.",
-							getSourceCodeLocation(node)));
-		}
+		if (elseExpr == null)
+			throw new ParsingException("conditional-expression",
+					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
+					"The else expression is missing.",
+					getSourceCodeLocation(node));
 
 		expression = new JavaConditionalExpression(cfg,
 				getSourceCodeLocationManager(node.getExpression(), true).getCurrentLocation(), conditionExpr, thenExpr,
@@ -394,27 +428,26 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			CreationReference node) {
-		parserContext.addException(
-				new ParsingException("creation-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Creation References are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("creation-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Creation References are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			ExpressionMethodReference node) {
-		parserContext.addException(
-				new ParsingException("expression-method-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Expression Method References are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("expression-method-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Expression Method References are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			FieldAccess node) {
-		ExpressionVisitor visitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor visitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
 		expression = new JavaAccessInstanceGlobal(cfg,
@@ -427,8 +460,10 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	public boolean visit(
 			InfixExpression node) {
 		InfixExpression.Operator operator = node.getOperator();
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
-		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		ExpressionVisitor rightVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getLeftOperand().accept(leftVisitor);
 		node.getRightOperand().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -442,7 +477,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		jdtOperands.add(node.getRightOperand());
 		for (Object n : node.extendedOperands()) {
 			ExpressionVisitor extendedOperandVisitor = new ExpressionVisitor(parserContext, source, compilationUnit,
-					cfg, tracker);
+					cfg, tracker, container);
 			((ASTNode) n).accept(extendedOperandVisitor);
 			if (extendedOperandVisitor.getExpression() != null) {
 				operands.add(extendedOperandVisitor.getExpression());
@@ -590,8 +625,9 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			InstanceofExpression node) {
-		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
-		TypeASTVisitor rightVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		ExpressionVisitor leftVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+				container);
+		TypeASTVisitor rightVisitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getLeftOperand().accept(leftVisitor);
 		node.getRightOperand().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
@@ -605,22 +641,21 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			LambdaExpression node) {
-		parserContext.addException(
-				new ParsingException("lambda-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Lambda expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("lambda-expression",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Lambda expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			MethodInvocation node) {
-		ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
 		List<Expression> parameters = new ArrayList<>();
 		String methodName = node.getName().toString();
 		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
 
 		boolean isInstance;
+		String name = null;
 		// we do not have a receiver
 		if (node.getExpression() == null) {
 			isInstance = !classUnit.getInstanceCodeMembersByName(methodName, true).isEmpty();
@@ -628,28 +663,45 @@ public class ExpressionVisitor extends JavaASTVisitor {
 			// if instance, we add this as parameter
 			if (isInstance)
 				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this",
-						new JavaReferenceType(JavaClassType.lookup(classUnit.getName(), null))));
+						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
 		} else {
-			node.getExpression().accept(receiver);
-			if (JavaClassType.hasType(node.getExpression().toString()))
-				isInstance = false;
-			else {
-				parameters.add(receiver.getExpression());
-				isInstance = true;
+			// this might be a fqn instead
+			name = container.imports.get(node.getExpression().toString());
+			if (name == null)
+				name = node.getExpression().toString();
+			if (LibrarySpecificationProvider.isLibraryAvailable(name))
+				LibrarySpecificationProvider.importClass(getProgram(), name);
+
+			Expression rec = null;
+			try {
+				ExpressionVisitor receiver = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+						container);
+				node.getExpression().accept(receiver);
+				rec = receiver.getExpression();
+			} catch (ParsingException e) {
+				if (!e.getName().equals("missing-variable"))
+					throw e;
+				// missing var is fine: we will use the fqn
 			}
+
+			if (rec != null) {
+				parameters.add(rec);
+				isInstance = true;
+			} else
+				isInstance = false;
 		}
 
-		if (!node.typeArguments().isEmpty()) {
-			parserContext.addException(
-					new ParsingException("method-invocation", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Method Invocation expressions with type arguments are not supported.",
-							getSourceCodeLocation(node)));
-		}
+		if (!node.typeArguments().isEmpty())
+			throw new ParsingException("method-invocation",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Method Invocation expressions with type arguments are not supported.",
+					getSourceCodeLocation(node));
+
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-						tracker);
+						tracker, container);
 				e.accept(argumentsVisitor);
 				Expression expr = argumentsVisitor.getExpression();
 				parameters.add(expr);
@@ -657,12 +709,20 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		}
 
 		if (isInstance)
-			expression = new JavaUnresolvedCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(),
-					Call.CallType.INSTANCE, null, node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedCall(
+					cfg,
+					getSourceCodeLocationManager(node.getName()).nextColumn(),
+					Call.CallType.INSTANCE,
+					null,
+					node.getName().toString(),
+					parameters.toArray(new Expression[0]));
 		else
-			expression = new JavaUnresolvedStaticCall(cfg, getSourceCodeLocationManager(node.getName()).nextColumn(),
-					node.getExpression() == null ? classUnit.getName() : node.getExpression().toString(),
-					node.getName().toString(), parameters.toArray(new Expression[0]));
+			expression = new JavaUnresolvedStaticCall(
+					cfg,
+					getSourceCodeLocationManager(node.getName()).nextColumn(),
+					name == null ? classUnit.getName() : name,
+					node.getName().toString(),
+					parameters.toArray(new Expression[0]));
 
 		return false;
 	}
@@ -670,78 +730,196 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			QualifiedName node) {
-		String targetName = node.getName().getIdentifier();
+		/*
+		 * From the javadoc of FieldAccess: An expression like "foo.this" can
+		 * only be represented as a this expression (ThisExpression) containing
+		 * a simple name. "this" is a keyword, and therefore invalid as an
+		 * identifier. An expression like "this.foo" can only be represented as
+		 * a field access expression (FieldAccess) containing a this expression
+		 * and a simple name. Again, this is because "this" is a keyword, and
+		 * therefore invalid as an identifier. An expression with "super" can
+		 * only be represented as a super field access expression
+		 * (SuperFieldAccess). "super" is a also keyword, and therefore invalid
+		 * as an identifier. An expression like "foo.bar" can be represented
+		 * either as a qualified name (QualifiedName) or as a field access
+		 * expression (FieldAccess) containing simple names. Either is
+		 * acceptable, and there is no way to choose between them without
+		 * information about what the names resolve to (ASTParser may return
+		 * either). Other expressions ending in an identifier, such as
+		 * "foo().bar" can only be represented as field access expressions
+		 * (FieldAccess).
+		 */
 
-		// need to resolve recursively
-		if (node.getQualifier() instanceof QualifiedName) {
-			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
-					tracker);
-			node.getQualifier().accept(visitor);
-			Expression expr = visitor.getExpression();
-			expression = new JavaAccessInstanceGlobal(cfg,
-					getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr,
-					node.getName().getIdentifier());
-			return false;
-		}
-
-		// FIXME: we are currently taking just the last name (the true name of
-		// the unit)
-		String unitName;
-		Name lastName = node.getQualifier();
-
-		if (node.getQualifier() instanceof SimpleName)
-			unitName = lastName.toString();
-		else {
-			while (lastName instanceof QualifiedName)
-				lastName = ((QualifiedName) lastName).getQualifier();
-			unitName = lastName.toString();
-		}
-
-		Unit unit = getProgram().getUnit(unitName);
-		if (unit == null) {
-			// FIXME: WORKAROUND FOR SEARCHING FOR MISSING LIBRARIES
-			if (Character.isUpperCase(unitName.charAt(0)))
-				parserContext.addException(
-						new ParsingException("missing-type", ParsingException.Type.UNSUPPORTED_STATEMENT,
-								"Missing unit " + unitName,
-								getSourceCodeLocation(node)));
-			else {
-				// it is a field access
-				ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
-						tracker);
-				lastName.accept(visitor);
-				Expression expr = visitor.getExpression();
-				expression = new JavaAccessInstanceGlobal(cfg,
-						getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(), expr,
-						node.getName().getIdentifier());
+		// based on tests, field accesses have precedence over fqns
+		try {
+			Expression fa = solveAsFieldAccess(node);
+			if (fa != null) {
+				expression = fa;
 				return false;
+			}
+		} catch (ParsingException e) {
+			if (!e.getName().equals("missing-global"))
+				throw e;
+		}
+
+		// we were not able to solve it as a field access,
+		// so we might have:
+		// - some.qualified.or.not.class.name.StaticField
+		// - some.qualified.or.not.class.name.StaticField.SomeOtherField
+		// - some.qualified.or.not.class.name (?)
+
+		// we try to find a unit by starting at the first token
+		// ("some") and going right ("some.qualified", "some.qualified.or", ...)
+		// until we find a unit or we exhaust all the possibilities
+		List<SimpleName> fields = new LinkedList<>();
+		SimpleName firstField = null;
+		Name current = node;
+		// each element in names holds:
+		// - the fqn to try
+		// - the static field to access in the fqn
+		// - the remaining fields to access from the static field
+		LIFOWorkingSet<Triple<String, SimpleName, List<SimpleName>>> names = LIFOWorkingSet.mk();
+		while (current != null) {
+			names.push(Triple.of(current.toString(), firstField, new LinkedList<>(fields)));
+			if (current instanceof QualifiedName) {
+				if (firstField != null)
+					fields.addFirst(firstField);
+				firstField = ((QualifiedName) current).getName();
+				current = ((QualifiedName) current).getQualifier();
+			} else
+				current = null;
+		}
+
+		Unit candidate = null;
+		while (!names.isEmpty()) {
+			Triple<String, SimpleName, List<SimpleName>> tentative = names.pop();
+			candidate = TypeASTVisitor.getUnit(tentative.getLeft(), getProgram(), container.pkg, container.imports);
+			if (candidate == null)
+				continue;
+
+			// unit found, search for the global
+			if (tentative.getMiddle() == null)
+				// if we got a unit with no field to access, we do nothing:
+				// the caller has to handle the fqn as a type (eg, in a static
+				// call)
+				return false;
+			Global global = parserContext.getGlobal(candidate, tentative.getMiddle().getIdentifier(), false);
+			if (global == null)
+				// we got the unit, but we have to access the global before
+				// returning
+				// if we cannot find it, we try the next candidate
+				continue;
+
+			Expression access = new JavaAccessGlobal(
+					cfg,
+					getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+					candidate,
+					global);
+
+			if (tentative.getRight().isEmpty()) {
+				// no more fields to access, we are done
+				expression = access;
+				return false;
+			}
+
+			// we have more fields to access
+			for (SimpleName f : tentative.getRight()) {
+				try {
+					access = new JavaAccessInstanceGlobal(cfg,
+							getSourceCodeLocationManager(f).nextColumn(),
+							access,
+							f.getIdentifier());
+				} catch (ParsingException e) {
+					if (!e.getName().equals("missing-global"))
+						throw e;
+					// no global found, we stop here and we try the next
+					// candidate
+					break;
+				}
 			}
 		}
 
-		Global global = parserContext.getGlobal(unit, targetName);
-		if (global == null) {
-			LOG.warn("Global " + targetName + " not found in unit " + unit.getName() + ".");
-			/*
-			 * parserContext.addException(new
-			 * ParsingException("missing_globals",
-			 * ParsingException.Type.MALFORMED_SOURCE, "Global " + targetName +
-			 * " not found in unit " + unit.getName() + ".",
-			 * getSourceCodeLocation(node)));
-			 */
-			global = new Global(getSourceCodeLocation(node), unit, targetName, false);
-		}
-		expression = new JavaAccessGlobal(cfg,
-				getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(), unit, global);
-		return false;
+		// we did not find a field access or a fqn matching the node
+		throw new ParsingException("missing-type",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Missing unit " + node,
+				getSourceCodeLocation(node));
+	}
+
+	private Expression solveAsFieldAccess(
+			QualifiedName node) {
+		// we try to resolve node as a field access (y.x or y.x.z.w)
+		String targetName = node.getName().getIdentifier();
+		Name qualifier = node.getQualifier();
+
+		Expression receiver = null;
+		if (qualifier instanceof SimpleName) {
+			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
+					tracker, container);
+			try {
+				((SimpleName) qualifier).accept(visitor);
+				receiver = visitor.getExpression();
+			} catch (ParsingException e) {
+				if (!e.getName().equals("missing-variable"))
+					throw e;
+				receiver = null;
+			}
+		} else if (qualifier instanceof QualifiedName)
+			receiver = solveAsFieldAccess((QualifiedName) qualifier);
+
+		if (receiver == null)
+			return null;
+
+		return new JavaAccessInstanceGlobal(cfg,
+				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
+				receiver,
+				targetName);
 	}
 
 	@Override
 	public boolean visit(
 			SimpleName node) {
 		String identifier = node.getIdentifier();
-		expression = new VariableRef(cfg, getSourceCodeLocation(node), identifier, parserContext.getVariableStaticType(
-				cfg, new VariableInfo(identifier, tracker != null ? tracker.getLocalVariable(identifier) : null)));
-		return false;
+		if (tracker != null && tracker.hasVariable(identifier)) {
+			expression = new VariableRef(
+					cfg,
+					getSourceCodeLocation(node),
+					identifier,
+					parserContext.getVariableStaticType(cfg, new VariableInfo(identifier,
+							tracker != null ? tracker.getLocalVariable(identifier) : null)));
+			return false;
+		}
+
+		// if the tracker does not have information about the actual
+		// variable, this might be a global
+		Global global = parserContext.getGlobal(cfg.getDescriptor().getUnit(), identifier, true);
+		if (global != null) {
+			if (global.isInstance()) {
+				JavaReferenceType type = null;
+				if (cfg.getUnit() instanceof ClassUnit)
+					type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
+				else
+					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+
+				expression = new JavaAccessInstanceGlobal(cfg,
+						getSourceCodeLocationManager(node).getCurrentLocation(),
+						new VariableRef(
+								cfg,
+								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+								"this",
+								type),
+						identifier);
+			} else
+				expression = new JavaAccessGlobal(cfg,
+						getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
+
+			return false;
+		}
+
+		throw new ParsingException("missing-variable",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Variable " + identifier + " not defined before its use",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
@@ -795,7 +973,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			ParenthesizedExpression node) {
-		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg, tracker,
+				container);
 		node.getExpression().accept(visitor);
 		expression = visitor.getExpression();
 		return false;
@@ -804,7 +983,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			PostfixExpression node) {
-		ExpressionVisitor sev = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor sev = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
 		node.getOperand().accept(sev);
 		Expression expr = sev.getExpression();
 		if (expr == null) {
@@ -824,7 +1003,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			PrefixExpression node) {
-		ExpressionVisitor sev = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+		ExpressionVisitor sev = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker, container);
 		node.getOperand().accept(sev);
 		Expression expr = sev.getExpression();
 		if (expr == null) {
@@ -864,19 +1043,17 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			SuperFieldAccess node) {
-
-		parserContext.addException(
-				new ParsingException("super-field-access", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Super Field Access expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("super-field-access",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Super Field Access expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			SuperMethodInvocation node) {
 		ClassUnit superClass = (ClassUnit) this.cfg.getUnit();
-		JavaClassType superType = JavaClassType.lookup(superClass.getName(), null);
+		JavaClassType superType = JavaClassType.lookup(superClass.getName());
 
 		// craft the call to superclass
 		List<Expression> parameters = new ArrayList<>();
@@ -884,7 +1061,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 		for (Object args : node.arguments()) {
 			ASTNode e = (ASTNode) args;
-			ExpressionVisitor argVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker);
+			ExpressionVisitor argVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg, tracker,
+					container);
 			e.accept(argVisitor);
 			Expression expr = argVisitor.getExpression();
 			parameters.add(expr);
@@ -899,48 +1077,46 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			SuperMethodReference node) {
-		parserContext.addException(
-				new ParsingException("super-method-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Super Method Reference expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("super-method-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Super Method Reference expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			SwitchExpression node) {
-		parserContext.addException(
-				new ParsingException("switch-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Switch Expressions are not supported.",
-						getSourceCodeLocation(node)));
-		return false;
+		throw new ParsingException("switch-expression",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Switch Expressions are not supported.",
+				getSourceCodeLocation(node));
 	}
 
 	@Override
 	public boolean visit(
 			ThisExpression node) {
-		if (node.getQualifier() != null) {
-			parserContext.addException(
-					new ParsingException("this-expression", ParsingException.Type.UNSUPPORTED_STATEMENT,
-							"Qualified This Expressions are not supported.",
-							getSourceCodeLocation(node)));
-		}
-		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this");
+		if (node.getQualifier() != null)
+			throw new ParsingException("this-expression",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Qualified This Expressions are not supported.",
+					getSourceCodeLocation(node));
+
+		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(
+				JavaClassType.lookup(((ClassUnit) cfg.getUnit()).getName())));
 		return false;
 	}
 
 	@Override
 	public boolean visit(
 			TypeLiteral node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 
 		// FIXME: we erase the type parameter
-		JavaClassType classType = JavaClassType.lookup("Class", null);
+		JavaClassType classType = JavaClassType.lookup("java.lang.Class");
 		expression = new JavaNewObj(
 				cfg,
 				getSourceCodeLocation(node),
-				classType.getUnit().getName(),
 				new JavaReferenceType(classType),
 				new Expression[0]);
 		return false;
@@ -949,17 +1125,43 @@ public class ExpressionVisitor extends JavaASTVisitor {
 	@Override
 	public boolean visit(
 			TypeMethodReference node) {
-		parserContext.addException(
-				new ParsingException("type-method-reference", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Type Method References are not supported.",
-						getSourceCodeLocation(node)));
+		throw new ParsingException("type-method-reference",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Type Method References are not supported.",
+				getSourceCodeLocation(node));
+	}
+
+	@Override
+	public boolean visit(
+			SingleVariableDeclaration node) {
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+		node.getType().accept(visitor);
+		it.unive.lisa.type.Type varType = visitor.getType();
+		varType = varType.isInMemoryType() ? new JavaReferenceType(varType) : varType;
+
+		String variableName = node.getName().getIdentifier();
+		VariableRef ref = new VariableRef(cfg,
+				getSourceCodeLocation(node.getName()),
+				variableName, varType);
+
+		if (tracker != null && tracker.hasVariable(variableName))
+			throw new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
+					"Variable " + variableName + " already exists in the cfg", getSourceCodeLocation(node));
+
+		if (tracker != null)
+			tracker.addVariable(variableName, ref, ref.getAnnotations());
+		parserContext.addVariableType(cfg,
+				new VariableInfo(variableName, tracker != null ? tracker.getLocalVariable(variableName) : null),
+				varType);
+
+		expression = ref;
 		return false;
 	}
 
 	@Override
 	public boolean visit(
 			VariableDeclarationExpression node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 		it.unive.lisa.type.Type varType = visitor.getType();
 		varType = varType.isInMemoryType() ? new JavaReferenceType(varType) : varType;
@@ -967,6 +1169,8 @@ public class ExpressionVisitor extends JavaASTVisitor {
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String variableName = fragment.getName().getIdentifier();
+			varType = visitor.liftToArray(varType, fragment);
+
 			VariableRef ref = new VariableRef(cfg,
 					getSourceCodeLocation(fragment),
 					variableName, varType);
@@ -983,7 +1187,7 @@ public class ExpressionVisitor extends JavaASTVisitor {
 
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			ExpressionVisitor exprVisitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
-					tracker);
+					tracker, container);
 			expr.accept(exprVisitor);
 			Expression initializer = exprVisitor.getExpression();
 			expression = new JavaAssignment(cfg,

@@ -1,7 +1,9 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -42,9 +44,32 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 			CodeLocation location,
 			Expression receiver,
 			String target) {
-		super(cfg, location, "::", Untyped.INSTANCE, receiver);
+		super(cfg, location, "::", getType(receiver, target, location), receiver);
 		this.target = target;
 		receiver.setParentStatement(this);
+	}
+
+	private static Type getType(
+			Expression receiver,
+			String target,
+			CodeLocation location) {
+		Type recType = receiver.getStaticType();
+		if (recType.isReferenceType())
+			recType = recType.asReferenceType().getInnerType();
+		if (recType.isUnitType()) {
+			CompilationUnit unit = recType.asUnitType().getUnit();
+			Global global = unit.getInstanceGlobal(target, true);
+			if (global != null)
+				return global.getStaticType();
+		} else if (recType.isArrayType() && target.equals("length"))
+			// the only instance global of an array type is "length"
+			return JavaIntType.INSTANCE;
+
+		throw new ParsingException(
+				"missing-global",
+				ParsingException.Type.UNSUPPORTED_STATEMENT,
+				"Cannot access instance global " + target + " from an expression of type " + receiver.getStaticType(),
+				location);
 	}
 
 	/**
@@ -124,22 +149,23 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 				Type inner = recType.asPointerType().getInnerType();
 				if (inner.isNullType()) {
 					// builds the exception
-					JavaClassType npeType = JavaClassType.getNullPoiterExceptionType();
-					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "NullPointerException",
+					JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
+					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 							npeType.getReference(), new Expression[0]);
 					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-					state = analysis.assign(state, throwVar,
-							state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					for (SymbolicExpression th : state.getExecutionExpressions()) {
+						state = analysis.assign(state, throwVar, th, this);
 
-					// deletes the receiver of the constructor
-					// and all the metavariables from subexpressions
-					state = state.forgetIdentifiers(call.getMetaVariables(), this);
-					state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-					result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-							new Error(npeType.getReference(), this)));
+						// deletes the receiver of the constructor
+						// and all the metavariables from subexpressions
+						state = state.forgetIdentifiers(call.getMetaVariables(), this);
+						state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+								new Error(npeType.getReference(), this)));
+					}
 					atLeastOne = true;
 					continue;
 				} else if (!inner.isUnitType())
@@ -160,12 +186,12 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 								Assignment asg = (Assignment) getParentStatement();
 								if (asg.getLeft().equals(this))
 									result = result.lub(analysis.smallStepSemantics(state, access, this));
-								else
+								else if (global.getStaticType().isPointerType())
 									result = result.lub(analysis.smallStepSemantics(state,
 											new HeapReference(global.getStaticType(), access, loc), this));
-							} else if (global.getStaticType().isPointerType())
-								result = result.lub(analysis.smallStepSemantics(state, access, this));
-							else
+								else
+									result = result.lub(analysis.smallStepSemantics(state, access, this));
+							} else
 								result = result.lub(analysis.smallStepSemantics(state, access, this));
 							atLeastOne = true;
 						}

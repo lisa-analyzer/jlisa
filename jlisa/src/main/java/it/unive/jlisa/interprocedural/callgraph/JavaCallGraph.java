@@ -1,5 +1,6 @@
 package it.unive.jlisa.interprocedural.callgraph;
 
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.symbols.*;
@@ -76,8 +77,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			Collection<NativeCFG> natives,
 			SymbolAliasing aliasing)
 			throws CallResolutionException {
-
-		CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier(), null).getUnit();
+		CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier()).getUnit();
 		HierarchyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
 		Set<CompilationUnit> seen = new HashSet<>();
 		int lowestDistance = Integer.MAX_VALUE;
@@ -372,7 +372,12 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 					&& formalType instanceof ReferenceType refTypeFormal) {
 				if (refTypeParam.getInnerType().isNullType()) {
 					return 0;
-				}
+				} else if (refTypeParam.getInnerType() instanceof JavaArrayType actualInner
+						&& refTypeFormal.getInnerType() instanceof JavaArrayType formalInner)
+					return actualInner.equals(formalInner) ? 0 : -1;
+
+				// from here on, we should suppose that the inner types are
+				// units
 				UnitType paramUnitType = refTypeParam.getInnerType().asUnitType();
 				UnitType formalUnitType = refTypeFormal.getInnerType().asUnitType();
 				if (paramUnitType != null && formalUnitType != null) {

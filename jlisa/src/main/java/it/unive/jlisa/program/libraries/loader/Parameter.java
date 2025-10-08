@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.libraries.loader;
 
+import it.unive.lisa.program.Program;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -64,6 +65,7 @@ public class Parameter {
 	}
 
 	public it.unive.lisa.program.cfg.Parameter toLiSAParameter(
+			Program program,
 			CodeLocation location,
 			CFG init) {
 		Expression defValue = null;
@@ -71,7 +73,7 @@ public class Parameter {
 			defValue = this.value.toLiSAExpression(init);
 		}
 
-		return new it.unive.lisa.program.cfg.Parameter(location, this.name, this.type.toLiSAType(), defValue,
+		return new it.unive.lisa.program.cfg.Parameter(location, this.name, this.type.toLiSAType(program), defValue,
 				new Annotations());
 	}
 }

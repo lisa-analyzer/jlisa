@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -37,16 +36,20 @@ public class JavaNewObj extends NaryExpression {
 	public JavaNewObj(
 			CFG cfg,
 			CodeLocation location,
-			String constructName,
 			JavaReferenceType type,
 			Expression... parameters) {
-		super(cfg, location, constructName, type, parameters);
+		super(cfg, location, type.getInnerType().toString(), type, parameters);
 	}
 
 	@Override
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return "new " + super.toString();
 	}
 
 	@Override
@@ -59,28 +62,12 @@ public class JavaNewObj extends NaryExpression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
-
-		if (state.getExecutionInfo(InitializedClassSet.INFO_KEY) == null)
-			state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY, new InitializedClassSet());
-
-		// if needed, calling the class initializer (if the class has one)
 		String className = reftype.getInnerType().toString();
-		if (!JavaClassType.lookup(className, null).getUnit()
-				.getCodeMembersByName(className + InitializedClassSet.SUFFIX_CLINIT).isEmpty()) {
-			if (!state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).contains(className)) {
-				UnresolvedCall clinit = new UnresolvedCall(
-						getCFG(),
-						getLocation(),
-						CallType.STATIC,
-						className,
-						className + InitializedClassSet.SUFFIX_CLINIT,
-						new Expression[0]);
+		String simpleName = className.contains(".")
+				? className.substring(className.lastIndexOf(".") + 1)
+				: className;
 
-				state = state.storeExecutionInfo(InitializedClassSet.INFO_KEY,
-						state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class).add(className));
-				state = clinit.forwardSemanticsAux(interprocedural, state, params, expressions);
-			}
-		}
+		state = InitializedClassSet.initialize(state, reftype, this, interprocedural);
 
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());
@@ -103,12 +90,13 @@ public class JavaNewObj extends NaryExpression {
 		expressions.put(paramThis, tmp);
 
 		// constructor call
+		String clazz = reftype.getInnerType().toString();
 		UnresolvedCall call = new UnresolvedCall(
 				getCFG(),
 				getLocation(),
 				CallType.INSTANCE,
-				reftype.getInnerType().toString(),
-				getConstructName(),
+				clazz,
+				simpleName,
 				fullExpressions);
 		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
 

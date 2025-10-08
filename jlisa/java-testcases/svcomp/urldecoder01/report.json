@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  } ],
+  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707455824.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320832151.json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "121ms",
+    "end" : "2025-09-25T17:38:08.827+02:00",
+    "expressions" : "51",
+    "files" : "3",
+    "globals" : "23",
+    "members" : "143",
+    "programs" : "1",
+    "start" : "2025-09-25T17:38:08.706+02:00",
+    "statements" : "27",
+    "units" : "51",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/urldecoder01"
+  }
+}

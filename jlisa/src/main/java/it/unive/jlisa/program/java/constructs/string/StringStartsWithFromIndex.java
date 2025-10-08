@@ -29,7 +29,7 @@ public class StringStartsWithFromIndex extends TernaryExpression implements Plug
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "replaceAll", left, middle, right);
+		super(cfg, location, "startsWith", left, middle, right);
 	}
 
 	public static StringStartsWithFromIndex build(

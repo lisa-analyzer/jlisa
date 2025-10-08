@@ -1,2 +1,2 @@
-class Enumeration extends Object:
+class java.util.Enumeration extends java.lang.Object:
 		

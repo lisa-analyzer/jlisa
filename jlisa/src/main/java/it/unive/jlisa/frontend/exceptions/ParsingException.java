@@ -1,6 +1,6 @@
 package it.unive.jlisa.frontend.exceptions;
 
-import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.cfg.CodeLocation;
 
 public class ParsingException extends RuntimeException {
 
@@ -13,14 +13,14 @@ public class ParsingException extends RuntimeException {
 
 	private String message;
 	private String name;
-	private SourceCodeLocation location;
+	private CodeLocation location;
 	private Type type;
 
 	public ParsingException(
 			String name,
 			Type type,
 			String message,
-			SourceCodeLocation location) {
+			CodeLocation location) {
 		this.message = message;
 		this.name = name;
 		this.location = location;

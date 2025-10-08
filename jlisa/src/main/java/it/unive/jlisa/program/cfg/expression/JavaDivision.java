@@ -1,6 +1,9 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -11,6 +14,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -49,23 +53,57 @@ public class JavaDivision extends Division {
 				getLocation());
 
 		if (analysis.satisfies(state, expr, this) == Satisfiability.SATISFIED) {
-			JavaClassType arithExc = JavaClassType.getArithmeticExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArithmeticException", arithExc.getReference(),
-					new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			// no division by zero exception for floating point numbers
+			if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
+					|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE
+					|| analysis.getDynamicTypeOf(state, left, this) == JavaFloatType.INSTANCE
+					|| analysis.getDynamicTypeOf(state, right, this) == JavaFloatType.INSTANCE) {
 
-			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(getCFG(), arithExc.getReference(), getLocation());
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				JavaAccessGlobal accessGlobal;
+				if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
+						|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE) {
+					accessGlobal = new JavaAccessGlobal(
+							getCFG(),
+							getLocation(),
+							getProgram().getUnit("java.lang.Double"),
+							new Global(
+									getLocation(),
+									getProgram().getUnit("java.lang.Double"),
+									"POSITIVE_INFINITY",
+									false,
+									JavaDoubleType.INSTANCE));
+				} else
+					accessGlobal = new JavaAccessGlobal(
+							getCFG(),
+							getLocation(),
+							getProgram().getUnit("java.lang.Float"),
+							new Global(
+									getLocation(),
+									getProgram().getUnit("java.lang.Float"),
+									"POSITIVE_INFINITY",
+									false,
+									JavaDoubleType.INSTANCE));
 
-			// deletes the receiver of the constructor
-			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
-			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(arithExc.getReference(), this));
+				return accessGlobal.forwardSemantics(state, interprocedural, expressions);
+			} else {
+				JavaClassType arithExc = JavaClassType.getArithmeticExceptionType();
+				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), arithExc.getReference(),
+						new Expression[0]);
+				state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+				// assign exception to variable thrower
+				CFGThrow throwVar = new CFGThrow(getCFG(), arithExc.getReference(), getLocation());
+				state = analysis.assign(state, throwVar,
+						state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+				// deletes the receiver of the constructor
+				// and all the metavariables from subexpressions
+				state = state.forgetIdentifiers(call.getMetaVariables(), this);
+				state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+				state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+				return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+						new Error(arithExc.getReference(), this));
+			}
 		} else if (analysis.satisfies(state, expr, this) == Satisfiability.NOT_SATISFIED)
 			return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 		else {
@@ -73,7 +111,7 @@ public class JavaDivision extends Division {
 					A> noExceptionState = super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 
 			JavaClassType arithExc = JavaClassType.getArithmeticExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "ArithmeticException", arithExc.getReference(),
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), arithExc.getReference(),
 					new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 

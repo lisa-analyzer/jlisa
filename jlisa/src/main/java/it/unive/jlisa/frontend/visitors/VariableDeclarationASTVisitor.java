@@ -10,19 +10,20 @@ import it.unive.lisa.type.Type;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-public class VariableDeclarationASTVisitor extends JavaASTVisitor {
+public class VariableDeclarationASTVisitor extends BaseCodeElementASTVisitor {
 	Parameter parameter;
 
 	public VariableDeclarationASTVisitor(
 			ParserContext parserContext,
 			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			CompilationUnit compilationUnit,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 	}
 
 	public boolean visit(
 			SingleVariableDeclaration node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 		Type type = visitor.getType();
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;

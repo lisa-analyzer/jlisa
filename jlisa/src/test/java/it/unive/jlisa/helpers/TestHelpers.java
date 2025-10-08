@@ -1,7 +1,6 @@
 package it.unive.jlisa.helpers;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
-import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
@@ -43,11 +42,12 @@ public class TestHelpers {
 		conf.optimize = false;
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		// conf.forceUpdate = true;
-		// conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
+		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
+		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new JavaInferredTypes();
+		InferredTypes type = new InferredTypes();
 		Interval domain = new Interval();
 
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
@@ -62,29 +62,14 @@ public class TestHelpers {
 			String testDir,
 			String subDir,
 			String... programFiles) {
-		CronConfiguration conf = new CronConfiguration();
-		conf.testDir = testDir;
-		conf.testSubDir = subDir;
-		conf.programFiles = new ArrayList<>();
-		for (String pf : programFiles)
-			conf.programFiles.add(pf);
-		conf.serializeResults = true;
-		conf.jsonOutput = false;
-		conf.optimize = false;
-		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-//		 conf.forceUpdate = true;
-//		 conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
+		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new JavaInferredTypes();
+		InferredTypes type = new InferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
-
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
-		// for interprocedural analysis
-		conf.callGraph = new JavaRTACallGraph();
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		return conf;
 	}
 
@@ -92,30 +77,16 @@ public class TestHelpers {
 			String testDir,
 			String subDir,
 			String... programFiles) {
-		CronConfiguration conf = new CronConfiguration();
-		conf.testDir = testDir;
-		conf.testSubDir = subDir;
-		conf.programFiles = new ArrayList<>();
-		for (String pf : programFiles)
-			conf.programFiles.add(pf);
-		conf.serializeResults = true;
-		conf.jsonOutput = false;
-		conf.optimize = false;
-		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
+		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
+
 		conf.semanticChecks.add(new AssertChecker());
-//		conf.forceUpdate = true;
-//		conf.analysisGraphs = GraphType.HTML_WITH_SUBNODES;
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new JavaInferredTypes();
+		InferredTypes type = new InferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
-
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
-		// for interprocedural analysis
-		conf.callGraph = new JavaRTACallGraph();
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		return conf;
 	}
 }

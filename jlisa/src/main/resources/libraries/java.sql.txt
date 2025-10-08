@@ -1,1 +1,1 @@
-class Connection extends Object:
+class java.sql.Connection extends java.lang.Object:

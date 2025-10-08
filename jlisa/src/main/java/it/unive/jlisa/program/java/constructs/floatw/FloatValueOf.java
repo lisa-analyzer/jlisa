@@ -49,11 +49,11 @@ public class FloatValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type doubleType = JavaClassType.lookup("Float", null);
-		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(doubleType);
+		Type floatType = JavaClassType.lookup("java.lang.Float");
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(floatType);
 
 		// allocate the value
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "Float", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[] { getSubExpression() });
 		ExpressionSet set = new ExpressionSet(expr);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] { set },

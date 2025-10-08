@@ -1,1 +1,1 @@
-class Scanner extends Object:
+class java.util.Scanner extends java.lang.Object:

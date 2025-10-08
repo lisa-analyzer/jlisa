@@ -36,7 +36,7 @@ public class JavaUnresolvedSuperCall extends UnresolvedCall {
 			ExpressionSet[] params,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		ClassUnit superClass = (ClassUnit) JavaClassType.lookup(getQualifier(), null).getUnit();
+		ClassUnit superClass = (ClassUnit) JavaClassType.lookup(getQualifier()).getUnit();
 		boolean resolved = false;
 
 		do {

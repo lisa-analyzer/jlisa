@@ -169,6 +169,7 @@ public class NaryExpression extends ValueExpression {
 			throws SemanticException {
 		T aux;
 		aux = operands[0].accept(visitor, params);
+		@SuppressWarnings("unchecked")
 		T[] op = (T[]) Array.newInstance(aux.getClass(), operands.length);
 		op[0] = aux;
 		for (int i = 1; i < operands.length; ++i) {

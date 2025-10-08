@@ -18,7 +18,7 @@ public class FilterOutputStreamConstructor extends NaryExpression implements Plu
 	public FilterOutputStreamConstructor(
 			CFG cfg,
 			CodeLocation location) {
-		super(cfg, location, "FilteredOutputStream", JavaClassType.lookup("FilteredOutputStream", null));
+		super(cfg, location, "FilterOutputStream", JavaClassType.lookup("java.io.FilterOutputStream"));
 	}
 
 	public static FilterOutputStreamConstructor build(

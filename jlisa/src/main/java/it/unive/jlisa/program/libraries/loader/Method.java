@@ -2,6 +2,7 @@ package it.unive.jlisa.program.libraries.loader;
 
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
+import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -86,19 +87,20 @@ public class Method {
 
 	@SuppressWarnings("unchecked")
 	public NativeCFG toLiSACfg(
+			Program program,
 			CodeLocation location,
 			CFG init,
 			Unit container) {
 		it.unive.lisa.program.cfg.Parameter[] pars = new it.unive.lisa.program.cfg.Parameter[params.size()];
 		for (int i = 0; i < pars.length; i++)
-			pars[i] = this.params.get(i).toLiSAParameter(location, init);
+			pars[i] = this.params.get(i).toLiSAParameter(program, location, init);
 
 		JavaCodeMemberDescriptor desc = new JavaCodeMemberDescriptor(
 				location,
 				container,
 				this.instance,
 				this.name,
-				this.type.toLiSAType(),
+				this.type.toLiSAType(program),
 				pars);
 
 		desc.setOverridable(!this.sealed);

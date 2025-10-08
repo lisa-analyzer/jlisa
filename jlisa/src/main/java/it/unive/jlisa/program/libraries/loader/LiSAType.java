@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.libraries.loader;
 
 import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
+import it.unive.lisa.program.Program;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
@@ -47,7 +48,8 @@ public class LiSAType implements Type {
 	}
 
 	@Override
-	public it.unive.lisa.type.Type toLiSAType() {
+	public it.unive.lisa.type.Type toLiSAType(
+			Program program) {
 		try {
 			Class<?> type = Class.forName(this.name);
 			Field field = type.getField(this.field);

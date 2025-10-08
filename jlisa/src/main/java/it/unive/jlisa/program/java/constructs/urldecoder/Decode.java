@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.urldecoder;
 
+import it.unive.jlisa.analysis.JavaNullConstant;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -66,10 +67,10 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		// as no-exception state, we return the top string
+		// as no-exception state, we return the top string...
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String", reftype,
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 				new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -79,14 +80,17 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
-			tmp = tmp.lub(sem);
+			tmp = tmp.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 		}
 
-		AnalysisState<A> noExceptionState = tmp;
+		// ... and null
+		AnalysisState<
+				A> nullState = analysis.smallStepSemantics(state, new JavaNullConstant(getLocation()), originating);
+		AnalysisState<A> noExceptionState = tmp.lub(nullState);
 
 		// builds the exception
 		JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
-		call = new JavaNewObj(getCFG(), getLocation(), "ArrayIndexOutOfBoundsException",
+		call = new JavaNewObj(getCFG(), getLocation(),
 				oobExc.getReference(), new Expression[0]);
 		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 				new StatementStore<A>(state));
@@ -96,7 +100,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		for (SymbolicExpression th : state.getExecutionExpressions()) {
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-			tmp = analysis.assign(state, throwVar, th, this);
+			tmp = analysis.assign(state, throwVar, th, originating);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
@@ -104,7 +108,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 					.forgetIdentifiers(getLeft().getMetaVariables(), this)
 					.forgetIdentifiers(getRight().getMetaVariables(), this);
 			exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-					new Error(oobExc.getReference(), this)));
+					new Error(oobExc.getReference(), originating)));
 		}
 
 		return noExceptionState.lub(exceptionState);

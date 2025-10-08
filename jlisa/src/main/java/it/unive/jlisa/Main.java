@@ -91,6 +91,12 @@ public class Main {
 				.required(false)
 				.build();
 
+		Option version = Option.builder("v")
+				.longOpt("version")
+				.desc("Version of the tool")
+				.required(false)
+				.build();
+
 		options.addOption(helpOption);
 		options.addOption(sourceOption);
 		options.addOption(outdirOption);
@@ -98,6 +104,8 @@ public class Main {
 		options.addOption(checker);
 		options.addOption(numericalDomainOption);
 		options.addOption(mode);
+		options.addOption(version);
+
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -110,6 +118,13 @@ public class Main {
 			// Handle help
 			if (cmd.hasOption("h") || args.length == 0) {
 				formatter.printHelp("jlisa", options, true);
+				System.exit(0);
+			}
+
+			if (cmd.hasOption("v")) {
+				Package jlisaPkg = Main.class.getPackage();
+				String implementationVersion = jlisaPkg.getImplementationVersion();
+				System.out.println("JLiSA version: " + implementationVersion);
 				System.exit(0);
 			}
 
@@ -178,10 +193,6 @@ public class Main {
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		if (!frontend.getParserContext().getExceptions().isEmpty()) {
-			LOG.error("Some errors occurred during the parsing, reporting the first one");
-			throw frontend.getParserContext().getExceptions().getFirst();
-		}
 		runAnalysis(outdir, checkerName, numericalDomain, frontend);
 	}
 
@@ -193,15 +204,10 @@ public class Main {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
-			if (!frontend.getParserContext().getExceptions().isEmpty()) {
-				CSVExceptionWriter.writeCSV(outdir + "frontend.csv", frontend.getParserContext().getExceptions());
-				LOG.error("Some errors occurred during the parsing. Check " + outdir + "frontend.csv file.");
-				System.exit(1);
-			}
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "frontend-noparsing.csv", e);
+			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", e);
 			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
-					+ "-noparsing.csv file.");
+					+ "/frontend.csv file.");
 			System.exit(1);
 		}
 		try {
@@ -218,17 +224,9 @@ public class Main {
 			throws IOException,
 			ParsingException {
 		JavaFrontend frontend = null;
-		try {
-			frontend = new JavaFrontend();
-			frontend.parseFromListOfFile(Arrays.stream(sources).toList());
-			return frontend;
-		} catch (Exception e) {
-			if (frontend != null && !frontend.getParserContext().getExceptions().isEmpty()) {
-				LOG.error("Some errors occurred during the parsing, reporting the first one");
-				throw frontend.getParserContext().getExceptions().getFirst();
-			} else
-				throw e;
-		}
+		frontend = new JavaFrontend();
+		frontend.parseFromListOfFile(Arrays.stream(sources).toList());
+		return frontend;
 	}
 
 	private static void runAnalysis(

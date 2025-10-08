@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "double_MathSin.mysin(MathSin__this,_double_x)_1707432791.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707441409.json", "long_MathSin.helperdoubleToRawBits(double_xm)_435199115.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_MathSin.MathSin(MathSin__this)_1707434651.json", "void_MathSin.MathSin_clinit()_1707434651.json" ],
+  "info" : {
+    "cfgs" : "19",
+    "duration" : "51ms",
+    "end" : "2025-10-07T14:30:50.513+02:00",
+    "expressions" : "863",
+    "files" : "6",
+    "globals" : "45",
+    "members" : "149",
+    "programs" : "1",
+    "start" : "2025-10-07T14:30:50.462+02:00",
+    "statements" : "243",
+    "units" : "49",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/MathSin"
+  }
+}

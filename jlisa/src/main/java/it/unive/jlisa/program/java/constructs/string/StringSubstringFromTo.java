@@ -45,7 +45,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "replaceAll", left, middle, right);
+		super(cfg, location, "substring", left, middle, right);
 	}
 
 	public static StringSubstringFromTo build(
@@ -116,7 +116,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), "IndexOutOfBoundsException",
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			AnalysisState<A> exceptionState = state.bottomExecution();
@@ -132,7 +132,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), originating)));
 			}
 
 			return exceptionState;
@@ -146,7 +146,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 					getLocation());
 
 			// allocate the string
-			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",
+			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 					new JavaReferenceType(stringType), new Expression[0]);
 			AnalysisState<
 					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -170,7 +170,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 					getLocation());
 
 			// allocate the string
-			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), "String",
+			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 					new JavaReferenceType(stringType), new Expression[0]);
 			AnalysisState<
 					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -187,7 +187,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
-			call = new JavaNewObj(getCFG(), getLocation(), "IndexOutOfBoundsException",
+			call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 			AnalysisState<A> exceptionState = state.bottomExecution();
@@ -203,7 +203,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), originating)));
 			}
 			return exceptionState.lub(noExceptionState);
 		}

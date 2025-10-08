@@ -1,2 +1,2 @@
-class Iterator extends Object:
+class java.util.Iterator extends java.lang.Object:
 		

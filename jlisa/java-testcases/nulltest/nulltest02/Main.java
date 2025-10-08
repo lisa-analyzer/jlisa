@@ -1,8 +1,11 @@
+import java.util.Random;
+
 public class Main {
 	
     public static void main(String[] args) {
     	String s = null;
-    	if (Random.nextInt() > 0)
+		Random rand = new Random();
+    	if (rand.nextInt() > 0)
     		s = "hello";
     	else 
     		s = null;

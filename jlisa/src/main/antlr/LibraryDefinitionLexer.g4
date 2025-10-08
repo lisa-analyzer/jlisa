@@ -20,10 +20,6 @@ NONE
    : 'none'
    ;
 
-LIBRARY
-   : 'library'
-   ;
-
 CLASS
    : 'class'
    ;
@@ -50,10 +46,6 @@ INSTANCE
 
 PARAM
    : 'param'
-   ;
-
-LOCATION
-   : 'location'
    ;
 
 TYPE

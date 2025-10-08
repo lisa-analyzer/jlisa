@@ -13,16 +13,9 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.AbstractClassUnit;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.ProgramValidationException;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -38,12 +31,11 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -52,39 +44,25 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class ClassASTVisitor extends JavaASTVisitor {
+public class ClassASTVisitor extends BaseUnitASTVisitor {
 
-	private boolean nested;
-
-	public ClassASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
-		nested = false;
-	}
+	private final String fullName;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
 			String source,
 			CompilationUnit compilationUnit,
-			boolean nested) {
-		super(parserContext, source, compilationUnit);
-		this.nested = nested;
+			String pkg,
+			Map<String, String> imports,
+			String fullName) {
+		super(parserContext, source, pkg, imports, compilationUnit);
+		this.fullName = fullName;
 	}
 
 	@Override
 	public boolean visit(
 			EnumDeclaration node) {
-		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(node.getName().toString());
-		Type enumType = getProgram().getTypes().getType(enUnit.getName());
-
-		// adding static fields corresponding to enum constants
-		for (Object con : node.enumConstants()) {
-			Global g = new Global(getSourceCodeLocation((ASTNode) con), enUnit, con.toString(), false,
-					new JavaReferenceType(enumType));
-			enUnit.addGlobal(g);
-		}
+		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(fullName);
 
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
@@ -94,134 +72,21 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		return false;
 	}
 
-	private void computeNestedUnits(
-			TypeDeclaration typeDecl) {
-		if ((typeDecl.isInterface())) {
-			InterfaceUnit iUnit = buildInterfaceUnit(source, getProgram(), typeDecl);
-			getProgram().getTypes().registerType(JavaInterfaceType.lookup(iUnit.getName(), iUnit));
-			getProgram().addUnit(iUnit);
-		} else {
-			ClassUnit cUnit = buildClassUnit(source, getProgram(), typeDecl);
-			getProgram().getTypes().registerType(JavaClassType.lookup(cUnit.getName(), cUnit));
-			getProgram().addUnit(cUnit);
-		}
-	}
-
-	private InterfaceUnit buildInterfaceUnit(
-			String source,
-			Program program,
-			TypeDeclaration typeDecl) {
-		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-
-		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isFinal(modifiers)) {
-			throw new RuntimeException(
-					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
-		}
-
-		InterfaceUnit iUnit = new InterfaceUnit(loc, program, typeDecl.getName().toString(), false);
-		program.addUnit(iUnit);
-		return iUnit;
-	}
-
-	private ClassUnit buildClassUnit(
-			String source,
-			Program program,
-			TypeDeclaration typeDecl) {
-		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-
-		int modifiers = typeDecl.getModifiers();
-		// FIXME: nested inner class can be private, but we currently do not
-		// model it (treated as public)
-		ClassUnit cUnit;
-		if (Modifier.isAbstract(modifiers)) {
-			if (Modifier.isFinal(modifiers)) {
-				throw new RuntimeException(
-						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
-			}
-			cUnit = new AbstractClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
-		} else {
-			cUnit = new ClassUnit(loc, program, typeDecl.getName().toString(), Modifier.isFinal(modifiers));
-		}
-		program.addUnit(cUnit);
-		return cUnit;
-	}
-
 	@Override
 	public boolean visit(
 			TypeDeclaration node) {
-		TypeDeclaration[] types = node.getTypes(); // nested types (e.g., nested
-													// inner classes)
-
-		for (TypeDeclaration type : types) {
-			if (type instanceof TypeDeclaration) {
-				TypeDeclaration typeDecl = (TypeDeclaration) type;
-				if ((typeDecl.isInterface())) {
-					InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(parserContext, source,
-							compilationUnit);
-					typeDecl.accept(interfaceVisitor);
-				} else {
-					ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, compilationUnit, true);
-					typeDecl.accept(classVisitor);
-				}
-			}
-		}
-
-		if (nested)
-			computeNestedUnits(node);
-
 		// parsing superclass
-		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(node.getName().toString());
-		if (node.getSuperclassType() != null) {
-			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
-			node.getSuperclassType().accept(visitor);
-			Type superType = visitor.getType();
-			if (superType != null) {
-				it.unive.lisa.program.Unit superUnit = getProgram().getUnit(superType.toString());
-				if (superUnit instanceof it.unive.lisa.program.CompilationUnit) {
-					cUnit.addAncestor((it.unive.lisa.program.CompilationUnit) superUnit);
-				}
-			}
-		} else {
-			cUnit.addAncestor(JavaClassType.getObjectType().getUnit());
-		}
+		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
 
-		// parsing implemented interfaces
-		for (Object intf : node.superInterfaceTypes()) {
-			TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit);
-			((ASTNode) intf).accept(visitor);
-			Type intfType = visitor.getType();
-			it.unive.lisa.program.Unit intfUnit = getProgram().getUnit(intfType.toString());
-			if (intfUnit instanceof it.unive.lisa.program.CompilationUnit) {
-				cUnit.addAncestor((it.unive.lisa.program.CompilationUnit) intfUnit);
-			}
-		}
-
-		if (!node.permittedTypes().isEmpty()) {
-			parserContext.addException(new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Permits is not supported.", getSourceCodeLocation(node)));
-		}
-
-		// iterates over inner declarations (just enums)
-		for (Object decl : node.bodyDeclarations()) {
-			// enum inner declaration
-			if (decl instanceof EnumDeclaration)
-				visit((EnumDeclaration) decl);
-		}
-
-		// all fields (static and non-static) are visited
-		Set<String> visitedFieldNames = new HashSet<>();
-		for (FieldDeclaration fd : node.getFields()) {
-			FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(parserContext, source, cUnit, compilationUnit,
-					visitedFieldNames);
-			fd.accept(visitor);
-		}
+		if (!node.permittedTypes().isEmpty())
+			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Permits is not supported.", getSourceCodeLocation(node));
 
 		createClassInitializer(cUnit, node);
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, this);
 			md.accept(visitor);
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -240,8 +105,16 @@ public class ClassASTVisitor extends JavaASTVisitor {
 			EnumUnit enumUnit) {
 
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit, false,
-				enumUnit.getName() + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE, new Annotations(),
+		String simpleName = enumUnit.getName().contains(".")
+				? enumUnit.getName().substring(enumUnit.getName().lastIndexOf(".") + 1)
+				: enumUnit.getName();
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(
+				locationManager.nextLocation(),
+				enumUnit,
+				false,
+				simpleName + InitializedClassSet.SUFFIX_CLINIT,
+				VoidType.INSTANCE,
+				new Annotations(),
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
@@ -251,7 +124,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		Statement init = null, last = null;
 		for (Global target : enumUnit.getGlobals()) {
 			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), enumUnit, target);
-			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(), enumUnit.getName(),
+			JavaNewObj call = new JavaNewObj(cfg, locationManager.nextLocation(),
 					new JavaReferenceType(enumType),
 					new JavaStringLiteral(cfg, locationManager.nextLocation(), target.getName()));
 			JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, call);
@@ -285,8 +158,11 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		String simpleName = enumUnit.getName().contains(".")
+				? enumUnit.getName().substring(enumUnit.getName().lastIndexOf(".") + 1)
+				: enumUnit.getName();
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit,
-				true, enumUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+				true, simpleName, VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
 		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
 		parserContext.addVariableType(cfg, new VariableInfo("name", null),
@@ -294,7 +170,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
 				new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
-						new VariableRef(cfg, locationManager.nextLocation(), "this"),
+						new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type)),
 						"name"),
 				new VariableRef(cfg, locationManager.nextLocation(), "name"));
 
@@ -323,8 +199,16 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		// create the CFG corresponding to the class initializer
 		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
-		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(locationManager.nextLocation(), unit, false,
-				unit.getName() + InitializedClassSet.SUFFIX_CLINIT, VoidType.INSTANCE, new Annotations(),
+		String simpleName = unit.getName().contains(".")
+				? unit.getName().substring(unit.getName().lastIndexOf(".") + 1)
+				: unit.getName();
+		CodeMemberDescriptor cmDesc = new CodeMemberDescriptor(
+				locationManager.nextLocation(),
+				unit,
+				false,
+				simpleName + InitializedClassSet.SUFFIX_CLINIT,
+				VoidType.INSTANCE,
+				new Annotations(),
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
@@ -336,11 +220,14 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		// we can safely suppose that there exist a single superclass
 		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
+		String superSimpleName = superClass.getName().contains(".")
+				? superClass.getName().substring(superClass.getName().lastIndexOf(".") + 1)
+				: superClass.getName();
 		JavaUnresolvedStaticCall superClassInit = new JavaUnresolvedStaticCall(
 				cfg,
 				locationManager.nextLocation(),
 				superClass.toString(),
-				superClass.toString() + InitializedClassSet.SUFFIX_CLINIT,
+				superSimpleName + InitializedClassSet.SUFFIX_CLINIT,
 				new Expression[0]);
 
 		cfg.addNode(superClassInit);
@@ -350,7 +237,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		// just static fields are considered to build the class initializer
 		for (FieldDeclaration fd : staticFields) {
-			TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+			TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
 			fd.getType().accept(typeVisitor);
 			Type type = typeVisitor.getType();
 			if (type.isInMemoryType())
@@ -358,10 +245,17 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 			for (Object f : fd.fragments()) {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
+				type = typeVisitor.liftToArray(type, fragment);
+
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
-					ExpressionVisitor exprVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
-							null);
+					ExpressionVisitor exprVisitor = new ExpressionVisitor(
+							parserContext,
+							source,
+							compilationUnit,
+							cfg,
+							null,
+							this);
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
@@ -401,16 +295,22 @@ public class ClassASTVisitor extends JavaASTVisitor {
 
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		String simpleName = classUnit.getName().contains(".")
+				? classUnit.getName().substring(classUnit.getName().lastIndexOf(".") + 1)
+				: classUnit.getName();
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit,
-				true, classUnit.getName(), VoidType.INSTANCE, annotations, paramArray);
+				true, simpleName, VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
 		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
 		// we filter just the class unit, not interfaces
 		String superClassName = classUnit.getImmediateAncestors().stream().filter(s -> s instanceof ClassUnit)
 				.findFirst().get().getName();
+		String superClassSimpleName = superClassName.contains(".")
+				? superClassName.substring(superClassName.lastIndexOf(".") + 1)
+				: superClassName;
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(), Call.CallType.INSTANCE,
-				null, superClassName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
+				superClassName, superClassSimpleName, new VariableRef(cfg, locationManager.nextLocation(), "this"));
 
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
@@ -434,9 +334,12 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		// we filter just the class unit, not interfaces
 		Unit ancestor = classUnit.getImmediateAncestors().stream().filter(s -> s instanceof ClassUnit).findFirst()
 				.get();
+		String ancestorSimpleName = ancestor.getName().contains(".")
+				? ancestor.getName().substring(ancestor.getName().lastIndexOf(".") + 1)
+				: ancestor.getName();
 		boolean implicitlyCallSuper = true;
 		if (injectionPoint instanceof JavaUnresolvedCall call) {
-			if (ancestor.getName().equals(call.getConstructName())) {
+			if (ancestor.getName().equals(call.getQualifier()) && ancestorSimpleName.equals(call.getTargetName())) {
 				implicitlyCallSuper = false;
 				List<Edge> outEdges = new ArrayList<>(cfg.getNodeList().getOutgoingEdges(injectionPoint));
 				if (outEdges.size() == 1) {
@@ -446,7 +349,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 		}
 
 		if (injectionPoint instanceof JavaUnresolvedCall &&
-				((JavaUnresolvedCall) injectionPoint).getConstructName().equals(cfg.getDescriptor().getName())) {
+				((JavaUnresolvedCall) injectionPoint).getTargetName().equals(cfg.getDescriptor().getName())) {
 			return;
 		}
 		if (implicitlyCallSuper) {
@@ -454,7 +357,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 			// before the field initializator.
 			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
 			JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(),
-					Call.CallType.INSTANCE, null, ancestor.getName(),
+					Call.CallType.INSTANCE, ancestor.getName(), ancestorSimpleName,
 					new VariableRef(cfg, locationManager.nextLocation(), "this"));
 			cfg.addNode(call);
 			cfg.addEdge(new SequentialEdge(call, injectionPoint));
@@ -469,7 +372,7 @@ public class ClassASTVisitor extends JavaASTVisitor {
 			if (Modifier.isStatic(field.getModifiers()))
 				continue;
 			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(parserContext, source,
-					compilationUnit, cfg);
+					compilationUnit, cfg, this);
 			field.accept(initVisitor);
 
 			if (initVisitor.getBlock() != null) {

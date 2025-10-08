@@ -2,10 +2,10 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
-import it.unive.jlisa.program.cfg.expression.instrumentations.EmptyBody;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
@@ -13,7 +13,7 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-public class BlockStatementASTVisitor extends JavaASTVisitor {
+public class BlockStatementASTVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
 	private ParsedBlock block;
 
@@ -22,8 +22,9 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 	private BlockStatementASTVisitor(
 			ParserContext parserContext,
 			String source,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			CompilationUnit compilationUnit,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, compilationUnit, container);
 	}
 
 	public BlockStatementASTVisitor(
@@ -31,8 +32,9 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 			String source,
 			CompilationUnit compilationUnit,
 			CFG cfg,
-			JavaLocalVariableTracker tracker) {
-		this(parserContext, source, compilationUnit);
+			JavaLocalVariableTracker tracker,
+			BaseUnitASTVisitor container) {
+		this(parserContext, source, compilationUnit, container);
 		this.cfg = cfg;
 		this.tracker = tracker;
 	}
@@ -55,15 +57,20 @@ public class BlockStatementASTVisitor extends JavaASTVisitor {
 
 		Statement first = null, last = null;
 		if (node.statements().isEmpty()) { // empty block
-			EmptyBody emptyBlock = null;
-			emptyBlock = new EmptyBody(cfg, getSourceCodeLocation(node));
+			NoOp emptyBlock = new NoOp(cfg, getSourceCodeLocation(node));
 			nodeList.addNode(emptyBlock);
 			first = emptyBlock;
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
-				StatementASTVisitor stmtVisitor = new StatementASTVisitor(parserContext, source, compilationUnit, cfg,
-						new ControlFlowTracker(), tracker);
+				StatementASTVisitor stmtVisitor = new StatementASTVisitor(
+						parserContext,
+						source,
+						compilationUnit,
+						cfg,
+						new ControlFlowTracker(),
+						tracker,
+						container);
 				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
 
 				ParsedBlock stmtBlock = stmtVisitor.getBlock();

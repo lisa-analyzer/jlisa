@@ -1,1 +1,1 @@
-class Date extends Object:
+class java.util.Date extends java.lang.Object:

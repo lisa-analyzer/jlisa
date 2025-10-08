@@ -81,6 +81,12 @@ import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.operator.NaryOperator;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -111,6 +117,7 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
@@ -386,7 +393,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringTrimOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.trim());
 
-		if (operator instanceof JavaStringValueOfLongOperator && arg.getValue() instanceof Integer l)
+		if (operator instanceof JavaStringValueOfLongOperator && arg.getValue() instanceof Long l)
 			return new ConstantValue(String.valueOf(l));
 
 		if (operator instanceof JavaStringValueOfBooleanOperator && arg.getValue() instanceof Boolean b)
@@ -412,6 +419,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaLongIntValueOperator && arg.getValue() instanceof Long l)
 			return new ConstantValue(l.intValue());
+
+		// boolean
+		if (operator instanceof LogicalNegation && arg.getValue() instanceof Boolean b)
+			return new ConstantValue(!b);
 
 		return top();
 	}
@@ -682,8 +693,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaStringAppendCharOperator) {
 			String lv = ((String) left.getValue());
-			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(lv + ((char) rv.intValue()));
+			if (right.getValue() instanceof Character) {
+				Character rv = ((Character) right.getValue());
+				return new ConstantValue(lv + (rv.charValue()));
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(lv + ((char) rv.intValue()));
+			}
 		}
 
 		if (operator instanceof JavaStringAppendStringOperator) {
@@ -1065,7 +1081,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object lVal = left.getValue();
 			Object rVal = right.getValue();
 
-			if (lVal instanceof Number || rVal instanceof Number)
+			if (lVal instanceof Number && rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
 					return ((Number) lVal).doubleValue() == ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
 							: Satisfiability.NOT_SATISFIED;
@@ -1212,6 +1228,33 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return environment;
 		else
 			return new ValueEnvironment<>(new ConstantValue()).bottom();
+	}
+
+	public ConstantValue evalTypeConv(
+			BinaryExpression conv,
+			ConstantValue left,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle.getRuntimeTypesOf(conv, pp).isEmpty())
+			return left.bottom();
+
+		if (left.getValue() instanceof Number)
+			if (right.getValue() instanceof JavaByteType)
+				return new ConstantValue(((Number) left.getValue()).byteValue());
+			else if (right.getValue() instanceof JavaShortType)
+				return new ConstantValue(((Number) left.getValue()).shortValue());
+			else if (right.getValue() instanceof JavaIntType)
+				return new ConstantValue(((Number) left.getValue()).intValue());
+			else if (right.getValue() instanceof JavaLongType)
+				return new ConstantValue(((Number) left.getValue()).longValue());
+			else if (right.getValue() instanceof JavaDoubleType)
+				return new ConstantValue(((Number) left.getValue()).doubleValue());
+			else if (right.getValue() instanceof JavaCharType)
+				return new ConstantValue((int) (char) ((Number) left.getValue()).longValue());
+
+		return left;
 	}
 
 	@Override

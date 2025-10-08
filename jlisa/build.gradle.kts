@@ -36,7 +36,7 @@ spotless {
 apply(from = "code-style.gradle.kts")
 
 group = "it.unive.jlisa"
-version = "1.0-SNAPSHOT"
+version = "0.1"
 
 application {
     mainClass.set("it.unive.jlisa.Main")
@@ -96,17 +96,12 @@ tasks.test {
 // JAR (FAT JAR)
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = application.mainClass.get()
+        attributes(
+            "Main-Class" to application.mainClass.get(),
+            "Implementation-Version" to project.version
+        )
     }
 
-    from({
-        configurations.runtimeClasspath.get().map { file ->
-            if (file.isDirectory) file
-            else zipTree(file).matching {
-                exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-            }
-        }
-    })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     // Run code style checks before packaging

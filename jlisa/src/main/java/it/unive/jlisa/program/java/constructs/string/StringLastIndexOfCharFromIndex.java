@@ -30,7 +30,7 @@ public class StringLastIndexOfCharFromIndex extends TernaryExpression implements
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "replaceAll", left, middle, right);
+		super(cfg, location, "lastIndexOf", left, middle, right);
 	}
 
 	public static StringLastIndexOfCharFromIndex build(

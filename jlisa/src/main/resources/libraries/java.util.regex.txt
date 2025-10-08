@@ -1,3 +1,3 @@
-class Matcher extends Object:
+class java.util.regex.Matcher extends java.lang.Object:
 
-class Pattern extends Object:
+class java.util.regex.Pattern extends java.lang.Object:

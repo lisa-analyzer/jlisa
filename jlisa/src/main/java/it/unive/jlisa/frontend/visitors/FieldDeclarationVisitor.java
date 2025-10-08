@@ -2,12 +2,10 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
 import java.util.Set;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -15,7 +13,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class FieldDeclarationVisitor extends JavaASTVisitor {
+public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit unit;
 
 	Set<String> visitedFieldNames;
@@ -25,8 +23,9 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 			String source,
 			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
 			CompilationUnit astCompilationUnit,
-			Set<String> visitedFieldNames) {
-		super(parserContext, source, astCompilationUnit);
+			Set<String> visitedFieldNames,
+			BaseUnitASTVisitor container) {
+		super(parserContext, source, astCompilationUnit, container);
 		this.unit = lisacompilationUnit;
 		this.visitedFieldNames = visitedFieldNames;
 	}
@@ -35,7 +34,7 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 	public boolean visit(
 			FieldDeclaration node) {
 		int modifiers = node.getModifiers();
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
@@ -43,16 +42,6 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
-			if (fragment.getExtraDimensions() != 0) {
-				if (type instanceof ArrayType) {
-					ArrayType arrayType = (ArrayType) type;
-					int dim = arrayType.getDimensions();
-					type = JavaArrayType.lookup(arrayType.getBaseType(), dim + fragment.getExtraDimensions());
-				} else {
-					type = JavaArrayType.lookup(type, fragment.getExtraDimensions());
-				}
-			}
-
 			String identifier = fragment.getName().getIdentifier();
 
 			if (visitedFieldNames.contains(identifier))
@@ -61,6 +50,7 @@ public class FieldDeclarationVisitor extends JavaASTVisitor {
 			else
 				visitedFieldNames.add(identifier);
 
+			type = typeVisitor.liftToArray(type, fragment);
 			boolean isStatic = Modifier.isStatic(modifiers) || (unit instanceof InterfaceUnit);
 			Global global = new Global(getSourceCodeLocation(fragment), unit, identifier, !isStatic, type,
 					new Annotations());

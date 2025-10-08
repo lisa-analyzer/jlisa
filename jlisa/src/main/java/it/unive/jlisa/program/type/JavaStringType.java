@@ -5,25 +5,22 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
-import it.unive.lisa.type.InMemoryType;
 import it.unive.lisa.type.StringType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
-import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaStringType extends JavaClassType implements StringType, InMemoryType, UnitType {
+public class JavaStringType extends JavaClassType implements StringType {
 
 	public JavaStringType(
 			CompilationUnit unit) {
-		// TODO: this should work also with java.lang.String
-		super("String", unit);
+		super("java.lang.String", unit);
 
 		// we update the String unit if only if not already registered
-		if (!types.containsKey("String"))
-			types.put("String", this);
+		if (!types.containsKey("java.lang.String"))
+			types.put("java.lang.String", this);
 	}
 
 	@Override
@@ -34,7 +31,7 @@ public class JavaStringType extends JavaClassType implements StringType, InMemor
 
 	@Override
 	public String toString() {
-		return "String";
+		return "java.lang.String";
 	}
 
 	@Override
