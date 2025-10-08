@@ -8,7 +8,8 @@ public class ParsingException extends RuntimeException {
 		UNSUPPORTED_STATEMENT,
 		MISSING_EXPECTED_EXPRESSION,
 		VARIABLE_ALREADY_DECLARED,
-		MALFORMED_SOURCE
+		MALFORMED_SOURCE,
+		PARSING_ERROR,
 	}
 
 	private String message;
