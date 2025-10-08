@@ -47,6 +47,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	private final String fullName;
+
 	public ClassASTVisitor(
 			ParserContext parserContext,
 			String source,

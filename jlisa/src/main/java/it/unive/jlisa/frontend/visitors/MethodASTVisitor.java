@@ -26,6 +26,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
 	CFG cfg;
 	boolean createMethodSignature;
+
 	public MethodASTVisitor(
 			ParserContext parserContext,
 			String source,
@@ -83,7 +84,8 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			// should never happen.
 			throw new ParsingException("missing_method_descriptor",
 					ParsingException.Type.PARSING_ERROR,
-					"Missing code member descriptor for " + codeMemberDescriptor + " in unit " + lisacompilationUnit.getName(),
+					"Missing code member descriptor for " + codeMemberDescriptor + " in unit "
+							+ lisacompilationUnit.getName(),
 					getSourceCodeLocation(node));
 		}
 
