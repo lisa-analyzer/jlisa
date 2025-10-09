@@ -23,10 +23,8 @@ import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
-
-import java.util.*;
-
 import it.unive.lisa.type.VoidType;
+import java.util.*;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.*;
 
@@ -34,7 +32,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(CompilationUnitASTVisitor.class);
 
-    public enum VisitorType {
+	public enum VisitorType {
 		ADD_UNITS,
 		VISIT_UNIT,
 		ADD_GLOBALS,
@@ -486,7 +484,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			TypeDeclaration typeDecl,
 			String outer) {
 
-        // nested types (e.g., nested inner classes)
+		// nested types (e.g., nested inner classes)
 		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
 		for (TypeDeclaration nested : typeDecl.getTypes())
 			initCodeMembersInDeclaration(unit, nested, newOuter);
@@ -508,7 +506,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			boolean isMain = isMain(methodsDecl);
 			int modifiers = methodsDecl.getModifiers();
 			CFG cfg = new CFG(codeMemberDescriptor);
-			boolean	added;
+			boolean added;
 			if (!Modifier.isStatic(modifiers)) {
 				added = lisaCU.addInstanceCodeMember(cfg);
 			} else {
@@ -526,7 +524,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 	}
 
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
-			MethodDeclaration node, it.unive.lisa.program.CompilationUnit lisaCU) {
+			MethodDeclaration node,
+			it.unive.lisa.program.CompilationUnit lisaCU) {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
@@ -565,7 +564,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 	}
 
 	private JavaCodeMemberDescriptor buildConstructorJavaCodeMemberDescriptor(
-			MethodDeclaration node, it.unive.lisa.program.CompilationUnit lisaCU) {
+			MethodDeclaration node,
+			it.unive.lisa.program.CompilationUnit lisaCU) {
 
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
@@ -623,7 +623,6 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 		return false;
 	}
-
 
 	private void addJavaLangImports() {
 		imports.put("Appendable", "java.lang.Appendable");

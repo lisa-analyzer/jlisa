@@ -171,7 +171,6 @@ public class JavaFrontend {
 		registerTypes();
 		initCodeMembers(expandedPaths);
 
-
 		for (String filePath : expandedPaths) {
 			Path path = Paths.get(filePath);
 			String source = Files.readString(path);
