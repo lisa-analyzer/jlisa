@@ -713,7 +713,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv.equalsIgnoreCase(rv));
 		}
-		
+
 		// char
 		if (operator instanceof JavaCharacterEqualsOperator) {
 			Integer lv = ((Integer) left.getValue());

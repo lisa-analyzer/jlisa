@@ -14,7 +14,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
 
-
 /**
  * Instrumentation to get next element from collection involved in for-each
  * structure
@@ -55,7 +54,7 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 		// TODO: to implement semantics
 		Type containerType = expr.getStaticType().asReferenceType().getInnerType();
 		Type contentType = containerType.asArrayType().getInnerType();
-		
+
 		PushAny top = new PushAny(contentType, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, top, this);
 	}

@@ -50,13 +50,13 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	 * char[]*
 	 */
 	public static JavaReferenceType CHAR_ARRAY = new JavaReferenceType(new JavaArrayType(JavaCharType.INSTANCE, 1));
-	
+
 	/**
 	 * String*[]*
 	 */
-	public static JavaReferenceType STRING_ARRAY = new JavaReferenceType(new JavaArrayType( new JavaReferenceType(JavaStringType.getStringType()), 1));
+	public static JavaReferenceType STRING_ARRAY = new JavaReferenceType(
+			new JavaArrayType(new JavaReferenceType(JavaStringType.getStringType()), 1));
 
-	
 	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
 
 	/**

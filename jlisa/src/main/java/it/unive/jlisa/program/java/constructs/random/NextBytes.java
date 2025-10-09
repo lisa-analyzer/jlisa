@@ -19,7 +19,11 @@ import it.unive.lisa.symbolic.value.PushAny;
 public class NextBytes extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	protected NextBytes(CFG cfg, CodeLocation location, Expression left, Expression right) {
+	protected NextBytes(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
 		super(cfg, location, "nextBytes", left, right);
 	}
 
@@ -44,8 +48,12 @@ public class NextBytes extends BinaryExpression implements PluggableStatement {
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(JavaArrayType.BYTE_ARRAY, getLocation()), originating);
 	}
