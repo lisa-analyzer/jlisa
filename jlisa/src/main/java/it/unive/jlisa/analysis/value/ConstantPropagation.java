@@ -82,6 +82,7 @@ import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.operator.NaryOperator;
 import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
@@ -116,6 +117,7 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
@@ -417,6 +419,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaLongIntValueOperator && arg.getValue() instanceof Long l)
 			return new ConstantValue(l.intValue());
+
+		// boolean
+		if (operator instanceof LogicalNegation && arg.getValue() instanceof Boolean b)
+			return new ConstantValue(!b);
 
 		return top();
 	}
@@ -1245,6 +1251,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) left.getValue()).longValue());
 			else if (right.getValue() instanceof JavaDoubleType)
 				return new ConstantValue(((Number) left.getValue()).doubleValue());
+			else if (right.getValue() instanceof JavaCharType)
+				return new ConstantValue((int) (char) ((Number) left.getValue()).longValue());
 
 		return left;
 	}
