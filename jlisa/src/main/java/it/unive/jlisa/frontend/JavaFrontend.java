@@ -169,6 +169,8 @@ public class JavaFrontend {
 		setRelationships(expandedPaths);
 		setGlobals(expandedPaths);
 		registerTypes();
+		initCodeMembers(expandedPaths);
+
 
 		for (String filePath : expandedPaths) {
 			Path path = Paths.get(filePath);
@@ -213,6 +215,18 @@ public class JavaFrontend {
 			CompilationUnit cu = getCompilationUnit(source);
 			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
 					CompilationUnitASTVisitor.VisitorType.ADD_GLOBALS));
+		}
+	}
+
+	public void initCodeMembers(
+			List<String> filePaths)
+			throws IOException {
+		for (String filePath : filePaths) {
+			Path path = Paths.get(filePath);
+			String source = Files.readString(path);
+			CompilationUnit cu = getCompilationUnit(source);
+			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
+					CompilationUnitASTVisitor.VisitorType.INIT_CODE_MEMBERS));
 		}
 	}
 
