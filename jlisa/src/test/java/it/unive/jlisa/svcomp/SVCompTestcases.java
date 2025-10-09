@@ -470,4 +470,13 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+	
+	@Test
+	public void radians_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "radians",
+				"Main.java", "../common");
+		perform(conf);
+	}
+	
+	
 }
