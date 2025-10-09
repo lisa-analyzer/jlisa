@@ -477,4 +477,25 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+	
+	@Test
+	public void StringMiscellaneous01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringMiscellaneous01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+	
+	@Test
+	public void StringStartEnd01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringStartEnd01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+	
+	@Test
+	public void TokenTest02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "TokenTest02",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }
