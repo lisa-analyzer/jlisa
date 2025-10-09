@@ -14,6 +14,18 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		param this libtype java.lang.String*
 		param val type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
 		
+	instance method String: it.unive.jlisa.program.java.constructs.string.StringCharArrayConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		
+	instance method String: it.unive.jlisa.program.java.constructs.string.StringCharArrayFromToConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param begin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
 	instance method getBytes: it.unive.jlisa.program.java.constructs.string.StringGetBytes
 		type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
 		param this libtype java.lang.String*
@@ -113,6 +125,10 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
 		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfCharArray
+		libtype java.lang.String*
+		param other type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
 			
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfObject
 		libtype java.lang.String*
@@ -198,3 +214,8 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
         param other libtype java.lang.String*
         param ooffset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        
+    instance method split: it.unive.jlisa.program.java.constructs.string.StringSplit
+    	type it.unive.jlisa.program.type.JavaArrayType::STRING_ARRAY
+    	param this libtype java.lang.String*
+    	param regex libtype java.lang.String*

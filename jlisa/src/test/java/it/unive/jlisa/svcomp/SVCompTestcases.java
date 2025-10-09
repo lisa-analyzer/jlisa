@@ -332,7 +332,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore // Ignored due to anonymous class.
+	@Ignore
 	public void Basic1_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -444,9 +444,60 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
-	public void long1_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "long1",
-				"Main.java", "../common/");
+	public void StringConstructors01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringConstructors01",
+				"Main.java");
+		perform(conf);
+	}
+
+	@Ignore
+	// FIXME there seem to be some nondeterminism in this test
+	public void SortedListInsert_MemUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"SortedListInsert-MemUnsat01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void RegexSubstitution02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "RegexSubstitution02",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringValueOf01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringValueOf01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void radians_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "radians",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringMiscellaneous01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringMiscellaneous01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringStartEnd01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringStartEnd01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void TokenTest02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "TokenTest02",
+				"Main.java", "../common");
 		perform(conf);
 	}
 }
