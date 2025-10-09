@@ -9,10 +9,7 @@ import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.Parameter;
-import it.unive.lisa.program.cfg.VariableTableEntry;
+import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
@@ -28,15 +25,18 @@ import org.eclipse.jdt.core.dom.*;
 public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
 	CFG cfg;
+	boolean createMethodSignature;
 
 	public MethodASTVisitor(
 			ParserContext parserContext,
 			String source,
 			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
 			CompilationUnit astCompilationUnit,
+			boolean createMethodSignature,
 			BaseUnitASTVisitor container) {
 		super(parserContext, source, astCompilationUnit, container);
 		this.lisacompilationUnit = lisacompilationUnit;
+		this.createMethodSignature = createMethodSignature;
 	}
 
 	@Override
@@ -53,14 +53,48 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 
 		int modifiers = node.getModifiers();
 
-		this.cfg = new CFG(codeMemberDescriptor);
+		if (createMethodSignature) {
+			CFG cfg = new CFG(codeMemberDescriptor);
+			boolean added;
+
+			if (!Modifier.isStatic(modifiers)) {
+				added = lisacompilationUnit.addInstanceCodeMember(cfg);
+			} else {
+				added = lisacompilationUnit.addCodeMember(cfg);
+			}
+			if (!added)
+				throw new ParsingException("duplicated_method_descriptor",
+						ParsingException.Type.MALFORMED_SOURCE,
+						"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
+						getSourceCodeLocation(node));
+
+			if (isMain)
+				getProgram().addEntryPoint(cfg);
+			return false;
+		}
+
+		CodeMember codeMember;
+		if (!Modifier.isStatic(modifiers)) {
+			codeMember = lisacompilationUnit.getInstanceCodeMember(codeMemberDescriptor.getSignature(), false);
+		} else {
+			codeMember = lisacompilationUnit.getCodeMember(codeMemberDescriptor.getSignature());
+		}
+
+		if (codeMember == null) {
+			// should never happen.
+			throw new ParsingException("missing_method_descriptor",
+					ParsingException.Type.PARSING_ERROR,
+					"Missing code member descriptor for " + codeMemberDescriptor + " in unit "
+							+ lisacompilationUnit.getName(),
+					getSourceCodeLocation(node));
+		}
+
+		cfg = (CFG) codeMember; // this explicit cast should always be possible.
 		for (Parameter p : codeMemberDescriptor.getFormals()) {
 			it.unive.lisa.type.Type paramType = p.getStaticType();
 			parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null),
 					paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
-
-		this.cfg = new CFG(codeMemberDescriptor);
 
 		JavaLocalVariableTracker tracker = new JavaLocalVariableTracker(cfg, codeMemberDescriptor);
 		tracker.enterScope();
@@ -119,23 +153,6 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			}
 
 		}
-
-		boolean added = false;
-
-		if (!Modifier.isStatic(modifiers)) {
-			added = lisacompilationUnit.addInstanceCodeMember(cfg);
-		} else {
-			added = lisacompilationUnit.addCodeMember(cfg);
-		}
-
-		if (!added)
-			throw new ParsingException("duplicated_method_descriptor",
-					ParsingException.Type.MALFORMED_SOURCE,
-					"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
-					getSourceCodeLocation(node));
-
-		if (isMain)
-			getProgram().addEntryPoint(cfg);
 
 		JavaCFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new,
 				parserContext.getCurrentSyntheticCodeLocationManager(source));
