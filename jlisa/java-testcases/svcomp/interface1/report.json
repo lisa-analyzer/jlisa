@@ -4,7 +4,7 @@
   } ],
   "files" : [ "report.json", "void_B.B(B__this)_1707427366.json", "void_B.f(B__this)_1707424545.json", "void_C.C(C__this)_1707427397.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
-    "cfgs" : "17",
+    "cfgs" : "18",
     "duration" : "8ms",
     "end" : "2025-10-08T15:39:26.672+02:00",
     "expressions" : "49",
