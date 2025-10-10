@@ -1,2 +1,138 @@
 class java.lang.StringBuilder extends java.lang.Object:
+	instance method StringBuilder: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+
+	instance method StringBuilder: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param val libtype java.lang.String*
+
+	instance method toString: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderToString
+		libtype java.lang.String*
+		param this libtype java.lang.StringBuilder*
 		
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendChar
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param val type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendString
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param val libtype java.lang.String*
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendObject
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param obj libtype java.lang.Object*
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendCharArray
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param str type  it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendCharSubArray
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param str type  it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendBoolean
+		libtype java.lang.StringBuffer*
+		param this libtype java.lang.StringBuffer*
+		param val type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendInt
+		libtype java.lang.StringBuffer*
+		param this libtype java.lang.StringBuffer*
+		param val type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendLong
+		libtype java.lang.StringBuffer*
+		param this libtype java.lang.StringBuffer*
+		param val type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendFloat
+		libtype java.lang.StringBuffer*
+		param this libtype java.lang.StringBuffer*
+		param val type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendDouble
+		libtype java.lang.StringBuffer*
+		param this libtype java.lang.StringBuffer*
+		param val type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertChar
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param c type it.unive.jlisa.program.type.JavaCharType::
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertInt
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param i type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertBoolean
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertLong
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param l type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertFloat
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertDouble
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertObject
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param obj libtype java.lang.Object*
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertString
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param str libtype java.lang.String*
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertCharArray
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param str type  it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+
+	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertCharSubArray
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param str type  it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method delete: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderDelete
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param start type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param end type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method deleteCharAt: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderDeleteCharAt
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
+		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
