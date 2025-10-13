@@ -21,23 +21,23 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringBuilderInsertChar extends TernaryExpression implements PluggableStatement {
+public class StringBuilderDelete extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBuilderInsertChar(
+	public StringBuilderDelete(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
 			Expression middle,
 			Expression right) {
-		super(cfg, location, "insert", left, middle, right);
+		super(cfg, location, "delete", left, middle, right);
 	}
 
-	public static StringBuilderInsertChar build(
+	public static StringBuilderDelete build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBuilderInsertChar(cfg, location, params[0], params[1], params[2]);
+		return new StringBuilderDelete(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -68,10 +68,10 @@ public class StringBuilderInsertChar extends TernaryExpression implements Plugga
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
+		it.unive.lisa.symbolic.value.TernaryExpression delete = new it.unive.lisa.symbolic.value.TernaryExpression(
 				stringType, accessLeft, middle, right, JavaStringInsertCharOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
+		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, delete, originating);
 
 		return analysis.smallStepSemantics(result, left, originating);
 	}

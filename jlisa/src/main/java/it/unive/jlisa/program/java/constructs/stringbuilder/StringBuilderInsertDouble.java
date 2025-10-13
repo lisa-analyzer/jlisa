@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertDoubleOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -21,10 +21,10 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringBuilderInsertChar extends TernaryExpression implements PluggableStatement {
+public class StringBuilderInsertDouble extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBuilderInsertChar(
+	public StringBuilderInsertDouble(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
@@ -33,11 +33,11 @@ public class StringBuilderInsertChar extends TernaryExpression implements Plugga
 		super(cfg, location, "insert", left, middle, right);
 	}
 
-	public static StringBuilderInsertChar build(
+	public static StringBuilderInsertDouble build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBuilderInsertChar(cfg, location, params[0], params[1], params[2]);
+		return new StringBuilderInsertDouble(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class StringBuilderInsertChar extends TernaryExpression implements Plugga
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
 		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, right, JavaStringInsertCharOperator.INSTANCE, getLocation());
+				stringType, accessLeft, middle, right, JavaStringInsertDoubleOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
 
