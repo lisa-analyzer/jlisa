@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertObjectOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -21,10 +21,10 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringBuilderInsertString extends TernaryExpression implements PluggableStatement {
+public class StringBuilderInsertObject extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBuilderInsertString(
+	public StringBuilderInsertObject(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
@@ -33,11 +33,11 @@ public class StringBuilderInsertString extends TernaryExpression implements Plug
 		super(cfg, location, "insert", left, middle, right);
 	}
 
-	public static StringBuilderInsertString build(
+	public static StringBuilderInsertObject build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBuilderInsertString(cfg, location, params[0], params[1], params[2]);
+		return new StringBuilderInsertObject(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -69,11 +69,13 @@ public class StringBuilderInsertString extends TernaryExpression implements Plug
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
-		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		HeapDereference derefRight = new HeapDereference(analysis.getDynamicTypeOf(state, accessLeft, originating),
+				right, getLocation());
+		AccessChild accessRight = new AccessChild(analysis.getDynamicTypeOf(state, accessLeft, originating), derefRight,
+				var, getLocation());
 
 		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, accessRight, JavaStringInsertStringOperator.INSTANCE, getLocation());
+				stringType, accessLeft, middle, accessRight, JavaStringInsertObjectOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
 

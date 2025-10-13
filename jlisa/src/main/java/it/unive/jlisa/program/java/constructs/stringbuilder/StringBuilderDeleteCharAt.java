@@ -10,10 +10,10 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -21,23 +21,22 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringBuilderDeleteCharAt extends TernaryExpression implements PluggableStatement {
+public class StringBuilderDeleteCharAt extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	public StringBuilderDeleteCharAt(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
-			Expression middle,
 			Expression right) {
-		super(cfg, location, "deleteCharAt", left, middle, right);
+		super(cfg, location, "deleteCharAt", left, right);
 	}
 
 	public static StringBuilderDeleteCharAt build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBuilderDeleteCharAt(cfg, location, params[0], params[1], params[2]);
+		return new StringBuilderDeleteCharAt(cfg, location, params[0], params[1]);
 	}
 
 	@Override
@@ -53,11 +52,10 @@ public class StringBuilderDeleteCharAt extends TernaryExpression implements Plug
 	}
 
 	@Override
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression left,
-			SymbolicExpression middle,
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {

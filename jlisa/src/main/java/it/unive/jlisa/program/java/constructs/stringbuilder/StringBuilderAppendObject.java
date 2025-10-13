@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendObjectOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -10,10 +10,10 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -21,23 +21,22 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringBuilderInsertString extends TernaryExpression implements PluggableStatement {
+public class StringBuilderAppendObject extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBuilderInsertString(
+	public StringBuilderAppendObject(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
-			Expression middle,
 			Expression right) {
-		super(cfg, location, "insert", left, middle, right);
+		super(cfg, location, "append", left, right);
 	}
 
-	public static StringBuilderInsertString build(
+	public static StringBuilderAppendObject build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBuilderInsertString(cfg, location, params[0], params[1], params[2]);
+		return new StringBuilderAppendObject(cfg, location, params[0], params[1]);
 	}
 
 	@Override
@@ -53,15 +52,13 @@ public class StringBuilderInsertString extends TernaryExpression implements Plug
 	}
 
 	@Override
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression left,
-			SymbolicExpression middle,
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
@@ -69,13 +66,15 @@ public class StringBuilderInsertString extends TernaryExpression implements Plug
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
-		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		HeapDereference derefRight = new HeapDereference(analysis.getDynamicTypeOf(state, right, originating), right,
+				getLocation());
+		AccessChild accessRight = new AccessChild(analysis.getDynamicTypeOf(state, right, originating), derefRight, var,
+				getLocation());
 
-		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, accessRight, JavaStringInsertStringOperator.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression append = new it.unive.lisa.symbolic.value.BinaryExpression(
+				stringType, accessLeft, accessRight, JavaStringAppendObjectOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
+		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, originating);
 
 		return analysis.smallStepSemantics(result, left, originating);
 	}

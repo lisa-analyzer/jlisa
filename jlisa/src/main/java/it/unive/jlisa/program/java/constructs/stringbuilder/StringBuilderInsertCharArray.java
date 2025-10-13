@@ -1,9 +1,7 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
-import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -15,16 +13,13 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
-public class StringBuilderInsertString extends TernaryExpression implements PluggableStatement {
+public class StringBuilderInsertCharArray extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringBuilderInsertString(
+	public StringBuilderInsertCharArray(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
@@ -33,11 +28,11 @@ public class StringBuilderInsertString extends TernaryExpression implements Plug
 		super(cfg, location, "insert", left, middle, right);
 	}
 
-	public static StringBuilderInsertString build(
+	public static StringBuilderInsertCharArray build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringBuilderInsertString(cfg, location, params[0], params[1], params[2]);
+		return new StringBuilderInsertCharArray(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -63,20 +58,8 @@ public class StringBuilderInsertString extends TernaryExpression implements Plug
 			throws SemanticException {
 
 		Type stringType = getProgram().getTypes().getStringType();
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
-		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-
-		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
-		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
-
-		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, accessRight, JavaStringInsertStringOperator.INSTANCE, getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
-
-		return analysis.smallStepSemantics(result, left, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(stringType, getLocation()),
+				originating);
 	}
 }
