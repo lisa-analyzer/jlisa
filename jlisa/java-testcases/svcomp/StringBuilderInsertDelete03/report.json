@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707446245.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707449097.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320535202.json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320623614.json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "19ms",
+    "end" : "2025-10-13T16:06:54.383+02:00",
+    "expressions" : "142",
+    "files" : "5",
+    "globals" : "27",
+    "members" : "173",
+    "programs" : "1",
+    "start" : "2025-10-13T16:06:54.364+02:00",
+    "statements" : "37",
+    "units" : "48",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/StringBuilderInsertDelete03"
+  }
+}
