@@ -39,29 +39,29 @@ class java.lang.StringBuilder extends java.lang.Object:
 		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendBoolean
-		libtype java.lang.StringBuffer*
-		param this libtype java.lang.StringBuffer*
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendBoolean
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
 		param val type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 
-	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendInt
-		libtype java.lang.StringBuffer*
-		param this libtype java.lang.StringBuffer*
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendInt
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
 		param val type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendLong
-		libtype java.lang.StringBuffer*
-		param this libtype java.lang.StringBuffer*
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendLong
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
 		param val type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 
-	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendFloat
-		libtype java.lang.StringBuffer*
-		param this libtype java.lang.StringBuffer*
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendFloat
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
 		param val type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 
-	instance method append: it.unive.jlisa.program.java.constructs.stringbuffer.StringBufferAppendDouble
-		libtype java.lang.StringBuffer*
-		param this libtype java.lang.StringBuffer*
+	instance method append: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderAppendDouble
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*
 		param val type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 
 	instance method insert: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderInsertChar
