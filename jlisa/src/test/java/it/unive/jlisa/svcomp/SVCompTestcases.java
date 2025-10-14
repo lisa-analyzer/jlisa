@@ -500,4 +500,43 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void StringBuilderAppend01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringBuilderAppend01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderAppend02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringBuilderAppend02",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderInsertDelete01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderInsertDelete01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderInsertDelete02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderInsertDelete02",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderInsertDelete03_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderInsertDelete03",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
 }
