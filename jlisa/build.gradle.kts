@@ -7,6 +7,8 @@ plugins {
     id("com.diffplug.spotless") version "7.0.3"
 }
 
+// A change!
+
 spotless {
     encoding(Charsets.UTF_8) // <- correct
     lineEndings = com.diffplug.spotless.LineEnding.UNIX
