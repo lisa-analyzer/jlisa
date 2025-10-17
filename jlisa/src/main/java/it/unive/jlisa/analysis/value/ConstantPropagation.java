@@ -35,6 +35,7 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
@@ -1218,6 +1219,25 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 						: Satisfiability.NOT_SATISFIED;
 			} else {
 				return ((Number) lVal).intValue() < ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			}
+		}
+
+		if (operator instanceof ComparisonGt) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return ((Number) lVal).doubleValue() > ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return ((Number) lVal).floatValue() > ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return ((Number) lVal).longValue() > ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else {
+				return ((Number) lVal).intValue() > ((Number) rVal).intValue() ? Satisfiability.SATISFIED
 						: Satisfiability.NOT_SATISFIED;
 			}
 		}
