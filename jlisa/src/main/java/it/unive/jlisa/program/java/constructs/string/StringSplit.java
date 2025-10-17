@@ -59,6 +59,7 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 			StatementStore<A> expressions)
 			throws SemanticException {
 		// in this case, we always return the top string
+		// TODO: implement semantics
 		Type stringArrayType = JavaArrayType.STRING_ARRAY;
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringArrayType, left, var, getLocation());
