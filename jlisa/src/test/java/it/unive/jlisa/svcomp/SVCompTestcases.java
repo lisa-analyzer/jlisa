@@ -539,4 +539,11 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void ExSymExe_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExe_true",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }
