@@ -11,6 +11,8 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.type.Type;
 
 /**
  * Instrumentation to get next element from collection involved in for-each
@@ -50,6 +52,10 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					StatementStore<A> expressions)
 					throws SemanticException {
 		// TODO: to implement semantics
-		return interprocedural.getAnalysis().smallStepSemantics(state, expr, this);
+		Type containerType = expr.getStaticType().asReferenceType().getInnerType();
+		Type contentType = containerType.asArrayType().getInnerType();
+
+		PushAny top = new PushAny(contentType, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, top, this);
 	}
 }

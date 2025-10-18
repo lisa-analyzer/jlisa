@@ -37,13 +37,6 @@ public class Main {
 			throws IOException,
 			ParseException,
 			ParsingException {
-		// String source = "public class Hello { public static void main() {
-		// System.out.println(\"Hello World :)\"); } }";
-
-		// ASTParser parser = ASTParser.newParser(AST.getJLSLatest()); // NOTE:
-		// JLS8 is deprecated. getJLSLatest will return JDK23
-		// parser.setSource(source.toCharArray());
-		// parser.setKind(ASTParser.K_COMPILATION_UNIT);
 
 		// Define options
 		Options options = new Options();
@@ -97,6 +90,13 @@ public class Main {
 				.required(false)
 				.build();
 
+		Option noHtmlOutput = Option.builder()
+				.longOpt("no-html")
+				.desc("Disable HTML output (enabled by default)")
+				.required(false)
+				.build();
+		options.addOption(noHtmlOutput);
+
 		options.addOption(helpOption);
 		options.addOption(sourceOption);
 		options.addOption(outdirOption);
@@ -105,13 +105,15 @@ public class Main {
 		options.addOption(numericalDomainOption);
 		options.addOption(mode);
 		options.addOption(version);
-
+		options.addOption(noHtmlOutput);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
 		String[] sources = new String[0];
 		String outdir = "";
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
+		boolean htmlOutput = true;
+
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -146,6 +148,10 @@ public class Main {
 				LogManager.setLogLevel(level);
 			}
 
+			if (cmd.hasOption("no-html")) {
+				htmlOutput = false;
+			}
+
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
 
@@ -173,10 +179,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain);
+			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain);
+			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -188,19 +194,21 @@ public class Main {
 			String[] sources,
 			String outdir,
 			String checkerName,
-			String numericalDomain)
+			String numericalDomain,
+			boolean htmlOutput)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(outdir, checkerName, numericalDomain, frontend);
+		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
 	}
 
 	private static void runStatistics(
 			String[] sources,
 			String outdir,
 			String checkerName,
-			String numericalDomain) {
+			String numericalDomain,
+			boolean htmlOutput) {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
@@ -211,7 +219,7 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(outdir, checkerName, numericalDomain, frontend);
+			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
 		} catch (Throwable e) {
 			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
@@ -233,14 +241,17 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
-			JavaFrontend frontend)
+			JavaFrontend frontend,
+			boolean htmlOutput)
 			throws ParseException {
 		Program p = frontend.getProgram();
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
 		conf.serializeResults = false;
 		conf.jsonOutput = true;
-		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+		if (htmlOutput) {
+			conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+		}
 		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;

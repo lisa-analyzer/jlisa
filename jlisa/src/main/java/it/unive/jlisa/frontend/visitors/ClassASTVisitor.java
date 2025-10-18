@@ -84,9 +84,13 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		createClassInitializer(cUnit, node);
 
+		for (MethodDeclaration md : node.getMethods()) {
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, true, this);
+			md.accept(visitor);
+		}
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, this);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this);
 			md.accept(visitor);
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;

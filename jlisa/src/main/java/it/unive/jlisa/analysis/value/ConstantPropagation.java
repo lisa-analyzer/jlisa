@@ -1,86 +1,7 @@
 package it.unive.jlisa.analysis.value;
 
 import it.unive.jlisa.lattices.ConstantValue;
-import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
-import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
-import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierPartOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierStartOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsLetterOrDigitOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsLowerCaseOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsUpperCaseOperator;
-import it.unive.jlisa.program.operator.JavaCharacterToLowerCaseOperator;
-import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
-import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
-import it.unive.jlisa.program.operator.JavaDoubleParseDoubleOperator;
-import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
-import it.unive.jlisa.program.operator.JavaDoubleToStringOperator;
-import it.unive.jlisa.program.operator.JavaFloatParseFloatOperator;
-import it.unive.jlisa.program.operator.JavaFloatToStringOperator;
-import it.unive.jlisa.program.operator.JavaIsDoubleParsableOperator;
-import it.unive.jlisa.program.operator.JavaIsFloatParsableOperator;
-import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
-import it.unive.jlisa.program.operator.JavaMathAbsOperator;
-import it.unive.jlisa.program.operator.JavaMathAcosOperator;
-import it.unive.jlisa.program.operator.JavaMathAsinOperator;
-import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
-import it.unive.jlisa.program.operator.JavaMathAtanOperator;
-import it.unive.jlisa.program.operator.JavaMathCosOperator;
-import it.unive.jlisa.program.operator.JavaMathExpOperator;
-import it.unive.jlisa.program.operator.JavaMathFloorOperator;
-import it.unive.jlisa.program.operator.JavaMathLog10Operator;
-import it.unive.jlisa.program.operator.JavaMathLogOperator;
-import it.unive.jlisa.program.operator.JavaMathPowOperator;
-import it.unive.jlisa.program.operator.JavaMathRoundOperator;
-import it.unive.jlisa.program.operator.JavaMathSinOperator;
-import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
-import it.unive.jlisa.program.operator.JavaMathTanOperator;
-import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
-import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
-import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
-import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
-import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
-import it.unive.jlisa.program.operator.JavaStringConcatOperator;
-import it.unive.jlisa.program.operator.JavaStringContainsOperator;
-import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
-import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
-import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
-import it.unive.jlisa.program.operator.JavaStringGetBytesOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
-import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
-import it.unive.jlisa.program.operator.JavaStringLastIndexOfCharFromIndexOperator;
-import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
-import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
-import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
-import it.unive.jlisa.program.operator.JavaStringLengthOperator;
-import it.unive.jlisa.program.operator.JavaStringMatchesOperator;
-import it.unive.jlisa.program.operator.JavaStringRegionMatchesIgnoreCaseOperator;
-import it.unive.jlisa.program.operator.JavaStringRegionMatchesOperator;
-import it.unive.jlisa.program.operator.JavaStringReplaceAllOperator;
-import it.unive.jlisa.program.operator.JavaStringReplaceFirstOperator;
-import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
-import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
-import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
-import it.unive.jlisa.program.operator.JavaStringSubstringFromToOperator;
-import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
-import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
-import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
-import it.unive.jlisa.program.operator.JavaStringTrimOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfObjectOperator;
-import it.unive.jlisa.program.operator.NaryExpression;
-import it.unive.jlisa.program.operator.NaryOperator;
+import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
@@ -114,6 +35,8 @@ import it.unive.lisa.symbolic.value.operator.binary.BitwiseUnsignedShiftRight;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseXor;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
@@ -408,8 +331,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringValueOfIntOperator && arg.getValue() instanceof Integer i)
 			return new ConstantValue(String.valueOf(i));
 
-		if (operator instanceof JavaStringValueOfCharOperator && arg.getValue() instanceof Character c)
-			return new ConstantValue(String.valueOf(c));
+		if (operator instanceof JavaStringValueOfCharOperator && arg.getValue() instanceof Integer i)
+			return new ConstantValue(String.valueOf((char) i.intValue()));
 
 		if (operator instanceof JavaStringValueOfObjectOperator && arg.getValue() instanceof Object o)
 			return new ConstantValue(String.valueOf(o));
@@ -702,10 +625,67 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
+		if (operator instanceof JavaStringAppendIntOperator) {
+			String lv = ((String) left.getValue());
+			if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(lv + rv.intValue());
+			}
+		}
+
+		if (operator instanceof JavaStringAppendLongOperator) {
+			String lv = ((String) left.getValue());
+			if (right.getValue() instanceof Long) {
+				Long rv = ((Long) right.getValue());
+				return new ConstantValue(lv + rv.longValue());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(lv + ((long) rv.intValue()));
+			}
+		}
+
+		if (operator instanceof JavaStringAppendFloatOperator) {
+			String lv = ((String) left.getValue());
+			if (right.getValue() instanceof Float) {
+				Float rv = ((Float) right.getValue());
+				return new ConstantValue(lv + rv.floatValue());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(lv + ((float) rv.intValue()));
+			}
+		}
+
+		if (operator instanceof JavaStringAppendDoubleOperator) {
+			String lv = ((String) left.getValue());
+			if (right.getValue() instanceof Double) {
+				Double rv = ((Double) right.getValue());
+				return new ConstantValue(lv + rv.doubleValue());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(lv + ((double) rv.intValue()));
+			}
+		}
+
+		if (operator instanceof JavaStringAppendBooleanOperator) {
+			String lv = ((String) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return new ConstantValue(lv + rv.booleanValue());
+		}
+
 		if (operator instanceof JavaStringAppendStringOperator) {
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return new ConstantValue(lv + rv);
+		}
+
+		if (operator instanceof JavaStringAppendCharArrayOperator) {
+			return ConstantValue.TOP;
+		}
+
+		if (operator instanceof JavaStringAppendObjectOperator) {
+			String lv = ((String) left.getValue());
+			Object rv = right.getValue();
+			return new ConstantValue(lv + rv.toString());
 		}
 
 		if (operator instanceof JavaStringEqualsIgnoreCaseOperator) {
@@ -733,6 +713,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(Character.digit(lv, rv));
 		}
 
+		if (operator instanceof JavaStringDeleteCharAtOperator) {
+			String lv = ((String) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(new StringBuffer(lv).deleteCharAt(rv.intValue()).toString());
+		}
+
 		return top();
 	}
 
@@ -753,8 +739,88 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringInsertCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
+			if (right.getValue() instanceof Character) {
+				Character rv = ((Character) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.charValue()).toString());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (char) rv.intValue()).toString());
+			}
+		}
+
+		if (operator instanceof JavaStringInsertBooleanOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.booleanValue()).toString());
+		}
+
+		if (operator instanceof JavaStringInsertStringOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			String rv = ((String) right.getValue());
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv).toString());
+		}
+
+		if (operator instanceof JavaStringInsertObjectOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Object rv = right.getValue();
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.toString()).toString());
+		}
+
+		if (operator instanceof JavaStringInsertIntOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (char) rv.intValue()).toString());
+			return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.intValue()).toString());
+		}
+
+		if (operator instanceof JavaStringInsertLongOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			if (right.getValue() instanceof Long) {
+				Long rv = ((Long) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.longValue()).toString());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (long) rv.intValue()).toString());
+			}
+		}
+
+		if (operator instanceof JavaStringInsertFloatOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			if (right.getValue() instanceof Float) {
+				Float rv = ((Float) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.floatValue()).toString());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (float) rv.intValue()).toString());
+			}
+		}
+
+		if (operator instanceof JavaStringInsertDoubleOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			if (right.getValue() instanceof Double) {
+				Double rv = ((Double) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), rv.doubleValue()).toString());
+			} else if (right.getValue() instanceof Integer) {
+				Integer rv = ((Integer) right.getValue());
+				return new ConstantValue(new StringBuffer(lv).insert(mv.intValue(), (double) rv.intValue()).toString());
+			}
+		}
+
+		if (operator instanceof JavaStringInsertCharArrayOperator) {
+			return ConstantValue.TOP;
+		}
+
+		if (operator instanceof JavaStringDeleteOperator) {
+			String lv = ((String) left.getValue());
+			Integer mv = ((Integer) middle.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(new StringBuffer(lv).delete(mv.intValue(), rv.intValue()).toString());
 		}
 
 		if (operator instanceof JavaStringReplaceAllOperator) {
@@ -833,6 +899,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			throws SemanticException {
 
 		NaryOperator operator = ((NaryExpression) expression).getOperator();
+		if (subExpressions.length == 4) {
+
+			if (operator instanceof JavaStringAppendCharSubArrayOperator) {
+				return ConstantValue.TOP;
+			}
+		}
 
 		if (subExpressions.length == 5) {
 
@@ -843,6 +915,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				Integer fo = ((Integer) subExpressions[3].getValue());
 				Integer fi = ((Integer) subExpressions[4].getValue());
 				return new ConstantValue(f.regionMatches(s, t, fo, fi));
+			}
+
+			if (operator instanceof JavaStringInsertCharSubArrayOperator) {
+				return ConstantValue.TOP;
 			}
 
 		} else if (subExpressions.length == 6) {
@@ -1027,7 +1103,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.UNKNOWN;
 
 		// character
-
 		if (operator instanceof JavaCharacterEqualsOperator) {
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
@@ -1144,6 +1219,44 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 						: Satisfiability.NOT_SATISFIED;
 			} else {
 				return ((Number) lVal).intValue() < ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			}
+		}
+
+		if (operator instanceof ComparisonLe) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return ((Number) lVal).doubleValue() <= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return ((Number) lVal).floatValue() <= ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return ((Number) lVal).longValue() <= ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else {
+				return ((Number) lVal).intValue() <= ((Number) rVal).intValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			}
+		}
+
+		if (operator instanceof ComparisonGt) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Double || rVal instanceof Double) {
+				return ((Number) lVal).doubleValue() > ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Float || rVal instanceof Float) {
+				return ((Number) lVal).floatValue() > ((Number) rVal).floatValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else if (lVal instanceof Long || rVal instanceof Long) {
+				return ((Number) lVal).longValue() > ((Number) rVal).longValue() ? Satisfiability.SATISFIED
+						: Satisfiability.NOT_SATISFIED;
+			} else {
+				return ((Number) lVal).intValue() > ((Number) rVal).intValue() ? Satisfiability.SATISFIED
 						: Satisfiability.NOT_SATISFIED;
 			}
 		}

@@ -46,6 +46,17 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	 */
 	public static JavaReferenceType BYTE_ARRAY = new JavaReferenceType(new JavaArrayType(JavaByteType.INSTANCE, 1));
 
+	/**
+	 * char[]*
+	 */
+	public static JavaReferenceType CHAR_ARRAY = new JavaReferenceType(new JavaArrayType(JavaCharType.INSTANCE, 1));
+
+	/**
+	 * String*[]*
+	 */
+	public static JavaReferenceType STRING_ARRAY = new JavaReferenceType(
+			new JavaArrayType(new JavaReferenceType(JavaStringType.getStringType()), 1));
+
 	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
 
 	/**
@@ -123,7 +134,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
 	@Override
 	public String toString() {
-		return base + "[]";
+		return base + "[]".repeat(dimensions);
 	}
 
 	@Override
