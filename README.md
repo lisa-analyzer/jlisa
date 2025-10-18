@@ -34,9 +34,12 @@ Build with Gradle:
 ## Usage
 
 To analyze Java source files:
+```bash
+./gradlew distZip
+```
 
 ```bash
-java -jar target/jlisa.jar -s <source-files> -o <output-directory> [-l <log-level>]
+./build/distributions/jlisa-0.1/bin/jlisa -s path/to/File.java -o out/ -n ConstantPropagation
 ```
 
 ## Command Line Options
@@ -48,6 +51,7 @@ java -jar target/jlisa.jar -s <source-files> -o <output-directory> [-l <log-leve
 | `-o`   | `--outdir`  | Path     | Output directory for results |
 | `-l`   | `--log-level` | Level | Logging level (e.g., INFO, DEBUG, ERROR) |
 | `-v`   | `--version` | None | Version of current jlisa's implementation |
+| `N/A`   | `--no-html` | None | Disable html output |
 
 ## Architecture
 
@@ -77,7 +81,7 @@ Make sure to have the following prerequisites:
 To run locally using Gradle:
 
 ```bash
-./gradlew run --args="-s path/to/File.java -o out/"
+./gradlew run --args="-s path/to/File.java -o out/ -n ConstantPropagation"
 ```
 
 ## License
