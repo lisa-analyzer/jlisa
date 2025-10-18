@@ -279,11 +279,6 @@ public class Main {
 		 * DefaultConfiguration.defaultHeapDomain(), new Pentagon(),
 		 * DefaultConfiguration.defaultTypeDomain());
 		 */
-		/*
-		 * DefaultConfiguration.simpleDomain(new
-		 * JavaFieldSensitivePointBasedHeap(), new
-		 * ConstantPropWithIntervalLattice(), new JavaInferredTypes());
-		 */
 		conf.analysis = new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				new ConstantPropWithInterval(),
