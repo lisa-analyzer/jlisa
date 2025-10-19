@@ -48,6 +48,7 @@ import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.LIFOWorkingSet;
 import java.util.ArrayList;
@@ -666,12 +667,12 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				// if rec is a VariableRef, we need to check if the code member of the compilation unit of the variable is instance or not.
 				if (rec instanceof VariableRef) {
 					if (rec.getStaticType() instanceof JavaReferenceType refType) {
-						if (refType.getInnerType() instanceof JavaClassType classType) {
-							if (!classType.getUnit().getInstanceCodeMembersByName(methodName, true).isEmpty()) {
+						if (refType.getInnerType() instanceof UnitType unitType) {
+							if (!unitType.getUnit().getInstanceCodeMembersByName(methodName, true).isEmpty()) {
 								parameters.add(rec);
 								isInstance = true;
 							} else {
-								name = classType.toString();
+								name = unitType.toString();
 							}
 						}
 					}
