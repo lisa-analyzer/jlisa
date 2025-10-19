@@ -11,7 +11,6 @@ public class ReaderTest extends JLiSAAnalysisExecutor {
 	@Test
 	public void readerTest() throws IOException {
 		CronConfiguration conf = TestHelpers.createConfiguration("reader", "", "Main.java");
-		conf.forceUpdate = true;
 		perform(conf);
 	}
 }
