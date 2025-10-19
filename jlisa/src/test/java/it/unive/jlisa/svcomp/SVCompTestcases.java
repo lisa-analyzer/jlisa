@@ -546,4 +546,20 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void RedBlackTree_FunUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"RedBlackTree-FunUnsat01",
+				"Main.java", "rbtree/Node.java", "rbtree/RedBlackTree.java", "rbtree/RedBlackTreeNode.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeLongBytecodes_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeLongBytecodes_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }

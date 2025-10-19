@@ -1,45 +1,52 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':21:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':25:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
-  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "13",
-    "duration" : "99ms",
-    "end" : "2025-10-08T12:11:19.446+02:00",
-    "expressions" : "80",
-    "files" : "1",
-    "globals" : "27",
-    "members" : "143",
-    "programs" : "1",
-    "start" : "2025-10-08T12:11:19.347+02:00",
-    "statements" : "34",
-    "units" : "48",
-    "version" : "0.1",
-    "warnings" : "3"
+  "warnings": [
+    {
+      "message": "['Main.java':21:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':23:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':25:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    }
+  ],
+  "files": [
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).json"
+  ],
+  "info": {
+    "cfgs": "13",
+    "duration": "99ms",
+    "end": "2025-10-08T12:11:19.446+02:00",
+    "expressions": "80",
+    "files": "1",
+    "globals": "27",
+    "members": "146",
+    "programs": "1",
+    "start": "2025-10-08T12:11:19.347+02:00",
+    "statements": "34",
+    "units": "48",
+    "version": "0.1",
+    "warnings": "3"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/long1"
+  "configuration": {
+    "analysisGraphs": "NONE",
+    "descendingPhaseType": "NONE",
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "jsonOutput": "true",
+    "openCallPolicy": "ReturnTopPolicy",
+    "optimize": "false",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "serializeInputs": "false",
+    "serializeResults": "true",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/long1"
   }
 }

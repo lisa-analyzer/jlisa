@@ -6,29 +6,7 @@ import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
-import it.unive.jlisa.program.cfg.expression.BitwiseNot;
-import it.unive.jlisa.program.cfg.expression.InstanceOf;
-import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
-import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
-import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
-import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
-import it.unive.jlisa.program.cfg.expression.JavaDivision;
-import it.unive.jlisa.program.cfg.expression.JavaNewArray;
-import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
-import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
-import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
-import it.unive.jlisa.program.cfg.expression.PostfixAddition;
-import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
-import it.unive.jlisa.program.cfg.expression.PrefixAddition;
-import it.unive.jlisa.program.cfg.expression.PrefixPlus;
-import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
+import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaSubtraction;
@@ -592,13 +570,13 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			expression = buildExpression(operands, jdtOperands, (
 					first,
 					second,
-					location) -> new And(cfg, location, first, second));
+					location) -> new /*Java*/And(cfg, location, first, second));
 			break;
 		case "||":
 			expression = buildExpression(operands, jdtOperands, (
 					first,
 					second,
-					location) -> new Or(cfg, location, first, second));
+					location) -> new /*Java*/Or(cfg, location, first, second));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
@@ -654,7 +632,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		String methodName = node.getName().toString();
 		ClassUnit classUnit = (ClassUnit) this.cfg.getUnit();
 
-		boolean isInstance;
+		boolean isInstance = false;
 		String name = null;
 		// we do not have a receiver
 		if (node.getExpression() == null) {
@@ -685,10 +663,38 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			}
 
 			if (rec != null) {
-				parameters.add(rec);
-				isInstance = true;
-			} else
-				isInstance = false;
+				// if rec is a VariableRef, we need to check if the code member of the compilation unit of the variable is instance or not.
+				if (rec instanceof VariableRef) {
+					if (rec.getStaticType() instanceof JavaReferenceType refType) {
+						if (refType.getInnerType() instanceof JavaClassType classType) {
+							if (!classType.getUnit().getInstanceCodeMembersByName(methodName, true).isEmpty()) {
+								parameters.add(rec);
+								isInstance = true;
+							} else {
+								name = classType.toString();
+							}
+						}
+					}
+				} else if (rec instanceof JavaAccessGlobal accessGlobal) {
+					if (accessGlobal.getTarget().getStaticType() instanceof JavaReferenceType refType) {
+						if (refType.getInnerType() instanceof JavaClassType classType) {
+							if (!classType.getUnit().getInstanceCodeMembersByName(methodName, true).isEmpty()) {
+								parameters.add(rec);
+								isInstance = true;
+							} else {
+								name = classType.toString();
+							}
+						}
+
+					}
+				} else {
+					// if the receiver is not a variable ref, nor an accessGlobal, we assume that the call is an instance.
+					// However, if the receiver is something like foo().foo2().foo3(), since we don't know the return type of foo2()
+					// we should try to resolve this call as both instance and static.
+					parameters.add(rec);
+					isInstance = true;
+				}
+			}
 		}
 
 		if (!node.typeArguments().isEmpty())

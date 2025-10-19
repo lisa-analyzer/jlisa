@@ -9,7 +9,7 @@ public class Main
 			System.out.println(asd);
 			
 			Main m = new Main();
-			m.HelloWorld();
+			m.HelloWorld(); // NOTE: THIS IS AN OPEN CALL
 		}
     }
 	/*
