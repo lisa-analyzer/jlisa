@@ -18,3 +18,8 @@ class java.io.PrintStream extends java.io.FilterOutputStream:
             type it.unive.lisa.type.VoidType::INSTANCE
             param self libtype java.io.PrintStream*
             param p libtype java.lang.String*
+    instance method printf: it.unive.jlisa.program.java.constructs.printstream.PrintStreamPrintf
+            type it.unive.lisa.type.VoidType::INSTANCE
+            param self libtype java.io.PrintStream*
+            param a libtype java.lang.String*
+            param b libtype java.lang.String*
