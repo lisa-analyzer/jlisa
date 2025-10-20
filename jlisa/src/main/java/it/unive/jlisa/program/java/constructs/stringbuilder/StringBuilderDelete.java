@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
 import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
-import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
