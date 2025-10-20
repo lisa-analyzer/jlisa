@@ -13,7 +13,7 @@ public class JavaStringSetCharAt implements TernaryOperator {
     /**
      * The singleton instance of this class.
      */
-    public static final JavaStringDeleteOperator INSTANCE = new JavaStringDeleteOperator();
+    public static final JavaStringSetCharAt INSTANCE = new JavaStringSetCharAt();
 
     /**
      * Builds the operator. This constructor is visible to allow subclassing:
