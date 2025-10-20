@@ -1,7 +1,4 @@
 class java.lang.Throwable extends java.lang.Object:
-    instance method getMessage: it.unive.jlisa.program.java.constructs.throwable.ThrowableGetMessage
-        libtype java.lang.String*
-        param self libtype java.lang.Throwable*
 
 class java.lang.Exception extends java.lang.Throwable:
 
