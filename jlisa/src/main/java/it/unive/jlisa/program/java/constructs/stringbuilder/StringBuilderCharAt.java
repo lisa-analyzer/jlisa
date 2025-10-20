@@ -69,7 +69,6 @@ public class StringBuilderCharAt extends BinaryExpression implements PluggableSt
 
         it.unive.lisa.symbolic.value.BinaryExpression charAt = new it.unive.lisa.symbolic.value.BinaryExpression(
                 stringType, accessLeft, right, JavaStringCharAtOperator.INSTANCE, getLocation());
-        AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
         return interprocedural.getAnalysis().smallStepSemantics(state, charAt, originating);
 
         //return analysis.smallStepSemantics(result, left, originating);

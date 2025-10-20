@@ -10,10 +10,7 @@ import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.BinaryExpression;
-import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.PluggableStatement;
-import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
@@ -27,22 +24,21 @@ import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class ThrowableGetMessage extends BinaryExpression implements PluggableStatement {
+public class ThrowableGetMessage extends UnaryExpression implements PluggableStatement {
     protected Statement originating;
 
     public ThrowableGetMessage(
             CFG cfg,
             CodeLocation location,
-            Expression left,
-            Expression right) {
-        super(cfg, location, "getMessage", left, right);
+            Expression expr) {
+        super(cfg, location, "getMessage", expr);
     }
 
     public static it.unive.jlisa.program.java.constructs.throwable.ThrowableGetMessage build(
             CFG cfg,
             CodeLocation location,
             Expression... params) {
-        return new it.unive.jlisa.program.java.constructs.throwable.ThrowableGetMessage(cfg, location, params[0], params[1]);
+        return new it.unive.jlisa.program.java.constructs.throwable.ThrowableGetMessage(cfg, location, params[0]);
     }
 
     @Override
@@ -58,11 +54,10 @@ public class ThrowableGetMessage extends BinaryExpression implements PluggableSt
     }
 
     @Override
-    public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+    public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
             InterproceduralAnalysis<A, D> interprocedural,
             AnalysisState<A> state,
-            SymbolicExpression left,
-            SymbolicExpression right,
+            SymbolicExpression expression,
             StatementStore<A> expressions)
             throws SemanticException {
         return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getProgram().getTypes().getStringType(), getLocation()),
