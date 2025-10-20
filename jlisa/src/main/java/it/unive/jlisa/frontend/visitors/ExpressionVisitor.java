@@ -8,6 +8,7 @@ import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
+import it.unive.jlisa.program.cfg.expression.JavaAnd;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
@@ -18,6 +19,7 @@ import it.unive.jlisa.program.cfg.expression.JavaDivision;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaOr;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
@@ -62,9 +64,7 @@ import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
-import it.unive.lisa.program.cfg.statement.logic.And;
 import it.unive.lisa.program.cfg.statement.logic.Not;
-import it.unive.lisa.program.cfg.statement.logic.Or;
 import it.unive.lisa.program.cfg.statement.numeric.Addition;
 import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
@@ -592,13 +592,13 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			expression = buildExpression(operands, jdtOperands, (
 					first,
 					second,
-					location) -> new And(cfg, location, first, second));
+					location) -> new JavaAnd(cfg, location, first, second));
 			break;
 		case "||":
 			expression = buildExpression(operands, jdtOperands, (
 					first,
 					second,
-					location) -> new Or(cfg, location, first, second));
+					location) -> new JavaOr(cfg, location, first, second));
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
