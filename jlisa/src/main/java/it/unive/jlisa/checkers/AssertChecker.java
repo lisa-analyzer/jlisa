@@ -159,8 +159,8 @@ public class AssertChecker
 							LOG.error("Cannot satisfy the expression");
 					} else
 						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				} else {
-					// FIXME: property proved
+				} else if (!expr.toString().equals("false")) {
+					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 					LOG.error("The abstract state of assert's expression is BOTTOM");
 				}
 			}

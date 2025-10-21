@@ -41,6 +41,8 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
+	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
+
 	/**
 	 * byte[]*
 	 */
@@ -55,9 +57,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	 * String*[]*
 	 */
 	public static JavaReferenceType STRING_ARRAY = new JavaReferenceType(
-			new JavaArrayType(new JavaReferenceType(JavaStringType.getStringType()), 1));
-
-	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
+			JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
 
 	/**
 	 * Clears the cache of {@link JavaArrayType}s created up to now.
@@ -256,5 +256,10 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 				throw new UnsupportedOperationException();
 			}
 		};
+	}
+
+	public static JavaReferenceType getStringArray() {
+		return new JavaReferenceType(
+				JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
 	}
 }
