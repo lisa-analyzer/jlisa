@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':57:6] on 'void Main::test(Main* this, int x, int z, int r)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  } ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707441099.json", "report.json", "void_Main.Main(Main__this)_1707433535.json", "void_Main.Main_clinit()_1707433535.json", "void_Main.main(java.lang.String_[]__args).json", "void_Main.test(Main__this,_int_x,_int_z,_int_r)_1707427831.json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "355ms",
+    "end" : "2025-10-21T10:42:26.647+02:00",
+    "expressions" : "84",
+    "files" : "5",
+    "globals" : "29",
+    "members" : "175",
+    "programs" : "1",
+    "start" : "2025-10-21T10:42:26.292+02:00",
+    "statements" : "45",
+    "units" : "48",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/ExSymExe13_true"
+  }
+}
