@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -14,11 +15,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.PushAny;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class StringSplit extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -58,11 +54,9 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		// in this case, we always return the top string
-		Type stringArrayType = JavaArrayType.STRING_ARRAY;
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild leftAccess = new AccessChild(stringArrayType, left, var, getLocation());
-		PushAny topString = new PushAny(stringArrayType, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+		// FIXME: we return the top string array
+		JavaReferenceType stringArrayType = JavaArrayType.getStringArray();
+		Expression unknown = stringArrayType.unknownValue(getCFG(), originating.getLocation());
+		return unknown.forwardSemantics(state, interprocedural, expressions);
 	}
 }
