@@ -428,10 +428,10 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			return;
 		if ((typeDecl.isInterface())) {
 			JavaInterfaceType interfaceType = JavaInterfaceType.lookup(name);
-			addFields(interfaceType.getUnit(), typeDecl);
+			addFields(interfaceType.getUnit(), typeDecl, false, outer);
 		} else {
 			JavaClassType classType = JavaClassType.lookup(name);
-			addFields(classType.getUnit(), typeDecl);
+			addFields(classType.getUnit(), typeDecl, true, outer);
 		}
 
 		// nested types (e.g., nested inner classes)
@@ -448,7 +448,21 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
 	private void addFields(
 			it.unive.lisa.program.CompilationUnit unit,
-			TypeDeclaration typeDecl) {
+			TypeDeclaration typeDecl,
+			boolean isClass,
+			String outer) {
+		if (isClass && outer != null) {
+			// adding the synthetic field for the enclosing instance
+			JavaClassType enclosingType = JavaClassType.lookup(getPackage() + outer);
+			Global enclosingField = new Global(
+					getSourceCodeLocation(typeDecl.getName()),
+					unit,
+					"$enclosing",
+					true,
+					enclosingType.getReference());
+			((ClassUnit) unit).addInstanceGlobal(enclosingField);
+		}
+
 		// iterates over inner declarations
 		for (Object decl : typeDecl.bodyDeclarations()) {
 			Set<String> visitedFieldNames = new HashSet<>();
