@@ -363,7 +363,17 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 					"A ClassInstanceCreation Type should be a JavaClassType; got: " + type.getClass().getName(),
 					getSourceCodeLocation(node));
 
-		List<Expression> parameters = new ArrayList<>();
+		List<Expression> parameters = new LinkedList<>();
+
+		if (node.getExpression() != null) {
+			// nested class creation, just pass the expression as first param
+			ExpressionVisitor argumentsVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
+					tracker, container);
+			node.getExpression().accept(argumentsVisitor);
+			Expression expr = argumentsVisitor.getExpression();
+			parameters.add(expr);
+		}
+
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
@@ -377,7 +387,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 		expression = new JavaNewObj(
 				cfg,
-				getSourceCodeLocation(node),
+				node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn() : getSourceCodeLocation(node),
 				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
@@ -450,7 +460,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				container);
 		node.getExpression().accept(visitor);
 		Expression expr = visitor.getExpression();
-		// TODO enclosing
 		expression = new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr,
 				node.getName().getIdentifier());
@@ -904,7 +913,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 				else
 					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
 
-		// TODO enclosing
 				expression = new JavaAccessInstanceGlobal(cfg,
 						getSourceCodeLocationManager(node).getCurrentLocation(),
 						new VariableRef(
@@ -918,6 +926,37 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 						getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
 
 			return false;
+		}
+
+		// it might also be a global from an enclosing instance
+		if (container instanceof ClassASTVisitor && ((ClassASTVisitor) container).enclosing != null) {
+			JavaClassType encl = ((ClassASTVisitor) container).enclosing;
+			global = parserContext.getGlobal(encl.getUnit(), identifier, true);
+			if (global != null) {
+				if (global.isInstance()) {
+					JavaReferenceType type = null;
+					if (cfg.getUnit() instanceof ClassUnit)
+						type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
+					else
+						type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+					expression = new JavaAccessInstanceGlobal(cfg,
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							new VariableRef(
+									cfg,
+									parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+									"this",
+									type),
+							"$enclosing");
+					expression = new JavaAccessInstanceGlobal(cfg,
+							getSourceCodeLocation(node),
+							expression,
+							identifier);
+				} else
+					expression = new JavaAccessGlobal(cfg,
+							getSourceCodeLocation(node), encl.getUnit(), global);
+
+				return false;
+			}
 		}
 
 		throw new ParsingException("missing-variable",
@@ -1099,13 +1138,41 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ThisExpression node) {
-		// TODO enclosing
-		if (node.getQualifier() != null)
-			throw new ParsingException("this-expression",
-					ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Qualified This Expressions are not supported.",
-					getSourceCodeLocation(node));
+		if (node.getQualifier() != null) {
+			if (!(container instanceof ClassASTVisitor) || ((ClassASTVisitor) container).enclosing == null)
+				throw new ParsingException("this-expression",
+						ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Qualified this expressions can only be used inside non-static inner classes.",
+						getSourceCodeLocation(node));
 
+			TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
+			node.getQualifier().accept(visitor);
+			it.unive.lisa.type.Type enclosing = visitor.getType();
+			JavaClassType encl = ((ClassASTVisitor) container).enclosing;
+			if (!enclosing.equals(encl)) 
+				throw new ParsingException("this-expression",
+						ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Qualified this expressions can only refer to the immediately enclosing class.",
+						getSourceCodeLocation(node));
+
+			JavaReferenceType type = null;
+			if (cfg.getUnit() instanceof ClassUnit)
+				type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
+			else
+				type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+
+			expression = new JavaAccessInstanceGlobal(cfg,
+					getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+					new VariableRef(
+							cfg,
+							getSourceCodeLocationManager(node.getQualifier(), false).getCurrentLocation(),
+							"this",
+							type),
+					"$enclosing");
+
+			return false;
+		}
+			
 		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(
 				JavaClassType.lookup(((ClassUnit) cfg.getUnit()).getName())));
 		return false;

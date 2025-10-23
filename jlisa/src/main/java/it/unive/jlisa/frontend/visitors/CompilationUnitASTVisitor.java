@@ -544,6 +544,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					name);
 			typeDecl.accept(interfaceVisitor);
 		} else {
+			boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
 			ClassASTVisitor classVisitor = new ClassASTVisitor(
 					parserContext,
 					source,
@@ -551,7 +552,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					pkg,
 					imports,
 					name,
-					outer == null ? null : JavaClassType.lookup(getPackage() + outer));
+					// static classes "reset" accessibility to outer instances
+					outer == null || isStatic ? null : JavaClassType.lookup(getPackage() + outer));
 			typeDecl.accept(classVisitor);
 		}
 

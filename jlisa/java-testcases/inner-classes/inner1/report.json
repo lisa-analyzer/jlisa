@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_Basic.Basic(Basic__this)_823992675.json", "void_Basic.Inner.Inner(Basic.Inner__this,_Basic__$enclosing)_823999433.json", "void_Basic.Inner.display1(Basic.Inner__this)_823986010.json", "void_Basic.Inner.display2(Basic.Inner__this)_823986041.json", "void_Basic.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "5",
+    "duration" : "1s 281ms",
+    "end" : "2025-10-24T11:13:05.323+02:00",
+    "expressions" : "39",
+    "files" : "5",
+    "globals" : "29",
+    "members" : "158",
+    "programs" : "1",
+    "start" : "2025-10-24T11:13:04.042+02:00",
+    "statements" : "19",
+    "units" : "47",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/inner-classes/inner1"
+  }
+}
