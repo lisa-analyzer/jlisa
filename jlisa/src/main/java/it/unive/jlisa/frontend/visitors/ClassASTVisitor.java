@@ -48,7 +48,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	private final String fullName;
-	private final JavaClassType enclosing;
+	public final JavaClassType enclosing;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
@@ -327,8 +327,32 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
 		cfg.addNode(call);
+		Statement last = call;
+
+		if (enclosing != null) {
+			JavaAssignment asg = new JavaAssignment(
+					cfg, 
+					locationManager.nextLocation(),
+					new JavaAccessInstanceGlobal(cfg, 
+						locationManager.nextLocation(),
+						new VariableRef(
+							cfg, 
+							locationManager.nextLocation(), 
+							"this", 
+							new JavaReferenceType(type)),
+						"$enclosing"),
+					new VariableRef(
+						cfg, 
+						locationManager.nextLocation(), 
+						"$enclosing", 
+						enclosing.getReference()));
+			cfg.addNode(asg);
+			cfg.addEdge(new SequentialEdge(call, asg));
+			last = asg;
+		}
+
+		cfg.addEdge(new SequentialEdge(last, ret));
 		cfg.getEntrypoints().add(call);
-		cfg.addEdge(new SequentialEdge(call, ret));
 		classUnit.addInstanceCodeMember(cfg);
 		return cfg;
 	}

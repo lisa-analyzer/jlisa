@@ -7,6 +7,8 @@ import it.unive.jlisa.frontend.util.JavaCFGTweaker;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
@@ -15,6 +17,7 @@ import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import java.util.ArrayList;
@@ -127,11 +130,36 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		node.getBody().accept(blockStatementASTVisitor);
 
 		cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
+
+		if (node.isConstructor() && enclosing != null) {
+			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
+			JavaAssignment asg = new JavaAssignment(
+					cfg, 
+					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+					new JavaAccessInstanceGlobal(cfg, 
+						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+						new VariableRef(
+							cfg, 
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), 
+							"this", 
+							new JavaReferenceType(type)),
+						"$enclosing"),
+					new VariableRef(
+						cfg, 
+						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), 
+						"$enclosing", 
+						enclosing.getReference()));
+			cfg.addNode(asg);
+			cfg.getEntrypoints().add(asg);
+			cfg.addEdge(new SequentialEdge(asg, blockStatementASTVisitor.getBlock().getBegin()));
+		}
+		
 		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
 			return false;
 		}
 
-		cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
+		if (!node.isConstructor() || enclosing == null)
+			cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
 		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
 		if (cfg.getAllExitpoints().isEmpty()) {
