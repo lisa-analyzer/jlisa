@@ -597,4 +597,20 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void SatFibonacci02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"SatFibonacci02",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Ignore
+	public void BellmanFord_MemUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"BellmanFord-MemUnsat01",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }
