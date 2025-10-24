@@ -48,7 +48,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	private final String fullName;
-	public final JavaClassType enclosing;
+	public final ClassASTVisitor enclosing;
+	public final JavaClassType enclosingType;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
@@ -57,10 +58,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			String pkg,
 			Map<String, String> imports,
 			String fullName,
-			JavaClassType enclosing) {
+			ClassASTVisitor enclosing,
+			JavaClassType enclosingType) {
 		super(parserContext, source, pkg, imports, compilationUnit);
 		this.fullName = fullName;
 		this.enclosing = enclosing;
+		this.enclosingType = enclosingType;
 	}
 
 	@Override
@@ -89,12 +92,14 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		createClassInitializer(cUnit, node);
 
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, true, this, enclosing);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, true, this,
+					enclosingType);
 			md.accept(visitor);
 		}
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this, enclosing);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this,
+					enclosingType);
 			md.accept(visitor);
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -301,8 +306,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
-		if (enclosing != null) 
-			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", enclosing.getReference(),
+		if (enclosingType != null)
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", enclosingType.getReference(),
 					null, new Annotations()));
 
 		Annotations annotations = new Annotations();
@@ -329,23 +334,23 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		cfg.addNode(call);
 		Statement last = call;
 
-		if (enclosing != null) {
+		if (enclosingType != null) {
 			JavaAssignment asg = new JavaAssignment(
-					cfg, 
+					cfg,
 					locationManager.nextLocation(),
-					new JavaAccessInstanceGlobal(cfg, 
-						locationManager.nextLocation(),
-						new VariableRef(
-							cfg, 
-							locationManager.nextLocation(), 
-							"this", 
-							new JavaReferenceType(type)),
-						"$enclosing"),
+					new JavaAccessInstanceGlobal(cfg,
+							locationManager.nextLocation(),
+							new VariableRef(
+									cfg,
+									locationManager.nextLocation(),
+									"this",
+									new JavaReferenceType(type)),
+							"$enclosing"),
 					new VariableRef(
-						cfg, 
-						locationManager.nextLocation(), 
-						"$enclosing", 
-						enclosing.getReference()));
+							cfg,
+							locationManager.nextLocation(),
+							"$enclosing",
+							enclosingType.getReference()));
 			cfg.addNode(asg);
 			cfg.addEdge(new SequentialEdge(call, asg));
 			last = asg;

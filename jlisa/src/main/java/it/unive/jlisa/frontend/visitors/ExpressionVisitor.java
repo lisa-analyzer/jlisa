@@ -6,6 +6,7 @@ import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaAnd;
@@ -387,7 +388,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 		expression = new JavaNewObj(
 				cfg,
-				node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn() : getSourceCodeLocation(node),
+				node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn()
+						: getSourceCodeLocation(node),
 				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
@@ -835,7 +837,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			// we have more fields to access
 			for (SimpleName f : tentative.getRight()) {
 				try {
-		// TODO enclosing
+					// TODO enclosing
 					access = new JavaAccessInstanceGlobal(cfg,
 							getSourceCodeLocationManager(f).nextColumn(),
 							access,
@@ -905,6 +907,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		// if the tracker does not have information about the actual
 		// variable, this might be a global
 		Global global = parserContext.getGlobal(cfg.getDescriptor().getUnit(), identifier, true);
+		SyntheticCodeLocationManager synth = parserContext.getCurrentSyntheticCodeLocationManager(source);
 		if (global != null) {
 			if (global.isInstance()) {
 				JavaReferenceType type = null;
@@ -915,48 +918,49 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 				expression = new JavaAccessInstanceGlobal(cfg,
 						getSourceCodeLocationManager(node).getCurrentLocation(),
-						new VariableRef(
-								cfg,
-								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-								"this",
-								type),
+						new VariableRef(cfg, synth.nextLocation(), "this", type),
 						identifier);
 			} else
-				expression = new JavaAccessGlobal(cfg,
-						getSourceCodeLocationManager(node).getCurrentLocation(), cfg.getUnit(), global);
+				expression = new JavaAccessGlobal(
+						cfg,
+						getSourceCodeLocationManager(node).getCurrentLocation(),
+						cfg.getUnit(),
+						global);
 
 			return false;
 		}
 
 		// it might also be a global from an enclosing instance
-		if (container instanceof ClassASTVisitor && ((ClassASTVisitor) container).enclosing != null) {
-			JavaClassType encl = ((ClassASTVisitor) container).enclosing;
+		ClassASTVisitor cursor = container instanceof ClassASTVisitor ? (ClassASTVisitor) container : null;
+		JavaReferenceType type = null;
+		if (cfg.getUnit() instanceof ClassUnit)
+			type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
+		else
+			type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+		// we accumulate this.$enclosing.$enclosing... until we find the global
+		// or we raise an exception
+		expression = new VariableRef(cfg, synth.nextLocation(), "this", type);
+		while (cursor != null && cursor.enclosingType != null) {
+			JavaClassType encl = cursor.enclosingType;
+			expression = new JavaAccessInstanceGlobal(cfg, synth.nextLocation(), expression, "$enclosing");
 			global = parserContext.getGlobal(encl.getUnit(), identifier, true);
 			if (global != null) {
 				if (global.isInstance()) {
-					JavaReferenceType type = null;
-					if (cfg.getUnit() instanceof ClassUnit)
-						type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
-					else
-						type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
-					expression = new JavaAccessInstanceGlobal(cfg,
-							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-							new VariableRef(
-									cfg,
-									parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-									"this",
-									type),
-							"$enclosing");
-					expression = new JavaAccessInstanceGlobal(cfg,
+					expression = new JavaAccessInstanceGlobal(
+							cfg,
 							getSourceCodeLocation(node),
 							expression,
 							identifier);
 				} else
-					expression = new JavaAccessGlobal(cfg,
-							getSourceCodeLocation(node), encl.getUnit(), global);
+					expression = new JavaAccessGlobal(
+							cfg,
+							getSourceCodeLocation(node),
+							encl.getUnit(),
+							global);
 
 				return false;
-			}
+			} else
+				cursor = cursor.enclosing;
 		}
 
 		throw new ParsingException("missing-variable",
@@ -1139,7 +1143,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			ThisExpression node) {
 		if (node.getQualifier() != null) {
-			if (!(container instanceof ClassASTVisitor) || ((ClassASTVisitor) container).enclosing == null)
+			if (!(container instanceof ClassASTVisitor) || ((ClassASTVisitor) container).enclosingType == null)
 				throw new ParsingException("this-expression",
 						ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Qualified this expressions can only be used inside non-static inner classes.",
@@ -1148,31 +1152,33 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			TypeASTVisitor visitor = new TypeASTVisitor(this.parserContext, source, compilationUnit, container);
 			node.getQualifier().accept(visitor);
 			it.unive.lisa.type.Type enclosing = visitor.getType();
-			JavaClassType encl = ((ClassASTVisitor) container).enclosing;
-			if (!enclosing.equals(encl)) 
-				throw new ParsingException("this-expression",
-						ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Qualified this expressions can only refer to the immediately enclosing class.",
-						getSourceCodeLocation(node));
 
+			ClassASTVisitor cursor = container instanceof ClassASTVisitor ? (ClassASTVisitor) container : null;
+			SyntheticCodeLocationManager synth = parserContext.getCurrentSyntheticCodeLocationManager(source);
 			JavaReferenceType type = null;
 			if (cfg.getUnit() instanceof ClassUnit)
 				type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
 			else
 				type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+			// we accumulate this.$enclosing.$enclosing... until we find the
+			// right type
+			// or we raise an exception
+			expression = new VariableRef(cfg, getSourceCodeLocation(node), "this", type);
+			while (cursor != null && cursor.enclosingType != null) {
+				JavaClassType encl = cursor.enclosingType;
+				expression = new JavaAccessInstanceGlobal(cfg, synth.nextLocation(), expression, "$enclosing");
+				if (encl.equals(enclosing))
+					return false;
+				else
+					cursor = cursor.enclosing;
+			}
 
-			expression = new JavaAccessInstanceGlobal(cfg,
-					getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
-					new VariableRef(
-							cfg,
-							getSourceCodeLocationManager(node.getQualifier(), false).getCurrentLocation(),
-							"this",
-							type),
-					"$enclosing");
-
-			return false;
+			throw new ParsingException("this-expression",
+					ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Qualified this expression could not find matching enclosing instance.",
+					getSourceCodeLocation(node));
 		}
-			
+
 		expression = new VariableRef(cfg, getSourceCodeLocation(node), "this", new JavaReferenceType(
 				JavaClassType.lookup(((ClassUnit) cfg.getUnit()).getName())));
 		return false;

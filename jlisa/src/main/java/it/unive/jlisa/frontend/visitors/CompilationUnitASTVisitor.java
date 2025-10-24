@@ -1,23 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -35,6 +17,22 @@ import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -521,7 +519,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		List<?> types = unit.types();
 		for (Object type : types)
 			if (type instanceof TypeDeclaration)
-				visitUnitsInDeclaration(unit, (TypeDeclaration) type, null, processed);
+				visitUnitsInDeclaration(unit, (TypeDeclaration) type, null, null, processed);
 			else if (type instanceof EnumDeclaration)
 				visitEnumUnit(unit, (EnumDeclaration) type, null, processed);
 	}
@@ -530,10 +528,12 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			CompilationUnit unit,
 			TypeDeclaration typeDecl,
 			String outer,
+			ClassASTVisitor enclosing,
 			Set<String> processed) {
 		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
 		if (!processed.add(name))
 			return;
+		ClassASTVisitor classVisitor = null;
 		if ((typeDecl.isInterface())) {
 			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
 					parserContext,
@@ -545,7 +545,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			typeDecl.accept(interfaceVisitor);
 		} else {
 			boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
-			ClassASTVisitor classVisitor = new ClassASTVisitor(
+			classVisitor = new ClassASTVisitor(
 					parserContext,
 					source,
 					unit,
@@ -553,6 +553,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					imports,
 					name,
 					// static classes "reset" accessibility to outer instances
+					outer == null || isStatic ? null : enclosing,
 					outer == null || isStatic ? null : JavaClassType.lookup(getPackage() + outer));
 			typeDecl.accept(classVisitor);
 		}
@@ -560,19 +561,23 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		// nested types (e.g., nested inner classes)
 		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
 		for (TypeDeclaration nested : typeDecl.getTypes())
-			visitUnitsInDeclaration(unit, nested, newOuter, processed);
+			visitUnitsInDeclaration(unit, nested, newOuter, classVisitor, processed);
 		for (Object decl : typeDecl.bodyDeclarations())
 			if (decl instanceof EnumDeclaration)
 				visitEnumUnit(unit, (EnumDeclaration) decl, newOuter, processed);
 			else if (decl instanceof TypeDeclaration)
-				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, processed);
+				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, classVisitor, processed);
 	}
 
-	private void visitEnumUnit(CompilationUnit unit, EnumDeclaration enumDecl, String outer, Set<String> processed) {
+	private void visitEnumUnit(
+			CompilationUnit unit,
+			EnumDeclaration enumDecl,
+			String outer,
+			Set<String> processed) {
 		String name = getPackage() + (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
 		if (!processed.add(name))
 			return;
-		ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports, name, null);
+		ClassASTVisitor classVisitor = new ClassASTVisitor(parserContext, source, unit, pkg, imports, name, null, null);
 		enumDecl.accept(classVisitor);
 
 		// nested types (e.g., nested inner classes)
@@ -581,7 +586,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			if (decl instanceof EnumDeclaration)
 				visitEnumUnit(unit, (EnumDeclaration) decl, newOuter, processed);
 			else if (decl instanceof TypeDeclaration)
-				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, processed);
+				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, null, processed);
 	}
 
 	private void addJavaLangImports() {

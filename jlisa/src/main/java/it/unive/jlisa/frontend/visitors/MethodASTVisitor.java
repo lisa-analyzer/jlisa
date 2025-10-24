@@ -134,26 +134,26 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		if (node.isConstructor() && enclosing != null) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
 			JavaAssignment asg = new JavaAssignment(
-					cfg, 
+					cfg,
 					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-					new JavaAccessInstanceGlobal(cfg, 
-						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-						new VariableRef(
-							cfg, 
-							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), 
-							"this", 
-							new JavaReferenceType(type)),
-						"$enclosing"),
+					new JavaAccessInstanceGlobal(cfg,
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							new VariableRef(
+									cfg,
+									parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+									"this",
+									new JavaReferenceType(type)),
+							"$enclosing"),
 					new VariableRef(
-						cfg, 
-						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), 
-						"$enclosing", 
-						enclosing.getReference()));
+							cfg,
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							"$enclosing",
+							enclosing.getReference()));
 			cfg.addNode(asg);
 			cfg.getEntrypoints().add(asg);
 			cfg.addEdge(new SequentialEdge(asg, blockStatementASTVisitor.getBlock().getBegin()));
 		}
-		
+
 		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
 			return false;
 		}
@@ -249,8 +249,9 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
-		if (enclosing != null) 
-			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing", enclosing.getReference(),
+		if (enclosing != null)
+			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+					enclosing.getReference(),
 					null, new Annotations()));
 
 		for (Object o : node.parameters()) {
