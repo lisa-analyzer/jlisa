@@ -365,6 +365,22 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void spec1_5_product3_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "spec1-5_product3",
+				"Main.java",
+				"Actions.java",
+				"../common/",
+				"MinePumpSystem/Environment.java",
+				"MinePumpSystem/MinePump.java");
+		perform(conf);
+	}
+
+	@Test
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results

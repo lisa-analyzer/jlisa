@@ -763,6 +763,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		 */
 
 		// based on tests, field accesses have precedence over fqns
+		// the resolution also searches in enclosing instances
 		try {
 			Expression fa = solveAsFieldAccess(node);
 			if (fa != null) {
@@ -837,7 +838,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			// we have more fields to access
 			for (SimpleName f : tentative.getRight()) {
 				try {
-					// TODO enclosing
 					access = new JavaAccessInstanceGlobal(cfg,
 							getSourceCodeLocationManager(f).nextColumn(),
 							access,
@@ -870,6 +870,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			ExpressionVisitor visitor = new ExpressionVisitor(this.parserContext, source, compilationUnit, cfg,
 					tracker, container);
 			try {
+				// this searches also in enclosing instances
 				((SimpleName) qualifier).accept(visitor);
 				receiver = visitor.getExpression();
 			} catch (ParsingException e) {
@@ -883,7 +884,6 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		if (receiver == null)
 			return null;
 
-		// TODO enclosing
 		return new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
 				receiver,
