@@ -6,6 +6,7 @@ import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
 import it.unive.jlisa.program.cfg.expression.JavaAnd;
@@ -31,7 +32,6 @@ import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
 import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
-import it.unive.jlisa.program.cfg.expression.*;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaSubtraction;
@@ -206,7 +206,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		return false;
 	}
 
-	public Type getArrayInitializerType(ArrayInitializer node) {
+	public Type getArrayInitializerType(
+			ArrayInitializer node) {
 		ASTNode decl = node;
 		while (decl.getParent() != null && !(decl.getParent() instanceof FieldDeclaration)) {
 			decl = decl.getParent();
@@ -215,9 +216,10 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			return null;
 		}
 		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
-		((FieldDeclaration)decl.getParent()).getType().accept(visitor);
+		((FieldDeclaration) decl.getParent()).getType().accept(visitor);
 		return visitor.getType();
 	}
+
 	@Override
 	public boolean visit(
 			Assignment node) {
@@ -668,7 +670,8 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			}
 
 			if (rec != null) {
-				// if rec is a VariableRef, we need to check if the code member of the compilation unit of the variable is instance or not.
+				// if rec is a VariableRef, we need to check if the code member
+				// of the compilation unit of the variable is instance or not.
 				if (rec instanceof VariableRef) {
 					if (rec.getStaticType() instanceof JavaReferenceType refType) {
 						if (refType.getInnerType() instanceof UnitType unitType) {
@@ -693,9 +696,13 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 
 					}
 				} else {
-					// if the receiver is not a variable ref, nor an accessGlobal, we assume that the call is an instance.
-					// However, if the receiver is something like foo().foo2().foo3(), since we don't know the return type of foo2()
-					// we should try to resolve this call as both instance and static.
+					// if the receiver is not a variable ref, nor an
+					// accessGlobal, we assume that the call is an instance.
+					// However, if the receiver is something like
+					// foo().foo2().foo3(), since we don't know the return type
+					// of foo2()
+					// we should try to resolve this call as both instance and
+					// static.
 					parameters.add(rec);
 					isInstance = true;
 				}

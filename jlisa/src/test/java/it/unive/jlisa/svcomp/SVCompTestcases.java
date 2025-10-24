@@ -3,9 +3,8 @@ package it.unive.jlisa.svcomp;
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
-import java.io.IOException;
-
 import it.unive.lisa.conf.LiSAConfiguration;
+import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
@@ -388,7 +387,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		// but it is too complex to thoroughly check its results
 		// at this stage. we just check that it runs to completion
 		// without inspecting the results (ie no json files are present)
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1",
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1-prop1",
 				"../common/",
 				"impl/",
 				"prop1/");
@@ -554,7 +553,8 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	public void RedBlackTree_FunUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"RedBlackTree-FunUnsat01",
-				"Main.java", "rbtree/Node.java", "rbtree/RedBlackTree.java", "rbtree/RedBlackTreeNode.java", "../common");
+				"Main.java", "rbtree/Node.java", "rbtree/RedBlackTree.java", "rbtree/RedBlackTreeNode.java",
+				"../common");
 		perform(conf);
 	}
 

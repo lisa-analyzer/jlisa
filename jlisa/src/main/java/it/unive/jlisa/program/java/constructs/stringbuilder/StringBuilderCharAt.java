@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
-import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -23,54 +22,54 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringBuilderCharAt extends BinaryExpression implements PluggableStatement {
-    protected Statement originating;
+	protected Statement originating;
 
-    public StringBuilderCharAt(
-            CFG cfg,
-            CodeLocation location,
-            Expression left,
-            Expression right) {
-        super(cfg, location, "deleteCharAt", left, right);
-    }
+	public StringBuilderCharAt(
+			CFG cfg,
+			CodeLocation location,
+			Expression left,
+			Expression right) {
+		super(cfg, location, "deleteCharAt", left, right);
+	}
 
-    public static StringBuilderCharAt build(
-            CFG cfg,
-            CodeLocation location,
-            Expression... params) {
-        return new StringBuilderCharAt(cfg, location, params[0], params[1]);
-    }
+	public static StringBuilderCharAt build(
+			CFG cfg,
+			CodeLocation location,
+			Expression... params) {
+		return new StringBuilderCharAt(cfg, location, params[0], params[1]);
+	}
 
-    @Override
-    protected int compareSameClassAndParams(
-            Statement o) {
-        return 0;
-    }
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
 
-    @Override
-    public void setOriginatingStatement(
-            Statement st) {
-        originating = st;
-    }
+	@Override
+	public void setOriginatingStatement(
+			Statement st) {
+		originating = st;
+	}
 
-    @Override
-    public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-            InterproceduralAnalysis<A, D> interprocedural,
-            AnalysisState<A> state,
-            SymbolicExpression left,
-            SymbolicExpression right,
-            StatementStore<A> expressions)
-            throws SemanticException {
-        Type stringType = getProgram().getTypes().getStringType();
-        Analysis<A, D> analysis = interprocedural.getAnalysis();
+	@Override
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Type stringType = getProgram().getTypes().getStringType();
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-        GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-        HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
-        AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-        it.unive.lisa.symbolic.value.BinaryExpression charAt = new it.unive.lisa.symbolic.value.BinaryExpression(
-                stringType, accessLeft, right, JavaStringCharAtOperator.INSTANCE, getLocation());
-        return interprocedural.getAnalysis().smallStepSemantics(state, charAt, originating);
+		it.unive.lisa.symbolic.value.BinaryExpression charAt = new it.unive.lisa.symbolic.value.BinaryExpression(
+				stringType, accessLeft, right, JavaStringCharAtOperator.INSTANCE, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, charAt, originating);
 
-        //return analysis.smallStepSemantics(result, left, originating);
-    }
+		// return analysis.smallStepSemantics(result, left, originating);
+	}
 }
