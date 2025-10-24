@@ -79,44 +79,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.tuple.Triple;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.ArrayCreation;
-import org.eclipse.jdt.core.dom.ArrayInitializer;
-import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.BooleanLiteral;
-import org.eclipse.jdt.core.dom.CaseDefaultExpression;
-import org.eclipse.jdt.core.dom.CastExpression;
-import org.eclipse.jdt.core.dom.CharacterLiteral;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ConditionalExpression;
-import org.eclipse.jdt.core.dom.CreationReference;
-import org.eclipse.jdt.core.dom.ExpressionMethodReference;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.InstanceofExpression;
-import org.eclipse.jdt.core.dom.LambdaExpression;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.NullLiteral;
-import org.eclipse.jdt.core.dom.NumberLiteral;
-import org.eclipse.jdt.core.dom.ParenthesizedExpression;
-import org.eclipse.jdt.core.dom.PostfixExpression;
-import org.eclipse.jdt.core.dom.PrefixExpression;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.StringLiteral;
-import org.eclipse.jdt.core.dom.SuperFieldAccess;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.SuperMethodReference;
-import org.eclipse.jdt.core.dom.SwitchExpression;
-import org.eclipse.jdt.core.dom.ThisExpression;
-import org.eclipse.jdt.core.dom.TypeLiteral;
-import org.eclipse.jdt.core.dom.TypeMethodReference;
-import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.*;
 
 public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
@@ -165,7 +128,13 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			e.accept(argumentsVisitor);
 			Expression expr = argumentsVisitor.getExpression();
 			parameters.add(expr);
-			contentType = expr.getStaticType();
+			contentType = getArrayInitializerType(node);
+			if (contentType == null) {
+				contentType = expr.getStaticType();
+			} else {
+				contentType = contentType.asArrayType().getBaseType();
+			}
+
 		}
 
 		expression = new JavaNewArrayWithInitializer(cfg,
@@ -237,6 +206,18 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		return false;
 	}
 
+	public Type getArrayInitializerType(ArrayInitializer node) {
+		ASTNode decl = node;
+		while (decl.getParent() != null && !(decl.getParent() instanceof FieldDeclaration)) {
+			decl = decl.getParent();
+		}
+		if (decl.getParent() == null) {
+			return null;
+		}
+		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
+		((FieldDeclaration)decl.getParent()).getType().accept(visitor);
+		return visitor.getType();
+	}
 	@Override
 	public boolean visit(
 			Assignment node) {
