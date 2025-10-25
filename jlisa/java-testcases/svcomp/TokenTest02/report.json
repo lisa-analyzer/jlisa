@@ -1,41 +1,48 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':18:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707448136.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320593823.json" ],
-  "info" : {
-    "cfgs" : "13",
-    "duration" : "121ms",
-    "end" : "2025-10-21T19:05:45.462+02:00",
-    "expressions" : "59",
-    "files" : "3",
-    "globals" : "27",
-    "members" : "173",
-    "programs" : "1",
-    "start" : "2025-10-21T19:05:45.341+02:00",
-    "statements" : "30",
-    "units" : "48",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':18:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "files": [
+    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707448136.json",
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320593823.json"
+  ],
+  "info": {
+    "cfgs": "13",
+    "duration": "121ms",
+    "end": "2025-10-21T19:05:45.462+02:00",
+    "expressions": "59",
+    "files": "3",
+    "globals": "27",
+    "members": "171",
+    "programs": "1",
+    "start": "2025-10-21T19:05:45.341+02:00",
+    "statements": "30",
+    "units": "48",
+    "version": "0.1",
+    "warnings": "1"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/TokenTest02"
+  "configuration": {
+    "analysisGraphs": "NONE",
+    "descendingPhaseType": "NONE",
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "jsonOutput": "true",
+    "openCallPolicy": "ReturnTopPolicy",
+    "optimize": "false",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "serializeInputs": "false",
+    "serializeResults": "true",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/TokenTest02"
   }
 }
