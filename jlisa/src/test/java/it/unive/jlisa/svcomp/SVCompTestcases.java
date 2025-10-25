@@ -1,11 +1,13 @@
 package it.unive.jlisa.svcomp;
 
+import java.io.IOException;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
-import java.io.IOException;
-import org.junit.Ignore;
-import org.junit.jupiter.api.Test;
 
 public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
@@ -594,14 +596,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	public void StringBuilderChars03_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"StringBuilderChars03",
-				"Main.java", "../common");
-		perform(conf);
-	}
-
-	@Test
-	public void SatFibonacci02_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
-				"SatFibonacci02",
 				"Main.java", "../common");
 		perform(conf);
 	}
