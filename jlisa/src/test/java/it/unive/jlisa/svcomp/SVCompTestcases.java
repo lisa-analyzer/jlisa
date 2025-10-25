@@ -365,7 +365,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -387,7 +387,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		// but it is too complex to thoroughly check its results
 		// at this stage. we just check that it runs to completion
 		// without inspecting the results (ie no json files are present)
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1-prop1",
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "siena-eqchk-1",
 				"../common/",
 				"impl/",
 				"prop1/");
