@@ -1,43 +1,57 @@
 {
-  "warnings" : [ {
-    "message" : "['$Main.java':5] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
-    "message" : "['Main.java':72:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707445935.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707471045.json", "report.json", "void_Main.List.List(Main.List__this)_1707434496.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196015915.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196660002.json", "void_Main.List.List_clinit()_1707434496.json", "void_Main.List.insert(Main.List__this,_int_data)_1707455669.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432512.json" ],
-  "info" : {
-    "cfgs" : "17",
-    "duration" : "163ms",
-    "end" : "2025-09-25T21:32:47.141+02:00",
-    "expressions" : "93",
-    "files" : "9",
-    "globals" : "26",
-    "members" : "145",
-    "programs" : "1",
-    "start" : "2025-09-25T21:32:46.978+02:00",
-    "statements" : "46",
-    "units" : "49",
-    "version" : "0.1",
-    "warnings" : "2"
+  "warnings": [
+    {
+      "message": "['$Main.java':5] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    },
+    {
+      "message": "['Main.java':72:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "files": [
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707445935.json",
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707471045.json",
+    "report.json",
+    "void_Main.List.List(Main.List__this)_1707434496.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196015915.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196660002.json",
+    "void_Main.List.List_clinit()_1707434496.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_1707455669.json",
+    "void_Main.main(java.lang.String_[]__args).json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432512.json"
+  ],
+  "info": {
+    "cfgs": "17",
+    "duration": "163ms",
+    "end": "2025-09-25T21:32:47.141+02:00",
+    "expressions": "93",
+    "files": "9",
+    "globals": "26",
+    "members": "149",
+    "programs": "1",
+    "start": "2025-09-25T21:32:46.978+02:00",
+    "statements": "46",
+    "units": "49",
+    "version": "0.1",
+    "warnings": "2"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/SortedListInsert-FunUnsat01"
+  "configuration": {
+    "analysisGraphs": "NONE",
+    "descendingPhaseType": "NONE",
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "jsonOutput": "true",
+    "openCallPolicy": "ReturnTopPolicy",
+    "optimize": "false",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "serializeInputs": "false",
+    "serializeResults": "true",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/SortedListInsert-FunUnsat01"
   }
 }
