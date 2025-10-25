@@ -7,14 +7,14 @@ import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaKDepthToken;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
-import it.unive.lisa.interprocedural.context.FullStackToken;
 import it.unive.lisa.program.Program;
 import java.io.IOException;
 import java.util.Arrays;
@@ -252,7 +252,7 @@ public class Main {
 		if (htmlOutput) {
 			conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		}
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
+		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(20));
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.optimize = false;
