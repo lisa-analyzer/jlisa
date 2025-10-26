@@ -157,7 +157,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		// currently we handle just single-dim and bi-dim arrays
 		if (node.dimensions().size() > 2)
 			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Multi-dimensional arrays are not supported are not supported.",
+					"Multi-dimensional arrays are not supported.",
 					getSourceCodeLocation(node));
 
 		// single-dimension arrays
@@ -169,21 +169,26 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		// bi-dimension arrays
 		else if (node.dimensions().size() == 2) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
-			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
 			ExpressionVisitor sndDimVisitor = new ExpressionVisitor(parserContext, source, compilationUnit, cfg,
 					tracker,
 					container);
 			((ASTNode) node.dimensions().get(1)).accept(sndDimVisitor);
-			List<Expression> parameters = new ArrayList<>();
-			for (int i = 0; i < fstDim; i++) {
-				Expression expr = new JavaNewArray(cfg,
-						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-						sndDimVisitor.getExpression(), (JavaReferenceType) type.asArrayType().getInnerType());
-				parameters.add(expr);
+			if (node.dimensions().get(0) instanceof NumberLiteral) {
+				int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
+				List<Expression> parameters = new ArrayList<>();
+				for (int i = 0; i < fstDim; i++) {
+					Expression expr = new JavaNewArray(cfg,
+							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							sndDimVisitor.getExpression(), (JavaReferenceType) type.asArrayType().getInnerType());
+					parameters.add(expr);
+				}
+				expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node),
+						parameters.toArray(new Expression[0]), new JavaReferenceType(type));
+			} else {
+				throw new ParsingException("two-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Two-dimensional arrays with non-constant dimensions are not supported.",
+						getSourceCodeLocation(node));
 			}
-
-			expression = new JavaNewArrayWithInitializer(cfg, getSourceCodeLocation(node),
-					parameters.toArray(new Expression[0]), new JavaReferenceType(type));
 		} else {
 			ArrayInitializer initializer = node.getInitializer();
 
