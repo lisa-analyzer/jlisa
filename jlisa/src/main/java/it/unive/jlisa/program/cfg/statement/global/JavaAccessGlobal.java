@@ -166,12 +166,12 @@ public class JavaAccessGlobal extends Expression {
 		// unit globals are unique, we can directly access those
 
 		GlobalVariable access = new GlobalVariable(
-				target.getStaticType(), 
+				target.getStaticType(),
 				classUnit.getName() + "::" + target.getName(),
-				target.getAnnotations(), 
+				target.getAnnotations(),
 				getLocation());
 		CodeLocation loc = getLocation();
-		
+
 		if (getParentStatement() instanceof Assignment) {
 			Assignment asg = (Assignment) getParentStatement();
 			if (asg.getLeft().equals(this))
