@@ -364,7 +364,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		BinaryOperator operator = expression.getOperator();
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() + ((Number) rVal).doubleValue());
@@ -379,7 +383,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof BitwiseOr) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() | ((Number) rVal).longValue());
@@ -390,7 +398,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof BitwiseShiftRight) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() >> ((Number) rVal).longValue());
@@ -401,7 +413,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof BitwiseUnsignedShiftRight) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() >>> ((Number) rVal).longValue());
@@ -412,7 +428,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof BitwiseShiftLeft) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() << ((Number) rVal).longValue());
@@ -423,7 +443,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof BitwiseXor) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() ^ ((Number) rVal).longValue());
@@ -434,7 +458,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof BitwiseAnd) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() & ((Number) rVal).longValue());
@@ -445,7 +473,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof SubtractionOperator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() - ((Number) rVal).doubleValue());
@@ -460,7 +492,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof MultiplicationOperator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() * ((Number) rVal).doubleValue());
@@ -475,7 +511,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof DivisionOperator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() / ((Number) rVal).doubleValue());
@@ -490,7 +530,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ModuloOperator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() % ((Number) rVal).doubleValue());
@@ -505,7 +549,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonLt) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return new ConstantValue(((Number) lVal).doubleValue() < ((Number) rVal).doubleValue());
@@ -520,7 +568,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaMathPowOperator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
 					|| lVal instanceof Float || rVal instanceof Float) {
@@ -530,7 +582,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof JavaMathAtan2Operator) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
 					|| lVal instanceof Float || rVal instanceof Float) {

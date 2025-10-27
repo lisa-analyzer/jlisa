@@ -3,7 +3,6 @@ package it.unive.jlisa.svcomp;
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
-import it.unive.lisa.conf.LiSAConfiguration;
 import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
@@ -365,7 +364,23 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Test
+	public void spec1_5_product3_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "spec1-5_product3",
+				"Main.java",
+				"Actions.java",
+				"../common/",
+				"MinePumpSystem/Environment.java",
+				"MinePumpSystem/MinePump.java");
+		perform(conf);
+	}
+
+	@Test
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -381,7 +396,9 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
+	// this test sometimes causes oom during dumping when executing 
+	// from gradle
 	public void siena_eqchk_prop1_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -410,7 +427,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
 				"Main.java", "../common/");
-		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		perform(conf);
 	}
 
@@ -571,7 +587,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"StringBuilderChars05",
 				"Main.java", "../common");
-		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		perform(conf);
 	}
 
@@ -580,7 +595,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"StringBuilderChars03",
 				"Main.java", "../common");
-		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		perform(conf);
 	}
 }

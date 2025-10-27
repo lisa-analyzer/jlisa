@@ -1,0 +1,39 @@
+{
+  "warnings" : [ ],
+  "files" : [ "report.json", "void_MoreNested.A.A(MoreNested.A__this,_MoreNested__$enclosing)_758881861.json", "void_MoreNested.A.B.B(MoreNested.A.B__this,_MoreNested.A__$enclosing)_758883845.json", "void_MoreNested.A.B.C.C(MoreNested.A.B.C__this,_MoreNested.A.B__$enclosing)_758885829.json", "void_MoreNested.A.B.C.foo(MoreNested.A.B.C__this)_758867601.json", "void_MoreNested.A.B.foo(MoreNested.A.B__this)_758867539.json", "void_MoreNested.A.foo(MoreNested.A__this)_758867477.json", "void_MoreNested.MoreNested(MoreNested__this)_758877986.json", "void_MoreNested.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "8",
+    "duration" : "164ms",
+    "end" : "2025-10-27T11:21:01.613+01:00",
+    "expressions" : "60",
+    "files" : "8",
+    "globals" : "31",
+    "members" : "165",
+    "programs" : "1",
+    "start" : "2025-10-27T11:21:01.449+01:00",
+    "statements" : "29",
+    "units" : "49",
+    "version" : "0.1",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/inner-classes/inner2"
+  }
+}

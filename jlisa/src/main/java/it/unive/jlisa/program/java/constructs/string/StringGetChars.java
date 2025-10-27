@@ -18,7 +18,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
-import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 public class StringGetChars extends NaryExpression implements PluggableStatement {
@@ -67,8 +66,6 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 				exprs[i] = expr;
 			}
 		}
-
-		Type stringType = getProgram().getTypes().getStringType();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		// TODO: implements semantics

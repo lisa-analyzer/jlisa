@@ -13,6 +13,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -47,6 +48,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	private final String fullName;
+	public final ClassASTVisitor enclosing;
+	public final JavaClassType enclosingType;
 
 	public ClassASTVisitor(
 			ParserContext parserContext,
@@ -54,9 +57,13 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			CompilationUnit compilationUnit,
 			String pkg,
 			Map<String, String> imports,
-			String fullName) {
+			String fullName,
+			ClassASTVisitor enclosing,
+			JavaClassType enclosingType) {
 		super(parserContext, source, pkg, imports, compilationUnit);
 		this.fullName = fullName;
+		this.enclosing = enclosing;
+		this.enclosingType = enclosingType;
 	}
 
 	@Override
@@ -84,14 +91,17 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		createClassInitializer(cUnit, node);
 
-		/*
-		 * for (MethodDeclaration md : node.getMethods()) { MethodASTVisitor
-		 * visitor = new MethodASTVisitor(parserContext, source, cUnit,
-		 * compilationUnit, true, this); md.accept(visitor); }
-		 */
+		// for (MethodDeclaration md : node.getMethods()) {
+		// MethodASTVisitor visitor = new MethodASTVisitor(parserContext,
+		// source, cUnit, compilationUnit, true, this,
+		// enclosingType);
+		// md.accept(visitor);
+		// }
+
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this);
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this,
+					enclosingType);
 			md.accept(visitor);
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -298,6 +308,10 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
+		if (enclosingType != null)
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", enclosingType.getReference(),
+					null, new Annotations()));
+
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		String simpleName = classUnit.getName().contains(".")
@@ -320,8 +334,32 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
 		cfg.addNode(call);
+		Statement last = call;
+
+		if (enclosingType != null) {
+			JavaAssignment asg = new JavaAssignment(
+					cfg,
+					locationManager.nextLocation(),
+					new JavaAccessInstanceGlobal(cfg,
+							locationManager.nextLocation(),
+							new VariableRef(
+									cfg,
+									locationManager.nextLocation(),
+									"this",
+									new JavaReferenceType(type)),
+							"$enclosing"),
+					new VariableRef(
+							cfg,
+							locationManager.nextLocation(),
+							"$enclosing",
+							enclosingType.getReference()));
+			cfg.addNode(asg);
+			cfg.addEdge(new SequentialEdge(call, asg));
+			last = asg;
+		}
+
+		cfg.addEdge(new SequentialEdge(last, ret));
 		cfg.getEntrypoints().add(call);
-		cfg.addEdge(new SequentialEdge(call, ret));
 		classUnit.addInstanceCodeMember(cfg);
 		return cfg;
 	}
