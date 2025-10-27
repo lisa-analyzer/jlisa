@@ -17,8 +17,10 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.edge.Edge;
+import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 import java.util.Set;
@@ -162,10 +164,27 @@ public class JavaAccessGlobal extends Expression {
 			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);
 
 		// unit globals are unique, we can directly access those
-		return analysis.smallStepSemantics(
-				state,
-				new GlobalVariable(target.getStaticType(), classUnit.getName() + "::" + target.getName(),
-						target.getAnnotations(), getLocation()),
-				this);
+
+		GlobalVariable access = new GlobalVariable(
+				target.getStaticType(), 
+				classUnit.getName() + "::" + target.getName(),
+				target.getAnnotations(), 
+				getLocation());
+		CodeLocation loc = getLocation();
+		
+		if (getParentStatement() instanceof Assignment) {
+			Assignment asg = (Assignment) getParentStatement();
+			if (asg.getLeft().equals(this))
+				return analysis.smallStepSemantics(state, access, this);
+			else if (target.getStaticType().isPointerType())
+				return analysis.smallStepSemantics(state,
+						new HeapReference(target.getStaticType(), access, loc), this);
+			else
+				return analysis.smallStepSemantics(state, access, this);
+		} else if (target.getStaticType().isPointerType())
+			return analysis.smallStepSemantics(state,
+					new HeapReference(target.getStaticType(), access, loc), this);
+		else
+			return analysis.smallStepSemantics(state, access, this);
 	}
 }
