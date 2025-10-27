@@ -397,7 +397,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Ignore
-	// this test sometimes causes oom during dumping when executing 
+	// this test sometimes causes oom during dumping when executing
 	// from gradle
 	public void siena_eqchk_prop1_test() throws IOException {
 		// this test had troublesome parsing errors,
