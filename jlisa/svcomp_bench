@@ -26,7 +26,9 @@ echo "[jlisa] building..."
 ./gradlew distZip -x spotlessJavaCheck -x test
 echo "[jlisa] unzipping jar..."
 unzip -o build/distributions/*.zip -d jlisa_dist
-JLISA_JAR=$(pwd)/$(find jlisa_dist -name "jlisa*.jar" | head -n 1)
+
+#JLISA_JAR=$(pwd)/$(find jlisa_dist -name "jlisa*.jar" | head -n 1)
+JLISA_JAR=$(echo "$(pwd)/jlisa_dist/jlisa-0.1/lib/"*.jar | tr ' ' ':')
 echo "[jlisa] jar located at $JLISA_JAR"
 
 cd sv-comp-benchmark

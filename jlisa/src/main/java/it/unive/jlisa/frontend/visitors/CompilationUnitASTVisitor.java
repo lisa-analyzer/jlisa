@@ -1,8 +1,31 @@
 package it.unive.jlisa.frontend.visitors;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
@@ -15,24 +38,14 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.ProgramValidationException;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.annotations.Annotations;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import it.unive.lisa.type.VoidType;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -42,7 +55,8 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		ADD_UNITS,
 		VISIT_UNIT,
 		ADD_GLOBALS,
-		SET_RELATIONSHIPS
+		SET_RELATIONSHIPS,
+		INIT_CODE_MEMBERS
 	}
 
 	public VisitorType visitorType;
@@ -88,10 +102,13 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		} else if (visitorType == VisitorType.ADD_GLOBALS) {
 			// phase 3
 			addGlobals(node, new TreeSet<>());
-		} else if (visitorType == VisitorType.VISIT_UNIT) {
+		} else if (visitorType == VisitorType.INIT_CODE_MEMBERS) {
 			// phase 4
+			initCodeMembers(node, new TreeSet<>());
+		} else if (visitorType == VisitorType.VISIT_UNIT) {
+			// phase 5
 			visitUnits(node, new TreeSet<>());
-		}
+		} 
 		return false;
 	}
 
@@ -587,6 +604,223 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				visitEnumUnit(unit, (EnumDeclaration) decl, newOuter, processed);
 			else if (decl instanceof TypeDeclaration)
 				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, null, processed);
+	}
+
+	private void initCodeMembers(
+			CompilationUnit unit,
+			Set<String> processed) {
+		List<?> types = unit.types();
+		for (Object type : types)
+			if (type instanceof TypeDeclaration)
+				initCodeMembersInDeclaration(unit, (TypeDeclaration) type, null, processed);
+			else if (type instanceof EnumDeclaration)
+				initCodeMembersInEnum(unit, (EnumDeclaration) type, null, processed);
+	}	
+
+	private void initCodeMembersInDeclaration(
+			CompilationUnit unit,
+			TypeDeclaration typeDecl,
+			String outer,
+			Set<String> processed) {
+		String name = getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		if (!processed.add(name))
+			return;
+
+		it.unive.lisa.program.CompilationUnit lisaCU = null;
+		if ((typeDecl.isInterface()))
+			lisaCU = JavaInterfaceType.lookup(name).getUnit();
+		else
+			lisaCU = JavaClassType.lookup(name).getUnit();
+
+		boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
+		JavaClassType enclosing = outer == null || isStatic ? null : JavaClassType.lookup(getPackage() + outer);
+
+		for (MethodDeclaration methodsDecl : typeDecl.getMethods()) {
+			CodeMemberDescriptor codeMemberDescriptor;
+			if (methodsDecl.isConstructor()) {
+				codeMemberDescriptor = buildConstructorJavaCodeMemberDescriptor(methodsDecl, enclosing, lisaCU);
+			} else {
+				codeMemberDescriptor = buildJavaCodeMemberDescriptor(methodsDecl, lisaCU);
+			}
+			boolean isMain = isMain(methodsDecl);
+			int modifiers = methodsDecl.getModifiers();
+			CFG cfg = new CFG(codeMemberDescriptor);
+			boolean added;
+			if (!Modifier.isStatic(modifiers)) {
+				added = lisaCU.addInstanceCodeMember(cfg);
+			} else {
+				added = lisaCU.addCodeMember(cfg);
+			}
+			if (!added)
+				throw new ParsingException("duplicated_method_descriptor",
+						ParsingException.Type.MALFORMED_SOURCE,
+						"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisaCU.getName(),
+						getSourceCodeLocation(methodsDecl));
+
+			if (isMain)
+				getProgram().addEntryPoint(cfg);
+		}
+
+		// nested types (e.g., nested inner classes)
+		String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
+		TypeDeclaration[] nested = typeDecl.getTypes();
+		for (TypeDeclaration n : nested)
+			initCodeMembersInDeclaration(unit, n, newOuter, processed);
+		for (Object decl : typeDecl.bodyDeclarations())
+			if (decl instanceof TypeDeclaration)
+				initCodeMembersInDeclaration(unit, (TypeDeclaration) decl, newOuter, processed);
+			else if (decl instanceof EnumDeclaration)
+				initCodeMembersInEnum(unit, (EnumDeclaration) decl, newOuter, processed);
+	}
+
+	private void initCodeMembersInEnum(
+			CompilationUnit unit,
+			EnumDeclaration node,
+			String outer,
+			Set<String> processed) {
+		String name = getPackage() + (outer == null ? "" : outer + ".") + node.getName().toString();
+		if (!processed.add(name))
+			return;
+		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);
+
+		for (Object decl : node.bodyDeclarations()) 
+			if (decl instanceof MethodDeclaration) {
+				MethodDeclaration methodsDecl = (MethodDeclaration) decl;
+				CodeMemberDescriptor codeMemberDescriptor = buildJavaCodeMemberDescriptor(methodsDecl, enUnit);
+				boolean isMain = isMain(methodsDecl);
+				int modifiers = methodsDecl.getModifiers();
+				CFG cfg = new CFG(codeMemberDescriptor);
+				boolean added;
+				if (!Modifier.isStatic(modifiers)) {
+					added = enUnit.addInstanceCodeMember(cfg);
+				} else {
+					added = enUnit.addCodeMember(cfg);
+				}
+				if (!added)
+					throw new ParsingException("duplicated_method_descriptor",
+							ParsingException.Type.MALFORMED_SOURCE,
+							"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + enUnit.getName(),
+							getSourceCodeLocation(methodsDecl));
+
+				if (isMain)
+					getProgram().addEntryPoint(cfg);
+			}
+
+		// nested types (e.g., nested inner classes)
+		String newOuter = outer == null ? node.getName().toString() : outer + "." + node.getName().toString();
+		for (Object decl : node.bodyDeclarations())
+			if (decl instanceof TypeDeclaration)
+				initCodeMembersInDeclaration(unit, (TypeDeclaration) decl, newOuter, processed);
+			else if (decl instanceof EnumDeclaration)
+				initCodeMembersInEnum(unit, (EnumDeclaration) decl, newOuter, processed);
+	}
+
+	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
+			MethodDeclaration node,
+			it.unive.lisa.program.CompilationUnit lisaCU) {
+		CodeLocation loc = getSourceCodeLocation(node);
+		JavaCodeMemberDescriptor codeMemberDescriptor;
+		boolean instance = !Modifier.isStatic(node.getModifiers());
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
+		node.getReturnType2().accept(typeVisitor);
+
+		it.unive.lisa.type.Type returnType = typeVisitor.getType();
+		List<Parameter> parameters = new ArrayList<>();
+		if (instance) {
+			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
+			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+					new Annotations()));
+		}
+
+		for (Object o : node.parameters()) {
+			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
+			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,
+					compilationUnit, this);
+			sd.accept(vd);
+			parameters.add(vd.getParameter());
+		}
+
+		// TODO annotations
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance,
+				node.getName().getIdentifier(),
+				returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType, annotations, paramArray);
+		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
+			codeMemberDescriptor.setOverridable(false);
+		} else {
+			codeMemberDescriptor.setOverridable(true);
+		}
+
+		return codeMemberDescriptor;
+	}
+
+	private JavaCodeMemberDescriptor buildConstructorJavaCodeMemberDescriptor(
+			MethodDeclaration node,
+			JavaClassType enclosing,
+			it.unive.lisa.program.CompilationUnit lisaCU) {
+
+		CodeLocation loc = getSourceCodeLocation(node);
+		JavaCodeMemberDescriptor codeMemberDescriptor;
+		boolean instance = !Modifier.isStatic(node.getModifiers());
+		it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
+
+		List<Parameter> parameters = new ArrayList<>();
+		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+				new Annotations()));
+
+		if (enclosing != null)
+			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+					enclosing.getReference(),
+					null, new Annotations()));
+
+		for (Object o : node.parameters()) {
+			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
+			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,
+					compilationUnit, this);
+			sd.accept(vd);
+			parameters.add(vd.getParameter());
+		}
+
+		// TODO annotations
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance,
+				node.getName().getIdentifier(), VoidType.INSTANCE, annotations, paramArray);
+		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
+			codeMemberDescriptor.setOverridable(false);
+		} else {
+			codeMemberDescriptor.setOverridable(true);
+		}
+
+		return codeMemberDescriptor;
+	}
+
+	private boolean isMain(
+			MethodDeclaration node) {
+		if (!Modifier.isStatic(node.getModifiers())) {
+			return false;
+		}
+		if (!node.getName().getIdentifier().equals("main")) {
+			return false;
+		}
+		if (node.getReceiverType() != null) {
+			return false;
+		}
+		if (node.parameters().size() != 1) {
+			return false;
+		}
+		SingleVariableDeclaration parameter = (SingleVariableDeclaration) node.parameters().getFirst();
+		org.eclipse.jdt.core.dom.Type type = parameter.getType();
+		if (parameter.getType().toString().equals("String[]")) {
+			return true;
+		}
+		if (type instanceof SimpleType && ((SimpleType) type).getName().toString().equals("String")
+				&& parameter.getExtraDimensions() == 1) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private void addJavaLangImports() {

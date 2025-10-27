@@ -3,6 +3,7 @@ package it.unive.jlisa.svcomp;
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
+import it.unive.lisa.conf.LiSAConfiguration;
 import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
@@ -425,6 +426,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "BinaryTreeSearch-MemSat01",
 				"Main.java", "../common/");
+		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		perform(conf);
 	}
 
@@ -560,6 +562,41 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"ExSymExe_true",
 				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void RedBlackTree_FunUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"RedBlackTree-FunUnsat01",
+				"Main.java", "rbtree/Node.java", "rbtree/RedBlackTree.java", "rbtree/RedBlackTreeNode.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeLongBytecodes_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeLongBytecodes_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderChars05_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars05",
+				"Main.java", "../common");
+		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderChars03_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars03",
+				"Main.java", "../common");
+		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		perform(conf);
 	}
 }
