@@ -252,7 +252,7 @@ public class Main {
 		if (htmlOutput) {
 			conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		}
-		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(20));
+		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.optimize = false;

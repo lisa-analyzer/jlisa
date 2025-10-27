@@ -46,12 +46,12 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	/**
 	 * byte[]*
 	 */
-	public static JavaReferenceType BYTE_ARRAY = new JavaReferenceType(new JavaArrayType(JavaByteType.INSTANCE, 1));
+	public static JavaReferenceType BYTE_ARRAY = new JavaReferenceType(JavaArrayType.lookup(JavaByteType.INSTANCE, 1));
 
 	/**
 	 * char[]*
 	 */
-	public static JavaReferenceType CHAR_ARRAY = new JavaReferenceType(new JavaArrayType(JavaCharType.INSTANCE, 1));
+	public static JavaReferenceType CHAR_ARRAY = new JavaReferenceType(JavaArrayType.lookup(JavaCharType.INSTANCE, 1));
 
 	/**
 	 * String*[]*
@@ -261,5 +261,9 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	public static JavaReferenceType getStringArray() {
 		return new JavaReferenceType(
 				JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
+	}
+
+	public static JavaReferenceType getByteArray() {
+		return new JavaReferenceType(JavaArrayType.lookup(JavaByteType.INSTANCE, 1));
 	}
 }
