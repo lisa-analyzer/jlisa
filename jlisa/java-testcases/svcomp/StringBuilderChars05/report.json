@@ -1,24 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':3] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
-    "message" : "['Main.java':19:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':18:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440479.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320356456.json" ],
+  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707443331.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320444868.json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "18ms",
-    "end" : "2025-10-27T11:20:30.206+01:00",
-    "expressions" : "63",
+    "duration" : "17ms",
+    "end" : "2025-10-27T11:28:39.543+01:00",
+    "expressions" : "52",
     "files" : "3",
     "globals" : "27",
     "members" : "177",
     "programs" : "1",
-    "start" : "2025-10-27T11:20:30.188+01:00",
-    "statements" : "29",
+    "start" : "2025-10-27T11:28:39.526+01:00",
+    "statements" : "27",
     "units" : "48",
     "version" : "0.1",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",
@@ -38,6 +36,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/StringValueOf05"
+    "workdir" : "java-outputs/svcomp/StringBuilderChars05"
   }
 }

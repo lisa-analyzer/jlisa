@@ -1,19 +1,19 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':67:6] on 'void Main::test(long x, long z)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707443951.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707440076.json", "report.json", "void_Main.Main(Main__this)_1707433411.json", "void_Main.main(java.lang.String_[]__args).json", "void_Main.test(long_x,_long_z)_1707427676.json" ],
   "info" : {
-    "cfgs" : "13",
-    "duration" : "15ms",
-    "end" : "2025-10-27T11:20:12.451+01:00",
-    "expressions" : "49",
-    "files" : "2",
+    "cfgs" : "14",
+    "duration" : "27ms",
+    "end" : "2025-10-27T11:20:12.895+01:00",
+    "expressions" : "109",
+    "files" : "4",
     "globals" : "27",
-    "members" : "177",
+    "members" : "178",
     "programs" : "1",
-    "start" : "2025-10-27T11:20:12.436+01:00",
-    "statements" : "27",
+    "start" : "2025-10-27T11:20:12.868+01:00",
+    "statements" : "48",
     "units" : "48",
     "version" : "0.1",
     "warnings" : "1"
@@ -36,6 +36,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/radians"
+    "workdir" : "java-outputs/svcomp/ExSymExeLongBytecodes_false"
   }
 }
