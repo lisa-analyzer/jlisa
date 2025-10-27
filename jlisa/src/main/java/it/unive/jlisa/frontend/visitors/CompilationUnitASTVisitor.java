@@ -1,27 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -46,6 +24,26 @@ import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.VoidType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 
@@ -108,7 +106,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		} else if (visitorType == VisitorType.VISIT_UNIT) {
 			// phase 5
 			visitUnits(node, new TreeSet<>());
-		} 
+		}
 		return false;
 	}
 
@@ -615,7 +613,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				initCodeMembersInDeclaration(unit, (TypeDeclaration) type, null, processed);
 			else if (type instanceof EnumDeclaration)
 				initCodeMembersInEnum(unit, (EnumDeclaration) type, null, processed);
-	}	
+	}
 
 	private void initCodeMembersInDeclaration(
 			CompilationUnit unit,
@@ -683,7 +681,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			return;
 		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);
 
-		for (Object decl : node.bodyDeclarations()) 
+		for (Object decl : node.bodyDeclarations())
 			if (decl instanceof MethodDeclaration) {
 				MethodDeclaration methodsDecl = (MethodDeclaration) decl;
 				CodeMemberDescriptor codeMemberDescriptor = buildJavaCodeMemberDescriptor(methodsDecl, enUnit);
