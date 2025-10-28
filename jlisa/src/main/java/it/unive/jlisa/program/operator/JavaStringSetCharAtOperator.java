@@ -8,19 +8,19 @@ import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaStringSetCharAt implements TernaryOperator {
+public class JavaStringSetCharAtOperator implements TernaryOperator {
 
 	/**
 	 * The singleton instance of this class.
 	 */
-	public static final JavaStringSetCharAt INSTANCE = new JavaStringSetCharAt();
+	public static final JavaStringSetCharAtOperator INSTANCE = new JavaStringSetCharAtOperator();
 
 	/**
 	 * Builds the operator. This constructor is visible to allow subclassing:
 	 * instances of this class should be unique, and the singleton can be
 	 * retrieved through field {@link #INSTANCE}.
 	 */
-	protected JavaStringSetCharAt() {
+	protected JavaStringSetCharAtOperator() {
 	}
 
 	@Override
