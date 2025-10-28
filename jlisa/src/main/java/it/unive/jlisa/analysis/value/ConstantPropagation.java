@@ -17,6 +17,7 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushInv;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
@@ -1401,11 +1402,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint dest,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Satisfiability sat = satisfies(environment, expression, dest, oracle);
-		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
+		Satisfiability sat = satisfies(environment, expression, src, oracle);
+		if (sat == Satisfiability.NOT_SATISFIED)
+			return environment.bottom();
+		if (sat == Satisfiability.SATISFIED)
 			return environment;
-		else
-			return new ValueEnvironment<>(new ConstantValue()).bottom();
+		return BaseNonRelationalValueDomain.super.assume(environment, expression, src, dest, oracle);
 	}
 
 	public ConstantValue evalTypeConv(
@@ -1433,6 +1435,63 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue((int) (char) ((Number) left.getValue()).longValue());
 
 		return left;
+	}
+
+	@Override
+	public ValueEnvironment<ConstantValue> assumeBinaryExpression(
+			ValueEnvironment<ConstantValue> environment,
+			BinaryExpression expression,
+			ProgramPoint src,
+			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Identifier id;
+		ConstantValue eval;
+		// boolean rightIsExpr;
+		ValueExpression left = (ValueExpression) expression.getLeft();
+		ValueExpression right = (ValueExpression) expression.getRight();
+		if (left instanceof Identifier) {
+			eval = eval(environment, right, src, oracle);
+			id = (Identifier) left;
+			// rightIsExpr = true;
+		} else if (right instanceof Identifier) {
+			eval = eval(environment, left, src, oracle);
+			id = (Identifier) right;
+			// rightIsExpr = false;
+		} else
+			return environment;
+
+		ConstantValue starting = environment.getState(id);
+		if (eval.isBottom() || starting.isBottom())
+			return environment.bottom();
+		if (eval.isTop())
+			// if the value is not constant, we cannot refine the state
+			return environment;
+
+		ConstantValue update = null;
+		// note for eq and neq: since we are tracking constants,
+		// exact equality/inequality is handled through satisfies
+		// (eg, x == 5 is either satisfied or not satisfied if x is constant);
+		// here we just refine the state when we have an unknown satisfiability
+		// (eg, x == 5 when x is top). This means that for eq we can just
+		// set x to 5, and for neq we must leave x to top.
+		// The only exception is with booleans: since they
+		// can have only two values, for neq we can invert the boolean value.
+		if (expression.getOperator() instanceof ComparisonEq)
+			update = eval;
+		else if (expression.getOperator() instanceof ComparisonNe)
+			if (eval.getValue() instanceof Boolean) {
+				Boolean b = (Boolean) eval.getValue();
+				update = new ConstantValue(!b.booleanValue());
+			} else
+				update = top();
+
+		if (update == null)
+			return environment;
+		else if (update.isBottom())
+			return environment.bottom();
+		else
+			return environment.putState(id, update);
 	}
 
 	@Override
