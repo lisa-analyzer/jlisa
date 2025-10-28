@@ -37,6 +37,7 @@ public class JavaOr extends Or {
 		AnalysisState<A> result = state.bottomExecution();
 
 		AnalysisState<A> leftState = getLeft().forwardSemantics(state, interprocedural, expressions);
+		expressions.put(getLeft(), leftState);
 
 		for (SymbolicExpression left : leftState.getExecutionExpressions()) {
 			Satisfiability sat = analysis.satisfies(state, left, this);
@@ -48,13 +49,14 @@ public class JavaOr extends Or {
 					result = result.lub(fwdBinarySemantics(interprocedural, state, left, right, expressions));
 			} else {
 				AnalysisState<A> rightState = getRight().forwardSemantics(leftState, interprocedural, expressions);
-//				result = result.lub(leftState);
-				if (rightState.getExecutionExpressions().isEmpty()) {
-//					result = result.lub(rightState);
-				} else {
-					for (SymbolicExpression right : rightState.getExecutionExpressions())
-						result = result.lub(fwdBinarySemantics(interprocedural, state, left, right, expressions));
-				}
+				expressions.put(getRight(), rightState);
+
+				for (SymbolicExpression right : rightState.getExecutionExpressions())
+					result = result.lub(fwdBinarySemantics(interprocedural, state, left, right, expressions));
+
+				result = result.lub(leftState);
+				if (rightState.getExecutionExpressions().isEmpty())
+					result = result.lub(rightState);
 			}
 		}
 

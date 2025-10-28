@@ -1,12 +1,12 @@
-class java.lang.Exception extends java.lang.Object:
+class java.lang.Throwable extends java.lang.Object:
+
+class java.lang.Exception extends java.lang.Throwable:
 
 class java.io.IOException extends java.lang.Exception:
 
 class java.text.ParseException extends java.lang.Exception:
 
 class java.io.FileNotFoundException extends java.io.IOException:
-
-class java.lang.Throwable extends java.lang.Object:
 
 class java.lang.Error extends java.lang.Throwable:
 

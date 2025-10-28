@@ -191,7 +191,10 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 											new HeapReference(global.getStaticType(), access, loc), this));
 								else
 									result = result.lub(analysis.smallStepSemantics(state, access, this));
-							} else
+							} else if (global.getStaticType().isPointerType())
+								result = result.lub(analysis.smallStepSemantics(state,
+										new HeapReference(global.getStaticType(), access, loc), this));
+							else
 								result = result.lub(analysis.smallStepSemantics(state, access, this));
 							atLeastOne = true;
 						}

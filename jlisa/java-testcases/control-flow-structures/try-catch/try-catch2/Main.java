@@ -7,7 +7,7 @@ public class Main {
 			return c;
         }
         catch(Exception e){
-            println(e.getMessage());
+            System.out.println(e.getMessage());
 			return 'a';
         }
         return '\0';

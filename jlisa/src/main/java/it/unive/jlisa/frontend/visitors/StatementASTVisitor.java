@@ -253,6 +253,12 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
 
+		if (container instanceof ClassASTVisitor && ((ClassASTVisitor) container).enclosing != null) {
+			Expression enclExpression = new VariableRef(cfg,
+					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(), "$enclosing");
+			parameters.add(enclExpression);
+		}
+
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
@@ -658,6 +664,11 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		if (!(unit instanceof ClassUnit)) {
 			throw new RuntimeException("The unit must be a ClassUnit when dealing with SuperConstructorInvocation");
 		}
+
+		// TODO there are cases where we should pass an enclosing instance
+		// to the super constructor, but they are really rare and hard to handle
+		// for now, we just live with it and we will get an open call
+
 		ClassUnit classUnit = (ClassUnit) unit;
 		String superclassName = classUnit.getImmediateAncestors().iterator().next().getName();
 		String simpleName = superclassName.contains(".")

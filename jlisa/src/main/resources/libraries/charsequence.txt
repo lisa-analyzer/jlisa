@@ -1,2 +1,4 @@
 class java.lang.CharSequence extends java.lang.Object:
-		
+    instance method length: it.unive.jlisa.program.java.constructs.charsequence.CharSequenceLength
+        type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param this libtype java.lang.CharSequence*

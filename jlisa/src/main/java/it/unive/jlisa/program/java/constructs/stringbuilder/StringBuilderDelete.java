@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -69,7 +69,7 @@ public class StringBuilderDelete extends TernaryExpression implements PluggableS
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
 		it.unive.lisa.symbolic.value.TernaryExpression delete = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, right, JavaStringInsertCharOperator.INSTANCE, getLocation());
+				stringType, accessLeft, middle, right, JavaStringDeleteOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, delete, originating);
 

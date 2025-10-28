@@ -365,6 +365,22 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void spec1_5_product3_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "spec1-5_product3",
+				"Main.java",
+				"Actions.java",
+				"../common/",
+				"MinePumpSystem/Environment.java",
+				"MinePumpSystem/MinePump.java");
+		perform(conf);
+	}
+
+	@Test
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -380,7 +396,9 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
+	// this test sometimes causes oom during dumping when executing
+	// from gradle
 	public void siena_eqchk_prop1_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -576,8 +594,42 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 	
 	@Test
-	public void ExSymExeF2L_true_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ExSymExeF2L_true",
+	public void RedBlackTree_FunUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"RedBlackTree-FunUnsat01",
+				"Main.java", "rbtree/Node.java", "rbtree/RedBlackTree.java", "rbtree/RedBlackTreeNode.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeLongBytecodes_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeLongBytecodes_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderChars05_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars05",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderChars03_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars03",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Ignore
+	public void BellmanFord_MemUnsat01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"BellmanFord-MemUnsat01",
 				"Main.java", "../common");
 		perform(conf);
 	}

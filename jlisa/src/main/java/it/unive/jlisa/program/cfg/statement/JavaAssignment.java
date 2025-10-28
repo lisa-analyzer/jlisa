@@ -82,6 +82,14 @@ public class JavaAssignment extends Assignment {
 					result = result
 							.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
 				}
+			} else if (left.getStaticType().canBeAssignedTo(rType)) {
+				// left is smaller that right. we do a narrowing.
+				Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
+						left.getStaticType(), loc);
+				BinaryExpression castExpression = new BinaryExpression(left.getStaticType(), right, typeConv,
+						TypeConv.INSTANCE, loc);
+				result = result
+						.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
 			}
 		}
 		return result;

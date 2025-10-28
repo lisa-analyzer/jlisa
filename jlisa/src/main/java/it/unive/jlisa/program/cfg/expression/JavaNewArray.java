@@ -101,7 +101,7 @@ public class JavaNewArray extends UnaryExpression {
 
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 
-		tmp = analysis.assign(tmp, lenAccess, expr, getEvaluationPredecessor());
+		tmp = analysis.assign(tmp, lenAccess, expr, this);
 
 		// first case: the size is constant
 		if (expr instanceof Constant) {
@@ -114,7 +114,7 @@ public class JavaNewArray extends UnaryExpression {
 				AnalysisState<A> init = state.bottomExecution();
 
 				for (SymbolicExpression v : tmp2.getExecutionExpressions()) {
-					init = init.lub(analysis.assign(tmp2, access, v, getEvaluationPredecessor()));
+					init = init.lub(analysis.assign(tmp2, access, v, this));
 				}
 
 				tmp = init;

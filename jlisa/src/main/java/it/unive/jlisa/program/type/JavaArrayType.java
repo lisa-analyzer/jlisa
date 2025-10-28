@@ -41,23 +41,23 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
+	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
+
 	/**
 	 * byte[]*
 	 */
-	public static JavaReferenceType BYTE_ARRAY = new JavaReferenceType(new JavaArrayType(JavaByteType.INSTANCE, 1));
+	public static JavaReferenceType BYTE_ARRAY = new JavaReferenceType(JavaArrayType.lookup(JavaByteType.INSTANCE, 1));
 
 	/**
 	 * char[]*
 	 */
-	public static JavaReferenceType CHAR_ARRAY = new JavaReferenceType(new JavaArrayType(JavaCharType.INSTANCE, 1));
+	public static JavaReferenceType CHAR_ARRAY = new JavaReferenceType(JavaArrayType.lookup(JavaCharType.INSTANCE, 1));
 
 	/**
 	 * String*[]*
 	 */
 	public static JavaReferenceType STRING_ARRAY = new JavaReferenceType(
-			new JavaArrayType(new JavaReferenceType(JavaStringType.getStringType()), 1));
-
-	private static final Map<Pair<Type, Integer>, JavaArrayType> types = new HashMap<>();
+			JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
 
 	/**
 	 * Clears the cache of {@link JavaArrayType}s created up to now.
@@ -256,5 +256,14 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 				throw new UnsupportedOperationException();
 			}
 		};
+	}
+
+	public static JavaReferenceType getStringArray() {
+		return new JavaReferenceType(
+				JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
+	}
+
+	public static JavaReferenceType getByteArray() {
+		return new JavaReferenceType(JavaArrayType.lookup(JavaByteType.INSTANCE, 1));
 	}
 }
