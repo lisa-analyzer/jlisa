@@ -1,46 +1,41 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':15:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-    }
-  ],
-  "files": [
-    "report.json",
-    "void_Main.main(java.lang.String_[]__args).json"
-  ],
-  "info": {
-    "cfgs": "13",
-    "duration": "5ms",
-    "end": "2025-10-13T16:36:21.426+02:00",
-    "expressions": "47",
-    "files": "1",
-    "globals": "27",
-    "members": "177",
-    "programs": "1",
-    "start": "2025-10-13T16:36:21.421+02:00",
-    "statements": "25",
-    "units": "48",
-    "version": "0.1",
-    "warnings": "1"
+  "warnings" : [ {
+    "message" : "['Main.java':15:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  } ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "15ms",
+    "end" : "2025-10-28T10:22:48.521+01:00",
+    "expressions" : "47",
+    "files" : "1",
+    "globals" : "27",
+    "members" : "179",
+    "programs" : "1",
+    "start" : "2025-10-28T10:22:48.506+01:00",
+    "statements" : "25",
+    "units" : "48",
+    "version" : "0.1",
+    "warnings" : "1"
   },
-  "configuration": {
-    "analysisGraphs": "NONE",
-    "descendingPhaseType": "NONE",
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "jsonOutput": "true",
-    "openCallPolicy": "ReturnTopPolicy",
-    "optimize": "false",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "serializeInputs": "false",
-    "serializeResults": "true",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/ClassCastException1"
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/ClassCastException1"
   }
 }
