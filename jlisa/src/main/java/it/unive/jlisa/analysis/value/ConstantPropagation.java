@@ -946,10 +946,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringSetCharAtOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
-			Character rv = ((Character) right.getValue());
+			Character rv;
+			if (right.getValue() instanceof Character c)
+				rv = c;
+			else
+				rv = Character.valueOf((char) ((Integer) right.getValue()).intValue());
+
 			if (lv.length() <= mv)
 				return bottom();
-			return new ConstantValue(lv.substring(0, mv - 1) + rv.toString() + lv.substring(mv + 1));
+			StringBuilder sb = new StringBuilder(lv);
+			sb.setCharAt(mv, rv);
+			return new ConstantValue(sb.toString());
 		}
 
 		return top();

@@ -89,10 +89,10 @@ public class StringBuilderSetCharAt extends TernaryExpression implements Pluggab
 				getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheck1 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
-				right, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
+				middle, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheck2 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
-				right, length, ComparisonGe.INSTANCE, getLocation());
+				middle, length, ComparisonGe.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression or = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
 				idxCheck1, idxCheck2, LogicalOr.INSTANCE, getLocation());
