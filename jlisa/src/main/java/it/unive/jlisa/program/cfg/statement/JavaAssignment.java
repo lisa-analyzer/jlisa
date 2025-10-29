@@ -155,7 +155,7 @@ public class JavaAssignment extends Assignment {
 			return true;
 		if (wrapper.equals(JavaClassType.getByteWrapperType()) && right instanceof JavaByteType)
 			return true;
-		
+
 		// TODO: missing: boolean, short, long
 		return false;
 	}
