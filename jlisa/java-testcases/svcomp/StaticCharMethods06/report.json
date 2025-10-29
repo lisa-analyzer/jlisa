@@ -1,0 +1,45 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':4] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':22:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':25:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  } ],
+  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707443331.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320444868.json" ],
+  "info" : {
+    "cfgs" : "13",
+    "duration" : "122ms",
+    "end" : "2025-10-29T16:41:19.498+01:00",
+    "expressions" : "60",
+    "files" : "3",
+    "globals" : "27",
+    "members" : "179",
+    "programs" : "1",
+    "start" : "2025-10-29T16:41:19.376+01:00",
+    "statements" : "33",
+    "units" : "48",
+    "version" : "0.1",
+    "warnings" : "3"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/StaticCharMethods06"
+  }
+}

@@ -606,6 +606,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void StaticCharMethods06_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StaticCharMethods06",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
 	@Ignore
 	public void BellmanFord_MemUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
