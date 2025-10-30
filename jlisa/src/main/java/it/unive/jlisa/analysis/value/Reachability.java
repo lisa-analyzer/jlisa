@@ -36,6 +36,13 @@ public class Reachability<D extends ValueDomain<L>,
 		L v = values.assign(state.second, id, expression, pp, oracle);
 
 		ReachLattice r = state.first;
+		if (r.isBottom() || r.isTop()) {
+			// no guards present, we can just return
+			if (v == state.second)
+				return state;
+			return new ValueLatticeProduct<>(r, v);
+		}
+
 		for (ControlFlowStructure cfs : pp.getCFG().getDescriptor().getControlFlowStructures())
 			if (cfs.getFirstFollower() == pp) {
 				Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
@@ -63,6 +70,13 @@ public class Reachability<D extends ValueDomain<L>,
 		L v = values.smallStepSemantics(state.second, expression, pp, oracle);
 
 		ReachLattice r = state.first;
+		if (r.isBottom() || r.isTop()) {
+			// no guards present, we can just return
+			if (v == state.second)
+				return state;
+			return new ValueLatticeProduct<>(r, v);
+		}
+
 		for (ControlFlowStructure cfs : pp.getCFG().getDescriptor().getControlFlowStructures())
 			if (cfs.getCondition() == pp) {
 				// for guards we keep the reachability of the first time
