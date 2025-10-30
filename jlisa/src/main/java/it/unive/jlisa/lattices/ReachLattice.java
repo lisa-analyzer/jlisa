@@ -140,6 +140,11 @@ public class ReachLattice
 		}
 
 		@Override
+		public String toString() {
+			return representation().toString();
+		}
+
+		@Override
 		public ReachabilityStatus lubAux(
 				ReachabilityStatus other)
 				throws SemanticException {
