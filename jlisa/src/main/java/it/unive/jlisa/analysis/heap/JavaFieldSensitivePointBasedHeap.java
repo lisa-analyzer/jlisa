@@ -84,6 +84,8 @@ public class JavaFieldSensitivePointBasedHeap
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		if (state.isTop())
+			return Satisfiability.UNKNOWN;
 
 		// negation
 		if (expression instanceof UnaryExpression un) {
