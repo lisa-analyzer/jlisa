@@ -3,6 +3,7 @@ package it.unive.jlisa;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
+import it.unive.jlisa.analysis.value.Reachability;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
@@ -268,7 +269,7 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
-			domain = new ConstantPropagation();
+			domain = new Reachability<>(new ConstantPropagation());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
