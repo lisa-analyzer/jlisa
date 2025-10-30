@@ -47,11 +47,16 @@ public class Reachability<D extends ValueDomain<L>,
 			if (cfs.getFirstFollower() == pp) {
 				Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
 				Statement condition = cfs.getCondition();
-				if (map == null)
-					throw new SemanticException(
-							"No state recorded for condition " + condition + " at " + condition.getLocation());
-				map.remove(condition);
-				r = new ReachLattice(r.getState(condition), map.isEmpty() ? null : map);
+				if (map != null)
+					map.remove(condition);
+				ReachabilityStatus reach = r.getState(condition);
+				if (reach == null)
+					// in some situations, e.g., if a loop ends with an if,
+					// pp is the first follower of a condition that has not been
+					// analyzed yet; in this case, we keep the current
+					// reachability
+					reach = r.lattice;
+				r = new ReachLattice(reach, map == null || map.isEmpty() ? null : map);
 				break;
 			}
 
@@ -81,18 +86,23 @@ public class Reachability<D extends ValueDomain<L>,
 			if (cfs.getCondition() == pp) {
 				// for guards we keep the reachability of the first time
 				// we encounter them
-				ReachabilityStatus st = r.getState(pp);
-				if (st != null)
-					r = new ReachLattice(st, r.function);
+				ReachabilityStatus reach = r.getState(pp);
+				if (reach != null)
+					r = new ReachLattice(reach, r.function);
 				break;
 			} else if (cfs.getFirstFollower() == pp) {
 				Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
 				Statement condition = cfs.getCondition();
-				if (map == null)
-					throw new SemanticException(
-							"No state recorded for condition " + condition + " at " + condition.getLocation());
-				map.remove(condition);
-				r = new ReachLattice(r.getState(condition), map.isEmpty() ? null : map);
+				if (map != null)
+					map.remove(condition);
+				ReachabilityStatus reach = r.getState(condition);
+				if (reach == null)
+					// in some situations, e.g., if a loop ends with an if,
+					// pp is the first follower of a condition that has not been
+					// analyzed yet; in this case, we keep the current
+					// reachability
+					reach = r.lattice;
+				r = new ReachLattice(reach, map == null || map.isEmpty() ? null : map);
 				break;
 			}
 

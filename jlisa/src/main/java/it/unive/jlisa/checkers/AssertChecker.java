@@ -190,10 +190,10 @@ public class AssertChecker
 				continue;
 			}
 
-			if (values.isBottom()) {
+			if (values.isTop()) {
 				// the statement is (possibly) reachable, is not an assert
 				// false,
-				// but we have a bottom value state
+				// but we have a top value state
 				// we cannot do much other than being conservative and
 				// say that the assertion might not hold
 				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
