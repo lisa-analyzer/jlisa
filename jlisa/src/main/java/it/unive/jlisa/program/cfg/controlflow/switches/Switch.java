@@ -135,4 +135,20 @@ public class Switch extends ControlFlowStructure {
 			defaultCase.getBody().add(replacement);
 		}
 	}
+	
+	/**
+	 * Yields the number of switch cases in the switch (included default case)
+	 * @return the number of cases
+	 */
+	public int getNumberOfCases() {
+		return cases.length + (defaultCase != null ? 1 : 0);
+	}
+	
+	public SwitchCase[] getSwitchCases() {
+		return cases;
+	}
+	
+	public DefaultSwitchCase getDefaultSwitchCase() {
+		return defaultCase;
+	}
 }
