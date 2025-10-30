@@ -2,9 +2,15 @@
   "warnings" : [ {
     "message" : "['Main.java':17:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
+    "message" : "['Main.java':18:9] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
     "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
+    "message" : "['Main.java':22:9] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
     "message" : "['Main.java':25:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':26:9] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':28:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
@@ -18,23 +24,27 @@
   }, {
     "message" : "['Main.java':40:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
+    "message" : "['Main.java':41:9] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
     "message" : "['Main.java':45:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':46:9] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "31ms",
-    "end" : "2025-10-28T10:22:46.057+01:00",
+    "duration" : "42ms",
+    "end" : "2025-10-30T16:35:29.068+01:00",
     "expressions" : "103",
     "files" : "1",
     "globals" : "27",
     "members" : "179",
     "programs" : "1",
-    "start" : "2025-10-28T10:22:46.026+01:00",
+    "start" : "2025-10-30T16:35:29.026+01:00",
     "statements" : "46",
     "units" : "48",
     "version" : "0.1",
-    "warnings" : "10"
+    "warnings" : "15"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",

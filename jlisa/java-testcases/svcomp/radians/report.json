@@ -1,18 +1,18 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707443951.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "31ms",
-    "end" : "2025-10-28T10:22:49.632+01:00",
+    "duration" : "18ms",
+    "end" : "2025-10-30T16:35:32.378+01:00",
     "expressions" : "49",
     "files" : "2",
     "globals" : "27",
     "members" : "179",
     "programs" : "1",
-    "start" : "2025-10-28T10:22:49.601+01:00",
+    "start" : "2025-10-30T16:35:32.360+01:00",
     "statements" : "27",
     "units" : "48",
     "version" : "0.1",

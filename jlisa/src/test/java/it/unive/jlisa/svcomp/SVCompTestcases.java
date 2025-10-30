@@ -5,10 +5,8 @@ import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import java.io.IOException;
 import org.junit.Ignore;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
 public class SVCompTestcases extends JLiSAAnalysisExecutor {
 
 	@Test
