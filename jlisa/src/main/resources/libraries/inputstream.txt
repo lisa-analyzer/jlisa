@@ -1,1 +1,3 @@
 class java.io.InputStream extends java.lang.Object:
+
+class java.io.FileInputStream extends java.io.InputStream:
