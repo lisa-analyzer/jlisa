@@ -64,7 +64,14 @@ public class Reachability<D extends ValueDomain<L>,
 
 		ReachLattice r = state.first;
 		for (ControlFlowStructure cfs : pp.getCFG().getDescriptor().getControlFlowStructures())
-			if (cfs.getFirstFollower() == pp) {
+			if (cfs.getCondition() == pp) {
+				// for guards we keep the reachability of the first time
+				// we encounter them
+				ReachabilityStatus st = r.getState(pp);
+				if (st != null)
+					r = new ReachLattice(st, r.function);
+				break;
+			} else if (cfs.getFirstFollower() == pp) {
 				Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
 				Statement condition = cfs.getCondition();
 				if (map == null)
