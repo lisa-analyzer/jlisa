@@ -2,12 +2,15 @@ package it.unive.jlisa.helpers;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
+import it.unive.jlisa.analysis.value.Reachability;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaKDepthToken;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
+import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
@@ -79,13 +82,14 @@ public class TestHelpers {
 			String... programFiles) {
 		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
 
-		conf.semanticChecks.add(new AssertChecker());
-
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
-		ConstantPropagation domain = new ConstantPropagation();
+		ConstantPropagation values = new ConstantPropagation();
+		Reachability<ConstantPropagation, ValueEnvironment<ConstantValue>> domain = new Reachability<>(values);
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
+
+		conf.semanticChecks.add(new AssertChecker());
 
 		return conf;
 	}

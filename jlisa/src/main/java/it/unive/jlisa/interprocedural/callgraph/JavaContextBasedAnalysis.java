@@ -1,5 +1,7 @@
 package it.unive.jlisa.interprocedural.callgraph;
 
+import it.unive.jlisa.lattices.ReachLattice;
+import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
 import it.unive.lisa.AnalysisExecutionException;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -7,10 +9,13 @@ import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalyzedCFG;
 import it.unive.lisa.analysis.OptimizedAnalyzedCFG;
+import it.unive.lisa.analysis.ProgramState;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.combination.ValueLatticeProduct;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
+import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.conf.FixpointConfiguration;
 import it.unive.lisa.interprocedural.CFGResults;
 import it.unive.lisa.interprocedural.FixpointResults;
@@ -21,6 +26,7 @@ import it.unive.lisa.interprocedural.callgraph.CallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.ContextSensitivityToken;
 import it.unive.lisa.interprocedural.context.LastCallToken;
+import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.logging.IterationLogger;
 import it.unive.lisa.program.Application;
 import it.unive.lisa.program.CodeUnit;
@@ -175,6 +181,10 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 						c2) -> c1.getDescriptor().getLocation().compareTo(c2.getDescriptor().getLocation()));
 		entryPoints.addAll(app.getEntryPoints());
 
+		// hack: we want the reachability to start from REACHABLE
+		// which is not the top of the lattice
+		entryState = fixReachability(entryState);
+
 		int iter = 0;
 		do {
 			LOG.info("Performing {} fixpoint iteration", StringUtilities.ordinal(iter + 1));
@@ -295,6 +305,32 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 	// }
 	// }
 	// }
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private AnalysisState<A> fixReachability(
+			AnalysisState<A> entryState)
+			throws FixpointException {
+		try {
+			if (entryState.getLatticeInstance(ReachLattice.class) != null) {
+				ProgramState<A> exec = entryState.getExecution();
+				SimpleAbstractState sas = (SimpleAbstractState) exec.getState();
+				ValueLatticeProduct values = (ValueLatticeProduct) sas.valueState;
+				entryState = entryState.withExecution(
+						new ProgramState(
+								new SimpleAbstractState(
+										sas.heapState,
+										new ValueLatticeProduct(new ReachLattice(ReachabilityStatus.REACHABLE, null),
+												(ValueLattice) values.second),
+										sas.typeState),
+								exec.getComputedExpressions(),
+								exec.getFixpointInformation()));
+			}
+
+			return entryState;
+		} catch (SemanticException e) {
+			throw new FixpointException(e);
+		}
+	}
 
 	private void processEntrypoints(
 			AnalysisState<A> entryState,
