@@ -140,7 +140,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					// as units get added in that phase
 					for (Unit unit : getProgram().getUnits())
 						if (getPackage(unit).equals(importName))
-							this.imports.put(unit.getName().replace(getPackage(unit), ""), unit.getName());
+							this.imports.put(unit.getName().replace(getPackage(unit), "").substring(1), unit.getName());
 			} else {
 				String importName = i.getName().getFullyQualifiedName();
 				String shortName;

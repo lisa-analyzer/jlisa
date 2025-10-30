@@ -79,7 +79,45 @@ import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.tuple.Triple;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CaseDefaultExpression;
+import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.CreationReference;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodReference;
+import org.eclipse.jdt.core.dom.SwitchExpression;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.TypeLiteral;
+import org.eclipse.jdt.core.dom.TypeMethodReference;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	private CFG cfg;
@@ -901,6 +939,20 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		if (receiver == null)
 			return null;
 
+		if (receiver.getStaticType().isReferenceType()
+				&& receiver.getStaticType().asReferenceType().getInnerType().isUnitType()) {
+			// this might be a static field access
+			// starting from an object
+			UnitType unitType = receiver.getStaticType().asReferenceType().getInnerType().asUnitType();
+			Global global = parserContext.getGlobal(unitType.getUnit(), targetName, true);
+			if (global != null && !global.isInstance())
+				return new JavaAccessGlobal(
+						cfg,
+						getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+						unitType.getUnit(),
+						global);
+		}
+
 		return new JavaAccessInstanceGlobal(cfg,
 				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
 				receiver,
@@ -947,7 +999,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			return false;
 		}
 
-		// it might also be a global from an enclosing instance
+		// it might also be an instance global from an enclosing instance
 		ClassASTVisitor cursor = container instanceof ClassASTVisitor ? (ClassASTVisitor) container : null;
 		JavaReferenceType type = null;
 		if (cfg.getUnit() instanceof ClassUnit)
@@ -1178,8 +1230,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			else
 				type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
 			// we accumulate this.$enclosing.$enclosing... until we find the
-			// right type
-			// or we raise an exception
+			// right type or we raise an exception
 			expression = new VariableRef(cfg, getSourceCodeLocation(node), "this", type);
 			while (cursor != null && cursor.enclosingType != null) {
 				JavaClassType encl = cursor.enclosingType;
