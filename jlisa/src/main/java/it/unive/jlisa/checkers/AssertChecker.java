@@ -1,12 +1,15 @@
 package it.unive.jlisa.checkers;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.lattices.ReachLattice;
+import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.combination.ValueLatticeProduct;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
@@ -18,6 +21,7 @@ import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.types.TypeSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -34,11 +38,11 @@ public class AssertChecker
 		SemanticCheck<
 				SimpleAbstractState<
 						HeapEnvironment<AllocationSites>,
-						ValueEnvironment<ConstantValue>,
+						ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 						TypeEnvironment<TypeSet>>,
 				SimpleAbstractDomain<
 						HeapEnvironment<AllocationSites>,
-						ValueEnvironment<ConstantValue>,
+						ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 						TypeEnvironment<TypeSet>>> {
 
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
@@ -48,11 +52,11 @@ public class AssertChecker
 			CheckToolWithAnalysisResults<
 					SimpleAbstractState<
 							HeapEnvironment<AllocationSites>,
-							ValueEnvironment<ConstantValue>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>,
 					SimpleAbstractDomain<
 							HeapEnvironment<AllocationSites>,
-							ValueEnvironment<ConstantValue>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node) {
@@ -78,9 +82,13 @@ public class AssertChecker
 
 	private void checkRuntimeException(
 			CheckToolWithAnalysisResults<
-					SimpleAbstractState<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>,
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>,
-					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>,
+					SimpleAbstractDomain<
+							HeapEnvironment<AllocationSites>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node)
@@ -90,7 +98,7 @@ public class AssertChecker
 			AnalysisState<
 					SimpleAbstractState<
 							HeapEnvironment<AllocationSites>,
-							ValueEnvironment<ConstantValue>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>> state = result.getAnalysisStateAfter(node);
 
 			// checking if there exists at least one exception state
@@ -103,7 +111,7 @@ public class AssertChecker
 
 			SimpleAbstractState<
 					HeapEnvironment<AllocationSites>,
-					ValueEnvironment<ConstantValue>,
+					ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 					TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
 
 			// if exceptions had been thrown, we raise a warning
@@ -122,11 +130,11 @@ public class AssertChecker
 			CheckToolWithAnalysisResults<
 					SimpleAbstractState<
 							HeapEnvironment<AllocationSites>,
-							ValueEnvironment<ConstantValue>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>,
 					SimpleAbstractDomain<
 							HeapEnvironment<AllocationSites>,
-							ValueEnvironment<ConstantValue>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			AssertStatement node)
@@ -135,35 +143,76 @@ public class AssertChecker
 			AnalysisState<
 					SimpleAbstractState<
 							HeapEnvironment<AllocationSites>,
-							ValueEnvironment<ConstantValue>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 							TypeEnvironment<TypeSet>>> state = null;
-			if (node instanceof SimpleAssert)
-				state = result.getAnalysisStateAfter(((SimpleAssert) node).getSubExpression());
-			else if (node instanceof AssertionStatement) {
-				state = result.getAnalysisStateAfter(((AssertionStatement) node).getLeft());
+
+			boolean isAssertFalse = false;
+			if (node instanceof SimpleAssert) {
+				Expression expr = ((SimpleAssert) node).getSubExpression();
+				state = result.getAnalysisStateAfter(expr);
+				isAssertFalse = expr.toString().equals("false");
+			} else if (node instanceof AssertionStatement) {
+				Expression expr = ((AssertionStatement) node).getLeft();
+				state = result.getAnalysisStateAfter(expr);
+				isAssertFalse = expr.toString().equals("false");
 			}
 
-			for (SymbolicExpression expr : state.getExecutionExpressions()) {
-				ValueEnvironment<ConstantValue> valueState = state.getExecutionState().valueState;
+			ValueLatticeProduct<ReachLattice,
+					ValueEnvironment<ConstantValue>> valueState = state.getExecutionState().valueState;
+			ReachabilityStatus reach = valueState.first.lattice;
+			ValueEnvironment<ConstantValue> values = valueState.second;
 
-				Satisfiability sat = tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node);
-				if (!valueState.isBottom()) {
-					if (!valueState.isTop()) {
-						if (sat == Satisfiability.SATISFIED) {
-							tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
-						} else if (sat == Satisfiability.NOT_SATISFIED) {
-							tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-						} else if (sat == Satisfiability.UNKNOWN)
-							tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-						else
-							LOG.error("Cannot satisfy the expression");
-					} else
-						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				} else if (!expr.toString().equals("false")) {
+			if (reach == ReachabilityStatus.UNREACHABLE) {
+				// if the assertion is not reachable, it won't fail
+				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+				continue;
+			}
+
+			if (isAssertFalse) {
+				// we do not need to query the satisfiability of of the
+				// expression:
+				// we rely on reachability to determine its status
+				if (reach == ReachabilityStatus.REACHABLE)
+					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
+				else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE)
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					LOG.error("The abstract state of assert's expression is BOTTOM");
-				}
+				continue;
 			}
+
+			if (values.isBottom()) {
+				// the statement is (possibly) reachable, is not an assert
+				// false,
+				// but we have a bottom value state
+				// we cannot do much other than being conservative and
+				// say that the assertion might not hold
+				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				LOG.error("The abstract state of assert's expression is BOTTOM");
+				continue;
+			}
+
+			if (values.isBottom()) {
+				// the statement is (possibly) reachable, is not an assert
+				// false,
+				// but we have a bottom value state
+				// we cannot do much other than being conservative and
+				// say that the assertion might not hold
+				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				continue;
+			}
+
+			Satisfiability overall = Satisfiability.BOTTOM;
+			for (SymbolicExpression expr : state.getExecutionExpressions())
+				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
+
+			if (overall == Satisfiability.SATISFIED)
+				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+			else if (overall == Satisfiability.NOT_SATISFIED) {
+				if (reach == ReachLattice.ReachabilityStatus.REACHABLE)
+					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
+				else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE)
+					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+			} else
+				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 		}
 	}
 }
