@@ -1,5 +1,7 @@
 {
   "warnings" : [ {
+    "message" : "['Main.java':40:4] on 'void Main::s()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
     "message" : "['Main.java':44:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':45:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
@@ -7,18 +9,18 @@
   "files" : [ "int_Main.i()_1707429877.json", "long_Main.l()_1707429908.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_Main.s()_1707423212.json" ],
   "info" : {
     "cfgs" : "16",
-    "duration" : "31ms",
-    "end" : "2025-10-28T10:22:56.785+01:00",
+    "duration" : "42ms",
+    "end" : "2025-10-30T16:35:38.959+01:00",
     "expressions" : "112",
     "files" : "4",
     "globals" : "27",
     "members" : "182",
     "programs" : "1",
-    "start" : "2025-10-28T10:22:56.754+01:00",
+    "start" : "2025-10-30T16:35:38.917+01:00",
     "statements" : "49",
     "units" : "48",
     "version" : "0.1",
-    "warnings" : "2"
+    "warnings" : "3"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",
