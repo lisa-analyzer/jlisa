@@ -275,11 +275,6 @@ public class Main {
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
 
-		/*
-		 * conf.analysis = DefaultConfiguration.simpleState(
-		 * DefaultConfiguration.defaultHeapDomain(), new Pentagon(),
-		 * DefaultConfiguration.defaultTypeDomain());
-		 */
 		conf.analysis = new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,

@@ -304,8 +304,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		return constantPropSatisfiability;
 	}
 
-
-    @Override
+	@Override
 	public ValueEnvironment<ConstantValueIntInterval> assume(
 			ValueEnvironment<ConstantValueIntInterval> environment,
 			ValueExpression expression,
@@ -320,6 +319,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			return environment;
 		return BaseNonRelationalValueDomain.super.assume(environment, expression, src, dest, oracle);
 	}
+
 	@Override
 	public ValueEnvironment<ConstantValueIntInterval> assumeConstant(
 			ValueEnvironment<ConstantValueIntInterval> environment,
