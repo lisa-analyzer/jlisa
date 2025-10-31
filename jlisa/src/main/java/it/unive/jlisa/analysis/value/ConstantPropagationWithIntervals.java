@@ -304,6 +304,22 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		return constantPropSatisfiability;
 	}
 
+
+    @Override
+	public ValueEnvironment<ConstantValueIntInterval> assume(
+			ValueEnvironment<ConstantValueIntInterval> environment,
+			ValueExpression expression,
+			ProgramPoint src,
+			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Satisfiability sat = satisfies(environment, expression, src, oracle);
+		if (sat == Satisfiability.NOT_SATISFIED)
+			return environment.bottom();
+		if (sat == Satisfiability.SATISFIED)
+			return environment;
+		return BaseNonRelationalValueDomain.super.assume(environment, expression, src, dest, oracle);
+	}
 	@Override
 	public ValueEnvironment<ConstantValueIntInterval> assumeConstant(
 			ValueEnvironment<ConstantValueIntInterval> environment,
