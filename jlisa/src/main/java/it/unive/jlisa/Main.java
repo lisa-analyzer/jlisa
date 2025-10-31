@@ -1,9 +1,11 @@
 package it.unive.jlisa;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.traces.JavaTracePartitioning;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.checkers.TracePartitioningAssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -96,6 +98,13 @@ public class Main {
 				.required(false)
 				.build();
 		options.addOption(noHtmlOutput);
+		
+		Option tracePart = Option.builder()
+				.longOpt("trace-partitioning")
+				.desc("Enable trace partitioning during the analysis (disabled by default)")
+				.required(false)
+				.build();
+		options.addOption(tracePart);
 
 		options.addOption(helpOption);
 		options.addOption(sourceOption);
@@ -113,6 +122,7 @@ public class Main {
 		String outdir = "";
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
 		boolean htmlOutput = true;
+		boolean tracePartitioning = false;
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
@@ -151,6 +161,10 @@ public class Main {
 			if (cmd.hasOption("no-html")) {
 				htmlOutput = false;
 			}
+			
+			if (cmd.hasOption("trace-partitioning")) {
+				tracePartitioning = true;
+			}
 
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
@@ -179,10 +193,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput);
+			runDebug(sources, outdir, checkerName, numericalDomain, tracePartitioning, htmlOutput);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput);
+			runStatistics(sources, outdir, checkerName, numericalDomain, tracePartitioning, htmlOutput);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -195,12 +209,13 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			boolean tracePartitioning,
 			boolean htmlOutput)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
+		runAnalysis(outdir, checkerName, numericalDomain, tracePartitioning, frontend, htmlOutput);
 	}
 
 	private static void runStatistics(
@@ -208,6 +223,7 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			boolean tracePartitioning,
 			boolean htmlOutput) {
 		JavaFrontend frontend = null;
 		try {
@@ -219,7 +235,7 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
+			runAnalysis(outdir, checkerName, numericalDomain, tracePartitioning, frontend, htmlOutput);
 		} catch (Throwable e) {
 			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
@@ -241,6 +257,7 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			boolean tracePartitioning,
 			JavaFrontend frontend,
 			boolean htmlOutput)
 			throws ParseException {
@@ -258,7 +275,7 @@ public class Main {
 		conf.optimize = false;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(new AssertChecker());
+			conf.semanticChecks.add(tracePartitioning ?  new TracePartitioningAssertChecker() : new AssertChecker());
 			break;
 		case "":
 			break;
@@ -273,11 +290,14 @@ public class Main {
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
-
-		conf.analysis = new SimpleAbstractDomain<>(
+				
+		conf.analysis = tracePartitioning ? new JavaTracePartitioning<>(new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
-				new JavaInferredTypes());
+				new JavaInferredTypes())) : new SimpleAbstractDomain<>(
+						new JavaFieldSensitivePointBasedHeap(),
+						domain,
+						new JavaInferredTypes());
 
 		LiSA lisa = new LiSA(conf);
 		lisa.run(p);
