@@ -136,3 +136,32 @@ class java.lang.StringBuilder extends java.lang.Object:
 		libtype java.lang.StringBuilder*
 		param this libtype java.lang.StringBuilder*
 		param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	instance method charAt: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderCharAt
+		type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	instance method setCharAt: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderSetCharAt
+		type  it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param ch type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	instance method length: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderLength
+		type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+
+    instance method capacity: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderCapacity
+		type  it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+
+    instance method ensureCapacity: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderEnsureCapacity
+		type  it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param minimumCapacity type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+    instance method setLength: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderSetLength
+		type  it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param newLength type it.unive.jlisa.program.type.JavaIntType::INSTANCE

@@ -1,20 +1,22 @@
 {
-  "warnings" : [ ],
+  "warnings" : [ {
+    "message" : "['Main.java':103:6] on 'void Main::test(Main* this, int x, int z)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
   "files" : [ "report.json", "void_Main.Main(Main__this)_1707433411.json", "void_Main.Main_clinit()_1707433411.json", "void_Main.main(java.lang.String_[]__args).json", "void_Main.test(Main__this,_int_x,_int_z)_1707427707.json" ],
   "info" : {
     "cfgs" : "21",
-    "duration" : "122ms",
-    "end" : "2025-10-16T17:26:27.963+02:00",
+    "duration" : "23ms",
+    "end" : "2025-10-31T16:08:27.100+01:00",
     "expressions" : "183",
     "files" : "4",
     "globals" : "28",
-    "members" : "181",
+    "members" : "191",
     "programs" : "1",
-    "start" : "2025-10-16T17:26:27.841+02:00",
+    "start" : "2025-10-31T16:08:27.077+01:00",
     "statements" : "79",
     "units" : "48",
     "version" : "0.1",
-    "warnings" : "0"
+    "warnings" : "1"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",

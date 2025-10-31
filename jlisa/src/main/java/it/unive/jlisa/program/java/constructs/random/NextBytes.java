@@ -55,6 +55,6 @@ public class NextBytes extends BinaryExpression implements PluggableStatement {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(JavaArrayType.BYTE_ARRAY, getLocation()), originating);
+				new PushAny(JavaArrayType.getByteArray(), getLocation()), originating);
 	}
 }

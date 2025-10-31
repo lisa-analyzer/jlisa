@@ -272,4 +272,24 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getIndexOutOfBoundsExceptionType() {
 		return lookup("java.lang.IndexOutOfBoundsException");
 	}
+
+	public static JavaClassType getCharacterWrapperType() {
+		return lookup("java.lang.Character");
+	}
+
+	public static JavaClassType getIntegerWrapperType() {
+		return lookup("java.lang.Integer");
+	}
+
+	public static JavaClassType getDoubleWrapperType() {
+		return lookup("java.lang.Double");
+	}
+
+	public static JavaClassType getFloatWrapperType() {
+		return lookup("java.lang.Float");
+	}
+
+	public static JavaClassType getByteWrapperType() {
+		return lookup("java.lang.Byte");
+	}
 }

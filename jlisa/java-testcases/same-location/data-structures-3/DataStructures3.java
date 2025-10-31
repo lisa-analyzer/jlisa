@@ -18,10 +18,10 @@ public class Datastructures3  {
 
     public static void main(String[] args) {
         String name = "";
-        C c1 = new C();
+        C c1 = new Datastructures3().new C();
         c1.setData("anbc");
 
-        C c2 = new C();
+        C c2 = new Datastructures3().new C();
         c2.setData(name);
         c1.setNext(c2);
 

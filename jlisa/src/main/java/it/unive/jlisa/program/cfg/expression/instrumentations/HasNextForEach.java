@@ -12,6 +12,7 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.PushAny;
 
 /**
  * Instrumentation to compute if there is a next element within the collection
@@ -51,8 +52,8 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		// TODO: to implement semantics
-		return interprocedural.getAnalysis().smallStepSemantics(state, expr, this);
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushAny(JavaBooleanType.INSTANCE, getLocation()), this);
 
 	}
 

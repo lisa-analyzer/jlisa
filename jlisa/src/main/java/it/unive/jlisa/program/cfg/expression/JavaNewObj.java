@@ -110,7 +110,7 @@ public class JavaNewObj extends NaryExpression {
 				getMetaVariables().add((Identifier) v);
 
 		// finally, we leave a reference to the newly created object on the
-		// stack; this correponds to the state after the constructor call
+		// stack; this corresponds to the state after the constructor call
 		// but with the receiver left on the stack
 		return sem.withExecutionExpressions(callstate.getExecutionExpressions());
 	}

@@ -3,18 +3,20 @@ package it.unive.jlisa;
 import it.unive.jlisa.analysis.ConstantPropWithInterval;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
-import it.unive.jlisa.checkers.AssertCheckerCPInterval;
+import it.unive.jlisa.analysis.value.ConstantPropagation;
+import it.unive.jlisa.analysis.value.Reachability;
+import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaKDepthToken;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
-import it.unive.lisa.interprocedural.context.FullStackToken;
 import it.unive.lisa.program.Program;
 import java.io.IOException;
 import java.util.Arrays;
@@ -252,13 +254,13 @@ public class Main {
 		if (htmlOutput) {
 			conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
 		}
-		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
+		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.optimize = false;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(new AssertCheckerCPInterval());
+			conf.semanticChecks.add(new AssertChecker());
 			break;
 		case "":
 			break;
@@ -268,7 +270,7 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
-			// domain = new ConstantPropWithIntervalLattice();
+			domain = new Reachability<>(new ConstantPropagation());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
