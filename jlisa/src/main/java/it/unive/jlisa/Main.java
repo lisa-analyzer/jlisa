@@ -1,6 +1,5 @@
 package it.unive.jlisa;
 
-import it.unive.jlisa.analysis.ConstantPropWithInterval;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
@@ -283,7 +282,7 @@ public class Main {
 		 */
 		conf.analysis = new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
-				new ConstantPropWithInterval(),
+				domain,
 				new JavaInferredTypes());
 
 		LiSA lisa = new LiSA(conf);
