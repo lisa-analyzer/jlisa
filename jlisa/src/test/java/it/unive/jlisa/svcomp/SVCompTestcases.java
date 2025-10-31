@@ -1,8 +1,15 @@
 package it.unive.jlisa.svcomp;
 
+import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.value.SVCompDomain;
+import it.unive.jlisa.checkers.AssertCheckerSVCompDomain;
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
+import it.unive.lisa.analysis.types.InferredTypes;
+import it.unive.lisa.conf.LiSAConfiguration;
 import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
@@ -646,4 +653,18 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void assert6_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"assert6",
+				"Main.java", "../common");
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+		InferredTypes type = new InferredTypes();
+		SVCompDomain domain = new SVCompDomain();
+		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
+		conf.semanticChecks.clear();
+		conf.semanticChecks.add(new AssertCheckerSVCompDomain());
+		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+		perform(conf);
+	}
 }
