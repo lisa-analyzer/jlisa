@@ -884,7 +884,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		if (defaultCase != null && !cases.isEmpty())
 			adj.addEdge(new FalseEdge(cases.getLast().getCondition(), defaultCase.getEntry()));
 
-//		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
+		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
 
 		if (node.statements().isEmpty() || (cases.isEmpty() && defaultCase == null)) {
 			emptyBlock = new NoOp(cfg,
