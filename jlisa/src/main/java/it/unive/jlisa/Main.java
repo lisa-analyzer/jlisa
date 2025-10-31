@@ -98,7 +98,7 @@ public class Main {
 				.required(false)
 				.build();
 		options.addOption(noHtmlOutput);
-		
+
 		Option tracePart = Option.builder()
 				.longOpt("trace-partitioning")
 				.desc("Enable trace partitioning during the analysis (disabled by default)")
@@ -161,7 +161,7 @@ public class Main {
 			if (cmd.hasOption("no-html")) {
 				htmlOutput = false;
 			}
-			
+
 			if (cmd.hasOption("trace-partitioning")) {
 				tracePartitioning = true;
 			}
@@ -275,7 +275,7 @@ public class Main {
 		conf.optimize = false;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(tracePartitioning ?  new TracePartitioningAssertChecker() : new AssertChecker());
+			conf.semanticChecks.add(tracePartitioning ? new TracePartitioningAssertChecker() : new AssertChecker());
 			break;
 		case "":
 			break;
@@ -290,11 +290,12 @@ public class Main {
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
-				
+
 		conf.analysis = tracePartitioning ? new JavaTracePartitioning<>(new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
-				new JavaInferredTypes())) : new SimpleAbstractDomain<>(
+				new JavaInferredTypes()))
+				: new SimpleAbstractDomain<>(
 						new JavaFieldSensitivePointBasedHeap(),
 						domain,
 						new JavaInferredTypes());

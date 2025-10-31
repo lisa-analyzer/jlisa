@@ -23,7 +23,6 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,41 +32,42 @@ import org.apache.logging.log4j.Logger;
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
 public class TracePartitioningAssertChecker
-		implements SemanticCheck<
-        TraceLattice<
-                SimpleAbstractState<
-                        HeapEnvironment<AllocationSites>,
-                        ValueEnvironment<ConstantValue>,
-                        TypeEnvironment<TypeSet>>>,
-		JavaTracePartitioning<
-		        SimpleAbstractState<
-					HeapEnvironment<AllocationSites>,
-					ValueEnvironment<ConstantValue>,
-					TypeEnvironment<TypeSet>>,
-				SimpleAbstractDomain<
-						HeapEnvironment<AllocationSites>,
-						ValueEnvironment<ConstantValue>,
-						TypeEnvironment<TypeSet>>>> {
-	
+		implements
+		SemanticCheck<
+				TraceLattice<
+						SimpleAbstractState<
+								HeapEnvironment<AllocationSites>,
+								ValueEnvironment<ConstantValue>,
+								TypeEnvironment<TypeSet>>>,
+				JavaTracePartitioning<
+						SimpleAbstractState<
+								HeapEnvironment<AllocationSites>,
+								ValueEnvironment<ConstantValue>,
+								TypeEnvironment<TypeSet>>,
+						SimpleAbstractDomain<
+								HeapEnvironment<AllocationSites>,
+								ValueEnvironment<ConstantValue>,
+								TypeEnvironment<TypeSet>>>> {
+
 	private static final Logger LOG = LogManager.getLogger(TracePartitioningAssertChecker.class);
 
 	@Override
 	public boolean visit(
 			CheckToolWithAnalysisResults<
-			TraceLattice<
-            SimpleAbstractState<
-                    HeapEnvironment<AllocationSites>,
-                    ValueEnvironment<ConstantValue>,
-                    TypeEnvironment<TypeSet>>>,
-	JavaTracePartitioning<
-	        SimpleAbstractState<
-				HeapEnvironment<AllocationSites>,
-				ValueEnvironment<ConstantValue>,
-				TypeEnvironment<TypeSet>>,
-			SimpleAbstractDomain<
-					HeapEnvironment<AllocationSites>,
-					ValueEnvironment<ConstantValue>,
-					TypeEnvironment<TypeSet>>>> tool,
+					TraceLattice<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>,
+					JavaTracePartitioning<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node) {
 
@@ -92,31 +92,31 @@ public class TracePartitioningAssertChecker
 
 	private void checkRuntimeException(
 			CheckToolWithAnalysisResults<
-			TraceLattice<
-            SimpleAbstractState<
-                    HeapEnvironment<AllocationSites>,
-                    ValueEnvironment<ConstantValue>,
-                    TypeEnvironment<TypeSet>>>,
-	JavaTracePartitioning<
-	        SimpleAbstractState<
-				HeapEnvironment<AllocationSites>,
-				ValueEnvironment<ConstantValue>,
-				TypeEnvironment<TypeSet>>,
-			SimpleAbstractDomain<
-					HeapEnvironment<AllocationSites>,
-					ValueEnvironment<ConstantValue>,
-					TypeEnvironment<TypeSet>>>> tool,
+					TraceLattice<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>,
+					JavaTracePartitioning<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node)
 			throws SemanticException {
 
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-			TraceLattice<
-            SimpleAbstractState<
-                    HeapEnvironment<AllocationSites>,
-                    ValueEnvironment<ConstantValue>,
-                    TypeEnvironment<TypeSet>>>> state = result.getAnalysisStateAfter(node);
+					TraceLattice<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>> state = result.getAnalysisStateAfter(node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
@@ -127,10 +127,10 @@ public class TracePartitioningAssertChecker
 							!state.getSmashedErrors().function.isEmpty());
 
 			TraceLattice<
-            SimpleAbstractState<
-                    HeapEnvironment<AllocationSites>,
-                    ValueEnvironment<ConstantValue>,
-                    TypeEnvironment<TypeSet>>> normaleState = state.getExecutionState();
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							ValueEnvironment<ConstantValue>,
+							TypeEnvironment<TypeSet>>> normaleState = state.getExecutionState();
 
 			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)
@@ -146,30 +146,30 @@ public class TracePartitioningAssertChecker
 
 	private void checkAssert(
 			CheckToolWithAnalysisResults<
-			TraceLattice<
-            SimpleAbstractState<
-                    HeapEnvironment<AllocationSites>,
-                    ValueEnvironment<ConstantValue>,
-                    TypeEnvironment<TypeSet>>>,
-	JavaTracePartitioning<
-	        SimpleAbstractState<
-				HeapEnvironment<AllocationSites>,
-				ValueEnvironment<ConstantValue>,
-				TypeEnvironment<TypeSet>>,
-			SimpleAbstractDomain<
-					HeapEnvironment<AllocationSites>,
-					ValueEnvironment<ConstantValue>,
-					TypeEnvironment<TypeSet>>>> tool,
+					TraceLattice<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>,
+					JavaTracePartitioning<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			AssertStatement node)
 			throws SemanticException {
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-			TraceLattice<
-	            SimpleAbstractState<
-	                    HeapEnvironment<AllocationSites>,
-	                    ValueEnvironment<ConstantValue>,
-	                    TypeEnvironment<TypeSet>>>> state = null;
+					TraceLattice<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									ValueEnvironment<ConstantValue>,
+									TypeEnvironment<TypeSet>>>> state = null;
 			if (node instanceof SimpleAssert)
 				state = result.getAnalysisStateAfter(((SimpleAssert) node).getSubExpression());
 			else if (node instanceof AssertionStatement) {
@@ -177,28 +177,60 @@ public class TracePartitioningAssertChecker
 			}
 
 			for (SymbolicExpression expr : state.getExecutionExpressions()) {
-				for(SimpleAbstractState<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>, TypeEnvironment<TypeSet>> v : state.getExecutionState().getValues()) {
+
+				boolean allSatisfy = true;
+				boolean allNotSatisfy = true;
+				boolean allUnknown = true;
+				boolean anyBottom = false;
+				boolean anyTop = false;
+
+				for (SimpleAbstractState<HeapEnvironment<AllocationSites>, ValueEnvironment<ConstantValue>,
+						TypeEnvironment<TypeSet>> v : state.getExecutionState().getValues()) {
 					ValueEnvironment<ConstantValue> valueState = v.valueState;
 					Satisfiability sat = tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node);
 					if (!valueState.isBottom()) {
 						if (!valueState.isTop()) {
 							if (sat == Satisfiability.SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+								allNotSatisfy = false;
+								allUnknown = false;
 							} else if (sat == Satisfiability.NOT_SATISFIED) {
-								tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-							} else if (sat == Satisfiability.UNKNOWN)
-								tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-							else
+								allSatisfy = false;
+								allUnknown = false;
+							} else if (sat == Satisfiability.UNKNOWN) {
+								allSatisfy = false;
+								allNotSatisfy = false;
+							} else {
+								allSatisfy = false;
+								allNotSatisfy = false;
+								allUnknown = false;
 								LOG.error("Cannot satisfy the expression");
-						} else
-							tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					} else if (!expr.toString().equals("false")) {
-						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+							}
+						} else {
+							anyTop = true;
+						}
+					} else {
+						anyBottom = true;
 						LOG.error("The abstract state of assert's expression is BOTTOM");
 					}
+				}
+
+				if (!anyBottom) {
+					if (!anyTop) {
+						if (allSatisfy) {
+							tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+						} else if (allNotSatisfy) {
+							tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
+						} else if (allUnknown)
+							tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+						else
+							LOG.error("Cannot satisfy the expression: trace partitioning reports different results");
+					} else
+						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				} else if (!expr.toString().equals("false")) {
+					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 				}
 			}
 		}
 	}
-	
+
 }
