@@ -52,6 +52,7 @@ public class StringBuilderCapacity extends UnaryExpression implements PluggableS
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()), originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()),
+				originating);
 	}
 }
