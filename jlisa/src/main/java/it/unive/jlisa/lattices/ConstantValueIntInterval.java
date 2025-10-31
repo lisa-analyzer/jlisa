@@ -37,7 +37,16 @@ public class ConstantValueIntInterval
 
 	@Override
 	public boolean isTop() {
-		return constantValue.isTop() && intInterval.isTop();
+		// Determining TOP is a bit subtle: ConstantValue takes precedence over
+		// IntInterval.
+		// If ConstantValue is TOP and represents a String, then IntInterval
+		// will be BOTTOM,
+		// but the combined ConstantValueIntInterval should still be considered
+		// TOP.
+		// Conversely, if ConstantValue is a number and is TOP, it represents
+		// any possible number,
+		// so IntInterval should also be TOP in that case.
+		return constantValue.isTop() && (intInterval.isTop() || intInterval.isBottom());
 	}
 
 	@Override
