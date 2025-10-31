@@ -762,7 +762,9 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		switchItem = itemVisitor.getExpression();
 		Statement noop = new NoOp(this.cfg,
 				parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
-		adj.addNode(noop);
+//		adj.addNode(noop);
+
+		boolean usedNoop = false;
 
 		List<it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase> cases = new ArrayList<>();
 
@@ -846,12 +848,18 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 			if (follower != null) {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
-				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
+				if (!lastCaseInstr.stopsExecution() && lastCaseInstr.throwsError()) {
+					adj.addNode(noop);
+					usedNoop = true;
+					adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
+				}
 			} else {
 				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
+				adj.addNode(noop);
+				usedNoop = true;
 				adj.addEdge(new SequentialEdge(emptyBlock, noop));
 			}
 		}
@@ -876,12 +884,14 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		if (defaultCase != null && !cases.isEmpty())
 			adj.addEdge(new FalseEdge(cases.getLast().getCondition(), defaultCase.getEntry()));
 
-		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
+//		lazySwitchEdgeBindingCleanUp(adj, cases, defaultCase != null ? defaultCase.getEntry() : null);
 
 		if (node.statements().isEmpty() || (cases.isEmpty() && defaultCase == null)) {
 			emptyBlock = new NoOp(cfg,
 					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			adj.addNode(emptyBlock);
+			adj.addNode(noop);
+			usedNoop = true;
 			adj.addEdge(new SequentialEdge(emptyBlock, noop));
 			first = emptyBlock;
 		}
@@ -893,12 +903,12 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				.addControlFlowStructure(new Switch(adj,
 						!cases.isEmpty() ? cases.getFirst().getCondition()
 								: defaultCase != null ? defaultCase.getEntry() : emptyBlock,
-						noop,
+						usedNoop ? noop : null,
 						cases.toArray(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase[cases.size()]),
 						defaultCase));
 		this.control.endControlFlowOf(adj, !cases.isEmpty() ? cases.getFirst().getCondition()
-				: defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, null, null);
-		this.block = new ParsedBlock(first, adj, noop);
+				: defaultCase != null ? defaultCase.getEntry() : emptyBlock, usedNoop ? noop : null, null, null);
+		this.block = new ParsedBlock(first, adj, usedNoop ? noop : null);
 		return false;
 	}
 
