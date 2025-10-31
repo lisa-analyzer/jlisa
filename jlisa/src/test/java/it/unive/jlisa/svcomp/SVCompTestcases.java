@@ -622,7 +622,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Test
 	public void BellmanFord_MemUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"BellmanFord-MemUnsat01",
