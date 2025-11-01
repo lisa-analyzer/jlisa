@@ -334,7 +334,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeConstant(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeConstant(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(constantValueEnvironment, intIntervalEnvironment);
+		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 
 	@Override
@@ -368,7 +368,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeUnaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeUnaryExpression(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(constantValueEnvironment, intIntervalEnvironment);
+		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 
 	@Override
@@ -385,7 +385,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeBinaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeBinaryExpression(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(constantValueEnvironment, intIntervalEnvironment);
+		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 
 	@Override
@@ -402,7 +402,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeTernaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeTernaryExpression(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(constantValueEnvironment, intIntervalEnvironment);
+		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 
 	@Override
@@ -419,7 +419,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeValueExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeValueExpression(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(constantValueEnvironment, intIntervalEnvironment);
+		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 
 	public static Pair<ValueEnvironment<ConstantValue>, ValueEnvironment<IntInterval>>
@@ -447,6 +447,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 	}
 
 	public static ValueEnvironment<ConstantValueIntInterval> mergeEnvironments(
+			ValueEnvironment<ConstantValueIntInterval> oldEnvironment,
 			ValueEnvironment<ConstantValue> constantEnv,
 			ValueEnvironment<IntInterval> intervalEnv)
 			throws SemanticException {
@@ -460,6 +461,12 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		for (Identifier id : allIds) {
 			ConstantValue constVal = constantEnv.getState(id);
 			IntInterval intVal = intervalEnv.getState(id);
+			IntInterval oldInterval = oldEnvironment.getState(id).getIntInterval();
+			if (oldInterval != null && intVal != null && !oldInterval.isBottom() && intVal.isBottom()) {
+				// When the old interval is not BOTTOM but the new interval is BOTTOM,
+				// we should also move the constant value to BOTTOM to maintain consistency.
+				constVal = ConstantValue.BOTTOM;
+			}
 			if (constVal == null)
 				constVal = ConstantValue.BOTTOM;
 			if (intVal == null)
@@ -468,7 +475,6 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval combined = new ConstantValueIntInterval(constVal, intVal);
 			merged = merged.putState(id, combined);
 		}
-
 		return merged;
 	}
 
