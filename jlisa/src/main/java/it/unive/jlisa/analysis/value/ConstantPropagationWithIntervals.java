@@ -7,7 +7,6 @@ import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
-import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -28,7 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class ConstantPropagationWithIntervals implements BaseNonRelationalValueDomain<ConstantValueIntInterval> {
 
 	private final ConstantPropagation constantPropagation = new ConstantPropagation();
-	private final Interval interval = new Interval();
+	private final JavaNumericInterval interval = new JavaNumericInterval();
 
 	@Override
 	public ConstantValueIntInterval top() {
