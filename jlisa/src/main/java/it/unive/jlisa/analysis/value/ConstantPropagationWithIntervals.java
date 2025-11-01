@@ -2,6 +2,7 @@ package it.unive.jlisa.analysis.value;
 
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.lattices.ConstantValueIntInterval;
+import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
@@ -477,6 +478,36 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			merged = merged.putState(id, combined);
 		}
 		return merged;
+	}
+
+	@Override
+	public Satisfiability satisfies(
+			ValueEnvironment<ConstantValueIntInterval> environment,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Pair<ValueEnvironment<ConstantValue>,
+				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		// Note: Since ConstantPropagation overrides `satisfies` to handle the
+		// satisfiability of n-ary expressions, we need to include the corresponding
+		// logic here as a temporary workaround. This is necessary because
+		// BaseNonRelationalValueDomain does not yet support `satisfiesNaryExpression`.
+		if (expression instanceof NaryExpression) {
+			SymbolicExpression[] exprs = ((NaryExpression) expression).getAllOperand(0);
+			ConstantValue[] args = new ConstantValue[exprs.length];
+			for (int i = 0; i < exprs.length; ++i) {
+				ConstantValue left = constantPropagation.eval(environments.getLeft(), (ValueExpression) exprs[i], pp,
+						oracle);
+				if (left.isBottom())
+					return Satisfiability.BOTTOM;
+				args[i] = left;
+			}
+
+			return constantPropagation.satisfiesNaryExpression((NaryExpression) expression, args, pp, oracle);
+		}
+
+		return BaseNonRelationalValueDomain.super.satisfies(environment, expression, pp, oracle);
 	}
 
 }
