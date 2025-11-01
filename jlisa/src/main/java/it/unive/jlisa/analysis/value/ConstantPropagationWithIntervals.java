@@ -273,11 +273,15 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				left.getConstantValue(), right.getConstantValue(), pp, oracle);
 		if (constantPropSatisfiability == Satisfiability.UNKNOWN
 				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			Satisfiability intervalSatisfiability = interval.satisfiesBinaryExpression(expression,
-					left.getIntInterval(), right.getIntInterval(), pp, oracle);
-			if (intervalSatisfiability == Satisfiability.SATISFIED) {
-				return Satisfiability.SATISFIED;
+			if (!left.getIntInterval().isBottom() && !right.getIntInterval().isBottom()) {
+				Satisfiability intervalSatisfiability = interval.satisfiesBinaryExpression(expression,
+						left.getIntInterval(), right.getIntInterval(), pp, oracle);
+				if (intervalSatisfiability == Satisfiability.SATISFIED
+						|| intervalSatisfiability == Satisfiability.NOT_SATISFIED) {
+					return intervalSatisfiability;
+				}
 			}
+
 		}
 		return constantPropSatisfiability;
 	}
@@ -490,9 +494,11 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		Pair<ValueEnvironment<ConstantValue>,
 				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		// Note: Since ConstantPropagation overrides `satisfies` to handle the
-		// satisfiability of n-ary expressions, we need to include the corresponding
+		// satisfiability of n-ary expressions, we need to include the
+		// corresponding
 		// logic here as a temporary workaround. This is necessary because
-		// BaseNonRelationalValueDomain does not yet support `satisfiesNaryExpression`.
+		// BaseNonRelationalValueDomain does not yet support
+		// `satisfiesNaryExpression`.
 		if (expression instanceof NaryExpression) {
 			SymbolicExpression[] exprs = ((NaryExpression) expression).getAllOperand(0);
 			ConstantValue[] args = new ConstantValue[exprs.length];
