@@ -351,7 +351,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeIdentifier(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeIdentifier(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(constantValueEnvironment, intIntervalEnvironment);
+		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 
 	@Override
@@ -463,8 +463,10 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			IntInterval intVal = intervalEnv.getState(id);
 			IntInterval oldInterval = oldEnvironment.getState(id).getIntInterval();
 			if (oldInterval != null && intVal != null && !oldInterval.isBottom() && intVal.isBottom()) {
-				// When the old interval is not BOTTOM but the new interval is BOTTOM,
-				// we should also move the constant value to BOTTOM to maintain consistency.
+				// When the old interval is not BOTTOM but the new interval is
+				// BOTTOM,
+				// we should also move the constant value to BOTTOM to maintain
+				// consistency.
 				constVal = ConstantValue.BOTTOM;
 			}
 			if (constVal == null)
