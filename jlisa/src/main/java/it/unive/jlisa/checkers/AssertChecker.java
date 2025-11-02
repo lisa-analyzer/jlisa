@@ -3,6 +3,8 @@ package it.unive.jlisa.checkers;
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.lattices.ReachLattice;
 import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
@@ -20,6 +22,7 @@ import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.types.TypeSet;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -27,6 +30,8 @@ import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,10 +52,19 @@ public class AssertChecker
 						HeapEnvironment<AllocationSites>,
 						ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
 						TypeEnvironment<TypeSet>>> {
+	private record VariableInfo(
+			String variableName,
+			String type,
+			String originFile,
+			String startLine,
+			String assumptionScope) {
+	}
 
+	private List<VariableInfo> nonDetVariables = new ArrayList<>();
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
 
 	private boolean minimalWitnessGenerated = false;
+	private boolean witnessGenerated = false;
 	private WitnessWriter witness;
 	private String workDir;
 
@@ -67,8 +81,23 @@ public class AssertChecker
 							TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node) {
-
 		// RuntimeException property checker
+		if (node instanceof JavaUnresolvedStaticCall unresolvedCall
+				&& unresolvedCall.getQualifier().equals("org.sosy_lab.sv_benchmarks.Verifier")) {
+			if (unresolvedCall.getParentStatement() instanceof JavaAssignment assignment
+					&& unresolvedCall.getTargetName().startsWith("nondet")) {
+				String type = unresolvedCall.getTargetName().substring(6);
+				String variableName = assignment.getLeft().toString();
+				String assumptionScope = "java::LMain;.main([Ljava/lang/String;)V";
+				// TODO: we should extract this from the cfg signature.
+				if (assignment.getLocation() instanceof SourceCodeLocation sc) {
+					String originFile = sc.getSourceFile();
+					String startLine = String.valueOf(sc.getLine());
+
+					nonDetVariables.add(new VariableInfo(variableName, type, originFile, startLine, assumptionScope));
+				}
+			}
+		}
 		if (graph.getProgram().getEntryPoints().contains(graph) && node instanceof Ret)
 			try {
 				checkRuntimeException(tool, graph, node);
@@ -186,8 +215,9 @@ public class AssertChecker
 						minimalWitnessGenerated = true;
 					}
 				} else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE) {
-					if (!minimalWitnessGenerated) {
+					if (!minimalWitnessGenerated && !witnessGenerated) {
 						generateViolationWitness();
+						witnessGenerated = true;
 					}
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 					continue;
@@ -202,7 +232,11 @@ public class AssertChecker
 				// say that the assertion might not hold
 				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 				// We don't know the values here, so it's hard to produce a
-				// witness.
+				// witness. First attempt: try with a table of values.
+				if (!minimalWitnessGenerated && !witnessGenerated) {
+					generateViolationWitness();
+					witnessGenerated = true;
+				}
 				LOG.error("The abstract state of assert's expression is BOTTOM");
 				continue;
 			}
@@ -215,7 +249,11 @@ public class AssertChecker
 				// say that the assertion might not hold
 				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 				// We don't know the values here, so it's hard to produce a
-				// witness.
+				// witness. First attempt: try with a table of values.
+				if (!minimalWitnessGenerated && !witnessGenerated) {
+					generateViolationWitness();
+					witnessGenerated = true;
+				}
 				continue;
 			}
 
@@ -234,14 +272,16 @@ public class AssertChecker
 					}
 				} else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE) {
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					if (!minimalWitnessGenerated) {
+					if (!minimalWitnessGenerated && !witnessGenerated) {
 						generateViolationWitness();
+						witnessGenerated = true;
 					}
 				}
 			} else {
 				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				if (!minimalWitnessGenerated) {
+				if (!minimalWitnessGenerated && !witnessGenerated) {
 					generateViolationWitness();
+					witnessGenerated = true;
 				}
 			}
 		}
@@ -263,9 +303,72 @@ public class AssertChecker
 		}
 	}
 
+	/*
+	 * This method provides non determinstic values for Verifier's methods.
+	 * Ideally, these values should be determine by looking at the analysis
+	 * state. However, if the analysis state is TOP, we should "guess" a number.
+	 */
+	private String getNonDetDefaultValue(
+			String type) {
+		switch (type) {
+		case "Boolean":
+			return "false";
+		case "Byte":
+			return "-128";
+		case "Char":
+			return "Ж";
+		case "Short":
+			return "32767";
+		case "Int":
+			return "1000000000";
+		case "Long":
+			return "2036854775808";
+		case "Float":
+			return "2036854775808";
+		case "Double":
+			return "0.998877665544";
+		case "String":
+			return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+		default:
+			return "0";
+		}
+	}
+
 	private void generateViolationWitness() {
-		// TODO
-		LOG.warn("Violation Witness not produced.");
+		try {
+			if (!nonDetVariables.isEmpty()) {
+				witness = new WitnessWriter();
+				Map<String, String> violationAttrs = Map.of("violation", "true");
+				Map<String, String> entryAttributes = Map.of("entry", "true");
+				witness.addNode("sink", null);
+				witness.addNode("n0", entryAttributes);
+				for (int i = 1; i < nonDetVariables.size(); i++) {
+					witness.addNode("n" + i, null);
+				}
+				witness.addNode("n" + nonDetVariables.size(), violationAttrs);
+				// generate edges
+				for (int i = 0; i < nonDetVariables.size(); i++) {
+					VariableInfo variable = nonDetVariables.get(i);
+					Map<String, String> edgeAttrs = Map.of(
+							"originfile", variable.originFile,
+							"startline", variable.startLine,
+							"threadId", "0",
+							"assumption", variable.variableName + " = " + getNonDetDefaultValue(variable.type),
+							"assumption.scope", variable.assumptionScope);
+					witness.addEdge("n" + i, "n" + (i + 1), edgeAttrs);
+				}
+				String witnessFilePath = workDir + "/witness/witness.graphml";
+				File outputFile = new File(witnessFilePath);
+				outputFile.getParentFile().mkdirs();
+				witness.writeToFile(witnessFilePath);
+				LOG.info("Violation witness produced.");
+			} else {
+				// the least we can do is to generate an minimal witness
+				generateMinimalViolationWitness();
+			}
+		} catch (Exception e) {
+			LOG.warn("Failed to produce witness: {}", e);
+		}
 	}
 
 	@Override
