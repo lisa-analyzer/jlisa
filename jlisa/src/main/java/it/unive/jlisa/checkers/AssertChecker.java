@@ -6,6 +6,7 @@ import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
+import it.unive.jlisa.witness.WitnessWriter;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -25,6 +26,8 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import java.io.File;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,6 +49,10 @@ public class AssertChecker
 						TypeEnvironment<TypeSet>>> {
 
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
+
+	private boolean minimalWitnessGenerated = false;
+	private WitnessWriter witness;
+	private String workDir;
 
 	@Override
 	public boolean visit(
@@ -172,47 +179,103 @@ public class AssertChecker
 				// we do not need to query the satisfiability of of the
 				// expression:
 				// we rely on reachability to determine its status
-				if (reach == ReachabilityStatus.REACHABLE)
+				if (reach == ReachabilityStatus.REACHABLE) {
 					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-				else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE)
+					if (!minimalWitnessGenerated) {
+						generateMinimalViolationWitness();
+						minimalWitnessGenerated = true;
+					}
+				} else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE) {
+					if (!minimalWitnessGenerated) {
+						generateViolationWitness();
+					}
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				continue;
-			}
+					continue;
+				}
 
-			if (values.isBottom()) {
-				// the statement is (possibly) reachable, is not an assert
-				// false,
-				// but we have a bottom value state
-				// we cannot do much other than being conservative and
-				// say that the assertion might not hold
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				LOG.error("The abstract state of assert's expression is BOTTOM");
-				continue;
-			}
-
-			if (values.isTop()) {
-				// the statement is (possibly) reachable, is not an assert
-				// false,
-				// but we have a top value state
-				// we cannot do much other than being conservative and
-				// say that the assertion might not hold
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				continue;
-			}
-
-			Satisfiability overall = Satisfiability.BOTTOM;
-			for (SymbolicExpression expr : state.getExecutionExpressions())
-				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
-
-			if (overall == Satisfiability.SATISFIED)
-				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
-			else if (overall == Satisfiability.NOT_SATISFIED) {
-				if (reach == ReachLattice.ReachabilityStatus.REACHABLE)
-					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-				else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE)
+				if (values.isBottom()) {
+					// the statement is (possibly) reachable, is not an assert
+					// false,
+					// but we have a bottom value state
+					// we cannot do much other than being conservative and
+					// say that the assertion might not hold
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-			} else
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+					// We don't know the values here, so it's hard to produce a
+					// witness.
+					LOG.error("The abstract state of assert's expression is BOTTOM");
+					continue;
+				}
+
+				if (values.isTop()) {
+					// the statement is (possibly) reachable, is not an assert
+					// false,
+					// but we have a top value state
+					// we cannot do much other than being conservative and
+					// say that the assertion might not hold
+					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+					// We don't know the values here, so it's hard to produce a
+					// witness.
+					continue;
+				}
+
+				Satisfiability overall = Satisfiability.BOTTOM;
+				for (SymbolicExpression expr : state.getExecutionExpressions())
+					overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
+
+				if (overall == Satisfiability.SATISFIED)
+					tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+				else if (overall == Satisfiability.NOT_SATISFIED) {
+					if (reach == ReachLattice.ReachabilityStatus.REACHABLE) {
+						tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
+						if (!minimalWitnessGenerated) {
+							generateMinimalViolationWitness();
+							minimalWitnessGenerated = true;
+						}
+					} else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE) {
+						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+						if (!minimalWitnessGenerated) {
+							generateViolationWitness();
+						}
+					}
+				} else {
+					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+					if (!minimalWitnessGenerated) {
+						generateViolationWitness();
+					}
+				}
+			}
 		}
+	}
+
+	private void generateMinimalViolationWitness() {
+		try {
+			witness = new WitnessWriter();
+			Map<String, String> violationAttrs = Map.of("violation", "true");
+			witness.addNode("sink", null);
+			witness.addNode("n0", violationAttrs);
+			String witnessFilePath = workDir + "/witness/witness.graphml";
+			File outputFile = new File(witnessFilePath);
+			outputFile.getParentFile().mkdirs();
+			witness.writeToFile(witnessFilePath);
+			LOG.info("Minimal violation witness produced.");
+		} catch (Exception e) {
+			LOG.warn("Failed to produce witness: {}", e);
+		}
+	}
+
+	private void generateViolationWitness() {
+		// TODO
+		LOG.warn("Violation Witness not produced.");
+	}
+
+	@Override
+	public void beforeExecution(
+			CheckToolWithAnalysisResults<SimpleAbstractState<HeapEnvironment<AllocationSites>,
+					ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
+							TypeEnvironment<TypeSet>>> tool) {
+		this.workDir = tool.getConfiguration().workdir;
+		SemanticCheck.super.beforeExecution(tool);
 	}
 }
