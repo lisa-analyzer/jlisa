@@ -192,56 +192,56 @@ public class AssertChecker
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 					continue;
 				}
+			}
 
-				if (values.isBottom()) {
-					// the statement is (possibly) reachable, is not an assert
-					// false,
-					// but we have a bottom value state
-					// we cannot do much other than being conservative and
-					// say that the assertion might not hold
-					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					// We don't know the values here, so it's hard to produce a
-					// witness.
-					LOG.error("The abstract state of assert's expression is BOTTOM");
-					continue;
-				}
+			if (values.isBottom()) {
+				// the statement is (possibly) reachable, is not an assert
+				// false,
+				// but we have a bottom value state
+				// we cannot do much other than being conservative and
+				// say that the assertion might not hold
+				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				// We don't know the values here, so it's hard to produce a
+				// witness.
+				LOG.error("The abstract state of assert's expression is BOTTOM");
+				continue;
+			}
 
-				if (values.isTop()) {
-					// the statement is (possibly) reachable, is not an assert
-					// false,
-					// but we have a top value state
-					// we cannot do much other than being conservative and
-					// say that the assertion might not hold
-					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					// We don't know the values here, so it's hard to produce a
-					// witness.
-					continue;
-				}
+			if (values.isTop()) {
+				// the statement is (possibly) reachable, is not an assert
+				// false,
+				// but we have a top value state
+				// we cannot do much other than being conservative and
+				// say that the assertion might not hold
+				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				// We don't know the values here, so it's hard to produce a
+				// witness.
+				continue;
+			}
 
-				Satisfiability overall = Satisfiability.BOTTOM;
-				for (SymbolicExpression expr : state.getExecutionExpressions())
-					overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
+			Satisfiability overall = Satisfiability.BOTTOM;
+			for (SymbolicExpression expr : state.getExecutionExpressions())
+				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
 
-				if (overall == Satisfiability.SATISFIED)
-					tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
-				else if (overall == Satisfiability.NOT_SATISFIED) {
-					if (reach == ReachLattice.ReachabilityStatus.REACHABLE) {
-						tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-						if (!minimalWitnessGenerated) {
-							generateMinimalViolationWitness();
-							minimalWitnessGenerated = true;
-						}
-					} else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE) {
-						tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-						if (!minimalWitnessGenerated) {
-							generateViolationWitness();
-						}
+			if (overall == Satisfiability.SATISFIED)
+				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+			else if (overall == Satisfiability.NOT_SATISFIED) {
+				if (reach == ReachLattice.ReachabilityStatus.REACHABLE) {
+					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
+					if (!minimalWitnessGenerated) {
+						generateMinimalViolationWitness();
+						minimalWitnessGenerated = true;
 					}
-				} else {
+				} else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE) {
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 					if (!minimalWitnessGenerated) {
 						generateViolationWitness();
 					}
+				}
+			} else {
+				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				if (!minimalWitnessGenerated) {
+					generateViolationWitness();
 				}
 			}
 		}
