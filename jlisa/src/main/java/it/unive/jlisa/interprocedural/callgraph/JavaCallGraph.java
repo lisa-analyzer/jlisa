@@ -3,11 +3,19 @@ package it.unive.jlisa.interprocedural.callgraph;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaNumericType;
-import it.unive.lisa.analysis.symbols.*;
+import it.unive.lisa.analysis.symbols.Aliases;
+import it.unive.lisa.analysis.symbols.NameSymbol;
+import it.unive.lisa.analysis.symbols.QualifiedNameSymbol;
+import it.unive.lisa.analysis.symbols.QualifierSymbol;
+import it.unive.lisa.analysis.symbols.SymbolAliasing;
 import it.unive.lisa.interprocedural.callgraph.BaseCallGraph;
 import it.unive.lisa.interprocedural.callgraph.CallResolutionException;
 import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.AbstractCodeMember;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.OpenCall;
@@ -20,7 +28,10 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,6 +49,8 @@ import java.util.Set;
  */
 public abstract class JavaCallGraph extends BaseCallGraph {
 
+	public final Map<UnresolvedCall, Map<List<Set<Type>>, Call>> openCalls = new IdentityHashMap<>();
+
 	@Override
 	public Call resolve(
 			UnresolvedCall call,
@@ -45,9 +58,8 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			SymbolAliasing aliasing)
 			throws CallResolutionException {
 		Call res = super.resolve(call, types, aliasing);
-		// TODO only temporary
 		if (res instanceof OpenCall)
-			throw new CallResolutionException("Open calls are not supported: " + call);
+			openCalls.computeIfAbsent(call, k -> new IdentityHashMap<>()).put(List.of(types), res);
 		return res;
 	}
 

@@ -1,5 +1,6 @@
 package it.unive.jlisa.checkers;
 
+import it.unive.jlisa.interprocedural.callgraph.JavaCallGraph;
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.lattices.ReachLattice;
 import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
@@ -24,7 +25,15 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.type.Type;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,6 +55,34 @@ public class AssertChecker
 						TypeEnvironment<TypeSet>>> {
 
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
+
+	@Override
+	public void afterExecution(
+			CheckToolWithAnalysisResults<SimpleAbstractState<HeapEnvironment<AllocationSites>,
+					ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>,
+							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
+							TypeEnvironment<TypeSet>>> tool) {
+		// TODO only temporary
+		String msg = "";
+		JavaCallGraph cg = (JavaCallGraph) tool.getCallGraph();
+		for (Entry<UnresolvedCall, Map<List<Set<Type>>, Call>> entry : cg.openCalls.entrySet()) {
+			for (Entry<List<Set<Type>>, Call> innerEntry : entry.getValue().entrySet()) {
+				msg += "[" + entry.getKey().getLocation() + "] " + entry.getKey() + " with types " + innerEntry.getKey()
+						+ "\n";
+			}
+		}
+
+		if (!msg.isEmpty()) {
+			System.err.println("Open calls found:\n" + msg);
+			try {
+				String tmp = new String(msg);
+				tool.getFileManager().mkOutputFile("open-calls.txt", writer -> writer.write(tmp));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	@Override
 	public boolean visit(
