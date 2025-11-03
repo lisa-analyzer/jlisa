@@ -7,6 +7,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -155,8 +156,10 @@ public class JavaAssignment extends Assignment {
 			return true;
 		if (wrapper.equals(JavaClassType.getByteWrapperType()) && right instanceof JavaByteType)
 			return true;
+		if (wrapper.equals(JavaClassType.getLongWrapperType()) && right instanceof JavaLongType)
+			return true;
 
-		// TODO: missing: boolean, short, long
+		// TODO: missing: boolean, short
 		return false;
 	}
 }
