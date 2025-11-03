@@ -19,21 +19,21 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
 
-public class BoolValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
+public class BooleanValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public BoolValueOf(
+	public BooleanValueOf(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
 		super(cfg, location, "valueOf", expr);
 	}
 
-	public static BoolValueOf build(
+	public static BooleanValueOf build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new BoolValueOf(cfg, location, params[0]);
+		return new BooleanValueOf(cfg, location, params[0]);
 	}
 
 	@Override
