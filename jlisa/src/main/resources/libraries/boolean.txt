@@ -1,0 +1,21 @@
+class java.lang.Boolean:
+    field FALSE type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+    field TRUE type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	method Integer_clinit: it.unive.jlisa.program.java.constructs.bool.BooleanClassInitializer
+    	type it.unive.lisa.type.VoidType::INSTANCE
+
+	instance field value type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	instance method Boolean: it.unive.jlisa.program.java.constructs.bool.BooleanConstructor
+		libtype java.lang.Boolean*
+		param this libtype java.lang.Boolean*
+		param c type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		
+	instance method booleanValue: it.unive.jlisa.program.java.constructs.bool.BooleanValue
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Boolean*
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.bool.BooleanValueOf
+		libtype java.lang.Boolean* 
+		param v type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE 

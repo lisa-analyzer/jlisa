@@ -1,0 +1,21 @@
+class java.lang.Short:
+    field FALSE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+    field TRUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	method Integer_clinit: it.unive.jlisa.program.java.constructs.shor.ShortClassInitializer
+    	type it.unive.lisa.type.VoidType::INSTANCE
+
+	instance field value type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	instance method Short: it.unive.jlisa.program.java.constructs.shor.ShortConstructor
+		libtype java.lang.Short*
+		param this libtype java.lang.Short*
+		param c type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+		
+	instance method shortValue: it.unive.jlisa.program.java.constructs.shor.ShortValue
+		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+		param this libtype java.lang.Short*
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.shor.ShortValueOf
+		libtype java.lang.Short* 
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE 
