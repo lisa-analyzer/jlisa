@@ -77,6 +77,10 @@ class java.lang.Math extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
+	method round: it.unive.jlisa.program.java.constructs.math.MathRound
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		
 	method toRadians: it.unive.jlisa.program.java.constructs.math.MathToRadians
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

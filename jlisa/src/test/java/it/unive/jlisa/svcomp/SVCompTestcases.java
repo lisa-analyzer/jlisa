@@ -680,7 +680,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	// FIXME: to check
 	@Test
 	public void Math_public_static_long_java_lang_Math_max_long_long_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",

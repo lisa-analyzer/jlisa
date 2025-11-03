@@ -1,19 +1,19 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':50:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':23:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707446245.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707449097.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320535202.json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320623614.json" ],
+  "files" : [ "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447175.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447206.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447237.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447268.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "7ms",
-    "end" : "2025-11-03T21:42:19.884+01:00",
-    "expressions" : "139",
+    "duration" : "4ms",
+    "end" : "2025-11-03T21:42:20.160+01:00",
+    "expressions" : "65",
     "files" : "5",
     "globals" : "27",
     "members" : "189",
     "programs" : "1",
-    "start" : "2025-11-03T21:42:19.877+01:00",
-    "statements" : "36",
+    "start" : "2025-11-03T21:42:20.156+01:00",
+    "statements" : "30",
     "units" : "49",
     "version" : "0.1",
     "warnings" : "1"
@@ -36,6 +36,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/StringBuilderInsertDelete02"
+    "workdir" : "java-outputs/svcomp/Math_public_static_long_java_lang_Math_max_long_long"
   }
 }

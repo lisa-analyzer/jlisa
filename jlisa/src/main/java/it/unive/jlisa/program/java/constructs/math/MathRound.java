@@ -63,7 +63,7 @@ public class MathRound extends it.unive.lisa.program.cfg.statement.UnaryExpressi
 		for (Type t : types) {
 			Type primType;
 			SymbolicExpression exprToAbs = expr;
-			if ((primType = JavaClassType.isWrapperClass(t)) != null) {
+			if (t.isReferenceType() && (primType = JavaClassType.isWrapperClass(t.asReferenceType().getInnerType())) != null) {
 				// unboxing
 				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 				HeapDereference derefLeft = new HeapDereference(primType, expr, getLocation());
