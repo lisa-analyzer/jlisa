@@ -9,6 +9,8 @@ import it.unive.lisa.interprocedural.callgraph.CallResolutionException;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.cfg.*;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.call.OpenCall;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
 import it.unive.lisa.program.language.resolution.ParameterMatchingStrategy;
@@ -35,6 +37,19 @@ import java.util.Set;
  * </p>
  */
 public abstract class JavaCallGraph extends BaseCallGraph {
+
+	@Override
+	public Call resolve(
+			UnresolvedCall call,
+			Set<Type>[] types,
+			SymbolAliasing aliasing)
+			throws CallResolutionException {
+		Call res = super.resolve(call, types, aliasing);
+		// TODO only temporary
+		if (res instanceof OpenCall)
+			throw new CallResolutionException("Open calls are not supported: " + call);
+		return res;
+	}
 
 	/**
 	 * Resolves a non-instance (static) call to its possible targets.
