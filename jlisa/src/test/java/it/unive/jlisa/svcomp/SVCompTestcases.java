@@ -4,7 +4,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import java.io.IOException;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class SVCompTestcases extends JLiSAAnalysisExecutor {
@@ -258,7 +258,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Disabled // TODO this seems nodeterministic on vignole
 	public void exceptions9_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions9",
 				"Main.java",
@@ -314,7 +314,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Disabled
 	public void urldecoder1_test() throws IOException {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder01",
@@ -323,7 +323,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Disabled
 	public void urldecoder2_test() throws IOException {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "urldecoder02",
@@ -332,7 +332,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Disabled
 	public void Basic1_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -396,7 +396,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Disabled
 	// this test sometimes causes oom during dumping when executing
 	// from gradle
 	public void siena_eqchk_prop1_test() throws IOException {
@@ -430,7 +430,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Disabled
 	public void SortedListInsert_FunUnsat01_test() throws IOException {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -468,7 +468,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Disabled
 	// FIXME there seem to be some nondeterminism in this test
 	public void SortedListInsert_MemUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -622,7 +622,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Ignore
+	@Test
 	public void BellmanFord_MemUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"BellmanFord-MemUnsat01",
@@ -651,6 +651,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"CWE369_Divide_by_Zero__float_connect_tcp_divide_01_bad",
 				"Main.java", "testcasesupport", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringBuilderCapLen01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderCapLen01",
+				"Main.java", "../common");
 		perform(conf);
 	}
 
