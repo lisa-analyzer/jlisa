@@ -869,7 +869,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 					adj.addNode(noop);
 					usedNoop = true;
 					adj.addEdge(new SequentialEdge(follower, noop));
-			}
+				}
 			} else {
 				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
