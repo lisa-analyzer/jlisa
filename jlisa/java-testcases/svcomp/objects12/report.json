@@ -1,0 +1,47 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':3] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['A.java':21:4] on 'void svcomp.objects.A::A(svcomp.objects.A* this, int x)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':21:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Sub2.java':18:4] on 'void svcomp.objects.Sub2::Sub2(svcomp.objects.Sub2* this, int z)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1292754391.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1292756716.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1293677912.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1293680237.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1294301136.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1295224657.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319420250.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319423288.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319423350.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319423412.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319444492.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319444554.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319450041.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319453079.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319453141.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319453203.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319474283.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1319474345.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_514142271.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_514144596.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_514150455.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_542771422.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_542773747.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_542779606.json", "int_svcomp.objects.A.getX(svcomp.objects.A__this)_1707429133.json", "int_svcomp.objects.A.getX(svcomp.objects.A__this)_1707441626.json", "java.lang.Object__org.sosy_lab.sv_benchmarks.Verifier.nondetObject(java.lang.Class__type,_org.sosy_lab.sv_benchmarks.ObjectFactory__factory)_1707437658.json", "java.lang.Object__org.sosy_lab.sv_benchmarks.Verifier.nondetObject(java.lang.Class__type,_org.sosy_lab.sv_benchmarks.ObjectFactory__factory)_1707437689.json", "report.json", "svcomp.objects.A__svcomp.objects.Factories.AFactory.createObject(svcomp.objects.Factories.AFactory__this)_1320283637.json", "svcomp.objects.A__svcomp.objects.Factories.AFactory.createObject(svcomp.objects.Factories.AFactory__this)_1320284598.json", "svcomp.objects.B__svcomp.objects.Factories.BFactory.createObject(svcomp.objects.Factories.BFactory__this)_1319423474.json", "svcomp.objects.B__svcomp.objects.Factories.BFactory.createObject(svcomp.objects.Factories.BFactory__this)_1319453265.json", "svcomp.objects.C__svcomp.objects.Factories.CFactory.createObject(svcomp.objects.Factories.CFactory__this)_1319423536.json", "svcomp.objects.C__svcomp.objects.Factories.CFactory.createObject(svcomp.objects.Factories.CFactory__this)_1319453327.json", "svcomp.objects.Sub1__svcomp.objects.Factories.Sub1Factory.createObject(svcomp.objects.Factories.Sub1Factory__this)_1294306995.json", "svcomp.objects.Sub1__svcomp.objects.Factories.Sub1Factory.createObject(svcomp.objects.Factories.Sub1Factory__this)_1295230516.json", "svcomp.objects.Sub2__svcomp.objects.Factories.Sub2Factory.createObject(svcomp.objects.Factories.Sub2Factory__this)_1294307057.json", "svcomp.objects.Sub2__svcomp.objects.Factories.Sub2Factory.createObject(svcomp.objects.Factories.Sub2Factory__this)_1295230578.json", "svcomp.objects.Sub__svcomp.objects.Factories.SubFactory.createObject(svcomp.objects.Factories.SubFactory__this)_1319473384.json", "svcomp.objects.Sub__svcomp.objects.Factories.SubFactory.createObject(svcomp.objects.Factories.SubFactory__this)_1319503175.json", "void_Main.main(java.lang.String_[]__args).json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_1003282448.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_1319407850.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_1319437641.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_945952009.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_974581160.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_974653297.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x)_1319407912.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x)_1319437703.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y)_1319407974.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y)_1319437765.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y,_svcomp.objects.Sub__sub)_1319408036.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y,_svcomp.objects.Sub__sub)_1319437827.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-1243231992.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-353492064.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-355728311.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1743964487.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1743966905.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1743969323.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1743971741.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1744888008.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1744890426.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1744892844.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1744895262.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_534011617.json", "void_svcomp.objects.B.B(svcomp.objects.B__this)_1292741991.json", "void_svcomp.objects.B.B(svcomp.objects.B__this)_1293665512.json", "void_svcomp.objects.C.C(svcomp.objects.C__this)_1292744316.json", "void_svcomp.objects.C.C(svcomp.objects.C__this)_1293667837.json", "void_svcomp.objects.Factories.AFactory.AFactory(svcomp.objects.Factories.AFactory__this)_1707457839.json", "void_svcomp.objects.Factories.AFactory.AFactory(svcomp.objects.Factories.AFactory__this)_1707457870.json", "void_svcomp.objects.Factories.BFactory.BFactory(svcomp.objects.Factories.BFactory__this)_1319408098.json", "void_svcomp.objects.Factories.BFactory.BFactory(svcomp.objects.Factories.BFactory__this)_1319437889.json", "void_svcomp.objects.Factories.CFactory.CFactory(svcomp.objects.Factories.CFactory__this)_1319408160.json", "void_svcomp.objects.Factories.CFactory.CFactory(svcomp.objects.Factories.CFactory__this)_1319437951.json", "void_svcomp.objects.Factories.Sub1Factory.Sub1Factory(svcomp.objects.Factories.Sub1Factory__this)_1294288736.json", "void_svcomp.objects.Factories.Sub1Factory.Sub1Factory(svcomp.objects.Factories.Sub1Factory__this)_1295212257.json", "void_svcomp.objects.Factories.Sub2Factory.Sub2Factory(svcomp.objects.Factories.Sub2Factory__this)_1294288798.json", "void_svcomp.objects.Factories.Sub2Factory.Sub2Factory(svcomp.objects.Factories.Sub2Factory__this)_1295212319.json", "void_svcomp.objects.Factories.SubFactory.SubFactory(svcomp.objects.Factories.SubFactory__this)_1319456086.json", "void_svcomp.objects.Factories.SubFactory.SubFactory(svcomp.objects.Factories.SubFactory__this)_1319485877.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_1741203976.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_1769905109.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_853700295.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_882401428.json", "void_svcomp.objects.Sub1.Sub1(svcomp.objects.Sub1__this)_514129871.json", "void_svcomp.objects.Sub1.Sub1(svcomp.objects.Sub1__this)_542759022.json", "void_svcomp.objects.Sub2.Sub2(svcomp.objects.Sub2__this,_int_z)_514132196.json", "void_svcomp.objects.Sub2.Sub2(svcomp.objects.Sub2__this,_int_z)_542761347.json" ],
+  "info" : {
+    "cfgs" : "55",
+    "duration" : "277ms",
+    "end" : "2025-11-03T14:01:09.553+01:00",
+    "expressions" : "243",
+    "files" : "89",
+    "globals" : "39",
+    "members" : "225",
+    "programs" : "1",
+    "start" : "2025-11-03T14:01:09.276+01:00",
+    "statements" : "161",
+    "units" : "66",
+    "version" : "0.1",
+    "warnings" : "4"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/objects12"
+  }
+}

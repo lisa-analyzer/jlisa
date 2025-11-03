@@ -645,6 +645,110 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common", "../classes");
 		perform(conf);
 	}
+	
+	@Test
+	public void objects02_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects02",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects03_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects03",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects04_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects04",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects05_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects05",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects06_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects06",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects07_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects07",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects08_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects08",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects09_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects09",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects10_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects10",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects11_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects11",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects12_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects12",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects13_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects13",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects14_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects14",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
 
 	@Test
 	public void CWE369_Divide_by_Zero__float_connect_tcp_divide_01_bad_test() throws IOException {
