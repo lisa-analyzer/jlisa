@@ -672,6 +672,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void Math_public_static_int_java_lang_Math_round_float() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Math_public_static_int_java_lang_Math_round_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
 	// FIXME: to check
 	@Test
 	public void Math_public_static_long_java_lang_Math_max_long_long_test() throws IOException {
