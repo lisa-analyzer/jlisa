@@ -639,6 +639,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void objects01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects01",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+
+	@Test
 	public void CWE369_Divide_by_Zero__float_connect_tcp_divide_01_bad_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"CWE369_Divide_by_Zero__float_connect_tcp_divide_01_bad",

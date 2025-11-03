@@ -12,7 +12,11 @@ import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.Parameter;
+import it.unive.lisa.program.cfg.VariableTableEntry;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
 import it.unive.lisa.program.cfg.statement.Ret;
@@ -24,7 +28,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -203,10 +214,30 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
-		node.getReturnType2().accept(typeVisitor);
 
-		it.unive.lisa.type.Type returnType = typeVisitor.getType();
+		it.unive.lisa.type.Type returnType = null;
+
+		// the method is generic
+		if (node.typeParameters().stream().filter(tp -> tp.toString().equals(node.getReturnType2().toString()))
+				.count() > 0)
+			returnType = JavaClassType.getObjectType();
+		// the method is not generic, but the class it is
+		else {
+			List topLevelTypes = compilationUnit.types();
+			for (Object tlType : topLevelTypes) {
+				if (tlType instanceof AbstractTypeDeclaration)
+					if (((TypeDeclaration) tlType).typeParameters().stream()
+							.filter(tp -> tp.toString().equals(node.getReturnType2().toString())).count() > 0)
+						returnType = JavaClassType.getObjectType();
+			}
+
+			if (returnType == null) {
+				TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
+				node.getReturnType2().accept(typeVisitor);
+				returnType = typeVisitor.getType();
+			}
+		}
+
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
