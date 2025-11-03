@@ -1,22 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':34] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    "message" : "['$Main.java':39] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
   }, {
-    "message" : "['Main.java':105:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':105:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "files" : [ "int[]__Main.runBellmanFord(int_N,_int[]__D,_int_src)_1707439394.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446648.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446896.json", "report.json", "void_Main.Main_clinit()_1707439394.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707433225.json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707437317.json" ],
   "info" : {
-    "cfgs" : "15",
-    "duration" : "204ms",
-    "end" : "2025-10-27T10:32:06.598+01:00",
-    "expressions" : "179",
+    "cfgs" : "17",
+    "duration" : "36ms",
+    "end" : "2025-11-03T16:34:04.849+01:00",
+    "expressions" : "181",
     "files" : "7",
     "globals" : "28",
-    "members" : "179",
+    "members" : "189",
     "programs" : "1",
-    "start" : "2025-10-27T10:32:06.394+01:00",
-    "statements" : "72",
-    "units" : "48",
+    "start" : "2025-11-03T16:34:04.813+01:00",
+    "statements" : "73",
+    "units" : "49",
     "version" : "0.1",
     "warnings" : "2"
   },

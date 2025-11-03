@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -225,7 +224,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		else {
 			List topLevelTypes = compilationUnit.types();
 			for (Object tlType : topLevelTypes) {
-				if (tlType instanceof AbstractTypeDeclaration)
+				if (tlType instanceof TypeDeclaration)
 					if (((TypeDeclaration) tlType).typeParameters().stream()
 							.filter(tp -> tp.toString().equals(node.getReturnType2().toString())).count() > 0)
 						returnType = JavaClassType.getObjectType();

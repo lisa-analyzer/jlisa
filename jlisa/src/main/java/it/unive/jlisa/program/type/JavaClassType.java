@@ -292,4 +292,8 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getByteWrapperType() {
 		return lookup("java.lang.Byte");
 	}
+
+	public static JavaClassType getLongWrapperType() {
+		return lookup("java.lang.Long");
+	}
 }
