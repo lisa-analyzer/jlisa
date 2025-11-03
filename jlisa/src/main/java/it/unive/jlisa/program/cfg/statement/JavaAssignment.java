@@ -105,7 +105,8 @@ public class JavaAssignment extends Assignment {
 				AnalysisState<A> wrapState = wrap.forwardSemantics(state, interprocedural, expressions);
 				for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
 					result = result
-							.lub(super.fwdBinarySemantics(interprocedural, state, left, wrapExp, expressions));
+							.lub(super.fwdBinarySemantics(interprocedural, wrapState, left, wrapExp, expressions));
+				result = result.forgetIdentifiers(wrap.getMetaVariables(), this);
 			} else if (isWrapperOf(rType, left.getStaticType())) {
 				// TODO: unboxing
 			}
