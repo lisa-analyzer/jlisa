@@ -73,7 +73,8 @@ public class MathMax extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 			for (Type rType : rightTypes) {
 				Type lPrimeType;
 				SymbolicExpression leftExpr = left;
-				if (lType.isReferenceType() && (lPrimeType = JavaClassType.isWrapperClass(lType.asReferenceType().getInnerType())) != null) {
+				if (lType.isReferenceType() && (lPrimeType = JavaClassType
+						.isWrapperClass(lType.asReferenceType().getInnerType())) != null) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 					HeapDereference derefLeft = new HeapDereference(lPrimeType, left, getLocation());
@@ -82,7 +83,8 @@ public class MathMax extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 
 				Type rPrimeType;
 				SymbolicExpression rightExpr = left;
-				if (rType.isReferenceType() && (rPrimeType = JavaClassType.isWrapperClass(rType.asReferenceType().getInnerType())) != null) {
+				if (rType.isReferenceType() && (rPrimeType = JavaClassType
+						.isWrapperClass(rType.asReferenceType().getInnerType())) != null) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 					HeapDereference derefRight = new HeapDereference(rPrimeType, right, getLocation());
