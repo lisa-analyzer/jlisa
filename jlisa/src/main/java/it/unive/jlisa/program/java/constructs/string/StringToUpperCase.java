@@ -80,7 +80,7 @@ public class StringToUpperCase extends UnaryExpression implements PluggableState
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, access, upper, this);
+			AnalysisState<A> sem = analysis.assign(callState, access, upper, originating);
 			tmp = tmp.lub(sem);
 		}
 
