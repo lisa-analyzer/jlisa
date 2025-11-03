@@ -27,6 +27,8 @@ import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.ContextSensitivityToken;
 import it.unive.lisa.interprocedural.context.LastCallToken;
 import it.unive.lisa.lattices.SimpleAbstractState;
+import it.unive.lisa.lattices.traces.ExecutionTrace;
+import it.unive.lisa.lattices.traces.TraceLattice;
 import it.unive.lisa.logging.IterationLogger;
 import it.unive.lisa.program.Application;
 import it.unive.lisa.program.CodeUnit;
@@ -48,6 +50,7 @@ import it.unive.lisa.util.datastructures.graph.algorithms.FixpointException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.TreeSet;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -313,15 +316,21 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 		try {
 			if (entryState.getLatticeInstance(ReachLattice.class) != null) {
 				ProgramState<A> exec = entryState.getExecution();
-				SimpleAbstractState sas = (SimpleAbstractState) exec.getState();
-				ValueLatticeProduct values = (ValueLatticeProduct) sas.valueState;
+				TraceLattice<A> traces = (TraceLattice<A>) exec.getState();
+				Map map = traces.mkNewFunction(traces.function, true);
+				for (Map.Entry<ExecutionTrace, A> entry : traces) {
+					SimpleAbstractState sas = (SimpleAbstractState) entry.getValue();
+					ValueLatticeProduct values = (ValueLatticeProduct) sas.valueState;
+					map.put(entry.getKey(), new SimpleAbstractState(
+							sas.heapState,
+							new ValueLatticeProduct(
+									new ReachLattice(ReachabilityStatus.REACHABLE, null),
+									(ValueLattice) values.second),
+							sas.typeState));
+				}
 				entryState = entryState.withExecution(
 						new ProgramState(
-								new SimpleAbstractState(
-										sas.heapState,
-										new ValueLatticeProduct(new ReachLattice(ReachabilityStatus.REACHABLE, null),
-												(ValueLattice) values.second),
-										sas.typeState),
+								new TraceLattice(traces.lattice, map),
 								exec.getComputedExpressions(),
 								exec.getFixpointInformation()));
 			}
