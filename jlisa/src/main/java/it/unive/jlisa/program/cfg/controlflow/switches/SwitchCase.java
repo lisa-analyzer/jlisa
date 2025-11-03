@@ -35,7 +35,7 @@ public class SwitchCase {
 	 *
 	 * @return the body of this switch case
 	 */
-	protected Collection<Statement> getBody() {
+	public Collection<Statement> getBody() {
 		return body;
 	}
 

@@ -11,11 +11,14 @@ public class Main {
 			case "World":
 				System.out.println("World");
 				break;
+			case "World2":
+				System.out.println("World");
+				break;
 			default:
 				System.out.println("Default");
 				break;
 		}
-
+	
 		switch (s) {
 			case "TWO":
 				System.out.println("2");
@@ -55,6 +58,7 @@ public class Main {
 			default:
 				System.out.println(s);
 				System.out.println("unknown animal");
+				
 		}
 
 		switch (s) {
@@ -79,6 +83,16 @@ public class Main {
 		switch(s) {
 
 		}
-
+		
+		switch (s) {
+			case "1":
+				return 0;
+			case "2":
+				return 1;
+			case "3":
+				return 2;
+			default:
+				return 3;
+		}
 	}
 }
