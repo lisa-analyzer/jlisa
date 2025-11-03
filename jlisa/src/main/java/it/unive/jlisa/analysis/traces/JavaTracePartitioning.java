@@ -1,8 +1,5 @@
 package it.unive.jlisa.analysis.traces;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -20,11 +17,13 @@ import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
 import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
 import it.unive.lisa.program.cfg.controlFlow.Loop;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class JavaTracePartitioning<A extends AbstractLattice<A>,
-D extends AbstractDomain<A>> extends TracePartitioning<A, D> {
-	
-	//FIXME: to change visibility on LiSA side
+		D extends AbstractDomain<A>> extends TracePartitioning<A, D> {
+
+	// FIXME: to change visibility on LiSA side
 	private final int max_loop_iterations;
 	private final int max_conditions;
 
@@ -35,9 +34,9 @@ D extends AbstractDomain<A>> extends TracePartitioning<A, D> {
 		super(maxLoopIterations, maxConditions, domain);
 		max_loop_iterations = maxLoopIterations;
 		max_conditions = maxConditions;
-		
+
 	}
-	
+
 	public JavaTracePartitioning(
 			D domain) {
 		super(domain);
@@ -84,7 +83,7 @@ D extends AbstractDomain<A>> extends TracePartitioning<A, D> {
 		return new TraceLattice<>(state.lattice, result);
 	}
 
-	//FIXME: to change visibility on LiSA side
+	// FIXME: to change visibility on LiSA side
 	private ExecutionTrace generateTraceFor(
 			ExecutionTrace trace,
 			ControlFlowStructure struct,
@@ -109,20 +108,21 @@ D extends AbstractDomain<A>> extends TracePartitioning<A, D> {
 			// the maximum iterations for this loop
 		} else if (struct instanceof IfThenElse && trace.numberOfBranches() < max_conditions) {
 			return trace.push(new Branching(src, ((IfThenElse) struct).getTrueBranch().contains(dest)));
-		} else if (struct instanceof Switch && trace.numberOfBranches() + ((Switch) struct).getNumberOfCases() < max_conditions) {
+		} else if (struct instanceof Switch
+				&& trace.numberOfBranches() + ((Switch) struct).getNumberOfCases() < max_conditions) {
 			Switch switchStruct = (Switch) struct;
 			ExecutionTrace res = trace;
-			for(SwitchCase c : switchStruct.getSwitchCases())
+			for (SwitchCase c : switchStruct.getSwitchCases())
 				res = res.push(new Branching(src, c.getBody().contains(dest)));
-				
-			if(switchStruct.getDefaultSwitchCase() != null)
+
+			if (switchStruct.getDefaultSwitchCase() != null)
 				res = res.push(new Branching(src, switchStruct.getDefaultSwitchCase().getBody().contains(dest)));
-			
+
 			return res;
 		}
-		
+
 		// no known conditional structure, or no need to push new tokens
 		return trace;
 	}
-	
+
 }
