@@ -580,7 +580,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.pow(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
-		
+
 		if (operator instanceof JavaMathMax) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
@@ -594,7 +594,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
 			}
 		}
-		
+
 		if (operator instanceof JavaMathMin) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
