@@ -40,7 +40,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		this(cfg, location, callType, qualifier, targetName, LeftToRightEvaluation.INSTANCE, staticType, parameters);
 	}
 
-	public JavaUnresolvedCall(
+	private JavaUnresolvedCall(
 			CFG cfg,
 			CodeLocation location,
 			CallType callType,

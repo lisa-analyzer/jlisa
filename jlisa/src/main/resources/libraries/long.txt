@@ -16,4 +16,9 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
 		
+	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongConstructor
+		libtype java.lang.Long*
+		param this libtype java.lang.Long*
+		param c type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		
 		
