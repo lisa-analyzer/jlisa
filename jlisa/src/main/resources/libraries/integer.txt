@@ -11,14 +11,11 @@ class java.lang.Integer extends java.lang.Number:
 		libtype java.lang.Integer*
 		param this libtype java.lang.Integer*
 		param c type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		
-		
-	instance method intValue: it.unive.jlisa.program.java.constructs.integer.IntValue
-		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype java.lang.Integer*
-		
+
 	method valueOf: it.unive.jlisa.program.java.constructs.integer.IntegerValueOf
 		libtype java.lang.Integer* 
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE 
 
-		
+	method toHexString: it.unive.jlisa.program.java.constructs.integer.IntegerToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE

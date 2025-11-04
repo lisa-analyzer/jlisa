@@ -14,10 +14,6 @@ class java.lang.Double extends java.lang.Number:
 		param this libtype java.lang.Double*
 		param c type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 	
-	instance method doubleValue: it.unive.jlisa.program.java.constructs.doublew.DoubleValue
-		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
-		param this libtype java.lang.Double*
-		
 	method valueOf: it.unive.jlisa.program.java.constructs.doublew.DoubleValueOf
 		libtype java.lang.Double* 
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE 
@@ -61,3 +57,15 @@ class java.lang.Double extends java.lang.Number:
 	instance method isFinite: it.unive.jlisa.program.java.constructs.doublew.DoubleIsFiniteInstance
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype java.lang.Double*
+		
+	method doubleToLongBits: it.unive.jlisa.program.java.constructs.doublew.DoubleToLongBits
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+
+	method doubleToRawLongBits: it.unive.jlisa.program.java.constructs.doublew.DoubleToRawLongBits
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+	
+	method toHexString: it.unive.jlisa.program.java.constructs.doublew.DoubleToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

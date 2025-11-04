@@ -3,35 +3,26 @@ class java.lang.Long extends java.lang.Number:
     field MIN_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 
 	instance field value type it.unive.jlisa.program.type.JavaLongType::INSTANCE
-			
-	instance method longValue: it.unive.jlisa.program.java.constructs.longw.LongValue
-		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
-		param this libtype java.lang.Long*
-	
+
 	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.Long*
-				
-	instance method intValue: it.unive.jlisa.program.java.constructs.longw.LongIntValue
-		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype java.lang.Long*
-		
+
 	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongConstructor
 		libtype java.lang.Long*
 		param this libtype java.lang.Long*
 		param c type it.unive.jlisa.program.type.JavaLongType::INSTANCE
-		
+
 	method bitCount: it.unive.jlisa.program.java.constructs.longw.LongBitCount
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
-		
+
 	method compare: it.unive.jlisa.program.java.constructs.longw.LongCompare
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Long*
-	
+
 	method rotateRight: it.unive.jlisa.program.java.constructs.longw.LongRotateRight
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
-		

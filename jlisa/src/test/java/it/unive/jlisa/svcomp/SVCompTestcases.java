@@ -736,7 +736,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-
 	@Test
 	public void Float_public_boolean_java_lang_Float_isInfinite_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",

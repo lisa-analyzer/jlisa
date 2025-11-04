@@ -1,7 +1,6 @@
-package it.unive.jlisa.program.java.constructs.longw;
+package it.unive.jlisa.program.java.constructs.numberw;
 
-import it.unive.jlisa.program.operator.JavaLongIntValueOperator;
-import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.operator.JavaNumberLongValueOperator;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -22,21 +21,21 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class LongIntValue extends UnaryExpression implements PluggableStatement {
+public class NumberLongValue extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public LongIntValue(
+	public NumberLongValue(
 			CFG cfg,
 			CodeLocation location,
 			Expression exp) {
-		super(cfg, location, "intValue", exp);
+		super(cfg, location, "longValue", exp);
 	}
 
-	public static LongIntValue build(
+	public static NumberLongValue build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new LongIntValue(cfg, location, params[0]);
+		return new NumberLongValue(cfg, location, params[0]);
 	}
 
 	@Override
@@ -58,17 +57,17 @@ public class LongIntValue extends UnaryExpression implements PluggableStatement 
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type longType = JavaLongType.INSTANCE;
+		Type type = interprocedural.getAnalysis().getDynamicTypeOf(state, expr, originating);
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference deref = new HeapDereference(longType, expr, getLocation());
-		AccessChild access = new AccessChild(longType, deref, var, getLocation());
+		HeapDereference deref = new HeapDereference(type, expr, getLocation());
+		AccessChild access = new AccessChild(type, deref, var, getLocation());
 
-		it.unive.lisa.symbolic.value.UnaryExpression intValue = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE,
+		it.unive.lisa.symbolic.value.UnaryExpression longValue = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaLongType.INSTANCE,
 				access,
-				JavaLongIntValueOperator.INSTANCE,
+				JavaNumberLongValueOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, intValue, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, longValue, originating);
 	}
 }
