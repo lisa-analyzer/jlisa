@@ -303,7 +303,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaFloatParseFloatOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Float.parseFloat(s));
-		
+
 		if (operator instanceof JavaLongBitCountOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.bitCount(l));
@@ -807,7 +807,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(new StringBuffer(lv).deleteCharAt(rv.intValue()).toString());
 		}
-		
+
 		// long
 		if (operator instanceof JavaLongRotateRightOperator) {
 			Long lv = ((Long) left.getValue());
@@ -820,7 +820,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.compare(lv, rv));
 		}
-
 
 		return top();
 	}

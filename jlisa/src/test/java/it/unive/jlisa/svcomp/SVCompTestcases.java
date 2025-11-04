@@ -687,7 +687,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void Long_public_static_int_java_lang_Long_bitCount_long_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -695,7 +695,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void Long_public_static_long_java_lang_Long_rotateRight_long_int_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -703,7 +703,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void Long_public_static_int_java_lang_Long_compare_long_long_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -711,11 +711,91 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void Boolean_public_boolean_java_lang_Boolean_booleanValue_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Boolean_public_boolean_java_lang_Boolean_booleanValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_boolean_java_lang_Float_isInfinite_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_boolean_java_lang_Float_isInfinite",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_boolean_java_lang_Float_isNaN_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_boolean_java_lang_Float_isNaN",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_boolean_java_lang_Float_isFinite_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_boolean_java_lang_Float_isFinite_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_boolean_java_lang_Float_isInfinite_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_boolean_java_lang_Float_isInfinite_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_boolean_java_lang_Float_isNaN_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_boolean_java_lang_Float_isNaN_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_boolean_java_lang_Double_isNaN_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_boolean_java_lang_Double_isNaN",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_boolean_java_lang_Double_isFinite_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_boolean_java_lang_Double_isFinite_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_boolean_java_lang_Double_isInfinite_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_boolean_java_lang_Double_isInfinite_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_boolean_java_lang_Double_isNaN_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_boolean_java_lang_Double_isNaN_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_boolean_java_lang_Double_isInfinite_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_boolean_java_lang_Double_isInfinite",
 				"Main.java", "../common");
 		perform(conf);
 	}

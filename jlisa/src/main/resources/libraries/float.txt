@@ -27,3 +27,27 @@ class java.lang.Float extends java.lang.Number:
 	method parseFloat: it.unive.jlisa.program.java.constructs.floatw.FloatParseFloat
 		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 		param v libtype java.lang.String* 
+
+	method isNaN: it.unive.jlisa.program.java.constructs.floatw.FloatIsNaN
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	instance method isNaN: it.unive.jlisa.program.java.constructs.floatw.FloatIsNaNInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Double*
+	
+	method isInfinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsInfinite
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	instance method isInfinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsInfiniteInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Double*
+
+		method isInfinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsFinite
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	instance method isInfinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsFiniteInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Double*
