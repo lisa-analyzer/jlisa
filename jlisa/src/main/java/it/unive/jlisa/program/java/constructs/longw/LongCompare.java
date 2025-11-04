@@ -22,13 +22,13 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class LongCompare extends BinaryExpression implements PluggableStatement{
+public class LongCompare extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	protected LongCompare(
 			CFG cfg,
 			CodeLocation location,
-			Expression left, 
+			Expression left,
 			Expression right) {
 		super(cfg, location, "long-compare", left, right);
 	}
@@ -39,18 +39,23 @@ public class LongCompare extends BinaryExpression implements PluggableStatement{
 			Expression... params) {
 		return new LongCompare(cfg, location, params[0], params[1]);
 	}
-	
+
 	@Override
-	public void setOriginatingStatement(Statement st) {
+	public void setOriginatingStatement(
+			Statement st) {
 		originating = st;
-		
+
 	}
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
-		
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
 		Type longType = left.getStaticType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
@@ -62,17 +67,18 @@ public class LongCompare extends BinaryExpression implements PluggableStatement{
 		AccessChild accessRight = new AccessChild(longType, derefRight, var, getLocation());
 
 		it.unive.lisa.symbolic.value.BinaryExpression rotate = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaIntType.INSTANCE, 
-				accessLeft, 
-				accessRight, 
-				JavaLongCompareOperator.INSTANCE, 
-				getLocation());		
-		
+				JavaIntType.INSTANCE,
+				accessLeft,
+				accessRight,
+				JavaLongCompareOperator.INSTANCE,
+				getLocation());
+
 		return analysis.smallStepSemantics(state, rotate, originating);
 	}
 
 	@Override
-	protected int compareSameClassAndParams(Statement o) {
+	protected int compareSameClassAndParams(
+			Statement o) {
 		return 0;
 	}
 

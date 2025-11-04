@@ -296,7 +296,7 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getLongWrapperType() {
 		return lookup("java.lang.Long");
 	}
-	
+
 	public static JavaClassType getBooleanWrapperType() {
 		return lookup("java.lang.Boolean");
 	}

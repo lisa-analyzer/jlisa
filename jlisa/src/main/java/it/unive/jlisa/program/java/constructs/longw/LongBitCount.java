@@ -62,7 +62,7 @@ public class LongBitCount extends UnaryExpression implements PluggableStatement 
 
 		HeapDereference deref = new HeapDereference(refType, expr, getLocation());
 		AccessChild accessExpr = new AccessChild(refType, deref, var, getLocation());
-		
+
 		it.unive.lisa.symbolic.value.UnaryExpression bitCount = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaIntType.INSTANCE,
 				accessExpr,
