@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.longw;
 
 import it.unive.jlisa.program.operator.JavaLongMinOperator;
-import it.unive.jlisa.program.operator.JavaLongSumOperator;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
