@@ -111,3 +111,7 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
 		
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.longw.LongToUnsignedString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		

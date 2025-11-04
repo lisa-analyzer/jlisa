@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447175.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447206.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "8ms",
+    "end" : "2025-11-04T17:51:24.739+01:00",
+    "expressions" : "59",
+    "files" : "3",
+    "globals" : "28",
+    "members" : "222",
+    "programs" : "1",
+    "start" : "2025-11-04T17:51:24.731+01:00",
+    "statements" : "28",
+    "units" : "50",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Long_public_static_java_lang_String_java_lang_Long_toUnsignedString_long"
+  }
+}
