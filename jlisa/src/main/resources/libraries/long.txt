@@ -80,3 +80,7 @@ class java.lang.Long extends java.lang.Number:
 		libtype java.lang.String*
 		param this libtype java.lang.Long*
 		
+	method reverse: it.unive.jlisa.program.java.constructs.longw.LongReverse
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		
