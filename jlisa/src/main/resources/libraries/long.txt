@@ -49,3 +49,7 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Long*
 		
+	instance method floatValue: it.unive.jlisa.program.java.constructs.longw.LongFloatValue
+		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		param this libtype java.lang.Long*
+		
