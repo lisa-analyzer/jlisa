@@ -57,3 +57,8 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		param this libtype java.lang.Long*
 		
+	method getLong: it.unive.jlisa.program.java.constructs.longw.LongGetLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.String*
+		param other libtype java.lang.Long*
+		
