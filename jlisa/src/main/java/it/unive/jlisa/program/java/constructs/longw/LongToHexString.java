@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.longw;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaLongToBinaryStringOperator;
 import it.unive.jlisa.program.operator.JavaLongToHexStringOperator;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
