@@ -21,4 +21,7 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param c type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		
+	method bitCount: it.unive.jlisa.program.java.constructs.longw.LongBitCount
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
 		

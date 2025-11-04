@@ -303,6 +303,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaFloatParseFloatOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Float.parseFloat(s));
+		
+		if (operator instanceof JavaLongBitCountOperator)
+			if (arg.getValue() instanceof Long l)
+				return new ConstantValue(Long.bitCount(l));
 
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)

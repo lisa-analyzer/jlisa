@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -159,8 +160,10 @@ public class JavaAssignment extends Assignment {
 			return true;
 		if (wrapper.equals(JavaClassType.getLongWrapperType()) && right instanceof JavaLongType)
 			return true;
+		if (wrapper.equals(JavaClassType.getBooleanWrapperType()) && right instanceof JavaBooleanType)
+			return true;
 
-		// TODO: missing: boolean, short
+		// TODO: missing: short
 		return false;
 	}
 }
