@@ -1,0 +1,43 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':7] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':54:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439518.json", "int_rbtree.Node.key(rbtree.Node__this)_-803980107.json", "int_rbtree.Node.key(rbtree.Node__this)_-804278017.json", "int_rbtree.Node.key(rbtree.Node__this)_-807120655.json", "int_rbtree.Node.key(rbtree.Node__this)_-807534846.json", "int_rbtree.RedBlackTreeNode.key(rbtree.RedBlackTreeNode__this)_740670417.json", "int_rbtree.RedBlackTreeNode.key(rbtree.RedBlackTreeNode__this)_740683778.json", "int_rbtree.RedBlackTreeNode.key(rbtree.RedBlackTreeNode__this)_740775476.json", "int_rbtree.RedBlackTreeNode.key(rbtree.RedBlackTreeNode__this)_740785086.json", "rbtree.RedBlackTreeNode__rbtree.RedBlackTree.root(rbtree.RedBlackTree__this)_1707466674.json", "rbtree.RedBlackTreeNode__rbtree.RedBlackTree.treeSearch(rbtree.RedBlackTree__this,_rbtree.RedBlackTreeNode__x,_int_k)_1707451298.json", "rbtree.RedBlackTreeNode__rbtree.RedBlackTreeNode.parent(rbtree.RedBlackTreeNode__this)_740776127.json", "rbtree.RedBlackTreeNode__rbtree.RedBlackTreeNode.parent(rbtree.RedBlackTreeNode__this)_740791503.json", "rbtree.RedBlackTreeNode__rbtree.RedBlackTreeNode.parent(rbtree.RedBlackTreeNode__this)_740795285.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707431861.json", "void_rbtree.Node.Node(rbtree.Node__this,_int__key)_-901686245.json", "void_rbtree.RedBlackTree.RedBlackTree(rbtree.RedBlackTree__this)_1707441533.json", "void_rbtree.RedBlackTree.treeInsert(rbtree.RedBlackTree__this,_rbtree.RedBlackTreeNode__x)_1707455049.json", "void_rbtree.RedBlackTreeNode.RedBlackTreeNode(rbtree.RedBlackTreeNode__this,_int__key)_1707464659.json", "void_rbtree.RedBlackTreeNode.parentTo(rbtree.RedBlackTreeNode__this,_rbtree.RedBlackTreeNode__parent)_740769896.json", "void_rbtree.RedBlackTreeNode.setBlack(rbtree.RedBlackTreeNode__this)_740781180.json", "void_rbtree.RedBlackTreeNode.setRed(rbtree.RedBlackTreeNode__this)_740770237.json" ],
+  "info" : {
+    "cfgs" : "54",
+    "duration" : "125ms",
+    "end" : "2025-11-04T01:03:24.566+01:00",
+    "expressions" : "855",
+    "files" : "23",
+    "globals" : "35",
+    "members" : "231",
+    "programs" : "1",
+    "start" : "2025-11-04T01:03:24.441+01:00",
+    "statements" : "287",
+    "units" : "53",
+    "version" : "0.1",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/RedBlackTree-FunUnsat01"
+  }
+}
