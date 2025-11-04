@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.longw;
 
-import it.unive.jlisa.program.operator.JavaLongCompareOperator;
 import it.unive.jlisa.program.operator.JavaLongCompareUnsignedOperator;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
