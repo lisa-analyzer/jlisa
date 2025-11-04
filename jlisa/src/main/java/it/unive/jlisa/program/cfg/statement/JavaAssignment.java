@@ -24,6 +24,7 @@ import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.evaluation.RightToLeftEvaluation;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
@@ -73,9 +74,13 @@ public class JavaAssignment extends Assignment {
 		}
 
 		for (Type rType : rightTypes) {
-			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped())
-				result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, right, expressions));
-			else if (rType.canBeAssignedTo(left.getStaticType())) {
+			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped()) {
+				SymbolicExpression lhs = left;
+				if (left instanceof HeapReference)
+					// assignments dereference the lhs
+					lhs = ((HeapReference) left).getExpression();
+				result = result.lub(super.fwdBinarySemantics(interprocedural, state, lhs, right, expressions));
+			} else if (rType.canBeAssignedTo(left.getStaticType())) {
 				if (left.getStaticType().isReferenceType()) { // type-cast
 					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
 							left.getStaticType(), loc);

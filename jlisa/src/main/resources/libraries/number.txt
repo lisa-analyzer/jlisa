@@ -1,25 +1,25 @@
 class java.lang.Number extends java.lang.Object:
 
-	instance method byteValue: it.unive.jlisa.program.java.constructs.numberw.ByteValue
+	instance method byteValue: it.unive.jlisa.program.java.constructs.numberw.NumberByteValue
 		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
 		param this libtype java.lang.Number*
 
-	instance method floatValue: it.unive.jlisa.program.java.constructs.numberw.FloatValue
+	instance method floatValue: it.unive.jlisa.program.java.constructs.numberw.NumberFloatValue
 		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 		param this libtype java.lang.Number*
 		
-	instance method doubleValue: it.unive.jlisa.program.java.constructs.numberw.DoubleValue
+	instance method doubleValue: it.unive.jlisa.program.java.constructs.numberw.NumberDoubleValue
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param this libtype java.lang.Number*
 
-	instance method intValue: it.unive.jlisa.program.java.constructs.numberw.IntValue
+	instance method intValue: it.unive.jlisa.program.java.constructs.numberw.NumberIntValue
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Number*
 
-	instance method longValue: it.unive.jlisa.program.java.constructs.numberw.LongValue
+	instance method longValue: it.unive.jlisa.program.java.constructs.numberw.NumberLongValue
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		param this libtype java.lang.Number*
 
-	instance method shortValue: it.unive.jlisa.program.java.constructs.numberw.ShortValue
+	instance method shortValue: it.unive.jlisa.program.java.constructs.numberw.NumberShortValue
 		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
 		param this libtype java.lang.Number*

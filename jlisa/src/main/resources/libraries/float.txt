@@ -56,6 +56,6 @@ class java.lang.Float extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 
-	method floatToRawIntBits: it.unive.jlisa.program.java.constructs.doublew.FloatToRawIntBits
+	method floatToRawIntBits: it.unive.jlisa.program.java.constructs.floatw.FloatToRawIntBits
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
