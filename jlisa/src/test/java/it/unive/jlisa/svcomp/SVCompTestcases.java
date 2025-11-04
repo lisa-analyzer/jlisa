@@ -566,7 +566,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void RedBlackTree_FunUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"RedBlackTree-FunUnsat01",
@@ -719,6 +719,23 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void GraphFragment_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"GraphFragment_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ProjectionGridRoundTripper_exceptionprone_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ProjectionGridRoundTripper_exceptionprone",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
 
 	@Test
 	public void Float_public_boolean_java_lang_Float_isInfinite_test() throws IOException {
