@@ -40,3 +40,8 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Long*
 		
+	instance method compareTo: it.unive.jlisa.program.java.constructs.longw.LongCompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+		

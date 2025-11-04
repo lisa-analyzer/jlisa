@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':23:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447175.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447206.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447237.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447268.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "10ms",
+    "end" : "2025-11-04T14:35:07.255+01:00",
+    "expressions" : "66",
+    "files" : "5",
+    "globals" : "28",
+    "members" : "206",
+    "programs" : "1",
+    "start" : "2025-11-04T14:35:07.245+01:00",
+    "statements" : "30",
+    "units" : "50",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Long_public_int_java_lang_Long_compareTo_java_lang_Long"
+  }
+}
