@@ -2,13 +2,13 @@ package it.unive.jlisa.program.operator;
 
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
-import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaLongCompareToOperator extends StringConcat {
+public class JavaLongCompareToOperator implements BinaryOperator {
 
 	/**
 	 * The singleton instance of this class.
@@ -25,7 +25,7 @@ public class JavaLongCompareToOperator extends StringConcat {
 
 	@Override
 	public String toString() {
-		return "long-compare";
+		return "long-compare-to";
 	}
 
 	@Override
@@ -39,11 +39,4 @@ public class JavaLongCompareToOperator extends StringConcat {
 			return Collections.emptySet();
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
-
-	@Override
-	protected Type resultType(
-			TypeSystem types) {
-		return JavaIntType.INSTANCE;
-	}
-
 }

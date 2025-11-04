@@ -340,6 +340,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.toOctalString(l));
 		
+		if (operator instanceof JavaLongToStringOperator)
+			if (arg.getValue() instanceof Long l)
+				return new ConstantValue(Long.toString(l));
+		
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
@@ -887,6 +891,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.max(lv, rv));
+		}
+		
+		if (operator instanceof JavaLongToStringOperator) {
+			Long lv = ((Long) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(Long.toString(lv, rv));
 		}
 
 		return top();
