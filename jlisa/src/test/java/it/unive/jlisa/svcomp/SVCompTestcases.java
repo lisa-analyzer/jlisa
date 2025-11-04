@@ -719,4 +719,21 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void GraphFragment_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"GraphFragment_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ProjectionGridRoundTripper_exceptionprone_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ProjectionGridRoundTripper_exceptionprone",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
 }

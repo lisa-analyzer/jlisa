@@ -35,10 +35,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMember;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
-import it.unive.lisa.program.cfg.statement.Ret;
-import it.unive.lisa.program.cfg.statement.Return;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.program.cfg.statement.call.CFGCall;
 import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStrategy;
 import it.unive.lisa.program.language.scoping.ScopingStrategy;
@@ -531,27 +528,10 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 					throw new SemanticException("Exception during the interprocedural analysis", e);
 				}
 
-				AnalysisState<A> returnExitState = initialState.bottom();
-				AnalysisState<A> throwExitState = initialState.bottom();
-
+				exitState = initialState.bottom();
 				for (Statement exit : fixpointResult.getAllExitpoints())
-					if (exit instanceof Ret || exit instanceof Return)
-						returnExitState = returnExitState.lub(fixpointResult.getAnalysisStateAfter(exit));
-					else
-						throwExitState = throwExitState.lub(fixpointResult.getAnalysisStateAfter(exit));
-
-				// if the normal state is bottom, we take the throw state
-				if (returnExitState.getExecutionState().isBottom())
-					exitState = throwExitState;
-				// if there are no errors, we also lub the states of the throws
-				// without followers
-				else if (returnExitState.getErrors().isBottom()) {
-					exitState = returnExitState;
-					for (Statement exit : fixpointResult.getAllExitpoints())
-						if (exit instanceof Throw && exit.getCFG().getOutgoingEdges(exit).isEmpty())
-							exitState = exitState.lub(fixpointResult.getAnalysisStateAfter(exit));
-				} else
-					exitState = returnExitState.lub(throwExitState);
+					exitState = exitState
+							.lub(analysis.removeCaughtErrors(fixpointResult.getAnalysisStateAfter(exit), exit));
 			}
 
 			// save the resulting state
