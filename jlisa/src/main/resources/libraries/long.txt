@@ -106,3 +106,8 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
 		
+	method rotateLeft: it.unive.jlisa.program.java.constructs.longw.LongRotateLeft
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Integer*
+		
