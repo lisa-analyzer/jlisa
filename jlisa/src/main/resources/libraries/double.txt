@@ -37,3 +37,27 @@ class java.lang.Double extends java.lang.Number:
 	method parseDouble: it.unive.jlisa.program.java.constructs.doublew.DoubleParseDouble
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v libtype java.lang.String* 
+		
+	method isNaN: it.unive.jlisa.program.java.constructs.doublew.DoubleIsNaN
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	instance method isNaN: it.unive.jlisa.program.java.constructs.doublew.DoubleIsNaNInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Double*
+	
+	method isInfinite: it.unive.jlisa.program.java.constructs.doublew.DoubleIsInfinite
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	instance method isInfinite: it.unive.jlisa.program.java.constructs.doublew.DoubleIsInfiniteInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Double*
+		
+	method isFinite: it.unive.jlisa.program.java.constructs.doublew.DoubleIsFinite
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	instance method isFinite: it.unive.jlisa.program.java.constructs.doublew.DoubleIsFiniteInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Double*

@@ -1,12 +1,14 @@
 package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -22,6 +24,7 @@ import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.evaluation.RightToLeftEvaluation;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
@@ -71,9 +74,13 @@ public class JavaAssignment extends Assignment {
 		}
 
 		for (Type rType : rightTypes) {
-			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped())
-				result = result.lub(super.fwdBinarySemantics(interprocedural, state, left, right, expressions));
-			else if (rType.canBeAssignedTo(left.getStaticType())) {
+			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped()) {
+				SymbolicExpression lhs = left;
+				if (left instanceof HeapReference)
+					// assignments dereference the lhs
+					lhs = ((HeapReference) left).getExpression();
+				result = result.lub(super.fwdBinarySemantics(interprocedural, state, lhs, right, expressions));
+			} else if (rType.canBeAssignedTo(left.getStaticType())) {
 				if (left.getStaticType().isReferenceType()) { // type-cast
 					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
 							left.getStaticType(), loc);
@@ -104,7 +111,8 @@ public class JavaAssignment extends Assignment {
 				AnalysisState<A> wrapState = wrap.forwardSemantics(state, interprocedural, expressions);
 				for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
 					result = result
-							.lub(super.fwdBinarySemantics(interprocedural, state, left, wrapExp, expressions));
+							.lub(super.fwdBinarySemantics(interprocedural, wrapState, left, wrapExp, expressions));
+				result = result.forgetIdentifiers(wrap.getMetaVariables(), this);
 			} else if (isWrapperOf(rType, left.getStaticType())) {
 				// TODO: unboxing
 			}
@@ -155,8 +163,12 @@ public class JavaAssignment extends Assignment {
 			return true;
 		if (wrapper.equals(JavaClassType.getByteWrapperType()) && right instanceof JavaByteType)
 			return true;
+		if (wrapper.equals(JavaClassType.getLongWrapperType()) && right instanceof JavaLongType)
+			return true;
+		if (wrapper.equals(JavaClassType.getBooleanWrapperType()) && right instanceof JavaBooleanType)
+			return true;
 
-		// TODO: missing: boolean, short, long
+		// TODO: missing: short
 		return false;
 	}
 }

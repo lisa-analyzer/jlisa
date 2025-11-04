@@ -36,7 +36,7 @@ public class JavaStringToLowerCaseOperator
 			Set<Type> argument) {
 		if (argument.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
-		return Collections.singleton(types.getIntegerType());
+		return Collections.singleton(types.getStringType());
 	}
 
 }

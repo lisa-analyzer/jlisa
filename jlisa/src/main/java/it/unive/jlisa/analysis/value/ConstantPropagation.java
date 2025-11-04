@@ -304,6 +304,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Float.parseFloat(s));
 
+		if (operator instanceof JavaLongBitCountOperator)
+			if (arg.getValue() instanceof Long l)
+				return new ConstantValue(Long.bitCount(l));
+
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
@@ -581,6 +585,34 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
+		if (operator instanceof JavaMathMax) {
+			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
+			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
+
+			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
+					|| lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
+			}
+		}
+
+		if (operator instanceof JavaMathMin) {
+			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
+			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
+
+			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
+					|| lVal instanceof Float || rVal instanceof Float) {
+				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
+			}
+		}
+
 		if (operator instanceof JavaMathAtan2Operator) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
@@ -774,6 +806,19 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(new StringBuffer(lv).deleteCharAt(rv.intValue()).toString());
+		}
+
+		// long
+		if (operator instanceof JavaLongRotateRightOperator) {
+			Long lv = ((Long) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(Long.rotateRight(lv, rv));
+		}
+
+		if (operator instanceof JavaLongCompareOperator) {
+			Long lv = ((Long) left.getValue());
+			Long rv = ((Long) right.getValue());
+			return new ConstantValue(Long.compare(lv, rv));
 		}
 
 		return top();

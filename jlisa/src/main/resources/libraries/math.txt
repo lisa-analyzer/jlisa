@@ -63,9 +63,23 @@ class java.lang.Math extends java.lang.Object:
 		param v1 type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v2 type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
+	method max: it.unive.jlisa.program.java.constructs.math.MathMax
+		type it.unive.lisa.type.Untyped::INSTANCE
+		param v1 type it.unive.lisa.type.Untyped::INSTANCE
+		param v2 type it.unive.lisa.type.Untyped::INSTANCE
+		
+	method min: it.unive.jlisa.program.java.constructs.math.MathMin
+		type it.unive.lisa.type.Untyped::INSTANCE
+		param v1 type it.unive.lisa.type.Untyped::INSTANCE
+		param v2 type it.unive.lisa.type.Untyped::INSTANCE
+		
 	method round: it.unive.jlisa.program.java.constructs.math.MathRound
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method round: it.unive.jlisa.program.java.constructs.math.MathRound
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 		
 	method toRadians: it.unive.jlisa.program.java.constructs.math.MathToRadians
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

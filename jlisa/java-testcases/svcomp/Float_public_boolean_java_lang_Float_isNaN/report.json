@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "assets/d3-graphviz.min.js", "assets/d3.v7.min.js", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707448136.html", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707448136.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707448167.html", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707448167.json", "report.json", "void_Main.main(java.lang.String_[]__args).html", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "32ms",
+    "end" : "2025-11-04T11:55:02.675+01:00",
+    "expressions" : "59",
+    "files" : "8",
+    "globals" : "28",
+    "members" : "204",
+    "programs" : "1",
+    "start" : "2025-11-04T11:55:02.643+01:00",
+    "statements" : "28",
+    "units" : "50",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "HTML_WITH_SUBNODES",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Float_public_boolean_java_lang_Float_isNaN"
+  }
+}

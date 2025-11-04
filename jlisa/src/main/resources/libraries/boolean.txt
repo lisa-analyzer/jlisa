@@ -1,0 +1,12 @@
+class java.lang.Boolean:
+
+	instance field value type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+	
+	instance method booleanValue: it.unive.jlisa.program.java.constructs.booleanw.BooleanValue
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Boolean*
+			
+	instance method Boolean: it.unive.jlisa.program.java.constructs.booleanw.BooleanConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.Boolean*
+		param value type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE

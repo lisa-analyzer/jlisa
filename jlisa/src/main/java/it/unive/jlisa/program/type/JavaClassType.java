@@ -292,4 +292,37 @@ public class JavaClassType implements UnitType {
 	public static JavaClassType getByteWrapperType() {
 		return lookup("java.lang.Byte");
 	}
+
+	public static JavaClassType getLongWrapperType() {
+		return lookup("java.lang.Long");
+	}
+
+	public static JavaClassType getBooleanWrapperType() {
+		return lookup("java.lang.Boolean");
+	}
+
+	/**
+	 * Yields the primitive type of the corresponding wrapper class, if
+	 * {@code type} is a wrapper class, {@code null} otherwise.
+	 *
+	 * @param type the type to check
+	 * 
+	 * @return Yields the primitive type of the corresponding wrapper class, if
+	 *             {@code type} is a wrapper class, {@code null} otherwise
+	 */
+	public static Type isWrapperClass(
+			Type type) {
+		if (type.equals(getIntegerWrapperType()))
+			return JavaIntType.INSTANCE;
+		else if (type.equals(getLongWrapperType()))
+			return JavaLongType.INSTANCE;
+		else if (type.equals(getFloatWrapperType()))
+			return JavaFloatType.INSTANCE;
+		else if (type.equals(getDoubleWrapperType()))
+			return JavaDoubleType.INSTANCE;
+		else if (type.equals(getCharacterWrapperType()))
+			return JavaCharType.INSTANCE;
+		// FIXME: to complete
+		return null;
+	}
 }

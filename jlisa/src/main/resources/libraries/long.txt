@@ -16,4 +16,22 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
 		
+	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongConstructor
+		libtype java.lang.Long*
+		param this libtype java.lang.Long*
+		param c type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		
+	method bitCount: it.unive.jlisa.program.java.constructs.longw.LongBitCount
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method compare: it.unive.jlisa.program.java.constructs.longw.LongCompare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+	
+	method rotateRight: it.unive.jlisa.program.java.constructs.longw.LongRotateRight
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Integer*
 		
