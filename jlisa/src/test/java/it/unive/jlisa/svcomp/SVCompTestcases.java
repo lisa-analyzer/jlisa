@@ -695,4 +695,12 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+	
+	@Test
+	public void Boolean_public_boolean_java_lang_Boolean_booleanValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Boolean_public_boolean_java_lang_Boolean_booleanValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }
