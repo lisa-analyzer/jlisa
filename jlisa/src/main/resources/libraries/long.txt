@@ -97,3 +97,7 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Long*
 		
+	method toOctalString: it.unive.jlisa.program.java.constructs.longw.LongToOctalString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
