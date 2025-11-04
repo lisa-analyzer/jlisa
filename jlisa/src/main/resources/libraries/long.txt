@@ -84,3 +84,7 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		param this libtype java.lang.Long*
 		
+	method toHexString: it.unive.jlisa.program.java.constructs.longw.LongToHexString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
