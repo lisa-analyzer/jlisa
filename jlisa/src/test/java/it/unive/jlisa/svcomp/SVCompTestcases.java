@@ -767,6 +767,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+	
+	@Test
+	public void Long_public_static_long_java_lang_Long_sum_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_sum_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
 
 	@Test
 	public void Boolean_public_boolean_java_lang_Boolean_booleanValue_test() throws IOException {
