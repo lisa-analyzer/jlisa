@@ -807,6 +807,20 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(new StringBuffer(lv).deleteCharAt(rv.intValue()).toString());
 		}
+		
+		// long
+		if (operator instanceof JavaLongRotateRightOperator) {
+			Long lv = ((Long) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(Long.rotateRight(lv, rv));
+		}
+
+		if (operator instanceof JavaLongCompareOperator) {
+			Long lv = ((Long) left.getValue());
+			Long rv = ((Long) right.getValue());
+			return new ConstantValue(Long.compare(lv, rv));
+		}
+
 
 		return top();
 	}
