@@ -31,7 +31,7 @@ public class JavaLongValueOfOperator implements UnaryOperator {
 	public Set<Type> typeInference(
 			TypeSystem types,
 			Set<Type> argument) {
-		if (argument.stream().noneMatch(t -> t.equals(types.getStringType())))
+		if (argument.stream().noneMatch(t -> t.equals(JavaLongType.INSTANCE)))
 			return Collections.emptySet();
 		return Collections.singleton(JavaLongType.INSTANCE);
 	}
