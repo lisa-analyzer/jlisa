@@ -17,6 +17,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Untyped;
 
@@ -59,7 +60,9 @@ public class FloatIsFiniteInstance extends UnaryExpression implements PluggableS
 					throws SemanticException {
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild access = new AccessChild(JavaFloatType.INSTANCE, expr, var, getLocation());
+		HeapDereference derefRight = new HeapDereference(
+				expr.getStaticType().asReferenceType().getInnerType(), expr, getLocation());
+		AccessChild access = new AccessChild(JavaFloatType.INSTANCE, derefRight, var, getLocation());
 
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaBooleanType.INSTANCE,

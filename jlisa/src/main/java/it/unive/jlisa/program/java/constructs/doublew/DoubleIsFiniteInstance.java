@@ -2,7 +2,7 @@ package it.unive.jlisa.program.java.constructs.doublew;
 
 import it.unive.jlisa.program.operator.JavaDoubleIsFiniteOperator;
 import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -17,6 +17,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Untyped;
 
@@ -59,7 +60,9 @@ public class DoubleIsFiniteInstance extends UnaryExpression implements Pluggable
 					throws SemanticException {
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild access = new AccessChild(JavaDoubleType.INSTANCE, expr, var, getLocation());
+		HeapDereference derefRight = new HeapDereference(
+				expr.getStaticType().asReferenceType().getInnerType(), expr, getLocation());
+		AccessChild access = new AccessChild(JavaFloatType.INSTANCE, derefRight, var, getLocation());
 
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaBooleanType.INSTANCE,

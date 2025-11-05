@@ -3,11 +3,19 @@ package it.unive.jlisa.interprocedural.callgraph;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaNumericType;
-import it.unive.lisa.analysis.symbols.*;
+import it.unive.lisa.analysis.symbols.Aliases;
+import it.unive.lisa.analysis.symbols.NameSymbol;
+import it.unive.lisa.analysis.symbols.QualifiedNameSymbol;
+import it.unive.lisa.analysis.symbols.QualifierSymbol;
+import it.unive.lisa.analysis.symbols.SymbolAliasing;
 import it.unive.lisa.interprocedural.callgraph.BaseCallGraph;
 import it.unive.lisa.interprocedural.callgraph.CallResolutionException;
 import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.AbstractCodeMember;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
@@ -368,6 +376,12 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				}
 			} else if (paramType.isBooleanType() && formalType.isBooleanType()) {
 				return 0;
+			} else if (JavaClassType.isWrapperOf(formalType, paramType)) {
+				// boxing
+				distance += 1;
+			} else if (JavaClassType.isWrapperOf(paramType, formalType)) {
+				// unboxing
+				distance += 1;
 			} else if (paramType instanceof ReferenceType refTypeParam
 					&& formalType instanceof ReferenceType refTypeFormal) {
 				if (refTypeParam.getInnerType().isNullType()) {
