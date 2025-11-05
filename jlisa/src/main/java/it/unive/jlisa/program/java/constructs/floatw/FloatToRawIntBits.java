@@ -1,5 +1,6 @@
-package it.unive.jlisa.program.java.constructs.integer;
+package it.unive.jlisa.program.java.constructs.floatw;
 
+import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -14,25 +15,22 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.Untyped;
 
-public class IntValue extends UnaryExpression implements PluggableStatement {
+public class FloatToRawIntBits extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public IntValue(
+	public FloatToRawIntBits(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "intValue", expr);
+		super(cfg, location, "floatToRawIntBits", expr);
 	}
 
-	public static IntValue build(
+	public static FloatToRawIntBits build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new IntValue(cfg, location, params[0]);
+		return new FloatToRawIntBits(cfg, location, params[0]);
 	}
 
 	@Override
@@ -55,8 +53,8 @@ public class IntValue extends UnaryExpression implements PluggableStatement {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild access = new AccessChild(JavaIntType.INSTANCE, expr, var, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaIntType.INSTANCE, expr, JavaFloatToRawIntBitsOperator.INSTANCE, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}
 }

@@ -665,6 +665,13 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void FractalTouchHandler_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "FractalTouchHandler_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void Math_public_static_long_java_lang_Math_abs_long() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Math_public_static_long_java_lang_Math_abs_long",

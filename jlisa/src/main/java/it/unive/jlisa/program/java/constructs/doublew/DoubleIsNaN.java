@@ -10,11 +10,9 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.PluggableStatement;
-import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.UnaryExpression;
+import it.unive.lisa.program.cfg.statement.*;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 
 public class DoubleIsNaN extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -53,12 +51,12 @@ public class DoubleIsNaN extends UnaryExpression implements PluggableStatement {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-
+		InstrumentedReceiver receiver = new InstrumentedReceiver(JavaBooleanType.INSTANCE, false, getLocation());
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaBooleanType.INSTANCE,
 				expr,
 				JavaDoubleIsNaNOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().assign(state, receiver, un, originating);
 	}
 }

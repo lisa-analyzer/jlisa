@@ -1,6 +1,7 @@
-package it.unive.jlisa.program.java.constructs.bytew;
+package it.unive.jlisa.program.java.constructs.floatw;
 
-import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -14,25 +15,22 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.Untyped;
 
-public class ByteValue extends UnaryExpression implements PluggableStatement {
+public class FloatToIntBits extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public ByteValue(
+	public FloatToIntBits(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "byteValue", expr);
+		super(cfg, location, "floatToIntBits", expr);
 	}
 
-	public static ByteValue build(
+	public static FloatToIntBits build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new ByteValue(cfg, location, params[0]);
+		return new FloatToIntBits(cfg, location, params[0]);
 	}
 
 	@Override
@@ -55,8 +53,8 @@ public class ByteValue extends UnaryExpression implements PluggableStatement {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild access = new AccessChild(JavaByteType.INSTANCE, expr, var, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaIntType.INSTANCE, expr, JavaFloatToIntBitsOperator.INSTANCE, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}
 }

@@ -1,11 +1,12 @@
 package it.unive.jlisa.program.java.constructs.doublew;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaDoubleToStringOperator;
-import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.operator.JavaDoubleToHexStringOperator;
+import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -24,21 +25,21 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class DoubleToString extends UnaryExpression implements PluggableStatement {
+public class DoubleToHexString extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public DoubleToString(
+	public DoubleToHexString(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "toString", expr);
+		super(cfg, location, "toHexString", expr);
 	}
 
-	public static DoubleToString build(
+	public static DoubleToHexString build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new DoubleToString(cfg, location, params[0]);
+		return new DoubleToHexString(cfg, location, params[0]);
 	}
 
 	@Override
@@ -63,25 +64,24 @@ public class DoubleToString extends UnaryExpression implements PluggableStatemen
 					throws SemanticException {
 
 		Type stringType = getProgram().getTypes().getStringType();
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaLongType.INSTANCE,
-				expr,
-				JavaDoubleToStringOperator.INSTANCE,
-				getLocation());
+		AccessChild access = new AccessChild(JavaDoubleType.INSTANCE, expr, var, getLocation());
+		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(
+				stringType, access, JavaDoubleToHexStringOperator.INSTANCE, getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(stringType), new Expression[0]);
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
+				new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, un, this);
+			AccessChild accessExpr = new AccessChild(stringType, ref, var, getLocation());
+			AnalysisState<A> sem = analysis.assign(callState, accessExpr, lower, this);
 			tmp = tmp.lub(sem);
 		}
 
