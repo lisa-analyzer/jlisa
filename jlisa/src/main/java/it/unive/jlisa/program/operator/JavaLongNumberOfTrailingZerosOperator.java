@@ -25,7 +25,7 @@ public class JavaLongNumberOfTrailingZerosOperator implements UnaryOperator {
 
 	@Override
 	public String toString() {
-		return "long-reverse";
+		return "long-trailing-zeros";
 	}
 
 	@Override
