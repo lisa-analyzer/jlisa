@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.character;
 
-import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierStartOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsAlphabeticOperator;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -15,23 +15,23 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
-public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.statement.UnaryExpression
+public class CharacterIsAlphabetic extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		implements
 		PluggableStatement {
 	protected Statement originating;
 
-	public CharacterIsJavaIdentifierStart(
+	public CharacterIsAlphabetic(
 			CFG cfg,
 			CodeLocation location,
 			Expression arg) {
-		super(cfg, location, "isJavaIdentifierStart", arg);
+		super(cfg, location, "isAlphabetic", arg);
 	}
 
-	public static CharacterIsJavaIdentifierStart build(
+	public static CharacterIsAlphabetic build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new CharacterIsJavaIdentifierStart(cfg, location, params[0]);
+		return new CharacterIsAlphabetic(cfg, location, params[0]);
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.st
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaBooleanType.INSTANCE,
 				expr,
-				JavaCharacterIsJavaIdentifierStartOperator.INSTANCE,
+				JavaCharacterIsAlphabeticOperator.INSTANCE,
 				getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}

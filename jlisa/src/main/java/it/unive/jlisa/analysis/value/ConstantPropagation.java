@@ -107,18 +107,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		UnaryOperator operator = expression.getOperator();
 		// char
-		if (operator instanceof JavaCharacterIsLetterOperator)
-			if (arg.getValue() instanceof Integer v)
-				return new ConstantValue(Character.isLetter(v));
-
-		if (operator instanceof JavaCharacterIsDigitOperator)
-			if (arg.getValue() instanceof Integer v)
-				return new ConstantValue(Character.isDigit(v));
-
-		if (operator instanceof JavaCharacterIsDefinedOperator)
-			if (arg.getValue() instanceof Integer v)
-				return new ConstantValue(Character.isDefined(v));
-
 		if (operator instanceof JavaCharacterToLowerCaseOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue((char) Character.toLowerCase(v));
@@ -127,25 +115,125 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue((char) Character.toUpperCase(v));
 
+		if (operator instanceof JavaCharacterIsAlphabeticOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isAlphabetic(v));
+
+		if (operator instanceof JavaCharacterIsBmpCodePointOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isBmpCodePoint(v));
+
+		if (operator instanceof JavaCharacterIsDefinedOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isDefined(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isDefined(v));
+
+		if (operator instanceof JavaCharacterIsDigitOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isDigit(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isDigit(v));
+
+		if (operator instanceof JavaCharacterIsISOControlOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isISOControl(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isISOControl(v));
+
+		if (operator instanceof JavaCharacterIsIdentifierIgnorableOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isIdentifierIgnorable(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isIdentifierIgnorable(v));
+
+		if (operator instanceof JavaCharacterIsIdeographicOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isIdeographic(v));
+
 		if (operator instanceof JavaCharacterIsJavaIdentifierPartOperator)
 			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isJavaIdentifierPart(v));
+			else if (arg.getValue() instanceof Character v)
 				return new ConstantValue(Character.isJavaIdentifierPart(v));
 
 		if (operator instanceof JavaCharacterIsJavaIdentifierStartOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isJavaIdentifierStart(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isJavaIdentifierStart(v));
 
 		if (operator instanceof JavaCharacterIsLetterOrDigitOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isLetterOrDigit(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isLetterOrDigit(v));
+
+		if (operator instanceof JavaCharacterIsLetterOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isLetter(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isLetter(v));
 
 		if (operator instanceof JavaCharacterIsLowerCaseOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isLowerCase(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isLowerCase(v));
+
+		if (operator instanceof JavaCharacterIsMirroredOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isMirrored(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isMirrored(v));
+
+		if (operator instanceof JavaCharacterIsSpaceOperator)
+			if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isSpace(v));
+
+		if (operator instanceof JavaCharacterIsSpaceCharOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isSpaceChar(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isSpaceChar(v));
+
+		if (operator instanceof JavaCharacterIsSupplementaryCodePointOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isSupplementaryCodePoint(v));
+
+		if (operator instanceof JavaCharacterIsTitleCaseOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isTitleCase(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isTitleCase(v));
+
+		if (operator instanceof JavaCharacterIsUnicodeIdentifierPartOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isUnicodeIdentifierPart(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isUnicodeIdentifierPart(v));
+
+		if (operator instanceof JavaCharacterIsUnicodeIdentifierStartOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isUnicodeIdentifierStart(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isUnicodeIdentifierStart(v));
 
 		if (operator instanceof JavaCharacterIsUpperCaseOperator)
 			if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Character.isUpperCase(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isUpperCase(v));
+
+		if (operator instanceof JavaCharacterIsValidCodePointOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isValidCodePoint(v));
+
+		if (operator instanceof JavaCharacterIsWhitespaceOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.isWhitespace(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.isWhitespace(v));
 
 		// numeric
 		if (operator instanceof NumericNegation)
