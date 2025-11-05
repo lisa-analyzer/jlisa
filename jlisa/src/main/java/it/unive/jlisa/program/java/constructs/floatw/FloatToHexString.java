@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.floatw;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaFloatToHexStringOperator;
-import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -67,10 +66,8 @@ public class FloatToHexString extends UnaryExpression implements PluggableStatem
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild access = new AccessChild(JavaFloatType.INSTANCE, expr, var, getLocation());
 		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType, access, JavaFloatToHexStringOperator.INSTANCE, getLocation());
+				stringType, expr, JavaFloatToHexStringOperator.INSTANCE, getLocation());
 
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
@@ -79,6 +76,7 @@ public class FloatToHexString extends UnaryExpression implements PluggableStatem
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild accessExpr = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, accessExpr, lower, this);

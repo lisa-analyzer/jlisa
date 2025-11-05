@@ -47,3 +47,15 @@ class java.lang.Float extends java.lang.Number:
 	instance method isFinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsFiniteInstance
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype java.lang.Float*
+
+	method toHexString: it.unive.jlisa.program.java.constructs.floatw.FloatToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		
+	method floatToIntBits: it.unive.jlisa.program.java.constructs.floatw.FloatToIntBits
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	method floatToRawIntBits: it.unive.jlisa.program.java.constructs.floatw.FloatToRawIntBits
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
