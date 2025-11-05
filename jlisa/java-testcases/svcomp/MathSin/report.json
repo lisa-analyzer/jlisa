@@ -1,18 +1,18 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
-  "files" : [ "double_MathSin.mysin(MathSin__this,_double_x)_1707432791.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707441409.json", "long_MathSin.helperdoubleToRawBits(double_xm)_435199115.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_MathSin.MathSin(MathSin__this)_1707434651.json", "void_MathSin.MathSin_clinit()_1707434651.json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_MathSin.MathSin(MathSin__this)_1707434651.json", "void_MathSin.MathSin_clinit()_1707434651.json", "void_MathSin.MathSin_clinit()_435245925.json", "void_MathSin.MathSin_clinit()_435245956.json", "void_MathSin.MathSin_clinit()_435246948.json", "void_MathSin.MathSin_clinit()_435246979.json", "void_MathSin.MathSin_clinit()_435250854.json", "void_MathSin.MathSin_clinit()_435291650.json", "void_MathSin.MathSin_clinit()_435292642.json" ],
   "info" : {
     "cfgs" : "21",
-    "duration" : "155ms",
-    "end" : "2025-11-04T17:58:53.896+01:00",
+    "duration" : "45ms",
+    "end" : "2025-11-05T09:16:40.492+01:00",
     "expressions" : "865",
-    "files" : "6",
+    "files" : "10",
     "globals" : "46",
-    "members" : "229",
+    "members" : "236",
     "programs" : "1",
-    "start" : "2025-11-04T17:58:53.741+01:00",
+    "start" : "2025-11-05T09:16:40.447+01:00",
     "statements" : "244",
     "units" : "51",
     "version" : "0.1",

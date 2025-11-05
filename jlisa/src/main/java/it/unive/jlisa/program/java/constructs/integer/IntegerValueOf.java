@@ -1,8 +1,7 @@
 package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaIntValueOfOperator;
-import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -18,10 +17,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -53,31 +49,18 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type intType = JavaIntType.INSTANCE;
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		Type IntegerType = JavaClassType.lookup("java.lang.Integer");
+		JavaReferenceType reftype = new JavaReferenceType(IntegerType);
 
-		it.unive.lisa.symbolic.value.UnaryExpression valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
-				intType,
-				expr,
-				JavaIntValueOfOperator.INSTANCE,
-				getLocation());
-
-		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(intType), new Expression[0]);
-		AnalysisState<
-				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-		AnalysisState<A> tmp = state.bottomExecution();
-		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild access = new AccessChild(intType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, valueOf, this);
-			tmp = tmp.lub(sem);
-		}
-
+		// allocate the value
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
+				new Expression[] { getSubExpression() });
+		ExpressionSet set = new ExpressionSet(expr);
+		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] { set },
+				expressions);
 		getMetaVariables().addAll(call.getMetaVariables());
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
-
+		return callState;
+		
 	}
 
 	@Override

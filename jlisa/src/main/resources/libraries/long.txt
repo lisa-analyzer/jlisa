@@ -30,7 +30,6 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
-<<<<<<< HEAD
 		
 	method compareUnsigned: it.unive.jlisa.program.java.constructs.longw.LongCompareUnsigned
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
