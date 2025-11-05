@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.java.constructs.doublew;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaDoubleToStringOperator;
+import it.unive.jlisa.program.operator.JavaDoubleStaticToStringOperator;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -24,21 +24,21 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class DoubleToString extends UnaryExpression implements PluggableStatement {
+public class DoubleStaticToString extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public DoubleToString(
+	public DoubleStaticToString(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
 		super(cfg, location, "toString", expr);
 	}
 
-	public static DoubleToString build(
+	public static DoubleStaticToString build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new DoubleToString(cfg, location, params[0]);
+		return new DoubleStaticToString(cfg, location, params[0]);
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class DoubleToString extends UnaryExpression implements PluggableStatemen
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE,
 				expr,
-				JavaDoubleToStringOperator.INSTANCE,
+				JavaDoubleStaticToStringOperator.INSTANCE,
 				getLocation());
 
 		// allocate the string

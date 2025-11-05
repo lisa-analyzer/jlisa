@@ -16,10 +16,6 @@ class java.lang.Float extends java.lang.Number:
 		libtype java.lang.Float* 
 		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE 
 
-	method toString: it.unive.jlisa.program.java.constructs.floatw.FloatToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
-
 	method parseFloat: it.unive.jlisa.program.java.constructs.floatw.FloatParseFloat
 		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 		param v libtype java.lang.String* 
@@ -59,3 +55,12 @@ class java.lang.Float extends java.lang.Number:
 	method floatToRawIntBits: it.unive.jlisa.program.java.constructs.floatw.FloatToRawIntBits
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	method compare: it.unive.jlisa.program.java.constructs.floatw.FloatCompare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Float*
+		param other libtype java.lang.Float*
+		
+	method toString: it.unive.jlisa.program.java.constructs.floatw.FloatStaticToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
