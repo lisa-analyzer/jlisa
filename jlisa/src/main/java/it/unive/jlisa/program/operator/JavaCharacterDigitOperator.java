@@ -33,11 +33,11 @@ public class JavaCharacterDigitOperator implements BinaryOperator {
 			TypeSystem types,
 			Set<Type> left,
 			Set<Type> right) {
-		if (left.stream().noneMatch(t -> t.equals(JavaCharType.INSTANCE)))
+		if (left.stream().noneMatch(t -> t.equals(JavaIntType.INSTANCE) || t.equals(JavaCharType.INSTANCE)))
 			return Collections.emptySet();
-		if (right.stream().noneMatch(t -> t.equals(JavaIntType.INSTANCE)))
+		if (right.stream().noneMatch(t -> t.equals(JavaIntType.INSTANCE) || t.equals(JavaCharType.INSTANCE)))
 			return Collections.emptySet();
-		return Collections.singleton(JavaCharType.INSTANCE);
+		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
 }
