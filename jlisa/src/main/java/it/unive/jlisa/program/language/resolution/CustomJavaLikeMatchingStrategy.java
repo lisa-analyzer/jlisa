@@ -6,7 +6,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.language.resolution.FixedOrderMatchingStrategy;
-import it.unive.lisa.program.language.resolution.RuntimeTypesMatchingStrategy;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.Set;
@@ -54,20 +53,19 @@ public class CustomJavaLikeMatchingStrategy
 			Parameter formal,
 			Expression actual,
 			Set<Type> types) {
-		if (actual.getStaticType().equals(Untyped.INSTANCE))
-			return RuntimeTypesMatchingStrategy.INSTANCE.matches(call, pos, formal, actual, types);
-
-		if (actual.getStaticType().canBeAssignedTo(formal.getStaticType()))
+		if (!actual.getStaticType().equals(Untyped.INSTANCE)
+				&& actual.getStaticType().canBeAssignedTo(formal.getStaticType()))
 			return true;
 
 		for (Type rType : types)
-			if (JavaClassType.isWrapperOf(formal.getStaticType(), rType)) {
+			if (rType.canBeAssignedTo(formal.getStaticType()))
+				return true;
+			else if (JavaClassType.isWrapperOf(formal.getStaticType(), rType))
 				// boxing
 				return true;
-			} else if (JavaClassType.isWrapperOf(rType, formal.getStaticType())) {
+			else if (JavaClassType.isWrapperOf(rType, formal.getStaticType()))
 				// unboxing
 				return true;
-			}
 
 		return false;
 	}

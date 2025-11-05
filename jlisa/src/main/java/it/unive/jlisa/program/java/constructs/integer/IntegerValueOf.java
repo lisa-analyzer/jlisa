@@ -1,27 +1,19 @@
 package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaIntValueOfOperator;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -30,7 +22,7 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "valueOf", expr);
+		super(cfg, location, "valueOf", JavaClassType.getIntegerWrapperType(), expr);
 	}
 
 	public static IntegerValueOf build(
@@ -53,31 +45,16 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type intType = JavaIntType.INSTANCE;
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		JavaClassType intWrapper = JavaClassType.getIntegerWrapperType();
+		JavaNewObj wrap = new JavaNewObj(
+				getCFG(),
+				getLocation(),
+				intWrapper.getReference(),
+				new Expression[] { getSubExpression() });
 
-		it.unive.lisa.symbolic.value.UnaryExpression valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
-				intType,
-				expr,
-				JavaIntValueOfOperator.INSTANCE,
-				getLocation());
-
-		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(intType), new Expression[0]);
-		AnalysisState<
-				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-		AnalysisState<A> tmp = state.bottomExecution();
-		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild access = new AccessChild(intType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, valueOf, this);
-			tmp = tmp.lub(sem);
-		}
-
-		getMetaVariables().addAll(call.getMetaVariables());
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
-
+		AnalysisState<A> sem = wrap.forwardSemantics(state, interprocedural, expressions);
+		getMetaVariables().addAll(wrap.getMetaVariables());
+		return sem;
 	}
 
 	@Override
