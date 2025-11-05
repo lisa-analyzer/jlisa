@@ -815,4 +815,44 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void Float_public_static_native_int_java_lang_Float_floatToRawIntBits_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_native_int_java_lang_Float_floatToRawIntBits_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_int_java_lang_Float_floatToIntBits_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_int_java_lang_Float_floatToIntBits_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_native_long_java_lang_Double_doubleToRawLongBits_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_native_long_java_lang_Double_doubleToRawLongBits_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_java_lang_String_java_lang_Float_toString_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_java_lang_String_java_lang_Float_toString_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Character_public_static_int_java_lang_Character_digit_char_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Character_public_static_int_java_lang_Character_digit_char_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }

@@ -22,7 +22,7 @@ class java.lang.Double extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE 
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
-	method toString: it.unive.jlisa.program.java.constructs.doublew.DoubleToString
+	method toString: it.unive.jlisa.program.java.constructs.doublew.DoubleStaticToString
 		libtype java.lang.String*
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
@@ -69,3 +69,8 @@ class java.lang.Double extends java.lang.Number:
 	method toHexString: it.unive.jlisa.program.java.constructs.doublew.DoubleToHexString
 		libtype java.lang.String*
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		
+	method compare: it.unive.jlisa.program.java.constructs.doublew.DoubleCompare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Double*
+		param other libtype java.lang.Double*

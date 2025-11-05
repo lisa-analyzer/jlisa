@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.operator;
 
-import it.unive.jlisa.program.type.JavaDoubleType;
-import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
@@ -25,16 +25,16 @@ public class JavaFloatToIntBitsOperator implements UnaryOperator {
 
 	@Override
 	public String toString() {
-		return "double-to-long-bits";
+		return "float-to-long-bits";
 	}
 
 	@Override
 	public Set<Type> typeInference(
 			TypeSystem types,
 			Set<Type> argument) {
-		if (argument.stream().noneMatch(t -> t.canBeAssignedTo(JavaDoubleType.INSTANCE)))
+		if (argument.stream().noneMatch(t -> t.canBeAssignedTo(JavaFloatType.INSTANCE)))
 			return Collections.emptySet();
-		return Collections.singleton(JavaLongType.INSTANCE);
+		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
 }

@@ -281,6 +281,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Double.doubleToRawLongBits(v));
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Double.doubleToRawLongBits(v));
+			else if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.doubleToRawLongBits(d.doubleValue()));
 
 		if (operator instanceof JavaDoubleLongBitsToDoubleOperator)
 			if (arg.getValue() instanceof Integer v)
@@ -288,16 +290,80 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Double.longBitsToDouble(v));
 
-		if (operator instanceof JavaDoubleToStringOperator)
+		if (operator instanceof JavaDoubleStaticToStringOperator)
 			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
-		if (operator instanceof JavaFloatToStringOperator)
+		if (operator instanceof JavaFloatStaticToStringOperator)
 			if (arg.getValue() instanceof Float d)
 				return new ConstantValue(d.toString());
 
+		if (operator instanceof JavaFloatIsFiniteOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Float.isFinite(d.floatValue()));
+		if (operator instanceof JavaDoubleIsFiniteOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.isFinite(d.doubleValue()));
+
+		if (operator instanceof JavaFloatIsInfiniteOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Float.isInfinite(d.floatValue()));
+		if (operator instanceof JavaDoubleIsInfiniteOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.isInfinite(d.doubleValue()));
+
+		if (operator instanceof JavaFloatIsNaNOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Float.isNaN(d.floatValue()));
 		if (operator instanceof JavaDoubleIsNaNOperator)
 			if (arg.getValue() instanceof Number d)
 				return new ConstantValue(Double.isNaN(d.doubleValue()));
+
+		if (operator instanceof JavaDoubleToLongBitsOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.doubleToLongBits(d.doubleValue()));
+
+		if (operator instanceof JavaFloatToIntBitsOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Float.floatToIntBits(d.floatValue()));
+		if (operator instanceof JavaFloatToRawIntBitsOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Float.floatToRawIntBits(d.floatValue()));
+
+		if (operator instanceof JavaDoubleToHexStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.toHexString(d.doubleValue()));
+
+		if (operator instanceof JavaIntToBinaryStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Integer.toBinaryString(d.intValue()));
+		if (operator instanceof JavaIntToOctalStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Integer.toOctalString(d.intValue()));
+		if (operator instanceof JavaIntToHexStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Integer.toHexString(d.intValue()));
+
+		if (operator instanceof JavaByteStaticToStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Byte.toString(d.byteValue()));
+
+		if (operator instanceof JavaByteToUnsignedLongOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Byte.toUnsignedLong(d.byteValue()));
+
+		if (operator instanceof JavaByteToUnsignedIntOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Byte.toUnsignedInt(d.byteValue()));
+
+		if (operator instanceof JavaLongStaticToStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Long.toString(d.longValue()));
+		if (operator instanceof JavaFloatStaticToStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Float.toString(d.floatValue()));
+		if (operator instanceof JavaDoubleStaticToStringOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.toString(d.doubleValue()));
 
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
@@ -822,6 +888,34 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.compare(lv, rv));
+		}
+
+		if (operator instanceof JavaFloatCompareOperator) {
+			Float lv = ((Float) left.getValue());
+			Float rv = ((Float) right.getValue());
+			return new ConstantValue(Float.compare(lv, rv));
+		}
+
+		if (operator instanceof JavaDoubleCompareOperator) {
+			Double lv = ((Double) left.getValue());
+			Double rv = ((Double) right.getValue());
+			return new ConstantValue(Double.compare(lv, rv));
+		}
+		if (operator instanceof JavaFloatCompareOperator) {
+			Float lv = ((Float) left.getValue());
+			Float rv = ((Float) right.getValue());
+			return new ConstantValue(Float.compare(lv, rv));
+		}
+		if (operator instanceof JavaByteCompareOperator) {
+			Byte lv = ((Byte) left.getValue());
+			Byte rv = ((Byte) right.getValue());
+			return new ConstantValue(Byte.compare(lv, rv));
+		}
+
+		if (operator instanceof JavaIntegerCompareOperator) {
+			Integer lv = ((Integer) left.getValue());
+			Integer rv = ((Integer) right.getValue());
+			return new ConstantValue(Integer.compare(lv, rv));
 		}
 
 		return top();
