@@ -1,14 +1,9 @@
 package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaDoubleType;
-import it.unive.jlisa.program.type.JavaFloatType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -24,13 +19,17 @@ import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.evaluation.RightToLeftEvaluation;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.type.Untyped;
 import java.util.Collections;
 import java.util.Set;
 
@@ -104,17 +103,27 @@ public class JavaAssignment extends Assignment {
 						TypeConv.INSTANCE, loc);
 				result = result
 						.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
-			} else if (isWrapperOf(left.getStaticType(), rType)) {
+			} else if (JavaClassType.isWrapperOf(left.getStaticType(), rType)) {
 				// boxing
 				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) left.getStaticType(),
 						new Expression[] { getRight() });
 				AnalysisState<A> wrapState = wrap.forwardSemantics(state, interprocedural, expressions);
 				for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
-					result = result
-							.lub(super.fwdBinarySemantics(interprocedural, wrapState, left, wrapExp, expressions));
-				result = result.forgetIdentifiers(wrap.getMetaVariables(), this);
-			} else if (isWrapperOf(rType, left.getStaticType())) {
-				// TODO: unboxing
+					result = result.lub(
+							super.fwdBinarySemantics(
+									interprocedural,
+									wrapState,
+									left,
+									wrapExp,
+									expressions)
+											.forgetIdentifiers(wrap.getMetaVariables(), this));
+			} else if (JavaClassType.isWrapperOf(rType, left.getStaticType())) {
+				// unboxing
+				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+				HeapDereference derefRight = new HeapDereference(rType.asReferenceType().getInnerType(), right,
+						getLocation());
+				AccessChild rightExpr = new AccessChild(left.getStaticType(), derefRight, var, getLocation());
+				result = result.lub(analysis.assign(state, left, rightExpr, this));
 			}
 		}
 		return result;
@@ -132,43 +141,6 @@ public class JavaAssignment extends Assignment {
 			return JavaCharType.fitsInType(value);
 		if (type instanceof JavaByteType)
 			return JavaByteType.fitsInType(value);
-		return false;
-	}
-
-	/**
-	 * Checks whether {@code left} type is the wrapper class of {@code right}.
-	 * 
-	 * @param left
-	 * @param right
-	 * 
-	 * @return
-	 */
-	private static boolean isWrapperOf(
-			Type left,
-			Type right) {
-		if (!left.isReferenceType())
-			return false;
-		if (!(left.asReferenceType().getInnerType() instanceof JavaClassType))
-			return false;
-
-		JavaClassType wrapper = (JavaClassType) left.asReferenceType().getInnerType();
-
-		if (wrapper.equals(JavaClassType.getCharacterWrapperType()) && right instanceof JavaCharType)
-			return true;
-		if (wrapper.equals(JavaClassType.getIntegerWrapperType()) && right instanceof JavaIntType)
-			return true;
-		if (wrapper.equals(JavaClassType.getDoubleWrapperType()) && right instanceof JavaDoubleType)
-			return true;
-		if (wrapper.equals(JavaClassType.getFloatWrapperType()) && right instanceof JavaFloatType)
-			return true;
-		if (wrapper.equals(JavaClassType.getByteWrapperType()) && right instanceof JavaByteType)
-			return true;
-		if (wrapper.equals(JavaClassType.getLongWrapperType()) && right instanceof JavaLongType)
-			return true;
-		if (wrapper.equals(JavaClassType.getBooleanWrapperType()) && right instanceof JavaBooleanType)
-			return true;
-
-		// TODO: missing: short
 		return false;
 	}
 }

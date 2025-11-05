@@ -301,6 +301,52 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.Boolean");
 	}
 
+	// TODO add when we will have Short
+	// public static JavaClassType getShortWrapperType() {
+	// return lookup("java.lang.Short");
+	// }
+
+	/**
+	 * Checks whether {@code objectType} type is the wrapper class of
+	 * {@code baseType}.
+	 * 
+	 * @param objectType
+	 * @param baseType
+	 * 
+	 * @return
+	 */
+	public static boolean isWrapperOf(
+			Type objectType,
+			Type baseType) {
+		if (!objectType.isReferenceType())
+			return false;
+		if (!(objectType.asReferenceType().getInnerType() instanceof JavaClassType))
+			return false;
+
+		JavaClassType wrapper = (JavaClassType) objectType.asReferenceType().getInnerType();
+
+		if (wrapper.equals(JavaClassType.getCharacterWrapperType()) && baseType instanceof JavaCharType)
+			return true;
+		if (wrapper.equals(JavaClassType.getIntegerWrapperType()) && baseType instanceof JavaIntType)
+			return true;
+		if (wrapper.equals(JavaClassType.getDoubleWrapperType()) && baseType instanceof JavaDoubleType)
+			return true;
+		if (wrapper.equals(JavaClassType.getFloatWrapperType()) && baseType instanceof JavaFloatType)
+			return true;
+		if (wrapper.equals(JavaClassType.getByteWrapperType()) && baseType instanceof JavaByteType)
+			return true;
+		if (wrapper.equals(JavaClassType.getLongWrapperType()) && baseType instanceof JavaLongType)
+			return true;
+		if (wrapper.equals(JavaClassType.getBooleanWrapperType()) && baseType instanceof JavaBooleanType)
+			return true;
+		// TODO add when we will have Short
+		// if (wrapper.equals(JavaClassType.getShortWrapperType()) && baseType
+		// instanceof JavaShortType)
+		// return true;
+
+		return false;
+	}
+
 	/**
 	 * Yields the primitive type of the corresponding wrapper class, if
 	 * {@code type} is a wrapper class, {@code null} otherwise.
@@ -310,7 +356,7 @@ public class JavaClassType implements UnitType {
 	 * @return Yields the primitive type of the corresponding wrapper class, if
 	 *             {@code type} is a wrapper class, {@code null} otherwise
 	 */
-	public static Type isWrapperClass(
+	public static Type getUnwrappedType(
 			Type type) {
 		if (type.equals(getIntegerWrapperType()))
 			return JavaIntType.INSTANCE;
@@ -322,7 +368,12 @@ public class JavaClassType implements UnitType {
 			return JavaDoubleType.INSTANCE;
 		else if (type.equals(getCharacterWrapperType()))
 			return JavaCharType.INSTANCE;
-		// FIXME: to complete
-		return null;
+		else if (type.equals(getByteWrapperType()))
+			return JavaByteType.INSTANCE;
+		// TODO add when we will have Short
+		// else if (type.equals(getShortWrapperType()))
+		// return JavaShortType.INSTANCE;
+		else
+			return null;
 	}
 }

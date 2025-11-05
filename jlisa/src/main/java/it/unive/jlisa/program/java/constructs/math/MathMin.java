@@ -72,7 +72,7 @@ public class MathMin extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 			for (Type rType : rightTypes) {
 				Type lPrimeType;
 				SymbolicExpression leftExpr = left;
-				if ((lPrimeType = JavaClassType.isWrapperClass(lType.asReferenceType().getInnerType())) != null) {
+				if ((lPrimeType = JavaClassType.getUnwrappedType(lType.asReferenceType().getInnerType())) != null) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 					HeapDereference derefLeft = new HeapDereference(lPrimeType, left, getLocation());
@@ -81,7 +81,7 @@ public class MathMin extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 
 				Type rPrimeType;
 				SymbolicExpression rightExpr = left;
-				if ((rPrimeType = JavaClassType.isWrapperClass(rType.asReferenceType().getInnerType())) != null) {
+				if ((rPrimeType = JavaClassType.getUnwrappedType(rType.asReferenceType().getInnerType())) != null) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 					HeapDereference derefRight = new HeapDereference(rPrimeType, right, getLocation());
