@@ -115,3 +115,7 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
 		
+	instance method toString: it.unive.jlisa.program.java.constructs.longw.LongToStringUnaryInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		

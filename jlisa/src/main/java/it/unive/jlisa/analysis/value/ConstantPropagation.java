@@ -355,6 +355,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.signum(l));
 		
+		if (operator instanceof JavaLongToStringUnaryInstanceOperator)
+			if (arg.getValue() instanceof Long l)
+				return new ConstantValue(l.toString());
+		
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
