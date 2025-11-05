@@ -1,0 +1,57 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':47] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':106:4] on 'void Main::computeCurrentVelocity(int units)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':110:4] on 'void Main::computeCurrentVelocity(int units)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':128:4] on 'void Main::computeCurrentVelocity(int units)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':43:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':54:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':61:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':76:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':88:4] on 'void Main::computeCurrentVelocity(int units)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707444137.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707444168.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446152.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707446121.json", "report.json", "void_Main.Main_clinit()_1707428048.json", "void_Main.addPoint(float_x,_float_y,_long_time)_1707428048.json", "void_Main.computeCurrentVelocity(int_units)_1707428079.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "18",
+    "duration" : "82ms",
+    "end" : "2025-11-05T16:18:32.820+01:00",
+    "expressions" : "285",
+    "files" : "8",
+    "globals" : "35",
+    "members" : "231",
+    "programs" : "1",
+    "start" : "2025-11-05T16:18:32.738+01:00",
+    "statements" : "107",
+    "units" : "50",
+    "version" : "0.1",
+    "warnings" : "9"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/VelocityTracker_true"
+  }
+}

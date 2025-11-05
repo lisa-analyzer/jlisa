@@ -1,12 +1,13 @@
 package it.unive.jlisa.program.language.resolution;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.language.resolution.FixedOrderMatchingStrategy;
-import it.unive.lisa.program.language.resolution.RuntimeTypesMatchingStrategy;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 import java.util.Set;
 
 /**
@@ -33,8 +34,48 @@ public class CustomJavaLikeMatchingStrategy
 			Expression actual,
 			Set<Type> types) {
 		if (call.getCallType() == CallType.INSTANCE && pos == 0)
-			return RuntimeTypesMatchingStrategy.INSTANCE.matches(call, pos, formal, actual, types);
-		return JavaStaticTypeMatchingStrategy.INSTANCE.matches(call, pos, formal, actual, types);
+			return matchReceiver(call, pos, formal, actual, types);
+		return matchArgument(call, pos, formal, actual, types);
+	}
+
+	private boolean matchReceiver(
+			Call call,
+			int pos,
+			Parameter formal,
+			Expression actual,
+			Set<Type> types) {
+		return types.stream().anyMatch(rt -> rt.canBeAssignedTo(formal.getStaticType()));
+	}
+
+	private boolean matchArgument(
+			Call call,
+			int pos,
+			Parameter formal,
+			Expression actual,
+			Set<Type> types) {
+		if (!actual.getStaticType().equals(Untyped.INSTANCE)
+				&& actual.getStaticType().canBeAssignedTo(formal.getStaticType()))
+			return true;
+
+		for (Type rType : types)
+			if (rType.canBeAssignedTo(formal.getStaticType()))
+				// equal or widening
+				return true;
+			else if (JavaClassType.isWrapperOf(formal.getStaticType(), rType))
+				// boxing
+				return true;
+			else if (JavaClassType.isWrapperOf(rType, formal.getStaticType()))
+				// unboxing
+				return true;
+		// TODO the next case should be allowed only when we handle it in the
+		// assigning strategy and in the call graph's parameter distance
+		// Type unwrapped;
+		// else if ((unwrapped = JavaClassType.getUnwrappedType(rType)) != null)
+		// unboxing + widening
+		// if (unwrapped.canBeAssignedTo(formal.getStaticType()))
+		// return true;
+
+		return false;
 	}
 
 }

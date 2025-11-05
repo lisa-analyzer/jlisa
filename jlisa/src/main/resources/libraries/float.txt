@@ -12,18 +12,55 @@ class java.lang.Float extends java.lang.Number:
 		param this libtype java.lang.Float*
 		param c type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 	
-	instance method floatValue: it.unive.jlisa.program.java.constructs.floatw.FloatValue
-		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
-		param this libtype java.lang.Float*
-		
 	method valueOf: it.unive.jlisa.program.java.constructs.floatw.FloatValueOf
 		libtype java.lang.Float* 
 		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE 
 
-	method toString: it.unive.jlisa.program.java.constructs.floatw.FloatToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
-
 	method parseFloat: it.unive.jlisa.program.java.constructs.floatw.FloatParseFloat
 		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 		param v libtype java.lang.String* 
+
+	method isNaN: it.unive.jlisa.program.java.constructs.floatw.FloatIsNaN
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		
+	instance method isNaN: it.unive.jlisa.program.java.constructs.floatw.FloatIsNaNInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Float*
+	
+	method isInfinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsInfinite
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		
+	instance method isInfinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsInfiniteInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Float*
+
+	method isFinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsFinite
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param f type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		
+	instance method isFinite: it.unive.jlisa.program.java.constructs.floatw.FloatIsFiniteInstance
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.lang.Float*
+
+	method toHexString: it.unive.jlisa.program.java.constructs.floatw.FloatToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		
+	method floatToIntBits: it.unive.jlisa.program.java.constructs.floatw.FloatToIntBits
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	method floatToRawIntBits: it.unive.jlisa.program.java.constructs.floatw.FloatToRawIntBits
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param d type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	method compare: it.unive.jlisa.program.java.constructs.floatw.FloatCompare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Float*
+		param other libtype java.lang.Float*
+		
+	method toString: it.unive.jlisa.program.java.constructs.floatw.FloatStaticToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE

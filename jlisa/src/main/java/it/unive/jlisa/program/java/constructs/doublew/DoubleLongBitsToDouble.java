@@ -53,6 +53,7 @@ public class DoubleLongBitsToDouble extends UnaryExpression implements Pluggable
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
+
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE,
 				expr,

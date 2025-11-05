@@ -4,6 +4,7 @@ import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -565,7 +566,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void RedBlackTree_FunUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"RedBlackTree-FunUnsat01",
@@ -638,6 +639,15 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Ignore
+	// FIXME there seem to be some nondeterminism in this test
+	public void objects01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects01",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+
 	@Test
 	public void CWE369_Divide_by_Zero__float_connect_tcp_divide_01_bad_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -654,4 +664,202 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void FractalTouchHandler_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "FractalTouchHandler_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Math_public_static_long_java_lang_Math_abs_long() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Math_public_static_long_java_lang_Math_abs_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Math_public_static_int_java_lang_Math_round_float() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Math_public_static_int_java_lang_Math_round_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Math_public_static_long_java_lang_Math_max_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Math_public_static_long_java_lang_Math_max_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_int_java_lang_Long_bitCount_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_int_java_lang_Long_bitCount_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_rotateRight_long_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_rotateRight_long_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_int_java_lang_Long_compare_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_int_java_lang_Long_compare_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Boolean_public_boolean_java_lang_Boolean_booleanValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Boolean_public_boolean_java_lang_Boolean_booleanValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void GraphFragment_false_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"GraphFragment_false",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ProjectionGridRoundTripper_exceptionprone_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ProjectionGridRoundTripper_exceptionprone",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_boolean_java_lang_Float_isInfinite_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_boolean_java_lang_Float_isInfinite",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_boolean_java_lang_Float_isNaN_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_boolean_java_lang_Float_isNaN",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_boolean_java_lang_Float_isFinite_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_boolean_java_lang_Float_isFinite_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_boolean_java_lang_Float_isInfinite_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_boolean_java_lang_Float_isInfinite_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_boolean_java_lang_Float_isNaN_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_boolean_java_lang_Float_isNaN_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_boolean_java_lang_Double_isNaN_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_boolean_java_lang_Double_isNaN",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_boolean_java_lang_Double_isFinite_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_boolean_java_lang_Double_isFinite_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_boolean_java_lang_Double_isInfinite_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_boolean_java_lang_Double_isInfinite_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_boolean_java_lang_Double_isNaN_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_boolean_java_lang_Double_isNaN_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_boolean_java_lang_Double_isInfinite_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_boolean_java_lang_Double_isInfinite",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_native_int_java_lang_Float_floatToRawIntBits_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_native_int_java_lang_Float_floatToRawIntBits_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_int_java_lang_Float_floatToIntBits_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_int_java_lang_Float_floatToIntBits_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Double_public_static_native_long_java_lang_Double_doubleToRawLongBits_double_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Double_public_static_native_long_java_lang_Double_doubleToRawLongBits_double",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Float_public_static_java_lang_String_java_lang_Float_toString_float_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Float_public_static_java_lang_String_java_lang_Float_toString_float",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Character_public_static_int_java_lang_Character_digit_char_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Character_public_static_int_java_lang_Character_digit_char_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }

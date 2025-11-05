@@ -1,9 +1,11 @@
 package it.unive.jlisa.program.java.constructs.math;
 
 import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -14,7 +16,13 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
+import java.util.Set;
 
 public class MathRound extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -46,13 +54,32 @@ public class MathRound extends it.unive.lisa.program.cfg.statement.UnaryExpressi
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		UnaryExpression round = new UnaryExpression(
-				JavaDoubleType.INSTANCE,
-				expr,
-				JavaMathRoundOperator.INSTANCE,
-				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, round, originating);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, originating);
+
+		AnalysisState<A> result = state.bottomExecution();
+
+		for (Type t : types) {
+			Type primType;
+			SymbolicExpression exprToAbs = expr;
+			if (t.isReferenceType()
+					&& (primType = JavaClassType.getUnwrappedType(t.asReferenceType().getInnerType())) != null) {
+				// unboxing
+				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+				HeapDereference derefLeft = new HeapDereference(primType, expr, getLocation());
+				exprToAbs = new AccessChild(primType, derefLeft, var, getLocation());
+			}
+
+			UnaryExpression abs = new UnaryExpression(
+					JavaDoubleType.INSTANCE,
+					exprToAbs,
+					JavaMathRoundOperator.INSTANCE,
+					getLocation());
+			result = result.lub(analysis.smallStepSemantics(state, abs, originating));
+		}
+
+		return result;
 	}
 
 	@Override

@@ -6,6 +6,23 @@ class java.lang.Byte extends java.lang.Number:
 		param this libtype java.lang.Byte*
 		param b type it.unive.jlisa.program.type.JavaByteType::INSTANCE
 		
-	instance method byteValue: it.unive.jlisa.program.java.constructs.bytew.ByteValue
-		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+	method valueOf: it.unive.jlisa.program.java.constructs.bytew.ByteValueOf
+		libtype java.lang.Byte* 
+		param v type it.unive.jlisa.program.type.JavaByteType::INSTANCE 
+		
+	method compare: it.unive.jlisa.program.java.constructs.bytew.ByteCompare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Byte*
+		param other libtype java.lang.Byte*
+		
+	method toString: it.unive.jlisa.program.java.constructs.bytew.ByteStaticToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		
+	method toUnsignedLong: it.unive.jlisa.program.java.constructs.bytew.ByteToUnsignedLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		
+	method toUnsignedInt: it.unive.jlisa.program.java.constructs.bytew.ByteToUnsignedInt
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaByteType::INSTANCE

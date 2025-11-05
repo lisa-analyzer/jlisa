@@ -24,8 +24,12 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -57,10 +61,18 @@ public class JavaArrayAccess extends BinaryExpression {
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
 		AccessChild lenAccess = new AccessChild(Untyped.INSTANCE, container, lenProperty, getLocation());
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		it.unive.lisa.symbolic.value.BinaryExpression bin = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE, right, lenAccess, ComparisonGe.INSTANCE, getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, bin, this);
+		it.unive.lisa.symbolic.value.BinaryExpression idxCheck1 = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				right, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression idxCheck2 = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				right, lenAccess, ComparisonGe.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression or = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				idxCheck1, idxCheck2, LogicalOr.INSTANCE, getLocation());
+
+		Satisfiability sat = analysis.satisfies(state, or, this);
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
@@ -87,12 +99,16 @@ public class JavaArrayAccess extends BinaryExpression {
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
-			AccessChild access = new AccessChild(accessType, container, right, getLocation());
+			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
+			if (accessType.isReferenceType())
+				access = new HeapReference(accessType, access, getLocation());
 			return analysis.smallStepSemantics(state, access, this);
 		} else {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
-			AccessChild access = new AccessChild(accessType, container, right, getLocation());
+			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
+			if (accessType.isReferenceType())
+				access = new HeapReference(accessType, access, getLocation());
 			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, access, this);
 
 			// builds the exception

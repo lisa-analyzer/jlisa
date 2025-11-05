@@ -125,6 +125,22 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
 		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+	
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
+		libtype java.lang.String*
+		param other type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
+		libtype java.lang.String*
+		param other type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
+		libtype java.lang.String*
+		param other type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+	
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
+		libtype java.lang.String*
+		param other type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfCharArray
 		libtype java.lang.String*
@@ -153,7 +169,7 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOf
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.String*
-		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param idx type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	instance method lastIndexOf: it.unive.jlisa.program.java.constructs.string.StringLastIndexOfString
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE

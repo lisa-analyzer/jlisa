@@ -25,7 +25,7 @@ public class JavaDoubleToRawLongBitsOperator implements UnaryOperator {
 
 	@Override
 	public String toString() {
-		return "double-to-raw-long-bits";
+		return "double-to-raw-int-bits";
 	}
 
 	@Override

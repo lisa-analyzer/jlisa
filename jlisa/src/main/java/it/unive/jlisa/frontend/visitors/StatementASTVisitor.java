@@ -762,7 +762,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		switchItem = itemVisitor.getExpression();
 		Statement noop = new NoOp(this.cfg,
 				parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
-		adj.addNode(noop);
+
+		boolean usedNoop = false;
 
 		List<it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase> cases = new ArrayList<>();
 
@@ -810,6 +811,17 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 					cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition,
 							caseInstrs));
 
+					for (Statement stBlock : caseBlock.getBody()) {
+						if (stBlock instanceof JavaBreak)
+							for (Statement stInstr : caseInstrs) {
+								if (stInstr.equals(stBlock)) {
+									adj.addNode(noop);
+									usedNoop = true;
+									adj.addEdge(new SequentialEdge(stInstr, noop));
+								}
+							}
+					}
+
 				}
 
 				if (switchDefault != null) {
@@ -821,7 +833,10 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 						emptyBlock = new NoOp(cfg,
 								parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 						adj.addNode(emptyBlock);
+						adj.addNode(noop);
+						usedNoop = true;
 						adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
+						adj.addEdge(new SequentialEdge(emptyBlock, noop));
 					}
 				}
 
@@ -846,12 +861,22 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			Statement follower = getFirstInstructionAfterSwitchInstr(switchDefault, caseInstrs);
 			if (follower != null) {
 				adj.addEdge(new SequentialEdge(switchDefault, follower));
-				adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
+				if (!lastCaseInstr.stopsExecution() && !lastCaseInstr.throwsError()) {
+					adj.addNode(noop);
+					usedNoop = true;
+					adj.addEdge(new SequentialEdge(lastCaseInstr, noop));
+				} else if (follower instanceof NoOp) {
+					adj.addNode(noop);
+					usedNoop = true;
+					adj.addEdge(new SequentialEdge(follower, noop));
+				}
 			} else {
 				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
 				adj.addEdge(new SequentialEdge(switchDefault, emptyBlock));
+				adj.addNode(noop);
+				usedNoop = true;
 				adj.addEdge(new SequentialEdge(emptyBlock, noop));
 			}
 		}
@@ -859,12 +884,18 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 		for (SwitchEqualityCheck switchCondition : workList) {
 
 			if (caseInstrs.size() > 1) {
-				adj.addEdge(new TrueEdge(switchCondition, caseInstrs.get(1)));
+				Statement next = getFirstInstructionAfterSwitchInstr(switchCondition, caseInstrs);
+				if (next == null && usedNoop)
+					next = noop;
+				adj.addEdge(new TrueEdge(switchCondition, next));
 			} else {
 				emptyBlock = new NoOp(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 				adj.addNode(emptyBlock);
+				adj.addNode(noop);
+				usedNoop = true;
 				adj.addEdge(new TrueEdge(defaultCase.getEntry(), emptyBlock));
+				adj.addEdge(new SequentialEdge(emptyBlock, noop));
 			}
 
 			cases.add(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase(switchCondition, caseInstrs));
@@ -882,6 +913,8 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 			emptyBlock = new NoOp(cfg,
 					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			adj.addNode(emptyBlock);
+			adj.addNode(noop);
+			usedNoop = true;
 			adj.addEdge(new SequentialEdge(emptyBlock, noop));
 			first = emptyBlock;
 		}
@@ -893,12 +926,14 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				.addControlFlowStructure(new Switch(adj,
 						!cases.isEmpty() ? cases.getFirst().getCondition()
 								: defaultCase != null ? defaultCase.getEntry() : emptyBlock,
-						noop,
+						usedNoop ? noop : null,
 						cases.toArray(new it.unive.jlisa.program.cfg.controlflow.switches.SwitchCase[cases.size()]),
 						defaultCase));
-		this.control.endControlFlowOf(adj, !cases.isEmpty() ? cases.getFirst().getCondition()
-				: defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, null, null);
-		this.block = new ParsedBlock(first, adj, noop);
+
+		if (usedNoop)
+			this.control.endControlFlowOf(adj, !cases.isEmpty() ? cases.getFirst().getCondition()
+					: defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, noop, null);
+		this.block = new ParsedBlock(first, adj, usedNoop ? noop : null);
 		return false;
 	}
 
@@ -915,6 +950,12 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 							e.newInstance(e.getSource(), getFirstInstructionAfterSwitchInstr(adj, c.getCondition())));
 					adj.removeEdge(e);
 				}
+
+				for (Statement st : c.getBody()) {
+					if (st.stopsExecution() && e.getSource().equals(st)) {
+						adj.removeEdge(e);
+					}
+				}
 			}
 		}
 
@@ -927,6 +968,7 @@ public class StatementASTVisitor extends BaseCodeElementASTVisitor {
 				}
 			}
 		}
+
 	}
 
 	private Statement getFirstInstructionAfterSwitchInstr(

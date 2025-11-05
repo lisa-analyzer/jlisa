@@ -719,10 +719,30 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
-		node.getReturnType2().accept(typeVisitor);
 
-		it.unive.lisa.type.Type returnType = typeVisitor.getType();
+		it.unive.lisa.type.Type returnType = null;
+
+		// the method is generic
+		if (node.typeParameters().stream().filter(tp -> tp.toString().equals(node.getReturnType2().toString()))
+				.count() > 0)
+			returnType = JavaClassType.getObjectType();
+		// the method is not generic, but the class it is
+		else {
+			List topLevelTypes = compilationUnit.types();
+			for (Object tlType : topLevelTypes) {
+				if (tlType instanceof TypeDeclaration)
+					if (((TypeDeclaration) tlType).typeParameters().stream()
+							.filter(tp -> tp.toString().equals(node.getReturnType2().toString())).count() > 0)
+						returnType = JavaClassType.getObjectType();
+			}
+
+			if (returnType == null) {
+				TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
+				node.getReturnType2().accept(typeVisitor);
+				returnType = typeVisitor.getType();
+			}
+		}
+
 		List<Parameter> parameters = new ArrayList<>();
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
