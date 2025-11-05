@@ -17,8 +17,17 @@ import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStra
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -56,43 +65,72 @@ public class JavaAssigningStrategy
 
 		for (int i = 0; i < formals.length; i++) {
 			AnalysisState<A> temp = prepared.bottomExecution();
-			for (SymbolicExpression exp : parameters[i])
-				if (JavaClassType.isWrapperOf(formals[i].getStaticType(), exp.getStaticType())) {
+			for (SymbolicExpression exp : parameters[i]) {
+				Type formalType = formals[i].getStaticType();
+				Variable formalVar = formals[i].toSymbolicVariable();
+				Type actualType = exp.getStaticType();
+				if (!formalType.isUntyped() && actualType.canBeAssignedTo(formalType) && !formalType.isReferenceType()
+						&& !actualType.equals(formalType)) {
+					// type-conv
+					Constant typeConv = new Constant(
+							new TypeTokenType(Collections.singleton(formalType)),
+							formalType,
+							call.getLocation());
+					BinaryExpression castExpression = new BinaryExpression(
+							formalType,
+							exp,
+							typeConv,
+							TypeConv.INSTANCE,
+							call.getLocation());
+					temp = temp.lub(interprocedural.getAnalysis().assign(prepared, formalVar, castExpression, call));
+					Set<SymbolicExpression> set = new HashSet<>(pars[i].elements());
+					set.remove(exp);
+					set.add(castExpression);
+					pars[i] = new ExpressionSet(set);
+					boxingUnboxingNeeded = true;
+				} else if (JavaClassType.isWrapperOf(formalType, actualType)) {
 					// boxing
 					JavaNewObj wrap = new JavaNewObj(
 							call.getCFG(),
 							call.getLocation(),
-							(JavaReferenceType) formals[i].getStaticType(),
+							(JavaReferenceType) formalType,
 							new Expression[] { call.getSubExpressions()[i] });
 					AnalysisState<A> wrapState = wrap.forwardSemantics(prepared, interprocedural, expressions);
 					for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
 						temp = temp.lub(
 								interprocedural.getAnalysis().assign(
 										wrapState,
-										formals[i].toSymbolicVariable(),
+										formalVar,
 										wrapExp,
 										call)
 										.forgetIdentifiers(wrap.getMetaVariables(), call));
-					pars[i] = wrapState.getExecutionExpressions();
+					Set<SymbolicExpression> set = new HashSet<>(pars[i].elements());
+					set.remove(exp);
+					set.addAll(wrapState.getExecutionExpressions().elements());
+					pars[i] = new ExpressionSet(set);
 					boxingUnboxingNeeded = true;
-				} else if (JavaClassType.isWrapperOf(exp.getStaticType(), formals[i].getStaticType())) {
+				} else if (JavaClassType.isWrapperOf(actualType, formalType)) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", call.getLocation());
 					HeapDereference derefRight = new HeapDereference(
-							exp.getStaticType().asReferenceType().getInnerType(), exp, call.getLocation());
-					AccessChild rightExpr = new AccessChild(formals[i].getStaticType(), derefRight, var,
+							actualType.asReferenceType().getInnerType(), exp, call.getLocation());
+					AccessChild rightExpr = new AccessChild(formalType, derefRight, var,
 							call.getLocation());
-					temp = temp.lub(interprocedural.getAnalysis().assign(prepared, formals[i].toSymbolicVariable(),
+					temp = temp.lub(interprocedural.getAnalysis().assign(prepared, formalVar,
 							rightExpr, call));
-					pars[i] = new ExpressionSet(rightExpr);
+					Set<SymbolicExpression> set = new HashSet<>(pars[i].elements());
+					set.remove(exp);
+					set.add(rightExpr);
+					pars[i] = new ExpressionSet(set);
 					boxingUnboxingNeeded = true;
 				} else
 					temp = temp.lub(
 							interprocedural.getAnalysis().assign(
 									prepared,
-									formals[i].toSymbolicVariable(),
+									formalVar,
 									exp,
 									call));
+			}
 			prepared = temp;
 		}
 

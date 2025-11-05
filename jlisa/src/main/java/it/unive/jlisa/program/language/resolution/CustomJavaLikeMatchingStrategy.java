@@ -59,6 +59,7 @@ public class CustomJavaLikeMatchingStrategy
 
 		for (Type rType : types)
 			if (rType.canBeAssignedTo(formal.getStaticType()))
+				// equal or widening
 				return true;
 			else if (JavaClassType.isWrapperOf(formal.getStaticType(), rType))
 				// boxing
@@ -66,6 +67,13 @@ public class CustomJavaLikeMatchingStrategy
 			else if (JavaClassType.isWrapperOf(rType, formal.getStaticType()))
 				// unboxing
 				return true;
+		// TODO the next case should be allowed only when we handle it in the
+		// assigning strategy and in the call graph's parameter distance
+		// Type unwrapped;
+		// else if ((unwrapped = JavaClassType.getUnwrappedType(rType)) != null)
+		// unboxing + widening
+		// if (unwrapped.canBeAssignedTo(formal.getStaticType()))
+		// return true;
 
 		return false;
 	}
