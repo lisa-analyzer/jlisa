@@ -145,3 +145,7 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.String*
 		param other libtype java.lang.Long*
 		
+	instance method byteValue: it.unive.jlisa.program.java.constructs.longw.LongByteValue
+		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		param this libtype java.lang.Long*
+		
