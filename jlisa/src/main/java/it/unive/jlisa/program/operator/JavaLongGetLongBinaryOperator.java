@@ -28,7 +28,10 @@ public class JavaLongGetLongBinaryOperator implements BinaryOperator {
 	}
 
 	@Override
-	public Set<Type> typeInference(TypeSystem types, Set<Type> left, Set<Type> right) {
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> left,
+			Set<Type> right) {
 		if (left.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		if (right.stream().noneMatch(t -> t.equals(JavaLongType.INSTANCE)))

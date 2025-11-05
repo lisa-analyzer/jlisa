@@ -65,7 +65,6 @@ public class LongValueOf extends UnaryExpression implements PluggableStatement {
 		HeapDereference derefLeft = new HeapDereference(longType, expr, getLocation());
 		AccessChild accessLeft = new AccessChild(longType, derefLeft, var, getLocation());
 
-
 		it.unive.lisa.symbolic.value.UnaryExpression valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE,
 				accessLeft,
@@ -73,7 +72,6 @@ public class LongValueOf extends UnaryExpression implements PluggableStatement {
 				getLocation());
 
 		return analysis.smallStepSemantics(state, valueOf, originating);
-
 
 	}
 }

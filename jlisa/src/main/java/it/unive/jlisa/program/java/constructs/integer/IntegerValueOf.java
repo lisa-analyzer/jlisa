@@ -60,7 +60,7 @@ public class IntegerValueOf extends it.unive.lisa.program.cfg.statement.UnaryExp
 				expressions);
 		getMetaVariables().addAll(call.getMetaVariables());
 		return callState;
-		
+
 	}
 
 	@Override

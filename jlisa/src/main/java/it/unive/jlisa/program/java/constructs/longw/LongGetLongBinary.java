@@ -59,8 +59,12 @@ public class LongGetLongBinary extends BinaryExpression implements PluggableStat
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type longType = JavaLongType.INSTANCE;
 		Type longWrapperType = JavaClassType.lookup("java.lang.Long");
 		Type stringType = getProgram().getTypes().getStringType();
@@ -69,7 +73,7 @@ public class LongGetLongBinary extends BinaryExpression implements PluggableStat
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-		
+
 		HeapDereference derefRight = new HeapDereference(longType, right, getLocation());
 		AccessChild accessRight = new AccessChild(longType, derefRight, var, getLocation());
 
@@ -81,10 +85,11 @@ public class LongGetLongBinary extends BinaryExpression implements PluggableStat
 				getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), (JavaReferenceType) new JavaReferenceType(longWrapperType),
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
+				(JavaReferenceType) new JavaReferenceType(longWrapperType),
 				new Expression[0]);
 		AnalysisState<
-		A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {

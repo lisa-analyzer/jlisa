@@ -318,67 +318,67 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaLongReverseBytesOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.reverseBytes(l));
-		
+
 		if (operator instanceof JavaLongHighestOneBitOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.highestOneBit(l));
-		
+
 		if (operator instanceof JavaLongToBinaryStringOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.toBinaryString(l));
-		
+
 		if (operator instanceof JavaLongReverseOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.reverse(l));
-		
+
 		if (operator instanceof JavaLongToHexStringOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.toHexString(l));
-		
+
 		if (operator instanceof JavaLongNumberOfTrailingZerosOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.numberOfTrailingZeros(l));
-		
+
 		if (operator instanceof JavaLongToOctalStringOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.toOctalString(l));
-		
+
 		if (operator instanceof JavaLongToStringUnaryOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.toString(l));
-		
+
 		if (operator instanceof JavaLongToUnsignedStringOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.toUnsignedString(l));
-		
+
 		if (operator instanceof JavaLongSignumOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.signum(l));
-		
+
 		if (operator instanceof JavaLongToStringUnaryInstanceOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(l.toString());
-		
+
 		if (operator instanceof JavaLongNumberOfLeadingZerosOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.numberOfLeadingZeros(l));
-	
+
 		if (operator instanceof JavaLongDoubleValueOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(l.doubleValue());
-	
+
 		if (operator instanceof JavaLongIntValueOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(l.intValue());
-		
+
 		if (operator instanceof JavaLongLowestOneBitOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(Long.lowestOneBit(l));
-		
+
 		if (operator instanceof JavaLongByteValueOperator)
 			if (arg.getValue() instanceof Long l)
 				return new ConstantValue(l.byteValue());
-		
+
 		// strings
 		if (operator instanceof JavaStringLengthOperator && arg.getValue() instanceof String str)
 			return new ConstantValue(str.length());
@@ -891,61 +891,61 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.compare(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongCompareUnsignedOperator) {
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.compareUnsigned(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongCompareToOperator) {
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(lv.compareTo(rv));
 		}
-		
+
 		if (operator instanceof JavaLongGetLongOperator) {
 			String lv = ((String) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.getLong(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongSumOperator) {
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.sum(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongMinOperator) {
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.min(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongMaxOperator) {
 			Long lv = ((Long) left.getValue());
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.max(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongToStringOperator) {
 			Long lv = ((Long) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(Long.toString(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongRotateLeftOperator) {
 			Long lv = ((Long) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(Long.rotateLeft(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongToUnsignedStringBinaryOperator) {
 			Long lv = ((Long) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(Long.toUnsignedString(lv, rv));
 		}
-		
+
 		if (operator instanceof JavaLongGetLongBinaryOperator) {
 			String lv = ((String) left.getValue());
 			Long rv = ((Long) right.getValue());

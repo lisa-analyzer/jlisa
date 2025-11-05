@@ -77,10 +77,11 @@ public class LongToOctalString extends UnaryExpression implements PluggableState
 				getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), (JavaReferenceType) new JavaReferenceType(stringType),
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
+				(JavaReferenceType) new JavaReferenceType(stringType),
 				new Expression[0]);
 		AnalysisState<
-		A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {

@@ -59,8 +59,12 @@ public class LongToString extends BinaryExpression implements PluggableStatement
 
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
-			InterproceduralAnalysis<A, D> interprocedural, AnalysisState<A> state, SymbolicExpression left,
-			SymbolicExpression right, StatementStore<A> expressions) throws SemanticException {
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Type longType = JavaLongType.INSTANCE;
 		Type intType = JavaIntType.INSTANCE;
 		Type stringType = getProgram().getTypes().getStringType();
@@ -69,7 +73,7 @@ public class LongToString extends BinaryExpression implements PluggableStatement
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(longType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(longType, derefLeft, var, getLocation());
-		
+
 		HeapDereference derefRight = new HeapDereference(intType, right, getLocation());
 		AccessChild accessRight = new AccessChild(intType, derefRight, var, getLocation());
 
@@ -81,10 +85,11 @@ public class LongToString extends BinaryExpression implements PluggableStatement
 				getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), (JavaReferenceType) new JavaReferenceType(stringType),
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
+				(JavaReferenceType) new JavaReferenceType(stringType),
 				new Expression[0]);
 		AnalysisState<
-		A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
