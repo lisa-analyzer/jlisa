@@ -854,4 +854,12 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void Character_public_static_int_java_lang_Character_digit_char_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Character_public_static_int_java_lang_Character_digit_char_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
 }
