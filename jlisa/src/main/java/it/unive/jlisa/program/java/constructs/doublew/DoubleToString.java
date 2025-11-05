@@ -31,7 +31,7 @@ public class DoubleToString extends UnaryExpression implements PluggableStatemen
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "doubleToRawLongBits", expr);
+		super(cfg, location, "toString", expr);
 	}
 
 	public static DoubleToString build(

@@ -3,11 +3,19 @@ package it.unive.jlisa.interprocedural.callgraph;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaNumericType;
-import it.unive.lisa.analysis.symbols.*;
+import it.unive.lisa.analysis.symbols.Aliases;
+import it.unive.lisa.analysis.symbols.NameSymbol;
+import it.unive.lisa.analysis.symbols.QualifiedNameSymbol;
+import it.unive.lisa.analysis.symbols.QualifierSymbol;
+import it.unive.lisa.analysis.symbols.SymbolAliasing;
 import it.unive.lisa.interprocedural.callgraph.BaseCallGraph;
 import it.unive.lisa.interprocedural.callgraph.CallResolutionException;
 import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.program.cfg.*;
+import it.unive.lisa.program.cfg.AbstractCodeMember;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
@@ -90,7 +98,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			for (CodeMember cm : cu.getCodeMembers()) {
 				if (!isATarget(call, aliasing, cm, types, false))
 					continue;
-				int distance = distanceFromPerfectTarget(call, cm, false);
+				int distance = distanceFromPerfectTarget(call, types, cm, false);
 				if (distance < 0)
 					continue; // incomparable
 				if (distance < lowestDistance) {
@@ -185,7 +193,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				for (CodeMember cm : cu.getInstanceCodeMembers(false)) {
 					if (!isATarget(call, aliasing, cm, types, true))
 						continue;
-					int distance = distanceFromPerfectTarget(call, cm, true);
+					int distance = distanceFromPerfectTarget(call, types, cm, true);
 					if (distance < 0)
 						continue;
 					if (distance < lowestDistance) {
@@ -340,6 +348,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 	 */
 	private int distanceFromPerfectTarget(
 			UnresolvedCall call,
+			Set<Type>[] types,
 			CodeMember cm,
 			boolean instance) {
 		int distance = 0;
@@ -350,50 +359,73 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			Expression parameter = params[i];
 			Type paramType = parameter.getStaticType();
 			Type formalType = descriptor.getFormals()[i].getStaticType();
-			if (formalType instanceof Untyped) {
+			if (formalType instanceof Untyped)
 				return 0;
-			}
 			if (paramType instanceof Untyped) {
-				return 0; // It is being evaluated with the
-							// CustomJavaLikeMatchingStrategy for now.
-			}
-			if (paramType instanceof JavaNumericType numericParam) {
-				if (formalType instanceof JavaNumericType numericFormal) {
-					int paramDist = numericParam.distance(numericFormal);
-					if (paramDist < 0)
-						return -1; // incomparable
-					distance += paramDist;
-				} else {
-					return -1;
-				}
-			} else if (paramType.isBooleanType() && formalType.isBooleanType()) {
-				return 0;
-			} else if (paramType instanceof ReferenceType refTypeParam
-					&& formalType instanceof ReferenceType refTypeFormal) {
-				if (refTypeParam.getInnerType().isNullType()) {
-					return 0;
-				} else if (refTypeParam.getInnerType() instanceof JavaArrayType actualInner
-						&& refTypeFormal.getInnerType() instanceof JavaArrayType formalInner)
-					return actualInner.equals(formalInner) ? 0 : -1;
-
-				// from here on, we should suppose that the inner types are
-				// units
-				UnitType paramUnitType = refTypeParam.getInnerType().asUnitType();
-				UnitType formalUnitType = refTypeFormal.getInnerType().asUnitType();
-				if (paramUnitType != null && formalUnitType != null) {
-					int paramDist = distanceBetweenCompilationUnits(formalUnitType.getUnit(), paramUnitType.getUnit());
-					if (paramDist < 0) {
-						return -1;
+				boolean allIncomparable = true;
+				for (Type runtimeType : types[i]) {
+					int dist = distanceBetweenParameters(formalType, runtimeType);
+					if (dist >= 0) {
+						allIncomparable = false;
+						distance += dist;
 					}
-					distance += paramDist;
-				} else {
-					return -1;
 				}
-			} else {
-				return -1;
+				if (allIncomparable)
+					return -1;
+				continue;
 			}
+			int dist = distanceBetweenParameters(formalType, paramType);
+			if (dist < 0)
+				return -1;
+			distance += dist;
 		}
 		return distance;
+	}
+
+	private int distanceBetweenParameters(
+			Type formalType,
+			Type paramType) {
+		if (formalType instanceof Untyped)
+			return 0;
+		if (paramType instanceof Untyped)
+			return 0;
+		if (paramType instanceof JavaNumericType numericParam)
+			if (formalType instanceof JavaNumericType numericFormal) {
+				int paramDist = numericParam.distance(numericFormal);
+				if (paramDist < 0)
+					return -1; // incomparable
+				return paramDist;
+			} else
+				return -1;
+		else if (paramType.isBooleanType() && formalType.isBooleanType())
+			return 0;
+		else if (JavaClassType.isWrapperOf(formalType, paramType))
+			// boxing
+			return 1;
+		else if (JavaClassType.isWrapperOf(paramType, formalType))
+			// unboxing
+			return 1;
+		else if (paramType instanceof ReferenceType refTypeParam
+				&& formalType instanceof ReferenceType refTypeFormal) {
+			if (refTypeParam.getInnerType().isNullType())
+				return 0;
+			else if (refTypeParam.getInnerType() instanceof JavaArrayType actualInner
+					&& refTypeFormal.getInnerType() instanceof JavaArrayType formalInner)
+				return actualInner.equals(formalInner) ? 0 : -1;
+
+			// from here on, we should suppose that the inner types are
+			// units
+			UnitType paramUnitType = refTypeParam.getInnerType().asUnitType();
+			UnitType formalUnitType = refTypeFormal.getInnerType().asUnitType();
+			if (paramUnitType != null && formalUnitType != null) {
+				int paramDist = distanceBetweenCompilationUnits(formalUnitType.getUnit(), paramUnitType.getUnit());
+				if (paramDist < 0)
+					return -1;
+				return paramDist;
+			} else
+				return -1;
+		} else
+			return -1;
 	}
 
 	/**

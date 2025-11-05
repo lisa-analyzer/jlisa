@@ -1,6 +1,7 @@
-package it.unive.jlisa.program.java.constructs.floatw;
+package it.unive.jlisa.program.java.constructs.doublew;
 
-import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.operator.JavaDoubleToLongBitsOperator;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -14,25 +15,22 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.Untyped;
 
-public class FloatValue extends UnaryExpression implements PluggableStatement {
+public class DoubleToLongBits extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public FloatValue(
+	public DoubleToLongBits(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "floatValue", expr);
+		super(cfg, location, "doubleToLongBits", expr);
 	}
 
-	public static FloatValue build(
+	public static DoubleToLongBits build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new FloatValue(cfg, location, params[0]);
+		return new DoubleToLongBits(cfg, location, params[0]);
 	}
 
 	@Override
@@ -55,8 +53,8 @@ public class FloatValue extends UnaryExpression implements PluggableStatement {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild access = new AccessChild(JavaFloatType.INSTANCE, expr, var, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaLongType.INSTANCE, expr, JavaDoubleToLongBitsOperator.INSTANCE, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}
 }

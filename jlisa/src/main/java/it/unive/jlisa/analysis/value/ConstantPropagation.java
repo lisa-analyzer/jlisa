@@ -291,10 +291,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaDoubleToStringOperator)
 			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
-
 		if (operator instanceof JavaFloatToStringOperator)
 			if (arg.getValue() instanceof Float d)
 				return new ConstantValue(d.toString());
+
+		if (operator instanceof JavaDoubleIsNaNOperator)
+			if (arg.getValue() instanceof Number d)
+				return new ConstantValue(Double.isNaN(d.doubleValue()));
 
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
@@ -345,7 +348,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStringGetBytesOperator && arg.getValue() instanceof String s)
 			return new ConstantValue(s.getBytes());
 
-		if (operator instanceof JavaLongIntValueOperator && arg.getValue() instanceof Long l)
+		if (operator instanceof JavaNumberIntValueOperator && arg.getValue() instanceof Long l)
 			return new ConstantValue(l.intValue());
 
 		// boolean

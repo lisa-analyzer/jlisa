@@ -63,7 +63,7 @@ public class MathAbs extends it.unive.lisa.program.cfg.statement.UnaryExpression
 			Type primType;
 			SymbolicExpression exprToAbs = expr;
 			if (t.isReferenceType()
-					&& (primType = JavaClassType.isWrapperClass(t.asReferenceType().getInnerType())) != null) {
+					&& (primType = JavaClassType.getUnwrappedType(t.asReferenceType().getInnerType())) != null) {
 				// unboxing
 				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 				HeapDereference derefLeft = new HeapDereference(primType, expr, getLocation());

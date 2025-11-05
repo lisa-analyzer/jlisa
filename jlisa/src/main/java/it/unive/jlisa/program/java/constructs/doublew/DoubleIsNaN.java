@@ -53,7 +53,6 @@ public class DoubleIsNaN extends UnaryExpression implements PluggableStatement {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaBooleanType.INSTANCE,
 				expr,
