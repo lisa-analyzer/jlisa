@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.operator;
 
-import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
@@ -31,7 +31,7 @@ public class JavaFloatToStringOperator implements UnaryOperator {
 	public Set<Type> typeInference(
 			TypeSystem types,
 			Set<Type> argument) {
-		if (argument.stream().noneMatch(t -> t.equals(JavaDoubleType.INSTANCE)))
+		if (argument.stream().noneMatch(t -> t.equals(JavaFloatType.INSTANCE)))
 			return Collections.emptySet();
 		return Collections.singleton(types.getStringType());
 	}
