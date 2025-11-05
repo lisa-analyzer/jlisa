@@ -140,3 +140,8 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
 		
+	method getLong: it.unive.jlisa.program.java.constructs.longw.LongGetLongBinary
+		libtype java.lang.Long*
+		param this libtype java.lang.String*
+		param other libtype java.lang.Long*
+		
