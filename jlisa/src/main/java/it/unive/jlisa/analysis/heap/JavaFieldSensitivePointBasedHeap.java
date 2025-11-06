@@ -1,8 +1,5 @@
 package it.unive.jlisa.analysis.heap;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -18,6 +15,8 @@ import it.unive.lisa.symbolic.value.MemoryPointer;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A field-insensitive program point-based {@link AllocationSiteBasedAnalysis}.
