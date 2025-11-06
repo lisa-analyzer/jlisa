@@ -235,6 +235,28 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Character v)
 				return new ConstantValue(Character.isWhitespace(v));
 
+		if (operator instanceof JavaCharacterGetDirectionalityOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.getDirectionality(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.getDirectionality(v));
+
+		if (operator instanceof JavaCharacterGetNumericValueOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.getNumericValue(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.getNumericValue(v));
+
+		if (operator instanceof JavaCharacterCharCountOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.charCount(v));
+
+		if (operator instanceof JavaCharacterToTitleCaseOperator)
+			if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(Character.toTitleCase(v));
+			else if (arg.getValue() instanceof Character v)
+				return new ConstantValue(Character.toTitleCase(v));
+
 		// numeric
 		if (operator instanceof NumericNegation)
 			if (arg.getValue() instanceof Double v)
@@ -954,9 +976,23 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		}
 
 		if (operator instanceof JavaCharacterDigitOperator) {
-			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
-			return new ConstantValue(Character.digit(lv, rv));
+			if (left.getValue() instanceof Integer lv)
+				return new ConstantValue(Character.digit(lv, rv));
+			else if (left.getValue() instanceof Character lv)
+				return new ConstantValue(Character.digit(lv, rv));
+		}
+
+		if (operator instanceof JavaCharacterToCodePointOperator) {
+			Character rv = ((Character) right.getValue());
+			Character lv = (Character) left.getValue();
+			return new ConstantValue(Character.toCodePoint(lv, rv));
+		}
+
+		if (operator instanceof JavaCharacterCompareOperator) {
+			Character rv = ((Character) right.getValue());
+			Character lv = (Character) left.getValue();
+			return new ConstantValue(Character.compare(lv, rv));
 		}
 
 		if (operator instanceof JavaStringDeleteCharAtOperator) {
