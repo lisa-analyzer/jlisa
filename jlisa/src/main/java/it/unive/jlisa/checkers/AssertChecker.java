@@ -81,7 +81,7 @@ public class AssertChecker
 							TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node) {
-		// RuntimeException property checker
+
 		if (node instanceof JavaUnresolvedStaticCall unresolvedCall
 				&& unresolvedCall.getQualifier().equals("org.sosy_lab.sv_benchmarks.Verifier")) {
 			if (unresolvedCall.getParentStatement() instanceof JavaAssignment assignment
@@ -98,6 +98,7 @@ public class AssertChecker
 				}
 			}
 		}
+		// RuntimeException property checker
 		if (graph.getProgram().getEntryPoints().contains(graph) && node instanceof Ret)
 			try {
 				checkRuntimeException(tool, graph, node);
