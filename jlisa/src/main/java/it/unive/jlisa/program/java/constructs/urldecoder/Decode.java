@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.urldecoder;
 
-import it.unive.jlisa.analysis.JavaNullConstant;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -22,6 +21,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -85,7 +85,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		// ... and null
 		AnalysisState<
-				A> nullState = analysis.smallStepSemantics(state, new JavaNullConstant(getLocation()), originating);
+				A> nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), originating);
 		AnalysisState<A> noExceptionState = tmp.lub(nullState);
 
 		// builds the exception

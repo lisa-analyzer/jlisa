@@ -1,5 +1,7 @@
 package it.unive.jlisa.analysis.value;
 
+import java.util.Set;
+
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
@@ -45,7 +47,6 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
-import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -78,15 +79,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public ConstantValue evalNullConstant(
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		throw new SemanticException("null value is not handled by the constant propagation domain");
-	}
-
-	@Override
-	public ConstantValue evalNonNullConstant(
+	public ConstantValue evalConstant(
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
@@ -1231,15 +1224,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public Satisfiability satisfiesNullConstant(
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		// this method should not be never called
-		return Satisfiability.UNKNOWN;
-	}
-
-	@Override
 	public Satisfiability satisfiesUnaryExpression(
 			UnaryExpression expression,
 			ConstantValue arg,
@@ -1531,7 +1515,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public Satisfiability satisfiesNonNullConstant(
+	public Satisfiability satisfiesConstant(
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
