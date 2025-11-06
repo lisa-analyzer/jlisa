@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.bytew;
 
-import it.unive.jlisa.program.operator.JavaByteToUnsignedIntOperator;
+import it.unive.jlisa.program.operator.JavaByteToUnsignedLongOperator;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -57,7 +57,7 @@ public class ByteToUnsignedLong extends UnaryExpression implements PluggableStat
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaIntType.INSTANCE,
 				expr,
-				JavaByteToUnsignedIntOperator.INSTANCE,
+				JavaByteToUnsignedLongOperator.INSTANCE,
 				getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}

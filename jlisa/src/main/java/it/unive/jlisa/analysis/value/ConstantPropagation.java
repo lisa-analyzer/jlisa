@@ -78,19 +78,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public ConstantValue evalNullConstant(
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		throw new SemanticException("null value is not handled by the constant propagation domain");
-	}
-
-	@Override
-	public ConstantValue evalNonNullConstant(
+	public ConstantValue evalConstant(
 			Constant constant,
 			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
+			SemanticOracle oracle) {
 		return new ConstantValue(constant.getValue());
 	}
 
@@ -1355,15 +1346,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public Satisfiability satisfiesNullConstant(
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		// this method should not be never called
-		return Satisfiability.UNKNOWN;
-	}
-
-	@Override
 	public Satisfiability satisfiesUnaryExpression(
 			UnaryExpression expression,
 			ConstantValue arg,
@@ -1655,7 +1637,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	}
 
 	@Override
-	public Satisfiability satisfiesNonNullConstant(
+	public Satisfiability satisfiesConstant(
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
