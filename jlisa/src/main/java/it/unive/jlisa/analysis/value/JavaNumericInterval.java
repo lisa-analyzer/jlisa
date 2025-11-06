@@ -25,8 +25,7 @@ public class JavaNumericInterval extends Interval {
 			ProgramPoint pp,
 			SemanticOracle oracle) {
 		if (constant.getValue() instanceof Number) {
-			Double i = ((Number) constant.getValue()).doubleValue();
-			return new IntInterval(new MathNumber(i), new MathNumber(i));
+			return fromConstant(constant);
 		}
 		// If the constant is not a number, return BOTTOM.
 		// TOP represents any possible number, but since the constant is not
@@ -111,4 +110,22 @@ public class JavaNumericInterval extends Interval {
 		return Satisfiability.UNKNOWN;
 	}
 
+	public IntInterval fromConstant(
+			Constant constant) {
+		double value = ((Number) constant.getValue()).doubleValue();
+		if (Double.isNaN(value)) {
+			return IntInterval.BOTTOM; // not a number
+		}
+		if (value == Double.POSITIVE_INFINITY) {
+			// return new IntInterval(MathNumber.PLUS_INFINITY,
+			// MathNumber.PLUS_INFINITY);
+			return IntInterval.BOTTOM;
+		}
+		if (value == Double.NEGATIVE_INFINITY) {
+			// return new IntInterval(MathNumber.MINUS_INFINITY,
+			// MathNumber.MINUS_INFINITY);
+			return IntInterval.BOTTOM;
+		}
+		return new IntInterval(new MathNumber(value), new MathNumber(value));
+	}
 }
