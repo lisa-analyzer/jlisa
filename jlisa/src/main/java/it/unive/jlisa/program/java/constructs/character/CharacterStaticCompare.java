@@ -16,10 +16,10 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
-public class CharacterCompare extends BinaryExpression implements PluggableStatement {
+public class CharacterStaticCompare extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public CharacterCompare(
+	public CharacterStaticCompare(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
@@ -27,11 +27,11 @@ public class CharacterCompare extends BinaryExpression implements PluggableState
 		super(cfg, location, "compare", left, right);
 	}
 
-	public static CharacterCompare build(
+	public static CharacterStaticCompare build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new CharacterCompare(cfg, location, params[0], params[1]);
+		return new CharacterStaticCompare(cfg, location, params[0], params[1]);
 	}
 
 	@Override

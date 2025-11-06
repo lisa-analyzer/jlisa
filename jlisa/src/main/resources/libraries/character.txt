@@ -36,7 +36,7 @@ class java.lang.Character extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-	method isBmpv: it.unive.jlisa.program.java.constructs.character.CharacterIsBmpv
+	method isBmpv: it.unive.jlisa.program.java.constructs.character.CharacterIsBmpCodePoint
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
@@ -124,7 +124,7 @@ class java.lang.Character extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-	method isSupplementaryv: it.unive.jlisa.program.java.constructs.character.CharacterIsSupplementaryv
+	method isSupplementaryv: it.unive.jlisa.program.java.constructs.character.CharacterIsSupplementaryCodePoint
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
@@ -160,7 +160,7 @@ class java.lang.Character extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-	method isValidv: it.unive.jlisa.program.java.constructs.character.CharacterIsValidv
+	method isValidv: it.unive.jlisa.program.java.constructs.character.CharacterIsValidCodePoint
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
