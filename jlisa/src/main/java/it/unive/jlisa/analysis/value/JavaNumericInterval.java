@@ -20,7 +20,7 @@ import it.unive.lisa.util.numeric.MathNumber;
 public class JavaNumericInterval extends Interval {
 
 	@Override
-	public IntInterval evalNonNullConstant(
+	public IntInterval evalConstant(
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle) {

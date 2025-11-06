@@ -49,24 +49,14 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 	}
 
 	@Override
-	public ConstantValueIntInterval evalNullConstant(
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		return new ConstantValueIntInterval(
-				constantPropagation.evalNullConstant(pp, oracle),
-				interval.evalNullConstant(pp, oracle));
-	}
-
-	@Override
-	public ConstantValueIntInterval evalNonNullConstant(
+	public ConstantValueIntInterval evalConstant(
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
 		return new ConstantValueIntInterval(
-				constantPropagation.evalNonNullConstant(constant, pp, oracle),
-				interval.evalNonNullConstant(constant, pp, oracle));
+				constantPropagation.evalConstant(constant, pp, oracle),
+				interval.evalConstant(constant, pp, oracle));
 	}
 
 	@Override
@@ -201,39 +191,6 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		if (constantPropSatisfiability == Satisfiability.UNKNOWN
 				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
 			Satisfiability intervalSatisfiability = interval.satisfiesAbstractValue(value.getIntInterval(), pp, oracle);
-			if (intervalSatisfiability == Satisfiability.SATISFIED) {
-				return Satisfiability.SATISFIED;
-			}
-		}
-		return constantPropSatisfiability;
-	}
-
-	@Override
-	public Satisfiability satisfiesNullConstant(
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		Satisfiability constantPropSatisfiability = constantPropagation.satisfiesNullConstant(pp, oracle);
-		if (constantPropSatisfiability == Satisfiability.UNKNOWN
-				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			Satisfiability intervalSatisfiability = interval.satisfiesNullConstant(pp, oracle);
-			if (intervalSatisfiability == Satisfiability.SATISFIED) {
-				return Satisfiability.SATISFIED;
-			}
-		}
-		return constantPropSatisfiability;
-	}
-
-	@Override
-	public Satisfiability satisfiesNonNullConstant(
-			Constant constant,
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		Satisfiability constantPropSatisfiability = constantPropagation.satisfiesNonNullConstant(constant, pp, oracle);
-		if (constantPropSatisfiability == Satisfiability.UNKNOWN
-				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			Satisfiability intervalSatisfiability = interval.satisfiesNonNullConstant(constant, pp, oracle);
 			if (intervalSatisfiability == Satisfiability.SATISFIED) {
 				return Satisfiability.SATISFIED;
 			}
