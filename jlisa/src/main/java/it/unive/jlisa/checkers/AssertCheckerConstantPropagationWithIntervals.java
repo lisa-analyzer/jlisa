@@ -221,8 +221,8 @@ public class AssertCheckerConstantPropagationWithIntervals
 						witnessGenerated = true;
 					}
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					continue;
 				}
+				continue;
 			}
 
 			if (values.isBottom()) {
