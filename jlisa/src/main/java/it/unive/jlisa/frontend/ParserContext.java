@@ -13,6 +13,11 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import it.unive.jlisa.frontend.annotations.AnnotationInfo;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 
 /**
  * Central context for parsing operations that manages program state, variable
@@ -46,13 +51,16 @@ public class ParserContext {
 	 */
 	Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
+	// Method -> annotations found on that method (e.g., @GetMapping)
+    private final Map<CodeMemberDescriptor, List<AnnotationInfo>> methodAnnotations = new HashMap<>();
+
+
 	/**
 	 * Constructs a new ParserContext with the specified program, API level, and
 	 * exception handling strategy.
 	 *
 	 * @param program                   the program to be parsed and analyzed
 	 * @param apiLevel                  the API level for this parsing context
-	 * @param exceptionHandlingStrategy the strategy for handling parsing
 	 *                                      exceptions
 	 */
 	public ParserContext(
@@ -68,23 +76,18 @@ public class ParserContext {
 	 * graph.
 	 *
 	 * @param cfg          the control flow graph containing the variable
-	 * @param variableName the name of the variable
+	 *
 	 * @param type         the static type of the variable
-	 * 
+	 * @param variableInfo  the variable info
 	 * @throws RuntimeException if a variable with the same name already exists
 	 *                              in the CFG
 	 */
 	public void addVariableType(
 			CFG cfg,
-			VariableInfo localVariable,
+			VariableInfo variableInfo,
 			Type type) {
-		Map<VariableInfo, Type> types = variableTypes.get(cfg);
-		if (types == null) {
-			types = new HashMap<>();
-			variableTypes.put(cfg, types);
-		}
-
-		types.put(localVariable, type);
+		Map<VariableInfo, Type> map = variableTypes.computeIfAbsent(cfg, k -> new HashMap<>());
+		map.put(variableInfo, type);
 	}
 
 	/**
@@ -105,14 +108,15 @@ public class ParserContext {
 	 * </ol>
 	 *
 	 * @param cfg  the control flow graph to search within
-	 * @param name the name of the variable to look up
-	 * 
+	 * @param variableInfo the variable to look up
 	 * @return the static type of the variable, or Untyped.INSTANCE if not found
 	 */
 	public Type getVariableStaticType(
 			CFG cfg,
 			VariableInfo variableInfo) {
+
 		Type type = null;
+
 		Map<VariableInfo, Type> cfgVariables = variableTypes.get(cfg);
 		if (cfgVariables != null) {
 			type = cfgVariables.get(variableInfo);
@@ -120,10 +124,12 @@ public class ParserContext {
 				type = cfgVariables.get(new VariableInfo(variableInfo.getName(), null));
 			}
 		}
+
 		if (type == null) {
 			String name = variableInfo.getName();
 			type = getVariableStaticTypeFromUnitAndGlobals(cfg, name);
 		}
+
 		return type;
 	}
 
@@ -184,6 +190,14 @@ public class ParserContext {
 	public int getApiLevel() {
 		return apiLevel;
 	}
+
+    public void addMethodAnnotation(CodeMemberDescriptor member, AnnotationInfo ann) {
+        methodAnnotations.computeIfAbsent(member, k -> new java.util.ArrayList<>()).add(ann);
+    }
+    public Map<CodeMemberDescriptor, List<AnnotationInfo>> getMethodAnnotations() {
+        return Collections.unmodifiableMap(methodAnnotations);
+    }
+
 
 	/**
 	 * Creates and returns a new SourceCodeLocationManager for the specified

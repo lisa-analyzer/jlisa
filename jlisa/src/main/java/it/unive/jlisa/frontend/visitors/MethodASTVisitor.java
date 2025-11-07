@@ -24,6 +24,17 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import org.eclipse.jdt.core.dom.*;
+import it.unive.jlisa.frontend.annotations.AnnotationInfo;
+import it.unive.jlisa.frontend.annotations.AnnotationMarker;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import org.eclipse.jdt.core.dom.Annotation;
+import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
+import org.eclipse.jdt.core.dom.MemberValuePair;
+import org.eclipse.jdt.core.dom.Annotation;
+import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
+import org.eclipse.jdt.core.dom.MemberValuePair;
 
 public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -60,7 +71,44 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 					paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
 
-		this.cfg = new CFG(codeMemberDescriptor);
+		// ===  detect @GetMapping and remember its info ===
+		it.unive.lisa.program.cfg.CodeMemberDescriptor __member = cfg.getDescriptor();
+		AnnotationInfo __gmInfo = null;
+
+		for (Object m : (java.util.List<?>) node.modifiers()) {
+			if (!(m instanceof org.eclipse.jdt.core.dom.Annotation __ann))
+				continue;
+
+			String simple = __ann.getTypeName().getFullyQualifiedName();
+			int dot = simple.lastIndexOf('.');
+			if (dot >= 0) simple = simple.substring(dot + 1);
+
+			// all annotation
+			System.out.println("[ANN] @" + simple + " on " + __member);
+
+			if (!"GetMapping".equals(simple))
+				continue;
+
+			java.util.Map<String,String> params = new java.util.HashMap<>();
+			if (__ann instanceof org.eclipse.jdt.core.dom.SingleMemberAnnotation sma) {
+				params.put("value", stripQuotes(String.valueOf(sma.getValue())));
+			} else if (__ann instanceof org.eclipse.jdt.core.dom.NormalAnnotation na) {
+				for (Object o : na.values()) {
+					org.eclipse.jdt.core.dom.MemberValuePair p = (org.eclipse.jdt.core.dom.MemberValuePair) o;
+					params.put(p.getName().getIdentifier(), stripQuotes(String.valueOf(p.getValue())));
+				}
+			}
+			if (!params.containsKey("value") && params.containsKey("path"))
+				params.put("value", params.get("path"));
+
+			__gmInfo = new AnnotationInfo("GetMapping", java.util.Collections.unmodifiableMap(params));
+			parserContext.addMethodAnnotation(__member, __gmInfo);
+			System.out.println("[JLiSA-ANN] " + __member + " -> " + __gmInfo);
+			break; //  just first @GetMapping
+		}
+
+// === end detect block ===
+
 
 		JavaLocalVariableTracker tracker = new JavaLocalVariableTracker(cfg, codeMemberDescriptor);
 		tracker.enterScope();
@@ -90,12 +138,26 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 
 		cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
 		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
-			return false;
+
 		}
 
 		cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
 		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
+
+		// === JLiSA: inject marker as the NEW first node ===
+		//if (__gmInfo != null) {
+		//	CodeLocation __loc = parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation();
+		//	AnnotationMarker __mark = new AnnotationMarker(cfg, __loc, __gmInfo);
+
+		//	list.addNode(__mark);
+		//	list.addEdge(new SequentialEdge(__mark, blockStatementASTVisitor.getFirst()));
+
+		//	entrypoints.clear();
+		//	entrypoints.add(__mark);
+		//}
+// === end inject ===
+
 		if (cfg.getAllExitpoints().isEmpty()) {
 			Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
 			if (cfg.getNodesCount() == 0) {
@@ -251,4 +313,15 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	public CFG getCFG() {
 		return this.cfg;
 	}
+
+	private static String stripQuotes(String s) {
+		if (s == null) return null;
+		s = s.trim();
+		if (s.length() >= 2 && ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'"))))
+			return s.substring(1, s.length() - 1);
+		return s;
+	}
+
+
+
 }

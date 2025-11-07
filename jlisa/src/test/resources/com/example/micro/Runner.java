@@ -14,5 +14,12 @@ public class Runner {
         String response = client.sendGet(url);
         System.out.println("Simulated HTTP response:");
         System.out.println(response);
+
+// direct path
+        String direct = controller.getInfo("Alice", 25);
+        System.out.println(direct);
+
+
     }
+
 }
