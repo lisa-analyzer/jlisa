@@ -442,6 +442,15 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 	}
 
 	@Override
+	public Satisfiability satisfiesConstant(
+			Constant constant,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		return constantPropagation.satisfiesConstant(constant, pp, oracle);
+	}
+
+	@Override
 	public Satisfiability satisfies(
 			ValueEnvironment<ConstantValueIntInterval> environment,
 			ValueExpression expression,
