@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.jlisa.frontend.annotations.AnnotationInfo;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -9,15 +10,13 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
-import it.unive.jlisa.frontend.annotations.AnnotationInfo;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import java.util.Map;
 
 /**
  * Central context for parsing operations that manages program state, variable
@@ -52,16 +51,14 @@ public class ParserContext {
 	Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
 	// Method -> annotations found on that method (e.g., @GetMapping)
-    private final Map<CodeMemberDescriptor, List<AnnotationInfo>> methodAnnotations = new HashMap<>();
-
+	private final Map<CodeMemberDescriptor, List<AnnotationInfo>> methodAnnotations = new HashMap<>();
 
 	/**
 	 * Constructs a new ParserContext with the specified program, API level, and
 	 * exception handling strategy.
 	 *
-	 * @param program                   the program to be parsed and analyzed
-	 * @param apiLevel                  the API level for this parsing context
-	 *                                      exceptions
+	 * @param program  the program to be parsed and analyzed
+	 * @param apiLevel the API level for this parsing context exceptions
 	 */
 	public ParserContext(
 			Program program,
@@ -76,9 +73,9 @@ public class ParserContext {
 	 * graph.
 	 *
 	 * @param cfg          the control flow graph containing the variable
-	 *
 	 * @param type         the static type of the variable
-	 * @param variableInfo  the variable info
+	 * @param variableInfo the variable info
+	 * 
 	 * @throws RuntimeException if a variable with the same name already exists
 	 *                              in the CFG
 	 */
@@ -107,8 +104,9 @@ public class ParserContext {
 	 * <li>Return Untyped.INSTANCE if no match is found</li>
 	 * </ol>
 	 *
-	 * @param cfg  the control flow graph to search within
+	 * @param cfg          the control flow graph to search within
 	 * @param variableInfo the variable to look up
+	 * 
 	 * @return the static type of the variable, or Untyped.INSTANCE if not found
 	 */
 	public Type getVariableStaticType(
@@ -191,13 +189,15 @@ public class ParserContext {
 		return apiLevel;
 	}
 
-    public void addMethodAnnotation(CodeMemberDescriptor member, AnnotationInfo ann) {
-        methodAnnotations.computeIfAbsent(member, k -> new java.util.ArrayList<>()).add(ann);
-    }
-    public Map<CodeMemberDescriptor, List<AnnotationInfo>> getMethodAnnotations() {
-        return Collections.unmodifiableMap(methodAnnotations);
-    }
+	public void addMethodAnnotation(
+			CodeMemberDescriptor member,
+			AnnotationInfo ann) {
+		methodAnnotations.computeIfAbsent(member, k -> new java.util.ArrayList<>()).add(ann);
+	}
 
+	public Map<CodeMemberDescriptor, List<AnnotationInfo>> getMethodAnnotations() {
+		return Collections.unmodifiableMap(methodAnnotations);
+	}
 
 	/**
 	 * Creates and returns a new SourceCodeLocationManager for the specified

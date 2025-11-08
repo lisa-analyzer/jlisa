@@ -150,7 +150,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType());
 	}
 
-	@Override
 	public ConstantValue evalNullConstant(
 			ProgramPoint pp,
 			SemanticOracle oracle)
@@ -158,7 +157,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		throw new SemanticException("null value is not handled by the constant propagation domain");
 	}
 
-	@Override
 	public ConstantValue evalNonNullConstant(
 			Constant constant,
 			ProgramPoint pp,
@@ -932,7 +930,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return Satisfiability.UNKNOWN;
 	}
 
-	@Override
 	public Satisfiability satisfiesNullConstant(
 			ProgramPoint pp,
 			SemanticOracle oracle)
@@ -1195,7 +1192,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				oracle);
 	}
 
-	@Override
 	public Satisfiability satisfiesNonNullConstant(
 			Constant constant,
 			ProgramPoint pp,

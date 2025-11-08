@@ -1,6 +1,8 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.annotations.AnnotationInfo;
+import it.unive.jlisa.frontend.annotations.AnnotationMarker;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
@@ -24,17 +26,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import org.eclipse.jdt.core.dom.*;
-import it.unive.jlisa.frontend.annotations.AnnotationInfo;
-import it.unive.jlisa.frontend.annotations.AnnotationMarker;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import org.eclipse.jdt.core.dom.Annotation;
-import org.eclipse.jdt.core.dom.NormalAnnotation;
-import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
-import org.eclipse.jdt.core.dom.MemberValuePair;
-import org.eclipse.jdt.core.dom.Annotation;
-import org.eclipse.jdt.core.dom.NormalAnnotation;
-import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
-import org.eclipse.jdt.core.dom.MemberValuePair;
 
 public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
@@ -59,6 +50,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		} else {
 			codeMemberDescriptor = buildJavaCodeMemberDescriptor(node);
 		}
+		System.out.println("[VISIT] " + codeMemberDescriptor.getFullSignature());
 
 		boolean isMain = isMain(node);
 
@@ -71,7 +63,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 					paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
 
-		// ===  detect @GetMapping and remember its info ===
+		// === detect @GetMapping and remember its info ===
 		it.unive.lisa.program.cfg.CodeMemberDescriptor __member = cfg.getDescriptor();
 		AnnotationInfo __gmInfo = null;
 
@@ -81,7 +73,8 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 
 			String simple = __ann.getTypeName().getFullyQualifiedName();
 			int dot = simple.lastIndexOf('.');
-			if (dot >= 0) simple = simple.substring(dot + 1);
+			if (dot >= 0)
+				simple = simple.substring(dot + 1);
 
 			// all annotation
 			System.out.println("[ANN] @" + simple + " on " + __member);
@@ -89,7 +82,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			if (!"GetMapping".equals(simple))
 				continue;
 
-			java.util.Map<String,String> params = new java.util.HashMap<>();
+			java.util.Map<String, String> params = new java.util.HashMap<>();
 			if (__ann instanceof org.eclipse.jdt.core.dom.SingleMemberAnnotation sma) {
 				params.put("value", stripQuotes(String.valueOf(sma.getValue())));
 			} else if (__ann instanceof org.eclipse.jdt.core.dom.NormalAnnotation na) {
@@ -104,11 +97,10 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			__gmInfo = new AnnotationInfo("GetMapping", java.util.Collections.unmodifiableMap(params));
 			parserContext.addMethodAnnotation(__member, __gmInfo);
 			System.out.println("[JLiSA-ANN] " + __member + " -> " + __gmInfo);
-			break; //  just first @GetMapping
+			break; // just first @GetMapping
 		}
 
 // === end detect block ===
-
 
 		JavaLocalVariableTracker tracker = new JavaLocalVariableTracker(cfg, codeMemberDescriptor);
 		tracker.enterScope();
@@ -141,22 +133,24 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 
 		}
 
-		cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
 		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
+		Statement first = blockStatementASTVisitor.getFirst();
 
-		// === JLiSA: inject marker as the NEW first node ===
-		//if (__gmInfo != null) {
-		//	CodeLocation __loc = parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation();
-		//	AnnotationMarker __mark = new AnnotationMarker(cfg, __loc, __gmInfo);
+		if (__gmInfo != null) {
+			CodeLocation __loc = parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation();
+			AnnotationMarker __mark = new AnnotationMarker(cfg, __loc, __gmInfo);
 
-		//	list.addNode(__mark);
-		//	list.addEdge(new SequentialEdge(__mark, blockStatementASTVisitor.getFirst()));
+			list.addNode(__mark);
+			list.addEdge(new SequentialEdge(__mark, first)); // marker -> first
 
-		//	entrypoints.clear();
-		//	entrypoints.add(__mark);
-		//}
-// === end inject ===
+			entrypoints.clear();
+			entrypoints.add(__mark); // entrypoint = marker
+			getProgram().addEntryPoint(cfg);
+
+		} else {
+			entrypoints.add(first); // annotation: first
+		}
 
 		if (cfg.getAllExitpoints().isEmpty()) {
 			Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
@@ -189,6 +183,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		} else {
 			added = lisacompilationUnit.addCodeMember(cfg);
 		}
+		System.out.println("[ADDED] " + cfg.getDescriptor() + " -> " + added);
 
 		if (!added)
 			throw new ParsingException("duplicated_method_descriptor",
@@ -314,14 +309,14 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		return this.cfg;
 	}
 
-	private static String stripQuotes(String s) {
-		if (s == null) return null;
+	private static String stripQuotes(
+			String s) {
+		if (s == null)
+			return null;
 		s = s.trim();
 		if (s.length() >= 2 && ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'"))))
 			return s.substring(1, s.length() - 1);
 		return s;
 	}
-
-
 
 }

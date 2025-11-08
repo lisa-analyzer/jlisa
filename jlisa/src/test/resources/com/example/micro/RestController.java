@@ -1,3 +1,4 @@
 package com.example.micro;
 
-public @interface RestController {}
+public @interface RestController {
+}

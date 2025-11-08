@@ -225,7 +225,7 @@ public class Main {
 		conf.workdir = outdir;
 		conf.serializeResults = false;
 		conf.jsonOutput = true;
-		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML_WITH_SUBNODES;
+		conf.analysisGraphs = LiSAConfiguration.GraphType.HTML;
 		conf.interproceduralAnalysis = new ContextBasedAnalysis<>(FullStackToken.getSingleton());
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
