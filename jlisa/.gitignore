@@ -59,3 +59,9 @@ tests-output/
 
  
  
+# Local junk
+/jlisa/run.log
+/tests-output/
+/**/.idea/
+/*.iml
+
