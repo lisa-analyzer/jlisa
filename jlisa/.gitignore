@@ -65,3 +65,9 @@ tests-output/
 /**/.idea/
 /*.iml
 
+
+# ignore logs
+run.log
+*.log
+jlisa/run.log
+
