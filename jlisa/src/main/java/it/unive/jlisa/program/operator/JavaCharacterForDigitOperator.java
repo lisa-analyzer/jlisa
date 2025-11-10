@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.operator;
 
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
@@ -32,9 +33,9 @@ public class JavaCharacterForDigitOperator implements BinaryOperator {
 			TypeSystem types,
 			Set<Type> left,
 			Set<Type> right) {
-		if (left.stream().noneMatch(t -> t.equals(JavaCharType.INSTANCE)))
+		if (left.stream().noneMatch(t -> t.equals(JavaIntType.INSTANCE)))
 			return Collections.emptySet();
-		if (right.stream().noneMatch(t -> t.equals(JavaCharType.INSTANCE)))
+		if (right.stream().noneMatch(t -> t.equals(JavaIntType.INSTANCE)))
 			return Collections.emptySet();
 		return Collections.singleton(JavaCharType.INSTANCE);
 	}

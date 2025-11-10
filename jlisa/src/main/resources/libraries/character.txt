@@ -15,6 +15,14 @@ class java.lang.Character extends java.lang.Object:
 		param this libtype java.lang.Character*
 		param other libtype java.lang.Character*
 		
+	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
 	method isLetterOrDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsLetterOrDigit
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
@@ -182,8 +190,8 @@ class java.lang.Character extends java.lang.Object:
 
 	method forDigit: it.unive.jlisa.program.java.constructs.character.CharacterForDigit
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		param v1 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		param v2 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 	
 	method toLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterToLowerCase
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
