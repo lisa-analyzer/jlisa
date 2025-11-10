@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.character;
 
 import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierStartOperator;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -13,7 +14,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.UnaryExpression;
 
 public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		implements
@@ -47,13 +47,13 @@ public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.st
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		UnaryExpression isJavaId = new UnaryExpression(
-				getProgram().getTypes().getBooleanType(),
+
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaBooleanType.INSTANCE,
 				expr,
 				JavaCharacterIsJavaIdentifierStartOperator.INSTANCE,
 				getLocation());
-
-		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
 	}
 
 	@Override

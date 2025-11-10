@@ -55,12 +55,12 @@ public class CharacterForDigit extends BinaryExpression implements PluggableStat
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+		it.unive.lisa.symbolic.value.BinaryExpression expr = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaCharType.INSTANCE,
 				left,
 				right,
 				JavaCharacterForDigitOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, expr, originating);
 	}
 }
