@@ -89,6 +89,8 @@ public class JavaNumericInterval extends Interval {
 			SemanticOracle oracle) {
 		if (left.isTop() || right.isTop())
 			return Satisfiability.UNKNOWN;
+		if (left.isBottom() || right.isBottom())
+			return Satisfiability.BOTTOM;
 
 		BinaryOperator operator = expression.getOperator();
 		if (operator == ComparisonEq.INSTANCE) {
@@ -212,9 +214,8 @@ public class JavaNumericInterval extends Interval {
 			IntInterval arg,
 			ProgramPoint pp,
 			SemanticOracle oracle) {
-		// if arg is top, top is returned
-		if (arg.isTop())
-			return top();
+		if (arg.isTop() || arg.isBottom())
+			return arg;
 
 		Double l, h;
 		try {
@@ -372,6 +373,8 @@ public class JavaNumericInterval extends Interval {
 		// if left or right is top, top is returned
 		if (left.isTop() || right.isTop())
 			return top();
+		if (left.isBottom() || right.isBottom())
+			return bottom();
 
 		BinaryOperator operator = expression.getOperator();
 

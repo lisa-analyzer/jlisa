@@ -96,6 +96,13 @@ public class Main {
 				.desc("Disable HTML output (enabled by default)")
 				.required(false)
 				.build();
+
+		Option dumpExcs = Option.builder("e")
+				.longOpt("dump-exceptions")
+				.desc("When in statistics mode, log exceptions to standard output")
+				.required(false)
+				.build();
+
 		options.addOption(noHtmlOutput);
 
 		options.addOption(helpOption);
@@ -107,6 +114,7 @@ public class Main {
 		options.addOption(mode);
 		options.addOption(version);
 		options.addOption(noHtmlOutput);
+		options.addOption(dumpExcs);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -114,6 +122,7 @@ public class Main {
 		String outdir = "";
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
 		boolean htmlOutput = true;
+		boolean dumpExceptions = false;
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
@@ -153,6 +162,10 @@ public class Main {
 				htmlOutput = false;
 			}
 
+			if (cmd.hasOption("e")) {
+				dumpExceptions = true;
+			}
+
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
 
@@ -183,7 +196,7 @@ public class Main {
 			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput);
+			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -209,7 +222,8 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
-			boolean htmlOutput) {
+			boolean htmlOutput,
+			boolean dumpExceptions) {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
@@ -217,6 +231,8 @@ public class Main {
 			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", e);
 			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
 					+ "/frontend.csv file.");
+			if (dumpExceptions)
+				e.printStackTrace(System.out);
 			System.exit(1);
 		}
 		try {
@@ -224,6 +240,8 @@ public class Main {
 		} catch (Throwable e) {
 			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
+			if (dumpExceptions)
+				e.printStackTrace(System.out);
 			System.exit(1);
 		}
 	}
