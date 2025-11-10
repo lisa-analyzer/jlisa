@@ -401,10 +401,10 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			return 0;
 		else if (JavaClassType.isWrapperOf(formalType, paramType))
 			// boxing
-			return 1;
+			return 2;
 		else if (JavaClassType.isWrapperOf(paramType, formalType))
 			// unboxing
-			return 1;
+			return 2;
 		else if (paramType instanceof ReferenceType refTypeParam
 				&& formalType instanceof ReferenceType refTypeFormal) {
 			if (refTypeParam.getInnerType().isNullType())
