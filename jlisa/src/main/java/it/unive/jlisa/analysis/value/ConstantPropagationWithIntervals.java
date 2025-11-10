@@ -186,16 +186,21 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Satisfiability constantPropSatisfiability = constantPropagation.satisfiesAbstractValue(value.getConstantValue(),
-				pp, oracle);
-		if (constantPropSatisfiability == Satisfiability.UNKNOWN
-				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			Satisfiability intervalSatisfiability = interval.satisfiesAbstractValue(value.getIntInterval(), pp, oracle);
-			if (intervalSatisfiability == Satisfiability.SATISFIED) {
-				return Satisfiability.SATISFIED;
-			}
+		Satisfiability sat = constantPropagation.satisfiesAbstractValue(value.getConstantValue(), pp, oracle);
+		switch (sat) {
+		case NOT_SATISFIED:
+		case SATISFIED:
+			return sat;
+		case BOTTOM:
+		case UNKNOWN:
+		default:
+			Satisfiability sat_intv = interval.satisfiesAbstractValue(value.getIntInterval(), pp, oracle);
+			if (sat_intv == Satisfiability.SATISFIED || sat_intv == Satisfiability.NOT_SATISFIED)
+				return sat_intv;
+			// we keep the same distinction between BOTTOM and UNKNOWN
+			// that we got from constant propagation
+			return sat;
 		}
-		return constantPropSatisfiability;
 	}
 
 	@Override
@@ -205,17 +210,26 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Satisfiability constantPropSatisfiability = constantPropagation.satisfiesUnaryExpression(expression,
-				arg.getConstantValue(), pp, oracle);
-		if (constantPropSatisfiability == Satisfiability.UNKNOWN
-				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			Satisfiability intervalSatisfiability = interval.satisfiesUnaryExpression(expression, arg.getIntInterval(),
-					pp, oracle);
-			if (intervalSatisfiability == Satisfiability.SATISFIED) {
-				return Satisfiability.SATISFIED;
-			}
+		Satisfiability sat = constantPropagation.satisfiesUnaryExpression(expression, arg.getConstantValue(), pp,
+				oracle);
+		switch (sat) {
+		case NOT_SATISFIED:
+		case SATISFIED:
+			return sat;
+		case BOTTOM:
+		case UNKNOWN:
+		default:
+			if (arg.getIntInterval().isBottom())
+				// we keep the same distinction between BOTTOM and UNKNOWN
+				// that we got from constant propagation
+				return sat;
+			Satisfiability sat_intv = interval.satisfiesUnaryExpression(expression, arg.getIntInterval(), pp, oracle);
+			if (sat_intv == Satisfiability.SATISFIED || sat_intv == Satisfiability.NOT_SATISFIED)
+				return sat_intv;
+			// we keep the same distinction between BOTTOM and UNKNOWN
+			// that we got from constant propagation
+			return sat;
 		}
-		return constantPropSatisfiability;
 	}
 
 	@Override
@@ -226,21 +240,27 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Satisfiability constantPropSatisfiability = constantPropagation.satisfiesBinaryExpression(expression,
-				left.getConstantValue(), right.getConstantValue(), pp, oracle);
-		if (constantPropSatisfiability == Satisfiability.UNKNOWN
-				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			if (!left.getIntInterval().isBottom() && !right.getIntInterval().isBottom()) {
-				Satisfiability intervalSatisfiability = interval.satisfiesBinaryExpression(expression,
-						left.getIntInterval(), right.getIntInterval(), pp, oracle);
-				if (intervalSatisfiability == Satisfiability.SATISFIED
-						|| intervalSatisfiability == Satisfiability.NOT_SATISFIED) {
-					return intervalSatisfiability;
-				}
-			}
-
+		Satisfiability sat = constantPropagation.satisfiesBinaryExpression(expression, left.getConstantValue(),
+				right.getConstantValue(), pp, oracle);
+		switch (sat) {
+		case NOT_SATISFIED:
+		case SATISFIED:
+			return sat;
+		case BOTTOM:
+		case UNKNOWN:
+		default:
+			if (left.getIntInterval().isBottom() || right.getIntInterval().isBottom())
+				// we keep the same distinction between BOTTOM and UNKNOWN
+				// that we got from constant propagation
+				return sat;
+			Satisfiability sat_intv = interval.satisfiesBinaryExpression(expression, left.getIntInterval(),
+					right.getIntInterval(), pp, oracle);
+			if (sat_intv == Satisfiability.SATISFIED || sat_intv == Satisfiability.NOT_SATISFIED)
+				return sat_intv;
+			// we keep the same distinction between BOTTOM and UNKNOWN
+			// that we got from constant propagation
+			return sat;
 		}
-		return constantPropSatisfiability;
 	}
 
 	@Override
@@ -252,17 +272,28 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Satisfiability constantPropSatisfiability = constantPropagation.satisfiesTernaryExpression(expression,
+		Satisfiability sat = constantPropagation.satisfiesTernaryExpression(expression,
 				left.getConstantValue(), middle.getConstantValue(), right.getConstantValue(), pp, oracle);
-		if (constantPropSatisfiability == Satisfiability.UNKNOWN
-				|| constantPropSatisfiability == Satisfiability.BOTTOM) {
-			Satisfiability intervalSatisfiability = interval.satisfiesTernaryExpression(expression,
+		switch (sat) {
+		case NOT_SATISFIED:
+		case SATISFIED:
+			return sat;
+		case BOTTOM:
+		case UNKNOWN:
+		default:
+			if (left.getIntInterval().isBottom() || middle.getIntInterval().isBottom()
+					|| right.getIntInterval().isBottom())
+				// we keep the same distinction between BOTTOM and UNKNOWN
+				// that we got from constant propagation
+				return sat;
+			Satisfiability sat_intv = interval.satisfiesTernaryExpression(expression,
 					left.getIntInterval(), middle.getIntInterval(), right.getIntInterval(), pp, oracle);
-			if (intervalSatisfiability == Satisfiability.SATISFIED) {
-				return Satisfiability.SATISFIED;
-			}
+			if (sat_intv == Satisfiability.SATISFIED || sat_intv == Satisfiability.NOT_SATISFIED)
+				return sat_intv;
+			// we keep the same distinction between BOTTOM and UNKNOWN
+			// that we got from constant propagation
+			return sat;
 		}
-		return constantPropSatisfiability;
 	}
 
 	@Override
