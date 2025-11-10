@@ -6,7 +6,11 @@ import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.analysis.*;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
@@ -80,8 +84,11 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 				StatementStore<A> expressions)
 				throws SemanticException {
 			JavaClassType printWriterClassType = JavaClassType.getPrintStreamType();
+			JavaClassType intpuStreamClassType = JavaClassType.getInputStreamType();
 			JavaClassType systemType = JavaClassType.getSystemType();
-			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(
+			
+			// System.out
+			JavaAccessGlobal outGlobal = new JavaAccessGlobal(
 					getCFG(),
 					getLocation(),
 					systemType.getUnit(),
@@ -95,15 +102,63 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 					getCFG(),
 					getLocation(),
 					new JavaReferenceType(printWriterClassType));
-			AnalysisState<A> callState = newOut.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+			AnalysisState<A> outCallState = newOut.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					expressions);
-			AnalysisState<A> accessGlobalState = accessGlobal.forwardSemantics(state, interprocedural, expressions);
+			AnalysisState<A> accessGlobalState = outGlobal.forwardSemantics(state, interprocedural, expressions);
 			AnalysisState<A> tmp = state.bottomExecution();
-			for (SymbolicExpression callExpr : callState.getExecutionExpressions()) {
+			for (SymbolicExpression callExpr : outCallState.getExecutionExpressions()) {
 				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions())
-					tmp = tmp.lub(interprocedural.getAnalysis().assign(callState, accessGlobalExpr, callExpr, this));
+					tmp = tmp.lub(interprocedural.getAnalysis().assign(outCallState, accessGlobalExpr, callExpr, this));
 			}
+			
+			// System.err
+			JavaAccessGlobal errGlobal = new JavaAccessGlobal(
+					getCFG(),
+					getLocation(),
+					systemType.getUnit(),
+					new Global(
+							getLocation(),
+							getUnit(),
+							"err",
+							false,
+							printWriterClassType));
+			JavaNewObj newErr = new JavaNewObj(
+					getCFG(),
+					getLocation(),
+					new JavaReferenceType(printWriterClassType));
+			AnalysisState<A> errCallState = newErr.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0],
+					expressions);
+			AnalysisState<A> accessErrGlobalState = errGlobal.forwardSemantics(tmp, interprocedural, expressions);
 
+			for (SymbolicExpression callExpr : errCallState.getExecutionExpressions()) {
+				for (SymbolicExpression accessGlobalExpr : accessErrGlobalState.getExecutionExpressions())
+					tmp = tmp.lub(interprocedural.getAnalysis().assign(accessErrGlobalState, accessGlobalExpr, callExpr, this));
+			}
+			
+			// System.in
+			JavaAccessGlobal inGlobal = new JavaAccessGlobal(
+					getCFG(),
+					getLocation(),
+					systemType.getUnit(),
+					new Global(
+							getLocation(),
+							getUnit(),
+							"in",
+							false,
+							intpuStreamClassType));
+			JavaNewObj newIn = new JavaNewObj(
+					getCFG(),
+					getLocation(),
+					new JavaReferenceType(intpuStreamClassType));
+			AnalysisState<A> inCallState = newIn.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0],
+					expressions);
+			AnalysisState<A> accessInGlobalState = inGlobal.forwardSemantics(tmp, interprocedural, expressions);
+
+			for (SymbolicExpression callExpr : inCallState.getExecutionExpressions()) {
+				for (SymbolicExpression accessGlobalExpr : accessInGlobalState.getExecutionExpressions())
+					tmp = tmp.lub(interprocedural.getAnalysis().assign(accessErrGlobalState, accessGlobalExpr, callExpr, this));
+			}
+			
 			return tmp.withExecutionExpressions(state.getExecutionExpressions());
 		}
 	}

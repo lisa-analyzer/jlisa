@@ -265,6 +265,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.io.PrintStream");
 	}
 
+	public static JavaClassType getInputStreamType() {
+		return lookup("java.io.InputStream");
+	}
+
 	public static JavaClassType getUnsupportedEncodingExceptionType() {
 		return lookup("java.io.UnsupportedEncodingException");
 	}
