@@ -228,6 +228,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		CFG cfg = new CFG(cmDesc);
 
 		// first, we add the clinit call to the superclass
+		// TODO this might also retrieve interfaces defined in the txts
+		// we have to fix interfaces and replace SingleHierarchyTraversal
 		Set<it.unive.lisa.program.CompilationUnit> superClasses = unit
 				.getImmediateAncestors().stream()
 				.filter(u -> u instanceof ClassUnit)
