@@ -7,20 +7,22 @@ Outputs are written under tests-output/ (ignored by Git).
 
 Windows
 
-gradlew.bat run --args="-s src/test/resources/demo/com/example/demo -o tests-output/demo-hello"
+.\gradlew.bat clean compileJava run --args="-s src/test/resources/demo/com/example/demo -o tests-output/demo-hello -n ConstantPropagation -l INFO"
 
 
 Linux/macOS
 
-./gradlew run --args="-s src/test/resources/demo/com/example/demo -o tests-output/demo-hello"
+./gradlew clean compileJava run --args="-s src/test/resources/demo/com/example/demo -o tests-output/demo-hello -n ConstantPropagation -l INFO"
+
+
 
 2) Micro (simplified service-like example)
 
 Windows
 
-gradlew.bat run --args="-s src/test/resources/com/example/micro -o tests-output/micro"
+.\gradlew.bat clean compileJava run --args="-s src/test/resources/com/example/micro -o tests-output/micro -n ConstantPropagation -l INFO"
 
 
 Linux/macOS
 
-./gradlew run --args="-s src/test/resources/com/example/micro -o tests-output/micro"
+./gradlew clean compileJava run --args="-s src/test/resources/com/example/micro -o tests-output/micro -n ConstantPropagation -l INFO"
