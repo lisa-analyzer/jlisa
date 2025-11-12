@@ -157,6 +157,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.sin(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.sin(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.sin(v));
 
 		if (operator instanceof JavaMathCosOperator)
 			if (arg.getValue() instanceof Double v)
@@ -164,6 +166,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Math.cos(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.cos(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.cos(v));
 
 		if (operator instanceof JavaMathSqrtOperator)
@@ -173,6 +177,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.sqrt(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.sqrt(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.sqrt(v));
 
 		if (operator instanceof JavaMathTanOperator)
 			if (arg.getValue() instanceof Double v)
@@ -180,6 +186,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Math.tan(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.tan(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.tan(v));
 
 		if (operator instanceof JavaMathAtanOperator)
@@ -189,6 +197,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.atan(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.atan(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.atan(v));
+
 
 		if (operator instanceof JavaMathLogOperator)
 			if (arg.getValue() instanceof Double v)
@@ -196,6 +207,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Math.log(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.log(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.log(v));
 
 		if (operator instanceof JavaMathLog10Operator)
@@ -205,6 +218,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.log10(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.log10(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.log10(v));
 
 		if (operator instanceof JavaMathAsinOperator)
 			if (arg.getValue() instanceof Double v)
@@ -212,6 +227,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Math.asin(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.asin(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.asin(v));
 
 		if (operator instanceof JavaMathExpOperator)
@@ -221,6 +238,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.exp(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.exp(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.exp(v));
 
 		if (operator instanceof JavaMathAcosOperator)
 			if (arg.getValue() instanceof Double v)
@@ -228,6 +247,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Math.acos(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.acos(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.acos(v));
 
 		if (operator instanceof JavaMathFloorOperator)
@@ -237,6 +258,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.floor(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.floor(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.floor(v));
 
 		if (operator instanceof JavaMathRoundOperator)
 			if (arg.getValue() instanceof Double v)
@@ -245,6 +268,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(Math.round(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(Math.round(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(Math.round(v));
 
 		if (operator instanceof JavaMathToRadiansOperator)
 			if (arg.getValue() instanceof Double v)
@@ -252,6 +277,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(Math.toRadians(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(Math.toRadians(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.toRadians(v));
 
 		if (operator instanceof JavaMathAbsOperator)
@@ -271,6 +298,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.sin(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.sin(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.sin(v));
 
 		if (operator instanceof JavaStrictMathCosOperator)
 			if (arg.getValue() instanceof Double v)
@@ -278,6 +307,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(StrictMath.cos(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.cos(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.cos(v));
 
 		if (operator instanceof JavaStrictMathSqrtOperator)
@@ -287,6 +318,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.sqrt(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.sqrt(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.sqrt(v));
 
 		if (operator instanceof JavaStrictMathTanOperator)
 			if (arg.getValue() instanceof Double v)
@@ -294,6 +327,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(StrictMath.tan(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.tan(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.tan(v));
 
 		if (operator instanceof JavaStrictMathAtanOperator)
@@ -303,6 +338,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.atan(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.atan(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.atan(v));
 
 		if (operator instanceof JavaStrictMathLogOperator)
 			if (arg.getValue() instanceof Double v)
@@ -310,6 +347,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(StrictMath.log(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.log(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.log(v));
 
 		if (operator instanceof JavaStrictMathLog10Operator)
@@ -319,6 +358,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.log10(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.log10(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.log10(v));
 
 		if (operator instanceof JavaStrictMathAsinOperator)
 			if (arg.getValue() instanceof Double v)
@@ -326,6 +367,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(StrictMath.asin(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.asin(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.asin(v));
 
 		if (operator instanceof JavaStrictMathExpOperator)
@@ -335,6 +378,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.exp(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.exp(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.exp(v));
 
 		if (operator instanceof JavaStrictMathAcosOperator)
 			if (arg.getValue() instanceof Double v)
@@ -342,6 +387,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(StrictMath.acos(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.acos(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.acos(v));
 
 		if (operator instanceof JavaStrictMathFloorOperator)
@@ -351,6 +398,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.floor(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.floor(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.floor(v));
 
 		if (operator instanceof JavaStrictMathRoundOperator)
 			if (arg.getValue() instanceof Double v)
@@ -358,6 +407,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Integer v)
 				return new ConstantValue(StrictMath.round(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.round(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.round(v));
 
 		if (operator instanceof JavaStrictMathToRadiansOperator)
@@ -367,7 +418,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(StrictMath.toRadians(v));
 			else if (arg.getValue() instanceof Float v)
 				return new ConstantValue(StrictMath.toRadians(v));
-
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.toRadians(v));
+		
 		if (operator instanceof JavaStrictMathAbsOperator)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(StrictMath.abs(v));
@@ -381,7 +434,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaStrictMathGetExponentOperator)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(StrictMath.getExponent(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.getExponent(v));
 			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.getExponent(v));
+			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(StrictMath.getExponent(v));
 
 		if (operator instanceof JavaDoubleToRawLongBitsOperator)
