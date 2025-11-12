@@ -2,15 +2,20 @@ package it.unive.jlisa.program.java.constructs.system;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.SyntheticCodeLocation;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.analysis.*;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.NativeCFG;
@@ -20,11 +25,12 @@ import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.VoidType;
 
 public class SystemClassInitializer extends NativeCFG implements PluggableStatement {
-//	private static final String GLOBAL_OUT = "out";
-//	private static final String GLOBAL_OUT_CLASS_NAME = "PrintStream";
+	// private static final String GLOBAL_OUT = "out";
+	// private static final String GLOBAL_OUT_CLASS_NAME = "PrintStream";
 
 	protected Statement originating;
 
@@ -80,31 +86,65 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 				StatementStore<A> expressions)
 				throws SemanticException {
 			JavaClassType printWriterClassType = JavaClassType.getPrintStreamType();
-			JavaClassType systemType = JavaClassType.getSystemType();
-			JavaAccessGlobal accessGlobal = new JavaAccessGlobal(
-					getCFG(),
-					getLocation(),
-					systemType.getUnit(),
-					new Global(
-							getLocation(),
-							getUnit(),
-							"out",
-							false,
-							printWriterClassType));
+			JavaClassType inputStreamClassType = JavaClassType.getInputStreamType();
+			JavaReferenceType refPrinterType = new JavaReferenceType(printWriterClassType);
+			JavaReferenceType refInputStreamType = new JavaReferenceType(inputStreamClassType);
+
+			String src = ((SourceCodeLocation) getLocation()).getSourceFile() + "::System";
+			Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+			// System.out
+			SyntheticCodeLocation outLocation = new SyntheticCodeLocation(src, 1);
 			JavaNewObj newOut = new JavaNewObj(
 					getCFG(),
-					getLocation(),
-					new JavaReferenceType(printWriterClassType));
-			AnalysisState<A> callState = newOut.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+					outLocation,
+					refPrinterType);
+			AnalysisState<A> outCallState = newOut.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					expressions);
-			AnalysisState<A> accessGlobalState = accessGlobal.forwardSemantics(state, interprocedural, expressions);
-			AnalysisState<A> tmp = state.bottomExecution();
-			for (SymbolicExpression callExpr : callState.getExecutionExpressions()) {
-				for (SymbolicExpression accessGlobalExpr : accessGlobalState.getExecutionExpressions())
-					tmp = tmp.lub(interprocedural.getAnalysis().assign(callState, accessGlobalExpr, callExpr, this));
+			AnalysisState<A> tmpOut = state.bottomExecution();
+			for (SymbolicExpression callExpr : outCallState.getExecutionExpressions()) {
+				GlobalVariable outId = new GlobalVariable(refPrinterType, "java.lang.System::out",
+						outLocation);
+				tmpOut = tmpOut.lub(analysis.assign(outCallState, outId, callExpr, originating));
 			}
 
-			return tmp.withExecutionExpressions(state.getExecutionExpressions());
+			// System.err
+			SyntheticCodeLocation errLocation = new SyntheticCodeLocation(src, 2);
+			JavaNewObj newErr = new JavaNewObj(
+					getCFG(),
+					errLocation,
+					refPrinterType);
+			AnalysisState<A> errCallState = newErr.forwardSemanticsAux(interprocedural, tmpOut, new ExpressionSet[0],
+					expressions);
+
+			AnalysisState<A> tmpErr = state.bottomExecution();
+			for (SymbolicExpression callExpr : errCallState.getExecutionExpressions()) {
+				GlobalVariable errId = new GlobalVariable(refPrinterType, "java.lang.System::err",
+						errLocation);
+				tmpErr = tmpErr.lub(analysis.assign(errCallState, errId, callExpr, originating));
+			}
+
+			// System.in
+			SyntheticCodeLocation inLocation = new SyntheticCodeLocation(src, 3);
+			JavaNewObj newIn = new JavaNewObj(
+					getCFG(),
+					inLocation,
+					refInputStreamType);
+			AnalysisState<A> inCallState = newIn.forwardSemanticsAux(interprocedural, tmpErr, new ExpressionSet[0],
+					expressions);
+
+			AnalysisState<A> tmpIn = state.bottomExecution();
+			for (SymbolicExpression callExpr : inCallState.getExecutionExpressions()) {
+				GlobalVariable inId = new GlobalVariable(refInputStreamType, "java.lang.System::in",
+						inLocation);
+				tmpIn = tmpIn.lub(analysis.assign(inCallState, inId, callExpr, originating));
+			}
+
+			tmpIn = tmpIn.forgetIdentifiers(newIn.getMetaVariables(), this)
+					.forgetIdentifiers(newErr.getMetaVariables(), this)
+					.forgetIdentifiers(newOut.getMetaVariables(), this);
+
+			return tmpIn;
 		}
 	}
 }

@@ -857,6 +857,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void basic1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"basic1-test",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void Two_Variable_Averaging_Filter_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Two-Variable_Averaging_Filter",
