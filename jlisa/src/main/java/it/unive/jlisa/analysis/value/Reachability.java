@@ -83,7 +83,10 @@ public class Reachability<D extends ValueDomain<L>,
 		for (ControlFlowStructure cfs : current.getCFG().getDescriptor().getControlFlowStructures())
 			if (cfs.getCondition() == current) {
 				// for guards we keep the reachability of the first time
-				// we encounter them
+				// we encounter them: this help with loops that are reachable
+				// but where the lub on the guard would make the condition
+				// become possibly reachable, thus making the analysis
+				// less precise
 				ReachabilityStatus reach = r.getState(current);
 				status = reach != null ? reach : r.lattice;
 				break;
@@ -93,12 +96,25 @@ public class Reachability<D extends ValueDomain<L>,
 				ReachabilityStatus reach = r.getState(condition);
 				if (reach == null)
 					// in some situations, e.g., if a loop ends with an if,
-					// pp is the first follower of a condition that has not been
-					// analyzed yet; in this case, we keep the current
+					// current is the first follower of a condition that has not
+					// been analyzed yet; in this case, we keep the current
 					// reachability
+					reach = r.lattice;
+				else if (cfs.allStatements().stream()
+						.filter(st -> st != cfs.getFirstFollower() && st != cfs.getCondition())
+						.anyMatch(Statement::stopsExecution))
+					// if the execution of the cfs can terminate, the
+					// reachability after the the cfs is not restored
+					// as some executions might terminate the execution
+					// TODO this is over-conservative: the stopping
+					// statement might be unreachable
 					reach = r.lattice;
 				status = status == null ? reach : status.lub(reach);
 			}
+
+		// TODO the reachability after a call that does not throw exceptions/
+		// halt the execution should be restored to the reachability before
+		// the call, but there is no way of doing it right now
 
 		if (!toRemove.isEmpty()) {
 			Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
@@ -108,6 +124,13 @@ public class Reachability<D extends ValueDomain<L>,
 		} else if (status != null)
 			// we might have a new status from guards
 			r = new ReachLattice(status, r.function);
+
+		if (v.isBottom())
+			// sanity check: if the state is bottom, the reachability is
+			// overridden
+			// we still take the modifications to the function into account
+			// to remove guards that are no longer needed
+			r = new ReachLattice(ReachabilityStatus.UNREACHABLE, r.function);
 
 		if (r == state.first && v == state.second)
 			return state;
