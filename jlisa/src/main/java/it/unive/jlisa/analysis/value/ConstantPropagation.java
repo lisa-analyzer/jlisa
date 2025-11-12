@@ -1104,6 +1104,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		for (ConstantValue val : subExpressions)
+			// we won't be able to compute the result if one of the arg is top
+			if (val.isTop())
+				return top();
 
 		NaryOperator operator = ((NaryExpression) expression).getOperator();
 		if (subExpressions.length == 4) {
