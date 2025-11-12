@@ -108,6 +108,7 @@ public class ConstantValueIntIntervalUpperBounds
 		if (constantValue.isTop() || other.getConstantValue().isTop()) {
 			return intInterval.lessOrEqual(other.getIntInterval());
 		}
+		// TODO: definiteIdSet.lessOrEqualAux(other.getDefiniteIdSet());
 		return constantValue.lessOrEqual(other.getConstantValue());
 	}
 
