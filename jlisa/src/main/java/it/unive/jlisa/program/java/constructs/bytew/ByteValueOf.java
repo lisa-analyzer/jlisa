@@ -3,7 +3,7 @@ package it.unive.jlisa.program.java.constructs.bytew;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaByteValueOfOperator;
 import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -71,7 +71,7 @@ public class ByteValueOf extends UnaryExpression implements PluggableStatement {
 
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(byteType), new Expression[0]);
+				JavaClassType.getByteWrapperType().getReference(), new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
