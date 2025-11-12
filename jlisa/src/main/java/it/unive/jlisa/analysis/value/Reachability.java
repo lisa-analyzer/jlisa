@@ -10,10 +10,14 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Reachability<D extends ValueDomain<L>,
 		L extends ValueLattice<L>> implements ValueDomain<ValueLatticeProduct<ReachLattice, L>> {
@@ -34,35 +38,7 @@ public class Reachability<D extends ValueDomain<L>,
 			SemanticOracle oracle)
 			throws SemanticException {
 		L v = values.assign(state.second, id, expression, pp, oracle);
-
-		ReachLattice r = state.first;
-		if (r.isBottom() || r.isTop()) {
-			// no guards present, we can just return
-			if (v == state.second)
-				return state;
-			return new ValueLatticeProduct<>(r, v);
-		}
-
-		for (ControlFlowStructure cfs : pp.getCFG().getDescriptor().getControlFlowStructures())
-			if (cfs.getFirstFollower() == pp) {
-				Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
-				Statement condition = cfs.getCondition();
-				if (map != null)
-					map.remove(condition);
-				ReachabilityStatus reach = r.getState(condition);
-				if (reach == null)
-					// in some situations, e.g., if a loop ends with an if,
-					// pp is the first follower of a condition that has not been
-					// analyzed yet; in this case, we keep the current
-					// reachability
-					reach = r.lattice;
-				r = new ReachLattice(reach, map == null || map.isEmpty() ? null : map);
-				break;
-			}
-
-		if (r == state.first && v == state.second)
-			return state;
-		return new ValueLatticeProduct<>(r, v);
+		return updateReachability(state, pp, v);
 	}
 
 	@Override
@@ -73,28 +49,47 @@ public class Reachability<D extends ValueDomain<L>,
 			SemanticOracle oracle)
 			throws SemanticException {
 		L v = values.smallStepSemantics(state.second, expression, pp, oracle);
+		return updateReachability(state, pp, v);
+	}
 
+	private ValueLatticeProduct<ReachLattice, L> updateReachability(
+			ValueLatticeProduct<ReachLattice, L> state,
+			ProgramPoint pp,
+			L v)
+			throws SemanticException {
 		ReachLattice r = state.first;
-		if (r.isBottom() || r.isTop()) {
+		if (r.isBottom() || r.isTop() || r.function == null || r.function.isEmpty() || !(pp instanceof Statement)) {
 			// no guards present, we can just return
 			if (v == state.second)
 				return state;
 			return new ValueLatticeProduct<>(r, v);
 		}
 
-		for (ControlFlowStructure cfs : pp.getCFG().getDescriptor().getControlFlowStructures())
-			if (cfs.getCondition() == pp) {
+		// reachability is the same for statements and sub-expressions,
+		// so we inspect the root statement
+		Statement current = (Statement) pp;
+		if (current instanceof Call) {
+			Call original = (Call) current;
+			while (original.getSource() != null)
+				original = original.getSource();
+			if (original != current)
+				current = original;
+		}
+		if (current instanceof Expression)
+			current = ((Expression) current).getRootStatement();
+
+		Set<Statement> toRemove = new HashSet<>();
+		ReachabilityStatus status = null;
+		for (ControlFlowStructure cfs : current.getCFG().getDescriptor().getControlFlowStructures())
+			if (cfs.getCondition() == current) {
 				// for guards we keep the reachability of the first time
 				// we encounter them
-				ReachabilityStatus reach = r.getState(pp);
-				if (reach != null)
-					r = new ReachLattice(reach, r.function);
+				ReachabilityStatus reach = r.getState(current);
+				status = reach != null ? reach : r.lattice;
 				break;
-			} else if (cfs.getFirstFollower() == pp) {
-				Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
+			} else if (cfs.getFirstFollower() == current) {
 				Statement condition = cfs.getCondition();
-				if (map != null)
-					map.remove(condition);
+				toRemove.add(condition);
 				ReachabilityStatus reach = r.getState(condition);
 				if (reach == null)
 					// in some situations, e.g., if a loop ends with an if,
@@ -102,9 +97,17 @@ public class Reachability<D extends ValueDomain<L>,
 					// analyzed yet; in this case, we keep the current
 					// reachability
 					reach = r.lattice;
-				r = new ReachLattice(reach, map == null || map.isEmpty() ? null : map);
-				break;
+				status = status == null ? reach : status.lub(reach);
 			}
+
+		if (!toRemove.isEmpty()) {
+			Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, true);
+			if (map != null)
+				toRemove.forEach(map::remove);
+			r = new ReachLattice(status, map == null || map.isEmpty() ? null : map);
+		} else if (status != null)
+			// we might have a new status from guards
+			r = new ReachLattice(status, r.function);
 
 		if (r == state.first && v == state.second)
 			return state;
@@ -122,11 +125,29 @@ public class Reachability<D extends ValueDomain<L>,
 		L v = values.assume(state.second, expression, src, dest, oracle);
 
 		ReachLattice r = state.first;
+		if (!(src instanceof Statement)) {
+			if (v == state.second)
+				return state;
+			return new ValueLatticeProduct<>(r, v);
+		}
+
+		Statement current = (Statement) src;
+		if (current instanceof Call) {
+			Call original = (Call) current;
+			while (original.getSource() != null)
+				original = original.getSource();
+			if (original != current)
+				current = original;
+		}
+		if (current instanceof Expression)
+			current = ((Expression) current).getRootStatement();
+
 		Map<ProgramPoint, ReachabilityStatus> map = r.mkNewFunction(r.function, false);
-		ReachabilityStatus prev = map.put(src, state.first.lattice);
+		ReachabilityStatus prev = map.put(current, state.first.lattice);
 		if (prev != null && prev != state.first.lattice)
-			throw new SemanticException("Conflicting reachability information for " + src + " at " + src.getLocation()
-					+ ": " + prev + " vs " + state.first.lattice);
+			throw new SemanticException(
+					"Conflicting reachability information for " + current + " at " + current.getLocation()
+							+ ": " + prev + " vs " + state.first.lattice);
 
 		Satisfiability sat = values.satisfies(state.second, expression, src, oracle);
 		if (sat == Satisfiability.BOTTOM || sat == Satisfiability.NOT_SATISFIED)
