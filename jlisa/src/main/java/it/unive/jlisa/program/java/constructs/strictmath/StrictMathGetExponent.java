@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.strictmath;
 
+import it.unive.jlisa.program.operator.JavaStrictMathGetExponentOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathToRadiansOperator;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -48,13 +49,13 @@ public class StrictMathGetExponent extends it.unive.lisa.program.cfg.statement.U
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		UnaryExpression radius = new UnaryExpression(
+		UnaryExpression expo = new UnaryExpression(
 				JavaIntType.INSTANCE,
 				expr,
-				JavaStrictMathToRadiansOperator.INSTANCE,
+				JavaStrictMathGetExponentOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, radius, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, expo, originating);
 	}
 
 	@Override
