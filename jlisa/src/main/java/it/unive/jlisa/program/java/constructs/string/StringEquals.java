@@ -3,9 +3,11 @@ package it.unive.jlisa.program.java.constructs.string;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -17,6 +19,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -58,6 +61,14 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		it.unive.lisa.symbolic.value.BinaryExpression referenceEqualityExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+				getProgram().getTypes().getBooleanType(), left, right, ComparisonEq.INSTANCE, getLocation());
+		Satisfiability sat = analysis.satisfies(state, referenceEqualityExpr, originating);
+
+		if (sat == Satisfiability.SATISFIED)
+			return analysis.smallStepSemantics(state, referenceEqualityExpr, originating);
+
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -72,6 +83,6 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 				accessRight,
 				JavaStringEqualsOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
+		return analysis.smallStepSemantics(state, equalsExpr, originating);
 	}
 }

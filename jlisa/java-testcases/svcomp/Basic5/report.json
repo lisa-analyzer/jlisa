@@ -1,0 +1,43 @@
+{
+  "warnings" : [ {
+    "message" : "['$Sanitizers6.java':27] on 'void securibench.micro.sanitizers.Sanitizers6::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['HttpServletResponse.java':38:6] on 'void mockx.servlet.http.HttpServletResponse::checkNoSymbolic(mockx.servlet.http.HttpServletResponse* this, java.lang.String* s)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "java.io.PrintWriter__mockx.servlet.http.HttpServletResponse.getWriter(mockx.servlet.http.HttpServletResponse__this)_1707441564.json", "java.lang.String__securibench.micro.sanitizers.Sanitizers6.clean(java.lang.String__name)_-329811755.json", "java.lang.String__securibench.micro.sanitizers.Sanitizers6.clean(java.lang.String__name)_-329811786.json", "java.lang.String__securibench.micro.sanitizers.Sanitizers6.clean(java.lang.String__name)_-329811817.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_anonymous_class.println(anonymous_class__this,_java.lang.String__x)_1707424297.json", "void_mockx.servlet.http.HttpServletResponse.HttpServletResponse(mockx.servlet.http.HttpServletResponse__this)_1707446338.json", "void_mockx.servlet.http.HttpServletResponse.checkNoSymbolic(mockx.servlet.http.HttpServletResponse__this,_java.lang.String__s)_-994593285.json", "void_securibench.micro.sanitizers.Sanitizers6.Sanitizers6_clinit()_-329811817.json", "void_securibench.micro.sanitizers.Sanitizers6.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "674",
+    "duration" : "673ms",
+    "end" : "2025-11-12T17:22:16.264+01:00",
+    "expressions" : "3666",
+    "files" : "10",
+    "globals" : "174",
+    "members" : "897",
+    "programs" : "1",
+    "start" : "2025-11-12T17:22:15.591+01:00",
+    "statements" : "2029",
+    "units" : "226",
+    "version" : "0.1",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Basic5"
+  }
+}

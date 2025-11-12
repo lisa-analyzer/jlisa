@@ -1,18 +1,18 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':24] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] DEFINITE: uncaught runtime exception in main method"
+    "message" : "['$Main.java':25] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] DEFINITE: uncaught runtime exception in main method"
   } ],
   "files" : [ "bool_Main.runGrid(Main__this,_double_tolerance)_1707431830.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_-1196539257.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707448167.json", "report.json", "void_Main.Main(Main__this)_1707437565.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "17",
-    "duration" : "4ms",
-    "end" : "2025-11-10T18:23:09.339+01:00",
+    "duration" : "137ms",
+    "end" : "2025-11-12T16:55:45.796+01:00",
     "expressions" : "125",
     "files" : "5",
     "globals" : "30",
     "members" : "231",
     "programs" : "1",
-    "start" : "2025-11-10T18:23:09.335+01:00",
+    "start" : "2025-11-12T16:55:45.659+01:00",
     "statements" : "51",
     "units" : "50",
     "version" : "0.1",

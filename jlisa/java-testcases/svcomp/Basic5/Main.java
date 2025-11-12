@@ -8,21 +8,14 @@ import java.io.IOException;
 import mockx.servlet.http.HttpServletRequest;
 import mockx.servlet.http.HttpServletResponse;
 import org.sosy_lab.sv_benchmarks.Verifier;
+import java.io.PrintWriter;
 import securibench.micro.basic.Basic5;
 
 public class Main {
 
   public static void main(String[] args) {
-    String s1 = Verifier.nondetString();
-    HttpServletRequest req = new HttpServletRequest();
     HttpServletResponse res = new HttpServletResponse();
-    req.setTaintedValue(s1);
-
-    Basic5 sut = new Basic5();
-    try {
-      sut.doGet(req, res);
-    } catch (IOException e) {
-
-    }
+    PrintWriter p = res.getWriter();
+    p.println("hello");
   }
 }

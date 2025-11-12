@@ -80,6 +80,7 @@ import java.util.List;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.ArrayInitializer;
@@ -370,12 +371,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ClassInstanceCreation node) {
-		if (node.getAnonymousClassDeclaration() != null) {
-			throw new ParsingException("anonymous-class",
-					ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Anonymous classes are not supported.",
-					getSourceCodeLocation(node));
-		}
+		SyntheticCodeLocationManager synth = parserContext.getCurrentSyntheticCodeLocationManager(source);
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
@@ -385,6 +381,31 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 					ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"A ClassInstanceCreation Type should be a JavaClassType; got: " + type.getClass().getName(),
 					getSourceCodeLocation(node));
+
+		AnonymousClassDeclaration anonymousClassDecl = node.getAnonymousClassDeclaration();
+		if (anonymousClassDecl != null) {
+			// anonymous class
+			SourceCodeLocation loc = getSourceCodeLocation(anonymousClassDecl);
+			ClassUnit anonymousClass = new ClassUnit(loc, getProgram(), "anonymous_class", true);
+			JavaClassType superClassType = JavaClassType.lookup(type.toString());
+			anonymousClass.addAncestor(superClassType.getUnit());
+			anonymousClass.addInstanceGlobal(new Global(synth.nextLocation(), anonymousClass, "$enclosing", true)); // static
+			getProgram().addUnit(anonymousClass);
+																													// type
+			JavaClassType anonType = JavaClassType.register(anonymousClass.getName(), anonymousClass);
+			getProgram().getTypes().registerType(anonType);
+
+			for (Object method : anonymousClassDecl.bodyDeclarations()) {
+				MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, anonymousClass, compilationUnit,
+						true, container, JavaClassType.lookup(cfg.getUnit().toString()));
+				((ASTNode) method).accept(visitor);
+			}
+			
+			ClassASTVisitor visitor = new ClassASTVisitor(parserContext, source, compilationUnit, "",
+					this.container.imports, "anonymous_class", (ClassASTVisitor) container,
+					JavaClassType.lookup(cfg.getUnit().toString()));
+			anonymousClassDecl.accept(visitor);
+		}
 
 		List<Expression> parameters = new LinkedList<>();
 
@@ -408,12 +429,87 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			}
 		}
 
-		expression = new JavaNewObj(
-				cfg,
-				node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn()
-						: getSourceCodeLocation(node),
-				new JavaReferenceType(type),
-				parameters.toArray(new Expression[0]));
+		if (anonymousClassDecl != null) {
+//			// need to add a constructor
+//			CodeLocation loc = getSourceCodeLocation(node);
+//			JavaCodeMemberDescriptor codeMemberDescriptor;
+//			List<Parameter> constructorParameters = new ArrayList<>();
+//
+//			constructorParameters.add(new Parameter(getSourceCodeLocation(node), "this",
+//					new JavaReferenceType(JavaClassType.lookup("anonymous_class")), null,
+//					new Annotations()));
+//
+//			constructorParameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+//					JavaClassType.lookup(cfg.getUnit().toString()).getReference(),
+//					null, new Annotations()));
+//
+//			for (Expression o : parameters)
+//				constructorParameters
+//						.add(new Parameter(synth.nextLocation(), "a", o.getStaticType(), null, new Annotations()));
+//
+//			// TODO annotations
+//			Annotations annotations = new Annotations();
+//			Parameter[] paramArray = constructorParameters.toArray(new Parameter[0]);
+//			codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, anonymousClass, true,
+//					"anonymous_class", VoidType.INSTANCE, annotations, paramArray);
+//			codeMemberDescriptor.setOverridable(false);
+//
+//			CFG constructor = new CFG(codeMemberDescriptor);
+//
+//			// add super constructor
+//			String superSimpleName = type.toString().contains(".")
+//					? type.toString().substring(type.toString().lastIndexOf(".") + 1)
+//					: type.toString();
+//
+//			JavaUnresolvedCall call = new JavaUnresolvedCall(constructor, synth.nextLocation(),
+//					Call.CallType.INSTANCE, null, superSimpleName,
+//					new VariableRef(constructor, synth.nextLocation(), "this"),
+//					new VariableRef(constructor, synth.nextLocation(), "a"));
+//			constructor.addNode(call);
+//			constructor.getEntrypoints().clear();
+//			constructor.getEntrypoints().add(call);
+//
+//			JavaAssignment asg = new JavaAssignment(
+//					constructor,
+//					synth.nextLocation(),
+//					new JavaAccessInstanceGlobal(constructor,
+//							synth.nextLocation(),
+//							new VariableRef(
+//									constructor,
+//									synth.nextLocation(),
+//									"this",
+//									JavaClassType.lookup("anonymous_class")),
+//							"$enclosing"),
+//					new VariableRef(
+//							constructor,
+//							synth.nextLocation(),
+//							"$enclosing",
+//							JavaClassType.lookup(cfg.getUnit().toString()).getReference()));
+//			constructor.addNode(asg);
+//
+//			Ret ret = new Ret(constructor, synth.nextLocation());
+//			constructor.addNode(ret);
+//			constructor.addEdge(new SequentialEdge(call, asg));
+//
+//			constructor.addEdge(new SequentialEdge(asg, ret));
+//			anonymousClass.addInstanceCodeMember(constructor);
+//
+//			parameters.add(0, new VariableRef(constructor, synth.nextLocation(), "this"));
+
+			expression = new JavaNewObj(
+					cfg,
+					node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn()
+							: getSourceCodeLocation(node),
+					new JavaReferenceType(JavaClassType.lookup("anonymous_class")),
+					parameters.toArray(new Expression[0]));
+		} else {
+			expression = new JavaNewObj(
+					cfg,
+					node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn()
+							: getSourceCodeLocation(node),
+					new JavaReferenceType(type),
+					parameters.toArray(new Expression[0]));
+		}
 		return false;
 	}
 
@@ -698,6 +794,30 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			if (isInstance)
 				parameters.add(new VariableRef(cfg, getSourceCodeLocation(node), "this",
 						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
+			else {
+				SyntheticCodeLocationManager synth = parserContext.getCurrentSyntheticCodeLocationManager(source);
+				ClassASTVisitor cursor = container instanceof ClassASTVisitor ? (ClassASTVisitor) container : null;
+				JavaReferenceType type = null;
+				if (cfg.getUnit() instanceof ClassUnit)
+					type = JavaClassType.lookup(cfg.getUnit().getName()).getReference();
+				else
+					type = JavaInterfaceType.lookup(cfg.getUnit().getName()).getReference();
+				// we accumulate this.$enclosing.$enclosing... until we find the
+				// global
+				// or we raise an exception
+				expression = new VariableRef(cfg, synth.nextLocation(), "this", type);
+				boolean global;
+				while (cursor != null && cursor.enclosingType != null) {
+					expression = new JavaAccessInstanceGlobal(cfg, synth.nextLocation(), expression, "$enclosing");
+					global = !cursor.enclosingType.getUnit().getInstanceCodeMembersByName(methodName, true).isEmpty();
+					if (global) {
+						parameters.add(expression);
+						cursor = null;
+						isInstance = true;
+					} else
+						cursor = cursor.enclosing;
+				}
+			}
 		} else {
 			// this might be a fqn instead
 			name = container.imports.get(node.getExpression().toString());

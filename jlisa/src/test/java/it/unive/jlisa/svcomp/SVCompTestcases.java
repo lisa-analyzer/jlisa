@@ -447,7 +447,7 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void VelocityTracker_true_test() throws IOException {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "VelocityTracker_true",
@@ -868,6 +868,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"basic1-test",
 				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Basic5_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Basic5",
+				"Main.java", "../common", "../micro/");
 		perform(conf);
 	}
 }

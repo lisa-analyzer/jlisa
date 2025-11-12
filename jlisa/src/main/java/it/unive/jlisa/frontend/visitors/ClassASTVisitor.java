@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -64,6 +66,29 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		this.fullName = fullName;
 		this.enclosing = enclosing;
 		this.enclosingType = enclosingType;
+	}
+
+	public boolean visit(
+			AnonymousClassDeclaration node) {
+		// parsing superclass
+		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
+		
+		boolean createDefaultConstructor = true;
+		for (Object md : node.bodyDeclarations()) {
+			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this,
+					enclosingType);
+			((ASTNode) md).accept(visitor);
+			if (((MethodDeclaration) md).isConstructor()) {
+				createDefaultConstructor = false;
+				fixConstructorCFG(visitor.getCFG(), new FieldDeclaration[0]);
+			}
+		}
+		if (createDefaultConstructor) {
+			CFG defaultConstructor = createDefaultConstructor(cUnit);
+			fixConstructorCFG(defaultConstructor, new FieldDeclaration[0]);
+		}
+
+		return false;
 	}
 
 	@Override
