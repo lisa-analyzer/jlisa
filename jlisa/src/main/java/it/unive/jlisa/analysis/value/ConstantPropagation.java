@@ -264,6 +264,126 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Math.abs(v));
 
+		if (operator instanceof JavaStrictMathSinOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.sin(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.sin(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.sin(v));
+
+		if (operator instanceof JavaStrictMathCosOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.cos(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.cos(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.cos(v));
+
+		if (operator instanceof JavaStrictMathSqrtOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.sqrt(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.sqrt(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.sqrt(v));
+
+		if (operator instanceof JavaStrictMathTanOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.tan(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.tan(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.tan(v));
+
+		if (operator instanceof JavaStrictMathAtanOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.atan(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.atan(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.atan(v));
+
+		if (operator instanceof JavaStrictMathLogOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.log(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.log(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.log(v));
+
+		if (operator instanceof JavaStrictMathLog10Operator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.log10(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.log10(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.log10(v));
+
+		if (operator instanceof JavaStrictMathAsinOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.asin(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.asin(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.asin(v));
+
+		if (operator instanceof JavaStrictMathExpOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.exp(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.exp(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.exp(v));
+
+		if (operator instanceof JavaStrictMathAcosOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.acos(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.acos(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.acos(v));
+
+		if (operator instanceof JavaStrictMathFloorOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.floor(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.floor(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.floor(v));
+
+		if (operator instanceof JavaStrictMathRoundOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.round(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.round(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.round(v));
+
+		if (operator instanceof JavaStrictMathToRadiansOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.toRadians(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.toRadians(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.toRadians(v));
+
+		if (operator instanceof JavaStrictMathAbsOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.abs(v));
+			else if (arg.getValue() instanceof Integer v)
+				return new ConstantValue(StrictMath.abs(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.abs(v));
+			else if (arg.getValue() instanceof Long v)
+				return new ConstantValue(StrictMath.abs(v));
+
+		if (operator instanceof JavaStrictMathGetExponentOperator)
+			if (arg.getValue() instanceof Double v)
+				return new ConstantValue(StrictMath.getExponent(v));
+			else if (arg.getValue() instanceof Float v)
+				return new ConstantValue(StrictMath.getExponent(v));
+
 		if (operator instanceof JavaDoubleToRawLongBitsOperator)
 			if (arg.getValue() instanceof Double v)
 				return new ConstantValue(Double.doubleToRawLongBits(v));
