@@ -149,3 +149,6 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
 		param this libtype java.lang.Long*
 		
+	method toString: it.unive.jlisa.program.java.constructs.longw.LongStaticToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE

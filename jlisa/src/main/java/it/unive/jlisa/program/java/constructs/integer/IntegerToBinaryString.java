@@ -1,10 +1,12 @@
-package it.unive.jlisa.program.java.constructs.floatw;
+package it.unive.jlisa.program.java.constructs.integer;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaFloatToStringOperator;
+import it.unive.jlisa.program.operator.JavaIntToBinaryStringOperator;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -23,21 +25,21 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class FloatToString extends UnaryExpression implements PluggableStatement {
+public class IntegerToBinaryString extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public FloatToString(
+	public IntegerToBinaryString(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "toString", expr);
+		super(cfg, location, "toBinaryString", expr);
 	}
 
-	public static FloatToString build(
+	public static IntegerToBinaryString build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new FloatToString(cfg, location, params[0]);
+		return new IntegerToBinaryString(cfg, location, params[0]);
 	}
 
 	@Override
@@ -62,25 +64,24 @@ public class FloatToString extends UnaryExpression implements PluggableStatement
 					throws SemanticException {
 
 		Type stringType = getProgram().getTypes().getStringType();
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType,
-				expr,
-				JavaFloatToStringOperator.INSTANCE,
-				getLocation());
+		AccessChild access = new AccessChild(JavaIntType.INSTANCE, expr, var, getLocation());
+		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(
+				stringType, access, JavaIntToBinaryStringOperator.INSTANCE, getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(stringType), new Expression[0]);
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
+				new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, un, this);
+			AccessChild accessExpr = new AccessChild(stringType, ref, var, getLocation());
+			AnalysisState<A> sem = analysis.assign(callState, accessExpr, lower, this);
 			tmp = tmp.lub(sem);
 		}
 

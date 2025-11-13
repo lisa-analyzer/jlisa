@@ -1,3 +1,7 @@
 class java.io.InputStream extends java.lang.Object:
-
+    
+    instance method InputStream: it.unive.jlisa.program.java.constructs.printstream.PrintStreamConstructor
+        libtype java.io.InputStream*
+        param this libtype java.io.InputStream*
+        
 class java.io.FileInputStream extends java.io.InputStream:
