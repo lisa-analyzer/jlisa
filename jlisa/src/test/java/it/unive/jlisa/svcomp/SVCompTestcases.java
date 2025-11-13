@@ -592,6 +592,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void StringBuilderChars01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void StringBuilderChars03_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"StringBuilderChars03",
@@ -716,6 +724,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	public void Boolean_public_boolean_java_lang_Boolean_booleanValue_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Boolean_public_boolean_java_lang_Boolean_booleanValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void GraphFragment_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"GraphFragment_true",
 				"Main.java", "../common");
 		perform(conf);
 	}
@@ -869,6 +885,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Two-Variable_Averaging_Filter",
 				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void printtokens_prop2_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"printtokens_prop2",
+				"impl", "prop2", "../common");
 		perform(conf);
 	}
 }

@@ -58,7 +58,7 @@ public class JavaArrayAccess extends BinaryExpression {
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
 		HeapDereference container = new HeapDereference(arrayType, left, getLocation());
-		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
+		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(Untyped.INSTANCE, container, lenProperty, getLocation());
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 

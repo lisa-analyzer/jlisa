@@ -219,7 +219,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 					AccessChild len = new AccessChild(
 							JavaIntType.INSTANCE,
 							allocExp,
-							new Variable(Untyped.INSTANCE, "len", getLocation()),
+							new Variable(Untyped.INSTANCE, "length", getLocation()),
 							getLocation());
 
 					// TODO fix when we'll support multidimensional arrays

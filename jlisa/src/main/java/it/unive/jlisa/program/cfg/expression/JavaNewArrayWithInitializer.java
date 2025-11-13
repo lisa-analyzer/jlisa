@@ -79,7 +79,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		JavaReferenceType refType = (JavaReferenceType) getStaticType();
-		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
+		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
@@ -91,7 +91,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
-		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
+		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
 
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 
@@ -105,7 +105,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 
 			for (SymbolicExpression expr : exprs) {
 
-				Variable var = new Variable(contentType, "" + i, getLocation());
+				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
 				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());

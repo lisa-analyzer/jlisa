@@ -1,8 +1,9 @@
 package it.unive.jlisa.checkers;
 
-import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.analysis.value.Reachability;
 import it.unive.jlisa.lattices.ReachLattice;
 import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
+import it.unive.jlisa.lattices.ReachabilityProduct;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
@@ -12,11 +13,10 @@ import it.unive.jlisa.witness.WitnessWriter;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
-import it.unive.lisa.analysis.combination.ValueLatticeProduct;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
-import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
+import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.CheckToolWithAnalysisResults;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.lattices.SimpleAbstractState;
@@ -41,17 +41,23 @@ import org.apache.logging.log4j.Logger;
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
-public class AssertChecker
+public class AssertChecker<V extends ValueLattice<V>>
 		implements
 		SemanticCheck<
-				SimpleAbstractState<
-						HeapEnvironment<AllocationSites>,
-						ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-						TypeEnvironment<TypeSet>>,
-				SimpleAbstractDomain<
-						HeapEnvironment<AllocationSites>,
-						ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-						TypeEnvironment<TypeSet>>> {
+				ReachabilityProduct<
+						SimpleAbstractState<
+								HeapEnvironment<AllocationSites>,
+								V,
+								TypeEnvironment<TypeSet>>>,
+				Reachability<
+						SimpleAbstractDomain<
+								HeapEnvironment<AllocationSites>,
+								V,
+								TypeEnvironment<TypeSet>>,
+						SimpleAbstractState<
+								HeapEnvironment<AllocationSites>,
+								V,
+								TypeEnvironment<TypeSet>>>> {
 	private record VariableInfo(
 			String variableName,
 			String type,
@@ -71,14 +77,20 @@ public class AssertChecker
 	@Override
 	public boolean visit(
 			CheckToolWithAnalysisResults<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>,
-					SimpleAbstractDomain<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>> tool,
+					ReachabilityProduct<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>,
+					Reachability<
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node) {
 
@@ -119,24 +131,31 @@ public class AssertChecker
 
 	private void checkRuntimeException(
 			CheckToolWithAnalysisResults<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>,
-					SimpleAbstractDomain<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>> tool,
+					ReachabilityProduct<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>,
+					Reachability<
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node)
 			throws SemanticException {
 
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>> state = result.getAnalysisStateAfter(node);
+					ReachabilityProduct<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>> state = result.getAnalysisStateAfter(node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
@@ -146,15 +165,16 @@ public class AssertChecker
 							!state.getSmashedErrors().isTop() &&
 							!state.getSmashedErrors().function.isEmpty());
 
-			SimpleAbstractState<
-					HeapEnvironment<AllocationSites>,
-					ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-					TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
+			ReachabilityProduct<
+					SimpleAbstractState<
+							HeapEnvironment<AllocationSites>,
+							V,
+							TypeEnvironment<TypeSet>>> normaleState = state.getExecutionState();
 
 			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)
 				// if the normal state is bottom, we raise a definite error
-				if (normaleState.isBottom())
+				if (normaleState.second.isBottom())
 					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
 				// otherwise, we raise a possible error (both normal and
 				// exception states are not bottom)
@@ -165,23 +185,30 @@ public class AssertChecker
 
 	private void checkAssert(
 			CheckToolWithAnalysisResults<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>,
-					SimpleAbstractDomain<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>> tool,
+					ReachabilityProduct<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>,
+					Reachability<
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			AssertStatement node)
 			throws SemanticException {
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>> state = null;
+					ReachabilityProduct<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>> state = null;
 
 			boolean isAssertFalse = false;
 			if (node instanceof SimpleAssert) {
@@ -194,10 +221,8 @@ public class AssertChecker
 				isAssertFalse = expr.toString().equals("false");
 			}
 
-			ValueLatticeProduct<ReachLattice,
-					ValueEnvironment<ConstantValue>> valueState = state.getExecutionState().valueState;
-			ReachabilityStatus reach = valueState.first.lattice;
-			ValueEnvironment<ConstantValue> values = valueState.second;
+			V values = state.getExecutionState().second.valueState;
+			ReachabilityStatus reach = state.getExecutionState().first.lattice;
 
 			if (reach == ReachabilityStatus.UNREACHABLE) {
 				// if the assertion is not reachable, it won't fail
@@ -374,11 +399,21 @@ public class AssertChecker
 
 	@Override
 	public void beforeExecution(
-			CheckToolWithAnalysisResults<SimpleAbstractState<HeapEnvironment<AllocationSites>,
-					ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>, TypeEnvironment<TypeSet>>,
-					SimpleAbstractDomain<HeapEnvironment<AllocationSites>,
-							ValueLatticeProduct<ReachLattice, ValueEnvironment<ConstantValue>>,
-							TypeEnvironment<TypeSet>>> tool) {
+			CheckToolWithAnalysisResults<
+					ReachabilityProduct<
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>,
+					Reachability<
+							SimpleAbstractDomain<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>,
+							SimpleAbstractState<
+									HeapEnvironment<AllocationSites>,
+									V,
+									TypeEnvironment<TypeSet>>>> tool) {
 		this.workDir = tool.getConfiguration().workdir;
 		SemanticCheck.super.beforeExecution(tool);
 	}

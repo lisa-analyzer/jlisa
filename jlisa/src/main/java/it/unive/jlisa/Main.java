@@ -2,9 +2,10 @@ package it.unive.jlisa;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
-import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervalsAndUpperBounds;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithPentagon;
 import it.unive.jlisa.analysis.value.Reachability;
-import it.unive.jlisa.checkers.AssertCheckerConstantPropagationWithIntervalsAndUpperBounds;
+import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -277,7 +278,7 @@ public class Main {
 		conf.optimize = false;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(new AssertCheckerConstantPropagationWithIntervalsAndUpperBounds());
+			conf.semanticChecks.add(new AssertChecker<>());
 			break;
 		case "":
 			break;
@@ -287,16 +288,16 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
-			domain = new Reachability<>(new ConstantPropagationWithIntervalsAndUpperBounds());
+			domain = new ConstantPropagationWithPentagon();
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
 
-		conf.analysis = new SimpleAbstractDomain<>(
+		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
-				new JavaInferredTypes());
+				new JavaInferredTypes()));
 
 		LiSA lisa = new LiSA(conf);
 		lisa.run(p);

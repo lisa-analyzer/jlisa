@@ -309,6 +309,18 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			return environment.bottom();
 		if (sat == Satisfiability.SATISFIED)
 			return environment;
+		ValueExpression e = expression.removeNegations();
+		if (e instanceof BinaryExpression be) {
+			// assume ultimately assigns a variable, so we need this sanity
+			// check
+			// to avoid introducing mappings on ids that we cannot track
+			ValueExpression left = (ValueExpression) be.getLeft();
+			ValueExpression right = (ValueExpression) be.getRight();
+			if (left instanceof Identifier id && (!id.canBeAssigned() || !canProcess(id, src, oracle)))
+				return environment;
+			else if (right instanceof Identifier id && (!id.canBeAssigned() || !canProcess(id, src, oracle)))
+				return environment;
+		}
 		return BaseNonRelationalValueDomain.super.assume(environment, expression, src, dest, oracle);
 	}
 
