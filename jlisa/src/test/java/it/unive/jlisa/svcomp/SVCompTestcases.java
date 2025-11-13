@@ -720,6 +720,240 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void Long_public_static_int_java_lang_Long_compareUnsigned_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_int_java_lang_Long_compareUnsigned_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_long_java_lang_Long_longValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_long_java_lang_Long_longValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_int_java_lang_Long_compareTo_java_lang_Long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_int_java_lang_Long_compareTo_java_lang_Long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_Long_java_lang_Long_valueOf_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_Long_java_lang_Long_valueOf_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_float_java_lang_Long_floatValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_float_java_lang_Long_floatValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_reverseBytes_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_reverseBytes_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_Long_java_lang_Long_getLong_java_lang_String_long_test()
+			throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_Long_java_lang_Long_getLong_java_lang_String_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_sum_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_sum_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_min_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_min_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_highestOneBit_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_highestOneBit_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toBinaryString_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toBinaryString_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_reverse_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_reverse_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toHexString_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toHexString_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_int_java_lang_Long_numberOfTrailingZeros_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_int_java_lang_Long_numberOfTrailingZeros_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_max_long_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_max_long_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toOctalString_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toOctalString_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toString_long_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toString_long_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_rotateLeft_long_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_rotateLeft_long_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toUnsignedString_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toUnsignedString_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toString_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toString_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_int_java_lang_Long_signum_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_int_java_lang_Long_signum_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_java_lang_String_java_lang_Long_toString_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_java_lang_String_java_lang_Long_toString",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_int_java_lang_Long_numberOfLeadingZeros_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_int_java_lang_Long_numberOfLeadingZeros_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_double_java_lang_Long_doubleValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_double_java_lang_Long_doubleValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_int_java_lang_Long_intValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_int_java_lang_Long_intValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_long_java_lang_Long_lowestOneBit_long_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_long_java_lang_Long_lowestOneBit_long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_String_java_lang_Long_toUnsignedString_long_int_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_String_java_lang_Long_toUnsignedString_long_int",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_static_java_lang_Long_java_lang_Long_getLong_java_lang_String_java_lang_Long_test()
+			throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_static_java_lang_Long_java_lang_Long_getLong_java_lang_String_java_lang_Long",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Long_public_byte_java_lang_Long_byteValue_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Long_public_byte_java_lang_Long_byteValue",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void Boolean_public_boolean_java_lang_Boolean_booleanValue_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Boolean_public_boolean_java_lang_Boolean_booleanValue",

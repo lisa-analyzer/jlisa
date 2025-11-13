@@ -16,7 +16,11 @@ class java.lang.Long extends java.lang.Number:
 	method bitCount: it.unive.jlisa.program.java.constructs.longw.LongBitCount
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
-
+		
+	method valueOf: it.unive.jlisa.program.java.constructs.longw.LongValueOf
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		
 	method compare: it.unive.jlisa.program.java.constructs.longw.LongCompare
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
@@ -26,7 +30,125 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
-
+		
+	method compareUnsigned: it.unive.jlisa.program.java.constructs.longw.LongCompareUnsigned
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+		
+	instance method compareTo: it.unive.jlisa.program.java.constructs.longw.LongCompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+		
+	instance method floatValue: it.unive.jlisa.program.java.constructs.longw.LongFloatValue
+		type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method reverseBytes: it.unive.jlisa.program.java.constructs.longw.LongReverseBytes
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method getLong: it.unive.jlisa.program.java.constructs.longw.LongGetLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.String*
+		param other libtype java.lang.Long*
+		
+	method sum: it.unive.jlisa.program.java.constructs.longw.LongSum
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+		
+	method min: it.unive.jlisa.program.java.constructs.longw.LongMin
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+		
+	method highestOneBit: it.unive.jlisa.program.java.constructs.longw.LongHighestOneBit
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method toBinaryString: it.unive.jlisa.program.java.constructs.longw.LongToBinaryString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
+	method reverse: it.unive.jlisa.program.java.constructs.longw.LongReverse
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method toHexString: it.unive.jlisa.program.java.constructs.longw.LongToHexString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
+	method numberOfTrailingZeros: it.unive.jlisa.program.java.constructs.longw.LongNumberOfTrailingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method max: it.unive.jlisa.program.java.constructs.longw.LongMax
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*
+		
+	method toOctalString: it.unive.jlisa.program.java.constructs.longw.LongToOctalString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
+	method toString: it.unive.jlisa.program.java.constructs.longw.LongToString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Integer*
+		
+	method rotateLeft: it.unive.jlisa.program.java.constructs.longw.LongRotateLeft
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Integer*
+		
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.longw.LongToUnsignedString
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+	
+	method toString: it.unive.jlisa.program.java.constructs.longw.LongToStringUnary
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
+	method signum: it.unive.jlisa.program.java.constructs.longw.LongSignum
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	instance method toString: it.unive.jlisa.program.java.constructs.longw.LongToStringUnaryInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		
+	method numberOfLeadingZeros: it.unive.jlisa.program.java.constructs.longw.LongNumberOfLeadingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	instance method doubleValue: it.unive.jlisa.program.java.constructs.longw.LongDoubleValue
+		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	instance method intValue: it.unive.jlisa.program.java.constructs.longw.LongIntValue
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method lowestOneBit: it.unive.jlisa.program.java.constructs.longw.LongLowestOneBit
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param this libtype java.lang.Long*
+		
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.longw.LongToUnsignedStringBinary
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Integer*
+		
+	method getLong: it.unive.jlisa.program.java.constructs.longw.LongGetLongBinary
+		libtype java.lang.Long*
+		param this libtype java.lang.String*
+		param other libtype java.lang.Long*
+		
+	instance method byteValue: it.unive.jlisa.program.java.constructs.longw.LongByteValue
+		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		param this libtype java.lang.Long*
+		
 	method toString: it.unive.jlisa.program.java.constructs.longw.LongStaticToString
 		libtype java.lang.String*
 		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
