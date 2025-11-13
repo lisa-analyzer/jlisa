@@ -2,67 +2,67 @@ package it.unive.jlisa.analysis.value;
 
 import it.unive.jlisa.lattices.ReachLattice;
 import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
+import it.unive.jlisa.lattices.ReachabilityProduct;
+import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
-import it.unive.lisa.analysis.combination.ValueLatticeProduct;
 import it.unive.lisa.analysis.lattices.Satisfiability;
-import it.unive.lisa.analysis.value.ValueDomain;
-import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Identifier;
-import it.unive.lisa.symbolic.value.ValueExpression;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class Reachability<D extends ValueDomain<L>,
-		L extends ValueLattice<L>> implements ValueDomain<ValueLatticeProduct<ReachLattice, L>> {
+public class Reachability<D extends AbstractDomain<A>,
+		A extends AbstractLattice<A>>
+		implements
+		AbstractDomain<ReachabilityProduct<A>> {
 
-	private final D values;
+	private final D domain;
 
 	public Reachability(
-			D values) {
-		this.values = values;
+			D domain) {
+		this.domain = domain;
 	}
 
 	@Override
-	public ValueLatticeProduct<ReachLattice, L> assign(
-			ValueLatticeProduct<ReachLattice, L> state,
+	public ReachabilityProduct<A> assign(
+			ReachabilityProduct<A> state,
 			Identifier id,
-			ValueExpression expression,
-			ProgramPoint pp,
-			SemanticOracle oracle)
+			SymbolicExpression expression,
+			ProgramPoint pp)
 			throws SemanticException {
-		L v = values.assign(state.second, id, expression, pp, oracle);
+		A v = domain.assign(state.second, id, expression, pp);
 		return updateReachability(state, pp, v);
 	}
 
 	@Override
-	public ValueLatticeProduct<ReachLattice, L> smallStepSemantics(
-			ValueLatticeProduct<ReachLattice, L> state,
-			ValueExpression expression,
-			ProgramPoint pp,
-			SemanticOracle oracle)
+	public ReachabilityProduct<A> smallStepSemantics(
+			ReachabilityProduct<A> state,
+			SymbolicExpression expression,
+			ProgramPoint pp)
 			throws SemanticException {
-		L v = values.smallStepSemantics(state.second, expression, pp, oracle);
+		A v = domain.smallStepSemantics(state.second, expression, pp);
 		return updateReachability(state, pp, v);
 	}
 
-	private ValueLatticeProduct<ReachLattice, L> updateReachability(
-			ValueLatticeProduct<ReachLattice, L> state,
+	private ReachabilityProduct<A> updateReachability(
+			ReachabilityProduct<A> state,
 			ProgramPoint pp,
-			L v)
+			A v)
 			throws SemanticException {
 		ReachLattice r = state.first;
 		if (r.isBottom() || r.isTop() || r.function == null || r.function.isEmpty() || !(pp instanceof Statement)) {
 			// no guards present, we can just return
 			if (v == state.second)
 				return state;
-			return new ValueLatticeProduct<>(r, v);
+			return new ReachabilityProduct<>(r, v);
 		}
 
 		// reachability is the same for statements and sub-expressions,
@@ -134,24 +134,23 @@ public class Reachability<D extends ValueDomain<L>,
 
 		if (r == state.first && v == state.second)
 			return state;
-		return new ValueLatticeProduct<>(r, v);
+		return new ReachabilityProduct<>(r, v);
 	}
 
 	@Override
-	public ValueLatticeProduct<ReachLattice, L> assume(
-			ValueLatticeProduct<ReachLattice, L> state,
-			ValueExpression expression,
+	public ReachabilityProduct<A> assume(
+			ReachabilityProduct<A> state,
+			SymbolicExpression expression,
 			ProgramPoint src,
-			ProgramPoint dest,
-			SemanticOracle oracle)
+			ProgramPoint dest)
 			throws SemanticException {
-		L v = values.assume(state.second, expression, src, dest, oracle);
+		A v = domain.assume(state.second, expression, src, dest);
 
 		ReachLattice r = state.first;
 		if (!(src instanceof Statement)) {
 			if (v == state.second)
 				return state;
-			return new ValueLatticeProduct<>(r, v);
+			return new ReachabilityProduct<>(r, v);
 		}
 
 		Statement current = (Statement) src;
@@ -172,7 +171,7 @@ public class Reachability<D extends ValueDomain<L>,
 					"Conflicting reachability information for " + current + " at " + current.getLocation()
 							+ ": " + prev + " vs " + state.first.lattice);
 
-		Satisfiability sat = values.satisfies(state.second, expression, src, oracle);
+		Satisfiability sat = domain.satisfies(state.second, expression, src);
 		if (sat == Satisfiability.BOTTOM || sat == Satisfiability.NOT_SATISFIED)
 			r = new ReachLattice(ReachabilityStatus.UNREACHABLE, map);
 		else if (sat == Satisfiability.SATISFIED)
@@ -182,24 +181,29 @@ public class Reachability<D extends ValueDomain<L>,
 			// we may take both branches
 			r = new ReachLattice(ReachabilityStatus.POSSIBLY_REACHABLE, map);
 
-		return new ValueLatticeProduct<>(r, v);
+		return new ReachabilityProduct<>(r, v);
 	}
 
 	@Override
 	public Satisfiability satisfies(
-			ValueLatticeProduct<ReachLattice, L> state,
-			ValueExpression expression,
-			ProgramPoint pp,
-			SemanticOracle oracle)
+			ReachabilityProduct<A> state,
+			SymbolicExpression expression,
+			ProgramPoint pp)
 			throws SemanticException {
 		if (state.first.isBottom())
 			return Satisfiability.BOTTOM;
-		return values.satisfies(state.second, expression, pp, oracle);
+		return domain.satisfies(state.second, expression, pp);
 	}
 
 	@Override
-	public ValueLatticeProduct<ReachLattice, L> makeLattice() {
-		return new ValueLatticeProduct<>(new ReachLattice(), values.makeLattice());
+	public ReachabilityProduct<A> makeLattice() {
+		return new ReachabilityProduct<>(new ReachLattice(), domain.makeLattice());
+	}
+
+	@Override
+	public SemanticOracle makeOracle(
+			ReachabilityProduct<A> state) {
+		return domain.makeOracle(state.second);
 	}
 
 }
