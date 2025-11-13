@@ -592,6 +592,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void StringBuilderChars01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void StringBuilderChars03_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"StringBuilderChars03",

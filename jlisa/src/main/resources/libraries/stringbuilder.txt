@@ -165,3 +165,7 @@ class java.lang.StringBuilder extends java.lang.Object:
 		type  it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.StringBuilder*
 		param newLength type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+    instance method reverse: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderReverse
+		libtype java.lang.StringBuilder*
+		param this libtype java.lang.StringBuilder*

@@ -8,7 +8,7 @@
   }, {
     "message" : "['Main.java':128:4] on 'void Main::computeCurrentVelocity(int units)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
-    "message" : "['Main.java':43:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':43:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':54:4] on 'void Main::addPoint(float x, float y, long time)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
@@ -21,14 +21,14 @@
   "files" : [ "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707444137.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707444168.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446152.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707446121.json", "report.json", "void_Main.Main_clinit()_1707428048.json", "void_Main.addPoint(float_x,_float_y,_long_time)_1707428048.json", "void_Main.computeCurrentVelocity(int_units)_1707428079.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "18",
-    "duration" : "257ms",
-    "end" : "2025-11-13T11:03:35.525+01:00",
+    "duration" : "377ms",
+    "end" : "2025-11-13T11:19:07.269+01:00",
     "expressions" : "285",
     "files" : "8",
     "globals" : "35",
     "members" : "232",
     "programs" : "1",
-    "start" : "2025-11-13T11:03:35.268+01:00",
+    "start" : "2025-11-13T11:19:06.892+01:00",
     "statements" : "107",
     "units" : "50",
     "version" : "0.1",
