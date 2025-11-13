@@ -85,7 +85,7 @@ public class JavaNewArray extends UnaryExpression {
 			// TODO: UNKNOWN case
 		}
 
-		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), true);
+		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
