@@ -55,6 +55,14 @@ public class JavaArrayAccess extends BinaryExpression {
 				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
 			return state.bottomExecution();
 
+		if (getSubExpressions()[0] instanceof JavaArrayAccess
+				|| getSubExpressions()[1] instanceof JavaArrayAccess) {
+			// TODO 99% of these require a more refined heap model, otherwise we
+			// have some false
+			// positives. For now, we just avoid nested array accesses.
+			throw new SemanticException("Nested array accesses are not supported yet");
+		}
+
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
 		HeapDereference container = new HeapDereference(arrayType, left, getLocation());

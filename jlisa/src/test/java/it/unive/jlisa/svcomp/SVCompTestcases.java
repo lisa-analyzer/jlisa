@@ -381,13 +381,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Disabled
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
 		// at this stage. we just check that it runs to completion
 		// without inspecting the results (ie no json files are present)
 		// FIXME there seem to be some nondeterminism in this test
+		// FIXME this has a double array access, see comment in JavaArrayAccess
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
 				"Main.java",
 				"../common/",
@@ -728,16 +729,18 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Disabled
 	public void GraphFragment_true_test() throws IOException {
+		// FIXME this has a double array access, see comment in JavaArrayAccess
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"GraphFragment_true",
 				"Main.java", "../common");
 		perform(conf);
 	}
 
-	@Test
+	@Disabled
 	public void GraphFragment_false_test() throws IOException {
+		// FIXME this has a double array access, see comment in JavaArrayAccess
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"GraphFragment_false",
 				"Main.java", "../common");
