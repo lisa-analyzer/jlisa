@@ -500,8 +500,6 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		// Note: Since ConstantPropagation overrides `satisfies` to handle the
 		// satisfiability of n-ary expressions, we need to include the
 		// corresponding
@@ -509,6 +507,8 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		// BaseNonRelationalValueDomain does not yet support
 		// `satisfiesNaryExpression`.
 		if (expression instanceof NaryExpression) {
+			Pair<ValueEnvironment<ConstantValue>,
+					ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 			SymbolicExpression[] exprs = ((NaryExpression) expression).getAllOperand(0);
 			ConstantValue[] args = new ConstantValue[exprs.length];
 			for (int i = 0; i < exprs.length; ++i) {
