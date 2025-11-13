@@ -97,7 +97,7 @@ public class JavaNewArray extends UnaryExpression {
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
-		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "len", getLocation());
+		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
 
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 
@@ -106,7 +106,7 @@ public class JavaNewArray extends UnaryExpression {
 		// first case: the size is constant
 		if (expr instanceof Constant) {
 			for (int i = 0; i < (Integer) ((Constant) expr).getValue(); i++) {
-				Variable var = new Variable(JavaIntType.INSTANCE, "" + i, getLocation());
+				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
 				AnalysisState<A> tmp2 = contentType.defaultValue(getCFG(), getLocation()).forwardSemantics(tmp,

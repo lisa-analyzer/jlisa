@@ -729,6 +729,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void GraphFragment_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"GraphFragment_true",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void GraphFragment_false_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"GraphFragment_false",
@@ -877,6 +885,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Two-Variable_Averaging_Filter",
 				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void printtokens_prop2_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"printtokens_prop2",
+				"impl", "prop2", "../common");
 		perform(conf);
 	}
 }
