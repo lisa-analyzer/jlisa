@@ -3,3 +3,7 @@ class java.lang.Class extends java.lang.Object:
 	instance method Class: it.unive.jlisa.program.java.constructs.ClassEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.Class*
+		
+	method forName: it.unive.jlisa.program.java.constructs.ClassForName
+		libtype java.lang.Class*
+		param str libtype java.lang.String*

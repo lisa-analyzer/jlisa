@@ -1,0 +1,43 @@
+{
+  "warnings" : [ {
+    "message" : "['$Sanitizers6.java':27] on 'void securibench.micro.sanitizers.Sanitizers6::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['HttpServletResponse.java':38:6] on 'void mockx.servlet.http.HttpServletResponse::checkNoSymbolic(mockx.servlet.http.HttpServletResponse* this, java.lang.String* s)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "files" : [ "java.io.PrintWriter__mockx.servlet.http.HttpServletResponse.getWriter(mockx.servlet.http.HttpServletResponse__this)_1387401209.json", "java.lang.String__mockx.servlet.http.Cookie.getName(mockx.servlet.http.Cookie__this)_1387400155.json", "java.lang.String__mockx.servlet.http.Cookie.getValue(mockx.servlet.http.Cookie__this)_1387401147.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707442463.json", "java.lang.String__securibench.micro.sanitizers.Sanitizers6.clean(java.lang.String__name)_-329811755.json", "java.lang.String__securibench.micro.sanitizers.Sanitizers6.clean(java.lang.String__name)_-329811786.json", "java.lang.String__securibench.micro.sanitizers.Sanitizers6.clean(java.lang.String__name)_-329811817.json", "mockx.servlet.http.Cookie_[]__mockx.servlet.http.HttpServletRequest.getCookies(mockx.servlet.http.HttpServletRequest__this)_1387398171.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_anonymous_class.println(anonymous_class__this,_java.lang.String__x)_1387384965.json", "void_anonymous_class.println(anonymous_class__this,_java.lang.String__x)_1387385058.json", "void_mockx.servlet.http.Cookie.Cookie(mockx.servlet.http.Cookie__this,_java.lang.String__name,_java.lang.String__value)_-1083424463.json", "void_mockx.servlet.http.HttpServlet.HttpServlet(mockx.servlet.http.HttpServlet__this)_-166573998.json", "void_mockx.servlet.http.HttpServletRequest.HttpServletRequest(mockx.servlet.http.HttpServletRequest__this)_1707445377.json", "void_mockx.servlet.http.HttpServletRequest.setTaintedValue(mockx.servlet.http.HttpServletRequest__this,_java.lang.String__value)_1707426219.json", "void_mockx.servlet.http.HttpServletResponse.HttpServletResponse(mockx.servlet.http.HttpServletResponse__this)_1707446369.json", "void_mockx.servlet.http.HttpServletResponse.checkNoSymbolic(mockx.servlet.http.HttpServletResponse__this,_java.lang.String__s)_1969089311.json", "void_mockx.servlet.http.HttpServletResponse.checkNoSymbolic(mockx.servlet.http.HttpServletResponse__this,_java.lang.String__s)_1969092194.json", "void_mockx.servlet.http.HttpSession.HttpSession(mockx.servlet.http.HttpSession__this)_-1082817266.json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320417960.json", "void_securibench.micro.BasicTestCase.BasicTestCase(securibench.micro.BasicTestCase__this)_-585025232.json", "void_securibench.micro.basic.Basic31.Basic31(securibench.micro.basic.Basic31__this)_1707434930.json", "void_securibench.micro.basic.Basic31.doGet(securibench.micro.basic.Basic31__this,_mockx.servlet.http.HttpServletRequest__req,_mockx.servlet.http.HttpServletResponse__resp)_1707428265.json", "void_securibench.micro.sanitizers.Sanitizers6.Sanitizers6_clinit()_-329811817.json", "void_securibench.micro.sanitizers.Sanitizers6.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "676",
+    "duration" : "112ms",
+    "end" : "2025-11-14T10:13:21.754+01:00",
+    "expressions" : "3682",
+    "files" : "25",
+    "globals" : "176",
+    "members" : "925",
+    "programs" : "1",
+    "start" : "2025-11-14T10:13:21.642+01:00",
+    "statements" : "2041",
+    "units" : "227",
+    "version" : "0.1",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Basic31"
+  }
+}

@@ -208,6 +208,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
 			MethodDeclaration node) {
 		CodeLocation loc = getSourceCodeLocation(node);
@@ -222,7 +223,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			returnType = JavaClassType.getObjectType();
 		// the method is not generic, but the class it is
 		else {
-			List topLevelTypes = compilationUnit.types();
+			List<?> topLevelTypes = compilationUnit.types();
 			for (Object tlType : topLevelTypes) {
 				if (tlType instanceof TypeDeclaration)
 					if (((TypeDeclaration) tlType).typeParameters().stream()

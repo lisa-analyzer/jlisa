@@ -1,10 +1,10 @@
 package it.unive.jlisa.lattices;
 
+import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.BaseLattice;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.lattices.FunctionalLattice;
-import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.util.representation.StringRepresentation;
@@ -16,7 +16,7 @@ public class ReachLattice
 		extends
 		FunctionalLattice<ReachLattice, ProgramPoint, ReachLattice.ReachabilityStatus>
 		implements
-		ValueLattice<ReachLattice> {
+		AbstractLattice<ReachLattice> {
 
 	public ReachLattice() {
 		super(ReachabilityStatus.POSSIBLY_REACHABLE);
@@ -31,14 +31,6 @@ public class ReachLattice
 	@Override
 	public StructuredRepresentation representation() {
 		return lattice.representation();
-	}
-
-	@Override
-	public ReachLattice store(
-			Identifier target,
-			Identifier source)
-			throws SemanticException {
-		return this;
 	}
 
 	@Override
@@ -159,5 +151,38 @@ public class ReachLattice
 			// should never happen
 			return false;
 		}
+	}
+
+	@Override
+	public ReachLattice withTopMemory() {
+		return this;
+	}
+
+	@Override
+	public ReachLattice withTopValues() {
+		return this;
+	}
+
+	@Override
+	public ReachLattice withTopTypes() {
+		return this;
+	}
+
+	public ReachLattice setToReachable() {
+		if (lattice == ReachabilityStatus.REACHABLE)
+			return this;
+		return new ReachLattice(ReachabilityStatus.REACHABLE, function);
+	}
+
+	public ReachLattice setToUnreachable() {
+		if (lattice == ReachabilityStatus.UNREACHABLE)
+			return this;
+		return new ReachLattice(ReachabilityStatus.UNREACHABLE, function);
+	}
+
+	public ReachLattice setToPossiblyReachable() {
+		if (lattice == ReachabilityStatus.POSSIBLY_REACHABLE)
+			return this;
+		return new ReachLattice(ReachabilityStatus.POSSIBLY_REACHABLE, function);
 	}
 }

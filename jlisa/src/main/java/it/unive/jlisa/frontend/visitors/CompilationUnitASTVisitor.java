@@ -723,6 +723,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 				initCodeMembersInEnum(unit, (EnumDeclaration) decl, newOuter, processed);
 	}
 
+	@SuppressWarnings("unchecked")
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
 			MethodDeclaration node,
 			it.unive.lisa.program.CompilationUnit lisaCU) {
@@ -738,7 +739,7 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			returnType = JavaClassType.getObjectType();
 		// the method is not generic, but the class it is
 		else {
-			List topLevelTypes = compilationUnit.types();
+			List<?> topLevelTypes = compilationUnit.types();
 			for (Object tlType : topLevelTypes) {
 				if (tlType instanceof TypeDeclaration)
 					if (((TypeDeclaration) tlType).typeParameters().stream()

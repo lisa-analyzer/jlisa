@@ -88,12 +88,13 @@ public class LocaleClassInitializer extends NativeCFG implements PluggableStatem
 
 			GlobalVariable uk = new GlobalVariable(localeType.getReference(), "java.util.Locale::UK",
 					getLocation());
-			Expression unknownLocaleForUk = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 1), localeType.getReference(), new Expression[0]);
-			
+			Expression unknownLocaleForUk = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 1),
+					localeType.getReference(), new Expression[0]);
+
 			GlobalVariable eng = new GlobalVariable(localeType.getReference(), "java.util.Locale::ENGLISH",
 					getLocation());
-			Expression unknownLocaleForEnglish = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 2), localeType.getReference(), new Expression[0]);
-
+			Expression unknownLocaleForEnglish = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 2),
+					localeType.getReference(), new Expression[0]);
 
 			AnalysisState<A> ukState = unknownLocaleForUk.forwardSemantics(state, interprocedural, expressions);
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
@@ -101,13 +102,13 @@ public class LocaleClassInitializer extends NativeCFG implements PluggableStatem
 			AnalysisState<A> tmp = state.bottomExecution();
 			for (SymbolicExpression ukVal : ukState.getExecutionExpressions())
 				tmp = tmp.lub(analysis.assign(ukState, uk, ukVal, originating));
-			
+
 			AnalysisState<A> engState = unknownLocaleForEnglish.forwardSemantics(tmp, interprocedural, expressions);
 
 			tmp = state.bottomExecution();
 			for (SymbolicExpression engVal : engState.getExecutionExpressions())
 				tmp = tmp.lub(analysis.assign(engState, eng, engVal, originating));
-			
+
 			return tmp;
 		}
 	}
