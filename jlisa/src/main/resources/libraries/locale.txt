@@ -1,3 +1,10 @@
 class java.util.Locale extends java.lang.Object:
     field UK libtype java.util.Locale*
     field ENGLISH libtype java.util.Locale*
+    
+    instance method Locale: it.unive.jlisa.program.java.constructs.locale.LocaleEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Locale*
+    
+    method Locale_clinit: it.unive.jlisa.program.java.constructs.locale.LocaleClassInitializer
+    	type it.unive.lisa.type.VoidType::INSTANCE

@@ -1,11 +1,17 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -13,6 +19,11 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
 public class StringToLowerCaseLocale extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -52,9 +63,30 @@ public class StringToLowerCaseLocale extends BinaryExpression implements Pluggab
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		Type stringType = getProgram().getTypes().getStringType();
+		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		// TODO: implemet semantics, add signature in "string.txt"
-		// Problem: understand how to type "Locale".
-		return state.top();
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference deref = new HeapDereference(stringType, left, getLocation());
+		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
+		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(
+				stringType, accessExpr, JavaStringToLowerCaseOperator.INSTANCE, getLocation());
+
+		// allocate the string
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
+				new Expression[0]);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		AnalysisState<A> tmp = state.bottomExecution();
+		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
+			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
+			AnalysisState<A> sem = analysis.assign(callState, access, lower, this);
+			tmp = tmp.lub(sem);
+		}
+
+		getMetaVariables().addAll(call.getMetaVariables());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 }

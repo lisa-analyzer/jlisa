@@ -305,6 +305,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.Boolean");
 	}
 
+	public static JavaClassType getLocaleType() {
+		return lookup("java.util.Locale");
+	}
+
 	// TODO add when we will have Short
 	// public static JavaClassType getShortWrapperType() {
 	// return lookup("java.lang.Short");

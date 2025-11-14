@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -560,6 +561,14 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 			typeDecl.accept(interfaceVisitor);
 		} else {
 			boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
+			boolean hasStaticBlocks = false;
+
+			for (Object body : typeDecl.bodyDeclarations())
+				if (body instanceof Initializer b && Modifier.isStatic(b.getModifiers())) {
+					hasStaticBlocks = true;
+					break;
+				}
+
 			classVisitor = new ClassASTVisitor(
 					parserContext,
 					source,
@@ -568,8 +577,9 @@ public class CompilationUnitASTVisitor extends BaseUnitASTVisitor {
 					imports,
 					name,
 					// static classes "reset" accessibility to outer instances
-					outer == null || isStatic ? null : enclosing,
-					outer == null || isStatic ? null : JavaClassType.lookup(getPackage() + outer));
+					outer == null || (isStatic && !hasStaticBlocks) ? null : enclosing,
+					outer == null || (isStatic && !hasStaticBlocks) ? null
+							: JavaClassType.lookup(getPackage() + outer));
 			typeDecl.accept(classVisitor);
 		}
 

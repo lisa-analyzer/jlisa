@@ -31,7 +31,9 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
+import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,7 @@ import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -70,9 +73,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 	public boolean visit(
 			AnonymousClassDeclaration node) {
-		// parsing superclass
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
-		
 		boolean createDefaultConstructor = true;
 		for (Object md : node.bodyDeclarations()) {
 			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this,
@@ -234,7 +235,14 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				staticFields.add(fd);
 		}
 
-		if (staticFields.isEmpty())
+		// get static block initializer
+		Set<Initializer> staticBlocks = new HashSet<Initializer>();
+
+		for (Object body : node.bodyDeclarations())
+			if (body instanceof Initializer b && Modifier.isStatic(b.getModifiers()))
+				staticBlocks.add(b);
+
+		if (staticFields.isEmpty() && staticBlocks.isEmpty())
 			return;
 
 		// create the CFG corresponding to the class initializer
@@ -316,6 +324,18 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				cfg.addEdge(new SequentialEdge(last, asg));
 				last = asg;
 			}
+		}
+
+		for (Initializer init : staticBlocks) {
+			BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source,
+					compilationUnit, cfg, null, this);
+			init.getBody().accept(blockStatementASTVisitor);
+
+			ParsedBlock stmtBlock = blockStatementASTVisitor.getBlock();
+
+			cfg.getNodeList().mergeWith(stmtBlock.getBody());
+			cfg.addEdge(new SequentialEdge(last, stmtBlock.getBegin()));
+			last = stmtBlock.getEnd();
 		}
 
 		// TODO: static block

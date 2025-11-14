@@ -108,7 +108,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 				Variable var = new Variable(contentType, "" + i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
-				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());
+				AnalysisState<A> init = analysis.assign(tmp, access, expr, this);
 				tmp = init;
 
 			}
@@ -118,7 +118,8 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 
 		getMetaVariables().add(array);
 
-		return analysis.smallStepSemantics(tmp, array, this);
+		return tmp.withExecutionExpression(array);
+//		return analysis.smallStepSemantics(tmp, array, this);
 	}
 
 }

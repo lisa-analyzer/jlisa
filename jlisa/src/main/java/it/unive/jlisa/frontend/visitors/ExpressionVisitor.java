@@ -391,7 +391,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			anonymousClass.addAncestor(superClassType.getUnit());
 			anonymousClass.addInstanceGlobal(new Global(synth.nextLocation(), anonymousClass, "$enclosing", true)); // static
 			getProgram().addUnit(anonymousClass);
-																													// type
+
 			JavaClassType anonType = JavaClassType.register(anonymousClass.getName(), anonymousClass);
 			getProgram().getTypes().registerType(anonType);
 
@@ -400,7 +400,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 						true, container, JavaClassType.lookup(cfg.getUnit().toString()));
 				((ASTNode) method).accept(visitor);
 			}
-			
+
 			ClassASTVisitor visitor = new ClassASTVisitor(parserContext, source, compilationUnit, "",
 					this.container.imports, "anonymous_class", (ClassASTVisitor) container,
 					JavaClassType.lookup(cfg.getUnit().toString()));

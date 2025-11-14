@@ -14,10 +14,10 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class StringConstructorFromByteArray extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -59,9 +59,11 @@ public class StringConstructorFromByteArray extends BinaryExpression implements 
 			throws SemanticException {
 		// in this case, we always return the top string
 		Type stringType = getProgram().getTypes().getStringType();
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
+		GlobalVariable var = new GlobalVariable(stringType, "value", getLocation());
+		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		AccessChild leftAccess = new AccessChild(stringType, derefLeft, var, getLocation());
 		PushAny topString = new PushAny(stringType, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+		AnalysisState<A> asg = interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+		return asg.withExecutionExpression(left);
 	}
 }
