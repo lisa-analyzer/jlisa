@@ -5,7 +5,6 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
-import it.unive.lisa.analysis.numeric.UpperBounds;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.symbolic.DefiniteIdSet;
 import it.unive.lisa.program.cfg.ProgramPoint;
@@ -23,7 +22,7 @@ public class JavaPentagon
 		implements
 		ValueDomain<JavaPentagonLattice> {
 
-	private final UpperBounds upperbounds = new UpperBounds();
+	private final JavaUpperBounds upperbounds = new JavaUpperBounds();
 
 	private final JavaNumericInterval intervals = new JavaNumericInterval();
 
