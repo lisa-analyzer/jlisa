@@ -2,7 +2,7 @@ package it.unive.jlisa;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
-import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithPentagon;
 import it.unive.jlisa.analysis.value.Reachability;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
@@ -287,7 +287,7 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
-			domain = new ConstantPropagationWithIntervals();
+			domain = new ConstantPropagationWithPentagon();
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
