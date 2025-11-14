@@ -6,6 +6,8 @@ import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.ValueExpression;
 
@@ -53,6 +55,18 @@ public class ConstantPropagationWithPentagon
 			return state.bottom();
 		if (sat == Satisfiability.SATISFIED)
 			return state;
+		ValueExpression e = expression.removeNegations();
+		if (e instanceof BinaryExpression be) {
+			// assume ultimately assigns a variable, so we need this sanity
+			// check
+			// to avoid introducing mappings on ids that we cannot track
+			ValueExpression left = (ValueExpression) be.getLeft();
+			ValueExpression right = (ValueExpression) be.getRight();
+			if (left instanceof Identifier id && (!id.canBeAssigned() || !canProcess(id, src, oracle)))
+				return state;
+			else if (right instanceof Identifier id && (!id.canBeAssigned() || !canProcess(id, src, oracle)))
+				return state;
+		}
 		return new ConstantValueWithPentagon(
 				pentagon.assume(state.first, expression, src, dest, oracle),
 				constantPropagation.assume(state.second, expression, src, dest, oracle));
@@ -83,5 +97,12 @@ public class ConstantPropagationWithPentagon
 	@Override
 	public ConstantValueWithPentagon makeLattice() {
 		return new ConstantValueWithPentagon(pentagon.makeLattice(), constantPropagation.makeLattice());
+	}
+
+	public boolean canProcess(
+			SymbolicExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle) {
+		return constantPropagation.canProcess(expression, pp, oracle);
 	}
 }
