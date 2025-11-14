@@ -1,6 +1,13 @@
 class java.util.List extends java.lang.Object:
 		
 class java.util.LinkedList extends java.util.List:
-	
+	instance method LinkedList: it.unive.jlisa.program.java.constructs.linkedlist.LinkedListEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.LinkedList*
+		
+	instance method toArray: it.unive.jlisa.program.java.constructs.linkedlist.LinkedListToArray
+    	type it.unive.jlisa.program.type.JavaArrayType::STRING_ARRAY
+    	param this libtype java.util.LinkedList*
+    	
 class java.util.ArrayList extends java.util.List:
 	

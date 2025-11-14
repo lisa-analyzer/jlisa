@@ -60,6 +60,12 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 			JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
 
 	/**
+	 * Object*[]*
+	 */
+	public static JavaReferenceType OBJECT_ARRAY = new JavaReferenceType(
+			JavaArrayType.lookup(new JavaReferenceType(JavaClassType.getObjectType()), 1));
+
+	/**
 	 * Clears the cache of {@link JavaArrayType}s created up to now.
 	 */
 	public static void clearAll() {
@@ -265,5 +271,10 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
 	public static JavaReferenceType getByteArray() {
 		return new JavaReferenceType(JavaArrayType.lookup(JavaByteType.INSTANCE, 1));
+	}
+
+	public static JavaReferenceType getObjectArray() {
+		return new JavaReferenceType(
+				JavaArrayType.lookup(new JavaReferenceType(JavaClassType.getObjectType()), 1));
 	}
 }

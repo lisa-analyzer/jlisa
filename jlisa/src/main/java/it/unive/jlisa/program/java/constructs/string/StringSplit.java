@@ -67,7 +67,7 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 			throws SemanticException {
 		// FIXME: this is a temporary solution: we return an array with length
 		// set to top but with
-		// for elements, set to the top string
+		// four elements, set to the top string
 		JavaReferenceType stringArrayType = JavaArrayType.getStringArray();
 		JavaClassType stringType = JavaClassType.getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
