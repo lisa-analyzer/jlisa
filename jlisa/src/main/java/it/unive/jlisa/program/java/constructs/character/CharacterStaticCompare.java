@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.java.constructs.character;
 
-import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
-import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.operator.JavaCharacterCompareOperator;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -16,22 +16,22 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
-public class CharacterForDigit extends BinaryExpression implements PluggableStatement {
+public class CharacterStaticCompare extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public CharacterForDigit(
+	public CharacterStaticCompare(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
 			Expression right) {
-		super(cfg, location, "forDigit", left, right);
+		super(cfg, location, "compare", left, right);
 	}
 
-	public static CharacterForDigit build(
+	public static CharacterStaticCompare build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new CharacterForDigit(cfg, location, params[0], params[1]);
+		return new CharacterStaticCompare(cfg, location, params[0], params[1]);
 	}
 
 	@Override
@@ -55,12 +55,12 @@ public class CharacterForDigit extends BinaryExpression implements PluggableStat
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		it.unive.lisa.symbolic.value.BinaryExpression expr = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaCharType.INSTANCE,
+		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaIntType.INSTANCE,
 				left,
 				right,
-				JavaCharacterForDigitOperator.INSTANCE,
+				JavaCharacterCompareOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, expr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
 	}
 }
