@@ -1,7 +1,6 @@
 package it.unive.jlisa.interprocedural.callgraph;
 
-import it.unive.jlisa.lattices.ReachLattice;
-import it.unive.jlisa.lattices.ReachLattice.ReachabilityStatus;
+import it.unive.jlisa.lattices.ReachabilityProduct;
 import it.unive.lisa.AnalysisExecutionException;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -13,9 +12,7 @@ import it.unive.lisa.analysis.ProgramState;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.combination.ValueLatticeProduct;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.conf.FixpointConfiguration;
 import it.unive.lisa.interprocedural.CFGResults;
 import it.unive.lisa.interprocedural.FixpointResults;
@@ -26,7 +23,6 @@ import it.unive.lisa.interprocedural.callgraph.CallGraph;
 import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.ContextSensitivityToken;
 import it.unive.lisa.interprocedural.context.LastCallToken;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.logging.IterationLogger;
 import it.unive.lisa.program.Application;
 import it.unive.lisa.program.CodeUnit;
@@ -308,17 +304,13 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 			AnalysisState<A> entryState)
 			throws FixpointException {
 		try {
-			if (entryState.getLatticeInstance(ReachLattice.class) != null) {
-				ProgramState<A> exec = entryState.getExecution();
-				SimpleAbstractState sas = (SimpleAbstractState) exec.getState();
-				ValueLatticeProduct values = (ValueLatticeProduct) sas.valueState;
+			if (entryState.getLatticeInstance(ReachabilityProduct.class) != null) {
+				ProgramState<
+						ReachabilityProduct<A>> exec = (ProgramState<ReachabilityProduct<A>>) entryState.getExecution();
+				ReachabilityProduct<A> sas = (ReachabilityProduct<A>) exec.getState();
 				entryState = entryState.withExecution(
 						new ProgramState(
-								new SimpleAbstractState(
-										sas.heapState,
-										new ValueLatticeProduct(new ReachLattice(ReachabilityStatus.REACHABLE, null),
-												(ValueLattice) values.second),
-										sas.typeState),
+								sas.setToReachable(),
 								exec.getComputedExpressions(),
 								exec.getFixpointInformation()));
 			}

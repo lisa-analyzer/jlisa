@@ -1,24 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':26] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
     "message" : "['Main.java':41:6] on 'void Main::updateAngles(Main* this, float rollValue, float pitchValue, float yawValue)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "files" : [ "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707453096.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707476160.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707499224.json", "report.json", "void_Main.Main(Main__this)_1707437689.json", "void_Main.Main_clinit()_1707437689.json", "void_Main.main(java.lang.String_[]__args).json", "void_Main.updateAngles(Main__this,_float_rollValue,_float_pitchValue,_float_yawValue)_1707431954.json" ],
   "info" : {
     "cfgs" : "17",
-    "duration" : "27ms",
-    "end" : "2025-11-10T11:35:19.475+01:00",
+    "duration" : "61ms",
+    "end" : "2025-11-13T13:53:28.538+01:00",
     "expressions" : "107",
     "files" : "7",
     "globals" : "31",
-    "members" : "270",
+    "members" : "232",
     "programs" : "1",
-    "start" : "2025-11-10T11:35:19.448+01:00",
+    "start" : "2025-11-13T13:53:28.477+01:00",
     "statements" : "40",
-    "units" : "50",
+    "units" : "51",
     "version" : "0.1",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",

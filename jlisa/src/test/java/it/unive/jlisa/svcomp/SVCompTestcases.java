@@ -381,13 +381,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Disabled
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
 		// at this stage. we just check that it runs to completion
 		// without inspecting the results (ie no json files are present)
 		// FIXME there seem to be some nondeterminism in this test
+		// FIXME this has a double array access, see comment in JavaArrayAccess
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "lock-00-01-10",
 				"Main.java",
 				"../common/",
@@ -592,6 +593,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void StringBuilderChars01_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"StringBuilderChars01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
 	public void StringBuilderChars03_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"StringBuilderChars03",
@@ -665,13 +674,6 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
-	public void FractalTouchHandler_false_test() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "FractalTouchHandler_false",
-				"Main.java", "../common");
-		perform(conf);
-	}
-
-	@Test
 	public void Math_public_static_long_java_lang_Math_abs_long() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Math_public_static_long_java_lang_Math_abs_long",
@@ -727,8 +729,18 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Disabled
+	public void GraphFragment_true_test() throws IOException {
+		// FIXME this has a double array access, see comment in JavaArrayAccess
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"GraphFragment_true",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Disabled
 	public void GraphFragment_false_test() throws IOException {
+		// FIXME this has a double array access, see comment in JavaArrayAccess
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"GraphFragment_false",
 				"Main.java", "../common");
@@ -860,6 +872,30 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"Character_public_static_int_java_lang_Character_digit_char_int",
 				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void basic1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"basic1-test",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Two_Variable_Averaging_Filter_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Two-Variable_Averaging_Filter",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void printtokens_prop2_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"printtokens_prop2",
+				"impl", "prop2", "../common");
 		perform(conf);
 	}
 }

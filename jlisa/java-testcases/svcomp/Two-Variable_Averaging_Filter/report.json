@@ -1,0 +1,41 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':48:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_1707438092.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "50ms",
+    "end" : "2025-11-13T17:54:43.499+01:00",
+    "expressions" : "104",
+    "files" : "2",
+    "globals" : "30",
+    "members" : "252",
+    "programs" : "1",
+    "start" : "2025-11-13T17:54:43.449+01:00",
+    "statements" : "43",
+    "units" : "51",
+    "version" : "0.1",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "analysisGraphs" : "NONE",
+    "descendingPhaseType" : "NONE",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "jsonOutput" : "true",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "optimize" : "false",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "serializeInputs" : "false",
+    "serializeResults" : "true",
+    "shouldSmashError" : "unset",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Two-Variable_Averaging_Filter"
+  }
+}

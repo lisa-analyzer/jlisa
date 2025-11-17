@@ -1,40 +1,22 @@
 package it.unive.jlisa.analysis.heap;
 
-import it.unive.jlisa.analysis.JavaNullConstant;
 import it.unive.jlisa.program.operator.NaryExpression;
-import it.unive.jlisa.program.type.JavaNullType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.lattices.Satisfiability;
-import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
-import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
-import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapExpression;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.HeapLocation;
-import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.MemoryPointer;
 import it.unive.lisa.symbolic.value.PushAny;
-import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
-import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A field-insensitive program point-based {@link AllocationSiteBasedAnalysis}.
@@ -62,112 +44,6 @@ public class JavaFieldSensitivePointBasedHeap
 		return expression.accept(rewriter, state, pp);
 	}
 
-	@Override
-	public Pair<HeapEnvWithFields, List<HeapReplacement>> assume(
-			HeapEnvWithFields state,
-			SymbolicExpression expression,
-			ProgramPoint src,
-			ProgramPoint dest,
-			SemanticOracle oracle)
-			throws SemanticException {
-		Satisfiability sat = satisfies(state, expression, dest, oracle);
-		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.UNKNOWN)
-			return Pair.of(state, List.of());
-		else
-			return Pair.of(state.bottom(), List.of());
-	}
-
-	@Override
-	public Satisfiability satisfies(
-			HeapEnvWithFields state,
-			SymbolicExpression expression,
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		if (state.isTop())
-			return Satisfiability.UNKNOWN;
-
-		// negation
-		if (expression instanceof UnaryExpression un) {
-			if (un.getOperator() == LogicalNegation.INSTANCE)
-				return satisfies(state, un.getExpression(), pp, oracle).negate();
-		}
-
-		if (expression instanceof BinaryExpression bin) {
-
-			// !=
-			if (bin.getOperator() == ComparisonNe.INSTANCE) {
-				BinaryExpression negatedBin = new BinaryExpression(bin.getStaticType(), bin.getLeft(), bin.getRight(),
-						ComparisonEq.INSTANCE, expression.getCodeLocation());
-				return satisfies(state, negatedBin, pp, oracle).negate();
-			}
-
-			// ==
-			if (bin.getOperator() == ComparisonEq.INSTANCE) {
-				SymbolicExpression leftExpr = bin.getLeft();
-				SymbolicExpression rightExpr = bin.getRight();
-
-				ExpressionSet rhsExps;
-				ExpressionSet lhsExps;
-				if (leftExpr instanceof Identifier) {
-					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr, pp));
-				} else if (expression.mightNeedRewriting())
-					lhsExps = rewrite(state, leftExpr, pp, oracle);
-				else
-					lhsExps = new ExpressionSet(leftExpr);
-
-				if (rightExpr instanceof Identifier) {
-					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr, pp));
-				} else if (expression.mightNeedRewriting())
-					rhsExps = rewrite(state, rightExpr, pp, oracle);
-				else
-					rhsExps = new ExpressionSet(rightExpr);
-
-				Satisfiability sat = Satisfiability.BOTTOM;
-				for (SymbolicExpression l : lhsExps) {
-					for (SymbolicExpression r : rhsExps) {
-						if (l instanceof MemoryPointer && r instanceof MemoryPointer) {
-							HeapLocation lp = ((MemoryPointer) l).getReferencedLocation();
-							HeapLocation rp = ((MemoryPointer) r).getReferencedLocation();
-
-							// left is null
-							if (lp.equals(NullAllocationSite.INSTANCE))
-								if (rp.equals(NullAllocationSite.INSTANCE))
-									sat = sat.lub(Satisfiability.SATISFIED);
-								else
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-							// right is null
-							else if (rp.equals(NullAllocationSite.INSTANCE))
-								sat = sat.lub(Satisfiability.NOT_SATISFIED);
-
-							// right is strong
-							else if (!rp.isWeak())
-								if (rp.equals(lp))
-									sat = sat.lub(Satisfiability.SATISFIED);
-								else if (!lp.isWeak())
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-								else
-									sat = sat.lub(Satisfiability.UNKNOWN);
-							// left is strong
-							else if (!lp.isWeak())
-								if (rp.equals(lp))
-									sat = sat.lub(Satisfiability.SATISFIED);
-								else if (!rp.isWeak())
-									sat = sat.lub(Satisfiability.NOT_SATISFIED);
-								else
-									sat = sat.lub(Satisfiability.UNKNOWN);
-						}
-					}
-				}
-
-				// FIXME: we may improve this check
-				return sat != Satisfiability.BOTTOM ? sat : super.satisfies(state, expression, pp, oracle);
-			}
-		}
-
-		return super.satisfies(state, expression, pp, oracle);
-	}
-
 	/**
 	 * A {@link it.unive.lisa.analysis.heap.BaseHeapDomain.Rewriter} for the
 	 * {@link FieldSensitivePointBasedHeap} domain.
@@ -177,116 +53,6 @@ public class JavaFieldSensitivePointBasedHeap
 	public class Rewriter
 			extends
 			FieldSensitivePointBasedHeap.Rewriter {
-
-		// TODO: dereference with null receiver
-
-		@Override
-		public ExpressionSet visit(
-				AccessChild expression,
-				ExpressionSet receiver,
-				ExpressionSet child,
-				Object... params)
-				throws SemanticException {
-			// needed to define the access child's visit just to propagate
-			// the null allocation site; in all the other cases, we rely on the
-			// super visit method
-			HeapEnvWithFields state = (HeapEnvWithFields) params[0];
-			ProgramPoint pp = (ProgramPoint) params[1];
-
-			Set<SymbolicExpression> toProcess = new HashSet<>();
-			for (SymbolicExpression rec : receiver) {
-				rec = rec.removeTypingExpressions();
-				if (rec instanceof Identifier)
-					toProcess.addAll(resolveIdentifier(state, (Identifier) rec, pp));
-				else
-					toProcess.add(rec);
-			}
-
-			Set<SymbolicExpression> result = new HashSet<>();
-			for (SymbolicExpression rec : toProcess) {
-				if (rec instanceof MemoryPointer) {
-					AllocationSite site = (AllocationSite) ((MemoryPointer) rec).getReferencedLocation();
-					if (site.equals(NullAllocationSite.INSTANCE))
-						result.add(site);
-					else
-						populate(expression, child, result, site);
-				} else if (rec instanceof AllocationSite) {
-					AllocationSite site = (AllocationSite) rec;
-					if (site.equals(NullAllocationSite.INSTANCE))
-						result.add(site);
-					else
-						populate(expression, child, result, site);
-				}
-			}
-
-			return new ExpressionSet(result);
-
-//
-//			for (SymbolicExpression rec : toProcess) {
-//				if (rec instanceof MemoryPointer) {
-//					AllocationSite site = (AllocationSite) ((MemoryPointer) rec).getReferencedLocation();
-//					if (site.equals(NullAllocationSite.INSTANCE))
-//						result.add(new ExpressionSet(site));
-//
-//				} else if (rec instanceof AllocationSite) {
-//					AllocationSite site = (AllocationSite) rec;
-//					if (site.equals(NullAllocationSite.INSTANCE))
-//						return new ExpressionSet(site);
-//				}
-//			}
-//
-//			return super.visit(expression, receiver, child, params);
-		}
-
-		private void populate(
-				AccessChild expression,
-				ExpressionSet child,
-				Set<SymbolicExpression> result,
-				AllocationSite site) {
-			for (SymbolicExpression target : child) {
-				AllocationSite e;
-
-				if (site instanceof StackAllocationSite)
-					e = new StackAllocationSite(
-							expression.getStaticType(),
-							site.getLocationName(),
-							target,
-							site.isWeak(),
-							site.getCodeLocation());
-				else
-					e = new HeapAllocationSite(
-							expression.getStaticType(),
-							site.getLocationName(),
-							target,
-							site.isWeak(),
-							site.getCodeLocation());
-
-				// propagates the annotations of the child value expression to
-				// the newly created allocation site
-				if (target instanceof Identifier)
-					for (Annotation ann : e.getAnnotations())
-						e.addAnnotation(ann);
-
-				result.add(e);
-			}
-		}
-
-		@Override
-		public ExpressionSet visit(
-				HeapExpression expression,
-				ExpressionSet[] subExpressions,
-				Object... params)
-				throws SemanticException {
-			if (expression instanceof JavaNullConstant) {
-				MemoryPointer mp = new MemoryPointer(
-						new JavaReferenceType(JavaNullType.INSTANCE),
-						NullAllocationSite.INSTANCE,
-						NullAllocationSite.INSTANCE.getCodeLocation());
-				return new ExpressionSet(mp);
-
-			} else
-				return super.visit(expression, subExpressions, params);
-		}
 
 		@Override
 		public ExpressionSet visit(
