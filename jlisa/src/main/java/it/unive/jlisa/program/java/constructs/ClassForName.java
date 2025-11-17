@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.java.constructs;
 
-import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -53,14 +50,18 @@ public class ClassForName extends UnaryExpression implements PluggableStatement 
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		if (getSubExpression() instanceof JavaStringLiteral c) {
-			// replace $ with .
-			String str = c.getValue().contains("$") ? c.getValue().replace('$', '.') : c.getValue();
-			// call the static initializer of the class
-			return InitializedClassSet.initialize(state, JavaClassType.lookup(str).getReference(), this,
-					interprocedural);
-		}
+		throw new SemanticException("Reflection is not supported");
 
-		return state.top();
+		// if (getSubExpression() instanceof JavaStringLiteral c) {
+		// // replace $ with .
+		// String str = c.getValue().contains("$") ? c.getValue().replace('$',
+		// '.') : c.getValue();
+		// // call the static initializer of the class
+		// return InitializedClassSet.initialize(state,
+		// JavaClassType.lookup(str).getReference(), this,
+		// interprocedural);
+		// }
+
+		// return state.top();
 	}
 }

@@ -63,6 +63,10 @@ public class JavaArrayAccess extends BinaryExpression {
 			throw new SemanticException("Nested array accesses are not supported yet");
 		}
 
+		if (!(right instanceof Constant))
+			// TODO
+			throw new SemanticException("Non-constant array indices are not supported yet");
+
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
 		HeapDereference container = new HeapDereference(arrayType, left, getLocation());

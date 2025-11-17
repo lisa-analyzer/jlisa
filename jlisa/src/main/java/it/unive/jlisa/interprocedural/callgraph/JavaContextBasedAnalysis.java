@@ -475,10 +475,7 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 		ContextSensitivityToken callerToken = token;
 		token = token.push(call);
 		if (((JavaKDepthToken) callerToken).length() == ((JavaKDepthToken) token).length()) {
-			if (call.returnsVoid(null))
-				return entryState.topExecution();
-			else
-				return entryState.topExecution().withExecutionExpression(call.getMetaVariable());
+			throw new SemanticException("Maximum recursion depth reached at " + call.getLocation());
 		}
 
 		ScopeToken scope = new ScopeToken(call);

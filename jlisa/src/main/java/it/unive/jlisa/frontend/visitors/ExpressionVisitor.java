@@ -418,6 +418,14 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			parameters.add(expr);
 		}
 
+		if (type.toString().startsWith(cfg.getDescriptor().getUnit().getName() + ".")) {
+			// we are creating an instance of an inner class defined inside the
+			// current
+			// class, we have to pass this as a parameter
+			parameters.add(new VariableRef(cfg, synth.nextLocation(), "this",
+					new JavaReferenceType(JavaClassType.lookup(cfg.getDescriptor().getUnit().getName()))));
+		}
+
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
