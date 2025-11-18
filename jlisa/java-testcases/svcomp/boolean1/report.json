@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':19:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':19:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
-  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_1707451050.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_1707451050.json", "report.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "15",
     "duration" : "2ms",

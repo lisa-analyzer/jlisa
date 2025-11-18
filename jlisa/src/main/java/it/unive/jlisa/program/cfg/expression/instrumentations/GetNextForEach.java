@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression.instrumentations;
 
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -54,6 +55,8 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 		// TODO: to implement semantics
 		Type containerType = expr.getStaticType().asReferenceType().getInnerType();
 		Type contentType = containerType.asArrayType().getInnerType();
+		if (contentType.isInMemoryType())
+			contentType = new JavaReferenceType(contentType);
 
 		PushAny top = new PushAny(contentType, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, top, this);

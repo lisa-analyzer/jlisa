@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707449097.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707449128.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707449097.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707449128.json", "report.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "15",
     "duration" : "5ms",

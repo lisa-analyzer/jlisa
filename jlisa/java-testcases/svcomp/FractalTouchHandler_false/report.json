@@ -1,10 +1,10 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':47:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':47:6] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
-    "message" : "['Main.java':48:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':48:6] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196734061.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196734092.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196735022.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196735053.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707441316.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707441347.json", "report.json", "void_Main.Main(Main__this)_1707437534.json", "void_Main.dragFractal(Main__this,_float_x,_float_y)_1707431799.json", "void_Main.dragFractal(Main__this,_float_x,_float_y)_1707431830.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196734061.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196734092.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196735022.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_-1196735053.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707441316.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707441347.json", "report.json", "void_Main.Main(Main__this)_1707437534.json", "void_Main.dragFractal(Main__this,_float_x,_float_y)_1707431799.json", "void_Main.dragFractal(Main__this,_float_x,_float_y)_1707431830.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "16",
     "duration" : "58ms",

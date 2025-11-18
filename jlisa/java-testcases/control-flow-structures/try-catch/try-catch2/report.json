@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "char_Main.foo(java.lang.String__name)_cfg.json", "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(java.lang.String_[]__args)_cfg.json" ],
+  "files" : [ "char_Main.foo(java.lang.String__name)_cfg.json", "report.json", "void_Main.Main(Main__this)_cfg.json", "void_Main.main(java.lang.String[]__args)_cfg.json" ],
   "info" : {
     "cfgs" : "3",
     "duration" : "1ms",

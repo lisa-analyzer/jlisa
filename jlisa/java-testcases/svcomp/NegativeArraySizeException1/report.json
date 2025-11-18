@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':14:6] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "15",
     "duration" : "3ms",

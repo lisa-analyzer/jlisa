@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':25] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] DEFINITE: uncaught runtime exception in main method"
+    "message" : "['$Main.java':25] on 'void Main::main(java.lang.String[]* args)': [STATEMENT] DEFINITE: uncaught runtime exception in main method"
   } ],
-  "files" : [ "bool_Main.runGrid(Main__this,_double_tolerance)_1707431830.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_-1196539257.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707448167.json", "report.json", "void_Main.Main(Main__this)_1707437565.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "bool_Main.runGrid(Main__this,_double_tolerance)_1707431830.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_-1196539257.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707448167.json", "report.json", "void_Main.Main(Main__this)_1707437565.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "17",
     "duration" : "4ms",

@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
-  "files" : [ "double_MathSin.mysin(MathSin__this,_double_x)_1707432791.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707441409.json", "long_MathSin.helperdoubleToRawBits(double_xm)_435199115.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_MathSin.MathSin(MathSin__this)_1707434651.json", "void_MathSin.MathSin_clinit()_1707434651.json" ],
+  "files" : [ "double_MathSin.mysin(MathSin__this,_double_x)_1707432791.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707441409.json", "long_MathSin.helperdoubleToRawBits(double_xm)_435199115.json", "report.json", "void_Main.main(java.lang.String[]__args).json", "void_MathSin.MathSin(MathSin__this)_1707434651.json", "void_MathSin.MathSin_clinit()_1707434651.json" ],
   "info" : {
     "cfgs" : "21",
     "duration" : "484ms",

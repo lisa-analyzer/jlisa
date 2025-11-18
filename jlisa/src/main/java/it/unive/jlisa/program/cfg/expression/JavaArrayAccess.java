@@ -64,8 +64,9 @@ public class JavaArrayAccess extends BinaryExpression {
 		}
 
 		// if (!(right instanceof Constant))
-		// 	// TODO
-		// 	throw new SemanticException("Non-constant array indices are not supported yet");
+		// // TODO
+		// throw new SemanticException("Non-constant array indices are not
+		// supported yet");
 
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
@@ -112,15 +113,15 @@ public class JavaArrayAccess extends BinaryExpression {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
 			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
-			if (accessType.isReferenceType())
-				access = new HeapReference(accessType, access, getLocation());
+			if (accessType.isInMemoryType())
+				access = new HeapReference(new JavaReferenceType(accessType), access, getLocation());
 			return analysis.smallStepSemantics(state, access, this);
 		} else {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
 			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
-			if (accessType.isReferenceType())
-				access = new HeapReference(accessType, access, getLocation());
+			if (accessType.isInMemoryType())
+				access = new HeapReference(new JavaReferenceType(accessType), access, getLocation());
 			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, access, this);
 
 			// builds the exception

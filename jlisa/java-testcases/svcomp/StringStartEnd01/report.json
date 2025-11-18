@@ -1,12 +1,12 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':17:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   }, {
-    "message" : "['Main.java':23:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':23:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
-    "message" : "['Main.java':29:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':29:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
-  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "15",
     "duration" : "7ms",

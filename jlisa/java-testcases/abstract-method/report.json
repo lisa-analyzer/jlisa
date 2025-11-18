@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_MainClass.MainClass(MainClass__this)_1707440448.json", "void_MainClass.abstractMethod(MainClass__this)_1707429908.json", "void_MainClass.main(java.lang.String_[]__args).json", "void_MyAbstractClass.MyAbstractClass(MyAbstractClass__this)_318915975.json" ],
+  "files" : [ "report.json", "void_MainClass.MainClass(MainClass__this)_1707440448.json", "void_MainClass.abstractMethod(MainClass__this)_1707429908.json", "void_MainClass.main(java.lang.String[]__args).json", "void_MyAbstractClass.MyAbstractClass(MyAbstractClass__this)_318915975.json" ],
   "info" : {
     "cfgs" : "5",
     "duration" : "4ms",

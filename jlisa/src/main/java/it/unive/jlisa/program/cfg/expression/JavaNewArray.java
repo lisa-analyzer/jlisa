@@ -37,7 +37,7 @@ public class JavaNewArray extends UnaryExpression {
 			CFG cfg,
 			CodeLocation location,
 			Expression subExpression,
-			JavaReferenceType type) {
+			Type type) {
 		super(cfg, location, "new", type, subExpression);
 	}
 
@@ -135,6 +135,6 @@ public class JavaNewArray extends UnaryExpression {
 
 	@Override
 	public String toString() {
-		return "new " + getStaticType() + "[" + getSubExpression() + "]";
+		return "new " + getStaticType().asReferenceType().getInnerType() + "[" + getSubExpression() + "]";
 	}
 }

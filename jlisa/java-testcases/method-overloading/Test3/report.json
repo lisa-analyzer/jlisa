@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Test3.foo(java.util.ArrayList__arrayList)_-1554739641.json", "void_Test3.main(java.lang.String_[]__args).json" ],
+  "files" : [ "report.json", "void_Test3.foo(java.util.ArrayList__arrayList)_-1554739641.json", "void_Test3.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "4",
     "duration" : "4ms",

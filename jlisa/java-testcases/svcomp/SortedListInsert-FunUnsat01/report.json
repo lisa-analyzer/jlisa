@@ -1,10 +1,10 @@
 {
   "warnings": [
     {
-      "message": "['$Main.java':5] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+      "message": "['$Main.java':5] on 'void Main::main(java.lang.String[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
     },
     {
-      "message": "['Main.java':72:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+      "message": "['Main.java':72:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
     }
   ],
   "files": [
@@ -16,7 +16,7 @@
     "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196660002.json",
     "void_Main.List.List_clinit()_1707434496.json",
     "void_Main.List.insert(Main.List__this,_int_data)_1707455669.json",
-    "void_Main.main(java.lang.String_[]__args).json",
+    "void_Main.main(java.lang.String[]__args).json",
     "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432512.json"
   ],
   "info": {

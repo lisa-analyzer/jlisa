@@ -92,11 +92,11 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		} else if (node.getDimensions() == 0) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
 		} else if (node.getDimensions() == 2) {
-			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+			_type = JavaArrayType.lookup(_type.isInMemoryType() ? _type : _type,
 					node.getDimensions());
-			type = JavaArrayType.lookup(new JavaReferenceType(_type), 0);
+			type = JavaArrayType.lookup(_type, 0);
 		} else {
-			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+			_type = JavaArrayType.lookup(_type.isInMemoryType() ? _type : _type,
 					node.getDimensions());
 			type = _type;
 		}
@@ -237,6 +237,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 			Type t,
 			VariableDeclarationFragment fragment) {
 		Type type = t;
+		Type plainType = t.isReferenceType() ? t.asReferenceType().getInnerType() : t;
 		// we do not currently support k-dim arrays, with k > 2
 		if (fragment.getExtraDimensions() > 2)
 			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
@@ -245,12 +246,12 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 
 		// single-dim array
 		if (fragment.getExtraDimensions() == 1)
-			type = new JavaReferenceType(JavaArrayType.lookup(type, 1));
+			type = new JavaReferenceType(JavaArrayType.lookup(plainType, 1));
 
 		// bidim array
 		else if (fragment.getExtraDimensions() == 2)
 			type = new JavaReferenceType(
-					JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(type, 1)), 2));
+					JavaArrayType.lookup(JavaArrayType.lookup(plainType, 1), 2));
 
 		return type;
 	}

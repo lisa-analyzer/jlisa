@@ -969,4 +969,12 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 				"Main.java", "../common", "../micro/");
 		perform(conf);
 	}
+
+	@Disabled
+	public void Arrays4_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Arrays4",
+				"Main.java", "../common", "../micro/");
+		perform(conf);
+	}
 }

@@ -14,7 +14,7 @@
   }, {
     "message" : "['Main.java':30:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
-  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439208.json", "report.json", "void_Main.f(int_i,_int_j)_1707422933.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439208.json", "report.json", "void_Main.f(int_i,_int_j)_1707422933.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "16",
     "duration" : "3ms",

@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Basic.Basic(Basic__this)_823992675.json", "void_Basic.Inner.Inner(Basic.Inner__this,_Basic__$enclosing)_823999433.json", "void_Basic.Inner.display1(Basic.Inner__this)_823986010.json", "void_Basic.Inner.display2(Basic.Inner__this)_823986041.json", "void_Basic.main(java.lang.String_[]__args).json" ],
+  "files" : [ "report.json", "void_Basic.Basic(Basic__this)_823992675.json", "void_Basic.Inner.Inner(Basic.Inner__this,_Basic__$enclosing)_823999433.json", "void_Basic.Inner.display1(Basic.Inner__this)_823986010.json", "void_Basic.Inner.display2(Basic.Inner__this)_823986041.json", "void_Basic.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "5",
     "duration" : "5ms",

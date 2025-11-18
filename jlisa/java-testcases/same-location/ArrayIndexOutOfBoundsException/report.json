@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "int_Verifier.nondetInt()_1707441099.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "int_Verifier.nondetInt()_1707441099.json", "report.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "13",
     "duration" : "5ms",

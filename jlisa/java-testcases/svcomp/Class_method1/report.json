@@ -1,8 +1,8 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':11:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':11:4] on 'void Main::main(java.lang.String[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
-  "files" : [ "bool_Main.f(java.lang.Class__c,_bool_b)_1707428854.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
+  "files" : [ "bool_Main.f(java.lang.Class__c,_bool_b)_1707428854.json", "report.json", "void_Main.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "16",
     "duration" : "1ms",

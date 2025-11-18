@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_LongTest.main(java.lang.String_[]__args).json" ],
+  "files" : [ "report.json", "void_LongTest.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "2",
     "duration" : "2ms",

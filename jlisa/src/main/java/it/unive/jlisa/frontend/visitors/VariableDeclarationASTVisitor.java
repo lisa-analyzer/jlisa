@@ -26,7 +26,6 @@ public class VariableDeclarationASTVisitor extends BaseCodeElementASTVisitor {
 		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
 		node.getType().accept(visitor);
 		Type type = visitor.getType();
-		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 		if (node.getExtraDimensions() != 0) {
 			if (type instanceof ArrayType) {
 				ArrayType arrayType = (ArrayType) type;

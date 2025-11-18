@@ -54,7 +54,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 				params += ", ";
 			}
 		}
-		return "new " + getStaticType() + "{" + params + "}";
+		return "new " + getStaticType().asReferenceType().getInnerType() + "{" + params + "}";
 	}
 
 	/**

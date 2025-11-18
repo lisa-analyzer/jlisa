@@ -266,7 +266,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
 	public static JavaReferenceType getStringArray() {
 		return new JavaReferenceType(
-				JavaArrayType.lookup(new JavaReferenceType(JavaStringType.getStringType()), 1));
+				JavaArrayType.lookup(JavaStringType.getStringType(), 1));
 	}
 
 	public static JavaReferenceType getByteArray() {
@@ -275,6 +275,6 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
 	public static JavaReferenceType getObjectArray() {
 		return new JavaReferenceType(
-				JavaArrayType.lookup(new JavaReferenceType(JavaClassType.getObjectType()), 1));
+				JavaArrayType.lookup(JavaClassType.getObjectType(), 1));
 	}
 }

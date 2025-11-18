@@ -1,6 +1,6 @@
 {
   "warnings" : [ ],
-  "files" : [ "report.json", "void_Test6.foo(int_i)_-1468852312.json", "void_Test6.foo(java.lang.Integer__i)_-1468852281.json", "void_Test6.main(java.lang.String_[]__args).json" ],
+  "files" : [ "report.json", "void_Test6.foo(int_i)_-1468852312.json", "void_Test6.foo(java.lang.Integer__i)_-1468852281.json", "void_Test6.main(java.lang.String[]__args).json" ],
   "info" : {
     "cfgs" : "4",
     "duration" : "3ms",
