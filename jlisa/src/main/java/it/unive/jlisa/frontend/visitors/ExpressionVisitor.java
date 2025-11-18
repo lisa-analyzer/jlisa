@@ -217,7 +217,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 			for (int i = 0; i < fstDim; i++) {
 				Expression expr = new JavaNewArray(cfg,
 						parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
-						sndDimVisitor.getExpression(), (JavaReferenceType) type.asArrayType().getInnerType());
+						sndDimVisitor.getExpression(), new JavaReferenceType(type.asArrayType().getBaseType()));
 				parameters.add(expr);
 			}
 

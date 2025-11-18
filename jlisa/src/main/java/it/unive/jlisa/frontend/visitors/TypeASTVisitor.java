@@ -92,12 +92,10 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		} else if (node.getDimensions() == 0) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
 		} else if (node.getDimensions() == 2) {
-			_type = JavaArrayType.lookup(_type.isInMemoryType() ? _type : _type,
-					node.getDimensions());
-			type = JavaArrayType.lookup(_type, 0);
+			_type = JavaArrayType.lookup(_type, 1);
+			type = JavaArrayType.lookup(_type, 1);
 		} else {
-			_type = JavaArrayType.lookup(_type.isInMemoryType() ? _type : _type,
-					node.getDimensions());
+			_type = JavaArrayType.lookup(_type, node.getDimensions());
 			type = _type;
 		}
 		return false;
