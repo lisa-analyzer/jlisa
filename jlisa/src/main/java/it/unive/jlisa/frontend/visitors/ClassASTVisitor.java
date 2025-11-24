@@ -86,6 +86,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
+
+			// 1) descriptor
+			CodeMemberDescriptor member = (CodeMemberDescriptor) getProgram()
+					.getUnit(fullName)
+					.getCodeMember(md.getName().getIdentifier());
+
 			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, this);
 			md.accept(visitor);
 			if (md.isConstructor()) {

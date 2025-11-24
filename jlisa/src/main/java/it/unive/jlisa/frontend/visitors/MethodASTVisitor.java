@@ -2,7 +2,7 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.annotations.AnnotationInfo;
-import it.unive.jlisa.frontend.annotations.AnnotationMarker;
+import it.unive.jlisa.frontend.annotations.MethodAnnotationExtractor;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
@@ -50,6 +50,9 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		} else {
 			codeMemberDescriptor = buildJavaCodeMemberDescriptor(node);
 		}
+		// 🔹 detect annotation now (descriptor is valid)
+		MethodAnnotationExtractor.detectAndRegisterGetMapping(this.parserContext, codeMemberDescriptor, node);
+
 		System.out.println("[VISIT] " + codeMemberDescriptor.getFullSignature());
 
 		boolean isMain = isMain(node);
@@ -62,45 +65,6 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null),
 					paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
-
-		// === detect @GetMapping and remember its info ===
-		it.unive.lisa.program.cfg.CodeMemberDescriptor __member = cfg.getDescriptor();
-		AnnotationInfo __gmInfo = null;
-
-		for (Object m : (java.util.List<?>) node.modifiers()) {
-			if (!(m instanceof org.eclipse.jdt.core.dom.Annotation __ann))
-				continue;
-
-			String simple = __ann.getTypeName().getFullyQualifiedName();
-			int dot = simple.lastIndexOf('.');
-			if (dot >= 0)
-				simple = simple.substring(dot + 1);
-
-			// all annotation
-			System.out.println("[ANN] @" + simple + " on " + __member);
-
-			if (!"GetMapping".equals(simple))
-				continue;
-
-			java.util.Map<String, String> params = new java.util.HashMap<>();
-			if (__ann instanceof org.eclipse.jdt.core.dom.SingleMemberAnnotation sma) {
-				params.put("value", stripQuotes(String.valueOf(sma.getValue())));
-			} else if (__ann instanceof org.eclipse.jdt.core.dom.NormalAnnotation na) {
-				for (Object o : na.values()) {
-					org.eclipse.jdt.core.dom.MemberValuePair p = (org.eclipse.jdt.core.dom.MemberValuePair) o;
-					params.put(p.getName().getIdentifier(), stripQuotes(String.valueOf(p.getValue())));
-				}
-			}
-			if (!params.containsKey("value") && params.containsKey("path"))
-				params.put("value", params.get("path"));
-
-			__gmInfo = new AnnotationInfo("GetMapping", java.util.Collections.unmodifiableMap(params));
-			parserContext.addMethodAnnotation(__member, __gmInfo);
-			System.out.println("[JLiSA-ANN] " + __member + " -> " + __gmInfo);
-			break; // just first @GetMapping
-		}
-
-// === end detect block ===
 
 		JavaLocalVariableTracker tracker = new JavaLocalVariableTracker(cfg, codeMemberDescriptor);
 		tracker.enterScope();
@@ -137,19 +101,14 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
 		Statement first = blockStatementASTVisitor.getFirst();
 
-		if (__gmInfo != null) {
-			CodeLocation __loc = parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation();
-			AnnotationMarker __mark = new AnnotationMarker(cfg, __loc, __gmInfo);
+		entrypoints.add(first);
 
-			list.addNode(__mark);
-			list.addEdge(new SequentialEdge(__mark, first)); // marker -> first
-
-			entrypoints.clear();
-			entrypoints.add(__mark); // entrypoint = marker
-			getProgram().addEntryPoint(cfg);
-
-		} else {
-			entrypoints.add(first); // annotation: first
+		List<AnnotationInfo> anns = parserContext.getMethodAnnotations(cfg.getDescriptor());
+		for (AnnotationInfo ann : anns) {
+			if ("GetMapping".equals(ann.getName())) {
+				getProgram().addEntryPoint(cfg);
+				break;
+			}
 		}
 
 		if (cfg.getAllExitpoints().isEmpty()) {

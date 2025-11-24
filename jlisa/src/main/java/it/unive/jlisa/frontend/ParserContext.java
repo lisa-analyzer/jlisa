@@ -199,6 +199,12 @@ public class ParserContext {
 		return Collections.unmodifiableMap(methodAnnotations);
 	}
 
+	public List<AnnotationInfo> getMethodAnnotations(
+			CodeMemberDescriptor member) {
+		List<AnnotationInfo> anns = methodAnnotations.get(member);
+		return anns == null ? Collections.emptyList() : anns;
+	}
+
 	/**
 	 * Creates and returns a new SourceCodeLocationManager for the specified
 	 * file position. This manager is used for tracking real source code
