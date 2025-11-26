@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 public final class MethodAnnotationExtractor {
 
 	private MethodAnnotationExtractor() {
+		// utility class, do not instantiate
 	}
 
 	/**
@@ -33,7 +34,7 @@ public final class MethodAnnotationExtractor {
 			if (!(m instanceof Annotation ann))
 				continue;
 
-			// simple name, without package
+			// simple name without package prefix
 			String simple = ann.getTypeName().getFullyQualifiedName();
 			int dot = simple.lastIndexOf('.');
 			if (dot >= 0)
@@ -53,12 +54,13 @@ public final class MethodAnnotationExtractor {
 			else if (ann instanceof NormalAnnotation na) {
 				for (Object o : na.values()) {
 					MemberValuePair p = (MemberValuePair) o;
-					params.put(p.getName().getIdentifier(),
+					params.put(
+							p.getName().getIdentifier(),
 							stripQuotes(String.valueOf(p.getValue())));
 				}
 			}
 
-			// if neither value nor path is present, we ignore it
+			// if only "path" is present, copy it into "value"
 			if (!params.containsKey("value") && params.containsKey("path")) {
 				params.put("value", params.get("path"));
 			}
@@ -67,20 +69,24 @@ public final class MethodAnnotationExtractor {
 					"GetMapping",
 					Collections.unmodifiableMap(params));
 
+			// register annotation info in the parser context
 			parserContext.addMethodAnnotation(member, gmInfo);
 		}
 
 		return gmInfo;
 	}
 
+	// removes surrounding quotes from a string literal
 	private static String stripQuotes(
 			String s) {
 		if (s == null || s.length() < 2)
 			return s;
+
 		if ((s.startsWith("\"") && s.endsWith("\""))
 				|| (s.startsWith("'") && s.endsWith("'"))) {
 			return s.substring(1, s.length() - 1);
 		}
+
 		return s;
 	}
 }
