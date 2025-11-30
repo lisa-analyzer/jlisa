@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.MemberValuePair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -14,9 +15,11 @@ import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 
 public final class MethodAnnotationExtractor {
 
-	private MethodAnnotationExtractor() {
-		// utility class, do not instantiate
-	}
+	// All Spring mapping annotations we currently support
+	private static final Set<
+			String> SUPPORTED_MAPPINGS = Set.of("GetMapping", "PostMapping", "PutMapping", "DeleteMapping");
+
+	// ... existing fields / methods
 
 	/**
 	 * Detects @GetMapping on a method, registers it in the ParserContext and
@@ -40,9 +43,12 @@ public final class MethodAnnotationExtractor {
 			if (dot >= 0)
 				simple = simple.substring(dot + 1);
 
-			// only care about @GetMapping
-			if (!"GetMapping".equals(simple))
+			// only care about mapping annotations we support
+			if (!SUPPORTED_MAPPINGS.contains(simple)) {
+				// if it's not one of
+				// GetMapping/PostMapping/PutMapping/DeleteMapping, skip it
 				continue;
+			}
 
 			Map<String, String> params = new HashMap<>();
 
@@ -65,12 +71,20 @@ public final class MethodAnnotationExtractor {
 				params.put("value", params.get("path"));
 			}
 
+			// use the actual annotation simple name
+			// (GetMapping/PostMapping/...)
 			gmInfo = new AnnotationInfo(
-					"GetMapping",
+					simple,
 					Collections.unmodifiableMap(params));
 
 			// register annotation info in the parser context
 			parserContext.addMethodAnnotation(member, gmInfo);
+		}
+// debug: print extracted annotation, if any
+		if (gmInfo != null) {
+			System.out.println("[ANN] Found GetMapping on "
+					+ member.getFullSignature()
+					+ " -> " + gmInfo);
 		}
 
 		return gmInfo;
