@@ -43,6 +43,11 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import it.unive.jlisa.frontend.annotations.AnnotationInfo;
+import it.unive.jlisa.program.type.JavaClassType;
+import org.eclipse.jdt.core.dom.Annotation;
+import java.util.Collections;
+import it.unive.jlisa.frontend.annotations.ClassAndFieldAnnotationExtractor;
 
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
@@ -78,12 +83,22 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		// parsing superclass
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
 
+		JavaClassType clazzType =
+				(JavaClassType) getProgram().getTypes().getType(fullName);
+		// Register class annotations like @RestController
+		registerClassAnnotations(node, cUnit);
+		ClassAndFieldAnnotationExtractor.detectClassAnnotations(parserContext, clazzType, node);
+
 		if (!node.permittedTypes().isEmpty())
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
 
 		createClassInitializer(cUnit, node);
 
+//  for fields ( @Autowired)
+		for (FieldDeclaration field : node.getFields()) {
+			ClassAndFieldAnnotationExtractor.detectFieldAnnotations(parserContext, clazzType, field);
+		}
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
 
@@ -105,6 +120,45 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		}
 
 		return false;
+	}
+	private void registerClassAnnotations(TypeDeclaration node, ClassUnit cUnit) {
+		// Get the type of Lisa (Type) for this clas
+		Type type = getProgram().getTypes().getType(cUnit.getName());
+
+		// If this Type is not actually a JavaClassType, we do nothing
+		if (!(type instanceof JavaClassType javaType)) {
+			return;
+		}
+
+		// Loop over all class modifiers (public, final, @RestController, ...)
+		for (Object m : node.modifiers()) {
+			if (!(m instanceof Annotation ann)) {
+				continue; // just annotations
+			}
+
+			//  We take the full annotation name and simplify it (without package)
+			String simple = ann.getTypeName().getFullyQualifiedName();
+			int dot = simple.lastIndexOf('.');
+			if (dot >= 0) {
+				simple = simple.substring(dot + 1);
+			}
+
+			// now just @RestController
+			if (!"RestController".equals(simple)) {
+				continue;
+			}
+
+			// We have no parameters for RestController → empty map
+			AnnotationInfo info = new AnnotationInfo(simple, Collections.emptyMap());
+
+			// store in ParserContext
+			parserContext.addClassAnnotation(javaType, info);
+
+			//  // debug to make sure
+			System.out.println("[ANN] Found class annotation @" + simple
+					+ " on " + cUnit.getName()
+					+ " -> " + info);
+		}
 	}
 
 	private void createEnumInitializer(

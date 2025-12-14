@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * Central context for parsing operations that manages program state, variable
@@ -52,6 +53,10 @@ public class ParserContext {
 
 	// Method -> annotations found on that method (e.g., @GetMapping)
 	private final Map<CodeMemberDescriptor, List<AnnotationInfo>> methodAnnotations = new HashMap<>();
+	// Class -> annotations found on that class (e.g. @RestController)
+	private final Map<JavaClassType, List<AnnotationInfo>> classAnnotations = new HashMap<>();
+	// Field -> annotations found on that field (e.g. @Autowired on 'service')
+	private final Map<String, List<AnnotationInfo>> fieldAnnotations = new HashMap<>();
 
 	/**
 	 * Constructs a new ParserContext with the specified program, API level, and
@@ -194,15 +199,41 @@ public class ParserContext {
 			AnnotationInfo ann) {
 		methodAnnotations.computeIfAbsent(member, k -> new java.util.ArrayList<>()).add(ann);
 	}
+	public void addClassAnnotation(
+			JavaClassType clazz,
+			AnnotationInfo ann) {
+		classAnnotations
+				.computeIfAbsent(clazz, k -> new ArrayList<>())
+				.add(ann);
+	}
 
 	public Map<CodeMemberDescriptor, List<AnnotationInfo>> getMethodAnnotations() {
 		return Collections.unmodifiableMap(methodAnnotations);
+	}
+	public Map<JavaClassType, List<AnnotationInfo>> getClassAnnotations() {
+		return Collections.unmodifiableMap(classAnnotations);
+	}
+	public List<AnnotationInfo> getClassAnnotations(JavaClassType clazz) {
+		return classAnnotations.getOrDefault(clazz, Collections.emptyList());
 	}
 
 	public List<AnnotationInfo> getMethodAnnotations(
 			CodeMemberDescriptor member) {
 		List<AnnotationInfo> anns = methodAnnotations.get(member);
 		return anns == null ? Collections.emptyList() : anns;
+	}
+	public void addFieldAnnotation(String fieldKey, AnnotationInfo ann) {
+		fieldAnnotations
+				.computeIfAbsent(fieldKey, k -> new ArrayList<>())
+				.add(ann);
+	}
+
+	public Map<String, List<AnnotationInfo>> getFieldAnnotations() {
+		return Collections.unmodifiableMap(fieldAnnotations);
+	}
+
+	public List<AnnotationInfo> getFieldAnnotations(String fieldKey) {
+		return fieldAnnotations.getOrDefault(fieldKey, Collections.emptyList());
 	}
 
 	/**
