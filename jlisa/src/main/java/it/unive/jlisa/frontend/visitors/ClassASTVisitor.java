@@ -3,6 +3,8 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.annotations.AnnotationInfo;
+import it.unive.jlisa.frontend.annotations.ClassAndFieldAnnotationExtractor;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -13,6 +15,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -31,11 +34,13 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -43,11 +48,6 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import it.unive.jlisa.frontend.annotations.AnnotationInfo;
-import it.unive.jlisa.program.type.JavaClassType;
-import org.eclipse.jdt.core.dom.Annotation;
-import java.util.Collections;
-import it.unive.jlisa.frontend.annotations.ClassAndFieldAnnotationExtractor;
 
 public class ClassASTVisitor extends BaseUnitASTVisitor {
 
@@ -83,8 +83,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		// parsing superclass
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
 
-		JavaClassType clazzType =
-				(JavaClassType) getProgram().getTypes().getType(fullName);
+		JavaClassType clazzType = (JavaClassType) getProgram().getTypes().getType(fullName);
 		// Register class annotations like @RestController
 		registerClassAnnotations(node, cUnit);
 		ClassAndFieldAnnotationExtractor.detectClassAnnotations(parserContext, clazzType, node);
@@ -121,7 +120,10 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		return false;
 	}
-	private void registerClassAnnotations(TypeDeclaration node, ClassUnit cUnit) {
+
+	private void registerClassAnnotations(
+			TypeDeclaration node,
+			ClassUnit cUnit) {
 		// Get the type of Lisa (Type) for this clas
 		Type type = getProgram().getTypes().getType(cUnit.getName());
 
@@ -136,7 +138,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 				continue; // just annotations
 			}
 
-			//  We take the full annotation name and simplify it (without package)
+			// We take the full annotation name and simplify it (without
+			// package)
 			String simple = ann.getTypeName().getFullyQualifiedName();
 			int dot = simple.lastIndexOf('.');
 			if (dot >= 0) {
@@ -154,7 +157,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			// store in ParserContext
 			parserContext.addClassAnnotation(javaType, info);
 
-			//  // debug to make sure
+			// // debug to make sure
 			System.out.println("[ANN] Found class annotation @" + simple
 					+ " on " + cUnit.getName()
 					+ " -> " + info);

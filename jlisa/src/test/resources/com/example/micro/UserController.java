@@ -12,23 +12,30 @@ public class UserController {
 		User user = new User(name, age);
 		return service.getUserInfo(user);
 	}
-	//  POST
+
+	// POST
 	@PostMapping("/user/create")
-	public String createUser(String name, int age) {
+	public String createUser(
+			String name,
+			int age) {
 		User user = new User(name, age);
 		return getUserInfo(this.service, user);
 	}
 
 	// PUT
 	@PutMapping("/user/update")
-	public String updateUser(String name, int age) {
+	public String updateUser(
+			String name,
+			int age) {
 		User user = new User(name, age);
 		return getUserInfo(this.service, user);
 	}
 
-	//  DELETE
+	// DELETE
 	@DeleteMapping("/user/delete")
-	public String deleteUser(String name, int age) {
+	public String deleteUser(
+			String name,
+			int age) {
 		User user = new User(name, age);
 		return getUserInfo(this.service, user);
 	}

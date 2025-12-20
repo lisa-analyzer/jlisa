@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 public final class MethodAnnotationExtractor {
 
 	// All Spring mapping annotations we currently support
-	private static final Set<
+	public static final Set<
 			String> SUPPORTED_MAPPINGS = Set.of("GetMapping", "PostMapping", "PutMapping", "DeleteMapping");
 
 	// ... existing fields / methods
@@ -80,11 +80,17 @@ public final class MethodAnnotationExtractor {
 			// register annotation info in the parser context
 			parserContext.addMethodAnnotation(member, gmInfo);
 		}
-// debug: print extracted annotation, if any
-		if (gmInfo != null) {
-			System.out.println("[ANN] Found GetMapping on "
-					+ member.getFullSignature()
-					+ " -> " + gmInfo);
+
+		// Set the graph title prefix AFTER processing all annotations
+		// so we can include all of them in the title
+		if (member instanceof it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor jd) {
+			String prefix = parserContext.getMethodAnnotations(member).stream()
+					.map(AnnotationInfo::toSpringLikeString)
+					.reduce((
+							a,
+							b) -> a + " " + b)
+					.orElse(null);
+			jd.setGraphTitlePrefix(prefix);
 		}
 
 		return gmInfo;

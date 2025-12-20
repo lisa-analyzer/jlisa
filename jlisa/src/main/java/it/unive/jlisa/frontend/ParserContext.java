@@ -13,11 +13,11 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 
 /**
  * Central context for parsing operations that manages program state, variable
@@ -199,6 +199,7 @@ public class ParserContext {
 			AnnotationInfo ann) {
 		methodAnnotations.computeIfAbsent(member, k -> new java.util.ArrayList<>()).add(ann);
 	}
+
 	public void addClassAnnotation(
 			JavaClassType clazz,
 			AnnotationInfo ann) {
@@ -210,10 +211,13 @@ public class ParserContext {
 	public Map<CodeMemberDescriptor, List<AnnotationInfo>> getMethodAnnotations() {
 		return Collections.unmodifiableMap(methodAnnotations);
 	}
+
 	public Map<JavaClassType, List<AnnotationInfo>> getClassAnnotations() {
 		return Collections.unmodifiableMap(classAnnotations);
 	}
-	public List<AnnotationInfo> getClassAnnotations(JavaClassType clazz) {
+
+	public List<AnnotationInfo> getClassAnnotations(
+			JavaClassType clazz) {
 		return classAnnotations.getOrDefault(clazz, Collections.emptyList());
 	}
 
@@ -222,7 +226,10 @@ public class ParserContext {
 		List<AnnotationInfo> anns = methodAnnotations.get(member);
 		return anns == null ? Collections.emptyList() : anns;
 	}
-	public void addFieldAnnotation(String fieldKey, AnnotationInfo ann) {
+
+	public void addFieldAnnotation(
+			String fieldKey,
+			AnnotationInfo ann) {
 		fieldAnnotations
 				.computeIfAbsent(fieldKey, k -> new ArrayList<>())
 				.add(ann);
@@ -232,7 +239,8 @@ public class ParserContext {
 		return Collections.unmodifiableMap(fieldAnnotations);
 	}
 
-	public List<AnnotationInfo> getFieldAnnotations(String fieldKey) {
+	public List<AnnotationInfo> getFieldAnnotations(
+			String fieldKey) {
 		return fieldAnnotations.getOrDefault(fieldKey, Collections.emptyList());
 	}
 
