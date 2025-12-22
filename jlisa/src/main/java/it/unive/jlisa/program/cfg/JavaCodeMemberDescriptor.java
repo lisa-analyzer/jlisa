@@ -9,21 +9,6 @@ import it.unive.lisa.type.Type;
 
 public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 	private String graphTitlePrefix;
-	// Track which methods are called for HTML generation
-	private static final java.util.concurrent.atomic.AtomicInteger CALL_COUNT_FULL = new java.util.concurrent.atomic.AtomicInteger(0);
-	private static final java.util.concurrent.atomic.AtomicInteger CALL_COUNT_SIG = new java.util.concurrent.atomic.AtomicInteger(0);
-	private static final java.util.concurrent.atomic.AtomicInteger CALL_COUNT_TOSTRING = new java.util.concurrent.atomic.AtomicInteger(0);
-	
-	// Static initializer to log all String-returning method calls via reflection proxy
-	static {
-		try {
-			// Log that this class is being loaded
-			java.io.FileWriter fw = new java.io.FileWriter("method-call-debug.log", true);
-			fw.write("[CLASS_LOADED] JavaCodeMemberDescriptor loaded at " + System.currentTimeMillis() + "\n");
-			fw.close();
-		} catch (Exception e) {
-		}
-	}
 
 	public JavaCodeMemberDescriptor(
 			CodeLocation location,
@@ -109,82 +94,30 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 
 	@Override
 	public String getSignature() {
+		// Base textual signature + annotations stored in this descriptor
 		String base = super.getSignature();
-		// Most important: LiSA uses getSignature() for HTML graph titles
-		// Always use signatureWithAnnotations to include annotations from Annotations object
-		String s = signatureWithAnnotations(base);
-		int count = CALL_COUNT_SIG.incrementAndGet();
-		// Log ALL calls to getSignature() to determine if this is what LiSA uses
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter("method-call-debug.log", true);
-			fw.write("[CALL getSignature #" + count + "] method=" + getName() + " base=" + base + " result=" + s + " hasAnns=" + (getAnnotations() != null && !getAnnotations().isEmpty()) + "\n");
-			// Only print full stacktrace for first few calls or when annotations are present
-			if (count <= 5 || (getAnnotations() != null && !getAnnotations().isEmpty())) {
-				new Exception("STACK").printStackTrace(new java.io.PrintWriter(fw));
-			}
-			fw.close();
-		} catch (Exception e) {
-		}
-		return s;
+		return signatureWithAnnotations(base);
 	}
 
 	@Override
 	public String getFullSignature() {
 		String base = super.getFullSignature();
-		// Always use signatureWithAnnotations to include annotations from Annotations object
-		// This ensures LiSA can display them in HTML
-		String s = signatureWithAnnotations(base);
-		int count = CALL_COUNT_FULL.incrementAndGet();
-		// Log ALL calls to getFullSignature() to determine if this is what LiSA uses
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter("method-call-debug.log", true);
-			fw.write("[CALL getFullSignature #" + count + "] method=" + getName() + " base=" + base + " result=" + s + " hasAnns=" + (getAnnotations() != null && !getAnnotations().isEmpty()) + "\n");
-			// Only print full stacktrace for first few calls or when annotations are present
-			if (count <= 5 || (getAnnotations() != null && !getAnnotations().isEmpty())) {
-				new Exception("STACK").printStackTrace(new java.io.PrintWriter(fw));
-			}
-			fw.close();
-		} catch (Exception e) {
-		}
-		return s;
+		return signatureWithAnnotations(base);
 	}
 
 	@Override
 	public String getFullSignatureWithParNames() {
+		// CRITICAL: LiSA uses getFullSignatureWithParNames() in SerializableCFG.fromCFG()
+		// for HTML titles and DOT graph names. Just decorate the base representation
+		// with the annotations already attached to this descriptor.
 		String base = super.getFullSignatureWithParNames();
-		// CRITICAL: LiSA uses getFullSignatureWithParNames() in SerializableCFG.fromCFG() line 58
-		// to generate the graph title for HTML output. This is the method that creates
-		// the "Graph: ..." title and the digraph name.
-		// Always use signatureWithAnnotations to include annotations from Annotations object
-		String s = signatureWithAnnotations(base);
-		// Log calls for debugging
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter("method-call-debug.log", true);
-			fw.write("[CALL getFullSignatureWithParNames] method=" + getName() + " base=" + base + " result=" + s + " hasAnns=" + (getAnnotations() != null && !getAnnotations().isEmpty()) + "\n");
-			fw.close();
-		} catch (Exception e) {
-		}
-		return s;
+		return signatureWithAnnotations(base);
 	}
 
 	@Override
 	public String toString() {
 		String base = super.toString();
-		// Always use signatureWithAnnotations to include annotations from Annotations object
-		String s = signatureWithAnnotations(base);
-		int count = CALL_COUNT_TOSTRING.incrementAndGet();
-		// Log ALL calls to toString() to determine if this is what LiSA uses
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter("method-call-debug.log", true);
-			fw.write("[CALL toString #" + count + "] method=" + getName() + " base=" + base + " result=" + s + " hasAnns=" + (getAnnotations() != null && !getAnnotations().isEmpty()) + "\n");
-			// Only print full stacktrace for first few calls or when annotations are present
-			if (count <= 5 || (getAnnotations() != null && !getAnnotations().isEmpty())) {
-				new Exception("STACK").printStackTrace(new java.io.PrintWriter(fw));
-			}
-			fw.close();
-		} catch (Exception e) {
-		}
-		return s;
+		return signatureWithAnnotations(base);
 	}
 
 	private String signatureWithAnnotations(
@@ -277,14 +210,6 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 			} catch (Exception e) {
 				// Method might not exist or be accessible, ignore
 			}
-			// Log clone call to debug
-			try {
-				java.io.FileWriter fw = new java.io.FileWriter("clone-debug.log", true);
-				fw.write("[CLONE] method=" + getName() + " anns=" + getAnnotations() + "\n");
-				new Exception("STACK").printStackTrace(new java.io.PrintWriter(fw));
-				fw.close();
-			} catch (Exception e) {
-			}
 			return cloned;
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to clone JavaCodeMemberDescriptor", e);
@@ -322,14 +247,6 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 			}
 		} catch (Exception e) {
 			// Method might not exist or be accessible, ignore
-		}
-		// Log copy call to debug
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter("clone-debug.log", true);
-			fw.write("[COPY] method=" + getName() + " anns=" + getAnnotations() + "\n");
-			new Exception("STACK").printStackTrace(new java.io.PrintWriter(fw));
-			fw.close();
-		} catch (Exception e) {
 		}
 		return copied;
 	}

@@ -157,10 +157,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			// store in ParserContext
 			parserContext.addClassAnnotation(javaType, info);
 
-			// // debug to make sure
-			System.out.println("[ANN] Found class annotation @" + simple
-					+ " on " + cUnit.getName()
-					+ " -> " + info);
+			// debug print removed to keep output clean
 		}
 	}
 
