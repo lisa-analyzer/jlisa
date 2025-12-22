@@ -1,18 +1,18 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707438712.json", "report.json", "void_A.A(A__this)_318571782.json", "void_B.B(B__this)_1707429350.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "16",
-    "duration" : "29ms",
-    "end" : "2025-09-25T12:02:29.301+02:00",
+    "duration" : "43ms",
+    "end" : "2025-12-22T16:07:30.771+01:00",
     "expressions" : "50",
     "files" : "4",
     "globals" : "23",
     "members" : "144",
     "programs" : "1",
-    "start" : "2025-09-25T12:02:29.272+02:00",
+    "start" : "2025-12-22T16:07:30.728+01:00",
     "statements" : "34",
     "units" : "51",
     "version" : "0.1",

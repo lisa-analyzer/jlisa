@@ -1,5 +1,7 @@
 {
   "warnings" : [ {
+    "message" : "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
     "message" : "['Main.java':20:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
     "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
@@ -11,18 +13,18 @@
   "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440479.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440510.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320356456.json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320357417.json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "8ms",
-    "end" : "2025-09-25T15:14:44.963+02:00",
+    "duration" : "97ms",
+    "end" : "2025-12-22T19:51:35.091+01:00",
     "expressions" : "88",
     "files" : "5",
     "globals" : "23",
     "members" : "141",
     "programs" : "1",
-    "start" : "2025-09-25T15:14:44.955+02:00",
+    "start" : "2025-12-22T19:51:34.994+01:00",
     "statements" : "33",
     "units" : "48",
     "version" : "0.1",
-    "warnings" : "4"
+    "warnings" : "5"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",

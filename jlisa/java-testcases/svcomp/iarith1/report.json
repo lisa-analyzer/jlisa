@@ -1,24 +1,26 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':25:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
   }, {
-    "message" : "['Main.java':34:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':25:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':34:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
   "info" : {
     "cfgs" : "13",
-    "duration" : "56ms",
-    "end" : "2025-09-24T18:08:05.557+02:00",
+    "duration" : "26ms",
+    "end" : "2025-12-22T19:51:38.081+01:00",
     "expressions" : "115",
     "files" : "1",
     "globals" : "23",
     "members" : "141",
     "programs" : "1",
-    "start" : "2025-09-24T18:08:05.501+02:00",
+    "start" : "2025-12-22T19:51:38.055+01:00",
     "statements" : "46",
     "units" : "48",
     "version" : "0.1",
-    "warnings" : "2"
+    "warnings" : "3"
   },
   "configuration" : {
     "analysisGraphs" : "NONE",
