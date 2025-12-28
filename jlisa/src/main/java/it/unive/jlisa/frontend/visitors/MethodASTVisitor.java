@@ -105,7 +105,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 
 		List<AnnotationInfo> anns = parserContext.getMethodAnnotations(cfg.getDescriptor());
 		for (AnnotationInfo ann : anns) {
-			if ("GetMapping".equals(ann.getName())) {
+			if (isSpringEndpointAnnotation(ann.getName())) {
 				getProgram().addEntryPoint(cfg);
 				break;
 			}
