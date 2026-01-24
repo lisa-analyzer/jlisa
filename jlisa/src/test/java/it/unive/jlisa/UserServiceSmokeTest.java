@@ -45,6 +45,17 @@ public class UserServiceSmokeTest {
         assertGraphExists(outDir, "@PostMapping", "UserController", "create");
         assertGraphExists(outDir, "@PutMapping", "UserController", "update");
         assertGraphExists(outDir, "@DeleteMapping", "UserController", "delete");
+        Path dump = outDir.resolve("field-annotations.txt");
+        assertTrue(Files.exists(dump), "Missing field annotations dump: " + dump);
+
+        String dumpContent = Files.readString(dump, StandardCharsets.UTF_8);
+
+        assertTrue(dumpContent.contains("::dataAccessor"),
+                "Missing field key for dataAccessor in dump.\n" + dumpContent);
+
+        assertTrue(dumpContent.contains("@Autowired"),
+                "Missing @Autowired in dump.\n" + dumpContent);
+
     }
 
     private static void assertGraphExists(Path outDir, String annotation, String clazz, String method) throws IOException {

@@ -46,31 +46,41 @@ public final class ClassAndFieldAnnotationExtractor {
 			JavaClassType clazzType,
 			FieldDeclaration fieldDecl) {
 
-		// All fragments of this declaration
+		// if THIS field declaration has @Autowired
+		boolean hasAutowired = false;
+		for (Object m : fieldDecl.modifiers()) {
+			if (!(m instanceof Annotation ann))
+				continue;
+
+			String fullName = ann.getTypeName().getFullyQualifiedName();
+			if (matches(fullName, AUTOWIRED)) {
+				hasAutowired = true;
+				break;
+			}
+		}
+
+		// If no @Autowired on this declaration, stop here
+		if (!hasAutowired)
+			return;
+
+		// 2) If it has @Autowired, apply it to all fragments declared in the same line
 		for (Object fragObj : fieldDecl.fragments()) {
-			VariableDeclarationFragment frag = (VariableDeclarationFragment) fragObj;
+			if (!(fragObj instanceof VariableDeclarationFragment frag))
+				continue;
 
 			String fieldName = frag.getName().getIdentifier();
-			// key for map fields
-			String fieldKey = clazzType + "::" + fieldName;
 
-			for (Object m : fieldDecl.modifiers()) {
-				if (!(m instanceof Annotation ann)) {
-					continue;
-				}
+			String fieldKey = ParserContext.fieldKey(clazzType.toString(), fieldName);
 
-				String simple = ann.getTypeName().getFullyQualifiedName();
 
-				// just @Autowired
-				if (matches(simple, AUTOWIRED)) {
-					AnnotationInfo info = new AnnotationInfo(simple, Collections.emptyMap());
-					parserContext.addFieldAnnotation(fieldKey, info);
-				}
-			}
+			//  store the SIMPLE name, not the fully-qualified name
+			AnnotationInfo info = new AnnotationInfo(AUTOWIRED, Collections.emptyMap());
+			parserContext.addFieldAnnotation(fieldKey, info);
 		}
 	}
 
-	// کمک‌کننده کوچک برای handle کردن نام کامل یا ساده
+
+	// help for handle
 	private static boolean matches(
 			String fullName,
 			String simpleName) {

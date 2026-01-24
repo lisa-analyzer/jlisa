@@ -1,10 +1,14 @@
 package com.example.userservice.controller;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+
+    @Autowired()
+    private Object dataAccessor;
 
     @GetMapping("/info")
     public String info(@RequestParam String name, @RequestParam int age) {

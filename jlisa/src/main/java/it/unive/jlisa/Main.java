@@ -27,6 +27,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import it.unive.jlisa.output.FieldAnnotationsDump;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import it.unive.jlisa.frontend.ParserContext;
 
 public class Main {
 
@@ -174,12 +178,21 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain)
-			throws IOException,
-			ParseException,
-			ParsingException {
+			throws IOException, ParseException, ParsingException {
+
 		JavaFrontend frontend = runFrontend(sources);
+
+		Path outPath = Paths.get(outdir);
+		try {
+			FieldAnnotationsDump.write(outPath, frontend.getParserContext());
+		} catch (IOException e) {
+			LOG.error("Failed to dump field annotations", e);
+		}
+
+
 		runAnalysis(outdir, checkerName, numericalDomain, frontend);
 	}
+
 
 	private static void runStatistics(
 			String[] sources,
@@ -195,6 +208,14 @@ public class Main {
 					+ "/frontend.csv file.");
 			System.exit(1);
 		}
+		Path outPath = Paths.get(outdir);
+
+		try {
+			FieldAnnotationsDump.write(outPath, frontend.getParserContext());
+		} catch (IOException e) {
+			LOG.error("Failed to dump field annotations", e);
+		}
+
 		try {
 			runAnalysis(outdir, checkerName, numericalDomain, frontend);
 		} catch (Throwable e) {

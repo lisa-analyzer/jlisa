@@ -227,6 +227,16 @@ public class ParserContext {
 		return anns == null ? Collections.emptyList() : anns;
 	}
 
+	public static String fieldKey(String fullyQualifiedClassName, String fieldName) {
+		if (fullyQualifiedClassName == null || fullyQualifiedClassName.isBlank())
+			throw new IllegalArgumentException("fullyQualifiedClassName is null/blank");
+		if (fieldName == null || fieldName.isBlank())
+			throw new IllegalArgumentException("fieldName is null/blank");
+
+		return fullyQualifiedClassName + "::" + fieldName;
+	}
+
+
 	public void addFieldAnnotation(
 			String fieldKey,
 			AnnotationInfo ann) {
