@@ -246,7 +246,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 	 * @param cfgTargets    the collection for CFG targets
 	 * @param nativeTargets the collection for native CFG targets
 	 */
-	private void addTarget(
+	public void addTarget(
 			CodeMember cm,
 			Collection<CFG> cfgTargets,
 			Collection<NativeCFG> nativeTargets) {
@@ -268,7 +268,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 	 * @return {@code true} if the code member is a valid target, {@code false}
 	 *             otherwise
 	 */
-	private boolean isATarget(
+	public boolean isATarget(
 			UnresolvedCall call,
 			SymbolAliasing aliasing,
 			CodeMember cm,
@@ -304,7 +304,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 	 * @return {@code true} if the call matches an alias, {@code false}
 	 *             otherwise
 	 */
-	private boolean matchesAlias(
+	public boolean matchesAlias(
 			UnresolvedCall call,
 			SymbolAliasing aliasing,
 			String name,
