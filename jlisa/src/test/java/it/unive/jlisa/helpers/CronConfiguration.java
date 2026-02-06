@@ -6,8 +6,7 @@ import java.util.List;
 
 /**
  * An extended {@link TestConfiguration} that also holds test configuration
- * keys. This configuration disables optimizations
- * ({@link LiSAConfiguration#optimize}) by default.
+ * keys.
  * 
  * @author <a href="mailto:vincenzo.arceri@unipr.it">Vincenzo Arceri</a>
  */
@@ -20,7 +19,6 @@ public class CronConfiguration extends TestConfiguration {
 	public List<String> programFiles;
 
 	public CronConfiguration() {
-		optimize = false;
 		programFile = "";
 		compareWithOptimization = false;
 	}
