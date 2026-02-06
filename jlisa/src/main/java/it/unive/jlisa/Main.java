@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
 import java.io.IOException;
@@ -267,6 +268,7 @@ public class Main {
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
+		conf.outputs.add(new JSONReportDumper());
 		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(150);
 		// conf.interproceduralAnalysis = new
 		// JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
