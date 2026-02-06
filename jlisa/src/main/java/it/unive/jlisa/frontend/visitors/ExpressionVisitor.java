@@ -846,7 +846,7 @@ public class ExpressionVisitor extends BaseCodeElementASTVisitor {
 		// - the fqn to try
 		// - the static field to access in the fqn
 		// - the remaining fields to access from the static field
-		LIFOWorkingSet<Triple<String, SimpleName, List<SimpleName>>> names = LIFOWorkingSet.mk();
+		LIFOWorkingSet<Triple<String, SimpleName, List<SimpleName>>> names = new LIFOWorkingSet<>();
 		while (current != null) {
 			names.push(Triple.of(current.toString(), firstField, new LinkedList<>(fields)));
 			if (current instanceof QualifiedName) {
