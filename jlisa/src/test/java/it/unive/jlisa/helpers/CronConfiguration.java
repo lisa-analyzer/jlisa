@@ -1,6 +1,5 @@
 package it.unive.jlisa.helpers;
 
-import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.util.testing.TestConfiguration;
 import java.util.List;
 
