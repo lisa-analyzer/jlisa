@@ -134,7 +134,7 @@ public final class JavaInterfaceType implements UnitType {
 
 	private Type scanForSupertypeOf(
 			UnitType other) {
-		WorkingSet<JavaInterfaceType> ws = FIFOWorkingSet.mk();
+		WorkingSet<JavaInterfaceType> ws = new FIFOWorkingSet<>();
 		Set<JavaInterfaceType> seen = new HashSet<>();
 		ws.push(this);
 		JavaInterfaceType current;
