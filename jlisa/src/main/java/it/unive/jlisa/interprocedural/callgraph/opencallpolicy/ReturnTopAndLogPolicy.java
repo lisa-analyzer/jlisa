@@ -1,8 +1,8 @@
 package it.unive.jlisa.interprocedural.callgraph.opencallpolicy;
 
 import it.unive.lisa.analysis.*;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.OpenCallPolicy;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.statement.call.OpenCall;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushAny;
