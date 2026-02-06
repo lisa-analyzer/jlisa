@@ -7,12 +7,13 @@
       "message": "['Main.java':67:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
     }
   ],
+  "notices": [],
   "files": [
-    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439859.json",
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439859.graph.json",
     "report.json",
-    "void_Main.main(java.lang.String_[]__args).json",
-    "void_Main.sort(int[]__a)_1707425723.json",
-    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432202.json"
+    "void_Main.main(java.lang.String_[]__args).graph.json",
+    "void_Main.sort(int[]__a)_1707425723.graph.json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432202.graph.json"
   ],
   "info": {
     "cfgs": "14",
@@ -27,26 +28,28 @@
     "statements": "42",
     "units": "48",
     "version": "0.1",
-    "warnings": "2"
+    "warnings": "2",
+    "notices": "0"
   },
   "configuration": {
-    "analysisGraphs": "NONE",
-    "descendingPhaseType": "NONE",
     "dumpForcesUnwinding": "false",
     "fixpointWorkingSet": "OrderBasedWorkingSet",
     "glbThreshold": "5",
     "hotspots": "unset",
-    "jsonOutput": "true",
     "openCallPolicy": "ReturnTopPolicy",
-    "optimize": "false",
     "recursionWideningThreshold": "5",
     "semanticChecks": "AssertChecker",
-    "serializeInputs": "false",
-    "serializeResults": "true",
     "shouldSmashError": "unset",
     "syntacticChecks": "",
     "useWideningPoints": "true",
     "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/SortedListInsert-MemUnsat01"
+    "workdir": "java-outputs/svcomp/SortedListInsert-MemUnsat01",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

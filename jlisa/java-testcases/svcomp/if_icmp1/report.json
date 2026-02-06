@@ -1,53 +1,69 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':14:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':17:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':20:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':22:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':25:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':28:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':30:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
-  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439208.json", "report.json", "void_Main.f(int_i,_int_j)_1707422933.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "16",
-    "duration" : "14ms",
-    "end" : "2025-11-13T17:55:17.464+01:00",
-    "expressions" : "68",
-    "files" : "3",
-    "globals" : "30",
-    "members" : "253",
-    "programs" : "1",
-    "start" : "2025-11-13T17:55:17.450+01:00",
-    "statements" : "40",
-    "units" : "51",
-    "version" : "0.1",
-    "warnings" : "7"
+  "warnings": [
+    {
+      "message": "['Main.java':14:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':17:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':20:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':22:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':25:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':28:6] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':30:6] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707439208.graph.json",
+    "report.json",
+    "void_Main.f(int_i,_int_j)_1707422933.graph.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "16",
+    "duration": "14ms",
+    "end": "2025-11-13T17:55:17.464+01:00",
+    "expressions": "68",
+    "files": "3",
+    "globals": "30",
+    "members": "253",
+    "programs": "1",
+    "start": "2025-11-13T17:55:17.450+01:00",
+    "statements": "40",
+    "units": "51",
+    "version": "0.1",
+    "warnings": "7",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/if_icmp1"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/if_icmp1",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

@@ -1,53 +1,67 @@
 {
-  "warnings" : [ {
-    "message" : "['$Main.java':11] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
-    "message" : "['Main.java':18:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':33:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':38:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':39:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':40:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':41:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "15",
-    "duration" : "53ms",
-    "end" : "2025-11-13T17:55:08.983+01:00",
-    "expressions" : "116",
-    "files" : "1",
-    "globals" : "30",
-    "members" : "253",
-    "programs" : "1",
-    "start" : "2025-11-13T17:55:08.930+01:00",
-    "statements" : "45",
-    "units" : "53",
-    "version" : "0.1",
-    "warnings" : "7"
+  "warnings": [
+    {
+      "message": "['$Main.java':11] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    },
+    {
+      "message": "['Main.java':18:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':33:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':38:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':39:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':40:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    },
+    {
+      "message": "['Main.java':41:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "15",
+    "duration": "53ms",
+    "end": "2025-11-13T17:55:08.983+01:00",
+    "expressions": "116",
+    "files": "1",
+    "globals": "30",
+    "members": "253",
+    "programs": "1",
+    "start": "2025-11-13T17:55:08.930+01:00",
+    "statements": "45",
+    "units": "53",
+    "version": "0.1",
+    "warnings": "7",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/RegexSubstitution01"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/RegexSubstitution01",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

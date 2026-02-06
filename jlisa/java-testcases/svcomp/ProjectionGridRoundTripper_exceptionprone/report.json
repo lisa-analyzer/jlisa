@@ -1,41 +1,53 @@
 {
-  "warnings" : [ {
-    "message" : "['$Main.java':24] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] DEFINITE: uncaught runtime exception in main method"
-  } ],
-  "files" : [ "bool_Main.runGrid(Main__this,_double_tolerance)_1707431830.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_-1196539257.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707448167.json", "report.json", "void_Main.Main(Main__this)_1707437565.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "17",
-    "duration" : "21ms",
-    "end" : "2025-11-13T17:55:03.697+01:00",
-    "expressions" : "125",
-    "files" : "5",
-    "globals" : "32",
-    "members" : "254",
-    "programs" : "1",
-    "start" : "2025-11-13T17:55:03.676+01:00",
-    "statements" : "51",
-    "units" : "51",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['$Main.java':24] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] DEFINITE: uncaught runtime exception in main method"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "bool_Main.runGrid(Main__this,_double_tolerance)_1707431830.graph.json",
+    "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_-1196539257.graph.json",
+    "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707448167.graph.json",
+    "report.json",
+    "void_Main.Main(Main__this)_1707437565.graph.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "17",
+    "duration": "21ms",
+    "end": "2025-11-13T17:55:03.697+01:00",
+    "expressions": "125",
+    "files": "5",
+    "globals": "32",
+    "members": "254",
+    "programs": "1",
+    "start": "2025-11-13T17:55:03.676+01:00",
+    "statements": "51",
+    "units": "51",
+    "version": "0.1",
+    "warnings": "1",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/ProjectionGridRoundTripper_exceptionprone"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/ProjectionGridRoundTripper_exceptionprone",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

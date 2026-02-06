@@ -1,41 +1,49 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':15:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
-  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "15",
-    "duration" : "18ms",
-    "end" : "2025-11-13T17:54:41.379+01:00",
-    "expressions" : "49",
-    "files" : "1",
-    "globals" : "30",
-    "members" : "252",
-    "programs" : "1",
-    "start" : "2025-11-13T17:54:41.361+01:00",
-    "statements" : "26",
-    "units" : "51",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':15:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "15",
+    "duration": "18ms",
+    "end": "2025-11-13T17:54:41.379+01:00",
+    "expressions": "49",
+    "files": "1",
+    "globals": "30",
+    "members": "252",
+    "programs": "1",
+    "start": "2025-11-13T17:54:41.361+01:00",
+    "statements": "26",
+    "units": "51",
+    "version": "0.1",
+    "warnings": "1",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/ArithmeticException5"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/ArithmeticException5",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

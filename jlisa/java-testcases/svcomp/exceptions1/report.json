@@ -1,47 +1,68 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':27:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':31:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':33:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-  } ],
-  "files" : [ "report.json", "void_A.A(A__this)_1250204410.json", "void_A.A(A__this)_1707429226.json", "void_A.A(A__this)_213486193.json", "void_A.A(A__this)_318566977.json", "void_B.B(B__this)_1707429195.json", "void_B.B(B__this)_213461362.json", "void_B.B(B__this)_318566171.json", "void_C.C(C__this)_1707429164.json", "void_C.C(C__this)_318565365.json", "void_D.D(D__this)_1707429133.json", "void_Main.main(java.lang.String_[]__arg).json" ],
-  "info" : {
-    "cfgs" : "19",
-    "duration" : "32ms",
-    "end" : "2025-11-13T17:54:42.268+01:00",
-    "expressions" : "60",
-    "files" : "11",
-    "globals" : "30",
-    "members" : "256",
-    "programs" : "1",
-    "start" : "2025-11-13T17:54:42.236+01:00",
-    "statements" : "41",
-    "units" : "55",
-    "version" : "0.1",
-    "warnings" : "4"
+  "warnings": [
+    {
+      "message": "['Main.java':27:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':31:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
+    },
+    {
+      "message": "['Main.java':33:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "report.json",
+    "void_A.A(A__this)_1250204410.graph.json",
+    "void_A.A(A__this)_1707429226.graph.json",
+    "void_A.A(A__this)_213486193.graph.json",
+    "void_A.A(A__this)_318566977.graph.json",
+    "void_B.B(B__this)_1707429195.graph.json",
+    "void_B.B(B__this)_213461362.graph.json",
+    "void_B.B(B__this)_318566171.graph.json",
+    "void_C.C(C__this)_1707429164.graph.json",
+    "void_C.C(C__this)_318565365.graph.json",
+    "void_D.D(D__this)_1707429133.graph.json",
+    "void_Main.main(java.lang.String_[]__arg).graph.json"
+  ],
+  "info": {
+    "cfgs": "19",
+    "duration": "32ms",
+    "end": "2025-11-13T17:54:42.268+01:00",
+    "expressions": "60",
+    "files": "11",
+    "globals": "30",
+    "members": "256",
+    "programs": "1",
+    "start": "2025-11-13T17:54:42.236+01:00",
+    "statements": "41",
+    "units": "55",
+    "version": "0.1",
+    "warnings": "4",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/exceptions1"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/exceptions1",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

@@ -1,41 +1,52 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':15:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-  } ],
-  "files" : [ "report.json", "void_B.B(B__this)_1707427366.json", "void_B.f(B__this)_1707424545.json", "void_C.C(C__this)_1707427397.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "20",
-    "duration" : "17ms",
-    "end" : "2025-11-13T17:55:10.643+01:00",
-    "expressions" : "51",
-    "files" : "4",
-    "globals" : "30",
-    "members" : "257",
-    "programs" : "1",
-    "start" : "2025-11-13T17:55:10.626+01:00",
-    "statements" : "33",
-    "units" : "54",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':15:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "report.json",
+    "void_B.B(B__this)_1707427366.graph.json",
+    "void_B.f(B__this)_1707424545.graph.json",
+    "void_C.C(C__this)_1707427397.graph.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "20",
+    "duration": "17ms",
+    "end": "2025-11-13T17:55:10.643+01:00",
+    "expressions": "51",
+    "files": "4",
+    "globals": "30",
+    "members": "257",
+    "programs": "1",
+    "start": "2025-11-13T17:55:10.626+01:00",
+    "statements": "33",
+    "units": "54",
+    "version": "0.1",
+    "warnings": "1",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/interface1"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/interface1",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

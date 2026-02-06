@@ -1,11 +1,12 @@
 {
   "warnings": [],
+  "notices": [],
   "files": [
-    "int_A.getX(A__this)_1707432481.json",
+    "int_A.getX(A__this)_1707432481.graph.json",
     "report.json",
-    "void_A.A(A__this)_1707430528.json",
-    "void_A.setX(A__this,_int_x)_1707424824.json",
-    "void_Main.main(java.lang.String[]_args).json"
+    "void_A.A(A__this)_1707430528.graph.json",
+    "void_A.setX(A__this,_int_x)_1707424824.graph.json",
+    "void_Main.main(java.lang.String[]_args).graph.json"
   ],
   "info": {
     "cfgs": "5",
@@ -20,25 +21,27 @@
     "statements": "13",
     "units": "37",
     "version": "0.1",
-    "warnings": "0"
+    "warnings": "0",
+    "notices": "0"
   },
   "configuration": {
-    "analysisGraphs": "NONE",
-    "descendingPhaseType": "NONE",
     "dumpForcesUnwinding": "false",
     "fixpointWorkingSet": "OrderBasedWorkingSet",
     "glbThreshold": "5",
     "hotspots": "unset",
-    "jsonOutput": "true",
     "openCallPolicy": "ReturnTopPolicy",
-    "optimize": "false",
     "recursionWideningThreshold": "5",
     "semanticChecks": "",
-    "serializeInputs": "false",
-    "serializeResults": "true",
     "syntacticChecks": "",
     "useWideningPoints": "true",
     "wideningThreshold": "5",
-    "workdir": "java-outputs/return"
+    "workdir": "java-outputs/return",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }
