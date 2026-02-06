@@ -57,6 +57,6 @@ public class RuntimeHalt extends BinaryExpression implements PluggableStatement 
 			throws SemanticException {
 		AnalysisState<A> asg = interprocedural.getAnalysis().assign(state,
 				new Variable(JavaIntType.INSTANCE, "$exit_code", getLocation()), right, originating);
-		return interprocedural.getAnalysis().moveExecutionToHalting(asg);
+		return interprocedural.getAnalysis().moveExecutionToHalting(asg, this);
 	}
 }

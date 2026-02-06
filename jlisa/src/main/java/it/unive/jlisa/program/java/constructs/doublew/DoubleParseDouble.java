@@ -12,9 +12,9 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -108,7 +108,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), originating));
+					new Error(nfeType.getReference(), originating), this);
 		} else {
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
@@ -134,7 +134,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), originating));
+					new Error(nfeType.getReference(), originating), this);
 			return exceptionState.lub(noExceptionState);
 		}
 	}
