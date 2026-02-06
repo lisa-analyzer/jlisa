@@ -45,7 +45,7 @@ public class JavaThrow extends Throw {
 		// affects the normal execution, and won't be effective after we
 		// move the state to the exception
 		sem = sem.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-		AnalysisState<A> moved = analysis.moveExecutionToError(sem, new Error(expr.getStaticType(), this));
+		AnalysisState<A> moved = analysis.moveExecutionToError(sem, new Error(expr.getStaticType(), this), this);
 		return moved;
 	}
 }
