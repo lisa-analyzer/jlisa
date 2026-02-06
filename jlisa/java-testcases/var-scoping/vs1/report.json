@@ -39,7 +39,7 @@
     "backwardFixpoint": "BackwardAscendingFixpoint",
     "forwardDescendingFixpoint": "unset",
     "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
+    "outputs": "JSONInputs, JSONReportDumper, JSONResults",
     "asynchronousListeners": "",
     "synchronousListeners": ""
   }

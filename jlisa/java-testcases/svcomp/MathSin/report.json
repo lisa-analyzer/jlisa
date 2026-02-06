@@ -1,54 +1,44 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "double_MathSin.mysin(MathSin__this,_double_x)_1707432791.graph.json",
-    "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707441409.graph.json",
-    "long_MathSin.helperdoubleToRawBits(double_xm)_435199115.graph.json",
-    "report.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json",
-    "void_MathSin.MathSin(MathSin__this)_1707434651.graph.json",
-    "void_MathSin.MathSin_clinit()_1707434651.graph.json"
-  ],
-  "info": {
-    "cfgs": "21",
-    "duration": "484ms",
-    "end": "2025-11-13T17:54:51.120+01:00",
-    "expressions": "865",
-    "files": "6",
-    "globals": "48",
-    "members": "258",
-    "programs": "1",
-    "start": "2025-11-13T17:54:50.636+01:00",
-    "statements": "244",
-    "units": "52",
-    "version": "0.1",
-    "warnings": "1",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "double_MathSin.mysin(MathSin__this,_double_x)_1707432791.graph.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707441409.graph.json", "long_MathSin.helperdoubleToRawBits(double_xm)_435199115.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_MathSin.MathSin(MathSin__this)_1707434651.graph.json", "void_MathSin.MathSin_clinit()_1707434651.graph.json" ],
+  "info" : {
+    "cfgs" : "21",
+    "duration" : "1s 3ms",
+    "end" : "2026-02-06T10:36:58.822+01:00",
+    "expressions" : "865",
+    "files" : "6",
+    "globals" : "48",
+    "members" : "258",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-02-06T10:36:57.819+01:00",
+    "statements" : "244",
+    "units" : "52",
+    "version" : "0.2",
+    "warnings" : "1"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/MathSin",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/MathSin"
   }
 }
