@@ -15,7 +15,6 @@ import it.unive.lisa.conf.FixpointConfiguration;
 import it.unive.lisa.events.EventQueue;
 import it.unive.lisa.interprocedural.*;
 import it.unive.lisa.interprocedural.callgraph.CallGraph;
-import it.unive.lisa.interprocedural.context.ContextBasedAnalysis;
 import it.unive.lisa.interprocedural.context.KDepthToken;
 import it.unive.lisa.interprocedural.events.*;
 import it.unive.lisa.lattices.ExpressionSet;
@@ -45,7 +44,7 @@ public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 		extends
 		CallGraphBasedAnalysis<A, D> {
 
-	private static final Logger LOG = LogManager.getLogger(ContextBasedAnalysis.class);
+	private static final Logger LOG = LogManager.getLogger(JavaContextBasedAnalysis.class);
 
 	/**
 	 * The members that cause a new fixpoint iteration to be triggered after the
