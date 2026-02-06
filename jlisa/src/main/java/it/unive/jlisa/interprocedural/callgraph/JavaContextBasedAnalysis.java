@@ -39,6 +39,21 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * TODO: Consider removing this class in the future.
+ *
+ * This class is a Java-specific adaptation of LiSA's ContextBasedAnalysis
+ * and includes workarounds for certain cases that are not present in the original.
+ *
+ * Current behavior:
+ * - Handles recursions differently than LiSA's ContextBasedAnalysis.
+ * - Relies on JavaKDepthToken to track the length of the targets collection.
+ *
+ * Notes:
+ * - Raising an error or returning 'top' when the maximum call stack size is reached
+ *   should not change analysis results, as previously tested.
+ * - A decision should be made then on whether to remove this class entirely.
+ */
 public class JavaContextBasedAnalysis<A extends AbstractLattice<A>,
 		D extends AbstractDomain<A>>
 		extends

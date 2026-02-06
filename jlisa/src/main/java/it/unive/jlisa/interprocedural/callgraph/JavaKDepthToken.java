@@ -10,9 +10,20 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A context sensitive token representing an entire call chain up to a fixed
- * length {@code k}, specified in the singleton creation
- * ({@link #getSingleton(int)}).
+ * TODO: Consider removing this class in the future.
+ *
+ * This class is used by JavaContextBasedAnalysis to track the recursion depth of
+ * the analysis and expose the current length of the CFGCalls collection.
+ *
+ * Differences between LiSA's KDepthToken:
+ * - Provides a method to retrieve the current size of the calls collection.
+ * - Primarily needed for JavaContextBasedAnalysis to function properly.
+ *
+ * Notes:
+ * - Its functionality may not be strictly necessary if JavaContextBasedAnalysis
+ *   is removed or refactored.
+ * - Before the next edition of SVCOMP, revisit whether this class is required,
+ *   and remove it if not needed.
  */
 public class JavaKDepthToken<A extends AbstractLattice<A>>
 		implements

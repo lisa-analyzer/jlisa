@@ -28,6 +28,19 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+/**
+ * TODO: Consider removing this class in the future.
+ *
+ * This class is a Java-specific call graph implementation. Currently, it largely
+ * replicates the behavior of LiSA's main CallGraph, with minor modifications
+ * such as integrated distance calculations.
+ *
+ * Notes:
+ * - Benchmark results should be compared with LiSA's main CallGraph to check
+ *   for any differences.
+ * - If the results are equivalent, this class can likely be removed.
+ * - Decision on removal should be revisited before the next edition of SVCOMP.
+ */
 
 /**
  * A call graph implementation tailored for resolving Java method calls.
