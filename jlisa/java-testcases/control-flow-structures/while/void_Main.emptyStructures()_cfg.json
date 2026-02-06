@@ -1,1 +1,0 @@
-{"name":"void Main::emptyStructures()","description":null,"nodes":[{"id":0,"text":"false"},{"id":1,"text":"true"},{"id":2,"text":"ret"}],"edges":[{"sourceId":0,"destId":0,"kind":"TrueEdge"},{"sourceId":0,"destId":1,"kind":"FalseEdge"},{"sourceId":1,"destId":1,"kind":"TrueEdge"},{"sourceId":1,"destId":2,"kind":"FalseEdge"}],"descriptions":[]}
