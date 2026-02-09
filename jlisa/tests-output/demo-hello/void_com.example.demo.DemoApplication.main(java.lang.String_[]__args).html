@@ -195,28 +195,6 @@
 			margin-top: 0.83em;
 			margin-bottom: 0.83em;
 		}
-		
-		.accordion {
-			background-color: #84c2a2;
-			cursor: pointer;
-			padding: 18px;
-			width: 100%;
-			text-align: left;
-			border: none;
-			outline: none;
-			transition: 0.4s;
-		}
-		
-		.accordion::after {
-			content: '\002B';
-			float: right;
-			margin-left: 5px;
-			font-size: 18px;
-		}
-
-		.active, .accordion:hover {	background-color: #16A15B;	}
-
-		.header-panel { display: none; }
 
 		g.edge > text {
 			font-size: 0.9em;
@@ -258,262 +236,72 @@
 					No node selected. Select a node to show its <span>results</span>.
 					</div>
 					<div><div id="header-node0" class="header-info header-hidden">
-					<button class="accordion active"><span class="description-title-text">greeting = com.example.demo.DemoApplication::hello("World")</span></button>
-					<div class="header-panel" style="display: block">						<span class="description-header">expressions: </span>[greeting]<br/>
-						<span class="description-header">state: </span><br/>
-						<div class="description-nest">
-							<span class="description-header">heap: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[heap[s]:pp@'DemoApplication.java':6:32]<br/>
-								<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-								<span class="description-header">call_ret_value@'DemoApplication.java':6:27: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-								<span class="description-header">greeting: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-							</div>
-							<span class="description-header">type: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[java.lang.String*]<br/>
-								<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-								<span class="description-header">call_ret_value@'DemoApplication.java':6:27: </span>[java.lang.String*]<br/>
-								<span class="description-header">greeting: </span>[java.lang.String*]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30: </span>[java.lang.String]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>[java.lang.String]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32: </span>[java.lang.String]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>[java.lang.String]<br/>
-							</div>
-							<span class="description-header">value: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>Hello World!<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>World<br/>
-							</div>
-						</div>
+					<div class="description-title-wrapper"><span class="description-title">Results for </span><span class="description-title-text">println(java.lang.System::out, com.example.demo.DemoApplication::hello("World"))</span></div>
+					<span class="description-header">expressions: </span>[PUSHANY]<br/>
+					<span class="description-header">info: </span><br/>
 					<div class="description-nest">
-						<button class="accordion"><span class="description-title-text">greeting</span></button>
-						<div class="header-panel">							<span class="description-header">expressions: </span>[greeting]<br/>
-							<span class="description-header">state: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[heap[s]:pp@'DemoApplication.java':6:32]<br/>
-									<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-									<span class="description-header">call_ret_value@'DemoApplication.java':6:27: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-								</div>
-								<span class="description-header">type: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[java.lang.String*]<br/>
-									<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-									<span class="description-header">call_ret_value@'DemoApplication.java':6:27: </span>[java.lang.String*]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>[java.lang.String]<br/>
-								</div>
-								<span class="description-header">value: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>Hello World!<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>World<br/>
-								</div>
-							</div>
-						</div>
-						<button class="accordion"><span class="description-title-text">com.example.demo.DemoApplication::hello("World")</span></button>
-						<div class="header-panel">							<span class="description-header">expressions: </span>[call_ret_value@'DemoApplication.java':6:27]<br/>
-							<span class="description-header">state: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[heap[s]:pp@'DemoApplication.java':6:32]<br/>
-									<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-									<span class="description-header">call_ret_value@'DemoApplication.java':6:27: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-								</div>
-								<span class="description-header">type: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[java.lang.String*]<br/>
-									<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-									<span class="description-header">call_ret_value@'DemoApplication.java':6:27: </span>[java.lang.String*]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>[java.lang.String]<br/>
-								</div>
-								<span class="description-header">value: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>Hello World!<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>World<br/>
-								</div>
-							</div>
-						<div class="description-nest">
-							<button class="accordion"><span class="description-title-text">"World"</span></button>
-							<div class="header-panel">								<span class="description-header">expressions: </span>[$rec@'DemoApplication.java':6:32]<br/>
-								<span class="description-header">state: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">heap: </span><br/>
-									<div class="description-nest">
-										<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[heap[s]:pp@'DemoApplication.java':6:32]<br/>
-										<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-									</div>
-									<span class="description-header">type: </span><br/>
-									<div class="description-nest">
-										<span class="description-header">$rec@'DemoApplication.java':6:32: </span>[java.lang.String*]<br/>
-										<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-										<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-										<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-										<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32: </span>[java.lang.String]<br/>
-										<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>[java.lang.String]<br/>
-									</div>
-									<span class="description-header">value: </span><br/>
-									<div class="description-nest">
-										<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-										<span class="description-header">heap[s]:pp@'DemoApplication.java':6:32[value]: </span>World<br/>
-									</div>
-								</div>
-							</div>
-						</div>
-						</div>
+						<span class="description-header">clinit: </span>[java.lang.System]<br/>
 					</div>
+					<span class="description-header">state: </span><br/>
+					<div class="description-nest">
+						<span class="description-header">heap: </span><br/>
+						<div class="description-nest">
+							<span class="description-header">$rec@'DemoApplication.java':14:27: </span>[heap[s]:pp@'DemoApplication.java':14:27]<br/>
+							<span class="description-header">$rec@'DemoApplication.java':14:8: </span>[heap[s]:pp@'DemoApplication.java':14:8]<br/>
+							<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':13:3]<br/>
+							<span class="description-header">call_ret_value@'DemoApplication.java':14:22: </span>[heap[s]:pp@'DemoApplication.java':9:17]<br/>
+							<span class="description-header">java.lang.System::out: </span>[heap[s]:pp@'DemoApplication.java':14:8]<br/>
+						</div>
+						<span class="description-header">type: </span><br/>
+						<div class="description-nest">
+							<span class="description-header">$rec@'DemoApplication.java':14:27: </span>[java.lang.String*]<br/>
+							<span class="description-header">$rec@'DemoApplication.java':14:8: </span>[java.io.PrintStream*]<br/>
+							<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
+							<span class="description-header">call_ret_value@'DemoApplication.java':14:22: </span>[java.lang.String*]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':13:3: </span>[java.lang.String*[]]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':13:3[len]: </span>[int]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':14:27: </span>[java.lang.String]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':14:27[value]: </span>[java.lang.String]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':14:8: </span>[java.io.PrintStream]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':9:17: </span>[java.lang.String]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':9:17[value]: </span>[java.lang.String]<br/>
+							<span class="description-header">java.lang.System::out: </span>[java.io.PrintStream*]<br/>
+						</div>
+						<span class="description-header">value: </span><br/>
+						<div class="description-nest">
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':13:3[len]: </span>#TOP#<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':14:27[value]: </span>#TOP#<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':9:17[value]: </span>#TOP#<br/>
+						</div>
 					</div>
 				</div>
 				<div id="header-node4" class="header-info header-hidden">
-					<button class="accordion active"><span class="description-title-text">println(java.lang.System::out, greeting)</span></button>
-					<div class="header-panel" style="display: block">						<span class="description-header">expressions: </span>[PUSHANY]<br/>
-						<span class="description-header">info: </span><br/>
-						<div class="description-nest">
-							<span class="description-header">clinit: </span>[java.lang.System]<br/>
-						</div>
-						<span class="description-header">state: </span><br/>
-						<div class="description-nest">
-							<span class="description-header">heap: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-								<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-								<span class="description-header">greeting: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-								<span class="description-header">java.lang.System::out: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-							</div>
-							<span class="description-header">type: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[java.io.PrintStream*]<br/>
-								<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-								<span class="description-header">greeting: </span>[java.lang.String*]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30: </span>[java.lang.String]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>[java.lang.String]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':7:14: </span>[java.io.PrintStream]<br/>
-								<span class="description-header">java.lang.System::out: </span>[java.io.PrintStream*]<br/>
-							</div>
-							<span class="description-header">value: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>Hello World!<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-							</div>
-						</div>
+					<div class="description-title-wrapper"><span class="description-title">Results for </span><span class="description-title-text">ret</span></div>
+					<span class="description-header">expressions: </span>[skip]<br/>
+					<span class="description-header">info: </span><br/>
 					<div class="description-nest">
-						<button class="accordion"><span class="description-title-text">java.lang.System::out</span></button>
-						<div class="header-panel">							<span class="description-header">expressions: </span>[java.lang.System::out]<br/>
-							<span class="description-header">info: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">clinit: </span>[java.lang.System]<br/>
-							</div>
-							<span class="description-header">state: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-									<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-									<span class="description-header">greeting: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-									<span class="description-header">java.lang.System::out: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-								</div>
-								<span class="description-header">type: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[java.io.PrintStream*]<br/>
-									<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-									<span class="description-header">greeting: </span>[java.lang.String*]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':7:14: </span>[java.io.PrintStream]<br/>
-									<span class="description-header">java.lang.System::out: </span>[java.io.PrintStream*]<br/>
-								</div>
-								<span class="description-header">value: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>Hello World!<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-								</div>
-							</div>
-						</div>
-						<button class="accordion"><span class="description-title-text">greeting</span></button>
-						<div class="header-panel">							<span class="description-header">expressions: </span>[greeting]<br/>
-							<span class="description-header">info: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">clinit: </span>[java.lang.System]<br/>
-							</div>
-							<span class="description-header">state: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-									<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-									<span class="description-header">greeting: </span>[heap[s]:pp@'DemoApplication.java':11:30]<br/>
-									<span class="description-header">java.lang.System::out: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-								</div>
-								<span class="description-header">type: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[java.io.PrintStream*]<br/>
-									<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-									<span class="description-header">greeting: </span>[java.lang.String*]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>[java.lang.String]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':7:14: </span>[java.io.PrintStream]<br/>
-									<span class="description-header">java.lang.System::out: </span>[java.io.PrintStream*]<br/>
-								</div>
-								<span class="description-header">value: </span><br/>
-								<div class="description-nest">
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':11:30[value]: </span>Hello World!<br/>
-									<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-								</div>
-							</div>
-						</div>
+						<span class="description-header">clinit: </span>[java.lang.System]<br/>
 					</div>
-					</div>
-				</div>
-				<div id="header-node7" class="header-info header-hidden">
-					<button class="accordion active"><span class="description-title-text">ret</span></button>
-					<div class="header-panel" style="display: block">						<span class="description-header">expressions: </span>[skip]<br/>
-						<span class="description-header">info: </span><br/>
+					<span class="description-header">state: </span><br/>
+					<div class="description-nest">
+						<span class="description-header">heap: </span><br/>
 						<div class="description-nest">
-							<span class="description-header">clinit: </span>[java.lang.System]<br/>
+							<span class="description-header">$rec@'DemoApplication.java':14:8: </span>[heap[s]:pp@'DemoApplication.java':14:8]<br/>
+							<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':13:3]<br/>
+							<span class="description-header">java.lang.System::out: </span>[heap[s]:pp@'DemoApplication.java':14:8]<br/>
 						</div>
-						<span class="description-header">state: </span><br/>
+						<span class="description-header">type: </span><br/>
 						<div class="description-nest">
-							<span class="description-header">heap: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-								<span class="description-header">args: </span>[heap[s]:pp@'DemoApplication.java':4:28]<br/>
-								<span class="description-header">java.lang.System::out: </span>[heap[s]:pp@'DemoApplication.java':7:14]<br/>
-							</div>
-							<span class="description-header">type: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">$rec@'DemoApplication.java':7:14: </span>[java.io.PrintStream*]<br/>
-								<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28: </span>[java.lang.String*[]]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>[int]<br/>
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':7:14: </span>[java.io.PrintStream]<br/>
-								<span class="description-header">java.lang.System::out: </span>[java.io.PrintStream*]<br/>
-							</div>
-							<span class="description-header">value: </span><br/>
-							<div class="description-nest">
-								<span class="description-header">heap[s]:pp@'DemoApplication.java':4:28[len]: </span>#TOP#<br/>
-							</div>
+							<span class="description-header">$rec@'DemoApplication.java':14:8: </span>[java.io.PrintStream*]<br/>
+							<span class="description-header">args: </span>[java.lang.String*[]*]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':13:3: </span>[java.lang.String*[]]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':13:3[len]: </span>[int]<br/>
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':14:8: </span>[java.io.PrintStream]<br/>
+							<span class="description-header">java.lang.System::out: </span>[java.io.PrintStream*]<br/>
+						</div>
+						<span class="description-header">value: </span><br/>
+						<div class="description-nest">
+							<span class="description-header">heap[s]:pp@'DemoApplication.java':13:3[len]: </span>#TOP#<br/>
 						</div>
 					</div>
 				</div></div>
@@ -550,7 +338,7 @@
 								.attributer(attributer)
 								.zoom(true);
 			/*<![CDATA[*/
-			const graph = "digraph \"void com.example.demo.DemoApplication::main(java.lang.String*[]* args)\" {\n\"node0\" [\"label\"=<greeting = com.example.demo.DemoApplication::hello(\u0026quot;World\u0026quot;)>,\"shape\"=\"rect\",\"id\"=\"node0\",\"style\"=\"dashed\"]\n\"node4\" [\"label\"=<println(java.lang.System::out, greeting)>,\"shape\"=\"rect\",\"id\"=\"node4\",\"color\"=\"gray\"]\n\"node7\" [\"label\"=<ret>,\"shape\"=\"rect\",\"id\"=\"node7\"]\n\"node0\" -> \"node4\"\n\"node4\" -> \"node7\"\n}";
+			const graph = "digraph \"void com.example.demo.DemoApplication::main(java.lang.String*[]* args)\" {\n\"node0\" [\"label\"=<println(java.lang.System::out, com.example.demo.DemoApplication::hello(\u0026quot;World\u0026quot;))>,\"shape\"=\"rect\",\"id\"=\"node0\",\"style\"=\"dashed\"]\n\"node4\" [\"label\"=<ret>,\"shape\"=\"rect\",\"id\"=\"node4\"]\n\"node0\" -> \"node4\"\n}";
 			/*]]>*/
 			
 			/* Zooming setup */
@@ -717,21 +505,6 @@
 			var span = d3.select(".close").on('click', function() {
 				modal.style('display', 'none');
 			});
-
-			/* Accordions */
-			var acc = document.getElementsByClassName("accordion");
-			var i;
-			for (i = 0; i < acc.length; i++) {
-				acc[i].addEventListener("click", function() {
-					this.classList.toggle("active");
-					var panel = this.nextElementSibling;
-					if (panel.style.display === "block") {
-						panel.style.display = "none";
-					} else {
-						panel.style.display = "block";
-					}
-				});
-			}
 			</script>
 	</body>
 </html>

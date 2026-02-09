@@ -1,0 +1,188 @@
+[1mdiff --git a/jlisa/examples/user-service/src/main/java/com/example/userservice/controller/UserController.java b/jlisa/examples/user-service/src/main/java/com/example/userservice/controller/UserController.java[m
+[1mindex 69810c1a4..22aad605f 100644[m
+[1m--- a/jlisa/examples/user-service/src/main/java/com/example/userservice/controller/UserController.java[m
+[1m+++ b/jlisa/examples/user-service/src/main/java/com/example/userservice/controller/UserController.java[m
+[36m@@ -1,11 +1,15 @@[m
+ package com.example.userservice.controller;[m
+ [m
+ import org.springframework.web.bind.annotation.*;[m
+[32m+[m[32mimport org.springframework.beans.factory.annotation.Autowired;[m[41m[m
+ [m
+ @RestController[m
+ @RequestMapping("/api/users")[m
+ public class UserController {[m
+ [m
+[32m+[m[32m    @Autowired()[m[41m[m
+[32m+[m[32m    private Object dataAccessor;[m[41m[m
+[32m+[m[41m[m
+     @GetMapping("/info")[m
+     public String info(@RequestParam String name, @RequestParam int age) {[m
+         return "name=" + name + ", age=" + age;[m
+[36m@@ -25,4 +29,4 @@[m [mpublic class UserController {[m
+     public String delete(@PathVariable long id) {[m
+         return "deleted " + id;[m
+     }[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/jlisa/src/main/java/it/unive/jlisa/Main.java b/jlisa/src/main/java/it/unive/jlisa/Main.java[m
+[1mindex 7a2400e1b..3531e4f00 100644[m
+[1m--- a/jlisa/src/main/java/it/unive/jlisa/Main.java[m
+[1m+++ b/jlisa/src/main/java/it/unive/jlisa/Main.java[m
+[36m@@ -27,6 +27,10 @@[m [mimport org.apache.commons.cli.Options;[m
+ import org.apache.commons.cli.ParseException;[m
+ import org.apache.logging.log4j.Level;[m
+ import org.apache.logging.log4j.Logger;[m
+[32m+[m[32mimport it.unive.jlisa.output.FieldAnnotationsDump;[m
+[32m+[m[32mimport java.nio.file.Path;[m
+[32m+[m[32mimport java.nio.file.Paths;[m
+[32m+[m[32mimport it.unive.jlisa.frontend.ParserContext;[m
+ [m
+ public class Main {[m
+ [m
+[36m@@ -174,13 +178,22 @@[m [mpublic class Main {[m
+ 			String outdir,[m
+ 			String checkerName,[m
+ 			String numericalDomain)[m
+[31m-			throws IOException,[m
+[31m-			ParseException,[m
+[31m-			ParsingException {[m
+[32m+[m			[32mthrows IOException, ParseException, ParsingException {[m
+[32m+[m
+ 		JavaFrontend frontend = runFrontend(sources);[m
+[32m+[m
+[32m+[m		[32mPath outPath = Paths.get(outdir);[m
+[32m+[m		[32mtry {[m
+[32m+[m			[32mFieldAnnotationsDump.write(outPath, frontend.getParserContext());[m
+[32m+[m		[32m} catch (IOException e) {[m
+[32m+[m			[32mLOG.error("Failed to dump field annotations", e);[m
+[32m+[m		[32m}[m
+[32m+[m
+[32m+[m
+ 		runAnalysis(outdir, checkerName, numericalDomain, frontend);[m
+ 	}[m
+ [m
+[32m+[m
+ 	private static void runStatistics([m
+ 			String[] sources,[m
+ 			String outdir,[m
+[36m@@ -195,6 +208,14 @@[m [mpublic class Main {[m
+ 					+ "/frontend.csv file.");[m
+ 			System.exit(1);[m
+ 		}[m
+[32m+[m		[32mPath outPath = Paths.get(outdir);[m
+[32m+[m
+[32m+[m		[32mtry {[m
+[32m+[m			[32mFieldAnnotationsDump.write(outPath, frontend.getParserContext());[m
+[32m+[m		[32m} catch (IOException e) {[m
+[32m+[m			[32mLOG.error("Failed to dump field annotations", e);[m
+[32m+[m		[32m}[m
+[32m+[m
+ 		try {[m
+ 			runAnalysis(outdir, checkerName, numericalDomain, frontend);[m
+ 		} catch (Throwable e) {[m
+[1mdiff --git a/jlisa/src/main/java/it/unive/jlisa/frontend/ParserContext.java b/jlisa/src/main/java/it/unive/jlisa/frontend/ParserContext.java[m
+[1mindex 624178736..bef27bb43 100644[m
+[1m--- a/jlisa/src/main/java/it/unive/jlisa/frontend/ParserContext.java[m
+[1m+++ b/jlisa/src/main/java/it/unive/jlisa/frontend/ParserContext.java[m
+[36m@@ -227,6 +227,16 @@[m [mpublic class ParserContext {[m
+ 		return anns == null ? Collections.emptyList() : anns;[m
+ 	}[m
+ [m
+[32m+[m	[32mpublic static String fieldKey(String fullyQualifiedClassName, String fieldName) {[m
+[32m+[m		[32mif (fullyQualifiedClassName == null || fullyQualifiedClassName.isBlank())[m
+[32m+[m			[32mthrow new IllegalArgumentException("fullyQualifiedClassName is null/blank");[m
+[32m+[m		[32mif (fieldName == null || fieldName.isBlank())[m
+[32m+[m			[32mthrow new IllegalArgumentException("fieldName is null/blank");[m
+[32m+[m
+[32m+[m		[32mreturn fullyQualifiedClassName + "::" + fieldName;[m
+[32m+[m	[32m}[m
+[32m+[m
+[32m+[m
+ 	public void addFieldAnnotation([m
+ 			String fieldKey,[m
+ 			AnnotationInfo ann) {[m
+[1mdiff --git a/jlisa/src/main/java/it/unive/jlisa/frontend/annotations/ClassAndFieldAnnotationExtractor.java b/jlisa/src/main/java/it/unive/jlisa/frontend/annotations/ClassAndFieldAnnotationExtractor.java[m
+[1mindex 270f1cc85..f1dc6fe4f 100644[m
+[1m--- a/jlisa/src/main/java/it/unive/jlisa/frontend/annotations/ClassAndFieldAnnotationExtractor.java[m
+[1m+++ b/jlisa/src/main/java/it/unive/jlisa/frontend/annotations/ClassAndFieldAnnotationExtractor.java[m
+[36m@@ -46,31 +46,41 @@[m [mpublic final class ClassAndFieldAnnotationExtractor {[m
+ 			JavaClassType clazzType,[m
+ 			FieldDeclaration fieldDecl) {[m
+ [m
+[31m-		// All fragments of this declaration[m
+[32m+[m		[32m// if THIS field declaration has @Autowired[m
+[32m+[m		[32mboolean hasAutowired = false;[m
+[32m+[m		[32mfor (Object m : fieldDecl.modifiers()) {[m
+[32m+[m			[32mif (!(m instanceof Annotation ann))[m
+[32m+[m				[32mcontinue;[m
+[32m+[m
+[32m+[m			[32mString fullName = ann.getTypeName().getFullyQualifiedName();[m
+[32m+[m			[32mif (matches(fullName, AUTOWIRED)) {[m
+[32m+[m				[32mhasAutowired = true;[m
+[32m+[m				[32mbreak;[m
+[32m+[m			[32m}[m
+[32m+[m		[32m}[m
+[32m+[m
+[32m+[m		[32m// If no @Autowired on this declaration, stop here[m
+[32m+[m		[32mif (!hasAutowired)[m
+[32m+[m			[32mreturn;[m
+[32m+[m
+[32m+[m		[32m// 2) If it has @Autowired, apply it to all fragments declared in the same line[m
+ 		for (Object fragObj : fieldDecl.fragments()) {[m
+[31m-			VariableDeclarationFragment frag = (VariableDeclarationFragment) fragObj;[m
+[32m+[m			[32mif (!(fragObj instanceof VariableDeclarationFragment frag))[m
+[32m+[m				[32mcontinue;[m
+ [m
+ 			String fieldName = frag.getName().getIdentifier();[m
+[31m-			// key for map fields[m
+[31m-			String fieldKey = clazzType + "::" + fieldName;[m
+ [m
+[31m-			for (Object m : fieldDecl.modifiers()) {[m
+[31m-				if (!(m instanceof Annotation ann)) {[m
+[31m-					continue;[m
+[31m-				}[m
+[32m+[m			[32mString fieldKey = ParserContext.fieldKey(clazzType.toString(), fieldName);[m
+ [m
+[31m-				String simple = ann.getTypeName().getFullyQualifiedName();[m
+ [m
+[31m-				// just @Autowired[m
+[31m-				if (matches(simple, AUTOWIRED)) {[m
+[31m-					AnnotationInfo info = new AnnotationInfo(simple, Collections.emptyMap());[m
+[31m-					parserContext.addFieldAnnotation(fieldKey, info);[m
+[31m-				}[m
+[31m-			}[m
+[32m+[m			[32m//  store the SIMPLE name, not the fully-qualified name[m
+[32m+[m			[32mAnnotationInfo info = new AnnotationInfo(AUTOWIRED, Collections.emptyMap());[m
+[32m+[m			[32mparserContext.addFieldAnnotation(fieldKey, info);[m
+ 		}[m
+ 	}[m
+ [m
+[31m-	// کمک‌کننده کوچک برای handle کردن نام کامل یا ساده[m
+[32m+[m
+[32m+[m	[32m// help for handle[m
+ 	private static boolean matches([m
+ 			String fullName,[m
+ 			String simpleName) {[m
+[1mdiff --git a/jlisa/src/test/java/it/unive/jlisa/UserServiceSmokeTest.java b/jlisa/src/test/java/it/unive/jlisa/UserServiceSmokeTest.java[m
+[1mindex f276d57ab..b55e96300 100644[m
+[1m--- a/jlisa/src/test/java/it/unive/jlisa/UserServiceSmokeTest.java[m
+[1m+++ b/jlisa/src/test/java/it/unive/jlisa/UserServiceSmokeTest.java[m
+[36m@@ -45,6 +45,17 @@[m [mpublic class UserServiceSmokeTest {[m
+         assertGraphExists(outDir, "@PostMapping", "UserController", "create");[m
+         assertGraphExists(outDir, "@PutMapping", "UserController", "update");[m
+         assertGraphExists(outDir, "@DeleteMapping", "UserController", "delete");[m
+[32m+[m[32m        Path dump = outDir.resolve("field-annotations.txt");[m[41m[m
+[32m+[m[32m        assertTrue(Files.exists(dump), "Missing field annotations dump: " + dump);[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m        String dumpContent = Files.readString(dump, StandardCharsets.UTF_8);[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m        assertTrue(dumpContent.contains("::dataAccessor"),[m[41m[m
+[32m+[m[32m                "Missing field key for dataAccessor in dump.\n" + dumpContent);[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m        assertTrue(dumpContent.contains("@Autowired"),[m[41m[m
+[32m+[m[32m                "Missing @Autowired in dump.\n" + dumpContent);[m[41m[m
+[32m+[m[41m[m
+     }[m
+ [m
+     private static void assertGraphExists(Path outDir, String annotation, String clazz, String method) throws IOException {[m

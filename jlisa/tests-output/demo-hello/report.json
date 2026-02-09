@@ -1,23 +1,23 @@
 {
   "warnings" : [ ],
-  "files" : [ "assets/d3-graphviz.min.js", "assets/d3.v7.min.js", "java.lang.String__com.example.demo.DemoApplication.hello(java.lang.String__name)_571726518.html", "report.json", "void_com.example.demo.DemoApplication.main(java.lang.String_[]__args).html" ],
+  "files" : [ "@GetMapping_java.lang.String__com.example.demo.DemoApplication.hello(java.lang.String__name).html", "@GetMapping_java.lang.String__com.example.demo.DemoApplication.hello(java.lang.String__name)_571721961.html", "assets/d3-graphviz.min.js", "assets/d3.v7.min.js", "report.json", "void_com.example.demo.DemoApplication.main(java.lang.String_[]__args).html" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "1s 714ms",
-    "end" : "2025-10-18T17:35:50.984+02:00",
-    "expressions" : "12",
-    "files" : "4",
+    "duration" : "1s 992ms",
+    "end" : "2026-01-11T21:54:36.499+01:00",
+    "expressions" : "8",
+    "files" : "5",
     "globals" : "23",
     "members" : "126",
     "programs" : "1",
-    "start" : "2025-10-18T17:35:49.270+02:00",
-    "statements" : "8",
+    "start" : "2026-01-11T21:54:34.507+01:00",
+    "statements" : "7",
     "units" : "47",
     "version" : "0.1",
     "warnings" : "0"
   },
   "configuration" : {
-    "analysisGraphs" : "HTML_WITH_SUBNODES",
+    "analysisGraphs" : "HTML",
     "descendingPhaseType" : "NONE",
     "dumpForcesUnwinding" : "false",
     "fixpointWorkingSet" : "OrderBasedWorkingSet",
@@ -34,6 +34,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "tests-output/demo-hello/"
+    "workdir" : "C:/Users/delar/jlisa/jlisa/tests-output/demo-hello/"
   }
 }
