@@ -4,12 +4,13 @@ import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.type.CharacterType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaCharType implements JavaNumericType {
+public class JavaCharType implements JavaNumericType, CharacterType {
 	public static final JavaCharType INSTANCE = new JavaCharType();
 
 	protected JavaCharType() {
@@ -29,23 +30,8 @@ public class JavaCharType implements JavaNumericType {
 	}
 
 	@Override
-	public boolean is8Bits() {
-		return false;
-	}
-
-	@Override
-	public boolean is16Bits() {
-		return true;
-	}
-
-	@Override
-	public boolean is32Bits() {
-		return false;
-	}
-
-	@Override
-	public boolean is64Bits() {
-		return false;
+	public int getNBits() {
+		return 16;
 	}
 
 	@Override

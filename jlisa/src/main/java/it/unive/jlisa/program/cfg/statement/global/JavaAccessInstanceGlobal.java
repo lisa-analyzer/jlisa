@@ -11,8 +11,8 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotations;
@@ -164,7 +164,7 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 						state = state.forgetIdentifiers(call.getMetaVariables(), this);
 						state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), this)));
+								new Error(npeType.getReference(), this), this));
 					}
 					atLeastOne = true;
 					continue;

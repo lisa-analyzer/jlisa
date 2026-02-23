@@ -1,41 +1,53 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':23:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707450089.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707450151.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447175.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447237.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "15",
-    "duration" : "46ms",
-    "end" : "2025-11-13T17:54:40.820+01:00",
-    "expressions" : "65",
-    "files" : "5",
-    "globals" : "30",
-    "members" : "252",
-    "programs" : "1",
-    "start" : "2025-11-13T17:54:40.774+01:00",
-    "statements" : "30",
-    "units" : "51",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':23:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707450089.graph.json",
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707450151.graph.json",
+    "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447175.graph.json",
+    "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_1707447237.graph.json",
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "15",
+    "duration": "46ms",
+    "end": "2025-11-13T17:54:40.820+01:00",
+    "expressions": "65",
+    "files": "5",
+    "globals": "30",
+    "members": "252",
+    "programs": "1",
+    "start": "2025-11-13T17:54:40.774+01:00",
+    "statements": "30",
+    "units": "51",
+    "version": "0.1",
+    "warnings": "1",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/Long_public_static_long_java_lang_Long_rotateRight_long_int"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/Long_public_static_long_java_lang_Long_rotateRight_long_int",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

@@ -1,6 +1,8 @@
 package it.unive.jlisa.interprocedural.callgraph;
 
-import it.unive.lisa.interprocedural.context.ContextSensitivityToken;
+import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.statement.call.CFGCall;
 import it.unive.lisa.util.collections.CollectionUtilities;
 import java.util.ArrayList;
@@ -8,13 +10,19 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A context sensitive token representing an entire call chain up to a fixed
- * length {@code k}, specified in the singleton creation
- * ({@link #getSingleton(int)}).
+ * TODO: Consider removing this class in the future. This class is used by
+ * JavaContextBasedAnalysis to track the recursion depth of the analysis and
+ * expose the current length of the CFGCalls collection. Differences between
+ * LiSA's KDepthToken: - Provides a method to retrieve the current size of the
+ * calls collection. - Primarily needed for JavaContextBasedAnalysis to function
+ * properly. Notes: - Its functionality may not be strictly necessary if
+ * JavaContextBasedAnalysis is removed or refactored. - Before the next edition
+ * of SVCOMP, revisit whether this class is required, and remove it if not
+ * needed.
  */
-public class JavaKDepthToken
+public class JavaKDepthToken<A extends AbstractLattice<A>>
 		implements
-		ContextSensitivityToken {
+		ScopeId<A> {
 
 	private final List<CFGCall> calls;
 
@@ -28,11 +36,19 @@ public class JavaKDepthToken
 
 	private JavaKDepthToken(
 			int k,
-			JavaKDepthToken source,
+			JavaKDepthToken<A> source,
 			CFGCall newToken) {
 		this.k = k;
+
+		if (k == 0) {
+			// k = 0 -> insensitive
+			this.calls = source.calls;
+			return;
+		}
+
 		int oldlen = source.calls.size();
-		if (oldlen < k) {
+		if (k < 0 || oldlen < k) {
+			// k < 0 -> full stack
 			this.calls = new ArrayList<>(oldlen + 1);
 			source.calls.forEach(this.calls::add);
 			this.calls.add(newToken);
@@ -64,6 +80,19 @@ public class JavaKDepthToken
 				+ calls.stream().map(call -> call.getLocation())
 						.collect(new CollectionUtilities.StringCollector<>(", "))
 				+ "]";
+	}
+
+	/**
+	 * Creates an empty token that can track at most {@code k} calls.
+	 *
+	 * @param <A> the type of {@link AbstractLattice} handled by the analysis
+	 * @param k   the maximum depth
+	 *
+	 * @return an empty token
+	 */
+	public static <A extends AbstractLattice<A>> JavaKDepthToken<A> create(
+			int k) {
+		return new JavaKDepthToken<>(k);
 	}
 
 	@Override
@@ -104,8 +133,8 @@ public class JavaKDepthToken
 	}
 
 	@Override
-	public ContextSensitivityToken startingId() {
-		return getSingleton(k);
+	public JavaKDepthToken<A> startingId() {
+		return create(k);
 	}
 
 	@Override
@@ -114,9 +143,10 @@ public class JavaKDepthToken
 	}
 
 	@Override
-	public ContextSensitivityToken push(
-			CFGCall c) {
-		return new JavaKDepthToken(k, this, c);
+	public JavaKDepthToken<A> push(
+			CFGCall c,
+			AnalysisState<A> state) {
+		return new JavaKDepthToken<>(k, this, c);
 	}
 
 	public int length() {

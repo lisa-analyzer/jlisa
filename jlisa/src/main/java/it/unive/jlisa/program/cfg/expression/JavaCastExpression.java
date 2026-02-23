@@ -9,9 +9,9 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -77,7 +77,7 @@ public class JavaCastExpression extends UnaryExpression {
 				state = state.forgetIdentifiers(call.getMetaVariables(), this);
 				state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 				return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-						new Error(ccExc.getReference(), this));
+						new Error(ccExc.getReference(), this), this);
 			} else if (sat == Satisfiability.SATISFIED) {
 				BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE,
 						getLocation());
@@ -101,7 +101,7 @@ public class JavaCastExpression extends UnaryExpression {
 				// deletes the receiver of the constructor
 				state = state.forgetIdentifiers(call.getMetaVariables(), this);
 				AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-						new Error(ccExc.getReference(), this));
+						new Error(ccExc.getReference(), this), this);
 				return exceptionState.lub(noExceptionState);
 			} else {
 				return state.bottomExecution();

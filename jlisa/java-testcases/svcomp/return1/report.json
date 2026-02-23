@@ -1,41 +1,52 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':27:68] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "bool_Main.bool_value()_1707437999.json", "long_Main.long_value()_1707455297.json", "report.json", "short_Main.short_value()_1707432202.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "18",
-    "duration" : "14ms",
-    "end" : "2025-11-13T17:54:56.715+01:00",
-    "expressions" : "57",
-    "files" : "4",
-    "globals" : "30",
-    "members" : "255",
-    "programs" : "1",
-    "start" : "2025-11-13T17:54:56.701+01:00",
-    "statements" : "34",
-    "units" : "51",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':27:68] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "bool_Main.bool_value()_1707437999.graph.json",
+    "long_Main.long_value()_1707455297.graph.json",
+    "report.json",
+    "short_Main.short_value()_1707432202.graph.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "18",
+    "duration": "14ms",
+    "end": "2025-11-13T17:54:56.715+01:00",
+    "expressions": "57",
+    "files": "4",
+    "globals": "30",
+    "members": "255",
+    "programs": "1",
+    "start": "2025-11-13T17:54:56.701+01:00",
+    "statements": "34",
+    "units": "51",
+    "version": "0.1",
+    "warnings": "1",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/return1"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/return1",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

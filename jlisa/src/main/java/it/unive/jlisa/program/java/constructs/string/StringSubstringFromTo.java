@@ -14,9 +14,9 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -132,7 +132,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating)));
+						new Error(oonExc.getReference(), originating), this));
 			}
 
 			return exceptionState;
@@ -203,7 +203,7 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating)));
+						new Error(oonExc.getReference(), originating), this));
 			}
 			return exceptionState.lub(noExceptionState);
 		}

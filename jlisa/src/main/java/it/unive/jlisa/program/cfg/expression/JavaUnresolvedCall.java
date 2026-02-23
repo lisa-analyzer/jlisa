@@ -3,8 +3,8 @@ package it.unive.jlisa.program.cfg.expression;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -85,7 +85,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 							// deletes the receiver of the constructor
 							state = state.forgetIdentifiers(call.getMetaVariables(), this);
 							result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-									new Error(npeType.getReference(), this)));
+									new Error(npeType.getReference(), this), this));
 						}
 						continue;
 					} else if (!inner.isUnitType())

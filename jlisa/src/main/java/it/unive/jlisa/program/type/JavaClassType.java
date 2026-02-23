@@ -149,7 +149,7 @@ public class JavaClassType implements UnitType {
 
 	private Type scanForSupertypeOf(
 			UnitType other) {
-		WorkingSet<JavaClassType> ws = FIFOWorkingSet.mk();
+		WorkingSet<JavaClassType> ws = new FIFOWorkingSet<>();
 		Set<JavaClassType> seen = new HashSet<>();
 		ws.push(this);
 		JavaClassType current;

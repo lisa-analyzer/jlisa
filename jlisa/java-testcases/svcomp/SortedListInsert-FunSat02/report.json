@@ -1,43 +1,78 @@
 {
-  "warnings" : [ {
-    "message" : "['$Main.java':12] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
-    "message" : "['Main.java':78:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446028.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446183.json", "report.json", "void_Main.List.List(Main.List__this)_1707434589.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1033242922.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196657026.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196786544.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1222195882.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1820932400.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-2006727146.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-258357936.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-371597808.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_1093072022.json", "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_1232895888.json", "void_Main.List.List_clinit()_-1196786544.json", "void_Main.List.List_clinit()_1707434589.json", "void_Main.List.insert(Main.List__this,_int_data)_-1033243945.json", "void_Main.List.insert(Main.List__this,_int_data)_-1196787567.json", "void_Main.List.insert(Main.List__this,_int_data)_-1222196905.json", "void_Main.List.insert(Main.List__this,_int_data)_-1820933423.json", "void_Main.List.insert(Main.List__this,_int_data)_-2006728169.json", "void_Main.List.insert(Main.List__this,_int_data)_-258358959.json", "void_Main.List.insert(Main.List__this,_int_data)_-371598831.json", "void_Main.List.insert(Main.List__this,_int_data)_1093070999.json", "void_Main.List.insert(Main.List__this,_int_data)_1232894865.json", "void_Main.List.insert(Main.List__this,_int_data)_1707430807.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432605.json" ],
-  "info" : {
-    "cfgs" : "17",
-    "duration" : "222ms",
-    "end" : "2025-10-30T15:27:10.345+01:00",
-    "expressions" : "101",
-    "files" : "27",
-    "globals" : "31",
-    "members" : "183",
-    "programs" : "1",
-    "start" : "2025-10-30T15:27:10.123+01:00",
-    "statements" : "49",
-    "units" : "49",
-    "version" : "0.1",
-    "warnings" : "2"
+  "warnings": [
+    {
+      "message": "['$Main.java':12] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    },
+    {
+      "message": "['Main.java':78:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446028.graph.json",
+    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446183.graph.json",
+    "report.json",
+    "void_Main.List.List(Main.List__this)_1707434589.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1033242922.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196657026.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1196786544.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1222195882.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-1820932400.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-2006727146.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-258357936.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_-371597808.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_1093072022.graph.json",
+    "void_Main.List.List(Main.List__this,_int_x,_Main.List__next)_1232895888.graph.json",
+    "void_Main.List.List_clinit()_-1196786544.graph.json",
+    "void_Main.List.List_clinit()_1707434589.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-1033243945.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-1196787567.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-1222196905.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-1820933423.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-2006728169.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-258358959.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_-371598831.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_1093070999.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_1232894865.graph.json",
+    "void_Main.List.insert(Main.List__this,_int_data)_1707430807.graph.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707432605.graph.json"
+  ],
+  "info": {
+    "cfgs": "17",
+    "duration": "222ms",
+    "end": "2025-10-30T15:27:10.345+01:00",
+    "expressions": "101",
+    "files": "27",
+    "globals": "31",
+    "members": "183",
+    "programs": "1",
+    "start": "2025-10-30T15:27:10.123+01:00",
+    "statements": "49",
+    "units": "49",
+    "version": "0.1",
+    "warnings": "2",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/SortedListInsert-FunSat02"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/SortedListInsert-FunSat02",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

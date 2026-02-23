@@ -5,7 +5,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
 import it.unive.lisa.program.cfg.CodeLocation;

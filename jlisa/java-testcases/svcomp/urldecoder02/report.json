@@ -4,11 +4,12 @@
       "message": "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
     }
   ],
+  "notices": [],
   "files": [
-    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707442370.json",
+    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707442370.graph.json",
     "report.json",
-    "void_Main.main(java.lang.String_[]__args).json",
-    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320415077.json"
+    "void_Main.main(java.lang.String_[]__args).graph.json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320415077.graph.json"
   ],
   "info": {
     "cfgs": "13",
@@ -23,26 +24,28 @@
     "statements": "27",
     "units": "51",
     "version": "0.1",
-    "warnings": "1"
+    "warnings": "1",
+    "notices": "0"
   },
   "configuration": {
-    "analysisGraphs": "NONE",
-    "descendingPhaseType": "NONE",
     "dumpForcesUnwinding": "false",
     "fixpointWorkingSet": "OrderBasedWorkingSet",
     "glbThreshold": "5",
     "hotspots": "unset",
-    "jsonOutput": "true",
     "openCallPolicy": "ReturnTopPolicy",
-    "optimize": "false",
     "recursionWideningThreshold": "5",
     "semanticChecks": "AssertChecker",
-    "serializeInputs": "false",
-    "serializeResults": "true",
     "shouldSmashError": "unset",
     "syntacticChecks": "",
     "useWideningPoints": "true",
     "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/urldecoder02"
+    "workdir": "java-outputs/svcomp/urldecoder02",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

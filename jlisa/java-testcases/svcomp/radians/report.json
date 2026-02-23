@@ -1,41 +1,50 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707443951.json", "report.json", "void_Main.main(java.lang.String_[]__args).json" ],
-  "info" : {
-    "cfgs" : "15",
-    "duration" : "14ms",
-    "end" : "2025-11-13T17:54:55.991+01:00",
-    "expressions" : "51",
-    "files" : "2",
-    "globals" : "30",
-    "members" : "252",
-    "programs" : "1",
-    "start" : "2025-11-13T17:54:55.977+01:00",
-    "statements" : "28",
-    "units" : "51",
-    "version" : "0.1",
-    "warnings" : "1"
+  "warnings": [
+    {
+      "message": "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707443951.graph.json",
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json"
+  ],
+  "info": {
+    "cfgs": "15",
+    "duration": "14ms",
+    "end": "2025-11-13T17:54:55.991+01:00",
+    "expressions": "51",
+    "files": "2",
+    "globals": "30",
+    "members": "252",
+    "programs": "1",
+    "start": "2025-11-13T17:54:55.977+01:00",
+    "statements": "28",
+    "units": "51",
+    "version": "0.1",
+    "warnings": "1",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/radians"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/radians",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

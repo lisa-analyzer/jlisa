@@ -1,43 +1,56 @@
 {
-  "warnings" : [ {
-    "message" : "['$Main.java':13] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
-    "message" : "['Main.java':35:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  } ],
-  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707451050.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707452042.json", "report.json", "void_Main.main(java.lang.String_[]__args).json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320684157.json", "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320714909.json" ],
-  "info" : {
-    "cfgs" : "15",
-    "duration" : "64ms",
-    "end" : "2025-11-13T17:55:09.597+01:00",
-    "expressions" : "95",
-    "files" : "5",
-    "globals" : "30",
-    "members" : "253",
-    "programs" : "1",
-    "start" : "2025-11-13T17:55:09.533+01:00",
-    "statements" : "40",
-    "units" : "53",
-    "version" : "0.1",
-    "warnings" : "2"
+  "warnings": [
+    {
+      "message": "['$Main.java':13] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    },
+    {
+      "message": "['Main.java':35:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    }
+  ],
+  "notices": [],
+  "files": [
+    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707451050.graph.json",
+    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707452042.graph.json",
+    "report.json",
+    "void_Main.main(java.lang.String_[]__args).graph.json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320684157.graph.json",
+    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320714909.graph.json"
+  ],
+  "info": {
+    "cfgs": "15",
+    "duration": "64ms",
+    "end": "2025-11-13T17:55:09.597+01:00",
+    "expressions": "95",
+    "files": "5",
+    "globals": "30",
+    "members": "253",
+    "programs": "1",
+    "start": "2025-11-13T17:55:09.533+01:00",
+    "statements": "40",
+    "units": "53",
+    "version": "0.1",
+    "warnings": "2",
+    "notices": "0"
   },
-  "configuration" : {
-    "analysisGraphs" : "NONE",
-    "descendingPhaseType" : "NONE",
-    "dumpForcesUnwinding" : "false",
-    "fixpointWorkingSet" : "OrderBasedWorkingSet",
-    "glbThreshold" : "5",
-    "hotspots" : "unset",
-    "jsonOutput" : "true",
-    "openCallPolicy" : "ReturnTopPolicy",
-    "optimize" : "false",
-    "recursionWideningThreshold" : "5",
-    "semanticChecks" : "AssertChecker",
-    "serializeInputs" : "false",
-    "serializeResults" : "true",
-    "shouldSmashError" : "unset",
-    "syntacticChecks" : "",
-    "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
-    "workdir" : "java-outputs/svcomp/RegexSubstitution02"
+  "configuration": {
+    "dumpForcesUnwinding": "false",
+    "fixpointWorkingSet": "OrderBasedWorkingSet",
+    "glbThreshold": "5",
+    "hotspots": "unset",
+    "openCallPolicy": "ReturnTopPolicy",
+    "recursionWideningThreshold": "5",
+    "semanticChecks": "AssertChecker",
+    "shouldSmashError": "unset",
+    "syntacticChecks": "",
+    "useWideningPoints": "true",
+    "wideningThreshold": "5",
+    "workdir": "java-outputs/svcomp/RegexSubstitution02",
+    "backwardDescendingFixpoint": "unset",
+    "backwardFixpoint": "BackwardAscendingFixpoint",
+    "forwardDescendingFixpoint": "unset",
+    "forwardFixpoint": "ForwardAscendingFixpoint",
+    "outputs": "JSONReportDumper, JSONResults",
+    "asynchronousListeners": "",
+    "synchronousListeners": ""
   }
 }

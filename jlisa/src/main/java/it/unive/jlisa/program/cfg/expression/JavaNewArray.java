@@ -12,9 +12,9 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.analysis.lattices.ExpressionSet;
-import it.unive.lisa.analysis.lattices.Satisfiability;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -77,7 +77,7 @@ public class JavaNewArray extends UnaryExpression {
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this)));
+						new Error(oonExc.getReference(), this), this));
 			}
 
 			return exceptionState;

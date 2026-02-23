@@ -1,16 +1,8 @@
 package it.unive.jlisa.type;
 
-import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.type.BooleanType;
-import it.unive.lisa.type.NumericType;
-import it.unive.lisa.type.ReferenceType;
-import it.unive.lisa.type.StringType;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.TypeSystem;
-import it.unive.lisa.type.TypeTokenType;
+import it.unive.jlisa.program.type.*;
+import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.type.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,9 +25,88 @@ public class JavaTypeSystem extends TypeSystem {
 	}
 
 	@Override
+	public CharacterType getCharacterType() {
+		return JavaCharType.INSTANCE;
+	}
+
+	@Override
 	public ReferenceType getReference(
 			Type type) {
 		return new JavaReferenceType(type);
+	}
+
+	@Override
+	public int distanceBetweenTypes(
+			Type first,
+			Type second) {
+		if (first instanceof Untyped)
+			return 0;
+		if (second instanceof Untyped)
+			return 0;
+		if (second instanceof JavaNumericType numericParam)
+			if (first instanceof JavaNumericType numericFormal) {
+				int paramDist = numericParam.distance(numericFormal);
+				if (paramDist < 0)
+					return -1; // incomparable
+				return paramDist;
+			} else
+				return -1;
+		else if (second.isBooleanType() && first.isBooleanType())
+			return 0;
+		else if (JavaClassType.isWrapperOf(first, second))
+			// boxing
+			return 10;
+		else if (JavaClassType.isWrapperOf(second, first))
+			// unboxing
+			return 10;
+		else if (second instanceof ReferenceType refTypeParam
+				&& first instanceof ReferenceType refTypeFormal) {
+			if (refTypeParam.getInnerType().isNullType())
+				return 0;
+			else if (refTypeParam.getInnerType() instanceof JavaArrayType actualInner
+					&& refTypeFormal.getInnerType() instanceof JavaArrayType formalInner)
+				return actualInner.equals(formalInner) ? 0 : -1;
+
+			// from here on, we should suppose that the inner types are
+			// units
+			UnitType paramUnitType = refTypeParam.getInnerType().asUnitType();
+			UnitType formalUnitType = refTypeFormal.getInnerType().asUnitType();
+			if (paramUnitType != null && formalUnitType != null) {
+				int paramDist = distanceBetweenCompilationUnits(formalUnitType.getUnit(), paramUnitType.getUnit());
+				if (paramDist < 0)
+					return -1;
+				return paramDist;
+			} else
+				return -1;
+		} else
+			return -1;
+	}
+
+	/**
+	 * Computes the inheritance distance between two compilation units.
+	 * <p>
+	 * The distance is the number of steps from {@code first} up its hierarchy
+	 * until {@code second} is reached. If {@code second} is not reachable,
+	 * returns -1.
+	 * </p>
+	 *
+	 * @param first  the starting compilation unit
+	 * @param second the target compilation unit
+	 *
+	 * @return the distance, or {@code -1} if no relationship exists
+	 */
+	private int distanceBetweenCompilationUnits(
+			CompilationUnit first,
+			CompilationUnit second) {
+		if (first.equals(second))
+			return 0;
+		for (CompilationUnit ancestor : second.getImmediateAncestors()) {
+			int dist = distanceBetweenCompilationUnits(first, ancestor);
+			if (dist < 0)
+				continue;
+			return 1 + dist;
+		}
+		return -1;
 	}
 
 	@Override
