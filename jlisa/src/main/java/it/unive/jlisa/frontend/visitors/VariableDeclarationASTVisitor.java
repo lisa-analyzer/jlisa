@@ -1,6 +1,8 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
@@ -10,20 +12,18 @@ import it.unive.lisa.type.Type;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-public class VariableDeclarationASTVisitor extends BaseCodeElementASTVisitor {
+public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> implements ResultHolder<Parameter> {
 	Parameter parameter;
 
 	public VariableDeclarationASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			BaseUnitASTVisitor container) {
-		super(parserContext, source, compilationUnit, container);
+			ParsingEnvironment environment,
+			UnitScope scope) {
+		super(environment, scope);
 	}
 
 	public boolean visit(
 			SingleVariableDeclaration node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
+		TypeASTVisitor visitor = new TypeASTVisitor(getEnvironment(), getScope());
 		node.getType().accept(visitor);
 		Type type = visitor.getType();
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
@@ -46,7 +46,9 @@ public class VariableDeclarationASTVisitor extends BaseCodeElementASTVisitor {
 		return false;
 	}
 
-	public Parameter getParameter() {
-		return this.parameter;
+
+	@Override
+	public Parameter getResult() {
+		return parameter;
 	}
 }

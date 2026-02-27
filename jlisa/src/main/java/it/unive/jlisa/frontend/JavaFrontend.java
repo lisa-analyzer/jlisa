@@ -2,6 +2,10 @@ package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
+import it.unive.jlisa.frontend.visitors.PopulateUnitsASTVisitor;
+import it.unive.jlisa.frontend.visitors.SetGlobalsASTVisitor;
+import it.unive.jlisa.frontend.visitors.SetRelationshipsASTVisitor;
+import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -35,7 +39,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class JavaFrontend {
-	private ParserContext parserContext;
+	private final ParserContext parserContext;
 	private int API_LEVEL = AST.getJLSLatest();
 
 	public JavaFrontend() {
@@ -165,92 +169,100 @@ public class JavaFrontend {
 		LibrarySpecificationProvider.load(getProgram());
 		LibrarySpecificationProvider.importJavaLang(getProgram());
 		List<String> expandedPaths = expandFilePaths(filePaths);
-		populateUnits(expandedPaths);
-		setRelationships(expandedPaths);
-		setGlobals(expandedPaths);
+		UnitScope[] scopes = new UnitScope[expandedPaths.size()];
+		for (int i = 0; i < expandedPaths.size(); i++) {
+			Path path = Paths.get(expandedPaths.get(i));
+			String source = Files.readString(path);
+			CompilationUnit cu = getCompilationUnit(source);
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, path.getFileName().toString(), cu);
+			scopes[i] = UnitScope.init(environment, cu);
+		}
+		populateUnits(expandedPaths, scopes);
 		registerTypes();
-		initCodeMembers(expandedPaths);
+		setRelationships(expandedPaths, scopes);
+		setGlobals(expandedPaths, scopes);
+		initCodeMembers(expandedPaths, scopes);
 
-		for (String filePath : expandedPaths) {
-			Path path = Paths.get(filePath);
+
+		for (int i = 0; i < expandedPaths.size(); i++) {
+			Path path = Paths.get(expandedPaths.get(i));
 			String source = Files.readString(path);
 			boolean module = path.getFileName().toString().equals("module-info.java");
-			parse(source, path.getFileName().toString(), module);
+			parse(source, path.getFileName().toString(), scopes[i], module);
 		}
 
 		return getProgram();
 	}
 
 	public void populateUnits(
-			List<String> filePaths)
+			List<String> filePaths,
+			UnitScope[] scopes
+			)
 			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
+		for (int i = 0; i < filePaths.size(); i++) {
+			Path path = Paths.get(filePaths.get(i));
 			String source = Files.readString(path);
 			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.ADD_UNITS));
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, path.getFileName().toString(), cu);
+
+			cu.accept(new PopulateUnitsASTVisitor(environment, scopes[i]));
 		}
 	}
 
 	public void setRelationships(
-			List<String> filePaths)
+			List<String> filePaths,
+			UnitScope[] scopes)
 			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
+		for (int i = 0; i < filePaths.size(); i++) {
+			Path path = Paths.get(filePaths.get(i));
 			String source = Files.readString(path);
 			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.SET_RELATIONSHIPS));
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, path.getFileName().toString(), cu);
+
+			cu.accept(new SetRelationshipsASTVisitor(environment,
+					scopes[i]));
 		}
 	}
 
 	public void setGlobals(
-			List<String> filePaths)
+			List<String> filePaths,
+			UnitScope[] scopes)
 			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
+		for (int i = 0; i < filePaths.size(); i++) {
+			Path path = Paths.get(filePaths.get(i));
 			String source = Files.readString(path);
 			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.ADD_GLOBALS));
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, path.getFileName().toString(), cu);
+
+			cu.accept(new SetGlobalsASTVisitor(environment,
+					scopes[i]));
 		}
 	}
 
 	public void initCodeMembers(
-			List<String> filePaths)
+			List<String> filePaths,
+			UnitScope[] scopes)
 			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
+		for (int i = 0; i < filePaths.size(); i++) {
+			Path path = Paths.get(filePaths.get(i));
 			String source = Files.readString(path);
 			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.INIT_CODE_MEMBERS));
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, path.getFileName().toString(), cu);
+
+			cu.accept(new InitCodeMembersASTVisitor(environment,
+					scopes[i]));
 		}
 	}
 
-	public Program parseFromFile(
-			String filePath)
-			throws IOException {
-		Path path = Paths.get(filePath);
-		String source = Files.readString(path);
-		boolean module = path.getFileName().toString().equals("module-info.java");
-		return parse(source, path.getFileName().toString(), module);
-	}
-
-	public Program parseFromString(
-			String source,
-			boolean module) {
-		return parse(source, "unknown", module);
-	}
 
 	private Program parse(
 			String source,
 			String fileName,
+			UnitScope scope,
 			boolean module) {
 		CompilationUnit cu = getCompilationUnit(source);
-		CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(parserContext, fileName, cu,
-				CompilationUnitASTVisitor.VisitorType.VISIT_UNIT);
+		ParsingEnvironment environment = new ParsingEnvironment(parserContext, fileName, cu);
+		CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(environment, scope);
 
 		if (module)
 			throw new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT,

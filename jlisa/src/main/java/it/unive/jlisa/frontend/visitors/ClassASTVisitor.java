@@ -3,8 +3,13 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
+import it.unive.jlisa.frontend.visitors.contexts.Scope;
+import it.unive.jlisa.frontend.visitors.scope.ClassScope;
+import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
@@ -37,6 +42,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import it.unive.lisa.util.frontend.ControlFlowTracker;
+import it.unive.lisa.util.frontend.ParsedBlock;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -45,31 +53,19 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class ClassASTVisitor extends BaseUnitASTVisitor {
-
-	private final String fullName;
-	public final ClassASTVisitor enclosing;
-	public final JavaClassType enclosingType;
+public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 	public ClassASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			String pkg,
-			Map<String, String> imports,
-			String fullName,
-			ClassASTVisitor enclosing,
-			JavaClassType enclosingType) {
-		super(parserContext, source, pkg, imports, compilationUnit);
-		this.fullName = fullName;
-		this.enclosing = enclosing;
-		this.enclosingType = enclosingType;
+			ParsingEnvironment environment,
+			ClassScope scope
+			) {
+		super(environment, scope);
 	}
 
 	@Override
 	public boolean visit(
 			EnumDeclaration node) {
-		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(fullName);
+		EnumUnit enUnit = (EnumUnit) getScope().getLisaClassUnit();
 
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
@@ -83,33 +79,34 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 	public boolean visit(
 			TypeDeclaration node) {
 		// parsing superclass
-		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(fullName);
 
 		if (!node.permittedTypes().isEmpty())
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
 
-		createClassInitializer(cUnit, node);
+		createClassInitializer((ClassUnit) getScope().getLisaClassUnit(), node);
 
 		// for (MethodDeclaration md : node.getMethods()) {
 		// MethodASTVisitor visitor = new MethodASTVisitor(parserContext,
-		// source, cUnit, compilationUnit, true, this,
+		// getSource(), cUnit, compilationUnit, true, this,
 		// enclosingType);
 		// md.accept(visitor);
 		// }
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
-			MethodASTVisitor visitor = new MethodASTVisitor(parserContext, source, cUnit, compilationUnit, false, this,
-					enclosingType);
-			md.accept(visitor);
+			CFG cfg = getParserContext().evaluate(
+					md,
+					() -> new MethodASTVisitor(getEnvironment(), getScope())
+			);
+
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
-				fixConstructorCFG(visitor.getCFG(), node.getFields());
+				fixConstructorCFG(cfg, node.getFields());
 			}
 		}
 		if (createDefaultConstructor) {
-			CFG defaultConstructor = createDefaultConstructor(cUnit);
+			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLisaClassUnit());
 			fixConstructorCFG(defaultConstructor, node.getFields());
 		}
 
@@ -119,7 +116,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 	private void createEnumInitializer(
 			EnumUnit enumUnit) {
 
-		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
 		String simpleName = enumUnit.getName().contains(".")
 				? enumUnit.getName().substring(enumUnit.getName().lastIndexOf(".") + 1)
 				: enumUnit.getName();
@@ -164,7 +161,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 	private void createEnumConstructor(
 			EnumUnit enumUnit) {
 		Type type = getProgram().getTypes().getType(enumUnit.getName());
-		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
@@ -179,8 +176,8 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), enumUnit,
 				true, simpleName, VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
-		parserContext.addVariableType(cfg, new VariableInfo("name", null),
+		getParserContext().addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+		getParserContext().addVariableType(cfg, new VariableInfo("name", null),
 				new JavaReferenceType(getProgram().getTypes().getStringType()));
 
 		JavaAssignment glAsg = new JavaAssignment(cfg, locationManager.nextLocation(),
@@ -213,7 +210,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			return;
 
 		// create the CFG corresponding to the class initializer
-		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
 		String simpleName = unit.getName().contains(".")
 				? unit.getName().substring(unit.getName().lastIndexOf(".") + 1)
 				: unit.getName();
@@ -254,7 +251,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 		// just static fields are considered to build the class initializer
 		for (FieldDeclaration fd : staticFields) {
-			TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, this);
+			TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
 			fd.getType().accept(typeVisitor);
 			Type type = typeVisitor.getType();
 			if (type.isInMemoryType())
@@ -266,13 +263,9 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
+					MethodScope scope = new MethodScope(getScope(), cfg, new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
 					ExpressionVisitor exprVisitor = new ExpressionVisitor(
-							parserContext,
-							source,
-							compilationUnit,
-							cfg,
-							null,
-							this);
+							getEnvironment(), scope);
 					fragment.getInitializer().accept(exprVisitor);
 					init = exprVisitor.getExpression();
 				} else
@@ -306,12 +299,12 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		Type type = getProgram().getTypes().getType(classUnit.getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
-		if (enclosingType != null)
-			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", enclosingType.getReference(),
+		if (getScope().getEnclosingClass() != null)
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", getScope().getEnclosingClass().getReference(),
 					null, new Annotations()));
 
 		Annotations annotations = new Annotations();
@@ -322,7 +315,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(locationManager.nextLocation(), classUnit,
 				true, simpleName, VoidType.INSTANCE, annotations, paramArray);
 		CFG cfg = new CFG(codeMemberDescriptor);
-		parserContext.addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+		getParserContext().addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
 		// we filter just the class unit, not interfaces
 		String superClassName = classUnit.getImmediateAncestors().stream().filter(s -> s instanceof ClassUnit)
 				.findFirst().get().getName();
@@ -338,7 +331,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		cfg.addNode(call);
 		Statement last = call;
 
-		if (enclosingType != null) {
+		if (getScope().getParentScope() != null) {
 			JavaAssignment asg = new JavaAssignment(
 					cfg,
 					locationManager.nextLocation(),
@@ -354,7 +347,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 							cfg,
 							locationManager.nextLocation(),
 							"$enclosing",
-							enclosingType.getReference()));
+							getScope().getEnclosingClass().getReference()));
 			cfg.addNode(asg);
 			cfg.addEdge(new SequentialEdge(call, asg));
 			last = asg;
@@ -400,7 +393,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 		if (implicitlyCallSuper) {
 			// add a super() call to this constructor, as a first statement,
 			// before the field initializator.
-			SyntheticCodeLocationManager locationManager = parserContext.getCurrentSyntheticCodeLocationManager(source);
+			SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
 			JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(),
 					Call.CallType.INSTANCE, ancestor.getName(), ancestorSimpleName,
 					new VariableRef(cfg, locationManager.nextLocation(), "this"));
@@ -416,8 +409,7 @@ public class ClassASTVisitor extends BaseUnitASTVisitor {
 			// static fields are skipped in constructor
 			if (Modifier.isStatic(field.getModifiers()))
 				continue;
-			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(parserContext, source,
-					compilationUnit, cfg, this);
+			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(getEnvironment(), getScope().toMethodScope(cfg, null, null));
 			field.accept(initVisitor);
 
 			if (initVisitor.getBlock() != null) {

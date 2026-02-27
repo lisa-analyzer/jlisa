@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import java.util.Map;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -18,7 +19,7 @@ public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 			String pkg,
 			Map<String, String> imports,
 			String fullName) {
-		super(parserContext, source, pkg, imports, compilationUnit);
+		super(new ParsingEnvironment(parserContext, source, compilationUnit), pkg, imports);
 		this.fullName = fullName;
 	}
 
@@ -47,7 +48,6 @@ public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 					"The 'permits' clause is not supported yet.",
 					// using first permitted type for location
 					getSourceCodeLocation((ASTNode) node.permittedTypes().get(0)));
-
 		return false;
 	}
 
