@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors.scope;
 
-import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -47,47 +46,10 @@ public final class UnitScope extends Scope {
         processImports(scope, environment, cu.imports());
 
 
-        for (Object type : cu.types()) {
-            if (type instanceof TypeDeclaration td) {
-                addType(scope, environment, td, null);
-            } else if (type instanceof EnumDeclaration ed) {
-                addEnum(scope, environment, ed, null);
-            }
-        }
         // Step 3: add local types (classes + enums) as explicit imports and register in scope
         addLocalTypes(scope, environment, cu);
 
         return scope;
-    }
-
-    /** Recursively add TypeDeclaration and nested types */
-    private static void addType(UnitScope scope, ParsingEnvironment env, TypeDeclaration td, String outer) {
-        String fqn = scope.getPackage() + "." + (outer == null ? "" : outer + ".") + td.getName().toString();
-        scope.addExplicitImport(td.getName().toString(), fqn);
-
-        it.unive.lisa.program.CompilationUnit unit = buildUnit(env, td, fqn);
-        scope.addLocalType(td.getName().toString(), unit);
-
-        String newOuter = outer == null ? td.getName().toString() : outer + "." + td.getName().toString();
-
-        // Nested classes
-        for (TypeDeclaration nested : td.getTypes()) {
-            addType(scope, env, nested, newOuter);
-        }
-
-        // Nested enums
-        for (Object decl : td.bodyDeclarations()) {
-            if (decl instanceof EnumDeclaration ed) {
-                addEnum(scope, env, ed, newOuter);
-            }
-        }
-    }
-
-    /** Add enum declarations recursively */
-    private static void addEnum(UnitScope scope, ParsingEnvironment env, EnumDeclaration ed, String outer) {
-        String fqn = scope.getPackage() + (outer == null ? "" : outer + ".") + ed.getName().toString();
-        scope.addExplicitImport(ed.getName().toString(), fqn);
-        scope.addLocalType(ed.getName().toString(), buildEnumUnit(env, ed, fqn));
     }
 
     private void addLocalType(String string, it.unive.lisa.program.CompilationUnit unit) {
@@ -102,26 +64,6 @@ public final class UnitScope extends Scope {
         return onDemandPackages;
     }
 
-    private static it.unive.lisa.program.CompilationUnit buildUnit(ParsingEnvironment env, TypeDeclaration td, String fqn) {
-        int modifiers = td.getModifiers();
-
-        if (!td.isInterface() && Modifier.isPrivate(modifiers))
-            throw new RuntimeException(
-                    new ProgramValidationException("Modifier private not allowed in a top-level class"));
-
-        if (td.isInterface()) {
-            // Interface unit
-            return new InterfaceUnit(env.getSourceCodeLocation(td), env.parserContext().getProgram(), fqn, Modifier.isFinal(modifiers));
-        } else if (Modifier.isAbstract(modifiers)) {
-            if (Modifier.isFinal(modifiers))
-                throw new RuntimeException(
-                        new ProgramValidationException("illegal combination of modifiers: abstract and final"));
-            return new AbstractClassUnit(env.getSourceCodeLocation(td), env.parserContext().getProgram(), fqn, Modifier.isFinal(modifiers));
-        } else {
-            return new ClassUnit(env.getSourceCodeLocation(td), env.parserContext().getProgram(), fqn, Modifier.isFinal(modifiers));
-        }
-    }
-
     /**
      * Adds all local types (classes and enums) declared in this compilation unit
      * to the scope as explicit imports, and registers nested types recursively.
@@ -131,9 +73,9 @@ public final class UnitScope extends Scope {
             if (type instanceof TypeDeclaration td) {
                 addTypeDeclaration(scope, env, td, null);
             } else if (type instanceof EnumDeclaration ed) {
-                String fqn = scope.getPackage() + ed.getName().toString();
+                String fqn = (scope.getPackage().isEmpty() ? "" : scope.getPackage() + ".") + ed.getName().toString();
                 scope.addExplicitImport(ed.getName().toString(), fqn);
-                scope.addLocalType(ed.getName().toString(), buildEnumUnit(env, ed, fqn));
+                scope.addLocalType(ed.getName().toString(), (it.unive.lisa.program.CompilationUnit) env.parserContext().getProgram().getUnit(fqn));
             }
         }
     }
@@ -147,14 +89,13 @@ public final class UnitScope extends Scope {
      * to the scope.
      */
     private static void addTypeDeclaration(UnitScope scope, ParsingEnvironment env, TypeDeclaration td, String outer) {
-        String name = scope.getPackage() + (outer == null ? "" : outer + ".") + td.getName().toString();
+        String name = (scope.getPackage().isEmpty() ? "" : scope.getPackage() + ".") + (outer == null ? "" : outer + ".") + td.getName().toString();
 
         // Register as explicit import
         scope.addExplicitImport(td.getName().toString(), name);
 
-        // Create the Unit (ClassUnit or InterfaceUnit)
-        it.unive.lisa.program.CompilationUnit unit = buildUnit(env, td, name);
-        scope.addLocalType(td.getName().toString(), unit);
+        // Look up the already-registered Unit (created by PopulateUnitsASTVisitor)
+        scope.addLocalType(td.getName().toString(), (it.unive.lisa.program.CompilationUnit) env.parserContext().getProgram().getUnit(name));
 
         // Handle nested types
         String newOuter = outer == null ? td.getName().toString() : outer + "." + td.getName().toString();
@@ -164,58 +105,12 @@ public final class UnitScope extends Scope {
 
         for (Object decl : td.bodyDeclarations()) {
             if (decl instanceof EnumDeclaration ed) {
-                String fqn = scope.getPackage() + newOuter + "." + ed.getName().toString();
+                String fqn = (scope.getPackage().isEmpty() ? "" : scope.getPackage() + ".") + newOuter + "." + ed.getName().toString();
                 scope.addExplicitImport(ed.getName().toString(), fqn);
-                scope.addLocalType(ed.getName().toString(), buildEnumUnit(env, ed, fqn));
+                scope.addLocalType(ed.getName().toString(), (it.unive.lisa.program.CompilationUnit) env.parserContext().getProgram().getUnit(fqn));
             }
         }
     }
-
-    private static EnumUnit buildEnumUnit(ParsingEnvironment env, EnumDeclaration ed, String fqn) {
-        EnumUnit enUnit = new EnumUnit(env.getSourceCodeLocation(ed), env.parserContext().getProgram(), fqn, true);
-        env.parserContext().getProgram().addUnit(enUnit);
-        JavaClassType.register(enUnit.getName(), enUnit);
-        return enUnit;
-    }
-
-    private static void addLocalImports(
-            UnitScope scope,
-            CompilationUnit unit
-            ) {
-        List<?> types = unit.types();
-        for (Object type : types) {
-            if (type instanceof TypeDeclaration)
-                addLocalImportsInDeclaration(scope, (TypeDeclaration) type, null);
-            else if (type instanceof EnumDeclaration) {
-                EnumDeclaration typeDecl = (EnumDeclaration) type;
-                String name = scope.getPackage() + typeDecl.getName().toString();
-                scope.getExplicitImports().put(typeDecl.getName().toString(), name);
-            }
-        }
-    }
-
-    private static void addLocalImportsInDeclaration(
-            UnitScope scope,
-            TypeDeclaration typeDecl,
-            String outer) {
-        String name = scope.getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
-        scope.getExplicitImports().put(typeDecl.getName().toString(), name);
-        if (outer != null)
-            scope.getExplicitImports().put((outer == null ? "" : outer + ".") + typeDecl.getName().toString(), name);
-
-        // nested types (e.g., nested inner classes)
-        String newOuter = outer == null ? typeDecl.getName().toString() : outer + "." + typeDecl.getName().toString();
-        for (TypeDeclaration nested : typeDecl.getTypes())
-            addLocalImportsInDeclaration(scope, nested, newOuter);
-        for (Object decl : typeDecl.bodyDeclarations()) {
-            if (decl instanceof EnumDeclaration enumDecl) {
-                name = scope.getPackage() + (newOuter == null ? "" : newOuter + ".") + enumDecl.getName().toString();
-                scope.getExplicitImports().put(enumDecl.getName().toString(), name);
-                scope.getExplicitImports().put(newOuter + "." + enumDecl.getName().toString(), name);
-            }
-        }
-    }
-
 
     private static void processImports(
             UnitScope scope,
@@ -259,40 +154,6 @@ public final class UnitScope extends Scope {
     private void addOnDemandPackage(String importName) {
         onDemandPackages.add(importName);
     }
-
-    private static boolean buildClassUnit(
-            UnitScope scope,
-            ParsingEnvironment env,
-            Program program,
-            String outer,
-            TypeDeclaration typeDecl,
-            Set<String> processed) {
-        SourceCodeLocation loc = env.getSourceCodeLocation(typeDecl);
-
-        int modifiers = typeDecl.getModifiers();
-        if (Modifier.isPrivate(modifiers) && outer == null)
-            throw new RuntimeException(
-                    new ProgramValidationException("Modifier private not allowed in a top-level class"));
-
-        ClassUnit cUnit;
-        String name = scope.getPackage() + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
-        if (!processed.add(name))
-            return false;
-        if (Modifier.isAbstract(modifiers))
-            if (Modifier.isFinal(modifiers))
-                throw new RuntimeException(
-                        new ProgramValidationException("illegal combination of modifiers: abstract and final"));
-            else
-                cUnit = new AbstractClassUnit(loc, program, name, Modifier.isFinal(modifiers));
-        else
-            cUnit = new ClassUnit(loc, program, name, Modifier.isFinal(modifiers));
-
-        program.addUnit(cUnit);
-        JavaClassType.register(cUnit.getName(), cUnit);
-        return true;
-    }
-
-
 
 
 

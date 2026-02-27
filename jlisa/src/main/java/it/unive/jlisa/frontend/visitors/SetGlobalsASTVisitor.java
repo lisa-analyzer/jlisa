@@ -80,7 +80,7 @@ public class SetGlobalsASTVisitor extends ScopedVisitor<UnitScope> {
         JavaClassType enclosingType = null;
         if (isClass && outer != null) {
             // adding the synthetic field for the enclosing instance
-            enclosingType = JavaClassType.lookup(getScope().getPackage() + outer);
+            enclosingType = JavaClassType.lookup((getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".") + outer);
             Global enclosingField = new Global(
                     getSourceCodeLocation(typeDecl.getName()),
                     unit,
@@ -105,7 +105,7 @@ public class SetGlobalsASTVisitor extends ScopedVisitor<UnitScope> {
             EnumDeclaration node,
             String outer,
             Set<String> processed) {
-        String name = getScope().getPackage() + (outer == null ? "" : outer + ".") + node.getName().toString();
+        String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".") + (outer == null ? "" : outer + ".") + node.getName().toString();
         if (!processed.add(name))
             return;
         EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);

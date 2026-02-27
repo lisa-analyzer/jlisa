@@ -149,7 +149,14 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHo
 			return direct;
 
 		if (name.contains(".")) {
-			return resolveQualified(name, program, scope);
+			Unit resolved = resolveQualified(name, program, scope);
+			if (resolved != null)
+				return resolved;
+			if (LibrarySpecificationProvider.isLibraryAvailable(name)) {
+				LibrarySpecificationProvider.importClass(program, name);
+				return program.getUnit(name);
+			}
+			return null;
 		}
 
 		Unit local = scope.getLocalType(name);
@@ -175,9 +182,14 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHo
 		}
 
 		for (String onDemandPkg : scope.getOnDemandPackages()) {
-			Unit u = program.getUnit(onDemandPkg + "." + name);
+			String fqn = onDemandPkg + "." + name;
+			Unit u = program.getUnit(fqn);
 			if (u != null)
 				return u;
+			if (LibrarySpecificationProvider.isLibraryAvailable(fqn)) {
+				LibrarySpecificationProvider.importClass(program, fqn);
+				return program.getUnit(fqn);
+			}
 		}
 
 		Unit javaLang = program.getUnit("java.lang." + name);

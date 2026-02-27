@@ -672,8 +672,12 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		} else {
 			// this might be a fqn instead
 			name = getScope().getParentScope().getUnitScope().getExplicitImports().get(node.getExpression().toString());
-			if (name == null)
+			if (name == null) {
 				name = node.getExpression().toString();
+				Unit resolved = TypeASTVisitor.getUnit(name, getProgram(), getScope().getParentScope().getUnitScope());
+				if (resolved != null)
+					name = resolved.getName();
+			}
 			if (LibrarySpecificationProvider.isLibraryAvailable(name))
 				LibrarySpecificationProvider.importClass(getProgram(), name);
 
@@ -1200,13 +1204,12 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 			// we accumulate this.$enclosing.$enclosing... until we find the
 			// right type or we raise an exception
 			expression = new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this", type);
-			while (cursor != null) {
-				JavaClassType encl = JavaClassType.lookup(cursor.getLisaClassUnit().getName());
+			while (cursor != null && cursor.getEnclosingClass() != null) {
+				JavaClassType encl = cursor.getEnclosingClass();
 				expression = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(), expression, "$enclosing");
 				if (encl.equals(enclosing))
 					return false;
-				else
-					cursor = cursor.getParentScope();
+				cursor = cursor.getParentScope();
 			}
 
 			throw new ParsingException("this-expression",

@@ -84,8 +84,12 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 		if (!processed.add(name))
 			return;
 		ClassASTVisitor classVisitor = null;
+		boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
+		JavaClassType enclosingType = null;
+		if (!isStatic && enclosingClassScope != null && enclosingClassScope.getLisaClassUnit() instanceof ClassUnit)
+			enclosingType = JavaClassType.lookup(enclosingClassScope.getLisaClassUnit().getName());
 		ClassScope scope = null;
-			scope = new ClassScope(getScope(), enclosingClassScope, null, cUnit);
+			scope = new ClassScope(getScope(), enclosingClassScope, enclosingType, cUnit);
 		if ((typeDecl.isInterface())) {
 			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
 					getParserContext(),
@@ -96,7 +100,6 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 					name);
 			typeDecl.accept(interfaceVisitor);
 		} else {
-			boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
 			classVisitor = new ClassASTVisitor(
 					getEnvironment(), scope);
 
@@ -120,7 +123,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			ClassScope enclosingClassScope,
 			String outer,
 			Set<String> processed) {
-		String name = getScope().getPackage() + (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
+		String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".") + (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(name);
 		if (!processed.add(name))
 			return;
@@ -128,7 +131,10 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 		if (enclosingClassScope == null) {
 			scope = getScope().toClassScope(null, cUnit);
 		} else {
-			scope = new ClassScope(getScope(), enclosingClassScope, null, cUnit);
+			JavaClassType enclosingEnumType = null;
+			if (enclosingClassScope.getLisaClassUnit() instanceof ClassUnit)
+				enclosingEnumType = JavaClassType.lookup(enclosingClassScope.getLisaClassUnit().getName());
+			scope = new ClassScope(getScope(), enclosingClassScope, enclosingEnumType, cUnit);
 		}
 		ClassASTVisitor classVisitor = new ClassASTVisitor(getEnvironment(), scope);
 		enumDecl.accept(classVisitor);

@@ -302,6 +302,9 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 			getScope().getControlFlowTracker().endControlFlowOf(block, expression, noop, expression, null);
 		} else {
 			LOG.warn("The last statement of do-while's body stops the execution, then the guard is not reachable.");
+			getScope().getControlFlowTracker().getModifiers()
+					.removeIf(pair -> pair.getRight() == null
+							&& (pair.getLeft().continuesControlFlow() || pair.getLeft().breaksControlFlow()));
 		}
 
 		this.block = new ParsedBlock(entry, block, isConditionDeadcode ? loopBody.getEnd() : noop);
@@ -655,6 +658,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 	@Override
 	public boolean visit(
 			SwitchCase node) {
+		Expression switchItem = getScope().getSwitchItem();
 		Expression expr;
 		if (switchItem.getStaticType().isReferenceType()
 				&& switchItem.getStaticType().asReferenceType().getInnerType().isUnitType()
@@ -699,8 +703,6 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 		return false;
 	}
 
-	private Expression switchItem = null;
-
 	@Override
 	public boolean visit(
 			SwitchStatement node) {
@@ -709,7 +711,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 
 		ExpressionVisitor itemVisitor = new ExpressionVisitor(getEnvironment(), getScope());
 		node.getExpression().accept(itemVisitor);
-		switchItem = itemVisitor.getExpression();
+		getScope().setSwitchItem(itemVisitor.getExpression());
 		Statement noop = new NoOp(getScope().getCFG(),
 				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
 
@@ -882,6 +884,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 		if (usedNoop)
 			getScope().getControlFlowTracker().endControlFlowOf(adj, !cases.isEmpty() ? cases.getFirst().getCondition()
 					: defaultCase != null ? defaultCase.getEntry() : emptyBlock, noop, noop, null);
+		getScope().setSwitchItem(null);
 		this.block = new ParsedBlock(first, adj, usedNoop ? noop : null);
 		return false;
 	}

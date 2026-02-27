@@ -331,7 +331,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		cfg.addNode(call);
 		Statement last = call;
 
-		if (getScope().getParentScope() != null) {
+		if (getScope().getEnclosingClass() != null) {
 			JavaAssignment asg = new JavaAssignment(
 					cfg,
 					locationManager.nextLocation(),
