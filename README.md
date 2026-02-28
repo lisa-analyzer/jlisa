@@ -14,8 +14,6 @@ JLiSA is a joint effort between the **[Software and Systems Verification (SSV) R
 
 In its **first participation** at [SV-COMP 2026](https://sv-comp.sosy-lab.org/2026/) (15th International Competition on Software Verification), JLiSA achieved **3rd place in the Java track**, earning the bronze medal. SV-COMP is the world's leading competition in automated software verification; results are presented at [TACAS 2026](https://etaps.org/2026/tacas), held in Turin, Italy, in April 2026.
 
-JLiSA is the **only 100% Italian technology** that participated in SV-COMP 2026.
-
 > Arceri et al., *"JLiSA: The Java Frontend of the Library for Static Analysis"* (Competition Contribution), SV-COMP 2026.
 > Artifact: [doi.org/10.5281/zenodo.17609338](https://doi.org/10.5281/zenodo.17609338)
 
