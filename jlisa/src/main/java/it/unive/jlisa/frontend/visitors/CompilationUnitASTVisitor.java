@@ -1,61 +1,28 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
-import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
-import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
-import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.AbstractClassUnit;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.ProgramValidationException;
-import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.Unit;
-import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import it.unive.lisa.program.cfg.Parameter;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.UnitType;
-import it.unive.lisa.type.VoidType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 
 	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(CompilationUnitASTVisitor.class);
 
-
 	public CompilationUnitASTVisitor(
 			ParsingEnvironment environment,
 			UnitScope scope) {
 		super(environment, scope);
 	}
-
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -68,7 +35,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 				visitUnitsInDeclaration(node, (TypeDeclaration) type, null, null, null, processed);
 			else if (type instanceof EnumDeclaration)
 				visitEnumUnit(node, (EnumDeclaration) type, null, null, processed);
-			return false;
+		return false;
 	}
 
 	private void visitUnitsInDeclaration(
@@ -78,9 +45,11 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			ClassASTVisitor enclosing,
 			ClassScope enclosingClassScope,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".") + (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
+				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
 
-		it.unive.lisa.program.CompilationUnit cUnit = (it.unive.lisa.program.CompilationUnit) getProgram().getUnit(name);
+		it.unive.lisa.program.CompilationUnit cUnit = (it.unive.lisa.program.CompilationUnit) getProgram()
+				.getUnit(name);
 		if (!processed.add(name))
 			return;
 		ClassASTVisitor classVisitor = null;
@@ -89,7 +58,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 		if (!isStatic && enclosingClassScope != null && enclosingClassScope.getLisaClassUnit() instanceof ClassUnit)
 			enclosingType = JavaClassType.lookup(enclosingClassScope.getLisaClassUnit().getName());
 		ClassScope scope = null;
-			scope = new ClassScope(getScope(), enclosingClassScope, enclosingType, cUnit);
+		scope = new ClassScope(getScope(), enclosingClassScope, enclosingType, cUnit);
 		if ((typeDecl.isInterface())) {
 			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
 					getParserContext(),
@@ -112,7 +81,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			visitUnitsInDeclaration(unit, nested, newOuter, classVisitor, scope, processed);
 		for (Object decl : typeDecl.bodyDeclarations())
 			if (decl instanceof EnumDeclaration)
-				visitEnumUnit(unit, (EnumDeclaration) decl,enclosingClassScope, newOuter, processed);
+				visitEnumUnit(unit, (EnumDeclaration) decl, enclosingClassScope, newOuter, processed);
 			else if (decl instanceof TypeDeclaration)
 				visitUnitsInDeclaration(unit, (TypeDeclaration) decl, newOuter, classVisitor, scope, processed);
 	}
@@ -123,7 +92,8 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			ClassScope enclosingClassScope,
 			String outer,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".") + (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
+		String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".")
+				+ (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(name);
 		if (!processed.add(name))
 			return;

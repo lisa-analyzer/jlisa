@@ -3,7 +3,6 @@ package it.unive.jlisa.frontend.visitors;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
@@ -52,7 +51,6 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.*;
-import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
@@ -120,13 +118,11 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 	private Expression expression;
 
-
 	public ExpressionVisitor(
 			ParsingEnvironment environment,
 			MethodScope scope) {
 		super(environment, scope);
 	}
-	
 
 	@Override
 	public boolean visit(
@@ -137,7 +133,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		node.getIndex().accept(rightVisitor);
 		Expression left = leftVisitor.getExpression();
 		Expression right = rightVisitor.getExpression();
-		expression = new JavaArrayAccess(getScope().getCFG(), getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(),
+		expression = new JavaArrayAccess(getScope().getCFG(),
+				getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(),
 				left, right);
 		return false;
 	}
@@ -189,7 +186,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		if (node.dimensions().size() == 1) {
 			((ASTNode) node.dimensions().get(0)).accept(lengthVisitor);
 			Expression length = lengthVisitor.getExpression();
-			expression = new JavaNewArray(getScope().getCFG(), getSourceCodeLocation(node), length, new JavaReferenceType(type));
+			expression = new JavaNewArray(getScope().getCFG(), getSourceCodeLocation(node), length,
+					new JavaReferenceType(type));
 		}
 		// bi-dimension arrays
 		else if (node.dimensions().size() == 2) {
@@ -638,7 +636,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		Expression left = leftVisitor.getExpression();
 		Type right = rightVisitor.getType();
 
-		expression = new InstanceOf(getScope().getCFG(), getSourceCodeLocationManager(node, true).nextColumn(), left, right);
+		expression = new InstanceOf(getScope().getCFG(), getSourceCodeLocationManager(node, true).nextColumn(), left,
+				right);
 
 		return false;
 	}
@@ -834,7 +833,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		Unit candidate = null;
 		while (!names.isEmpty()) {
 			Triple<String, SimpleName, List<SimpleName>> tentative = names.pop();
-			candidate = TypeASTVisitor.getUnit(tentative.getLeft(), getProgram(), getScope().getParentScope().unitScope());
+			candidate = TypeASTVisitor.getUnit(tentative.getLeft(), getProgram(),
+					getScope().getParentScope().unitScope());
 			if (candidate == null)
 				continue;
 
@@ -941,7 +941,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 					getSourceCodeLocation(node),
 					identifier,
 					getParserContext().getVariableStaticType(getScope().getCFG(), new VariableInfo(identifier,
-							getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(identifier) : null)));
+							getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(identifier)
+									: null)));
 			return false;
 		}
 
@@ -973,7 +974,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 
 		// it might also be an instance global from an enclosing instance
 		ClassScope cursor = getScope().getParentScope().getParentScope();
-		//ClassASTVisitor cursor = container instanceof ClassASTVisitor ? (ClassASTVisitor) container : null;
+		// ClassASTVisitor cursor = container instanceof ClassASTVisitor ?
+		// (ClassASTVisitor) container : null;
 		JavaReferenceType type = null;
 		if (getScope().getCFG().getUnit() instanceof ClassUnit)
 			type = JavaClassType.lookup(getScope().getCFG().getUnit().getName()).getReference();
@@ -984,8 +986,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		expression = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", type);
 		while (cursor != null) {
 			CompilationUnit encl = cursor.getLisaClassUnit();
-			//JavaClassType encl = cursor.enclosingType;
-			expression = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(), expression, "$enclosing");
+			// JavaClassType encl = cursor.enclosingType;
+			expression = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(), expression,
+					"$enclosing");
 			global = getParserContext().getGlobal(encl, identifier, true);
 			if (global != null) {
 				if (global.isInstance()) {
@@ -1018,14 +1021,16 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		String token = node.getToken();
 		if ((token.endsWith("f") || token.endsWith("F")) && !token.startsWith("0x")) {
 			// FlOAT
-			expression = new FloatLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), Float.parseFloat(token));
+			expression = new FloatLiteral(this.getScope().getCFG(), getSourceCodeLocation(node),
+					Float.parseFloat(token));
 			return false;
 		}
 		if (token.contains(".")
 				|| ((token.contains("e") || token.contains("E") || token.endsWith("d") || token.endsWith("D"))
 						&& !token.startsWith("0x"))) {
 			// DOUBLE
-			expression = new DoubleLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), Double.parseDouble(token));
+			expression = new DoubleLiteral(this.getScope().getCFG(), getSourceCodeLocation(node),
+					Double.parseDouble(token));
 			return false;
 		}
 		if (token.endsWith("l") || token.endsWith("L")) {
@@ -1079,11 +1084,13 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 			return false;
 		}
 		if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
-			expression = new PostfixAddition(getScope().getCFG(), getSourceCodeLocationManager(node.getOperand(), true).nextColumn(),
+			expression = new PostfixAddition(getScope().getCFG(),
+					getSourceCodeLocationManager(node.getOperand(), true).nextColumn(),
 					expr);
 		}
 		if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
-			expression = new PostfixSubtraction(getScope().getCFG(), getSourceCodeLocationManager(node.getOperand(), true).nextColumn(),
+			expression = new PostfixSubtraction(getScope().getCFG(),
+					getSourceCodeLocationManager(node.getOperand(), true).nextColumn(),
 					expr);
 		}
 		return false;
@@ -1146,7 +1153,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 
 		// craft the call to superclass
 		List<Expression> parameters = new ArrayList<>();
-		parameters.add(new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this", new JavaReferenceType(superType)));
+		parameters.add(new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this",
+				new JavaReferenceType(superType)));
 
 		for (Object args : node.arguments()) {
 			ASTNode e = (ASTNode) args;
@@ -1156,7 +1164,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 			parameters.add(expr);
 		}
 
-		expression = new JavaUnresolvedSuperCall(getScope().getCFG(), getSourceCodeLocationManager(node.getName()).nextColumn(),
+		expression = new JavaUnresolvedSuperCall(getScope().getCFG(),
+				getSourceCodeLocationManager(node.getName()).nextColumn(),
 				Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(),
 				parameters.toArray(new Expression[0]));
 		return false;
@@ -1206,7 +1215,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 			expression = new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this", type);
 			while (cursor != null && cursor.getEnclosingClass() != null) {
 				JavaClassType encl = cursor.getEnclosingClass();
-				expression = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(), expression, "$enclosing");
+				expression = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(), expression,
+						"$enclosing");
 				if (encl.equals(enclosing))
 					return false;
 				cursor = cursor.getParentScope();
@@ -1268,7 +1278,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 		if (getScope().getTracker() != null)
 			getScope().getTracker().addVariable(variableName, ref, ref.getAnnotations());
 		getParserContext().addVariableType(getScope().getCFG(),
-				new VariableInfo(variableName, getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(variableName) : null),
+				new VariableInfo(variableName,
+						getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(variableName)
+								: null),
 				varType);
 
 		expression = ref;
@@ -1299,7 +1311,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> {
 			if (getScope().getTracker() != null)
 				getScope().getTracker().addVariable(variableName, ref, ref.getAnnotations());
 			getParserContext().addVariableType(getScope().getCFG(),
-					new VariableInfo(variableName, getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(variableName) : null),
+					new VariableInfo(variableName,
+							getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(variableName)
+									: null),
 					varType);
 
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();

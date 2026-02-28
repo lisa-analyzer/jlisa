@@ -2,18 +2,18 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.visitors.scope.Scope;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 
 public abstract class ScopedVisitor<S extends Scope> extends JavaASTVisitor {
-    S scope;
+	S scope;
 
-    protected ScopedVisitor(ParsingEnvironment env,
-                            S scope) {
-        super(env);
-        this.scope = scope;
-    }
+	protected ScopedVisitor(
+			ParsingEnvironment env,
+			S scope) {
+		super(env);
+		this.scope = scope;
+	}
 
-    public S getScope() {
-        return scope;
-    }
+	public S getScope() {
+		return scope;
+	}
 }

@@ -1,10 +1,8 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.EnumUnit;
-import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SourceCodeLocationManager;
@@ -63,7 +61,6 @@ import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import it.unive.lisa.util.frontend.ControlFlowTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,7 +76,6 @@ import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CatchClause;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.DoStatement;
@@ -220,9 +216,10 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "this");
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
-		if (getScope().getParentScope() != null) {
+		if (getScope().getParentScope().getEnclosingClass() != null) {
 			Expression enclExpression = new VariableRef(getScope().getCFG(),
-					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "$enclosing");
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
+					"$enclosing");
 			parameters.add(enclExpression);
 		}
 
@@ -235,7 +232,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 				parameters.add(expr);
 			}
 		}
-		JavaUnresolvedCall call = new JavaUnresolvedCall(getScope().getCFG(), getSourceCodeLocationManager(node, true).nextColumn(),
+		JavaUnresolvedCall call = new JavaUnresolvedCall(getScope().getCFG(),
+				getSourceCodeLocationManager(node, true).nextColumn(),
 				Call.CallType.INSTANCE, null, getScope().getCFG().getDescriptor().getName(),
 				parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
@@ -646,7 +644,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 			}
 		}
 
-		JavaUnresolvedCall call = new JavaUnresolvedCall(getScope().getCFG(), getSourceCodeLocationManager(node, true).nextColumn(),
+		JavaUnresolvedCall call = new JavaUnresolvedCall(getScope().getCFG(),
+				getSourceCodeLocationManager(node, true).nextColumn(),
 				Call.CallType.INSTANCE, superclassName, simpleName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
@@ -1009,7 +1008,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 		node.getExpression().accept(synchTargetVisitor);
 		Expression syncTarget = synchTargetVisitor.getExpression();
 
-		SyntheticCodeLocationManager syntheticLocMan = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		SyntheticCodeLocationManager syntheticLocMan = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
 		Statement syntheticCondition = new NotEqual(getScope().getCFG(), syntheticLocMan.nextLocation(), syncTarget,
 				new JavaNullLiteral(getScope().getCFG(), syntheticLocMan.nextLocation()));
 
@@ -1050,8 +1050,9 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 			lastBlockStatement = noop;
 		}
 
-		getScope().getCFG().getDescriptor().addControlFlowStructure(new SynchronizedBlock(adj, syncTarget, syntheticCondition,
-				synchronizedBody.getBody().getNodes(), follower));
+		getScope().getCFG().getDescriptor()
+				.addControlFlowStructure(new SynchronizedBlock(adj, syncTarget, syntheticCondition,
+						synchronizedBody.getBody().getNodes(), follower));
 		this.block = new ParsedBlock(syntheticCondition, adj, lastBlockStatement);
 
 		return false;
@@ -1094,7 +1095,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 				initializer = type.defaultValue(getScope().getCFG(),
 						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
 				assignment = new JavaAssignment(getScope().getCFG(),
-						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), ref, initializer);
+						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), ref,
+						initializer);
 			} else {
 				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);
 				org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
@@ -1114,7 +1116,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 						&& !type.equals(initializer.getStaticType())) {
 					// implicit cast
 					JavaCastExpression cast = new JavaCastExpression(getScope().getCFG(),
-							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), initializer,
+							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
+							initializer,
 							type);
 					assignment = new JavaAssignment(getScope().getCFG(), loc.getCurrentLocation(), ref, cast);
 				} else
@@ -1308,10 +1311,13 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> {
 
 		// exception variable
 		SingleVariableDeclaration exc = node.getException();
-		VariableRef v = new VariableRef(getScope().getCFG(), getSourceCodeLocation(exc), exc.getName().getIdentifier(), type);
+		VariableRef v = new VariableRef(getScope().getCFG(), getSourceCodeLocation(exc), exc.getName().getIdentifier(),
+				type);
 		getScope().getTracker().addVariable(v.toString(), v, new Annotations());
 		getParserContext().addVariableType(getScope().getCFG(),
-				new VariableInfo(v.toString(), getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(v.toString()) : null),
+				new VariableInfo(v.toString(),
+						getScope().getTracker() != null ? getScope().getTracker().getLocalVariable(v.toString())
+								: null),
 				type);
 
 		// exception body

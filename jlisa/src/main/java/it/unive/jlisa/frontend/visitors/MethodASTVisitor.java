@@ -25,13 +25,12 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.ControlFlowTracker;
+import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-
-import it.unive.lisa.util.frontend.ControlFlowTracker;
-import it.unive.lisa.util.frontend.ParsedBlock;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SimpleType;
@@ -39,7 +38,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG>{
+class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
 	private CFG cfg;
 
 	public MethodASTVisitor(
@@ -64,7 +63,8 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		CodeMember codeMember;
 		if (!Modifier.isStatic(modifiers)) {
-			codeMember = getScope().getLisaClassUnit().getInstanceCodeMember(codeMemberDescriptor.getSignature(), false);
+			codeMember = getScope().getLisaClassUnit().getInstanceCodeMember(codeMemberDescriptor.getSignature(),
+					false);
 		} else {
 			codeMember = getScope().getLisaClassUnit().getCodeMember(codeMemberDescriptor.getSignature());
 		}
@@ -105,11 +105,11 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		if (node.getBody() == null) // e.g. abstract method declarations
 			return false;
-		
+
 		ParsedBlock block = getParserContext().evaluate(
 				node.getBody(),
-				() -> new BlockStatementASTVisitor(getEnvironment(), getScope().toMethodScope(cfg, tracker, new ControlFlowTracker()))
-		);
+				() -> new BlockStatementASTVisitor(getEnvironment(),
+						getScope().toMethodScope(cfg, tracker, new ControlFlowTracker())));
 
 		cfg.getNodeList().mergeWith(block.getBody());
 
@@ -122,14 +122,15 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
 							new VariableRef(
 									cfg,
-									getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
+									getParserContext().getCurrentSyntheticCodeLocationManager(getSource())
+											.nextLocation(),
 									"this",
 									new JavaReferenceType(type)),
-							"$getScope().enclosingClass()"),
+							"$enclosing"),
 					new VariableRef(
 							cfg,
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
-							"$getScope().enclosingClass()",
+							"$enclosing",
 							getScope().getEnclosingClass().getReference()));
 			cfg.addNode(asg);
 			cfg.getEntrypoints().add(asg);
@@ -145,7 +146,8 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
 		if (cfg.getAllExitpoints().isEmpty()) {
-			Ret ret = new Ret(cfg, getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
+			Ret ret = new Ret(cfg,
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
 			if (cfg.getNodesCount() == 0) {
 				// empty method, so the ret is also the entrypoint
 				list.addNode(ret);
@@ -219,7 +221,8 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope());
+			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(),
+					getScope().getUnitScope());
 			sd.accept(vd);
 			parameters.add(vd.getResult());
 		}
@@ -252,13 +255,15 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 				new Annotations()));
 
 		if (getScope().getEnclosingClass() != null)
-			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$getScope().enclosingClass()",
-					getScope().getEnclosingClass().getReference(),
-					null, new Annotations()));
+			parameters
+					.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+							getScope().getEnclosingClass().getReference(),
+							null, new Annotations()));
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope());
+			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(),
+					getScope().getUnitScope());
 			sd.accept(vd);
 			parameters.add(vd.getResult());
 		}
@@ -303,7 +308,6 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		return false;
 	}
-
 
 	@Override
 	public CFG getResult() {

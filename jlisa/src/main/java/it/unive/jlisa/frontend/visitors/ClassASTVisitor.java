@@ -2,12 +2,10 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
-import it.unive.jlisa.frontend.visitors.contexts.Scope;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -18,7 +16,6 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -36,16 +33,12 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
+import it.unive.lisa.util.frontend.ControlFlowTracker;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import it.unive.lisa.util.frontend.ControlFlowTracker;
-import it.unive.lisa.util.frontend.ParsedBlock;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -57,8 +50,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 	public ClassASTVisitor(
 			ParsingEnvironment environment,
-			ClassScope scope
-			) {
+			ClassScope scope) {
 		super(environment, scope);
 	}
 
@@ -97,8 +89,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		for (MethodDeclaration md : node.getMethods()) {
 			CFG cfg = getParserContext().evaluate(
 					md,
-					() -> new MethodASTVisitor(getEnvironment(), getScope())
-			);
+					() -> new MethodASTVisitor(getEnvironment(), getScope()));
 
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -116,7 +107,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 	private void createEnumInitializer(
 			EnumUnit enumUnit) {
 
-		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
 		String simpleName = enumUnit.getName().contains(".")
 				? enumUnit.getName().substring(enumUnit.getName().lastIndexOf(".") + 1)
 				: enumUnit.getName();
@@ -161,7 +153,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 	private void createEnumConstructor(
 			EnumUnit enumUnit) {
 		Type type = getProgram().getTypes().getType(enumUnit.getName());
-		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
@@ -210,7 +203,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			return;
 
 		// create the CFG corresponding to the class initializer
-		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
 		String simpleName = unit.getName().contains(".")
 				? unit.getName().substring(unit.getName().lastIndexOf(".") + 1)
 				: unit.getName();
@@ -263,7 +257,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 				it.unive.lisa.program.cfg.statement.Expression init;
 				if (fragment.getInitializer() != null) {
-					MethodScope scope = new MethodScope(getScope(), cfg, new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
+					MethodScope scope = new MethodScope(getScope(), cfg,
+							new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
 					ExpressionVisitor exprVisitor = new ExpressionVisitor(
 							getEnvironment(), scope);
 					fragment.getInitializer().accept(exprVisitor);
@@ -299,12 +294,14 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		Type type = getProgram().getTypes().getType(classUnit.getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
 		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
 		if (getScope().getEnclosingClass() != null)
-			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing", getScope().getEnclosingClass().getReference(),
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing",
+					getScope().getEnclosingClass().getReference(),
 					null, new Annotations()));
 
 		Annotations annotations = new Annotations();
@@ -393,7 +390,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		if (implicitlyCallSuper) {
 			// add a super() call to this constructor, as a first statement,
 			// before the field initializator.
-			SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+			SyntheticCodeLocationManager locationManager = getParserContext()
+					.getCurrentSyntheticCodeLocationManager(getSource());
 			JavaUnresolvedCall call = new JavaUnresolvedCall(cfg, locationManager.nextLocation(),
 					Call.CallType.INSTANCE, ancestor.getName(), ancestorSimpleName,
 					new VariableRef(cfg, locationManager.nextLocation(), "this"));
@@ -409,7 +407,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			// static fields are skipped in constructor
 			if (Modifier.isStatic(field.getModifiers()))
 				continue;
-			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(getEnvironment(), getScope().toMethodScope(cfg, null, null));
+			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(getEnvironment(),
+					getScope().toMethodScope(cfg, null, null));
 			field.accept(initVisitor);
 
 			if (initVisitor.getBlock() != null) {

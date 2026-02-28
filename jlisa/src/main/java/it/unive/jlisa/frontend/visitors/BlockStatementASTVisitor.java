@@ -11,10 +11,12 @@ import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ParsedBlock;
 import org.eclipse.jdt.core.dom.Block;
 
-class BlockStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock>{
+class BlockStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
 	private ParsedBlock block;
 
-	public BlockStatementASTVisitor(ParsingEnvironment environment, MethodScope scope) {
+	public BlockStatementASTVisitor(
+			ParsingEnvironment environment,
+			MethodScope scope) {
 		super(environment, scope);
 	}
 

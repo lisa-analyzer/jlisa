@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -14,7 +13,6 @@ import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.global.AccessInstanceGlobal;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -24,8 +22,9 @@ public class FieldInitializationVisitor extends ScopedVisitor<MethodScope> {
 	private it.unive.lisa.program.cfg.statement.Statement last;
 	private NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());
 
-
-	public FieldInitializationVisitor(ParsingEnvironment environment, MethodScope scope) {
+	public FieldInitializationVisitor(
+			ParsingEnvironment environment,
+			MethodScope scope) {
 		super(environment, scope);
 	}
 
@@ -36,7 +35,8 @@ public class FieldInitializationVisitor extends ScopedVisitor<MethodScope> {
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
 			type = new JavaReferenceType(type);
-		SyntheticCodeLocationManager locationManager = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
 
 		VariableRef thisExpr = new VariableRef(getScope().getCFG(), locationManager.nextLocation(), "this");
 
@@ -58,7 +58,8 @@ public class FieldInitializationVisitor extends ScopedVisitor<MethodScope> {
 			}
 
 			JavaAssignment assignment = new JavaAssignment(getScope().getCFG(), locationManager.nextLocation(),
-					new AccessInstanceGlobal(getScope().getCFG(), locationManager.nextLocation(), thisExpr, identifier), initializer);
+					new AccessInstanceGlobal(getScope().getCFG(), locationManager.nextLocation(), thisExpr, identifier),
+					initializer);
 			block.addNode(assignment);
 			if (first == null) {
 				first = assignment;

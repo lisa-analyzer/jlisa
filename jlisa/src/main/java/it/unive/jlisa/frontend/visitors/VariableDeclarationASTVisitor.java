@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -9,7 +8,6 @@ import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> implements ResultHolder<Parameter> {
@@ -45,7 +43,6 @@ public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> impl
 		this.parameter = new Parameter(getSourceCodeLocation(node), identifier, type, null, annotations);
 		return false;
 	}
-
 
 	@Override
 	public Parameter getResult() {

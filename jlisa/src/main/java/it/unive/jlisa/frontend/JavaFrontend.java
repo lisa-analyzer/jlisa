@@ -183,7 +183,6 @@ public class JavaFrontend {
 		setGlobals(expandedPaths, scopes);
 		initCodeMembers(expandedPaths, scopes);
 
-
 		for (int i = 0; i < expandedPaths.size(); i++) {
 			Path path = Paths.get(expandedPaths.get(i));
 			String source = Files.readString(path);
@@ -196,8 +195,7 @@ public class JavaFrontend {
 
 	public void populateUnits(
 			List<String> filePaths,
-			UnitScope[] scopes
-			)
+			UnitScope[] scopes)
 			throws IOException {
 		for (int i = 0; i < filePaths.size(); i++) {
 			Path path = Paths.get(filePaths.get(i));
@@ -253,7 +251,6 @@ public class JavaFrontend {
 					scopes[i]));
 		}
 	}
-
 
 	private Program parse(
 			String source,

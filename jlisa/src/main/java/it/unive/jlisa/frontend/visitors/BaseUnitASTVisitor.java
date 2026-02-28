@@ -1,11 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
-import java.util.Map;
-
 import it.unive.jlisa.frontend.ParsingEnvironment;
-import it.unive.lisa.analysis.nonrelational.Environment;
-import org.eclipse.jdt.core.dom.CompilationUnit;
+import java.util.Map;
 
 public class BaseUnitASTVisitor extends JavaASTVisitor {
 

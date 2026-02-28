@@ -24,8 +24,6 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
-import java.util.Collection;
-import java.util.Map;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.IntersectionType;
 import org.eclipse.jdt.core.dom.NameQualifiedType;
@@ -204,7 +202,6 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHo
 		return null;
 	}
 
-
 	private static Unit resolveQualified(
 			String name,
 			Program program,
@@ -248,7 +245,6 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHo
 
 		return program.getUnit(current);
 	}
-
 
 	public boolean visit(
 			QualifiedName node) {

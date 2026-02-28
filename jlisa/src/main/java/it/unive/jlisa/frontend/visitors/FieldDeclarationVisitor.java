@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
@@ -10,7 +9,6 @@ import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.Type;
 import java.util.Set;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -49,7 +47,8 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 
 			type = typeVisitor.liftToArray(type, fragment);
 			boolean isStatic = Modifier.isStatic(modifiers) || (getScope().getLisaClassUnit() instanceof InterfaceUnit);
-			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier, !isStatic, type,
+			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier,
+					!isStatic, type,
 					new Annotations());
 			if (isStatic) {
 				getScope().getLisaClassUnit().addGlobal(global);
