@@ -1,6 +1,9 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.structure;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -21,9 +24,9 @@ public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> impl
 
 	public boolean visit(
 			SingleVariableDeclaration node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(getEnvironment(), getScope());
-		node.getType().accept(visitor);
-		Type type = visitor.getType();
+		Type type = getParserContext().evaluate(
+				node.getType(),
+				() -> new TypeASTVisitor(getEnvironment(), getScope()));
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 		if (node.getExtraDimensions() != 0) {
 			if (type instanceof ArrayType) {

@@ -1,6 +1,9 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.pipeline;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.FQNUtils;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
@@ -39,8 +42,7 @@ public class SetRelationshipsASTVisitor extends ScopedVisitor<UnitScope> {
 			TypeDeclaration typeDecl,
 			Set<String> processed) {
 		it.unive.lisa.program.CompilationUnit lisaCU = null;
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return;
 		if (typeDecl.isInterface())
@@ -71,8 +73,7 @@ public class SetRelationshipsASTVisitor extends ScopedVisitor<UnitScope> {
 			String outer,
 			EnumDeclaration typeDecl,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return;
 		it.unive.lisa.program.CompilationUnit lisaCU = JavaClassType.lookup(name).getUnit();

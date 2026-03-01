@@ -1,4 +1,4 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.structure;
 
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
@@ -6,6 +6,9 @@ import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;

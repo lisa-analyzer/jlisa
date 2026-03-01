@@ -97,7 +97,6 @@ public class Main {
 				.desc("Disable HTML output (enabled by default)")
 				.required(false)
 				.build();
-
 		Option dumpExcs = Option.builder("e")
 				.longOpt("dump-exceptions")
 				.desc("When in statistics mode, log exceptions to standard output")

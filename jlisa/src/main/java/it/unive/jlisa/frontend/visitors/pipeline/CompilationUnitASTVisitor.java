@@ -1,8 +1,12 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.pipeline;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.FQNUtils;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.jlisa.frontend.visitors.structure.ClassASTVisitor;
+import it.unive.jlisa.frontend.visitors.structure.InterfaceASTVisitor;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.ClassUnit;
 import java.util.List;
@@ -45,8 +49,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			ClassASTVisitor enclosing,
 			ClassScope enclosingClassScope,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 
 		it.unive.lisa.program.CompilationUnit cUnit = (it.unive.lisa.program.CompilationUnit) getProgram()
 				.getUnit(name);
@@ -92,8 +95,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			ClassScope enclosingClassScope,
 			String outer,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + enumDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, enumDecl.getName().toString());
 		ClassUnit cUnit = (ClassUnit) getProgram().getUnit(name);
 		if (!processed.add(name))
 			return;

@@ -2,7 +2,6 @@ package it.unive.jlisa.frontend.visitors.scope;
 
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
 
 public final class MethodScope extends Scope implements EnclosableScope<ClassScope> {
@@ -10,7 +9,6 @@ public final class MethodScope extends Scope implements EnclosableScope<ClassSco
 	private CFG cfg;
 	private JavaLocalVariableTracker tracker;
 	private ControlFlowTracker flowTracker;
-	private Expression switchItem;
 
 	public MethodScope(
 			ClassScope parentScope,
@@ -38,14 +36,5 @@ public final class MethodScope extends Scope implements EnclosableScope<ClassSco
 
 	public ControlFlowTracker getControlFlowTracker() {
 		return this.flowTracker;
-	}
-
-	public Expression getSwitchItem() {
-		return this.switchItem;
-	}
-
-	public void setSwitchItem(
-			Expression switchItem) {
-		this.switchItem = switchItem;
 	}
 }

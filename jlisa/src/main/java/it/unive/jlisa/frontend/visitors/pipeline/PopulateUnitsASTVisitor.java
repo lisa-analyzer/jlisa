@@ -1,7 +1,9 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.pipeline;
 
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.FQNUtils;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
@@ -59,8 +61,7 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 					new ProgramValidationException("Illegal combination of modifiers: interface and final"));
 		}
 
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return false;
 		InterfaceUnit iUnit = new InterfaceUnit(loc, program, name, false);
@@ -84,8 +85,7 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 		ClassUnit cUnit;
 		String name;
 
-		name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".") + (outer == null ? "" : outer + ".")
-				+ typeDecl.getName().toString();
+		name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return false;
 		if (Modifier.isAbstract(modifiers))
@@ -132,8 +132,7 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 			EnumDeclaration typeDecl,
 			Set<String> processed) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return;
 		EnumUnit enUnit = new EnumUnit(loc, program, name, true);

@@ -1,10 +1,13 @@
-package it.unive.jlisa.frontend;
+package it.unive.jlisa.frontend.visitors.pipeline;
 
+import it.unive.jlisa.frontend.EnumUnit;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
-import it.unive.jlisa.frontend.visitors.TypeASTVisitor;
-import it.unive.jlisa.frontend.visitors.VariableDeclarationASTVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.jlisa.frontend.visitors.structure.VariableDeclarationASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
@@ -46,8 +49,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			TypeDeclaration typeDecl,
 			String outer,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return;
 
@@ -166,9 +168,9 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			}
 
 			if (returnType == null) {
-				TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope());
-				node.getReturnType2().accept(typeVisitor);
-				returnType = typeVisitor.getType();
+				returnType = getParserContext().evaluate(
+						node.getReturnType2(),
+						() -> new TypeASTVisitor(getEnvironment(), getScope()));
 			}
 		}
 
@@ -181,9 +183,9 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(), getScope());
-			sd.accept(vd);
-			parameters.add(vd.getResult());
+			parameters.add(getParserContext().evaluate(
+					sd,
+					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
 		// TODO annotations
@@ -222,9 +224,9 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(), getScope());
-			sd.accept(vd);
-			parameters.add(vd.getResult());
+			parameters.add(getParserContext().evaluate(
+					sd,
+					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
 		// TODO annotations

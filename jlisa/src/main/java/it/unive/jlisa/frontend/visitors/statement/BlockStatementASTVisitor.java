@@ -1,6 +1,8 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.statement;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
@@ -11,7 +13,7 @@ import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ParsedBlock;
 import org.eclipse.jdt.core.dom.Block;
 
-class BlockStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
+public class BlockStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
 	private ParsedBlock block;
 
 	public BlockStatementASTVisitor(
@@ -40,10 +42,9 @@ class BlockStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 			last = emptyBlock;
 		} else {
 			for (Object o : node.statements()) {
-				StatementASTVisitor stmtVisitor = new StatementASTVisitor(getEnvironment(), getScope());
-				((org.eclipse.jdt.core.dom.Statement) o).accept(stmtVisitor);
-
-				ParsedBlock stmtBlock = stmtVisitor.getBlock();
+				ParsedBlock stmtBlock = getParserContext().evaluate(
+						(org.eclipse.jdt.core.dom.Statement) o,
+						() -> new StatementASTVisitor(getEnvironment(), getScope()));
 
 				nodeList.mergeWith(stmtBlock.getBody());
 

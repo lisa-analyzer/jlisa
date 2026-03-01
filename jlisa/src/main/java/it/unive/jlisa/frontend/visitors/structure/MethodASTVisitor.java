@@ -1,4 +1,4 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.structure;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
@@ -6,7 +6,11 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
+import it.unive.jlisa.frontend.visitors.statement.BlockStatementASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
@@ -206,9 +210,9 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 			}
 
 			if (returnType == null) {
-				TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
-				node.getReturnType2().accept(typeVisitor);
-				returnType = typeVisitor.getType();
+				returnType = getParserContext().evaluate(
+						node.getReturnType2(),
+						() -> new TypeASTVisitor(getEnvironment(), getScope().getUnitScope()));
 			}
 		}
 
@@ -221,10 +225,9 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(),
-					getScope().getUnitScope());
-			sd.accept(vd);
-			parameters.add(vd.getResult());
+			parameters.add(getParserContext().evaluate(
+					sd,
+					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
 		}
 
 		// TODO annotations
@@ -262,10 +265,9 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(getEnvironment(),
-					getScope().getUnitScope());
-			sd.accept(vd);
-			parameters.add(vd.getResult());
+			parameters.add(getParserContext().evaluate(
+					sd,
+					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
 		}
 
 		// TODO annotations

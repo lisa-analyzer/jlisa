@@ -1,8 +1,11 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.pipeline;
 
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.FQNUtils;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.jlisa.frontend.visitors.structure.FieldDeclarationVisitor;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -50,8 +53,7 @@ public class SetGlobalsASTVisitor extends ScopedVisitor<UnitScope> {
 			TypeDeclaration typeDecl,
 			String outer,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : scope.getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + typeDecl.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return;
 		if ((typeDecl.isInterface())) {
@@ -109,8 +111,7 @@ public class SetGlobalsASTVisitor extends ScopedVisitor<UnitScope> {
 			EnumDeclaration node,
 			String outer,
 			Set<String> processed) {
-		String name = (getScope().getPackage().isEmpty() ? "" : getScope().getPackage() + ".")
-				+ (outer == null ? "" : outer + ".") + node.getName().toString();
+		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, node.getName().toString());
 		if (!processed.add(name))
 			return;
 		EnumUnit enUnit = (EnumUnit) getProgram().getUnit(name);

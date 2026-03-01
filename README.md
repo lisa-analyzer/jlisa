@@ -1,4 +1,4 @@
-# JLiSA — Java Frontend of the Library for Static Analysis
+# JLiSA — Java Frontend of LiSA (Library for Static Analysis)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![SV-COMP 2026](https://img.shields.io/badge/SV--COMP%202026-🥉%20Bronze%20Medal-CD7F32)](https://sv-comp.sosy-lab.org/2026/)
@@ -126,8 +126,9 @@ Results are written to the output directory as JSON files (one per CFG) and a `r
 ---
 
 ## Architecture
+Java source code is parsed via the [Eclipse Java Development Tools (JDT)](https://projects.eclipse.org/projects/eclipse.jdt) library.
 
-JLiSA's frontend translates Java source files to LiSA's IR in five sequential passes:
+JLiSA's frontend translates Java source files to LiSA's IR in five sequential passes, implemented using the JDT visitor pattern in the following classes:
 
 1. **`PopulateUnitsASTVisitor`** — registers all class and interface stubs in the program
 2. **`SetRelationshipsASTVisitor`** — resolves superclass and interface relationships
@@ -135,7 +136,7 @@ JLiSA's frontend translates Java source files to LiSA's IR in five sequential pa
 4. **`InitCodeMembersASTVisitor`** — declares method and constructor signatures
 5. **`CompilationUnitASTVisitor`** — performs full body translation, generating CFGs
 
-Java source code is parsed via the Eclipse Java Development Tools (JDT). Each pass uses a `ParsingEnvironment` (wrapping the JDT `CompilationUnit`, filename, and parser context) and a `UnitScope` for import and name resolution.
+
 
 ### Java Standard Library
 
@@ -146,7 +147,8 @@ Standard library classes are not parsed from source. Instead, hand-written stub 
 | Package | Purpose |
 |---|---|
 | `it.unive.jlisa.frontend` | Parsing pipeline, `JavaFrontend`, `ParserContext` |
-| `it.unive.jlisa.frontend.visitors` | AST visitor hierarchy |
+| `it.unive.jlisa.frontend.util` | Shared utilities (e.g. `FQNUtils` for building fully qualified names) |
+| `it.unive.jlisa.frontend.visitors` | AST visitor base classes and hierarchy |
 | `it.unive.jlisa.program.cfg.expression` | Java-specific expression nodes |
 | `it.unive.jlisa.program.cfg.statement` | Java-specific statement nodes |
 | `it.unive.jlisa.program.java.constructs` | Library method semantics |

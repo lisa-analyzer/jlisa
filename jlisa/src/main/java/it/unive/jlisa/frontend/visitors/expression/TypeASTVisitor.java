@@ -1,8 +1,9 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.expression;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -35,7 +36,9 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHolder<Type> {
+public class TypeASTVisitor extends ScopedVisitor<UnitScope>
+		implements
+		it.unive.jlisa.frontend.visitors.ResultHolder<Type> {
 	private Type type;
 
 	public TypeASTVisitor(
@@ -251,7 +254,7 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHo
 		// get the qualifier
 		String qName = node.getFullyQualifiedName();
 
-		Unit u = getUnit(qName, getProgram(), scope);
+		Unit u = getUnit(qName, getProgram(), getScope());
 		if (u == null)
 			throw new UnsupportedStatementException(
 					qName + " does not exist in the program, location: " + getSourceCodeLocation(node));
@@ -270,7 +273,7 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope> implements ResultHo
 	@Override
 	public boolean visit(
 			SimpleName node) {
-		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), scope);
+		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), getScope());
 
 		if (u == null)
 			throw new UnsupportedStatementException(
