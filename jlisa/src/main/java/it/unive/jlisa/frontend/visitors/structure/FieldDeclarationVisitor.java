@@ -1,32 +1,29 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.structure;
 
-import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
+import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.Type;
 import java.util.Set;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
-	it.unive.lisa.program.CompilationUnit unit;
+public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 
 	Set<String> visitedFieldNames;
 
 	public FieldDeclarationVisitor(
-			ParserContext parserContext,
-			String source,
-			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
-			CompilationUnit astCompilationUnit,
-			Set<String> visitedFieldNames,
-			BaseUnitASTVisitor container) {
-		super(parserContext, source, astCompilationUnit, container);
-		this.unit = lisacompilationUnit;
+			ParsingEnvironment environment,
+			ClassScope scope,
+			Set<String> visitedFieldNames) {
+		super(environment, scope);
 		this.visitedFieldNames = visitedFieldNames;
 	}
 
@@ -34,7 +31,7 @@ public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 	public boolean visit(
 			FieldDeclaration node) {
 		int modifiers = node.getModifiers();
-		TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
+		TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
@@ -51,13 +48,14 @@ public class FieldDeclarationVisitor extends BaseCodeElementASTVisitor {
 				visitedFieldNames.add(identifier);
 
 			type = typeVisitor.liftToArray(type, fragment);
-			boolean isStatic = Modifier.isStatic(modifiers) || (unit instanceof InterfaceUnit);
-			Global global = new Global(getSourceCodeLocation(fragment), unit, identifier, !isStatic, type,
+			boolean isStatic = Modifier.isStatic(modifiers) || (getScope().getLisaClassUnit() instanceof InterfaceUnit);
+			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier,
+					!isStatic, type,
 					new Annotations());
 			if (isStatic) {
-				unit.addGlobal(global);
+				getScope().getLisaClassUnit().addGlobal(global);
 			} else {
-				unit.addInstanceGlobal(global);
+				getScope().getLisaClassUnit().addInstanceGlobal(global);
 			}
 		}
 

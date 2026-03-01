@@ -1,11 +1,16 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.structure;
 
-import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.JavaCFGTweaker;
 import it.unive.jlisa.frontend.util.JavaLocalVariableTracker;
 import it.unive.jlisa.frontend.util.VariableInfo;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
+import it.unive.jlisa.frontend.visitors.scope.ClassScope;
+import it.unive.jlisa.frontend.visitors.statement.BlockStatementASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
@@ -24,11 +29,12 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.ControlFlowTracker;
+import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SimpleType;
@@ -36,24 +42,13 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-public class MethodASTVisitor extends BaseCodeElementASTVisitor {
-	it.unive.lisa.program.CompilationUnit lisacompilationUnit;
-	CFG cfg;
-	boolean createMethodSignature;
-	private final JavaClassType enclosing;
+class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
+	private CFG cfg;
 
 	public MethodASTVisitor(
-			ParserContext parserContext,
-			String source,
-			it.unive.lisa.program.CompilationUnit lisacompilationUnit,
-			CompilationUnit astCompilationUnit,
-			boolean createMethodSignature,
-			BaseUnitASTVisitor container,
-			JavaClassType enclosing) {
-		super(parserContext, source, astCompilationUnit, container);
-		this.lisacompilationUnit = lisacompilationUnit;
-		this.createMethodSignature = createMethodSignature;
-		this.enclosing = enclosing;
+			ParsingEnvironment environment,
+			ClassScope scope) {
+		super(environment, scope);
 	}
 
 	@Override
@@ -70,31 +65,12 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 
 		int modifiers = node.getModifiers();
 
-		if (createMethodSignature) {
-			CFG cfg = new CFG(codeMemberDescriptor);
-			boolean added;
-
-			if (!Modifier.isStatic(modifiers)) {
-				added = lisacompilationUnit.addInstanceCodeMember(cfg);
-			} else {
-				added = lisacompilationUnit.addCodeMember(cfg);
-			}
-			if (!added)
-				throw new ParsingException("duplicated_method_descriptor",
-						ParsingException.Type.MALFORMED_SOURCE,
-						"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisacompilationUnit.getName(),
-						getSourceCodeLocation(node));
-
-			if (isMain)
-				getProgram().addEntryPoint(cfg);
-			return false;
-		}
-
 		CodeMember codeMember;
 		if (!Modifier.isStatic(modifiers)) {
-			codeMember = lisacompilationUnit.getInstanceCodeMember(codeMemberDescriptor.getSignature(), false);
+			codeMember = getScope().getLisaClassUnit().getInstanceCodeMember(codeMemberDescriptor.getSignature(),
+					false);
 		} else {
-			codeMember = lisacompilationUnit.getCodeMember(codeMemberDescriptor.getSignature());
+			codeMember = getScope().getLisaClassUnit().getCodeMember(codeMemberDescriptor.getSignature());
 		}
 
 		if (codeMember == null) {
@@ -102,14 +78,14 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			throw new ParsingException("missing_method_descriptor",
 					ParsingException.Type.PARSING_ERROR,
 					"Missing code member descriptor for " + codeMemberDescriptor + " in unit "
-							+ lisacompilationUnit.getName(),
+							+ getScope().getLisaClassUnit().getName(),
 					getSourceCodeLocation(node));
 		}
 
 		cfg = (CFG) codeMember; // this explicit cast should always be possible.
 		for (Parameter p : codeMemberDescriptor.getFormals()) {
 			it.unive.lisa.type.Type paramType = p.getStaticType();
-			parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null),
+			getParserContext().addVariableType(cfg, new VariableInfo(p.getName(), null),
 					paramType.isInMemoryType() ? new JavaReferenceType(paramType) : paramType);
 		}
 
@@ -126,54 +102,56 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		}
 
 		for (Parameter p : formalParams) {
-			parserContext.addVariableType(cfg, new VariableInfo(p.getName(), null), p.getStaticType());
+			getParserContext().addVariableType(cfg, new VariableInfo(p.getName(), null), p.getStaticType());
 			// Not required add the parameter in the tracker because it is done
 			// in the tracker constructor given the descriptor.
 		}
 
-		BlockStatementASTVisitor blockStatementASTVisitor = new BlockStatementASTVisitor(parserContext, source,
-				compilationUnit, cfg, tracker, container);
-
 		if (node.getBody() == null) // e.g. abstract method declarations
 			return false;
 
-		node.getBody().accept(blockStatementASTVisitor);
+		ParsedBlock block = getParserContext().evaluate(
+				node.getBody(),
+				() -> new BlockStatementASTVisitor(getEnvironment(),
+						getScope().toMethodScope(cfg, tracker, new ControlFlowTracker())));
 
-		cfg.getNodeList().mergeWith(blockStatementASTVisitor.getBlock().getBody());
+		cfg.getNodeList().mergeWith(block.getBody());
 
-		if (node.isConstructor() && enclosing != null) {
-			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
+		if (node.isConstructor() && getScope().getEnclosingClass() != null) {
+			it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLisaClassUnit().getName());
 			JavaAssignment asg = new JavaAssignment(
 					cfg,
-					parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
 					new JavaAccessInstanceGlobal(cfg,
-							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
 							new VariableRef(
 									cfg,
-									parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+									getParserContext().getCurrentSyntheticCodeLocationManager(getSource())
+											.nextLocation(),
 									"this",
 									new JavaReferenceType(type)),
 							"$enclosing"),
 					new VariableRef(
 							cfg,
-							parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation(),
+							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
 							"$enclosing",
-							enclosing.getReference()));
+							getScope().getEnclosingClass().getReference()));
 			cfg.addNode(asg);
 			cfg.getEntrypoints().add(asg);
-			cfg.addEdge(new SequentialEdge(asg, blockStatementASTVisitor.getBlock().getBegin()));
+			cfg.addEdge(new SequentialEdge(asg, block.getBegin()));
 		}
 
-		if (blockStatementASTVisitor.getBlock().getBody().getNodes().isEmpty()) {
+		if (block.getBody().getNodes().isEmpty()) {
 			return false;
 		}
 
-		if (!node.isConstructor() || enclosing == null)
-			cfg.getEntrypoints().add(blockStatementASTVisitor.getFirst());
+		if (!node.isConstructor() || getScope().getEnclosingClass() == null)
+			cfg.getEntrypoints().add(block.getBegin());
 		NodeList<CFG, Statement, Edge> list = cfg.getNodeList();
 		Collection<Statement> entrypoints = cfg.getEntrypoints();
 		if (cfg.getAllExitpoints().isEmpty()) {
-			Ret ret = new Ret(cfg, parserContext.getCurrentSyntheticCodeLocationManager(source).nextLocation());
+			Ret ret = new Ret(cfg,
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
 			if (cfg.getNodesCount() == 0) {
 				// empty method, so the ret is also the entrypoint
 				list.addNode(ret);
@@ -197,13 +175,13 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		}
 
 		JavaCFGTweaker.splitProtectedYields(cfg, JavaSyntaxException::new,
-				parserContext.getCurrentSyntheticCodeLocationManager(source));
+				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()));
 		JavaCFGTweaker.addFinallyEdges(cfg, JavaSyntaxException::new);
 		JavaCFGTweaker.addReturns(cfg, JavaSyntaxException::new,
-				parserContext.getCurrentSyntheticCodeLocationManager(source));
+				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()));
 		cfg.simplify();
 
-		tracker.exitScope(blockStatementASTVisitor.getLast());
+		tracker.exitScope(block.getEnd());
 
 		return false;
 	}
@@ -223,7 +201,7 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			returnType = JavaClassType.getObjectType();
 		// the method is not generic, but the class it is
 		else {
-			List<?> topLevelTypes = compilationUnit.types();
+			List<?> topLevelTypes = getAstUnit().types();
 			for (Object tlType : topLevelTypes) {
 				if (tlType instanceof TypeDeclaration)
 					if (((TypeDeclaration) tlType).typeParameters().stream()
@@ -232,31 +210,30 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 			}
 
 			if (returnType == null) {
-				TypeASTVisitor typeVisitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
-				node.getReturnType2().accept(typeVisitor);
-				returnType = typeVisitor.getType();
+				returnType = getParserContext().evaluate(
+						node.getReturnType2(),
+						() -> new TypeASTVisitor(getEnvironment(), getScope().getUnitScope()));
 			}
 		}
 
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		if (instance) {
-			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
+			it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLisaClassUnit().getName());
 			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 					new Annotations()));
 		}
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,
-					compilationUnit, container);
-			sd.accept(vd);
-			parameters.add(vd.getParameter());
+			parameters.add(getParserContext().evaluate(
+					sd,
+					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
 		}
 
 		// TODO annotations
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisacompilationUnit, instance,
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLisaClassUnit(), instance,
 				node.getName().getIdentifier(),
 				returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType, annotations, paramArray);
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
@@ -274,29 +251,29 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
-		it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisacompilationUnit.getName());
+		it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLisaClassUnit().getName());
 
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
-		if (enclosing != null)
-			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
-					enclosing.getReference(),
-					null, new Annotations()));
+		if (getScope().getEnclosingClass() != null)
+			parameters
+					.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+							getScope().getEnclosingClass().getReference(),
+							null, new Annotations()));
 
 		for (Object o : node.parameters()) {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
-			VariableDeclarationASTVisitor vd = new VariableDeclarationASTVisitor(parserContext, source,
-					compilationUnit, container);
-			sd.accept(vd);
-			parameters.add(vd.getParameter());
+			parameters.add(getParserContext().evaluate(
+					sd,
+					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
 		}
 
 		// TODO annotations
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisacompilationUnit, instance,
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLisaClassUnit(), instance,
 				node.getName().getIdentifier(), VoidType.INSTANCE, annotations, paramArray);
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
 			codeMemberDescriptor.setOverridable(false);
@@ -334,7 +311,8 @@ public class MethodASTVisitor extends BaseCodeElementASTVisitor {
 		return false;
 	}
 
-	public CFG getCFG() {
-		return this.cfg;
+	@Override
+	public CFG getResult() {
+		return cfg;
 	}
 }

@@ -1,8 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
-import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import java.util.Map;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class BaseUnitASTVisitor extends JavaASTVisitor {
 
@@ -14,12 +13,10 @@ public class BaseUnitASTVisitor extends JavaASTVisitor {
 	protected Map<String, String> imports;
 
 	public BaseUnitASTVisitor(
-			ParserContext parserContext,
-			String source,
+			ParsingEnvironment environment,
 			String pkg,
-			Map<String, String> imports,
-			CompilationUnit compilationUnit) {
-		super(parserContext, source, compilationUnit);
+			Map<String, String> imports) {
+		super(environment);
 		this.pkg = pkg;
 		this.imports = imports;
 	}
