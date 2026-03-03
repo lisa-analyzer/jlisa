@@ -7,6 +7,7 @@ import it.unive.jlisa.frontend.visitors.pipeline.PopulateUnitsASTVisitor;
 import it.unive.jlisa.frontend.visitors.pipeline.SetGlobalsASTVisitor;
 import it.unive.jlisa.frontend.visitors.pipeline.SetRelationshipsASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.jlisa.program.java.constructs.VerifierAssume;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -22,13 +23,18 @@ import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.type.StringType;
 import it.unive.lisa.type.TypeSystem;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -213,7 +219,38 @@ public class JavaFrontend {
 			registerTypes();
 		}
 
+		patchVerifierAssume();
 		return getProgram();
+	}
+
+	/**
+	 * Post-processing: replaces the source-parsed
+	 * {@code Verifier.assume(boolean)} method with a {@link NativeCFG} backed
+	 * by the {@link Assume} construct, so that calls to
+	 * {@code Verifier.assume(cond)} properly narrow the analysis state by
+	 * {@code cond} rather than descending into the source implementation (which
+	 * uses {@code halt(1)} and provides no narrowing).
+	 */
+	private void patchVerifierAssume() {
+		Unit verifierUnit = getProgram().getUnit("org.sosy_lab.sv_benchmarks.Verifier");
+		if (verifierUnit == null)
+			return;
+		Collection<CodeMember> candidates = verifierUnit.getCodeMembersByName("assume");
+		if (candidates.isEmpty())
+			return;
+		CodeMember existing = candidates.iterator().next();
+		NativeCFG replacement = new NativeCFG(existing.getDescriptor(), VerifierAssume.class);
+		try {
+			Field field = Unit.class.getDeclaredField("codeMembers");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, CodeMember> map = (Map<String, CodeMember>) field.get(verifierUnit);
+			map.put(existing.getDescriptor().getSignature(), replacement);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			System.err.println("[JLiSA] Warning: could not patch Verifier.assume: " + e.getMessage());
+		} catch (RuntimeException e) {
+			System.err.println("[JLiSA] Warning: unexpected error patching Verifier.assume: " + e.getMessage());
+		}
 	}
 
 	private void runPass(

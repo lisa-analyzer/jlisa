@@ -147,6 +147,14 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void ClassCastException2_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "ClassCastException2",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
+
+	@Test
 	public void NegativeArraySizeException1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"NegativeArraySizeException1",
@@ -180,8 +188,32 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void exceptions14_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions14",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
+
+	@Test
+	public void exceptions15_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions15",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
+
+	@Test
 	public void exceptions16_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions16",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
+
+	@Test
+	public void exceptions18_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions18",
 				"Main.java",
 				"../common/");
 		perform(conf);
@@ -503,6 +535,34 @@ public class SVCompTestcases extends JLiSAAnalysisExecutor {
 	@Test
 	public void StringMiscellaneous01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringMiscellaneous01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void InsertionSort_FunSat01() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithFlaggedIntervals("svcomp", "InsertionSort-FunSat01",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Base64_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithFlaggedIntervals("svcomp", "Base64",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Assume_Test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithFlaggedIntervals("svcomp", "Assume-Test",
+				"Main.java", "../common");
+		perform(conf);
+	}
+
+	@Test
+	public void SpdyStream_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithFlaggedIntervals("svcomp", "SpdyStream",
 				"Main.java", "../common");
 		perform(conf);
 	}

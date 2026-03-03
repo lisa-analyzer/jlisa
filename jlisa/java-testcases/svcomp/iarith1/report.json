@@ -1,52 +1,46 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':25:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-    },
-    {
-      "message": "['Main.java':34:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "report.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json"
-  ],
-  "info": {
-    "cfgs": "15",
-    "duration": "28ms",
-    "end": "2025-11-13T17:55:05.109+01:00",
-    "expressions": "118",
-    "files": "1",
-    "globals": "30",
-    "members": "252",
-    "programs": "1",
-    "start": "2025-11-13T17:55:05.081+01:00",
-    "statements": "47",
-    "units": "51",
-    "version": "0.1",
-    "warnings": "2",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['Main.java':25:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':34:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "7ms",
+    "end" : "2026-03-03T13:30:28.917+01:00",
+    "expressions" : "115",
+    "files" : "1",
+    "globals" : "30",
+    "members" : "252",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-03-03T13:30:28.910+01:00",
+    "statements" : "44",
+    "units" : "51",
+    "version" : "0.2",
+    "warnings" : "2"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/iarith1",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/iarith1"
   }
 }

@@ -1,54 +1,46 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':19:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-    },
-    {
-      "message": "['Main.java':20:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "bool_Main.test(java.lang.Integer__i)_1707430094.graph.json",
-    "bool_Main.test(java.lang.Integer__i)_1707431024.graph.json",
-    "report.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json"
-  ],
-  "info": {
-    "cfgs": "16",
-    "duration": "12ms",
-    "end": "2025-11-13T17:55:03.052+01:00",
-    "expressions": "50",
-    "files": "3",
-    "globals": "30",
-    "members": "253",
-    "programs": "1",
-    "start": "2025-11-13T17:55:03.040+01:00",
-    "statements": "28",
-    "units": "51",
-    "version": "0.1",
-    "warnings": "2",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['Main.java':19:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':20:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "bool_Main.test(java.lang.Integer__i)_1707430094.graph.json", "bool_Main.test(java.lang.Integer__i)_1707431024.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "5ms",
+    "end" : "2026-03-03T13:30:26.042+01:00",
+    "expressions" : "47",
+    "files" : "3",
+    "globals" : "30",
+    "members" : "253",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-03-03T13:30:26.037+01:00",
+    "statements" : "25",
+    "units" : "51",
+    "version" : "0.2",
+    "warnings" : "2"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/instanceof8",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/instanceof8"
   }
 }

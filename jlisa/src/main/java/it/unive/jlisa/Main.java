@@ -2,6 +2,7 @@ package it.unive.jlisa;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithFlaggedIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
@@ -287,6 +288,16 @@ public class Main {
 		case "ConstantPropagation":
 			domain = new ConstantPropagationWithIntervals();
 			break;
+		case "FlaggedIntervals": {
+			ConstantPropagationWithFlaggedIntervals flaggedDomain = new ConstantPropagationWithFlaggedIntervals();
+			// Wire up the existential provider when using AssertChecker
+			if (checkerName.equals("Assert")) {
+				conf.semanticChecks.clear();
+				conf.semanticChecks.add(new AssertChecker<>(flaggedDomain));
+			}
+			domain = flaggedDomain;
+			break;
+		}
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}

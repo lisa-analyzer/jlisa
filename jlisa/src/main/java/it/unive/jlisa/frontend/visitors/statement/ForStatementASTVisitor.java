@@ -117,8 +117,19 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 				hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getBody().getNodes() : null, noop,
 				loopBody.getBody().getNodes());
 		getScope().getCFG().getDescriptor().addControlFlowStructure(forloop);
+		// For a for-loop, `continue` must jump to the updater (e.g. j++) and
+		// then
+		// to the condition — not directly to the condition. This mirrors the
+		// Java
+		// specification: `continue` in `for (init; cond; update)` is equivalent
+		// to jumping to `update` then `cond`. If there are no updaters (or they
+		// are dead code), fall back to the condition as in while/do-while
+		// loops.
+		Statement continueTarget = (hasUpdaters && !areUpdatersDeadcode)
+				? updaters.getBegin()
+				: (hasCondition ? condition : alwaysTrue);
 		getScope().getControlFlowTracker().endControlFlowOf(block, hasCondition ? condition : alwaysTrue, noop,
-				hasCondition ? condition : alwaysTrue, null);
+				continueTarget, null);
 		this.block = new ParsedBlock(entry, block, noop);
 		return false;
 	}

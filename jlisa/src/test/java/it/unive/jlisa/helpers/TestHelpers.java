@@ -2,6 +2,7 @@ package it.unive.jlisa.helpers;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithFlaggedIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
@@ -12,6 +13,7 @@ import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONResults;
 import java.util.ArrayList;
 
@@ -86,6 +88,37 @@ public class TestHelpers {
 		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
 
 		conf.semanticChecks.add(new AssertChecker<>());
+		// conf.outputs.add(new HtmlResults<>(true));
+		return conf;
+	}
+
+	/**
+	 * Creates a {@link CronConfiguration} that uses the flagged-interval domain
+	 * with the {@link AssertChecker} wired up to use existential satisfiability
+	 * for generating definite FALSE verdicts.
+	 *
+	 * @param testDir      the base directory containing the tests
+	 * @param subDir       the subdirectory within the test directory containing
+	 *                         specific test files
+	 * @param programFiles the names of the program files to be analyzed
+	 *
+	 * @return a configured {@code CronConfiguration} instance ready for
+	 *             analysis
+	 */
+	public static CronConfiguration assertCheckerWithFlaggedIntervals(
+			String testDir,
+			String subDir,
+			String... programFiles) {
+		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
+
+		// the abstract domain
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+		InferredTypes type = new InferredTypes();
+		ConstantPropagationWithFlaggedIntervals domain = new ConstantPropagationWithFlaggedIntervals();
+		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
+		conf.outputs.add(new HtmlResults<>(true));
+		// Wire the existential provider into AssertChecker
+		conf.semanticChecks.add(new AssertChecker<>(domain));
 
 		return conf;
 	}

@@ -1,58 +1,46 @@
 {
-  "warnings": [
-    {
-      "message": "['$Main.java':39] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-    },
-    {
-      "message": "['Main.java':105:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "int[]__Main.runBellmanFord(int_N,_int[]__D,_int_src)_1707439394.graph.json",
-    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446648.graph.json",
-    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446896.graph.json",
-    "report.json",
-    "void_Main.Main_clinit()_1707439394.graph.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json",
-    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707433225.graph.json",
-    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1707437317.graph.json"
-  ],
-  "info": {
-    "cfgs": "17",
-    "duration": "197ms",
-    "end": "2025-11-13T17:55:12.324+01:00",
-    "expressions": "181",
-    "files": "7",
-    "globals": "31",
-    "members": "254",
-    "programs": "1",
-    "start": "2025-11-13T17:55:12.127+01:00",
-    "statements": "73",
-    "units": "51",
-    "version": "0.1",
-    "warnings": "2",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['$Main.java':39] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':105:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int[]__Main.runBellmanFord(int_N,_int[]__D,_int_src)_1707439394.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446648.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446896.graph.json", "report.json", "void_Main.Main_clinit()_1707439394.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "16",
+    "duration" : "75ms",
+    "end" : "2026-03-03T18:36:49.545+01:00",
+    "expressions" : "178",
+    "files" : "5",
+    "globals" : "31",
+    "members" : "254",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-03-03T18:36:49.470+01:00",
+    "statements" : "70",
+    "units" : "51",
+    "version" : "0.2",
+    "warnings" : "2"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/BellmanFord-MemUnsat01",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/BellmanFord-MemUnsat01"
   }
 }

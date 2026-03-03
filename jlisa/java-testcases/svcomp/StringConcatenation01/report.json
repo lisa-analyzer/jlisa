@@ -1,62 +1,50 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':20:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    },
-    {
-      "message": "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    },
-    {
-      "message": "['Main.java':24:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    },
-    {
-      "message": "['Main.java':27:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440479.graph.json",
-    "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440510.graph.json",
-    "report.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json",
-    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320356456.graph.json",
-    "void_org.sosy_lab.sv_benchmarks.Verifier.assume(bool_condition)_1320357417.graph.json"
-  ],
-  "info": {
-    "cfgs": "15",
-    "duration": "36ms",
-    "end": "2025-11-13T17:55:02.361+01:00",
-    "expressions": "90",
-    "files": "5",
-    "globals": "30",
-    "members": "252",
-    "programs": "1",
-    "start": "2025-11-13T17:55:02.325+01:00",
-    "statements": "34",
-    "units": "51",
-    "version": "0.1",
-    "warnings": "4",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['Main.java':20:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':21:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':24:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':27:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440479.graph.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_1707440510.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "13ms",
+    "end" : "2026-03-03T13:30:25.662+01:00",
+    "expressions" : "87",
+    "files" : "3",
+    "globals" : "30",
+    "members" : "252",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-03-03T13:30:25.649+01:00",
+    "statements" : "31",
+    "units" : "51",
+    "version" : "0.2",
+    "warnings" : "4"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/StringConcatenation01",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/StringConcatenation01"
   }
 }

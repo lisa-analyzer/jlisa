@@ -1,50 +1,44 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707443951.graph.json",
-    "report.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json"
-  ],
-  "info": {
-    "cfgs": "15",
-    "duration": "14ms",
-    "end": "2025-11-13T17:54:55.991+01:00",
-    "expressions": "51",
-    "files": "2",
-    "globals": "30",
-    "members": "252",
-    "programs": "1",
-    "start": "2025-11-13T17:54:55.977+01:00",
-    "statements": "28",
-    "units": "51",
-    "version": "0.1",
-    "warnings": "1",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['Main.java':38:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_1707443951.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "8ms",
+    "end" : "2026-03-03T13:30:22.478+01:00",
+    "expressions" : "48",
+    "files" : "2",
+    "globals" : "30",
+    "members" : "252",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-03-03T13:30:22.470+01:00",
+    "statements" : "25",
+    "units" : "51",
+    "version" : "0.2",
+    "warnings" : "1"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/radians",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/radians"
   }
 }
