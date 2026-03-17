@@ -1,8 +1,10 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.expression;
 
-import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -23,10 +25,7 @@ import it.unive.lisa.program.Unit;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
-import java.util.Collection;
-import java.util.Map;
 import org.eclipse.jdt.core.dom.ArrayType;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IntersectionType;
 import org.eclipse.jdt.core.dom.NameQualifiedType;
 import org.eclipse.jdt.core.dom.ParameterizedType;
@@ -37,15 +36,15 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class TypeASTVisitor extends BaseCodeElementASTVisitor {
+public class TypeASTVisitor extends ScopedVisitor<UnitScope>
+		implements
+		it.unive.jlisa.frontend.visitors.ResultHolder<Type> {
 	private Type type;
 
 	public TypeASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			BaseUnitASTVisitor container) {
-		super(parserContext, source, compilationUnit, container);
+			ParsingEnvironment environment,
+			UnitScope scope) {
+		super(environment, scope);
 	}
 
 	@Override
@@ -84,7 +83,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ArrayType node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
+		TypeASTVisitor visitor = new TypeASTVisitor(getEnvironment(), getScope());
 		node.getElementType().accept(visitor);
 		Type _type = visitor.getType();
 		if (_type == null) {
@@ -142,33 +141,112 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	}
 
 	public static Unit getUnit(
-			String qName,
+			String name,
 			Program program,
-			String pkg,
-			Map<String, String> imports) {
-		if (LibrarySpecificationProvider.isLibraryAvailable(qName))
-			LibrarySpecificationProvider.importClass(program, qName);
+			UnitScope scope) {
 
-		Collection<Unit> units = program.getUnits();
+		Unit direct = program.getUnit(name);
+		if (direct != null)
+			return direct;
 
-		// check in the file/package
-		for (Unit unit : units) {
-			// - if the container has no package, the
-			// class we are looking must have no package as well
-			// and the name must exactly match what we are referencing
-			// - if the container does have a package, the
-			// class we are looking for must have the same package
-			// followed by the name we are referencing
-			if ((pkg == null && unit.getName().equals(qName))
-					|| (pkg != null && unit.getName().equals(pkg + "." + qName)))
-				return unit;
+		if (name.contains(".")) {
+			Unit resolved = resolveQualified(name, program, scope);
+			if (resolved != null)
+				return resolved;
+			if (LibrarySpecificationProvider.isLibraryAvailable(name)) {
+				LibrarySpecificationProvider.importClass(program, name);
+				return program.getUnit(name);
+			}
+			return null;
 		}
 
-		// look up the unit in the program (e.g., Map.Entry, we lookup Entry)
-		String imported = imports.get(qName);
-		String name = imported != null ? imported : qName;
+		Unit local = scope.getLocalType(name);
+		if (local != null)
+			return local;
 
-		return program.getUnit(name);
+		String pkg = scope.getPackage();
+		if (pkg != null) {
+			Unit samePkg = program.getUnit(pkg + "." + name);
+			if (samePkg != null)
+				return samePkg;
+		}
+
+		String explicit = scope.getExplicitImports().get(name);
+		if (explicit != null) {
+			Unit u = program.getUnit(explicit);
+			if (u != null)
+				return u;
+			if (LibrarySpecificationProvider.isLibraryAvailable(explicit)) {
+				LibrarySpecificationProvider.importClass(program, explicit);
+				return program.getUnit(explicit);
+			}
+		}
+
+		for (String onDemandPkg : scope.getOnDemandPackages()) {
+			String fqn = onDemandPkg + "." + name;
+			Unit u = program.getUnit(fqn);
+			if (u != null)
+				return u;
+			if (LibrarySpecificationProvider.isLibraryAvailable(fqn)) {
+				LibrarySpecificationProvider.importClass(program, fqn);
+				return program.getUnit(fqn);
+			}
+		}
+
+		Unit javaLang = program.getUnit("java.lang." + name);
+		if (javaLang != null)
+			return javaLang;
+
+		if (LibrarySpecificationProvider.isLibraryAvailable(name)) {
+			LibrarySpecificationProvider.importClass(program, name);
+			return program.getUnit(name);
+		}
+
+		return null;
+	}
+
+	private static Unit resolveQualified(
+			String name,
+			Program program,
+			UnitScope scope) {
+
+		String outerName = name.substring(0, name.indexOf('.'));
+		String rest = name.substring(name.indexOf('.') + 1);
+
+		// Resolve outer normally (recursive but safe)
+		Unit outer = getUnit(outerName, program, scope);
+		if (outer == null)
+			return null;
+
+		return resolveNested(outer, rest, program);
+	}
+
+	private static Unit resolveNested(
+			Unit outer,
+			String nestedPath,
+			Program program) {
+
+		String current = outer.getName(); // fully qualified
+		String[] parts = nestedPath.split("\\.");
+
+		for (String part : parts) {
+			current = current + "." + part;
+
+			Unit nested = program.getUnit(current);
+
+			if (nested == null) {
+				// Lazy library load attempt
+				if (LibrarySpecificationProvider.isLibraryAvailable(current)) {
+					LibrarySpecificationProvider.importClass(program, current);
+					nested = program.getUnit(current);
+				}
+			}
+
+			if (nested == null)
+				return null;
+		}
+
+		return program.getUnit(current);
 	}
 
 	public boolean visit(
@@ -176,7 +254,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 		// get the qualifier
 		String qName = node.getFullyQualifiedName();
 
-		Unit u = getUnit(qName, getProgram(), container.pkg, container.imports);
+		Unit u = getUnit(qName, getProgram(), getScope());
 		if (u == null)
 			throw new UnsupportedStatementException(
 					qName + " does not exist in the program, location: " + getSourceCodeLocation(node));
@@ -195,7 +273,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			SimpleName node) {
-		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), container.pkg, container.imports);
+		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), getScope());
 
 		if (u == null)
 			throw new UnsupportedStatementException(
@@ -217,7 +295,7 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 	@Override
 	public boolean visit(
 			ParameterizedType node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
+		TypeASTVisitor visitor = new TypeASTVisitor(getEnvironment(), getScope());
 		node.getType().accept(visitor);
 		Type rawType = visitor.getType();
 
@@ -252,6 +330,11 @@ public class TypeASTVisitor extends BaseCodeElementASTVisitor {
 			type = new JavaReferenceType(
 					JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(type, 1)), 2));
 
+		return type;
+	}
+
+	@Override
+	public Type getResult() {
 		return type;
 	}
 }

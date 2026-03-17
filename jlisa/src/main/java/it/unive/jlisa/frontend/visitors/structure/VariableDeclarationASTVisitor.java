@@ -1,31 +1,32 @@
-package it.unive.jlisa.frontend.visitors;
+package it.unive.jlisa.frontend.visitors.structure;
 
-import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
+import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-public class VariableDeclarationASTVisitor extends BaseCodeElementASTVisitor {
+public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> implements ResultHolder<Parameter> {
 	Parameter parameter;
 
 	public VariableDeclarationASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			BaseUnitASTVisitor container) {
-		super(parserContext, source, compilationUnit, container);
+			ParsingEnvironment environment,
+			UnitScope scope) {
+		super(environment, scope);
 	}
 
 	public boolean visit(
 			SingleVariableDeclaration node) {
-		TypeASTVisitor visitor = new TypeASTVisitor(parserContext, source, compilationUnit, container);
-		node.getType().accept(visitor);
-		Type type = visitor.getType();
+		Type type = getParserContext().evaluate(
+				node.getType(),
+				() -> new TypeASTVisitor(getEnvironment(), getScope()));
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 		if (node.getExtraDimensions() != 0) {
 			if (type instanceof ArrayType) {
@@ -46,7 +47,8 @@ public class VariableDeclarationASTVisitor extends BaseCodeElementASTVisitor {
 		return false;
 	}
 
-	public Parameter getParameter() {
-		return this.parameter;
+	@Override
+	public Parameter getResult() {
+		return parameter;
 	}
 }

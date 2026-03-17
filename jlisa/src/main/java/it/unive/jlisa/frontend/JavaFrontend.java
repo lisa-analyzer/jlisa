@@ -1,7 +1,12 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.visitors.CompilationUnitASTVisitor;
+import it.unive.jlisa.frontend.visitors.pipeline.CompilationUnitASTVisitor;
+import it.unive.jlisa.frontend.visitors.pipeline.InitCodeMembersASTVisitor;
+import it.unive.jlisa.frontend.visitors.pipeline.PopulateUnitsASTVisitor;
+import it.unive.jlisa.frontend.visitors.pipeline.SetGlobalsASTVisitor;
+import it.unive.jlisa.frontend.visitors.pipeline.SetRelationshipsASTVisitor;
+import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.language.JavaLanguageFeatures;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -24,18 +29,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class JavaFrontend {
-	private ParserContext parserContext;
+	private final ParserContext parserContext;
 	private int API_LEVEL = AST.getJLSLatest();
 
 	public JavaFrontend() {
@@ -58,8 +64,9 @@ public class JavaFrontend {
 		Program p;
 		if (program == null) {
 			p = createProgram();
+		} else {
+			p = program;
 		}
-		p = program;
 		this.parserContext = new ParserContext(p, this.API_LEVEL);
 	}
 
@@ -83,7 +90,7 @@ public class JavaFrontend {
 		JavaInterfaceType.clearAll();
 	}
 
-	public void registerTypes() {
+	private void registerTypes() {
 		TypeSystem typeSystem = this.parserContext.getProgram().getTypes();
 		typeSystem.registerType(JavaBooleanType.INSTANCE);
 		typeSystem.registerType(JavaByteType.INSTANCE);
@@ -105,7 +112,7 @@ public class JavaFrontend {
 		return new Program(features, typeSystem);
 	}
 
-	public ASTParser getParser(
+	private ASTParser getParser(
 			String source,
 			int parseAs) {
 		ASTParser parser = ASTParser.newParser(AST.getJLSLatest()); // NOTE:
@@ -125,23 +132,20 @@ public class JavaFrontend {
 		parser.setSource(source.toCharArray());
 		parser.setResolveBindings(true);
 		parser.setBindingsRecovery(true);
-		// String[] classpath = {};
-		// parser.setEnvironment(classpath, new String[] { "." }, null, true);
-		// parser.setCompilerOptions(JavaCore.getOptions());
 
 		return parser;
 	}
 
-	public CompilationUnit getCompilationUnit(
+	private CompilationUnit getCompilationUnit(
 			String source) {
 		ASTParser parser = getParser(source, ASTParser.K_COMPILATION_UNIT);
 		return (CompilationUnit) parser.createAST(null);
 	}
 
-	public List<String> expandFilePaths(
+	private List<String> expandFilePaths(
 			List<String> paths)
 			throws IOException {
-		List<String> expandedPaths = new ArrayList<>();
+		java.util.List<String> expandedPaths = new java.util.ArrayList<>();
 		for (String pathStr : paths) {
 			Path path = Paths.get(pathStr).normalize();
 			if (Files.isDirectory(path)) {
@@ -165,110 +169,62 @@ public class JavaFrontend {
 		LibrarySpecificationProvider.load(getProgram());
 		LibrarySpecificationProvider.importJavaLang(getProgram());
 		List<String> expandedPaths = expandFilePaths(filePaths);
-		populateUnits(expandedPaths);
-		setRelationships(expandedPaths);
-		setGlobals(expandedPaths);
-		registerTypes();
-		initCodeMembers(expandedPaths);
+		int n = expandedPaths.size();
 
-		for (String filePath : expandedPaths) {
-			Path path = Paths.get(filePath);
+		// Parse all files once upfront
+		CompilationUnit[] cus = new CompilationUnit[n];
+		String[] fileNames = new String[n];
+		UnitScope[] scopes = new UnitScope[n];
+		for (int i = 0; i < n; i++) {
+			Path path = Paths.get(expandedPaths.get(i));
+			fileNames[i] = path.getFileName().toString();
+			if (fileNames[i].equals("module-info.java"))
+				throw new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Java modules are not supported.", new SourceCodeLocation(fileNames[i], -1, -1));
 			String source = Files.readString(path);
-			boolean module = path.getFileName().toString().equals("module-info.java");
-			parse(source, path.getFileName().toString(), module);
+			cus[i] = getCompilationUnit(source);
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
+			scopes[i] = UnitScope.init(environment, cus[i]);
+		}
+
+		runPass(cus, fileNames, scopes, (
+				env,
+				scope) -> new PopulateUnitsASTVisitor(env, scope));
+		registerTypes();
+		runPass(cus, fileNames, scopes, (
+				env,
+				scope) -> new SetRelationshipsASTVisitor(env, scope));
+		runPass(cus, fileNames, scopes, (
+				env,
+				scope) -> new SetGlobalsASTVisitor(env, scope));
+		runPass(cus, fileNames, scopes, (
+				env,
+				scope) -> new InitCodeMembersASTVisitor(env, scope));
+
+		for (int i = 0; i < n; i++) {
+			IProblem[] problems = cus[i].getProblems();
+			for (IProblem problem : problems)
+				if (problem.isError())
+					System.out.println("Error at line " + problem.getSourceLineNumber() + ": " + problem.getMessage());
+			if (problems.length != 0)
+				throw new RuntimeException(problems.length + " problems found.");
+			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
+			cus[i].accept(new CompilationUnitASTVisitor(env, scopes[i]));
+			registerTypes();
 		}
 
 		return getProgram();
 	}
 
-	public void populateUnits(
-			List<String> filePaths)
-			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
-			String source = Files.readString(path);
-			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.ADD_UNITS));
+	private void runPass(
+			CompilationUnit[] cus,
+			String[] fileNames,
+			UnitScope[] scopes,
+			BiFunction<ParsingEnvironment, UnitScope, ASTVisitor> factory) {
+		for (int i = 0; i < cus.length; i++) {
+			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
+			cus[i].accept(factory.apply(env, scopes[i]));
 		}
-	}
-
-	public void setRelationships(
-			List<String> filePaths)
-			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
-			String source = Files.readString(path);
-			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.SET_RELATIONSHIPS));
-		}
-	}
-
-	public void setGlobals(
-			List<String> filePaths)
-			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
-			String source = Files.readString(path);
-			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.ADD_GLOBALS));
-		}
-	}
-
-	public void initCodeMembers(
-			List<String> filePaths)
-			throws IOException {
-		for (String filePath : filePaths) {
-			Path path = Paths.get(filePath);
-			String source = Files.readString(path);
-			CompilationUnit cu = getCompilationUnit(source);
-			cu.accept(new CompilationUnitASTVisitor(parserContext, path.getFileName().toString(), cu,
-					CompilationUnitASTVisitor.VisitorType.INIT_CODE_MEMBERS));
-		}
-	}
-
-	public Program parseFromFile(
-			String filePath)
-			throws IOException {
-		Path path = Paths.get(filePath);
-		String source = Files.readString(path);
-		boolean module = path.getFileName().toString().equals("module-info.java");
-		return parse(source, path.getFileName().toString(), module);
-	}
-
-	public Program parseFromString(
-			String source,
-			boolean module) {
-		return parse(source, "unknown", module);
-	}
-
-	private Program parse(
-			String source,
-			String fileName,
-			boolean module) {
-		CompilationUnit cu = getCompilationUnit(source);
-		CompilationUnitASTVisitor visitor = new CompilationUnitASTVisitor(parserContext, fileName, cu,
-				CompilationUnitASTVisitor.VisitorType.VISIT_UNIT);
-
-		if (module)
-			throw new ParsingException("java-module", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Java modules are not supported.", new SourceCodeLocation(source, -1, -1));
-		IProblem[] problems = cu.getProblems();
-		for (IProblem problem : problems) {
-			if (problem.isError()) {
-				System.out.println("Error at line " + problem.getSourceLineNumber() + ": " + problem.getMessage());
-			}
-		}
-		if (problems.length != 0) {
-			throw new RuntimeException(problems.length + " problems found.");
-		}
-
-		cu.accept(visitor);
-
-		registerTypes();
-		return this.parserContext.getProgram();
 	}
 
 }
