@@ -1,3 +1,7 @@
+<img src="logo.png" alt="logo" width="300"/>
+
+---
+
 # JLiSA — Java Frontend of LiSA (Library for Static Analysis)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -14,22 +18,22 @@ JLiSA is a joint effort between the **[Software and Systems Verification (SSV) R
 
 In its **first participation** at [SV-COMP 2026](https://sv-comp.sosy-lab.org/2026/) (15th International Competition on Software Verification), JLiSA achieved **3rd place in the Java track**, earning the bronze medal. SV-COMP is the world's leading competition in automated software verification; results are presented at [TACAS 2026](https://etaps.org/2026/tacas), held in Turin, Italy, in April 2026.
 
-> Arceri et al., *"JLiSA: The Java Frontend of the Library for Static Analysis"* (Competition Contribution), SV-COMP 2026.
+> Arceri et al., _"JLiSA: The Java Frontend of the Library for Static Analysis"_ (Competition Contribution), SV-COMP 2026.
 > Artifact: [doi.org/10.5281/zenodo.17609338](https://doi.org/10.5281/zenodo.17609338)
 
 Further details in the press releases from [Ca' Foscari University](https://www.unive.it/web/en/15205/article/7827) and [University of Parma](https://www.unipr.it/en/node/111091).
 
 ### The Team
 
-| Name | Institution |
-|---|---|
-| Vincenzo Arceri | University of Parma |
-| Luca Negrini | Ca' Foscari University of Venice |
-| Giacomo Zanatta | Ca' Foscari University of Venice |
-| Filippo Bianchi | University of Parma |
+| Name              | Institution                      |
+| ----------------- | -------------------------------- |
+| Vincenzo Arceri   | University of Parma              |
+| Luca Negrini      | Ca' Foscari University of Venice |
+| Giacomo Zanatta   | Ca' Foscari University of Venice |
+| Filippo Bianchi   | University of Parma              |
 | Teodors Lisovenko | Ca' Foscari University of Venice |
-| Luca Olivieri | Ca' Foscari University of Venice |
-| Pietro Ferrara | Ca' Foscari University of Venice |
+| Luca Olivieri     | Ca' Foscari University of Venice |
+| Pietro Ferrara    | Ca' Foscari University of Venice |
 
 ---
 
@@ -111,21 +115,22 @@ Results are written to the output directory as JSON files (one per CFG) and a `r
 
 ## Command-Line Options
 
-| Option | Long Option | Argument | Description |
-|--------|-------------|----------|-------------|
-| `-s` | `--source` | `file...` | Java source files to analyze (space-separated) |
-| `-o` | `--outdir` | `path` | Output directory for analysis results |
-| `-n` | `--numericalDomain` | `domain` | Numerical domain: `ConstantPropagation` |
-| `-c` | `--checker` | `checker` | Semantic checker: `Assert` |
-| `-l` | `--log-level` | `level` | Log verbosity: `INFO`, `DEBUG`, `WARN`, `ERROR`, `OFF` |
-| `-m` | `--mode` | `mode` | Execution mode: `Debug` (default), `Statistics` |
-| `-v` | `--version` | — | Print the tool version |
-| `-h` | `--help` | — | Print the help message |
-| N/A | `--no-html` | — | Disable HTML output (enabled by default) |
+| Option | Long Option         | Argument  | Description                                            |
+| ------ | ------------------- | --------- | ------------------------------------------------------ |
+| `-s`   | `--source`          | `file...` | Java source files to analyze (space-separated)         |
+| `-o`   | `--outdir`          | `path`    | Output directory for analysis results                  |
+| `-n`   | `--numericalDomain` | `domain`  | Numerical domain: `ConstantPropagation`                |
+| `-c`   | `--checker`         | `checker` | Semantic checker: `Assert`                             |
+| `-l`   | `--log-level`       | `level`   | Log verbosity: `INFO`, `DEBUG`, `WARN`, `ERROR`, `OFF` |
+| `-m`   | `--mode`            | `mode`    | Execution mode: `Debug` (default), `Statistics`        |
+| `-v`   | `--version`         | —         | Print the tool version                                 |
+| `-h`   | `--help`            | —         | Print the help message                                 |
+| N/A    | `--no-html`         | —         | Disable HTML output (enabled by default)               |
 
 ---
 
 ## Architecture
+
 Java source code is parsed via the [Eclipse Java Development Tools (JDT)](https://projects.eclipse.org/projects/eclipse.jdt) library.
 
 JLiSA's frontend translates Java source files to LiSA's IR in five sequential passes, implemented using the JDT visitor pattern in the following classes:
@@ -136,28 +141,26 @@ JLiSA's frontend translates Java source files to LiSA's IR in five sequential pa
 4. **`InitCodeMembersASTVisitor`** — declares method and constructor signatures
 5. **`CompilationUnitASTVisitor`** — performs full body translation, generating CFGs
 
-
-
 ### Java Standard Library
 
 Standard library classes are not parsed from source. Instead, hand-written stub files (`src/main/resources/libraries/*.txt`) declare class hierarchies, fields, and method signatures using a custom DSL parsed by an ANTLR grammar. Method semantics are implemented as Java classes under `it.unive.jlisa.program.java.constructs`. Stubs are loaded lazily at analysis time by `LibrarySpecificationProvider`.
 
 ### Key Packages
 
-| Package | Purpose |
-|---|---|
-| `it.unive.jlisa.frontend` | Parsing pipeline, `JavaFrontend`, `ParserContext` |
-| `it.unive.jlisa.frontend.util` | Shared utilities (e.g. `FQNUtils` for building fully qualified names) |
-| `it.unive.jlisa.frontend.visitors` | AST visitor base classes and hierarchy |
-| `it.unive.jlisa.program.cfg.expression` | Java-specific expression nodes |
-| `it.unive.jlisa.program.cfg.statement` | Java-specific statement nodes |
-| `it.unive.jlisa.program.java.constructs` | Library method semantics |
-| `it.unive.jlisa.program.libraries` | Library stub loader |
-| `it.unive.jlisa.program.type` | Java type system |
-| `it.unive.jlisa.analysis` | Abstract domains (heap, value, type) |
-| `it.unive.jlisa.interprocedural` | Call graph and interprocedural analysis |
-| `it.unive.jlisa.checkers` | Semantic checkers (`AssertChecker`) |
-| `it.unive.jlisa.witness` | Violation witness generation (GraphML) |
+| Package                                  | Purpose                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| `it.unive.jlisa.frontend`                | Parsing pipeline, `JavaFrontend`, `ParserContext`                     |
+| `it.unive.jlisa.frontend.util`           | Shared utilities (e.g. `FQNUtils` for building fully qualified names) |
+| `it.unive.jlisa.frontend.visitors`       | AST visitor base classes and hierarchy                                |
+| `it.unive.jlisa.program.cfg.expression`  | Java-specific expression nodes                                        |
+| `it.unive.jlisa.program.cfg.statement`   | Java-specific statement nodes                                         |
+| `it.unive.jlisa.program.java.constructs` | Library method semantics                                              |
+| `it.unive.jlisa.program.libraries`       | Library stub loader                                                   |
+| `it.unive.jlisa.program.type`            | Java type system                                                      |
+| `it.unive.jlisa.analysis`                | Abstract domains (heap, value, type)                                  |
+| `it.unive.jlisa.interprocedural`         | Call graph and interprocedural analysis                               |
+| `it.unive.jlisa.checkers`                | Semantic checkers (`AssertChecker`)                                   |
+| `it.unive.jlisa.witness`                 | Violation witness generation (GraphML)                                |
 
 ---
 
