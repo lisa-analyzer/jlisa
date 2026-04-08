@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.character;
 
-import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterToCodePointOperator;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -16,22 +16,22 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
-public class CharacterForDigit extends BinaryExpression implements PluggableStatement {
+public class CharacterToCodePoint extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public CharacterForDigit(
+	public CharacterToCodePoint(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
 			Expression right) {
-		super(cfg, location, "forDigit", left, right);
+		super(cfg, location, "toCodePoint", left, right);
 	}
 
-	public static CharacterForDigit build(
+	public static CharacterToCodePoint build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new CharacterForDigit(cfg, location, params[0], params[1]);
+		return new CharacterToCodePoint(cfg, location, params[0], params[1]);
 	}
 
 	@Override
@@ -55,12 +55,12 @@ public class CharacterForDigit extends BinaryExpression implements PluggableStat
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		it.unive.lisa.symbolic.value.BinaryExpression expr = new it.unive.lisa.symbolic.value.BinaryExpression(
+		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaCharType.INSTANCE,
 				left,
 				right,
-				JavaCharacterForDigitOperator.INSTANCE,
+				JavaCharacterToCodePointOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, expr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
 	}
 }

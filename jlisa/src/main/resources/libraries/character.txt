@@ -9,56 +9,27 @@ class java.lang.Character extends java.lang.Object:
 	instance method charValue: it.unive.jlisa.program.java.constructs.character.CharValue
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param this libtype java.lang.Character*
-
-	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
-		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		
-	method isDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsDigit
-		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	instance method equals: it.unive.jlisa.program.java.constructs.character.CharacterEquals
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param this libtype java.lang.Character*
 		param other libtype java.lang.Character*
 		
-	method isDefined: it.unive.jlisa.program.java.constructs.character.CharacterIsDefined
-		type it.unive.lisa.program.type.BoolType::INSTANCE
+	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
-	method forDigit: it.unive.jlisa.program.java.constructs.character.CharacterForDigit
-		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	method isLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsLetter
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		
-	method toLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterToLowerCase
-		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		
-	method toUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterToUpperCase
-		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-	
-	method isJavaIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierPart
-		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-	
-	method isJavaIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierStart
-		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
 	method isLetterOrDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsLetterOrDigit
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		
-	method isLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterIsLowerCase
+	method isLetterOrDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsLetterOrDigit
 		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		
-	method isUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterIsUpperCase
-		type it.unive.lisa.program.type.BoolType::INSTANCE
-		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	method digit: it.unive.jlisa.program.java.constructs.character.CharacterDigit
 		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
@@ -68,3 +39,200 @@ class java.lang.Character extends java.lang.Object:
 	method valueOf: it.unive.jlisa.program.java.constructs.character.CharacterValueOf
 		libtype java.lang.Character*
 		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isAlphabetic: it.unive.jlisa.program.java.constructs.character.CharacterIsAlphabetic
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isBmpv: it.unive.jlisa.program.java.constructs.character.CharacterIsBmpCodePoint
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isDefined: it.unive.jlisa.program.java.constructs.character.CharacterIsDefined
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsDigit
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isISOControl: it.unive.jlisa.program.java.constructs.character.CharacterIsISOControl
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isISOControl: it.unive.jlisa.program.java.constructs.character.CharacterIsISOControl
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isIdentifierIgnorable: it.unive.jlisa.program.java.constructs.character.CharacterIsIdentifierIgnorable
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isIdentifierIgnorable: it.unive.jlisa.program.java.constructs.character.CharacterIsIdentifierIgnorable
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isIdeographic: it.unive.jlisa.program.java.constructs.character.CharacterIsIdeographic
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isJavaIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierPart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isJavaIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierPart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isJavaIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierStart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isJavaIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaIdentifierStart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isJavaLetterOrDigit: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaLetterOrDigit
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isJavaLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaLetter
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isJavaLetter: it.unive.jlisa.program.java.constructs.character.CharacterIsJavaLetter
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterIsLowerCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterIsLowerCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isMirrored: it.unive.jlisa.program.java.constructs.character.CharacterIsMirrored
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isMirrored: it.unive.jlisa.program.java.constructs.character.CharacterIsMirrored
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isSpace: it.unive.jlisa.program.java.constructs.character.CharacterIsSpace
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isSpaceChar: it.unive.jlisa.program.java.constructs.character.CharacterIsSpaceChar
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isSpaceChar: it.unive.jlisa.program.java.constructs.character.CharacterIsSpaceChar
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isSupplementaryv: it.unive.jlisa.program.java.constructs.character.CharacterIsSupplementaryCodePoint
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isTitleCase: it.unive.jlisa.program.java.constructs.character.CharacterIsTitleCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isTitleCase: it.unive.jlisa.program.java.constructs.character.CharacterIsTitleCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isUnicodeIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsUnicodeIdentifierPart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isUnicodeIdentifierPart: it.unive.jlisa.program.java.constructs.character.CharacterIsUnicodeIdentifierPart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isUnicodeIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsUnicodeIdentifierStart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isUnicodeIdentifierStart: it.unive.jlisa.program.java.constructs.character.CharacterIsUnicodeIdentifierStart
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterIsUpperCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterIsUpperCase
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isValidv: it.unive.jlisa.program.java.constructs.character.CharacterIsValidCodePoint
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method isWhitespace: it.unive.jlisa.program.java.constructs.character.CharacterIsWhitespace
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method isWhitespace: it.unive.jlisa.program.java.constructs.character.CharacterIsWhitespace
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method getDirectionality: it.unive.jlisa.program.java.constructs.character.CharacterGetDirectionality
+		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	method getDirectionality: it.unive.jlisa.program.java.constructs.character.CharacterGetDirectionality
+		type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method forDigit: it.unive.jlisa.program.java.constructs.character.CharacterForDigit
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	
+	method toLowerCase: it.unive.jlisa.program.java.constructs.character.CharacterToLowerCase
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	
+	method toTitleCase: it.unive.jlisa.program.java.constructs.character.CharacterToTitleCase
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+	
+	method toUpperCase: it.unive.jlisa.program.java.constructs.character.CharacterToUpperCase
+		type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method charCount: it.unive.jlisa.program.java.constructs.character.CharacterCharCount
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method digit: it.unive.jlisa.program.java.constructs.character.CharacterDigit
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method digit: it.unive.jlisa.program.java.constructs.character.CharacterDigit
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method getNumericValue: it.unive.jlisa.program.java.constructs.character.CharacterGetNumericValue
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		
+	method getNumericValue: it.unive.jlisa.program.java.constructs.character.CharacterGetNumericValue
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		
+	method toCodePoint: it.unive.jlisa.program.java.constructs.character.CharacterToCodePoint
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	method compare: it.unive.jlisa.program.java.constructs.character.CharacterStaticCompare
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param v1 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+		param v2 type it.unive.jlisa.program.type.JavaCharType::INSTANCE
