@@ -1,6 +1,7 @@
 package it.unive.jlisa.helpers;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.heap.JavaRecencyAbsFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
@@ -12,7 +13,12 @@ import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.outputs.DotCallGraph;
+import it.unive.lisa.outputs.HtmlCallGraph;
+import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONResults;
+import it.unive.lisa.outputs.OutputCFGDumper;
+
 import java.util.ArrayList;
 
 public class TestHelpers {
@@ -40,12 +46,12 @@ public class TestHelpers {
 		for (String pf : programFiles)
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
+		conf.outputs.add(new HtmlResults<>(true));
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		// conf.forceUpdate = true;
-		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
+		//conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
-
-		// the abstract domain
+		// the abstract domain 
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		Interval domain = new Interval();
@@ -81,6 +87,23 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+		InferredTypes type = new InferredTypes();
+		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();
+		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
+
+		conf.semanticChecks.add(new AssertChecker<>());
+
+		return conf;
+	}
+	
+	public static CronConfiguration recency(
+			String testDir,
+			String subDir,
+			String... programFiles) {
+		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
+
+		// the abstract domain
+		FieldSensitivePointBasedHeap heap = new JavaRecencyAbsFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();
 		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
