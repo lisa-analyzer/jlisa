@@ -23,5 +23,19 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 				"Main.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void recency_test_stack() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test1.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void recency_test_forloop() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test2.java");
+		perform(conf);
+	}
 
 }

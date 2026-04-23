@@ -103,7 +103,9 @@ public class TestHelpers {
 		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
 
 		// the abstract domain
-		FieldSensitivePointBasedHeap heap = new JavaRecencyAbsFieldSensitivePointBasedHeap();
+		JavaRecencyAbsFieldSensitivePointBasedHeap heap = new JavaRecencyAbsFieldSensitivePointBasedHeap();
+		//JavaFieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+
 		InferredTypes type = new InferredTypes();
 		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();
 		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
