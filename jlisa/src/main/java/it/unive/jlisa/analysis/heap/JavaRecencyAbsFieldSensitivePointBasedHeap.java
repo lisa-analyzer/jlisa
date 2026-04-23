@@ -1,6 +1,7 @@
 package it.unive.jlisa.analysis.heap;
 
-import it.unive.jlisa.analysis.heap.pointbased.RecencyAbsFieldSensitivePointBasedHeap;
+import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
+import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -8,8 +9,8 @@ import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
+import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
-import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
 import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -21,6 +22,7 @@ import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -35,13 +37,13 @@ import java.util.Set;
  */
 public class JavaRecencyAbsFieldSensitivePointBasedHeap
 		extends
-		FieldSensitivePointBasedHeap {
+		RecencyAbsFieldSensitivePointBasedHeap {
 
 	private final Rewriter rewriter = new Rewriter();
 
 	@Override
 	public ExpressionSet rewrite(
-			HeapEnvWithFields state,
+			RecencyAbstractionHeapEnvWithFields state,
 			SymbolicExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle)
@@ -57,7 +59,7 @@ public class JavaRecencyAbsFieldSensitivePointBasedHeap
 	 */
 	public class Rewriter
 			extends
-			FieldSensitivePointBasedHeap.Rewriter {
+			RecencyAbsFieldSensitivePointBasedHeap.Rewriter {
 
 		@Override
 		public ExpressionSet visit(
@@ -96,49 +98,5 @@ public class JavaRecencyAbsFieldSensitivePointBasedHeap
 			return new ExpressionSet(result);
 		}
 		
-		@Override
-		public ExpressionSet visit(
-				MemoryAllocation expression,
-				Object... params)
-				throws SemanticException {
-			String pp = expression.getCodeLocation().getCodeLocation();
-			HeapEnvWithFields state = (HeapEnvWithFields) params[0];
-
-			boolean weak;
-			
-			Set<AllocationSite> st = getAllocatedAt(state, pp);
-			
-//			if(st.size() == 1) {
-//				AllocationSite ns = null;
-//				for(AllocationSite s : st) {
-//					ns = s.toWeak();
-//					st.remove(s);
-//				}
-//				st.add(ns);
-//			} else {
-//				
-//			}
-			
-			if (!st.isEmpty())
-				weak = true;
-			else
-				weak = false;
-
-			weak = false;
-			
-			AllocationSite e;
-			if (expression.isStackAllocation())
-				e = new StackAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
-			else
-				e = new HeapAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
-			e.setAllocation(true);
-
-			// propagates the annotations of expression
-			// to the newly created allocation site
-			for (Annotation ann : expression.getAnnotations())
-				e.getAnnotations().addAnnotation(ann);
-
-			return new ExpressionSet(e);
-		}
 	}
 }
