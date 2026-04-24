@@ -279,19 +279,20 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 					AllocationSite site = (AllocationSite) rec;
 					if(site instanceof RecencyAbstractionHeapAllocationSite) {
 						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
-						if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
+						if(!s.isWeak()) {
 							result.add(s.getRecent());
+//							if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
+//								result.add(s.getRecent());
+//							} else {
+//								populate(expression, child, result, s.getRecent());
+//							}
 						} else {
-							populate(expression, child, result, s.getRecent());
-						}
-						if(s.getSummary() != null) {
 							if(s.getSummary().equals(NullAllocationSite.INSTANCE)) {
 								result.add(s.getRecent());
 							} else {
-								populate(expression, child, result, s.getRecent());
+								populate(expression, child, result, s.getSummary());
 							}
 						}
-						
 					} else {
 						if (site.equals(NullAllocationSite.INSTANCE))
 							result.add(site);
@@ -303,7 +304,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 
 			return new ExpressionSet(result);
 		}
-
+		
 		private void populate(
 				AccessChild expression,
 				ExpressionSet child,

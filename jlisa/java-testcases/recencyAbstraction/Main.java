@@ -22,11 +22,13 @@ public class Main{
 		A e;
 		
 		a = create(1);
+		a.a = 0;
 		a = create(2);
 		a = create(3);
 		b = create(7);
 		//c = create(3);
 		
+		b.a = 8;
 		a.a = 5;
 		
 		c = create(10);
