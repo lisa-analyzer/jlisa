@@ -65,9 +65,13 @@ dependencies {
     implementation("commons-cli:commons-cli:1.4")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
-    implementation("io.github.lisa-analyzer:lisa-sdk:0.2")
-    implementation("io.github.lisa-analyzer:lisa-analyses:0.2")
-    implementation("io.github.lisa-analyzer:lisa-program:0.2")
+    // Coordinates match the local lisa composite build (microservices branch).
+    // The settings.gradle.kts includeBuild line substitutes these with the
+    // local subprojects at build time. To go back to upstream, drop the
+    // includeBuild and switch these back to io.github.lisa-analyzer:*:0.2.
+    implementation("it.unive:lisa-sdk:0.1")
+    implementation("it.unive:lisa-analyses:0.1")
+    implementation("it.unive:lisa-program:0.1")
     implementation("io.github.classgraph:classgraph:4.8.175")
 }
 

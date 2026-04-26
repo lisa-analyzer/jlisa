@@ -20,6 +20,8 @@ import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.lisa.AnalysisSetupException;
+import it.unive.lisa.frontend.LiSAFrontend;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.StringType;
@@ -40,15 +42,53 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-public class JavaFrontend {
+public class JavaFrontend implements LiSAFrontend {
 	private final ParserContext parserContext;
 	private int API_LEVEL = AST.getJLSLatest();
+
+	/**
+	 * Source path captured by the {@link #JavaFrontend(String, String)}
+	 * constructor and consumed by {@link #toLiSAProgram()}. Either a single
+	 * .java file or a directory; if a directory, all .java files under it are
+	 * parsed (recursive walk via {@link #parseFromListOfFile(List)}).
+	 * <p>
+	 * {@code null} when the frontend was created via the no-arg or program-
+	 * level constructors (in which case the caller is responsible for invoking
+	 * {@link #parseFromListOfFile(List)} directly and {@link #toLiSAProgram()}
+	 * is unsupported).
+	 */
+	private final String sourcePath;
 
 	public JavaFrontend() {
 		// We are creating a new Program. We need to start from a blank state.
 		clearAll();
 
 		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
+		this.sourcePath = null;
+	}
+
+	/**
+	 * Constructs a {@link LiSAFrontend}-shaped frontend that, when
+	 * {@link #toLiSAProgram()} is called, will parse {@code projectDir}
+	 * recursively (or {@code mainFile} if {@code projectDir} is null/blank).
+	 * Mirrors the lisa-network entry contract used by
+	 * {@code PyFrontend(mainFile, false, projectDir)}: lisa-network's
+	 * {@code Main.pickFrontend(mainFile, projectDir)} can construct any
+	 * frontend by the same two-arg signature.
+	 *
+	 * @param mainFile   the entry-point .java file path; for Java this is
+	 *                       informational since all sources in
+	 *                       {@code projectDir} will be parsed, but is preserved
+	 *                       here for symmetry with the Python frontend
+	 * @param projectDir the project root containing .java files; if null or
+	 *                       blank, only {@code mainFile} is parsed
+	 */
+	public JavaFrontend(
+			String mainFile,
+			String projectDir) {
+		clearAll();
+		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
+		this.sourcePath = (projectDir != null && !projectDir.isBlank()) ? projectDir : mainFile;
 	}
 
 	public JavaFrontend(
@@ -57,6 +97,7 @@ public class JavaFrontend {
 
 		this.API_LEVEL = apiLevel;
 		this.parserContext = new ParserContext(createProgram(), this.API_LEVEL);
+		this.sourcePath = null;
 	}
 
 	public JavaFrontend(
@@ -68,6 +109,7 @@ public class JavaFrontend {
 			p = program;
 		}
 		this.parserContext = new ParserContext(p, this.API_LEVEL);
+		this.sourcePath = null;
 	}
 
 	public JavaFrontend(
@@ -75,6 +117,25 @@ public class JavaFrontend {
 			int apiLevel) {
 		this.API_LEVEL = apiLevel;
 		this.parserContext = new ParserContext(program, apiLevel);
+		this.sourcePath = null;
+	}
+
+	/**
+	 * {@link LiSAFrontend} SPI entry: parses the source path supplied to
+	 * {@link #JavaFrontend(String, String)} and returns the resulting LiSA
+	 * {@link Program}. Throws {@link AnalysisSetupException} when the frontend
+	 * was created without a source path (i.e. via one of the legacy
+	 * constructors).
+	 */
+	@Override
+	public Program toLiSAProgram() throws IOException, AnalysisSetupException {
+		if (sourcePath == null)
+			throw new AnalysisSetupException(
+					"JavaFrontend.toLiSAProgram() requires the (mainFile, projectDir) "
+							+ "constructor; the no-arg/legacy constructors only support direct "
+							+ "parseFromListOfFile() invocation.");
+		parseFromListOfFile(List.of(sourcePath));
+		return getProgram();
 	}
 
 	public Program getProgram() {
