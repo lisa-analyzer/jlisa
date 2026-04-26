@@ -2,13 +2,19 @@ package it.unive.jlisa.lattices;
 
 import it.unive.lisa.analysis.BaseLattice;
 import it.unive.lisa.analysis.Lattice;
+import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.value.ValueLattice;
+import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
+import java.util.function.Predicate;
 
 public class ConstantValue
 		implements
-		BaseLattice<ConstantValue> {
+		BaseLattice<ConstantValue>,
+		ValueLattice<ConstantValue> {
 
 	public static final ConstantValue TOP = new ConstantValue(false);
 	public static final ConstantValue BOTTOM = new ConstantValue(true);
@@ -145,5 +151,76 @@ public class ConstantValue
 	public boolean isNumeric() {
 		return value instanceof Long || value instanceof Integer || value instanceof Double || value instanceof Float
 				|| value instanceof Short;
+	}
+
+	/**
+	 * {@link ValueLattice} contract: stores the abstraction of {@code source}'s
+	 * value as the abstraction of {@code target}. {@code ConstantValue} is a
+	 * single-cell lattice (one value, no per-identifier map), so per-identifier
+	 * storage is meaningless at this level; the enclosing
+	 * {@link it.unive.lisa.analysis.nonrelational.value.ValueEnvironment}
+	 * handles identifier-keyed substitution. We mirror pylisa's
+	 * {@code ConstantPropagation.store} stub and return {@code null} so the
+	 * default {@code applyReplacement} short-circuits cleanly.
+	 */
+	@Override
+	public ConstantValue store(
+			Identifier target,
+			Identifier source)
+			throws SemanticException {
+		return null;
+	}
+
+	/**
+	 * {@link ValueLattice} contract via {@code DomainLattice}: a no-op for
+	 * {@code ConstantValue} since this lattice tracks a single abstract value,
+	 * not a map keyed by identifier — identifier-level forgetting is the
+	 * enclosing {@code ValueEnvironment}'s job. Mirrors pylisa's
+	 * {@code ConstantPropagation.forgetIdentifiers} stub.
+	 */
+	@Override
+	public ConstantValue forgetIdentifiers(
+			Iterable<Identifier> ids,
+			ProgramPoint pp)
+			throws SemanticException {
+		return null;
+	}
+
+	@Override
+	public ConstantValue forgetIdentifiersIf(
+			Predicate<Identifier> test,
+			ProgramPoint pp)
+			throws SemanticException {
+		return null;
+	}
+
+	@Override
+	public boolean knowsIdentifier(
+			Identifier id) {
+		return false;
+	}
+
+	@Override
+	public ConstantValue forgetIdentifier(
+			Identifier id,
+			ProgramPoint pp)
+			throws SemanticException {
+		return null;
+	}
+
+	@Override
+	public ConstantValue pushScope(
+			ScopeToken token,
+			ProgramPoint pp)
+			throws SemanticException {
+		return null;
+	}
+
+	@Override
+	public ConstantValue popScope(
+			ScopeToken token,
+			ProgramPoint pp)
+			throws SemanticException {
+		return null;
 	}
 }
