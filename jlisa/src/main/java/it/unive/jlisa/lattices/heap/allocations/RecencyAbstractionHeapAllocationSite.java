@@ -107,12 +107,6 @@ public class RecencyAbstractionHeapAllocationSite extends AllocationSite{
 			throw new RuntimeException("Wrong type of other, cannot calculate lub!");
 		}
 		
-//		if(this.isWeak() || other.isWeak()) {
-//			recent = (AllocationSite) recent.lub(aux.getRecent());
-//			summary = (AllocationSite) summary.lub(aux.getSummary());
-//			return (RecencyAbstractionHeapAllocationSite) toWeak();
-//		}
-		
 		recent = (AllocationSite) recent.lub(aux.getRecent());
 		summary = (AllocationSite) summary.lub(aux.getSummary());
 		
