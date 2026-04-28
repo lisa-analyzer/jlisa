@@ -22,30 +22,25 @@ public class Main{
 		A e;
 		
 		a = create(1);
-		a = create(2);
-		a.a = 0;
-		a = create(3);
-		b = create(7);
-		//c = create(3);
+		b = create(2);
 		
-		b.a = 8;
-		a.a = 5;
-		
-		c = create(10);
-		
-		a.a = 17;
-		
-		d = create(-3);
-		
-		e = create(50);
-		
-		int r = 2;
 		int t = System.in.read();
+		int r = t;
 		
 		if(t > 3) {
 			e = create(25);
+			if(r < 2) {
+				e = create(26);
+			} else {
+				e = create(27);
+			}
 		} else {
-			d = create(15);
+			d = create(-2);
+			if(r < 2) {
+				d = create(-3);
+			} else {
+				d = create(-4);
+			}
 		}
 	}
 }
