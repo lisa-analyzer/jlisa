@@ -8,7 +8,7 @@ import it.unive.lisa.lattices.FunctionalLattice;
 import it.unive.lisa.lattices.GenericMapLattice;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
-import it.unive.jlisa.lattices.heap.allocations.JlisaHeapAllocationSite;
+import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.lisa.lattices.heap.allocations.NullAllocationSite;
@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang3.ObjectUtils.Null;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -278,19 +279,24 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 					AllocationSite site = (AllocationSite) rec;
 					if(site instanceof RecencyAbstractionHeapAllocationSite) {
 						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
-						if(!s.isWeak()) {
-							//result.add(s.getRecent());
-							if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
-								result.add(s.getRecent());
-							} else {
-								populate(expression, child, result, s.getRecent());
-							}
+//						if(!s.isWeak()) {
+//							//result.add(s.getRecent());
+//							if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
+//								result.add(s.getRecent());
+//							} else {
+//								populate(expression, child, result, s.getRecent());
+//							}
+//						} else {
+//							if(s.getSummary().equals(NullAllocationSite.INSTANCE)) {
+//								result.add(s.getSummary());
+//							} else {
+//								populate(expression, child, result, s.getSummary());
+//							}
+//						}
+						if(!site.isWeak()) {
+							result.add(site);
 						} else {
-							if(s.getSummary().equals(NullAllocationSite.INSTANCE)) {
-								result.add(s.getSummary());
-							} else {
-								populate(expression, child, result, s.getSummary());
-							}
+							populate(expression, child, result, site);
 						}
 					} else {
 						if (site.equals(NullAllocationSite.INSTANCE))
@@ -320,12 +326,25 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 							site.isWeak(),
 							site.getCodeLocation());
 				else
-					e = new JlisaHeapAllocationSite(
-							expression.getStaticType(),
-							site.getLocationName(),
-							target,
-							site.isWeak(),
-							site.getCodeLocation());
+					if(site instanceof RecencyAbstractionHeapAllocationSite) {
+						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
+						try {
+							s.lubWeak();
+						} catch (SemanticException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						e = site;
+//						e = new RecencyAbstractionHeapAllocationSite(
+//								expression.getStaticType(),
+//								site.getLocationName(),
+//								target,
+//								site.isWeak(),
+//								site.getCodeLocation());
+					} else {
+						e = site;
+					}
+					
 
 				// propagates the annotations of the child value expression to
 				// the newly created allocation site

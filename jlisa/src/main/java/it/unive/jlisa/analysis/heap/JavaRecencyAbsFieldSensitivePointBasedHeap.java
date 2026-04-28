@@ -1,6 +1,5 @@
 package it.unive.jlisa.analysis.heap;
 
-import it.unive.jlisa.lattices.heap.allocations.JlisaHeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
@@ -8,6 +7,7 @@ import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -62,7 +62,7 @@ public class JavaRecencyAbsFieldSensitivePointBasedHeap
 			if (expression.getStaticType().isPointerType()) {
 				Type inner = expression.getStaticType().asPointerType().getInnerType();
 				CodeLocation loc = expression.getCodeLocation();
-				JlisaHeapAllocationSite site = new JlisaHeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
+				HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
 				return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
 			}
 			return new ExpressionSet(expression);
