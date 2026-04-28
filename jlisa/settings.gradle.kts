@@ -7,5 +7,12 @@ rootProject.name = "jlisa"
 // those. Group/version differ (it.unive:*:0.1 locally vs.
 // io.github.lisa-analyzer:*:0.2 upstream), so the corresponding implementation
 // declarations in build.gradle.kts have been switched to it.unive:*:0.1.
-includeBuild("/Users/giacomo/02-work/03-microservices/lisa/lisa/lisa")
+//
+// Relative includeBuild path: works on any host with the four repos arranged
+// side-by-side under a common parent.
+//   <parent>/lisa/lisa/lisa/
+//   <parent>/jlisa/jlisa/                    (this repo)
+//   <parent>/pylisa_microservices_lisa_upgrade/pylisa/
+//   <parent>/lisa-network/lisa-network/lisa-network/
+includeBuild("../../lisa/lisa/lisa")
 
