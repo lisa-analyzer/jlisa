@@ -8,7 +8,7 @@ import it.unive.lisa.lattices.FunctionalLattice;
 import it.unive.lisa.lattices.GenericMapLattice;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
-import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
+import it.unive.jlisa.lattices.heap.allocations.JlisaHeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.lisa.lattices.heap.allocations.NullAllocationSite;
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.lang3.ObjectUtils.Null;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -280,15 +279,15 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 					if(site instanceof RecencyAbstractionHeapAllocationSite) {
 						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
 						if(!s.isWeak()) {
-							result.add(s.getRecent());
-//							if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
-//								result.add(s.getRecent());
-//							} else {
-//								populate(expression, child, result, s.getRecent());
-//							}
+							//result.add(s.getRecent());
+							if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
+								result.add(s.getRecent());
+							} else {
+								populate(expression, child, result, s.getRecent());
+							}
 						} else {
 							if(s.getSummary().equals(NullAllocationSite.INSTANCE)) {
-								result.add(s.getRecent());
+								result.add(s.getSummary());
 							} else {
 								populate(expression, child, result, s.getSummary());
 							}
@@ -321,7 +320,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 							site.isWeak(),
 							site.getCodeLocation());
 				else
-					e = new HeapAllocationSite(
+					e = new JlisaHeapAllocationSite(
 							expression.getStaticType(),
 							site.getLocationName(),
 							target,
@@ -354,34 +353,13 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 			else
 				weak = false;
 			
-			if(sites.size() > 1) {
-				System.out.println(sites.toString());
-			}
-
-			AllocationSite e = null;
-			boolean found = false;
+			AllocationSite e;
+			
 			if (expression.isStackAllocation())
 				e = new StackAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
 			else
-				if(true)
-					e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, false, expression.getCodeLocation());
-				//e = new HeapAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
-				else {
-					for(AllocationSite s: sites) {
-						RecencyAbstractionHeapAllocationSite site = (RecencyAbstractionHeapAllocationSite) s;
-						if(site.getRecent().getLocationName().equals(pp)) {
-							//site = site.lubWeak(expression.getStaticType(), pp, expression.getCodeLocation());
-							e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, !weak, expression.getCodeLocation());
-							found = true;
-						}
-					}
-					if(!found) {
-						System.out.println("Match not found");
-						e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
-
-					}
-
-				}
+				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, false, expression.getCodeLocation());
+				
 			e.setAllocation(true);
 
 			// propagates the annotations of expression

@@ -1,6 +1,6 @@
 package it.unive.jlisa.analysis.heap;
 
-import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
+import it.unive.jlisa.lattices.heap.allocations.JlisaHeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
@@ -8,21 +8,14 @@ import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.heap.allocations.AllocationSite;
-import it.unive.lisa.lattices.heap.allocations.AllocationSites;
-import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
-import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
-import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.MemoryPointer;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -69,7 +62,7 @@ public class JavaRecencyAbsFieldSensitivePointBasedHeap
 			if (expression.getStaticType().isPointerType()) {
 				Type inner = expression.getStaticType().asPointerType().getInnerType();
 				CodeLocation loc = expression.getCodeLocation();
-				HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
+				JlisaHeapAllocationSite site = new JlisaHeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
 				return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
 			}
 			return new ExpressionSet(expression);

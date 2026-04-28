@@ -2,7 +2,6 @@ package it.unive.jlisa.lattices.heap.allocations;
 
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
-import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.HeapLocation;
@@ -30,8 +29,8 @@ public class RecencyAbstractionHeapAllocationSite extends AllocationSite{
 			boolean isWeak,
 			CodeLocation location) {
 		super(staticType, locationName, field, isWeak, location);
-		recent = new HeapAllocationSite(staticType, locationName, field, false, location);
-		summary = new HeapAllocationSite(staticType, locationName, field, true, location);
+		recent = new JlisaHeapAllocationSite(staticType, locationName, field, false, location);
+		summary = new JlisaHeapAllocationSite(staticType, locationName, field, true, location);
 	}
 	
 	public RecencyAbstractionHeapAllocationSite(
@@ -41,8 +40,8 @@ public class RecencyAbstractionHeapAllocationSite extends AllocationSite{
 			boolean isWeak,
 			CodeLocation location) {
 		super(staticType, locationName, field, isWeak, location);
-		recent = new HeapAllocationSite(staticType, locationName, field, false, location);
-		summary = new HeapAllocationSite(staticType, locationName, field, true, location);
+		recent = new JlisaHeapAllocationSite(staticType, locationName, field, false, location);
+		summary = new JlisaHeapAllocationSite(staticType, locationName, field, true, location);
 	}
 	
 	public AllocationSite getRecent() {
@@ -57,8 +56,8 @@ public class RecencyAbstractionHeapAllocationSite extends AllocationSite{
 			Type staticType,
 			String locationName,
 			CodeLocation location) throws SemanticException {
-		summary = (HeapAllocationSite) summary.lub(recent);
-		recent = new HeapAllocationSite(staticType, locationName ,false, location);
+		summary = (JlisaHeapAllocationSite) summary.lub(recent);
+		recent = new JlisaHeapAllocationSite(staticType, locationName ,false, location);
 		
 		return this;
 	}
