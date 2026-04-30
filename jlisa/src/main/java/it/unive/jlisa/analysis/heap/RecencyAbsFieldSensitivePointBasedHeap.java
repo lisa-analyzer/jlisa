@@ -151,6 +151,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
 
 						for (SymbolicExpression child : childs) {
+							//addField(s, child, mapping);
 							addField(s.getRecent(), child, mapping);
 							addField(s.getSummary(), child, mapping);
 						}
@@ -185,7 +186,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 					RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
 					if (st.fields.getKeys().contains(s.getRecent()))
 						for (SymbolicExpression field : st.fields.getState(s.getRecent())) {
-							AllocationSite withField = s.getRecent().withField(field);
+							AllocationSite withField = s.withField(field);
 							if (!withField.isWeak()) {
 								HeapReplacement replacement = new HeapReplacement();
 								replacement.addSource(withField);
@@ -278,26 +279,9 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 				} else if (rec instanceof AllocationSite) {
 					AllocationSite site = (AllocationSite) rec;
 					if(site instanceof RecencyAbstractionHeapAllocationSite) {
-						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
-//						if(!s.isWeak()) {
-//							//result.add(s.getRecent());
-//							if(s.getRecent().equals(NullAllocationSite.INSTANCE)) {
-//								result.add(s.getRecent());
-//							} else {
-//								populate(expression, child, result, s.getRecent());
-//							}
-//						} else {
-//							if(s.getSummary().equals(NullAllocationSite.INSTANCE)) {
-//								result.add(s.getSummary());
-//							} else {
-//								populate(expression, child, result, s.getSummary());
-//							}
-//						}
-						if(!site.isWeak()) {
-							result.add(site);
-						} else {
-							populate(expression, child, result, site);
-						}
+						// We always call populate because RecAbsAllocationSite can
+						// never be NullAllocationSite
+						populate(expression, child, result, site);
 					} else {
 						if (site.equals(NullAllocationSite.INSTANCE))
 							result.add(site);
@@ -326,26 +310,13 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 							site.isWeak(),
 							site.getCodeLocation());
 				else
-					if(site instanceof RecencyAbstractionHeapAllocationSite) {
-						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
-						try {
-							s.lubWeak();
-						} catch (SemanticException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-						e = site;
-//						e = new RecencyAbstractionHeapAllocationSite(
-//								expression.getStaticType(),
-//								site.getLocationName(),
-//								target,
-//								site.isWeak(),
-//								site.getCodeLocation());
-					} else {
-						e = site;
-					}
+					e = new RecencyAbstractionHeapAllocationSite(
+							expression.getStaticType(),
+							site.getLocationName(),
+							target,
+							site.isWeak(),
+							site.getCodeLocation());
 					
-
 				// propagates the annotations of the child value expression to
 				// the newly created allocation site
 				if (target instanceof Identifier)
@@ -377,7 +348,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 			if (expression.isStackAllocation())
 				e = new StackAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
 			else
-				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, false, expression.getCodeLocation());
+				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp ,false, expression.getCodeLocation());
 				
 			e.setAllocation(true);
 
