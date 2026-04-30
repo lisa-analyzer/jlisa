@@ -42,5 +42,7 @@ public class Main{
 				d = create(-4);
 			}
 		}
+		
+		//d.a = 30;
 	}
 }

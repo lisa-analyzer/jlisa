@@ -55,7 +55,7 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 	}
 	
 	@Test
-	public void recency_test_ifelse() throws IOException {
+	public void recency_test_ifelsenested() throws IOException {
 		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
 				"Test5.java");
 		perform(conf);
@@ -68,4 +68,18 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 		perform(conf);
 	}
 
+	@Test
+	public void recency_test_ifelse1() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test7.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void recency_test_ifelse2() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test8.java");
+		perform(conf);
+	}
+	
 }
