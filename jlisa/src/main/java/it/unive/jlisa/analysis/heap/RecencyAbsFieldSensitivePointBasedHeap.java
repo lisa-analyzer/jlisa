@@ -8,7 +8,6 @@ import it.unive.lisa.lattices.FunctionalLattice;
 import it.unive.lisa.lattices.GenericMapLattice;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
-import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
 import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.lisa.lattices.heap.allocations.NullAllocationSite;
@@ -28,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.lang3.ObjectUtils.Null;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -348,7 +346,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 			if (expression.isStackAllocation())
 				e = new StackAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
 			else
-				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp ,false, expression.getCodeLocation());
+				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, false, expression.getCodeLocation());
 				
 			e.setAllocation(true);
 

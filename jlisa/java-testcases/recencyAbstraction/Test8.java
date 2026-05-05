@@ -26,10 +26,11 @@ public class Main{
 		if(t > 1) {
 			a = create(5);
 		} else {
+			a = create(6);
 			b = create(7);
 		}
-		
-		int i = 1;
+				
+		int i = 2; 
 		
 		a.a += 10;
 		b.a = 200;

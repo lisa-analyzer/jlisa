@@ -17,19 +17,28 @@ public class Main{
 		
 		A a;
 		A b;
+		A c;
 		
 		a = create(0);
-		b = create(1);
+		b = a;
 				
-		for(int i = 2; i < 5; i++) {
-			a = create(i);
-			b = create(i+1);
+		int t = System.in.read();
+		
+		if(t > 1) {
+			a = create(5);
+		} else {
+			a = create(7);
 		}
 				
-//		while (i < 5) {
-//			a = create(i);
-//			b = create(i+1);
-//			i++;
-//		}
+		a.a += 10;
+		b.a = 20;
+		
+		c = b;
+		
+		b = create(12);
+		a = create(21);
+		
+		c.a += 22;
+		
 	}
 }

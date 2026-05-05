@@ -27,7 +27,6 @@ public class Main{
 			a = create(5);
 		} else {
 			b = create(7);
-			a = create(8);
 		}
 		
 		int i = 1;

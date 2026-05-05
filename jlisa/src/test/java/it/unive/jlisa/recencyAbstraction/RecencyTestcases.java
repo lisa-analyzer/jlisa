@@ -82,4 +82,11 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 		perform(conf);
 	}
 	
+	@Test
+	public void recency_test_aliasing() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test9.java");
+		perform(conf);
+	}
+	
 }
