@@ -237,6 +237,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.NegativeArraySizeException");
 	}
 
+	public static JavaClassType getClassMetaType() {
+		return lookup("java.lang.Class");
+	}
+
 	public static JavaClassType getObjectType() {
 		return lookup("java.lang.Object");
 	}

@@ -592,6 +592,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof LogicalNegation && arg.getValue() instanceof Boolean b)
 			return new ConstantValue(!b);
 
+		// reflection
+		if (operator instanceof JavaClassForNameOperator && arg.getValue() instanceof String s) {
+			// TODO: check whether we know the class.
+			return new ConstantValue(s);
+		}
+
 		return top();
 	}
 
