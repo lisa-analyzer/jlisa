@@ -4,6 +4,7 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
@@ -594,8 +595,12 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		// reflection
 		if (operator instanceof JavaClassForNameOperator && arg.getValue() instanceof String s) {
-			// TODO: check whether we know the class.
+			// TODO: check whether we know the class
 			return new ConstantValue(s);
+		}
+
+		if (operator instanceof JavaClassNewInstanceOperator && arg.getValue() instanceof String s) {
+			// TODO
 		}
 
 		return top();
@@ -1471,6 +1476,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				} catch (NumberFormatException e) {
 					return Satisfiability.NOT_SATISFIED;
 				}
+			return Satisfiability.SATISFIED;
+		}
+
+		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+			try {
+				JavaClassType.lookup(v);
+			} catch (IllegalArgumentException e) {
+				return Satisfiability.NOT_SATISFIED;
+			}
+
 			return Satisfiability.SATISFIED;
 		}
 

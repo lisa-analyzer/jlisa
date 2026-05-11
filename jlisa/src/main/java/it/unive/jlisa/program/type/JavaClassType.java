@@ -265,6 +265,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.NumberFormatException");
 	}
 
+	public static JavaClassType getClassNotFoundException() {
+		return lookup("java.lang.ClassNotFoundException");
+	}
+
 	public static JavaClassType getPrintStreamType() {
 		return lookup("java.io.PrintStream");
 	}

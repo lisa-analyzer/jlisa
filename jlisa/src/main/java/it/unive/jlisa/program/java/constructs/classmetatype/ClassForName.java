@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaClassForNameOperator;
+import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -12,6 +13,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -65,31 +67,51 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		HeapDereference derefExpr = new HeapDereference(stringType, expr, getLocation());
 		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
 
-		it.unive.lisa.symbolic.value.UnaryExpression forName = new it.unive.lisa.symbolic.value.UnaryExpression(
+		// check if class actually exists
+		it.unive.lisa.symbolic.value.UnaryExpression isClassInProgram = new it.unive.lisa.symbolic.value.UnaryExpression(
 				stringType,
 				accessExpr,
-				JavaClassForNameOperator.INSTANCE,
+				JavaIsClassDefinedOperator.INSTANCE,
 				getLocation());
 
-		// allocate the Class object
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(classMetaType),
-				new Expression[0]);
-		AnalysisState<
-				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		Satisfiability sat = analysis.satisfies(state, isClassInProgram, originating);
 
-		// `name` field of Class type
-		GlobalVariable nameField = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
+		// we are sure the class exists
+		if (sat == Satisfiability.SATISFIED) {
 
-		AnalysisState<A> tmp = state.bottomExecution();
-		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild dst = new AccessChild(stringType, ref, nameField, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, dst, forName, this);
-			tmp = tmp.lub(sem);
+			it.unive.lisa.symbolic.value.UnaryExpression forName = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType,
+					accessExpr,
+					JavaClassForNameOperator.INSTANCE,
+					getLocation());
+
+			// allocate the Class object
+			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
+					new JavaReferenceType(classMetaType),
+					new Expression[0]);
+			AnalysisState<
+					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+			// `name` field of Class type
+			GlobalVariable nameField = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
+
+			AnalysisState<A> tmp = state.bottomExecution();
+			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
+				AccessChild dst = new AccessChild(stringType, ref, nameField, getLocation());
+				AnalysisState<A> sem = analysis.assign(callState, dst, forName, this);
+				tmp = tmp.lub(sem);
+			}
+
+			getMetaVariables().addAll(call.getMetaVariables());
+			return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 		}
 
-		getMetaVariables().addAll(call.getMetaVariables());
-		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
+		if (sat == Satisfiability.NOT_SATISFIED) {
+			// TODO
+		}
+
+		return state;
+
 	}
 
 	@Override
