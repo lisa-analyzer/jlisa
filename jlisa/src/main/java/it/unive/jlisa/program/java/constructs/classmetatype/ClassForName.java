@@ -20,12 +20,14 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import it.unive.lisa.analysis.AnalysisState.Error;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -76,8 +78,11 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 		Satisfiability sat = analysis.satisfies(state, isClassInProgram, originating);
 
-		// we are sure the class exists
-		if (sat == Satisfiability.SATISFIED) {
+		AnalysisState<A> noExceptionState = state.bottomExecution();
+		AnalysisState<A> exceptionState = state.bottomExecution();
+
+		// populate the "no exception" path
+		if (sat != Satisfiability.NOT_SATISFIED) {
 
 			it.unive.lisa.symbolic.value.UnaryExpression forName = new it.unive.lisa.symbolic.value.UnaryExpression(
 					stringType,
@@ -103,15 +108,34 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			}
 
 			getMetaVariables().addAll(call.getMetaVariables());
-			return tmp.withExecutionExpressions(callState.getExecutionExpressions());
+			noExceptionState = tmp.withExecutionExpressions(callState.getExecutionExpressions());
 		}
 
-		if (sat == Satisfiability.NOT_SATISFIED) {
-			// TODO
+		// `ClassNotFoundException to be thrown
+		if (sat != Satisfiability.SATISFIED) {
+
+			JavaClassType classNotFoundType = JavaClassType.getClassNotFoundException();
+
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+					classNotFoundType.getReference(), new Expression[0]);
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+			// assign exception to variable thrower
+			CFGThrow throwVar = new CFGThrow(getCFG(), classNotFoundType.getReference(), getLocation());
+			state = analysis.assign(state, throwVar,
+					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
+			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+
+			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+					new Error(classNotFoundType.getReference(), originating), this);
+
 		}
 
-		return state;
-
+		return exceptionState.lub(noExceptionState);
 	}
 
 	@Override
