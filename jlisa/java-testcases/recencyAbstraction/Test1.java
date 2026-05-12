@@ -1,21 +1,48 @@
-public class Test1{
+public class A{
+	int a;
 	
-	String create(String a) {
-		String b = new String(a);
-		return b;
+	public A(int a) {
+		this.a = a;
+	}
+}
+
+public class Main{
+	
+	A create (int n) {
+		A obj = new A(n);
+		return obj;
 	}
 	
 	public static void main(String[] args) {
 		
-		String a;
-		String b;
-		String c;
+		A a;
+		A b;
+		A c;
+		A d;
+		A e;
 		
-		a = create("Ciao");
-		b = create("Hello");
-		c = create("World");
+		a = create(1);
+		a = create(2);
+		a = create(5);
+		b = create(7);
+		c = create(-1);
 		
-		c = "java";
+		c = create(10);
+				
+		d = create(-3);
+		
+		e = create(50);
+		
+		a = create(100);
+		b = create(-12);
+		
+		int t = System.in.read();
+		
+		if(t > 0)
+			c = create(10);
+		else
+			c = create(12);
+		
 		
 	}
 }

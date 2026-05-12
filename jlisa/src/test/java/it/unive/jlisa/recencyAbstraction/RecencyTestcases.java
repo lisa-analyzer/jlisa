@@ -2,7 +2,6 @@ package it.unive.jlisa.recencyAbstraction;
 
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 import it.unive.jlisa.helpers.CronConfiguration;
@@ -26,8 +25,8 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 	}
 	
 	// Ignore for the moment, recency works only with heap
-	@Ignore
-	public void recency_test_stack() throws IOException {
+	@Test
+	public void recency_test_creation() throws IOException {
 		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
 				"Test1.java");
 		perform(conf);
@@ -89,4 +88,10 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 		perform(conf);
 	}
 	
+	@Test
+	public void recency_test_nullIdentifiers() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("recencyAbstraction", "",
+				"Test10.java");
+		perform(conf);
+	}
 }
