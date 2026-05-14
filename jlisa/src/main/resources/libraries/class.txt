@@ -8,4 +8,7 @@ class java.lang.Class extends java.lang.Object:
 		libtype java.lang.Class*
 		param v libtype java.lang.String*
 
+	instance method newInstance: it.unive.jlisa.program.java.constructs.classmetatype.ClassNewInstance
+		libtype java.lang.Object*
+		param v libtype java.lang.Class*
 
