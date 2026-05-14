@@ -23,6 +23,10 @@ public class JavaClassType implements UnitType {
 
 	protected static final Map<String, JavaClassType> types = new HashMap<>();
 
+	// this is used by the `newInstance()` semantics to access the dynamic type
+	// and call the corresponding constructor
+	private static String lastDynamicTypeLookup;
+
 	/**
 	 * Clears the cache of {@link JavaClassType}s created up to now.
 	 */
@@ -311,6 +315,15 @@ public class JavaClassType implements UnitType {
 
 	public static JavaClassType getBooleanWrapperType() {
 		return lookup("java.lang.Boolean");
+	}
+
+	public static void setDynamicTypeLookup(
+			String s) {
+		lastDynamicTypeLookup = s;
+	}
+
+	public static String getDynamicTypeLookup() {
+		return lastDynamicTypeLookup;
 	}
 
 	// TODO add when we will have Short

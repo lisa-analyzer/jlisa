@@ -52,7 +52,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		originating = st;
 	}
 
-
 	// TODO: invoke clinit if not already invoked
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
