@@ -24,7 +24,7 @@ public class Main{
 		a = create(1);
 		b = create(2);
 		
-		int t = System.in.read();
+		int t = args.length * (-args.length);
 		int r = t;
 		
 		if(t > 3) {

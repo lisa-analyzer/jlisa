@@ -23,7 +23,7 @@ public class Main{
 		b = create(1);
 		c = create(2);
 		
-		int t = System.in.read();
+		int t = args.length * (-args.length);
 		
 		if(t > 1) {
 			a = create(5);

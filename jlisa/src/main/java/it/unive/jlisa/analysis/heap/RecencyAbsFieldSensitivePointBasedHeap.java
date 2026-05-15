@@ -149,7 +149,6 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
 
 						for (SymbolicExpression child : childs) {
-							//addField(s, child, mapping);
 							addField(s.getRecent(), child, mapping);
 							addField(s.getSummary(), child, mapping);
 						}
