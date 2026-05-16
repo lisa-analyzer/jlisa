@@ -7,6 +7,7 @@ import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
@@ -1479,13 +1480,23 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		}
 
 		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+			boolean classLookup = true;
+			boolean interfaceLookup = true;
 			try {
 				JavaClassType.lookup(v);
 			} catch (IllegalArgumentException e) {
-				return Satisfiability.NOT_SATISFIED;
+				classLookup = false;
+			}
+			try {
+				JavaInterfaceType.lookup(v);
+			} catch (IllegalArgumentException e) {
+				interfaceLookup = false;
 			}
 
-			return Satisfiability.SATISFIED;
+			if (classLookup || interfaceLookup) {
+				return Satisfiability.SATISFIED;
+			}
+			return Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof GhostTypeLookupOperator && arg.getValue() instanceof String s) {
