@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.operator.JavaClassForNameOperator;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -15,6 +17,8 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -28,6 +32,8 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -52,7 +58,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		originating = st;
 	}
 
-	// TODO: invoke clinit if not already invoked
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
@@ -84,6 +89,22 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
+
+			String loadingClassStr = getDynamicClassType(interprocedural, state, expr);
+			JavaClassType loadingClass = JavaClassType.lookup(loadingClassStr);
+
+			// execute static initializer
+			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
+			if (classUnit.getCodeMembersByName(loadingClassStr).isEmpty()) {
+				Set<CompilationUnit> superClasses = classUnit
+						.getImmediateAncestors().stream()
+						.filter(u -> u instanceof ClassUnit)
+						.collect(Collectors.toSet());
+
+				classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
+			}
+			state = InitializedClassSet.initialize(state, loadingClass.getReference(), this,
+					interprocedural);
 
 			it.unive.lisa.symbolic.value.UnaryExpression forName = new it.unive.lisa.symbolic.value.UnaryExpression(
 					stringType,
@@ -144,4 +165,31 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			Statement o) {
 		return 0;
 	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> String getDynamicClassType(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		Type stringType = getProgram().getTypes().getStringType();
+
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference derefExpr = new HeapDereference(stringType, expr, getLocation());
+		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
+
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				stringType,
+				accessExpr,
+				GhostTypeLookupOperator.INSTANCE,
+				getLocation());
+
+		analysis.satisfies(state, un, originating);
+		String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
+
+		return dynamicTypeStr;
+	}
+
 }

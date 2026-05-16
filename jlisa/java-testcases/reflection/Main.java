@@ -12,8 +12,18 @@ public class ReflectionTest {
 interface Animal {
 }
 
-class Cat {
+class Mammal {
+	private static boolean foo = true;
+}
+
+class Felid extends Mammal {
+	private static int boo = 42;
+}
+
+class Cat extends Felid {
 	private String nickname;
+
+	private static int age = 2;
 
 	public Cat(String x) {
 		nickname = x;
