@@ -599,10 +599,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(s);
 		}
 
-		if (operator instanceof JavaClassNewInstanceOperator && arg.getValue() instanceof String s) {
-			// TODO
-		}
-
 		return top();
 	}
 

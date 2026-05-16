@@ -7,8 +7,8 @@ import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
@@ -85,8 +85,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		Type dynamicType = null;
 		try {
 			dynamicType = JavaClassType.lookup(dynamicTypeStr);
-		}
-		catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException e) {
 			canInstantiate = false;
 		}
 

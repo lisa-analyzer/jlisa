@@ -58,4 +58,3 @@ public class InstantiationExceptionConstructor extends NaryExpression implements
 				originating);
 	}
 }
-
