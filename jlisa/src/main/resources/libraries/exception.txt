@@ -108,8 +108,6 @@ class java.lang.IllegalAccessException extends java.lang.Exception:
 
 class java.lang.reflect.InvocationTargetException extends java.lang.Exception:
 
-class java.lang.InstantiationException extends java.lang.Exception:
-
 class java.lang.NoSuchFieldException extends java.lang.Exception:
 
 class java.lang.IllegalStateException extends java.lang.RuntimeException:
@@ -124,5 +122,16 @@ class java.lang.ClassNotFoundException extends java.lang.Exception:
 	instance method ClassNotFoundException: it.unive.jlisa.program.java.constructs.exceptions.ClassNotFoundExceptionConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.ClassNotFoundException*
+
+class java.lang.InstantiationException extends java.lang.Exception:
+
+	instance method InstantiationException: it.unive.jlisa.program.java.constructs.exceptions.InstantiationExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.InstantiationException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method InstantiationException: it.unive.jlisa.program.java.constructs.exceptions.InstantiationExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.InstantiationException*
 
 

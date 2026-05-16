@@ -4,8 +4,12 @@ public class ReflectionTest {
 		Class c = Class.forName(s);
 
 		Object o = c.newInstance();
+
 		return;
 	}
+}
+
+interface Animal {
 }
 
 class Cat {
