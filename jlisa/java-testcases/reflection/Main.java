@@ -7,6 +7,8 @@ public class ReflectionTest {
 
 		Field f = c.getField("nickname");
 
+		java.lang.reflect.Method m = c.getMethod("toString");
+
 		return;
 	}
 }

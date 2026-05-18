@@ -1,3 +1,5 @@
 class java.lang.reflect.Field extends java.lang.Object:
 
 class java.lang.reflect.Method extends java.lang.Object:
+	field name libtype java.lang.String*
+	field declaringClass libtype java.lang.Class*
