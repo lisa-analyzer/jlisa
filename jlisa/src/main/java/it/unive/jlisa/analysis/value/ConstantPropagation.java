@@ -1296,6 +1296,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return top();
 
 		NaryOperator operator = ((NaryExpression) expression).getOperator();
+		if (subExpressions.length == 3) {
+
+			if (operator instanceof JavaClassGetMethodOperator) {
+				return ConstantValue.TOP;
+			}
+		}
+
 		if (subExpressions.length == 4) {
 
 			if (operator instanceof JavaStringAppendCharSubArrayOperator) {

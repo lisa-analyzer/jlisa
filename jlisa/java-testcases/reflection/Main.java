@@ -5,6 +5,8 @@ public class ReflectionTest {
 
 		Object o = c.newInstance();
 
+		java.lang.reflect.Method m = c.getMethod("toString");
+
 		return;
 	}
 }

@@ -12,3 +12,9 @@ class java.lang.Class extends java.lang.Object:
 		libtype java.lang.Object*
 		param v libtype java.lang.Class*
 
+	instance method getMethod: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetMethod
+		libtype java.lang.reflect.Method*
+		param v libtype java.lang.Class*
+		param name libtype java.lang.String*
+		param parameterTypes libtype java.lang.Class[]*
+
