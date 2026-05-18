@@ -1,29 +1,18 @@
+import java.lang.reflect.Field;
+
 public class ReflectionTest {
 	public static void main(String[] args) {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		Object o = c.newInstance();
+		Field f = c.getField("nickname");
 
 		return;
 	}
 }
 
-interface Animal {
-}
-
-class Mammal {
-	private static boolean foo = true;
-}
-
-class Felid extends Mammal {
-	private static int boo = 42;
-}
-
-class Cat extends Felid {
+class Cat {
 	private String nickname;
-
-	private static int age = 2;
 
 	public Cat(String x) {
 		nickname = x;

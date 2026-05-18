@@ -76,13 +76,13 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
 
 		// check if class actually exists
-		it.unive.lisa.symbolic.value.UnaryExpression isClassInProgram = new it.unive.lisa.symbolic.value.UnaryExpression(
+		it.unive.lisa.symbolic.value.UnaryExpression isClassDefined = new it.unive.lisa.symbolic.value.UnaryExpression(
 				stringType,
 				accessExpr,
 				JavaIsClassDefinedOperator.INSTANCE,
 				getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, isClassInProgram, originating);
+		Satisfiability sat = analysis.satisfies(state, isClassDefined, originating);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();

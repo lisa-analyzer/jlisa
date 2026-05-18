@@ -245,6 +245,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.Class");
 	}
 
+	public static JavaClassType getFieldMetaType() {
+		return lookup("java.lang.reflect.Field");
+	}
+
 	public static JavaClassType getObjectType() {
 		return lookup("java.lang.Object");
 	}

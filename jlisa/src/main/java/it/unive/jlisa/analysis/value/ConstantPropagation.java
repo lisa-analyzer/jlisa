@@ -15,6 +15,8 @@ import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.lattices.Satisfiability;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -47,6 +49,7 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.util.HashMap;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -76,7 +79,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			// anyway).
 			return true;
 
-		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType());
+		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType())
+				|| rts.stream().anyMatch(t -> t.equals(JavaClassType.getFieldMetaType()));
 	}
 
 	@Override
@@ -1096,6 +1100,22 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(Integer.compare(lv, rv));
 		}
 
+		if (operator instanceof JavaClassGetFieldOperator) {
+			String className = ((String) left.getValue());
+			String fieldName = ((String) right.getValue());
+			JavaClassType loadingClass = JavaClassType.lookup(className);
+
+			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
+			Global field = classUnit.getInstanceGlobal(fieldName, true);
+
+			// TODO: actual abstraction of the field meta object
+			HashMap<String, String> res = new HashMap<>();
+
+			res.put("type", field.getStaticType().toString());
+			res.put("name", fieldName);
+			return new ConstantValue(field);
+		}
+
 		return top();
 	}
 
@@ -1709,6 +1729,20 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		}
+
+		// reflection
+		if (operator instanceof JavaIsFieldDefinedOperator && left.getValue() instanceof String l
+				&& right.getValue() instanceof String r) {
+
+			// safe since class is defined
+			JavaClassType loadingClass = JavaClassType.lookup(l);
+			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
+
+			if (classUnit.getInstanceGlobal(r, true) == null) {
+				return Satisfiability.NOT_SATISFIED;
+			}
+			return Satisfiability.SATISFIED;
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
