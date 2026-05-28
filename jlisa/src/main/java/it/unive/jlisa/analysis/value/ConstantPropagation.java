@@ -49,8 +49,11 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+
 import java.util.HashMap;
 import java.util.Set;
+
+import it.unive.lisa.program.CompilationUnit;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -80,7 +83,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return true;
 
 		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType())
-				|| rts.stream().anyMatch(t -> t.equals(JavaClassType.getFieldMetaType()));
+				|| rts.stream().anyMatch(t -> t.equals(JavaClassType.getFieldMetaType()))
+				|| rts.stream().anyMatch(t -> t.equals(JavaClassType.getMethodType()));
 	}
 
 	@Override
@@ -1319,7 +1323,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (subExpressions.length == 3) {
 
 			if (operator instanceof JavaClassGetMethodOperator) {
-				return ConstantValue.TOP;
+				String className = ((String) subExpressions[0].getValue());
+				String methodName = ((String) subExpressions[1].getValue());
+				JavaClassType loadingClass = JavaClassType.lookup(className);
+
+				// TODO: actual abstraction of the field meta object
+				HashMap<String, String> res = new HashMap<>();
+
+				res.put("class", className);
+				res.put("name", methodName);
+				return new ConstantValue(res);
 			}
 		}
 
@@ -1747,6 +1760,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 
 			if (classUnit.getInstanceGlobal(r, true) == null) {
+				return Satisfiability.NOT_SATISFIED;
+			}
+			return Satisfiability.SATISFIED;
+		}
+
+		if (operator instanceof JavaIsMethodDefinedOperator && left.getValue() instanceof String l && right.getValue() instanceof String r) {
+			JavaClassType ct= JavaClassType.lookup(l);
+			CompilationUnit cu = ct.getUnit();
+			if(cu.getInstanceCodeMember(r, true) == null) {
 				return Satisfiability.NOT_SATISFIED;
 			}
 			return Satisfiability.SATISFIED;

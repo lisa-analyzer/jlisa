@@ -28,6 +28,9 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import it.unive.jlisa.program.operator.JavaClassGetMethodOperator;
+import it.unive.jlisa.program.operator.JavaIsMethodDefinedOperator;
+import it.unive.lisa.lattices.Satisfiability;
 
 public class ClassGetMethod extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -79,33 +82,34 @@ public class ClassGetMethod extends NaryExpression implements PluggableStatement
 		Type methodType = JavaClassType.getMethodType();
 		Type stringType = getProgram().getTypes().getStringType();
 
-		// Extract the dynamic class type from the receiver (Class object)
-		GlobalVariable nameField = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-		HeapDereference derefExpr = new HeapDereference(classMetaType, exprs[0], getLocation());
-		AccessChild accessExpr = new AccessChild(stringType, derefExpr, nameField, getLocation());
-
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType,
-				accessExpr,
-				GhostTypeLookupOperator.INSTANCE,
-				getLocation());
-
-		analysis.satisfies(state, un, originating);
-		String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
-
-		// Check if the class exists
-		boolean classExists = true;
-		try {
-			JavaClassType.lookup(dynamicTypeStr);
-		} catch (IllegalArgumentException e) {
-			classExists = false;
-		}
-
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
-		// Populate the "no exception" path
-		if (classExists) {
+		// access class name (1st arg)
+		GlobalVariable classNameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
+		HeapDereference derefClassNameExpr = new HeapDereference(stringType, exprs[0], getLocation());
+		AccessChild accessClassNameExpr = new AccessChild(stringType, derefClassNameExpr, classNameVar, getLocation());
+
+		// access method name (2nd arg)
+		GlobalVariable methodNameVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		HeapDereference derefMethodNameExpr = new HeapDereference(stringType, exprs[1], getLocation());
+		AccessChild accessMethodNameExpr = new AccessChild(stringType, derefMethodNameExpr, methodNameVar, getLocation());
+
+        exprs[0] = accessClassNameExpr;
+        exprs[1] = accessMethodNameExpr;
+
+		// check if class actually exists
+		it.unive.lisa.symbolic.value.BinaryExpression isMethodDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
+				stringType,
+				accessClassNameExpr,
+				accessMethodNameExpr,
+				JavaIsMethodDefinedOperator.INSTANCE,
+				getLocation());
+
+		Satisfiability sat = analysis.satisfies(state, isMethodDefined, originating);
+
+		if (sat == Satisfiability.SATISFIED) {
+			// class and method definitely exist, no exception to be thrown
 			// Allocate the Method object
 			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 					new JavaReferenceType(methodType),
@@ -113,35 +117,31 @@ public class ClassGetMethod extends NaryExpression implements PluggableStatement
 			AnalysisState<
 					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-			// Assign the method name to the `name` field of Method
-			GlobalVariable methodNameField = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-
-			AnalysisState<A> tmp = state.bottomExecution();
-			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-				AccessChild dst = new AccessChild(stringType, ref, methodNameField, getLocation());
-
-				// Use PushAny as a top value for the method name
-				PushAny top = new PushAny(stringType, getLocation());
-				AnalysisState<A> sem = analysis.assign(callState, dst, top, this);
-				tmp = tmp.lub(sem);
-			}
-
 			// Assign the declaring class to the `declaringClass` field of Method
-			GlobalVariable declaringClassField = new GlobalVariable(Untyped.INSTANCE, "declaringClass",
+			GlobalVariable declaringClassField = new GlobalVariable(Untyped.INSTANCE, "value",getLocation());
+
+			it.unive.jlisa.program.operator.NaryExpression getMethod = new it.unive.jlisa.program.operator.NaryExpression(
+					methodType,
+					exprs,
+					JavaClassGetMethodOperator.INSTANCE,
 					getLocation());
 
 			AnalysisState<A> tmp2 = state.bottomExecution();
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-				AccessChild dstDecl = new AccessChild(classMetaType, ref, declaringClassField, getLocation());
-				AnalysisState<A> sem = analysis.assign(tmp, dstDecl, exprs[0], this);
+				AccessChild dstDecl = new AccessChild(methodType, ref, declaringClassField, getLocation());
+				AnalysisState<A> sem = analysis.assign(callState, dstDecl, getMethod, this);
 				tmp2 = tmp2.lub(sem);
 			}
 
 			getMetaVariables().addAll(call.getMetaVariables());
 			noExceptionState = tmp2.withExecutionExpressions(callState.getExecutionExpressions());
-		}
 
-		// NoSuchMethodException to be thrown if class does not exist or method
+		} else if (sat == Satisfiability.NOT_SATISFIED) {
+			System.out.println("Method not defined");
+		}
+		
+
+		/*// NoSuchMethodException to be thrown if class does not exist or method
 		// not found
 		if (!classExists) {
 			JavaClassType noSuchMethodExceptionType = JavaClassType.getNoSuchMethodException();
@@ -161,7 +161,7 @@ public class ClassGetMethod extends NaryExpression implements PluggableStatement
 
 			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
 					new Error(noSuchMethodExceptionType.getReference(), originating), this);
-		}
+		}*/
 
 		return exceptionState.lub(noExceptionState);
 	}

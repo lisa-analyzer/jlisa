@@ -21,4 +21,4 @@ class java.lang.Class extends java.lang.Object:
 		libtype java.lang.reflect.Method*
 		param v libtype java.lang.Class*
 		param name libtype java.lang.String*
-		param parameterTypes libtype java.lang.Class[]*
+		param parameterTypes libtype java.lang.String*

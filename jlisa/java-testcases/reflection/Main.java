@@ -1,13 +1,11 @@
 import java.lang.reflect.Field;
 
 public class ReflectionTest {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NoSuchMethodException, ClassNotFoundException {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		Field f = c.getField("nickname");
-
-		java.lang.reflect.Method m = c.getMethod("toString");
+		java.lang.reflect.Method m = c.getMethod("sound", "test");
 
 		return;
 	}
@@ -22,6 +20,10 @@ class Cat {
 
 	public Cat() {
 		nickname = "ziggy";
+	}
+
+	public String sound(int x,int y){
+		return "meow";
 	}
 }
 
