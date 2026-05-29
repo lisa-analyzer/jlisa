@@ -5,16 +5,17 @@ import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.jlisa.frontend.util.Build;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.*;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import it.unive.lisa.program.annotations.Annotations;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 
@@ -33,7 +34,7 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 				addUnitsInDeclaration((TypeDeclaration) type, null, processed);
 			else if (type instanceof EnumDeclaration)
 				addEnumUnit(getParserContext().getProgram(), null, (EnumDeclaration) type, processed);
-
+			// TODO: Add another branch for annotation type declaration, i.e. for instances  like @interface Foo...
 		return false;
 	}
 
@@ -64,6 +65,8 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return false;
+
+		// TODO: Add annotation support
 		InterfaceUnit iUnit = new InterfaceUnit(loc, program, name, false);
 		program.addUnit(iUnit);
 		JavaInterfaceType.register(iUnit.getName(), iUnit);
@@ -93,9 +96,9 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			else
-				cUnit = new AbstractClassUnit(loc, program, name, Modifier.isFinal(modifiers));
+				cUnit = new AbstractClassUnit(loc, program, name, addAnnotations(typeDecl.modifiers()), Modifier.isFinal(modifiers));
 		else
-			cUnit = new ClassUnit(loc, program, name, Modifier.isFinal(modifiers));
+			cUnit = new ClassUnit(loc, program, name, addAnnotations(typeDecl.modifiers()), Modifier.isFinal(modifiers));
 
 		program.addUnit(cUnit);
 		JavaClassType.register(cUnit.getName(), cUnit);
@@ -135,6 +138,7 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 		String name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return;
+		// TODO: Add annotation support
 		EnumUnit enUnit = new EnumUnit(loc, program, name, true);
 		program.addUnit(enUnit);
 		JavaClassType.register(enUnit.getName(), enUnit);
@@ -146,5 +150,17 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 				addEnumUnit(getProgram(), newOuter, (EnumDeclaration) decl, processed);
 			else if (decl instanceof TypeDeclaration)
 				addUnitsInDeclaration((TypeDeclaration) decl, newOuter, processed);
+	}
+
+	private Annotations addAnnotations(List<?> modifiers) {
+		Annotations anns = new Annotations();
+
+		for (Object modifier : modifiers) {
+			if (modifier instanceof Annotation jdtAnn) {
+				anns.addAnnotation(Build.lisaAnnotation.fromJDT(jdtAnn));
+			}
+		}
+
+		return anns;
 	}
 }
