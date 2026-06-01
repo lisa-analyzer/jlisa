@@ -36,7 +36,7 @@ public class Main{
 		a = create(100);
 		b = create(-12);
 		
-		int t = System.in.read();
+		int t = args.length * (-args.length);
 		
 		if(t > 0)
 			c = create(10);

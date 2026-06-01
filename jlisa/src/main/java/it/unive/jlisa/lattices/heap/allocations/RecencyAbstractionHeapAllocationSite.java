@@ -2,6 +2,7 @@ package it.unive.jlisa.lattices.heap.allocations;
 
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
+import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -108,6 +109,26 @@ public class RecencyAbstractionHeapAllocationSite extends AllocationSite{
 		summary = (AllocationSite) summary.lub(aux.getSummary());
 		
 		return this;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if(obj instanceof AllocationSites) {
+			AllocationSites sites = (AllocationSites) obj;
+			if(sites.size() != 1)
+				return false;
+			for(AllocationSite s : sites) {
+				return super.equals(s);
+			}
+		}
+		
+		if (getClass() != obj.getClass())
+			return false;
+		return super.equals(obj);
 	}
 	
 }

@@ -34,6 +34,7 @@ public class Main{
 			} else {
 				e = create(27);
 			}
+			int i = 2;
 		} else {
 			d = create(-2);
 			if(r < 2) {
@@ -41,6 +42,7 @@ public class Main{
 			} else {
 				d = create(-4);
 			}
+			int i = 2;
 		}
 		
 		//d.a = 30;

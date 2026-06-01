@@ -9,21 +9,17 @@ import it.unive.lisa.lattices.FunctionalLattice;
 import it.unive.lisa.lattices.GenericMapLattice;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
-import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
-import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.util.collections.CollectionsDiffBuilder;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -56,7 +52,7 @@ public class RecencyAbstractionHeapEnvWithFields
 		super(new AllocationSites().top());
 		this.fields = new GenericMapLattice<AllocationSite, ExpressionSet>(new ExpressionSet()).top();
 	}
-
+	
 	/**
 	 * Builds an environment containing the given mapping. If function is
 	 * {@code null}, the new environment is the top environment if
@@ -285,30 +281,8 @@ public class RecencyAbstractionHeapEnvWithFields
 			RecencyAbstractionHeapEnvWithFields other)
 			throws SemanticException {
 		RecencyAbstractionHeapEnvWithFields lub = super.lubAux(other);
-		
-		Collection<AllocationSite> sites = fields.getKeys();
-		Set<AllocationSite> toKeep = new HashSet<AllocationSite>();
-				
-		for(Entry<Identifier, AllocationSites> t : lub) {
-			for(Entry<AllocationSite, ExpressionSet> f : lub.fields) {
-				for(AllocationSite elem : t.getValue().elements) {
-					if(elem.getLocationName().equals(f.getKey().getLocationName()))
-						if(elem.isWeak() == f.getKey().isWeak())
-							toKeep.add(f.getKey());
-				}	
-			}
-		}
-		
-		sites.removeAll(toKeep);
-		
-		for(AllocationSite elem : sites) {
-			if(elem instanceof HeapAllocationSite) {
-				forgetIdentifier(elem, null);
-				other.forgetIdentifier(elem, null);
-			}
-		}
-		
 		return new RecencyAbstractionHeapEnvWithFields(lub.lattice, lub.function, fields.lub(other.fields));
+	
 	}
 
 	@Override

@@ -24,7 +24,6 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 		perform(conf);
 	}
 	
-	// Ignore for the moment, recency works only with heap
 	@Test
 	public void recency_test_creation() throws IOException {
 		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",

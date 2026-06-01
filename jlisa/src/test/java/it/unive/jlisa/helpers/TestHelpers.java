@@ -8,17 +8,13 @@ import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.Reachability;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.jlisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.outputs.DotCallGraph;
-import it.unive.lisa.outputs.HtmlCallGraph;
 import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONResults;
-import it.unive.lisa.outputs.OutputCFGDumper;
-
 import java.util.ArrayList;
 
 public class TestHelpers {
