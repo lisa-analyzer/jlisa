@@ -313,17 +313,7 @@ public class SimpleAbstractState<
 									replacements.add(replacement);
 								}
 							}
-						} else {
-							for (SymbolicExpression field : pHeap.fields.getState(val)) {
-								AllocationSite withField = val.withField(field);
-								if (!withField.isWeak()) {
-									HeapReplacement replacement = new HeapReplacement();
-									replacement.addSource(withField);
-									replacement.addTarget(withField.toWeak());
-									replacements.add(replacement);
-								}
-							}
-						}
+						} 
 					}
 				}
 			}
@@ -345,17 +335,7 @@ public class SimpleAbstractState<
 									replacements.add(replacement);
 								}
 							}
-						} else {
-							for (SymbolicExpression field : pHeap.fields.getState(val)) {
-								AllocationSite withField = val.withField(field);
-								if (!withField.isWeak()) {
-									HeapReplacement replacement = new HeapReplacement();
-									replacement.addSource(withField);
-									replacement.addTarget(withField.toWeak());
-									replacements.add(replacement);
-								}
-							}
-						}
+						} 
 					}
 				}
 			}
