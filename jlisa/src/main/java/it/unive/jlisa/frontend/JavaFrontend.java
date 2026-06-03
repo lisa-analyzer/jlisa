@@ -90,7 +90,7 @@ public class JavaFrontend {
 		JavaInterfaceType.clearAll();
 	}
 
-	private void registerTypes() {
+	protected void registerTypes() {
 		TypeSystem typeSystem = this.parserContext.getProgram().getTypes();
 		typeSystem.registerType(JavaBooleanType.INSTANCE);
 		typeSystem.registerType(JavaByteType.INSTANCE);
@@ -112,7 +112,7 @@ public class JavaFrontend {
 		return new Program(features, typeSystem);
 	}
 
-	private ASTParser getParser(
+	protected ASTParser getParser(
 			String source,
 			int parseAs) {
 		ASTParser parser = ASTParser.newParser(AST.getJLSLatest()); // NOTE:
@@ -136,13 +136,13 @@ public class JavaFrontend {
 		return parser;
 	}
 
-	private CompilationUnit getCompilationUnit(
+	protected CompilationUnit getCompilationUnit(
 			String source) {
 		ASTParser parser = getParser(source, ASTParser.K_COMPILATION_UNIT);
 		return (CompilationUnit) parser.createAST(null);
 	}
 
-	private List<String> expandFilePaths(
+	protected List<String> expandFilePaths(
 			List<String> paths)
 			throws IOException {
 		java.util.List<String> expandedPaths = new java.util.ArrayList<>();
@@ -216,7 +216,7 @@ public class JavaFrontend {
 		return getProgram();
 	}
 
-	private void runPass(
+	protected void runPass(
 			CompilationUnit[] cus,
 			String[] fileNames,
 			UnitScope[] scopes,
