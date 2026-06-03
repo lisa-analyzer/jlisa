@@ -5,7 +5,7 @@ import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
-import it.unive.jlisa.frontend.util.Build;
+import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.*;
@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import it.unive.lisa.program.annotations.Annotations;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -80,8 +79,9 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 			Set<String> processed) {
 		SourceCodeLocation loc = getSourceCodeLocation(typeDecl);
 
-		int modifiers = typeDecl.getModifiers();
-		if (Modifier.isPrivate(modifiers) && outer == null)
+		int modifierFlags = typeDecl.getModifiers();
+		List<?> modifiers = typeDecl.modifiers();
+		if (Modifier.isPrivate(modifierFlags) && outer == null)
 			throw new RuntimeException(
 					new ProgramValidationException("Modifier private not allowed in a top-level class"));
 
@@ -91,14 +91,16 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 		name = FQNUtils.buildFQN(getScope().getPackage(), outer, typeDecl.getName().toString());
 		if (!processed.add(name))
 			return false;
-		if (Modifier.isAbstract(modifiers))
-			if (Modifier.isFinal(modifiers))
+		if (Modifier.isAbstract(modifierFlags))
+			if (Modifier.isFinal(modifierFlags))
 				throw new RuntimeException(
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			else
-				cUnit = new AbstractClassUnit(loc, program, name, addAnnotations(typeDecl.modifiers()), Modifier.isFinal(modifiers));
+				cUnit = new AbstractClassUnit(loc, program, name,
+						AnnotationBuilder.fromDeclarationModifiers(modifiers), Modifier.isFinal(modifierFlags));
 		else
-			cUnit = new ClassUnit(loc, program, name, addAnnotations(typeDecl.modifiers()), Modifier.isFinal(modifiers));
+			cUnit = new ClassUnit(loc, program, name,
+					AnnotationBuilder.fromDeclarationModifiers(modifiers), Modifier.isFinal(modifierFlags));
 
 		program.addUnit(cUnit);
 		JavaClassType.register(cUnit.getName(), cUnit);
@@ -150,17 +152,5 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 				addEnumUnit(getProgram(), newOuter, (EnumDeclaration) decl, processed);
 			else if (decl instanceof TypeDeclaration)
 				addUnitsInDeclaration((TypeDeclaration) decl, newOuter, processed);
-	}
-
-	private Annotations addAnnotations(List<?> modifiers) {
-		Annotations anns = new Annotations();
-
-		for (Object modifier : modifiers) {
-			if (modifier instanceof Annotation jdtAnn) {
-				anns.addAnnotation(Build.lisaAnnotation.fromJDT(jdtAnn));
-			}
-		}
-
-		return anns;
 	}
 }

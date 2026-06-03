@@ -3,6 +3,7 @@ package it.unive.jlisa.frontend.visitors.pipeline;
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
@@ -150,6 +151,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
+		List<?> modifiers = node.modifiers();
 
 		it.unive.lisa.type.Type returnType = null;
 
@@ -177,8 +179,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		List<Parameter> parameters = new ArrayList<>();
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
-			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
-					new Annotations()));
+			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type)));
 		}
 
 		for (Object o : node.parameters()) {
@@ -188,12 +189,13 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
-		// TODO annotations
-		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance,
 				node.getName().getIdentifier(),
-				returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType, annotations, paramArray);
+				returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType,
+				AnnotationBuilder.fromDeclarationModifiers(modifiers),
+				paramArray);
+
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
 			codeMemberDescriptor.setOverridable(false);
 		} else {
@@ -211,6 +213,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
+		List<?> modifiers = node.modifiers();
 		it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
 
 		List<Parameter> parameters = new ArrayList<>();
@@ -229,11 +232,10 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
-		// TODO annotations
-		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance,
-				node.getName().getIdentifier(), VoidType.INSTANCE, annotations, paramArray);
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance, node.getName().getIdentifier(),
+				VoidType.INSTANCE, AnnotationBuilder.fromDeclarationModifiers(modifiers), paramArray);
+
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
 			codeMemberDescriptor.setOverridable(false);
 		} else {

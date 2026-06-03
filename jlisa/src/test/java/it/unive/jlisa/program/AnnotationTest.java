@@ -10,6 +10,7 @@ import it.unive.lisa.program.annotations.AnnotationMember;
 import it.unive.lisa.program.annotations.values.ArrayAnnotationValue;
 import it.unive.lisa.program.annotations.values.BasicAnnotationValue;
 import it.unive.lisa.program.annotations.values.BoolAnnotationValue;
+import it.unive.lisa.program.annotations.values.CharAnnotationValue;
 import it.unive.lisa.program.annotations.values.DoubleAnnotationValue;
 import it.unive.lisa.program.annotations.values.FloatAnnotationValue;
 import it.unive.lisa.program.annotations.values.IntAnnotationValue;
@@ -25,50 +26,75 @@ import org.junit.jupiter.api.Test;
 
 public class AnnotationTest {
 
-    private static Program program;
+    private static Program lisaProgram;
 
     @BeforeAll
     static void parse() throws IOException {
-        program = new JavaFrontend().parseFromListOfFile(List.of(
+        lisaProgram = new JavaFrontend().parseFromListOfFile(List.of(
                 "java-testcases/annotation/A.java",
                 "java-testcases/annotation/B.java",
                 "java-testcases/annotation/C.java",
                 "java-testcases/annotation/D.java",
+                "java-testcases/annotation/E.java",
+                "java-testcases/annotation/F.java",
+                "java-testcases/annotation/G.java",
+                "java-testcases/annotation/H.java",
+                "java-testcases/annotation/I.java",
                 "java-testcases/annotation/Main.java"));
     }
 
-    private static void assertAnnotation(String unitName, Annotation expected) {
-        Collection<Annotation> anns = ((CompilationUnit) program.getUnit(unitName)).getAnnotations().getAnnotations();
-        assertTrue(anns.contains(expected), "unit " + unitName + " should carry " + expected + ", got " + anns);
+    private static Collection<Annotation> getClassLevelAnnotations(String classUnitName) {
+        return ((CompilationUnit) lisaProgram.getUnit(classUnitName)).getAnnotations().getAnnotations();
+    }
+
+    private static Collection<Annotation> getMethodLevelAnnotations(String classUnitName, String methodUnitName ) {
+        return ((CompilationUnit) lisaProgram.getUnit(classUnitName))
+                .getInstanceCodeMembersByName(methodUnitName, false)
+                .iterator().next()
+                .getDescriptor().getAnnotations().getAnnotations();
+    }
+
+    private static void assertAnnotationOfClass(String classUnitName, Annotation isAnnotatedWith) {
+        Collection<Annotation> anns = getClassLevelAnnotations(classUnitName);
+
+        assertTrue(anns.contains(isAnnotatedWith), "unit " + classUnitName + " should carry " + isAnnotatedWith + ", got " + anns);
+    }
+
+    private static void assertAnnotationOfMethod(String classUnitName, String methodUnitName, Annotation isAnnotatedWith) {
+        Collection<Annotation> anns = getMethodLevelAnnotations(classUnitName, methodUnitName);
+
+        assertTrue(anns.contains(isAnnotatedWith),
+                classUnitName + "." + methodUnitName + " should carry " + isAnnotatedWith + ", got " + anns);
     }
 
     @Test
-    public void testMarkerAnnotation() {
-        Annotation expected = new Annotation("ClassLevelMarkerTypeAnnotation");
-        assertAnnotation("A", expected);
+    public void testClassLevelMarkerAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("ClassLevelMarkerTypeAnnotation");
+
+        assertAnnotationOfClass("A", isAnnotatedWith);
     }
 
     @Test
-    public void testSingleMemberAnnotation() {
-        Annotation expected = new Annotation("ClassLevelSingleMemberAnnotation",
+    public void testClassLevelSingleMemberAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("ClassLevelSingleMemberAnnotation",
                 List.of(new AnnotationMember("value", new IntAnnotationValue(22))));
 
-        assertAnnotation("B", expected);
+        assertAnnotationOfClass("B", isAnnotatedWith);
     }
 
     @Test
     public void testNormalAnnotation() {
-        Annotation expected = new Annotation("ClassLevelNormalAnnotation", List.of(
+        Annotation isAnnotatedWith = new Annotation("ClassLevelNormalAnnotation", List.of(
                 new AnnotationMember("value", new IntAnnotationValue(1)),
                 new AnnotationMember("value2", new StringAnnotationValue("\"a\"")),
                 new AnnotationMember("value3", new BoolAnnotationValue(true))));
 
-        assertAnnotation("C", expected);
+        assertAnnotationOfClass("C", isAnnotatedWith);
     }
 
     @Test
     public void testNormalAnnotationWithArray() {
-        Annotation expected = new Annotation("ClassLevelAnnotationInherited", List.of(
+        Annotation isAnnotatedWith = new Annotation("ClassLevelAnnotationInherited", List.of(
                 new AnnotationMember("value1", new FloatAnnotationValue(1.5f)),
                 new AnnotationMember("value2", new DoubleAnnotationValue(2.5)),
                 new AnnotationMember("value3", new LongAnnotationValue(99L)),
@@ -77,6 +103,47 @@ public class AnnotationTest {
                         new StringAnnotationValue("\"x\""),
                         new StringAnnotationValue("\"y\"")}))));
 
-        assertAnnotation("D", expected);
+        assertAnnotationOfClass("D", isAnnotatedWith);
+    }
+
+    @Test
+    public void testMethodLevelMarkerAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("MethodLevelMarkerTypeAnnotation");
+
+        assertAnnotationOfMethod("E", "E_1", isAnnotatedWith);
+    }
+
+    @Test
+    public void testMethodLevelSingleMemberAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("MethodLevelSingleMemberAnnotation",
+                List.of(new AnnotationMember("value", new StringAnnotationValue("\"a\""))));
+
+        assertAnnotationOfMethod("F", "F_2", isAnnotatedWith);
+    }
+
+    @Test
+    public void testMethodLevelNormalAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("MethodLevelNormalAnnotation", List.of(
+                new AnnotationMember("value", new CharAnnotationValue('a')),
+                new AnnotationMember("value2", new IntAnnotationValue(1)),
+                new AnnotationMember("value3", new BoolAnnotationValue(false))));
+
+        assertAnnotationOfMethod("G", "G_1", isAnnotatedWith);
+    }
+
+    @Test
+    public void testConstructorLevelMarkerAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("ConstructorLevelMarkerTypeAnnotation");
+
+        assertAnnotationOfMethod("H", "H", isAnnotatedWith);
+    }
+
+    @Test
+    public void testConstructorLevelNormalAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("ConstructorLevelNormalAnnotation", List.of(
+                new AnnotationMember("value", new StringAnnotationValue("\"a\"")),
+                new AnnotationMember("value2", new LongAnnotationValue(99L))));
+
+        assertAnnotationOfMethod("I", "I", isAnnotatedWith);
     }
 }
