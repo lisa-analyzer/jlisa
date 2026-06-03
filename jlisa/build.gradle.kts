@@ -65,9 +65,9 @@ dependencies {
     implementation("commons-cli:commons-cli:1.4")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
-    implementation("io.github.lisa-analyzer:lisa-sdk:0.2")
-    implementation("io.github.lisa-analyzer:lisa-analyses:0.2")
-    implementation("io.github.lisa-analyzer:lisa-program:0.2")
+    implementation("io.github.lisa-analyzer:lisa-sdk:0.3-SNAPSHOT")
+    implementation("io.github.lisa-analyzer:lisa-analyses:0.3-SNAPSHOT")
+    implementation("io.github.lisa-analyzer:lisa-program:0.3-SNAPSHOT")
     implementation("io.github.classgraph:classgraph:4.8.175")
 }
 
@@ -91,6 +91,41 @@ tasks.named<org.gradle.api.plugins.antlr.AntlrTask>("generateGrammarSource") {
 // TEST CONFIGURATION
 tasks.test {
     useJUnitPlatform()
+
+    testLogging {
+        showStandardStreams = false
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+
+    val outputs = mutableMapOf<String, StringBuilder>() // test key -> output buffer
+
+    fun key(d: org.gradle.api.tasks.testing.TestDescriptor) = "${d.className}.${d.name}"
+
+    addTestOutputListener { descriptor, event ->
+        outputs.computeIfAbsent(key(descriptor)) { StringBuilder() }.append(event.message)
+    }
+
+    addTestListener(object : org.gradle.api.tasks.testing.TestListener {
+        override fun beforeSuite(suite: org.gradle.api.tasks.testing.TestDescriptor) {}
+        override fun afterSuite(
+            suite: org.gradle.api.tasks.testing.TestDescriptor,
+            result: org.gradle.api.tasks.testing.TestResult
+        ) {}
+        override fun beforeTest(testDescriptor: org.gradle.api.tasks.testing.TestDescriptor) {}
+        override fun afterTest(
+            desc: org.gradle.api.tasks.testing.TestDescriptor,
+            result: org.gradle.api.tasks.testing.TestResult
+        ) {
+            val buf = outputs.remove(key(desc))
+            if (result.resultType == org.gradle.api.tasks.testing.TestResult.ResultType.FAILURE
+                && buf != null) {
+                println("=== Captured output for ${desc.className}.${desc.name} ===")
+                print(buf.toString())
+                println("=============================================================")
+            }
+        }
+    })
 }
 
 // JAR (FAT JAR)
