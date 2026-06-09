@@ -49,13 +49,13 @@ import org.apache.commons.lang3.tuple.Pair;
  * @param <V> the type of {@link ValueLattice} embedded in this state
  * @param <T> the type of {@link TypeLattice} embedded in this state
  */
-public class SimpleAbstractState<
+public class RASimpleAbstractState<
 		H extends HeapLattice<H>,
 		V extends ValueLattice<V>,
 		T extends TypeLattice<T>>
 		implements
-		BaseLattice<SimpleAbstractState<H, V, T>>,
-		AbstractLattice<SimpleAbstractState<H, V, T>> {
+		BaseLattice<RASimpleAbstractState<H, V, T>>,
+		AbstractLattice<RASimpleAbstractState<H, V, T>> {
 
 	/**
 	 * The key that should be used to store the instance of {@link HeapDomain}
@@ -104,7 +104,7 @@ public class SimpleAbstractState<
 	 *                      structures
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			H heapState) {
 		this.heapState = heapState;
 		this.valueState = (V) SingleValueLattice.SINGLETON;
@@ -120,7 +120,7 @@ public class SimpleAbstractState<
 	 *                       program variables and concretized memory locations
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			V valueState) {
 		this.heapState = (H) SingleHeapLattice.SINGLETON;
 		this.valueState = valueState;
@@ -137,7 +137,7 @@ public class SimpleAbstractState<
 	 *                      locations
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			T typeState) {
 		this.heapState = (H) SingleHeapLattice.SINGLETON;
 		this.valueState = (V) SingleValueLattice.SINGLETON;
@@ -155,7 +155,7 @@ public class SimpleAbstractState<
 	 *                       program variables and concretized memory locations
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			H heapState,
 			V valueState) {
 		this.heapState = heapState;
@@ -175,7 +175,7 @@ public class SimpleAbstractState<
 	 *                      locations
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			H heapState,
 			T typeState) {
 		this.heapState = heapState;
@@ -195,7 +195,7 @@ public class SimpleAbstractState<
 	 *                       locations
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			V valueState,
 			T typeState) {
 		this.heapState = (H) SingleHeapLattice.SINGLETON;
@@ -214,7 +214,7 @@ public class SimpleAbstractState<
 	 *                       types of program variables and concretized memory
 	 *                       locations
 	 */
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			H heapState,
 			V valueState,
 			T typeState) {
@@ -230,17 +230,17 @@ public class SimpleAbstractState<
 	 * @param mo the oracle containing the components for the state to be
 	 *               created
 	 */
-	public SimpleAbstractState(
+	public RASimpleAbstractState(
 			SimpleAbstractDomain<H, V, T>.MutableOracle mo) {
 		this(mo.heap, mo.value, mo.type);
 	}
 
-	public SimpleAbstractState(
-			it.unive.jlisa.analysis.SimpleAbstractDomain<H, V, T>.MutableOracle mo) {
+	public RASimpleAbstractState(
+			it.unive.jlisa.analysis.RASimpleAbstractDomain<H, V, T>.MutableOracle mo) {
 		this(mo.heap, mo.value, mo.type);	
 	}
 
-	private SimpleAbstractState<H, V, T> applySubstitution(
+	private RASimpleAbstractState<H, V, T> applySubstitution(
 			List<HeapReplacement> subs,
 			ProgramPoint pp)
 			throws SemanticException {
@@ -251,39 +251,39 @@ public class SimpleAbstractState<
 				t = t.applyReplacement(repl, pp);
 				v = v.applyReplacement(repl, pp);
 			}
-		return new SimpleAbstractState<>(heapState, v, t);
+		return new RASimpleAbstractState<>(heapState, v, t);
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> pushScope(
+	public RASimpleAbstractState<H, V, T> pushScope(
 			ScopeToken scope,
 			ProgramPoint pp)
 			throws SemanticException {
 		// it should not be necessary to apply substitutions here,
 		// as we are not deleting variables and the heap locations
 		// won't be masked by the scope
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				heapState.pushScope(scope, pp).getLeft(),
 				valueState.pushScope(scope, pp),
 				typeState.pushScope(scope, pp));
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> popScope(
+	public RASimpleAbstractState<H, V, T> popScope(
 			ScopeToken scope,
 			ProgramPoint pp)
 			throws SemanticException {
 		Pair<H, List<HeapReplacement>> heap = heapState.popScope(scope, pp);
-		SimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
+		RASimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
 		V v = subs.valueState.popScope(scope, pp);
 		T t = subs.typeState.popScope(scope, pp);
-		return new SimpleAbstractState<>(heap.getLeft(), v, t);
+		return new RASimpleAbstractState<>(heap.getLeft(), v, t);
 	}
 
 	@SuppressWarnings("unlikely-arg-type")
 	@Override
-	public SimpleAbstractState<H, V, T> lubAux(
-			SimpleAbstractState<H, V, T> other)
+	public RASimpleAbstractState<H, V, T> lubAux(
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		H postHeap = heapState.lub(other.heapState);
 		V postValue = valueState.lub(other.valueState);
@@ -356,57 +356,57 @@ public class SimpleAbstractState<
 			}
 		}
 		
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				postHeap,
 				postValue,
 				postType);
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> upchainAux(
-			SimpleAbstractState<H, V, T> other)
+	public RASimpleAbstractState<H, V, T> upchainAux(
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				heapState.upchain(other.heapState),
 				valueState.upchain(other.valueState),
 				typeState.upchain(other.typeState));
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> glbAux(
-			SimpleAbstractState<H, V, T> other)
+	public RASimpleAbstractState<H, V, T> glbAux(
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				heapState.glb(other.heapState),
 				valueState.glb(other.valueState),
 				typeState.glb(other.typeState));
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> downchainAux(
-			SimpleAbstractState<H, V, T> other)
+	public RASimpleAbstractState<H, V, T> downchainAux(
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				heapState.downchain(other.heapState),
 				valueState.downchain(other.valueState),
 				typeState.downchain(other.typeState));
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> wideningAux(
-			SimpleAbstractState<H, V, T> other)
+	public RASimpleAbstractState<H, V, T> wideningAux(
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				heapState.widening(other.heapState),
 				valueState.widening(other.valueState),
 				typeState.widening(other.typeState));
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> narrowingAux(
-			SimpleAbstractState<H, V, T> other)
+	public RASimpleAbstractState<H, V, T> narrowingAux(
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
-		return new SimpleAbstractState<>(
+		return new RASimpleAbstractState<>(
 				heapState.narrowing(other.heapState),
 				valueState.narrowing(other.valueState),
 				typeState.narrowing(other.typeState));
@@ -414,7 +414,7 @@ public class SimpleAbstractState<
 
 	@Override
 	public boolean lessOrEqualAux(
-			SimpleAbstractState<H, V, T> other)
+			RASimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return heapState.lessOrEqual(other.heapState)
 				&& valueState.lessOrEqual(other.valueState)
@@ -422,13 +422,13 @@ public class SimpleAbstractState<
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> top() {
-		return new SimpleAbstractState<>(heapState.top(), valueState.top(), typeState.top());
+	public RASimpleAbstractState<H, V, T> top() {
+		return new RASimpleAbstractState<>(heapState.top(), valueState.top(), typeState.top());
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> bottom() {
-		return new SimpleAbstractState<>(heapState.bottom(), valueState.bottom(), typeState.bottom());
+	public RASimpleAbstractState<H, V, T> bottom() {
+		return new RASimpleAbstractState<>(heapState.bottom(), valueState.bottom(), typeState.bottom());
 	}
 
 	@Override
@@ -442,39 +442,39 @@ public class SimpleAbstractState<
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> forgetIdentifier(
+	public RASimpleAbstractState<H, V, T> forgetIdentifier(
 			Identifier id,
 			ProgramPoint pp)
 			throws SemanticException {
 		Pair<H, List<HeapReplacement>> heap = heapState.forgetIdentifier(id, pp);
-		SimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
+		RASimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
 		V v = subs.valueState.forgetIdentifier(id, pp);
 		T t = subs.typeState.forgetIdentifier(id, pp);
-		return new SimpleAbstractState<>(heap.getLeft(), v, t);
+		return new RASimpleAbstractState<>(heap.getLeft(), v, t);
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> forgetIdentifiers(
+	public RASimpleAbstractState<H, V, T> forgetIdentifiers(
 			Iterable<Identifier> ids,
 			ProgramPoint pp)
 			throws SemanticException {
 		Pair<H, List<HeapReplacement>> heap = heapState.forgetIdentifiers(ids, pp);
-		SimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
+		RASimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
 		V v = subs.valueState.forgetIdentifiers(ids, pp);
 		T t = subs.typeState.forgetIdentifiers(ids, pp);
-		return new SimpleAbstractState<>(heap.getLeft(), v, t);
+		return new RASimpleAbstractState<>(heap.getLeft(), v, t);
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> forgetIdentifiersIf(
+	public RASimpleAbstractState<H, V, T> forgetIdentifiersIf(
 			Predicate<Identifier> test,
 			ProgramPoint pp)
 			throws SemanticException {
 		Pair<H, List<HeapReplacement>> heap = heapState.forgetIdentifiersIf(test, pp);
-		SimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
+		RASimpleAbstractState<H, V, T> subs = applySubstitution(heap.getRight(), pp);
 		V v = subs.valueState.forgetIdentifiersIf(test, pp);
 		T t = subs.typeState.forgetIdentifiersIf(test, pp);
-		return new SimpleAbstractState<>(heap.getLeft(), v, t);
+		return new RASimpleAbstractState<>(heap.getLeft(), v, t);
 	}
 
 	@Override
@@ -496,7 +496,7 @@ public class SimpleAbstractState<
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		SimpleAbstractState<?, ?, ?> other = (SimpleAbstractState<?, ?, ?>) obj;
+		RASimpleAbstractState<?, ?, ?> other = (RASimpleAbstractState<?, ?, ?>) obj;
 		if (heapState == null) {
 			if (other.heapState != null)
 				return false;
@@ -541,18 +541,18 @@ public class SimpleAbstractState<
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> withTopMemory() {
-		return new SimpleAbstractState<>(heapState.top(), valueState, typeState);
+	public RASimpleAbstractState<H, V, T> withTopMemory() {
+		return new RASimpleAbstractState<>(heapState.top(), valueState, typeState);
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> withTopValues() {
-		return new SimpleAbstractState<>(heapState, valueState.top(), typeState);
+	public RASimpleAbstractState<H, V, T> withTopValues() {
+		return new RASimpleAbstractState<>(heapState, valueState.top(), typeState);
 	}
 
 	@Override
-	public SimpleAbstractState<H, V, T> withTopTypes() {
-		return new SimpleAbstractState<>(heapState, valueState, typeState.top());
+	public RASimpleAbstractState<H, V, T> withTopTypes() {
+		return new RASimpleAbstractState<>(heapState, valueState, typeState.top());
 	}
 
 	@Override
