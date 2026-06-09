@@ -48,3 +48,7 @@ bin/
 .DS_Store
 /gradle.properties
 sv-comp-benchmark
+
+### Spring Boot testcases (unziped ones) ###
+/spring-testcases/*
+!/spring-testcases/*.zip
