@@ -93,4 +93,18 @@ public class RecencyTestcases extends JLiSAAnalysisExecutor{
 				"Test10.java");
 		perform(conf);
 	}
+	
+	@Test
+	public void recency_test_nullIdentifiers2() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test10.java");
+		perform(conf);
+	}
+	
+	@Test
+	public void recency_test_multipleFields() throws IOException {
+		CronConfiguration conf = TestHelpers.recency("recencyAbstraction", "",
+				"Test11.java");
+		perform(conf);
+	}
 }

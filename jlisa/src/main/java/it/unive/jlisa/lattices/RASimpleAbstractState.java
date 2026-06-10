@@ -332,7 +332,8 @@ public class RASimpleAbstractState<
 									HeapReplacement replacement = new HeapReplacement();
 									replacement.addSource(withField);
 									replacement.addTarget(withField.toWeak());
-									replacements.add(replacement);
+									if(!replacements.contains(replacement))
+											replacements.add(replacement);
 								}
 							}
 						} 
