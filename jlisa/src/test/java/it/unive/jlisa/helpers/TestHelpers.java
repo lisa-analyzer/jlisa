@@ -1,5 +1,6 @@
 package it.unive.jlisa.helpers;
 
+import it.unive.jlisa.analysis.RASimpleAbstractDomain;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.heap.JavaRecencyAbsFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
@@ -8,7 +9,7 @@ import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.Reachability;
-import it.unive.jlisa.analysis.RASimpleAbstractDomain;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
@@ -45,14 +46,14 @@ public class TestHelpers {
 		conf.outputs.add(new HtmlResults<>(true));
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		// conf.forceUpdate = true;
-		//conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
+		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
-		// the abstract domain 
+		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		Interval domain = new Interval();
 
-		conf.analysis = new RASimpleAbstractDomain<>(heap, domain, type);
+		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
 		// for interprocedural analysis
 		conf.callGraph = new JavaRTACallGraph();
@@ -85,13 +86,13 @@ public class TestHelpers {
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		InferredTypes type = new InferredTypes();
 		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();
-		conf.analysis = new Reachability<>(new RASimpleAbstractDomain<>(heap, domain, type));
+		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
 
 		conf.semanticChecks.add(new AssertChecker<>());
 
 		return conf;
 	}
-	
+
 	public static CronConfiguration recency(
 			String testDir,
 			String subDir,
@@ -100,7 +101,8 @@ public class TestHelpers {
 
 		// the abstract domain
 		JavaRecencyAbsFieldSensitivePointBasedHeap heap = new JavaRecencyAbsFieldSensitivePointBasedHeap();
-		//JavaFieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+		// JavaFieldSensitivePointBasedHeap heap = new
+		// JavaFieldSensitivePointBasedHeap();
 
 		InferredTypes type = new InferredTypes();
 		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();

@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.type.TypeDomain;
 import it.unive.lisa.analysis.type.TypeLattice;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
+import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.SingleHeapLattice;
 import it.unive.lisa.lattices.SingleTypeLattice;
 import it.unive.lisa.lattices.SingleValueLattice;
@@ -53,9 +54,8 @@ public class RASimpleAbstractState<
 		H extends HeapLattice<H>,
 		V extends ValueLattice<V>,
 		T extends TypeLattice<T>>
-		implements
-		BaseLattice<RASimpleAbstractState<H, V, T>>,
-		AbstractLattice<RASimpleAbstractState<H, V, T>> {
+		extends SimpleAbstractState<H, V, T>
+		implements AbstractLattice<SimpleAbstractState<H, V, T>>{
 
 	/**
 	 * The key that should be used to store the instance of {@link HeapDomain}
@@ -106,6 +106,7 @@ public class RASimpleAbstractState<
 	@SuppressWarnings("unchecked")
 	public RASimpleAbstractState(
 			H heapState) {
+		super(heapState);
 		this.heapState = heapState;
 		this.valueState = (V) SingleValueLattice.SINGLETON;
 		this.typeState = (T) SingleTypeLattice.SINGLETON;
@@ -122,6 +123,7 @@ public class RASimpleAbstractState<
 	@SuppressWarnings("unchecked")
 	public RASimpleAbstractState(
 			V valueState) {
+		super(valueState);
 		this.heapState = (H) SingleHeapLattice.SINGLETON;
 		this.valueState = valueState;
 		this.typeState = (T) SingleTypeLattice.SINGLETON;
@@ -139,6 +141,7 @@ public class RASimpleAbstractState<
 	@SuppressWarnings("unchecked")
 	public RASimpleAbstractState(
 			T typeState) {
+		super(typeState);
 		this.heapState = (H) SingleHeapLattice.SINGLETON;
 		this.valueState = (V) SingleValueLattice.SINGLETON;
 		this.typeState = typeState;
@@ -158,6 +161,7 @@ public class RASimpleAbstractState<
 	public RASimpleAbstractState(
 			H heapState,
 			V valueState) {
+		super(heapState, valueState);
 		this.heapState = heapState;
 		this.valueState = valueState;
 		this.typeState = (T) SingleTypeLattice.SINGLETON;
@@ -178,6 +182,7 @@ public class RASimpleAbstractState<
 	public RASimpleAbstractState(
 			H heapState,
 			T typeState) {
+		super(heapState, typeState);
 		this.heapState = heapState;
 		this.valueState = (V) SingleValueLattice.SINGLETON;
 		this.typeState = typeState;
@@ -198,6 +203,7 @@ public class RASimpleAbstractState<
 	public RASimpleAbstractState(
 			V valueState,
 			T typeState) {
+		super(valueState, typeState);
 		this.heapState = (H) SingleHeapLattice.SINGLETON;
 		this.valueState = valueState;
 		this.typeState = typeState;
@@ -218,6 +224,7 @@ public class RASimpleAbstractState<
 			H heapState,
 			V valueState,
 			T typeState) {
+		super(heapState, valueState, typeState);
 		this.heapState = heapState;
 		this.valueState = valueState;
 		this.typeState = typeState;
@@ -237,7 +244,7 @@ public class RASimpleAbstractState<
 
 	public RASimpleAbstractState(
 			it.unive.jlisa.analysis.RASimpleAbstractDomain<H, V, T>.MutableOracle mo) {
-		this(mo.heap, mo.value, mo.type);	
+		this(mo.heap, mo.value, mo.type);
 	}
 
 	private RASimpleAbstractState<H, V, T> applySubstitution(
@@ -282,14 +289,14 @@ public class RASimpleAbstractState<
 
 	@SuppressWarnings("unlikely-arg-type")
 	@Override
-	public RASimpleAbstractState<H, V, T> lubAux(
-			RASimpleAbstractState<H, V, T> other)
+	public SimpleAbstractState<H, V, T> lubAux(
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		H postHeap = heapState.lub(other.heapState);
 		V postValue = valueState.lub(other.valueState);
 		T postType = typeState.lub(other.typeState);
-		
-		if( postHeap instanceof RecencyAbstractionHeapEnvWithFields) {
+
+		if (postHeap instanceof RecencyAbstractionHeapEnvWithFields) {
 			RecencyAbstractionHeapEnvWithFields pHeap = (RecencyAbstractionHeapEnvWithFields) postHeap;
 			RecencyAbstractionHeapEnvWithFields tHeap = (RecencyAbstractionHeapEnvWithFields) heapState;
 			RecencyAbstractionHeapEnvWithFields oHeap = (RecencyAbstractionHeapEnvWithFields) other.heapState;
@@ -297,12 +304,12 @@ public class RASimpleAbstractState<
 			List<HeapReplacement> replacements = new LinkedList<>();
 
 			Collection<AllocationSites> s = tHeap.function.values();
-			
+
 			// Checks if there are changes in heap identifiers of this state
-			for(AllocationSites sites : s) {
-				for(AllocationSite val : sites) {
-					if(!pHeap.function.containsValue(val)) {
-						if(val instanceof RecencyAbstractionHeapAllocationSite) {
+			for (AllocationSites sites : s) {
+				for (AllocationSite val : sites) {
+					if (!pHeap.function.containsValue(val)) {
+						if (val instanceof RecencyAbstractionHeapAllocationSite) {
 							RecencyAbstractionHeapAllocationSite site = (RecencyAbstractionHeapAllocationSite) val;
 							for (SymbolicExpression field : pHeap.fields.getState(site.getRecent())) {
 								AllocationSite withField = site.withField(field);
@@ -313,18 +320,18 @@ public class RASimpleAbstractState<
 									replacements.add(replacement);
 								}
 							}
-						} 
+						}
 					}
 				}
 			}
 
 			s = oHeap.function.values();
-			
-			// Checks if there are changes in heap identifiers of this state
-			for(AllocationSites sites : s) {
-				for(AllocationSite val : sites) {
-					if(!pHeap.function.containsValue(val)) {
-						if(val instanceof RecencyAbstractionHeapAllocationSite) {
+
+			// Checks if there are changes in heap identifiers of other state
+			for (AllocationSites sites : s) {
+				for (AllocationSite val : sites) {
+					if (!pHeap.function.containsValue(val)) {
+						if (val instanceof RecencyAbstractionHeapAllocationSite) {
 							RecencyAbstractionHeapAllocationSite site = (RecencyAbstractionHeapAllocationSite) val;
 							for (SymbolicExpression field : pHeap.fields.getState(site.getRecent())) {
 								AllocationSite withField = site.withField(field);
@@ -332,31 +339,31 @@ public class RASimpleAbstractState<
 									HeapReplacement replacement = new HeapReplacement();
 									replacement.addSource(withField);
 									replacement.addTarget(withField.toWeak());
-									if(!replacements.contains(replacement))
-											replacements.add(replacement);
+									if (!replacements.contains(replacement))
+										replacements.add(replacement);
 								}
 							}
-						} 
+						}
 					}
 				}
 			}
-			
+
 			V aux = postValue;
-			
-			for(HeapReplacement repl : replacements) {
+
+			for (HeapReplacement repl : replacements) {
 				aux = aux.applyReplacement(repl, null);
 				postType = postType.applyReplacement(repl, null);
 			}
-			
+
 			postValue = postValue.lub(aux);
-			
-			for(HeapReplacement repl : replacements) {
-				for(Identifier id : repl.getSources()) {
+
+			for (HeapReplacement repl : replacements) {
+				for (Identifier id : repl.getSources()) {
 					postValue = postValue.forgetIdentifier(id, null);
 				}
 			}
 		}
-		
+
 		return new RASimpleAbstractState<>(
 				postHeap,
 				postValue,
@@ -364,8 +371,8 @@ public class RASimpleAbstractState<
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> upchainAux(
-			RASimpleAbstractState<H, V, T> other)
+	public SimpleAbstractState<H, V, T> upchainAux(
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return new RASimpleAbstractState<>(
 				heapState.upchain(other.heapState),
@@ -374,8 +381,8 @@ public class RASimpleAbstractState<
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> glbAux(
-			RASimpleAbstractState<H, V, T> other)
+	public SimpleAbstractState<H, V, T> glbAux(
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return new RASimpleAbstractState<>(
 				heapState.glb(other.heapState),
@@ -384,8 +391,8 @@ public class RASimpleAbstractState<
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> downchainAux(
-			RASimpleAbstractState<H, V, T> other)
+	public SimpleAbstractState<H, V, T> downchainAux(
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return new RASimpleAbstractState<>(
 				heapState.downchain(other.heapState),
@@ -394,8 +401,8 @@ public class RASimpleAbstractState<
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> wideningAux(
-			RASimpleAbstractState<H, V, T> other)
+	public SimpleAbstractState<H, V, T> wideningAux(
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return new RASimpleAbstractState<>(
 				heapState.widening(other.heapState),
@@ -404,8 +411,8 @@ public class RASimpleAbstractState<
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> narrowingAux(
-			RASimpleAbstractState<H, V, T> other)
+	public SimpleAbstractState<H, V, T> narrowingAux(
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return new RASimpleAbstractState<>(
 				heapState.narrowing(other.heapState),
@@ -415,7 +422,7 @@ public class RASimpleAbstractState<
 
 	@Override
 	public boolean lessOrEqualAux(
-			RASimpleAbstractState<H, V, T> other)
+			SimpleAbstractState<H, V, T> other)
 			throws SemanticException {
 		return heapState.lessOrEqual(other.heapState)
 				&& valueState.lessOrEqual(other.valueState)
@@ -555,15 +562,4 @@ public class RASimpleAbstractState<
 	public RASimpleAbstractState<H, V, T> withTopTypes() {
 		return new RASimpleAbstractState<>(heapState, valueState, typeState.top());
 	}
-
-	@Override
-	public <D extends Lattice<D>> Collection<D> getAllLatticeInstances(
-			Class<D> lattice) {
-		Collection<D> result = AbstractLattice.super.getAllLatticeInstances(lattice);
-		result.addAll(heapState.getAllLatticeInstances(lattice));
-		result.addAll(typeState.getAllLatticeInstances(lattice));
-		result.addAll(valueState.getAllLatticeInstances(lattice));
-		return result;
-	}
-
 }

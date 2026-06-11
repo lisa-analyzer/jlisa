@@ -13,7 +13,6 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.util.collections.CollectionsDiffBuilder;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -44,7 +43,7 @@ public class RecencyAbstractionHeapEnvWithFields
 	 * Tracks the fields of each allocation site.
 	 */
 	public final GenericMapLattice<AllocationSite, ExpressionSet> fields;
-	
+
 	/**
 	 * Builds an empty environment.
 	 */
@@ -52,7 +51,7 @@ public class RecencyAbstractionHeapEnvWithFields
 		super(new AllocationSites().top());
 		this.fields = new GenericMapLattice<AllocationSite, ExpressionSet>(new ExpressionSet()).top();
 	}
-	
+
 	/**
 	 * Builds an environment containing the given mapping. If function is
 	 * {@code null}, the new environment is the top environment if
@@ -105,7 +104,8 @@ public class RecencyAbstractionHeapEnvWithFields
 				sites.add((AllocationSite) id);
 		GenericMapLattice<AllocationSite, ExpressionSet> f = fields.removeAll(sites);
 		return Pair
-				.of(new RecencyAbstractionHeapEnvWithFields(result.getLeft().lattice, result.getLeft().function, f), result.getRight());
+				.of(new RecencyAbstractionHeapEnvWithFields(result.getLeft().lattice, result.getLeft().function, f),
+						result.getRight());
 	}
 
 	@Override
@@ -138,7 +138,8 @@ public class RecencyAbstractionHeapEnvWithFields
 				sites.add((AllocationSite) id);
 		GenericMapLattice<AllocationSite, ExpressionSet> f = fields.removeAll(sites);
 		return Pair
-				.of(new RecencyAbstractionHeapEnvWithFields(result.getLeft().lattice, result.getLeft().function, f), result.getRight());
+				.of(new RecencyAbstractionHeapEnvWithFields(result.getLeft().lattice, result.getLeft().function, f),
+						result.getRight());
 	}
 
 	private Pair<RecencyAbstractionHeapEnvWithFields, List<HeapReplacement>> liftIdentifiers(
@@ -282,7 +283,7 @@ public class RecencyAbstractionHeapEnvWithFields
 			throws SemanticException {
 		RecencyAbstractionHeapEnvWithFields lub = super.lubAux(other);
 		return new RecencyAbstractionHeapEnvWithFields(lub.lattice, lub.function, fields.lub(other.fields));
-	
+
 	}
 
 	@Override

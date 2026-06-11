@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis;
 
+import it.unive.jlisa.lattices.RASimpleAbstractState;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.events.DomainAssignEnd;
@@ -24,7 +25,7 @@ import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.events.EventQueue;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.jlisa.lattices.RASimpleAbstractState;
+import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
@@ -55,7 +56,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLattice<V>, T extends TypeLattice<T>>
 		implements
-		AbstractDomain<RASimpleAbstractState<H, V, T>> {
+		AbstractDomain<SimpleAbstractState<H, V, T>> {
 
 	/**
 	 * The heap domain used by this abstract domain.
@@ -232,13 +233,13 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> assign(
-			RASimpleAbstractState<H, V, T> state,
+	public SimpleAbstractState<H, V, T> assign(
+			SimpleAbstractState<H, V, T> state,
 			Identifier id,
 			SymbolicExpression expression,
 			ProgramPoint pp)
 			throws SemanticException {
-		MutableOracle mo = new MutableOracle(state);
+		MutableOracle mo = new MutableOracle((RASimpleAbstractState<H, V, T>) state);
 
 		if (events != null)
 			events.post(new DomainAssignStart<>(getClass(), state, id, expression));
@@ -282,7 +283,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 		if (events != null)
 			events.post(new HeapRewriteEnd<>(heapDomain.getClass(), mo.heap, expression, exprs));
 		if (exprs.isEmpty()) {
-			RASimpleAbstractState<H, V, T> res = state.bottom();
+			RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 			if (events != null)
 				events.post(new DomainAssignEnd<>(getClass(), pp, state, res, id, expression));
 			return res;
@@ -342,12 +343,12 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> smallStepSemantics(
-			RASimpleAbstractState<H, V, T> state,
+	public SimpleAbstractState<H, V, T> smallStepSemantics(
+			SimpleAbstractState<H, V, T> state,
 			SymbolicExpression expression,
 			ProgramPoint pp)
 			throws SemanticException {
-		MutableOracle mo = new MutableOracle(state);
+		MutableOracle mo = new MutableOracle((RASimpleAbstractState<H, V, T>) state);
 
 		if (events != null)
 			events.post(new DomainSmallStepStart<>(getClass(), state, expression));
@@ -391,7 +392,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 		if (events != null)
 			events.post(new HeapRewriteEnd<>(heapDomain.getClass(), mo.heap, expression, exprs));
 		if (exprs.isEmpty()) {
-			RASimpleAbstractState<H, V, T> res = state.bottom();
+			RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 			if (events != null)
 				events.post(new DomainSmallStepEnd<>(getClass(), pp, state, res, expression));
 			return res;
@@ -459,13 +460,13 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 	}
 
 	@Override
-	public RASimpleAbstractState<H, V, T> assume(
-			RASimpleAbstractState<H, V, T> state,
+	public SimpleAbstractState<H, V, T> assume(
+			SimpleAbstractState<H, V, T> state,
 			SymbolicExpression expression,
 			ProgramPoint src,
 			ProgramPoint dest)
 			throws SemanticException {
-		MutableOracle mo = new MutableOracle(state);
+		MutableOracle mo = new MutableOracle((RASimpleAbstractState<H, V, T>) state);
 
 		if (events != null)
 			events.post(new DomainAssumeStart<>(getClass(), state, expression));
@@ -478,7 +479,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(heapDomain.getClass(), src, state.heapState, mo.heap, expression));
 			if (mo.heap.isBottom()) {
-				RASimpleAbstractState<H, V, T> res = state.bottom();
+				RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 				if (events != null)
 					events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 				return res;
@@ -490,7 +491,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(typeDomain.getClass(), src, state.typeState, mo.type, expression));
 			if (mo.type.isBottom()) {
-				RASimpleAbstractState<H, V, T> res = state.bottom();
+				RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 				if (events != null)
 					events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 				return res;
@@ -502,7 +503,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(valueDomain.getClass(), src, state.valueState, mo.value, expression));
 			if (mo.value.isBottom()) {
-				RASimpleAbstractState<H, V, T> res = state.bottom();
+				RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 				if (events != null)
 					events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 				return res;
@@ -521,7 +522,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 		if (events != null)
 			events.post(new DomainAssumeEnd<>(heapDomain.getClass(), src, state.heapState, mo.heap, expression));
 		if (mo.heap.isBottom()) {
-			RASimpleAbstractState<H, V, T> res = state.bottom();
+			RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 			return res;
@@ -533,7 +534,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 		if (events != null)
 			events.post(new HeapRewriteEnd<>(heapDomain.getClass(), mo.heap, expression, exprs));
 		if (exprs.isEmpty()) {
-			RASimpleAbstractState<H, V, T> res = state.bottom();
+			RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 			return res;
@@ -552,7 +553,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(typeDomain.getClass(), src, state.typeState, mo.type, expr));
 			if (mo.type.isBottom()) {
-				RASimpleAbstractState<H, V, T> res = state.bottom();
+				RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 				if (events != null)
 					events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 				return res;
@@ -564,7 +565,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 			if (events != null)
 				events.post(new DomainAssumeEnd<>(valueDomain.getClass(), src, state.valueState, mo.value, expr));
 			if (mo.value.isBottom()) {
-				RASimpleAbstractState<H, V, T> res = state.bottom();
+				RASimpleAbstractState<H, V, T> res = (RASimpleAbstractState<H, V, T>) state.bottom();
 				if (events != null)
 					events.post(new DomainAssumeEnd<>(getClass(), src, state, res, expression));
 				return res;
@@ -601,7 +602,7 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 
 		RASimpleAbstractState<H, V, T> res;
 		if (typeRes.isBottom() || valueRes.isBottom())
-			res = state.bottom();
+			res = (RASimpleAbstractState<H, V, T>) state.bottom();
 		else
 			res = new RASimpleAbstractState<>(mo.heap, valueRes, typeRes);
 		if (events != null)
@@ -611,11 +612,11 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 
 	@Override
 	public Satisfiability satisfies(
-			RASimpleAbstractState<H, V, T> state,
+			SimpleAbstractState<H, V, T> state,
 			SymbolicExpression expression,
 			ProgramPoint pp)
 			throws SemanticException {
-		MutableOracle mo = new MutableOracle(state);
+		MutableOracle mo = new MutableOracle((RASimpleAbstractState<H, V, T>) state);
 
 		if (events != null)
 			events.post(new DomainSatisfiesStart<>(getClass(), state, expression));
@@ -753,8 +754,8 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 
 	@Override
 	public RASimpleAbstractState<H, V, T> onCallReturn(
-			RASimpleAbstractState<H, V, T> entryState,
-			RASimpleAbstractState<H, V, T> callres,
+			SimpleAbstractState<H, V, T> entryState,
+			SimpleAbstractState<H, V, T> callres,
 			ProgramPoint call)
 			throws SemanticException {
 		H h = heapDomain.onCallReturn(
@@ -770,19 +771,19 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 				callres.typeState,
 				call);
 		if (h == callres.heapState && v == callres.valueState && t == callres.typeState)
-			return callres;
+			return (RASimpleAbstractState<H, V, T>) callres;
 		return new RASimpleAbstractState<>(h, v, t);
 	}
 
 	@Override
 	public SemanticOracle makeOracle(
-			RASimpleAbstractState<H, V, T> state) {
-		return new MutableOracle(state);
+			SimpleAbstractState<H, V, T> state) {
+		return new MutableOracle((RASimpleAbstractState<H, V, T>) state);
 	}
 
 	/**
-	 * An oracle for {@link RASimpleAbstractState}s that can be muted, i.e., whose
-	 * fields are not final and can be updated while the computation is
+	 * An oracle for {@link RASimpleAbstractState}s that can be muted, i.e.,
+	 * whose fields are not final and can be updated while the computation is
 	 * happening.
 	 * 
 	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
@@ -901,4 +902,3 @@ public class RASimpleAbstractDomain<H extends HeapLattice<H>, V extends ValueLat
 
 	}
 }
-

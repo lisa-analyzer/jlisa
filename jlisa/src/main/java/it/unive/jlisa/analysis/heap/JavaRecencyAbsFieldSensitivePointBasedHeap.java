@@ -90,6 +90,6 @@ public class JavaRecencyAbsFieldSensitivePointBasedHeap
 			result.add(e);
 			return new ExpressionSet(result);
 		}
-		
+
 	}
 }

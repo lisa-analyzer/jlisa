@@ -1,5 +1,7 @@
 package it.unive.jlisa.analysis.heap;
 
+import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
+import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
@@ -8,8 +10,6 @@ import it.unive.lisa.lattices.FunctionalLattice;
 import it.unive.lisa.lattices.GenericMapLattice;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
-import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapAllocationSite;
-import it.unive.jlisa.lattices.heap.allocations.RecencyAbstractionHeapEnvWithFields;
 import it.unive.lisa.lattices.heap.allocations.NullAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
 import it.unive.lisa.program.annotations.Annotation;
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -117,7 +116,8 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		Pair<RecencyAbstractionHeapEnvWithFields, List<HeapReplacement>> sss = super.smallStepSemantics(state, expression, pp, oracle);
+		Pair<RecencyAbstractionHeapEnvWithFields,
+				List<HeapReplacement>> sss = super.smallStepSemantics(state, expression, pp, oracle);
 		RecencyAbstractionHeapEnvWithFields st = sss.getLeft();
 
 		if (expression instanceof AccessChild) {
@@ -145,7 +145,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 					AllocationSite site = (AllocationSite) rec;
 					ExpressionSet childs = rewrite(sss.getLeft(), accessChild.getChild(), pp, oracle);
 
-					if(site instanceof RecencyAbstractionHeapAllocationSite) {
+					if (site instanceof RecencyAbstractionHeapAllocationSite) {
 						RecencyAbstractionHeapAllocationSite s = (RecencyAbstractionHeapAllocationSite) site;
 
 						for (SymbolicExpression child : childs) {
@@ -160,10 +160,10 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 				}
 
 			return Pair.of(
-					new RecencyAbstractionHeapEnvWithFields(st.lattice, st.function, new GenericMapLattice<>(st.fields.lattice, mapping)),
+					new RecencyAbstractionHeapEnvWithFields(st.lattice, st.function,
+							new GenericMapLattice<>(st.fields.lattice, mapping)),
 					sss.getRight());
-		} 
-		else if (expression instanceof MemoryAllocation) {
+		} else if (expression instanceof MemoryAllocation) {
 			String loc = expression.getCodeLocation().getCodeLocation();
 			Set<AllocationSite> alreadyAllocated = getAllocatedAt(st, loc);
 
@@ -275,8 +275,9 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 						populate(expression, child, result, site);
 				} else if (rec instanceof AllocationSite) {
 					AllocationSite site = (AllocationSite) rec;
-					if(site instanceof RecencyAbstractionHeapAllocationSite) {
-						// We always call populate because RecAbsAllocationSite can
+					if (site instanceof RecencyAbstractionHeapAllocationSite) {
+						// We always call populate because RecAbsAllocationSite
+						// can
 						// never be NullAllocationSite
 						populate(expression, child, result, site);
 					} else {
@@ -290,7 +291,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 
 			return new ExpressionSet(result);
 		}
-		
+
 		private void populate(
 				AccessChild expression,
 				ExpressionSet child,
@@ -313,7 +314,7 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 							target,
 							site.isWeak(),
 							site.getCodeLocation());
-					
+
 				// propagates the annotations of the child value expression to
 				// the newly created allocation site
 				if (target instanceof Identifier)
@@ -333,20 +334,21 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 			RecencyAbstractionHeapEnvWithFields state = (RecencyAbstractionHeapEnvWithFields) params[0];
 
 			Set<AllocationSite> sites = getAllocatedAt(state, pp);
-			
+
 			boolean weak;
 			if (!sites.isEmpty())
 				weak = true;
 			else
 				weak = false;
-			
+
 			AllocationSite e;
-			
+
 			if (expression.isStackAllocation())
 				e = new StackAllocationSite(expression.getStaticType(), pp, weak, expression.getCodeLocation());
 			else
-				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, false, expression.getCodeLocation());
-				
+				e = new RecencyAbstractionHeapAllocationSite(expression.getStaticType(), pp, false,
+						expression.getCodeLocation());
+
 			e.setAllocation(true);
 
 			// propagates the annotations of expression
@@ -358,22 +360,23 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 		}
 
 	}
-	
-	
+
 	@Override
 	protected Set<AllocationSite> getAllocatedAt(
 			RecencyAbstractionHeapEnvWithFields state,
 			String location) {
 		Set<AllocationSite> sites = new HashSet<>();
-		
-		for (AllocationSites set : ((FunctionalLattice<RecencyAbstractionHeapEnvWithFields, Identifier, AllocationSites>) state).getValues())
+
+		for (AllocationSites set : ((FunctionalLattice<RecencyAbstractionHeapEnvWithFields, Identifier,
+				AllocationSites>) state).getValues())
 			for (AllocationSite site : set) {
-				if(site instanceof NullAllocationSite) {
-					if(site.getLocationName().equals(location))
+				if (site instanceof NullAllocationSite) {
+					if (site.getLocationName().equals(location))
 						sites.add(site);
 				} else {
-					if(site instanceof RecencyAbstractionHeapAllocationSite)
-						if (((RecencyAbstractionHeapAllocationSite) site).getRecent().getLocationName().equals(location))
+					if (site instanceof RecencyAbstractionHeapAllocationSite)
+						if (((RecencyAbstractionHeapAllocationSite) site).getRecent().getLocationName()
+								.equals(location))
 							sites.add(site);
 				}
 			}
@@ -381,4 +384,3 @@ public class RecencyAbsFieldSensitivePointBasedHeap
 	}
 
 }
-
