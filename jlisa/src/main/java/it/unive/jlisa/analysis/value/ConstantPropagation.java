@@ -16,6 +16,7 @@ import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -49,11 +50,8 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
-
 import java.util.HashMap;
 import java.util.Set;
-
-import it.unive.lisa.program.CompilationUnit;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
 
@@ -1117,7 +1115,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			res.put("type", field.getStaticType().toString());
 			res.put("name", fieldName);
-			return new ConstantValue(field);
+			return new ConstantValue(res);
 		}
 
 		return top();
@@ -1320,21 +1318,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return top();
 
 		NaryOperator operator = ((NaryExpression) expression).getOperator();
-		if (subExpressions.length == 3) {
-
-			if (operator instanceof JavaClassGetMethodOperator) {
-				String className = ((String) subExpressions[0].getValue());
-				String methodName = ((String) subExpressions[1].getValue());
-				JavaClassType loadingClass = JavaClassType.lookup(className);
-
-				// TODO: actual abstraction of the field meta object
-				HashMap<String, String> res = new HashMap<>();
-
-				res.put("class", className);
-				res.put("name", methodName);
-				return new ConstantValue(res);
-			}
-		}
 
 		if (subExpressions.length == 4) {
 
@@ -1370,6 +1353,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(f.regionMatches(s, t, fo, fi, si));
 			}
 
+		}
+
+		if (subExpressions.length > 1 && operator instanceof JavaClassGetMethodOperator) {
+			String className = ((String) subExpressions[0].getValue());
+			String methodName = ((String) subExpressions[1].getValue());
+
+			// TODO: actual abstraction of the method meta object
+			HashMap<String, String> res = new HashMap<>();
+
+			res.put("class", className);
+			res.put("name", methodName);
+			return new ConstantValue(res);
 		}
 
 		return top();
@@ -1434,6 +1429,20 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				Integer si = ((Integer) arg[5].getValue());
 				return f.regionMatches(s, t, fo, fi, si) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 			}
+		}
+
+		// at least class and method name
+		if (operator instanceof JavaIsMethodDefinedOperator && arg.length > 1) {
+
+			String className = (String) arg[0].getValue();
+			String methodName = (String) arg[1].getValue();
+
+			JavaClassType ct = JavaClassType.lookup(className);
+			CompilationUnit cu = ct.getUnit();
+			if (cu.getInstanceCodeMembersByName(methodName, true).isEmpty()) {
+				return Satisfiability.NOT_SATISFIED;
+			}
+			return Satisfiability.SATISFIED;
 		}
 
 		return Satisfiability.UNKNOWN;
@@ -1765,15 +1774,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.SATISFIED;
 		}
 
-		if (operator instanceof JavaIsMethodDefinedOperator && left.getValue() instanceof String l && right.getValue() instanceof String r) {
-			JavaClassType ct= JavaClassType.lookup(l);
-			CompilationUnit cu = ct.getUnit();
-			if(cu.getInstanceCodeMember(r, true) == null) {
-				return Satisfiability.NOT_SATISFIED;
-			}
-			return Satisfiability.SATISFIED;
-		}
-
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 
@@ -1786,7 +1786,23 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		// TODO Auto-generated method stub
+		TernaryOperator operator = expression.getOperator();
+		if (left.isTop() || middle.isTop() || right.isTop()) {
+			return Satisfiability.UNKNOWN;
+		}
+
+		//
+		// if (operator instanceof JavaIsMethodDefinedOperator &&
+		// left.getValue() instanceof String l
+		// && middle.getValue() instanceof String m) {
+		// JavaClassType ct = JavaClassType.lookup(l);
+		// CompilationUnit cu = ct.getUnit();
+		// if (cu.getInstanceCodeMembersByName(m, true).isEmpty()) {
+		// return Satisfiability.NOT_SATISFIED;
+		// }
+		// return Satisfiability.SATISFIED;
+		// }
+
 		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp,
 				oracle);
 	}

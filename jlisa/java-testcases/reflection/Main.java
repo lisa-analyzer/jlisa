@@ -5,7 +5,7 @@ public class ReflectionTest {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		java.lang.reflect.Method m = c.getMethod("sound", "test");
+		java.lang.reflect.Method m = c.getMethod("sound", new String[] {"cat"});
 
 		return;
 	}
