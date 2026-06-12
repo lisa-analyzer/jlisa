@@ -1,3 +1,4 @@
+
 public class Main{
 	
 	public static void main(String[] args) {
@@ -16,5 +17,12 @@ public class Main{
 		// Constructor-level
 		H h = new H();
 		I i = new I();
+
+		// Parameter-level in methods
+		J j = new J();
+		K k = new K();
+		L l = new L();
+		M m = new M();
+		N n = new N();
 	}
 }

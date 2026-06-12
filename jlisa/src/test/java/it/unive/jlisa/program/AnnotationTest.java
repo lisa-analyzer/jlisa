@@ -16,6 +16,7 @@ import it.unive.lisa.program.annotations.values.FloatAnnotationValue;
 import it.unive.lisa.program.annotations.values.IntAnnotationValue;
 import it.unive.lisa.program.annotations.values.LongAnnotationValue;
 import it.unive.lisa.program.annotations.values.StringAnnotationValue;
+import it.unive.lisa.program.cfg.Parameter;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -40,19 +41,38 @@ public class AnnotationTest {
                 "java-testcases/annotation/G.java",
                 "java-testcases/annotation/H.java",
                 "java-testcases/annotation/I.java",
+                "java-testcases/annotation/J.java",
+                "java-testcases/annotation/K.java",
+                "java-testcases/annotation/L.java",
+                "java-testcases/annotation/M.java",
+                "java-testcases/annotation/N.java",
                 "java-testcases/annotation/Main.java"));
     }
 
     private static Collection<Annotation> getClassLevelAnnotations(String classUnitName) {
-        return ((CompilationUnit) lisaProgram.getUnit(classUnitName)).getAnnotations().getAnnotations();
+        return ((CompilationUnit) lisaProgram.getUnit(classUnitName)).getAnnotationList();
     }
 
     private static Collection<Annotation> getMethodLevelAnnotations(String classUnitName, String methodUnitName ) {
         return ((CompilationUnit) lisaProgram.getUnit(classUnitName))
                 .getInstanceCodeMembersByName(methodUnitName, false)
                 .iterator().next()
-                .getDescriptor().getAnnotations().getAnnotations();
+                .getDescriptor().getAnnotationList();
     }
+
+	private static Collection<Annotation> getParameterLevelAnnotations(
+			String classUnitName, String codeMemberName, String parameterName) {
+		Parameter[] params = ((CompilationUnit) lisaProgram.getUnit(classUnitName))
+				.getInstanceCodeMembersByName(codeMemberName, false)
+				.iterator().next()
+				.getDescriptor().getFormals();
+
+		for (Parameter param : params)
+			if (param.getName().equals(parameterName))
+				return param.getAnnotationList();
+
+		throw new AssertionError("no parameter named " + parameterName + " in " + classUnitName + "." + codeMemberName);
+	}
 
     private static void assertAnnotationOfClass(String classUnitName, Annotation isAnnotatedWith) {
         Collection<Annotation> anns = getClassLevelAnnotations(classUnitName);
@@ -65,6 +85,20 @@ public class AnnotationTest {
 
         assertTrue(anns.contains(isAnnotatedWith),
                 classUnitName + "." + methodUnitName + " should carry " + isAnnotatedWith + ", got " + anns);
+    }
+
+    private static void assertAnnotationOfParameter(String classUnitName, String methodUnitName, String parameterName, Annotation isAnnotatedWith) {
+        Collection<Annotation> anns = getParameterLevelAnnotations(classUnitName, methodUnitName, parameterName);
+
+        assertTrue(anns.contains(isAnnotatedWith),
+                classUnitName + "." + methodUnitName + "(" + parameterName + ") should carry " + isAnnotatedWith + ", got " + anns);
+    }
+
+    private static void assertParameterHasNoAnnotations(String classUnitName, String methodUnitName, String parameterName) {
+        Collection<Annotation> anns = getParameterLevelAnnotations(classUnitName, methodUnitName, parameterName);
+
+        assertTrue(anns.isEmpty(),
+                classUnitName + "." + methodUnitName + "(" + parameterName + ") should carry no annotations, got " + anns);
     }
 
     @Test
@@ -145,5 +179,67 @@ public class AnnotationTest {
                 new AnnotationMember("value2", new LongAnnotationValue(99L))));
 
         assertAnnotationOfMethod("I", "I", isAnnotatedWith);
+    }
+
+    @Test
+    public void testParameterLevelSingleMemberAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("ParameterLevelSingleMemberAnnotation",
+                List.of(new AnnotationMember("value", new StringAnnotationValue("\"paramVal\""))));
+
+        assertAnnotationOfParameter("J", "J_1", "param1", isAnnotatedWith);
+    }
+
+    @Test
+    public void testParameterLevelMarkerAnnotation() {
+        Annotation isAnnotatedWith = new Annotation("ParameterLevelMarkerTypeAnnotation");
+
+        assertAnnotationOfParameter("K", "K_1", "param1", isAnnotatedWith);
+        assertAnnotationOfParameter("K", "K_1", "param3", isAnnotatedWith);
+        assertParameterHasNoAnnotations("K", "K_1", "param2");
+        assertParameterHasNoAnnotations("K", "K_2", "param");
+    }
+
+    @Test
+    public void testParameterLevelNormalAnnotation() {
+        Annotation onParam1 = new Annotation("ParameterLevelNormalAnnotation", List.of(
+                new AnnotationMember("value", new IntAnnotationValue(1)),
+                new AnnotationMember("value2", new StringAnnotationValue("\"paramVal\"")),
+                new AnnotationMember("value3", new BoolAnnotationValue(false)),
+                new AnnotationMember("value4", new CharAnnotationValue('p'))));
+        Annotation onParam2 = new Annotation("ParameterLevelNormalAnnotation", List.of(
+                new AnnotationMember("value", new IntAnnotationValue(2)),
+                new AnnotationMember("value2", new StringAnnotationValue("\"paramVal2\"")),
+                new AnnotationMember("value3", new BoolAnnotationValue(true)),
+                new AnnotationMember("value4", new CharAnnotationValue('a'))));
+
+        assertAnnotationOfParameter("L", "L_2", "param1", onParam1);
+        assertAnnotationOfParameter("L", "L_2", "param2", onParam2);
+        assertParameterHasNoAnnotations("L", "L_2", "param3");
+        assertParameterHasNoAnnotations("L", "L_1", "param");
+    }
+
+    @Test
+    public void testParameterLevelVarargsAnnotation() {
+        Annotation single = new Annotation("ParameterLevelSingleMemberAnnotation",
+                List.of(new AnnotationMember("value", new StringAnnotationValue("\"paramVal\""))));
+        Annotation varargs = new Annotation("ParameterLevelVarargsTypeAnnotation");
+
+        assertAnnotationOfParameter("M", "M_1", "param1", single);
+        assertAnnotationOfParameter("M", "M_1", "param2", varargs);
+    }
+
+    @Test
+    public void testConstructorParameterLevelAnnotations() {
+        Annotation single = new Annotation("ParameterLevelSingleMemberAnnotation",
+                List.of(new AnnotationMember("value", new StringAnnotationValue("\"paramVal\""))));
+        Annotation normal = new Annotation("ParameterLevelNormalAnnotation", List.of(
+                new AnnotationMember("value", new IntAnnotationValue(10)),
+                new AnnotationMember("value2", new StringAnnotationValue("\"b\"")),
+                new AnnotationMember("value3", new BoolAnnotationValue(false)),
+                new AnnotationMember("value4", new CharAnnotationValue('s'))));
+
+        assertAnnotationOfParameter("N", "N", "param1", single);
+        assertAnnotationOfParameter("N", "N", "param2", normal);
+        assertParameterHasNoAnnotations("N", "N", "param3");
     }
 }

@@ -2,17 +2,16 @@ package it.unive.jlisa.frontend.visitors.pipeline;
 
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
-import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.*;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -33,7 +32,8 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 				addUnitsInDeclaration((TypeDeclaration) type, null, processed);
 			else if (type instanceof EnumDeclaration)
 				addEnumUnit(getParserContext().getProgram(), null, (EnumDeclaration) type, processed);
-			// TODO: Add another branch for annotation type declaration, i.e. for instances  like @interface Foo...
+		// TODO: Add another branch for annotation type declaration, i.e. for
+		// instances like @interface Foo...
 		return false;
 	}
 
