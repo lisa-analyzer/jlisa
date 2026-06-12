@@ -1,7 +1,6 @@
 package it.unive.jlisa.analysis.heap;
 
 import it.unive.jlisa.program.operator.NaryExpression;
-import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
@@ -15,7 +14,6 @@ import it.unive.lisa.symbolic.value.MemoryPointer;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,55 +23,55 @@ import java.util.Set;
  * Analysis An Abstract Interpretation Perspective", Section 8.3.4
  *
  * @author <a href="mailto:vincenzo.arceri@unipr.it">Vincenzo Arceri</a>
+ * 
  * @see <a href=
- * "https://mitpress.mit.edu/books/introduction-static-analysis">https://mitpress.mit.edu/books/introduction-static-analysis</a>
+ *          "https://mitpress.mit.edu/books/introduction-static-analysis">https://mitpress.mit.edu/books/introduction-static-analysis</a>
  */
 public class JavaFieldSensitivePointBasedHeap
-        extends
-        FieldSensitivePointBasedHeap {
+		extends
+		FieldSensitivePointBasedHeap {
 
-    @Override
-    public ExpressionSet rewriteValueExpression(
-            ValueExpression expression,
-            ExpressionSet[] subExpressions,
-            HeapEnvWithFields state,
-            ProgramPoint pp,
-            SemanticOracle oracle) {
-        Set<SymbolicExpression> result = new HashSet<>();
-        SymbolicExpression[] res = new SymbolicExpression[subExpressions.length];
+	@Override
+	public ExpressionSet rewriteValueExpression(
+			ValueExpression expression,
+			ExpressionSet[] subExpressions,
+			HeapEnvWithFields state,
+			ProgramPoint pp,
+			SemanticOracle oracle) {
+		Set<SymbolicExpression> result = new HashSet<>();
+		SymbolicExpression[] res = new SymbolicExpression[subExpressions.length];
 
-        for (int i = 0; i < subExpressions.length; ++i) {
-            ExpressionSet set = subExpressions[i];
-            for (SymbolicExpression expr : set) {
-                res[i] = expr;
-            }
-        }
+		for (int i = 0; i < subExpressions.length; ++i) {
+			ExpressionSet set = subExpressions[i];
+			for (SymbolicExpression expr : set) {
+				res[i] = expr;
+			}
+		}
 
-        NaryExpression e = new NaryExpression(
-                expression.getStaticType(),
-                res,
-                ((NaryExpression) expression).getOperator(),
-                expression.getCodeLocation());
-        result.add(e);
+		NaryExpression e = new NaryExpression(
+				expression.getStaticType(),
+				res,
+				((NaryExpression) expression).getOperator(),
+				expression.getCodeLocation());
+		result.add(e);
 
-        return new ExpressionSet(result);
-    }
+		return new ExpressionSet(result);
+	}
 
-    @Override
-    public ExpressionSet rewritePushAny(
-            PushAny expression,
-            HeapEnvWithFields state,
-            ProgramPoint pp,
-            SemanticOracle oracle) {
+	@Override
+	public ExpressionSet rewritePushAny(
+			PushAny expression,
+			HeapEnvWithFields state,
+			ProgramPoint pp,
+			SemanticOracle oracle) {
 
-        if (expression.getStaticType().isPointerType()) {
-            Type inner = expression.getStaticType().asPointerType().getInnerType();
-            CodeLocation loc = expression.getCodeLocation();
-            HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
-            return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
-        }
+		if (expression.getStaticType().isPointerType()) {
+			Type inner = expression.getStaticType().asPointerType().getInnerType();
+			CodeLocation loc = expression.getCodeLocation();
+			HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
+			return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
+		}
 
-        return new ExpressionSet(expression);
-    }
+		return new ExpressionSet(expression);
+	}
 }
-
