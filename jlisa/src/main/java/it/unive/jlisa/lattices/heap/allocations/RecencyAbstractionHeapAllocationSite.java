@@ -111,7 +111,12 @@ public class RecencyAbstractionHeapAllocationSite extends AllocationSite {
 		if (other instanceof RecencyAbstractionHeapAllocationSite) {
 			aux = (RecencyAbstractionHeapAllocationSite) other;
 		} else {
-			throw new RuntimeException("Wrong type of other, cannot calculate lub!");
+			throw new SemanticException(
+					"Cannot perform the least upper bound between different identifiers: '"
+							+ this
+							+ "' and '"
+							+ other
+							+ "'");
 		}
 
 		recent = (AllocationSite) recent.lub(aux.getRecent());
