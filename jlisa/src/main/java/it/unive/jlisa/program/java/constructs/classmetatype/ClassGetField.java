@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.operator.JavaClassGetFieldOperator;
 import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -21,6 +22,7 @@ import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -87,6 +89,9 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
 
+		AnalysisState<A> noExceptionState = state.bottomExecution();
+		AnalysisState<A> exceptionState = state.bottomExecution();
+
 		if (sat != Satisfiability.NOT_SATISFIED) {
 
 			// allocate the Field object
@@ -113,14 +118,33 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			}
 
 			getMetaVariables().addAll(call.getMetaVariables());
-			return tmp.withExecutionExpressions(callState.getExecutionExpressions());
+			noExceptionState = tmp.withExecutionExpressions(callState.getExecutionExpressions());
 		}
 
-		// TODO: `NoSuchFieldException`
 		if (sat != Satisfiability.SATISFIED) {
+
+			JavaClassType noSuchFieldType = JavaClassType.getNoSuchFieldException();
+
+			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+					noSuchFieldType.getReference(), new Expression[0]);
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+			// assign exception to variable thrower
+			CFGThrow throwVar = new CFGThrow(getCFG(), noSuchFieldType.getReference(), getLocation());
+			state = analysis.assign(state, throwVar,
+					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
+			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+					new Error(noSuchFieldType.getReference(), originating), this);
 		}
 
-		return state;
+		return exceptionState.lub(noExceptionState);
 	}
 
 	@Override

@@ -92,6 +92,7 @@ public class LibrarySpecificationProvider {
 	public static void importJavaLang(
 			Program program) {
 		importClass(program, "java.lang.Object");
+		importClass(program, "java.lang.Class");
 		importClass(program, "java.lang.String");
 		for (String lib : AVAILABLE_LIB_CLASSES.keySet())
 			if (getPackage(lib).equals("java.lang"))

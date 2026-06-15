@@ -1109,12 +1109,20 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 			Global field = classUnit.getInstanceGlobal(fieldName, true);
+			boolean isInstance = true;
+
+			Global tmp = classUnit.getGlobal(fieldName);
+			if (tmp != null) {
+				isInstance = false;
+				field = tmp;
+			}
 
 			// TODO: actual abstraction of the field meta object
-			HashMap<String, String> res = new HashMap<>();
+			HashMap<String, Object> res = new HashMap<>();
 
 			res.put("type", field.getStaticType().toString());
 			res.put("name", fieldName);
+			res.put("isInstance", isInstance);
 			return new ConstantValue(res);
 		}
 
@@ -1768,7 +1776,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			JavaClassType loadingClass = JavaClassType.lookup(l);
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 
-			if (classUnit.getInstanceGlobal(r, true) == null) {
+			if (classUnit.getInstanceGlobal(r, true) == null && classUnit.getGlobal(r) == null) {
 				return Satisfiability.NOT_SATISFIED;
 			}
 			return Satisfiability.SATISFIED;

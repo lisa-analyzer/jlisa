@@ -281,6 +281,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.InstantiationException");
 	}
 
+	public static JavaClassType getNoSuchFieldException() {
+		return lookup("java.lang.NoSuchFieldException");
+	}
+
 	public static JavaClassType getNoSuchMethodException() {
 		return lookup("java.lang.NoSuchMethodException");
 	}
