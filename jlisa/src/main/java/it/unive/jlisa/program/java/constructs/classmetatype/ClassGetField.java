@@ -4,6 +4,10 @@ import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.operator.JavaClassGetFieldOperator;
 import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
+import it.unive.jlisa.program.operator.JavaFieldSetClassNameOperator;
+import it.unive.jlisa.program.operator.JavaFieldSetNameOperator;
+import it.unive.jlisa.program.operator.JavaFieldSetTypeOperator;
+import it.unive.jlisa.program.operator.JavaFieldSetIsInstanceOperator;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -27,6 +31,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -66,6 +71,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
+		Type booleanType = getProgram().getTypes().getBooleanType();
 		Type stringType = getProgram().getTypes().getStringType();
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 
@@ -101,21 +107,43 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			AnalysisState<
 					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-			it.unive.lisa.symbolic.value.BinaryExpression getField = new it.unive.lisa.symbolic.value.BinaryExpression(
-					fieldMetaType,
+			AnalysisState<A> tmp = callState.bottomExecution();
+
+			// assign class name
+			it.unive.lisa.symbolic.value.UnaryExpression fieldSetClassName = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType,
 					accessClassNameExpr,
-					accessFieldNameExpr,
-					JavaClassGetFieldOperator.INSTANCE,
+					JavaFieldSetClassNameOperator.INSTANCE,
 					getLocation());
 
-			GlobalVariable valueField = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+			tmp = assignFieldWithOperator(interprocedural, callState, expressions, "className", fieldSetClassName);
 
-			AnalysisState<A> tmp = state.bottomExecution();
-			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-				AccessChild dst = new AccessChild(fieldMetaType, ref, valueField, getLocation());
-				AnalysisState<A> sem = analysis.assign(callState, dst, getField, this);
-				tmp = tmp.lub(sem);
-			}
+			// assign field name
+			it.unive.lisa.symbolic.value.UnaryExpression fieldSetName = new it.unive.lisa.symbolic.value.UnaryExpression(
+					stringType,
+					accessFieldNameExpr,
+					JavaFieldSetNameOperator.INSTANCE,
+					getLocation());
+
+			tmp = assignFieldWithOperator(interprocedural, tmp, expressions, "name", fieldSetName);
+
+			// assign field type
+			it.unive.lisa.symbolic.value.BinaryExpression fieldSetType = new it.unive.lisa.symbolic.value.BinaryExpression(
+					stringType,
+					accessClassNameExpr,
+					accessFieldNameExpr,
+					JavaFieldSetTypeOperator.INSTANCE,
+					getLocation());
+			tmp = assignFieldWithOperator(interprocedural, tmp, expressions, "type", fieldSetType);
+
+			// assign field isInstance
+			it.unive.lisa.symbolic.value.BinaryExpression fieldSetIsInstance = new it.unive.lisa.symbolic.value.BinaryExpression(
+					booleanType,
+					accessClassNameExpr,
+					accessFieldNameExpr,
+					JavaFieldSetIsInstanceOperator.INSTANCE,
+					getLocation());
+			tmp = assignFieldWithOperator(interprocedural, tmp, expressions, "isInstance", fieldSetIsInstance);
 
 			getMetaVariables().addAll(call.getMetaVariables());
 			noExceptionState = tmp.withExecutionExpressions(callState.getExecutionExpressions());
@@ -151,6 +179,31 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> assignFieldWithOperator(
+		InterproceduralAnalysis<A, D> interprocedural,
+		AnalysisState<A> state,
+		StatementStore<A> expressions,
+		String fieldToAssign,
+		ValueExpression expr
+	) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		Type fieldMetaType = JavaClassType.getFieldMetaType();
+
+		GlobalVariable acc = new GlobalVariable(Untyped.INSTANCE, fieldToAssign, getLocation());
+
+		AnalysisState<A> tmp = state.bottomExecution();
+		for (SymbolicExpression ref : state.getExecutionExpressions()) {
+			AccessChild dst = new AccessChild(fieldMetaType, ref, acc, getLocation());
+			AnalysisState<A> sem = analysis.assign(state, dst, expr, this);
+			tmp = tmp.lub(sem);
+		}
+
+		tmp = tmp.withExecutionExpressions(state.getExecutionExpressions());
+		return tmp;
 	}
 
 }

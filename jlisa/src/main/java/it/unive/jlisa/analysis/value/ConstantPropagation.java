@@ -601,7 +601,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(!b);
 
 		// reflection
+
 		if (operator instanceof JavaClassForNameOperator && arg.getValue() instanceof String s) {
+			return new ConstantValue(s);
+		}
+
+		if (operator instanceof JavaFieldSetClassNameOperator && arg.getValue() instanceof String s) {
+			return new ConstantValue(s);
+		}
+
+		if (operator instanceof JavaFieldSetNameOperator && arg.getValue() instanceof String s) {
 			return new ConstantValue(s);
 		}
 
@@ -1102,13 +1111,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(Integer.compare(lv, rv));
 		}
 
-		if (operator instanceof JavaClassGetFieldOperator) {
-			String className = ((String) left.getValue());
-			String fieldName = ((String) right.getValue());
+		// reflection
+		if ((operator instanceof JavaFieldSetTypeOperator || operator instanceof JavaFieldSetIsInstanceOperator)
+			&& left.getValue() instanceof String className
+			&& right.getValue() instanceof String fieldName) {
+
 			JavaClassType loadingClass = JavaClassType.lookup(className);
 
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 			Global field = classUnit.getInstanceGlobal(fieldName, true);
+
 			boolean isInstance = true;
 
 			Global tmp = classUnit.getGlobal(fieldName);
@@ -1117,13 +1129,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				field = tmp;
 			}
 
-			// TODO: actual abstraction of the field meta object
-			HashMap<String, Object> res = new HashMap<>();
-
-			res.put("type", field.getStaticType().toString());
-			res.put("name", fieldName);
-			res.put("isInstance", isInstance);
-			return new ConstantValue(res);
+			if (operator instanceof JavaFieldSetTypeOperator) {
+				return new ConstantValue(field.getStaticType().toString());
+			}
+			return new ConstantValue(isInstance);
 		}
 
 		return top();
