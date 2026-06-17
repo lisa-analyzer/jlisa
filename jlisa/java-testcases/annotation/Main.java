@@ -24,5 +24,8 @@ public class Main{
 		L l = new L();
 		M m = new M();
 		N n = new N();
+
+		// Special cases
+		S1 s1 = new S1();
 	}
 }

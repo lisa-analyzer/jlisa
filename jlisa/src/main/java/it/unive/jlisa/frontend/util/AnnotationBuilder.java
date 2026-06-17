@@ -63,6 +63,7 @@ public final class AnnotationBuilder {
 		case CharacterLiteral cl -> new CharAnnotationValue(cl.charValue());
 		case BooleanLiteral bl -> new BoolAnnotationValue(bl.booleanValue());
 		case NumberLiteral nl -> getNumericAnnotationValue(nl);
+		case TypeLiteral tl -> new CompilationUnitAnnotationValue(tl.getType().toString());
 		case ArrayInitializer ai -> getArrayAnnotationValue(ai);
 		default -> throw new RuntimeException("Unsupported annotation value type: " + expr.getClass());
 		};
