@@ -3,62 +3,79 @@ package it.unive.jlisa.springed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
+import it.unive.jlisa.springed.p1.output.P1Output;
 import it.unive.jlisa.springed.p1.P1Impl;
-import it.unive.jlisa.springed.p1.constructs.Mapping;
 import it.unive.jlisa.springed.p1.constructs.Registry;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class Main {
+
+	private static final String OUTPUT_DIR = "spring-outputs";
+	private static final String OUTPUT_FILE_NAME = "registry.json";
+
+	private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+	private static final SpringFrontend FRONTEND = new SpringFrontend();
+	private static final P1Impl P1 = new P1Impl();
 
 	public static void main(
 			String[] args)
 			throws IOException {
 
-		if (args.length == 0) {
-			System.out.println("usage: <spring-boot-source-path> [more paths...]");
-			return;
-		}
+		if (!areArgsOk(args)) return;
 
-		Map<String, Object> root = new LinkedHashMap<>();
-		int total = 0;
+		writeOutput(runAnalysis(args));
+	}
+
+	private static P1Output runAnalysis(String[] args) throws IOException {
+		P1Output output = new P1Output();
 
 		for (String source : args) {
-			Unit[] units = new SpringFrontend().parse(source);
-			Registry registry = new P1Impl().produceRegistry(units);
+			Unit[] units = FRONTEND.parse(source);
+			Registry registry = P1.produceRegistry(units);
 
-			Map<String, Mapping> byMethod = new LinkedHashMap<>();
-			for (Mapping mapping : registry.getMappings())
-				byMethod.put(mapping.getMethod().getDescriptor().getName(), mapping);
-
-			root.put(projectName(source), Map.of("registry", byMethod));
-			total += byMethod.size();
+			output.addRegistry(projectName(source), registry);
 		}
 
-		String fileName = "registry-" + UUID.randomUUID().toString().substring(0, 8) + ".json";
-		Path out = Paths.get("spring-outputs", fileName);
+		return output;
+	}
+
+	private static void writeOutput(P1Output output) throws IOException {
+
+		Path out = Paths.get(OUTPUT_DIR, OUTPUT_FILE_NAME);
 		Files.createDirectories(out.getParent());
 
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-		mapper.writeValue(out.toFile(), root);
+		MAPPER.writeValue(out.toFile(), output);
 
-		System.out.println("Wrote " + root.size() + " project(s), " + total
+		int mappings = output.get().values().stream()
+				.mapToInt(r -> r.getMappings().size())
+				.sum();
+
+		System.out.println("Wrote " + output.get().size() + " project(s), " + mappings
 				+ " mapping(s) total, to " + out.toAbsolutePath());
+	}
+
+	private static boolean areArgsOk(String[] args) {
+		if (args.length == 0) {
+			System.out.println("usage: <spring-boot-source-path> [more paths...]");
+			return false;
+		}
+
+		return true;
 	}
 
 	private static String projectName(
 			String source) {
 		Path p = Paths.get(source).normalize();
+
 		for (int i = 1; i < p.getNameCount(); i++)
 			if (p.getName(i).toString().equals("src"))
 				return p.getName(i - 1).toString();
+
 		return p.getFileName().toString();
 	}
 }

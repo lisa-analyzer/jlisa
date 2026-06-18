@@ -13,6 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.BiFunction;
+
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
@@ -71,5 +74,22 @@ public class SpringFrontend extends JavaFrontend {
 		}
 
 		return units;
+	}
+
+	@Override
+	protected void runPass(
+			CompilationUnit[] cus,
+			String[] fileNames,
+			UnitScope[] scopes,
+			BiFunction<ParsingEnvironment, UnitScope, ASTVisitor> factory) {
+		for (int i = 0; i < cus.length; i++) {
+			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
+			
+			try {
+				cus[i].accept(factory.apply(env, scopes[i]));
+			} catch (RuntimeException e) {
+				System.out.println("Error while parsing " + fileNames[i] + " " + e.getMessage());
+			}
+		}
 	}
 }

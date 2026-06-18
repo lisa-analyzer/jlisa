@@ -21,12 +21,22 @@ public class Mapping {
 		return method;
 	}
 
+	public WebAnnotation getAnnotation() { return annotation; }
+
 	@JsonProperty("method")
 	public String getMethodName() {
 		return method.getDescriptor().getFullName();
 	}
 
-	public WebAnnotation getAnnotation() {
-		return annotation;
+	@JsonIgnore
+	public String getJsonFieldName() {
+		String fullName = method.getDescriptor().getFullName();
+		int separator = fullName.indexOf("::");
+
+		String qualifiedClass = separator >= 0 ? fullName.substring(0, separator) : fullName;
+		String methodName = separator >= 0 ? fullName.substring(separator + 2) : "";
+		String className = qualifiedClass.substring(qualifiedClass.lastIndexOf('.') + 1);
+
+		return className + "_" + methodName;
 	}
 }

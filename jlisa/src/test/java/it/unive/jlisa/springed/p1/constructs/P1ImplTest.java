@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class P1ImplAnnotationTest {
+public class P1ImplTest {
 
 	@BeforeAll
 	public static void unpackCase() throws IOException {
