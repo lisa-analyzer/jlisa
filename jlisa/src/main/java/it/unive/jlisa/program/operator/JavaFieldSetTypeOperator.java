@@ -40,4 +40,3 @@ public class JavaFieldSetTypeOperator implements BinaryOperator {
 	}
 
 }
-

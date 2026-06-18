@@ -36,4 +36,3 @@ public class JavaFieldSetClassNameOperator implements StringOperator, UnaryOpera
 		return Collections.singleton(types.getStringType());
 	}
 }
-

@@ -40,5 +40,3 @@ public class JavaFieldSetIsInstanceOperator implements BinaryOperator {
 	}
 
 }
-
-
