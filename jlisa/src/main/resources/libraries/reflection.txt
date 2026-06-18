@@ -4,6 +4,14 @@ class java.lang.reflect.Field extends java.lang.Object:
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param self libtype java.lang.reflect.Field*
 
+	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.FieldGetName
+		libtype java.lang.String*
+		param this libtype java.lang.reflect.Field*
+
+	instance method getClass: it.unive.jlisa.program.java.constructs.classmetatype.FieldGetClass
+		libtype java.lang.Class*
+		param this libtype java.lang.reflect.Field*
+
 class java.lang.reflect.Method extends java.lang.Object:
 	field name libtype java.lang.String*
 	field declaringClass libtype java.lang.Class*
