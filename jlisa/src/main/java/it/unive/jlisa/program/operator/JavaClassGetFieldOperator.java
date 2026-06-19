@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.operator;
 
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
@@ -32,11 +33,12 @@ public class JavaClassGetFieldOperator implements BinaryOperator {
 			TypeSystem types,
 			Set<Type> left,
 			Set<Type> right) {
-		if (left.stream().noneMatch(t -> t.equals(JavaClassType.getStringType())))
+		if (left.stream().noneMatch(t -> t.equals(new JavaReferenceType(JavaClassType.getStringType()))))
 			return Collections.emptySet();
-		if (right.stream().noneMatch(t -> t.equals(JavaClassType.getStringType())))
+		if (right.stream().noneMatch(t -> t.equals(new JavaReferenceType(JavaClassType.getStringType()))))
 			return Collections.emptySet();
-		return Collections.singleton(JavaClassType.getFieldMetaType());
+
+		return Collections.singleton(new JavaReferenceType(JavaClassType.getFieldMetaType()));
 	}
 
 }

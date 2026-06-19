@@ -92,6 +92,12 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 
 		AnalysisState<A> tmp = state.bottomExecution();
 
+		// FIXME: using syntheticCodeLocations like this causes multiple
+		// allocations of
+		// `Field` objects to reside in the same 3 locations.
+		// Switch to syntheticCodeLocationManager if this is the correct
+		// approach
+
 		// allocate Class object for field `clazz`
 		SyntheticCodeLocation s1 = new SyntheticCodeLocation(src, 1);
 		JavaNewObj call1 = new JavaNewObj(getCFG(), s1,

@@ -18,6 +18,9 @@ import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -50,7 +53,9 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -1112,8 +1117,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		// reflection
 		if ((operator instanceof JavaFieldSetTypeOperator || operator instanceof JavaFieldSetIsInstanceOperator)
-			&& left.getValue() instanceof String className
-			&& right.getValue() instanceof String fieldName) {
+				&& left.getValue() instanceof String className
+				&& right.getValue() instanceof String fieldName) {
 
 			JavaClassType loadingClass = JavaClassType.lookup(className);
 
@@ -1447,17 +1452,56 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
-		// at least class and method name
 		if (operator instanceof JavaIsMethodDefinedOperator && arg.length > 1) {
 
+			// we have at least class and method name
 			String className = (String) arg[0].getValue();
 			String methodName = (String) arg[1].getValue();
 
 			JavaClassType ct = JavaClassType.lookup(className);
 			CompilationUnit cu = ct.getUnit();
-			if (cu.getInstanceCodeMembersByName(methodName, true).isEmpty()) {
+
+			// all methods with that name, both instance and static
+			Collection<CodeMember> codeMembersWithName = cu.getInstanceCodeMembersByName(methodName, true);
+			codeMembersWithName.addAll(cu.getCodeMembersByName(methodName));
+
+			// filter using length
+			codeMembersWithName.removeIf(cm -> cm.getDescriptor().isInstance()
+					&& cm.getDescriptor().getFormals().length - 1 != arg.length - 2);
+			codeMembersWithName.removeIf(
+					cm -> !cm.getDescriptor().isInstance() && cm.getDescriptor().getFormals().length != arg.length - 2);
+
+			if (codeMembersWithName.isEmpty())
 				return Satisfiability.NOT_SATISFIED;
+
+			// filter using types
+			for (int i = 0; i < arg.length - 2; ++i) {
+
+				String getMethodParamType = (String) arg[2 + i].getValue();
+
+				Set<CodeMember> toRemove = new HashSet<CodeMember>();
+
+				for (CodeMember possibleMethod : codeMembersWithName) {
+					CodeMemberDescriptor descriptor = possibleMethod.getDescriptor();
+					Parameter[] parameters = descriptor.getFormals();
+
+					int skipFirst = (descriptor.isInstance()) ? 1 : 0;
+					Parameter currentParam = parameters[i + skipFirst];
+
+					Type paramType = currentParam.getStaticType();
+					// TODO: if paramType is referenceType, get the inner type
+
+					if (paramType.toString() != getMethodParamType) {
+						toRemove.add(possibleMethod);
+					}
+				}
+
+				codeMembersWithName.removeAll(toRemove);
+
+				if (codeMembersWithName.isEmpty())
+					return Satisfiability.NOT_SATISFIED;
 			}
+
 			return Satisfiability.SATISFIED;
 		}
 
@@ -1806,18 +1850,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (left.isTop() || middle.isTop() || right.isTop()) {
 			return Satisfiability.UNKNOWN;
 		}
-
-		//
-		// if (operator instanceof JavaIsMethodDefinedOperator &&
-		// left.getValue() instanceof String l
-		// && middle.getValue() instanceof String m) {
-		// JavaClassType ct = JavaClassType.lookup(l);
-		// CompilationUnit cu = ct.getUnit();
-		// if (cu.getInstanceCodeMembersByName(m, true).isEmpty()) {
-		// return Satisfiability.NOT_SATISFIED;
-		// }
-		// return Satisfiability.SATISFIED;
-		// }
 
 		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp,
 				oracle);

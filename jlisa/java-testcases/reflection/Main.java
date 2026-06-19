@@ -1,18 +1,33 @@
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class ReflectionTest {
-	public static void main(String[] args) throws NoSuchMethodException, ClassNotFoundException {
-		String s = new String("Cat");
-		Class c = Class.forName(s);
+	public static void main(String[] args) throws Exception {
 
-		java.lang.reflect.Method m = c.getMethod("sound", new String[] {"cat"});
+		String s = new String("Cat");
+
+		Class c1 = Class.forName(s);
+		Class c2 = Class.forName("java.lang.String");
+
+		Class[] arr = new Class[] {c1, c2};
+
+		// Method m = c1.getMethod("sound", arr);
+
+		Field f1 = c1.getField("nickname");
+		//
+		// Field f2 = c.getField("age");
+
+		// String z = f.getName();
+		// String zzz = z.toString();
+		//
+		// Class c2 = f.getClass();
 
 		return;
 	}
 }
 
 class Cat {
-	private String nickname;
+	public String nickname;
 
 	public Cat(String x) {
 		nickname = x;
@@ -22,7 +37,23 @@ class Cat {
 		nickname = "ziggy";
 	}
 
-	public String sound(int x,int y){
+	public String sound(Cat x, String y){
+		return "meow";
+	}
+
+	public String sound(){
+		return "meow";
+	}
+
+	public String sound(int x){
+		return "meow";
+	}
+
+	public String sound(int x, int y, int z){
+		return "meow";
+	}
+
+	public static String sound(int x, int y, int z, int w){
 		return "meow";
 	}
 }

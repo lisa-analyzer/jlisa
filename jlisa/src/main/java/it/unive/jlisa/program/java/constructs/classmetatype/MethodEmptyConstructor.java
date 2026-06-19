@@ -51,6 +51,10 @@ public class MethodEmptyConstructor extends UnaryExpression implements Pluggable
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
+
+		// TODO: allocate clazz, name, and an array containing the parameter
+		// types
+
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
 				originating);
 	}

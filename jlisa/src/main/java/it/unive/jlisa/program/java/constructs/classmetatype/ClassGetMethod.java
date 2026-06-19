@@ -1,9 +1,10 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaClassGetMethodOperator;
 import it.unive.jlisa.program.operator.JavaIsMethodDefinedOperator;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -24,6 +25,7 @@ import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -69,12 +71,14 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Type methodType = JavaClassType.getMethodType();
 		Type stringType = getProgram().getTypes().getStringType();
 
+		Type contentType = new JavaReferenceType(classMetaType);
+
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
 		// access class name (1st arg)
 		GlobalVariable classNameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-		HeapDereference derefClassNameExpr = new HeapDereference(stringType, left, getLocation());
+		HeapDereference derefClassNameExpr = new HeapDereference(classMetaType, left, getLocation());
 		AccessChild accessClassNameExpr = new AccessChild(stringType, derefClassNameExpr, classNameVar, getLocation());
 
 		// access method name (2nd arg)
@@ -83,9 +87,26 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		AccessChild accessMethodNameExpr = new AccessChild(stringType, derefMethodNameExpr, methodNameVar,
 				getLocation());
 
-		SymbolicExpression[] exprs = new SymbolicExpression[2];
+		// TODO: variable length depending on the amount of parameters.
+		// this is just an example with 2 "hardcoded" parameters
+		SymbolicExpression[] exprs = new SymbolicExpression[4];
 		exprs[0] = accessClassNameExpr;
 		exprs[1] = accessMethodNameExpr;
+
+		HeapDereference derefArr = new HeapDereference(JavaArrayType.CLASS_ARRAY.getInnerType(), right, getLocation());
+
+		for (int i = 0; i < 2; ++i) {
+
+			Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
+			AccessChild accessArrayAtIndex = new AccessChild(contentType, derefArr, var, getLocation());
+			HeapDereference derefArrayAtIndex = new HeapDereference(classMetaType, accessArrayAtIndex, getLocation());
+
+			AccessChild accessClassName = new AccessChild(stringType, derefArrayAtIndex, classNameVar, getLocation());
+
+			// 2+ since the first two exprs are already taken by class name and
+			// method name
+			exprs[2 + i] = accessClassName;
+		}
 
 		it.unive.jlisa.program.operator.NaryExpression isMethodDefined = new it.unive.jlisa.program.operator.NaryExpression(
 				getProgram().getTypes().getBooleanType(),
@@ -106,32 +127,43 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			AnalysisState<
 					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
+			// TODO: same thing as getField, assign each field separately
+
+			noExceptionState = callState.topExecution();
+
 			// Assign the declaring class to the `declaringClass` field of
 			// Method
-			GlobalVariable declaringClassField = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+			// GlobalVariable declaringClassField = new
+			// GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+			//
+			//
+			// it.unive.jlisa.program.operator.NaryExpression getMethod = new
+			// it.unive.jlisa.program.operator.NaryExpression(
+			// methodType,
+			// exprs,
+			// JavaClassGetMethodOperator.INSTANCE,
+			// getLocation());
+			//
+			// AnalysisState<A> tmp2 = state.bottomExecution();
+			// for (SymbolicExpression ref :
+			// callState.getExecutionExpressions()) {
+			//
+			// AccessChild dstDecl = new AccessChild(methodType, ref,
+			// declaringClassField, getLocation());
+			//
+			// AnalysisState<A> sem = analysis.assign(callState, dstDecl,
+			// getMethod, this);
+			// tmp2 = tmp2.lub(sem);
+			// }
 
-			it.unive.jlisa.program.operator.NaryExpression getMethod = new it.unive.jlisa.program.operator.NaryExpression(
-					methodType,
-					exprs,
-					JavaClassGetMethodOperator.INSTANCE,
-					getLocation());
-
-			AnalysisState<A> tmp2 = state.bottomExecution();
-			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-
-				AccessChild dstDecl = new AccessChild(methodType, ref, declaringClassField, getLocation());
-
-				AnalysisState<A> sem = analysis.assign(callState, dstDecl,
-						getMethod, this);
-				tmp2 = tmp2.lub(sem);
-			}
-
-			getMetaVariables().addAll(call.getMetaVariables());
-			noExceptionState = tmp2.withExecutionExpressions(callState.getExecutionExpressions());
+			// getMetaVariables().addAll(call.getMetaVariables());
+			// noExceptionState =
+			// tmp2.withExecutionExpressions(callState.getExecutionExpressions());
 
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			// TODO: exception path
 
+			exceptionState = state.topExecution();
 			/*
 			 * // NoSuchMethodException to be thrown if class does not exist or
 			 * method // not found if (!classExists) { JavaClassType
