@@ -12,14 +12,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class SpringFrontend extends JavaFrontend {
+
+	private static final Logger LOG = LogManager.getLogger(SpringFrontend.class);
+	private final List<Throwable> parseExceptions = new ArrayList<>();
 
 	public Unit[] parse(
 			String filePath)
@@ -76,6 +81,12 @@ public class SpringFrontend extends JavaFrontend {
 		return units;
 	}
 
+	public List<Throwable> getParseExceptions() {
+		List<Throwable> all = new ArrayList<>(parseExceptions);
+		all.addAll(getParserContext().getExceptions());
+		return all;
+	}
+
 	@Override
 	protected void runPass(
 			CompilationUnit[] cus,
@@ -84,11 +95,12 @@ public class SpringFrontend extends JavaFrontend {
 			BiFunction<ParsingEnvironment, UnitScope, ASTVisitor> factory) {
 		for (int i = 0; i < cus.length; i++) {
 			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
-			
+
 			try {
 				cus[i].accept(factory.apply(env, scopes[i]));
 			} catch (RuntimeException e) {
-				System.out.println("Error while parsing " + fileNames[i] + " " + e.getMessage());
+				LOG.error("Error while parsing " + fileNames[i], e);
+				parseExceptions.add(e);
 			}
 		}
 	}

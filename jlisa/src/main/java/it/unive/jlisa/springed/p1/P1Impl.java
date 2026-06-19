@@ -53,11 +53,11 @@ public final class P1Impl implements P1 {
 			Unit[] units) {
 		List<ClassUnit> classes = new ArrayList<>();
 
-        for (Unit unit : units) {
-            if (unit instanceof ClassUnit) {
-                classes.add((ClassUnit) unit);
-            }
-        }
+		for (Unit unit : units) {
+			if (unit instanceof ClassUnit) {
+				classes.add((ClassUnit) unit);
+			}
+		}
 
 		List<ClassUnit> controllers = new ArrayList<>();
 		for (ClassUnit classUnit : classes) {

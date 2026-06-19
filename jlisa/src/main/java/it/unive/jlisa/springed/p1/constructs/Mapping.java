@@ -21,7 +21,9 @@ public class Mapping {
 		return method;
 	}
 
-	public WebAnnotation getAnnotation() { return annotation; }
+	public WebAnnotation getAnnotation() {
+		return annotation;
+	}
 
 	@JsonProperty("method")
 	public String getMethodName() {

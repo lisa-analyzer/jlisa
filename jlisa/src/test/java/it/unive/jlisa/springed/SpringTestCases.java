@@ -17,7 +17,9 @@ public final class SpringTestCases {
 	private SpringTestCases() {
 	}
 
-	public static Path extract(String name) throws IOException {
+	public static Path extract(
+			String name)
+			throws IOException {
 		Path zip = ROOT.resolve(name + ".zip");
 		if (!Files.isRegularFile(zip))
 			throw new IOException("missing test case archive: " + zip.toAbsolutePath());
@@ -46,7 +48,9 @@ public final class SpringTestCases {
 		return target;
 	}
 
-	public static void delete(Path path) throws IOException {
+	public static void delete(
+			Path path)
+			throws IOException {
 		if (!Files.exists(path))
 			return;
 

@@ -275,10 +275,13 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope>
 			SimpleName node) {
 		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), getScope());
 
-		if (u == null)
-			throw new UnsupportedStatementException(
+		if (u == null) {
+			getParserContext().addException(new UnsupportedStatementException(
 					node.getFullyQualifiedName() + " does not exist in the program (referenced at "
-							+ getSourceCodeLocation(node) + ")");
+							+ getSourceCodeLocation(node) + ")"));
+			type = Untyped.INSTANCE;
+			return false;
+		}
 
 		type = Untyped.INSTANCE;
 		if (u instanceof ClassUnit)
@@ -286,8 +289,8 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope>
 		else if (u instanceof InterfaceUnit)
 			type = JavaInterfaceType.lookup(u.getName());
 		else
-			throw new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " is not a class or interface unit");
+			getParserContext().addException(new UnsupportedStatementException(
+					node.getFullyQualifiedName() + " is not a class or interface unit"));
 
 		return false;
 	}

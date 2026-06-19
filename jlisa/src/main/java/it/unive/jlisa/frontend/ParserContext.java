@@ -9,7 +9,9 @@ import it.unive.lisa.program.*;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -46,6 +48,8 @@ public class ParserContext {
 	 */
 	Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
+	private final List<Throwable> exceptions = new ArrayList<>();
+
 	/**
 	 * Constructs a new ParserContext with the specified program, API level, and
 	 * exception handling strategy.
@@ -60,6 +64,15 @@ public class ParserContext {
 			int apiLevel) {
 		this.program = program;
 		this.apiLevel = apiLevel;
+	}
+
+	public void addException(
+			RuntimeException e) {
+		exceptions.add(e);
+	}
+
+	public List<Throwable> getExceptions() {
+		return exceptions;
 	}
 
 	/**
