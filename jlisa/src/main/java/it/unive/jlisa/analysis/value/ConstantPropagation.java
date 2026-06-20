@@ -53,6 +53,7 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1116,7 +1117,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		}
 
 		// reflection
-		if ((operator instanceof JavaFieldSetTypeOperator || operator instanceof JavaFieldSetIsInstanceOperator)
+		if ((operator instanceof JavaFieldSetTypeOperator || operator instanceof JavaFieldSetModifiersOperator)
 				&& left.getValue() instanceof String className
 				&& right.getValue() instanceof String fieldName) {
 
@@ -1125,18 +1126,20 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 			Global field = classUnit.getInstanceGlobal(fieldName, true);
 
-			boolean isInstance = true;
+			int modifiers = 0;
 
-			Global tmp = classUnit.getGlobal(fieldName);
-			if (tmp != null) {
-				isInstance = false;
-				field = tmp;
+			// field is static, we know it exists
+			if (field == null) {
+				modifiers |= Modifier.STATIC;
+				field = classUnit.getGlobal(fieldName);
+				assert (field != null);
 			}
 
 			if (operator instanceof JavaFieldSetTypeOperator) {
 				return new ConstantValue(field.getStaticType().toString());
 			}
-			return new ConstantValue(isInstance);
+
+			return new ConstantValue(modifiers);
 		}
 
 		return top();

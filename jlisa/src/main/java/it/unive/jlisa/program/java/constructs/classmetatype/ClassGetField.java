@@ -2,11 +2,12 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaFieldSetClassNameOperator;
-import it.unive.jlisa.program.operator.JavaFieldSetIsInstanceOperator;
+import it.unive.jlisa.program.operator.JavaFieldSetModifiersOperator;
 import it.unive.jlisa.program.operator.JavaFieldSetNameOperator;
 import it.unive.jlisa.program.operator.JavaFieldSetTypeOperator;
 import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -69,7 +70,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Type booleanType = getProgram().getTypes().getBooleanType();
+		Type intType = JavaIntType.INSTANCE;
 		Type stringType = getProgram().getTypes().getStringType();
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -86,7 +87,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
 		GlobalVariable typeVar = new GlobalVariable(Untyped.INSTANCE, "type", getLocation());
-		GlobalVariable isInstanceVar = new GlobalVariable(Untyped.INSTANCE, "isInstance", getLocation());
+		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", getLocation());
 
 		// check if field actually exists in the given class
 		it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
@@ -168,17 +169,17 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				dst = new AccessChild(stringType, derefFieldType, nameVar, getLocation());
 				sem = analysis.assign(sem, dst, fieldSetType, this);
 
-				// assign field isInstance
-				it.unive.lisa.symbolic.value.BinaryExpression fieldSetIsInstance = new it.unive.lisa.symbolic.value.BinaryExpression(
-						booleanType,
+				// assign field modifiers
+				it.unive.lisa.symbolic.value.BinaryExpression fieldSetModifiers = new it.unive.lisa.symbolic.value.BinaryExpression(
+						intType,
 						accessClassNameExpr,
 						accessFieldNameExpr,
-						JavaFieldSetIsInstanceOperator.INSTANCE,
+						JavaFieldSetModifiersOperator.INSTANCE,
 						getLocation());
 
-				// (*field)->isInstance
-				dst = new AccessChild(booleanType, derefThisField, isInstanceVar, getLocation());
-				sem = analysis.assign(sem, dst, fieldSetIsInstance, this);
+				// (*field)->modifiers
+				dst = new AccessChild(intType, derefThisField, modifiersVar, getLocation());
+				sem = analysis.assign(sem, dst, fieldSetModifiers, this);
 
 				tmp = tmp.lub(sem);
 

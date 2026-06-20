@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.SyntheticCodeLocation;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -31,6 +32,8 @@ import it.unive.lisa.type.Untyped;
 
 public class FieldEmptyConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
+
+	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Field");
 
 	public FieldEmptyConstructor(
 			CFG cfg,
@@ -99,7 +102,7 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 		// approach
 
 		// allocate Class object for field `clazz`
-		SyntheticCodeLocation s1 = new SyntheticCodeLocation(src, 1);
+		SyntheticCodeLocation s1 = synGen.nextLocation();
 		JavaNewObj call1 = new JavaNewObj(getCFG(), s1,
 				new JavaReferenceType(classMetaType),
 				new Expression[0]);
@@ -115,7 +118,7 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 		}
 
 		// allocate String object for field `name`
-		SyntheticCodeLocation s2 = new SyntheticCodeLocation(src, 2);
+		SyntheticCodeLocation s2 = synGen.nextLocation();
 		JavaNewObj call2 = new JavaNewObj(getCFG(), s2,
 				new JavaReferenceType(stringType),
 				new Expression[0]);
@@ -131,7 +134,7 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 		}
 
 		// allocate Class object for field `type`
-		SyntheticCodeLocation s3 = new SyntheticCodeLocation(src, 3);
+		SyntheticCodeLocation s3 = synGen.nextLocation();
 		JavaNewObj call3 = new JavaNewObj(getCFG(), s3,
 				new JavaReferenceType(classMetaType),
 				new Expression[0]);

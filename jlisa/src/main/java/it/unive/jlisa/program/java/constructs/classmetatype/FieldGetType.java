@@ -22,21 +22,21 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class FieldGetClass extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
+public class FieldGetType extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public FieldGetClass(
+	public FieldGetType(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "getClass", new JavaReferenceType(JavaClassType.getClassMetaType()), expr);
+		super(cfg, location, "getType", new JavaReferenceType(JavaClassType.getClassMetaType()), expr);
 	}
 
-	public static FieldGetClass build(
+	public static FieldGetType build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new FieldGetClass(cfg, location, params[0]);
+		return new FieldGetType(cfg, location, params[0]);
 	}
 
 	@Override
@@ -59,9 +59,9 @@ public class FieldGetClass extends it.unive.lisa.program.cfg.statement.UnaryExpr
 		Type classMetaType = JavaClassType.getClassMetaType();
 		JavaReferenceType reftype = new JavaReferenceType(classMetaType);
 
-		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
+		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "type", getLocation());
 
-		// (*field)->clazz
+		// (*field)->type
 		HeapDereference derefThisField = new HeapDereference(fieldMetaType, expr, getLocation());
 		AccessChild accessThisFieldClazz = new AccessChild(reftype, derefThisField, clazzVar, getLocation());
 
