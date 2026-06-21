@@ -346,6 +346,17 @@ public class JavaClassType implements UnitType {
 		return lastDynamicTypeLookup;
 	}
 
+	private static Integer lastGetMethodParameterCount;
+
+	public static void setGetMethodParameterCount(
+			Integer count) {
+		lastGetMethodParameterCount = count;
+	}
+
+	public static Integer getGetMethodParameterCount() {
+		return lastGetMethodParameterCount;
+	}
+
 	// TODO add when we will have Short
 	// public static JavaClassType getShortWrapperType() {
 	// return lookup("java.lang.Short");

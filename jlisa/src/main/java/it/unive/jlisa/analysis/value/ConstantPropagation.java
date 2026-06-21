@@ -1406,7 +1406,14 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue[] args = new ConstantValue[exprs.length];
 
 			for (int i = 0; i < exprs.length; ++i) {
-				ConstantValue left = eval(state, (ValueExpression) exprs[i], pp, oracle);
+				ConstantValue left;
+				try {
+					left = eval(state, (ValueExpression) exprs[i], pp, oracle);
+				} catch (Exception e) {
+					// if evaluation fails (e.g. unexpected nulls), be conservative
+					// and return UNKNOWN so analysis can continue
+					return Satisfiability.UNKNOWN;
+				}
 				if (left.isBottom())
 					return Satisfiability.BOTTOM;
 				args[i] = left;
@@ -1468,17 +1475,26 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Collection<CodeMember> codeMembersWithName = cu.getInstanceCodeMembersByName(methodName, true);
 			codeMembersWithName.addAll(cu.getCodeMembersByName(methodName));
 
-			// filter using length
-			codeMembersWithName.removeIf(cm -> cm.getDescriptor().isInstance()
-					&& cm.getDescriptor().getFormals().length - 1 != arg.length - 2);
-			codeMembersWithName.removeIf(
-					cm -> !cm.getDescriptor().isInstance() && cm.getDescriptor().getFormals().length != arg.length - 2);
+			int actualParamCount = Math.max(0, arg.length - 2);
+
+			// filter methods by the number of parameters inferred from the
+			// number of
+			// provided class arguments (arg.length - 2). For instance methods
+			// the
+			// descriptor contains an extra implicit receiver formal, so
+			// subtract 1.
+			codeMembersWithName.removeIf(cm -> {
+				CodeMemberDescriptor descriptor = cm.getDescriptor();
+				int expected = descriptor.isInstance() ? descriptor.getFormals().length - 1
+						: descriptor.getFormals().length;
+				return expected != actualParamCount;
+			});
 
 			if (codeMembersWithName.isEmpty())
 				return Satisfiability.NOT_SATISFIED;
 
 			// filter using types
-			for (int i = 0; i < arg.length - 2; ++i) {
+			for (int i = 0; i < actualParamCount; ++i) {
 
 				String getMethodParamType = (String) arg[2 + i].getValue();
 
@@ -1492,9 +1508,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 					Parameter currentParam = parameters[i + skipFirst];
 
 					Type paramType = currentParam.getStaticType();
-					// TODO: if paramType is referenceType, get the inner type
+					if (paramType.isReferenceType()) {
+						paramType = paramType.asReferenceType().getInnerType();
+					}
 
-					if (paramType.toString() != getMethodParamType) {
+					if (!paramType.toString().equals(getMethodParamType)) {
 						toRemove.add(possibleMethod);
 					}
 				}
@@ -1605,6 +1623,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return Satisfiability.SATISFIED;
 			}
 			return Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof GhostGetMethodParameterCountOperator) {
+			if (arg.getValue() instanceof Integer v) {
+				JavaClassType.setGetMethodParameterCount(v);
+				return Satisfiability.SATISFIED;
+			} else {
+				JavaClassType.setGetMethodParameterCount(null);
+				return Satisfiability.UNKNOWN;
+			}
 		}
 
 		if (operator instanceof GhostTypeLookupOperator && arg.getValue() instanceof String s) {

@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
 import it.unive.jlisa.program.operator.JavaIsMethodDefinedOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -27,6 +28,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -87,15 +89,34 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		AccessChild accessMethodNameExpr = new AccessChild(stringType, derefMethodNameExpr, methodNameVar,
 				getLocation());
 
-		// TODO: variable length depending on the amount of parameters.
-		// this is just an example with 2 "hardcoded" parameters
-		SymbolicExpression[] exprs = new SymbolicExpression[4];
-		exprs[0] = accessClassNameExpr;
-		exprs[1] = accessMethodNameExpr;
+		// Support variable length depending on the amount of parameters.
+		// Access the length property of the parameterTypes array
+		java.util.List<SymbolicExpression> exprsList = new java.util.ArrayList<>();
+		exprsList.add(accessClassNameExpr);
+		exprsList.add(accessMethodNameExpr);
 
 		HeapDereference derefArr = new HeapDereference(JavaArrayType.CLASS_ARRAY.getInnerType(), right, getLocation());
 
-		for (int i = 0; i < 2; ++i) {
+		// Get the length of the array via ghost state if available
+		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE,
+				new HeapDereference(JavaArrayType.CLASS_ARRAY, right, getLocation()),
+				lenProperty, getLocation());
+
+		it.unive.lisa.symbolic.value.UnaryExpression ghostLen = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaIntType.INSTANCE,
+				accessLen,
+				GhostGetMethodParameterCountOperator.INSTANCE,
+				getLocation());
+		analysis.satisfies(state, ghostLen, originating);
+		Integer exactParamCount = JavaClassType.getGetMethodParameterCount();
+
+		if (exactParamCount == null) {
+			// fallback: preserve the existing max limit
+			exactParamCount = 20;
+		}
+
+		for (int i = 0; i < exactParamCount; ++i) {
 
 			Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 			AccessChild accessArrayAtIndex = new AccessChild(contentType, derefArr, var, getLocation());
@@ -103,16 +124,17 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			AccessChild accessClassName = new AccessChild(stringType, derefArrayAtIndex, classNameVar, getLocation());
 
-			// 2+ since the first two exprs are already taken by class name and
-			// method name
-			exprs[2 + i] = accessClassName;
+			// Add the class name of each parameter type
+			exprsList.add(accessClassName);
 		}
 
+		SymbolicExpression[] exprs = exprsList.toArray(new SymbolicExpression[0]);
+
 		it.unive.jlisa.program.operator.NaryExpression isMethodDefined = new it.unive.jlisa.program.operator.NaryExpression(
-				getProgram().getTypes().getBooleanType(),
-				exprs,
-				JavaIsMethodDefinedOperator.INSTANCE,
-				getLocation());
+			getProgram().getTypes().getBooleanType(),
+			exprs,
+			JavaIsMethodDefinedOperator.INSTANCE,
+			getLocation());
 
 		Satisfiability sat = analysis.satisfies(state, isMethodDefined, originating);
 
