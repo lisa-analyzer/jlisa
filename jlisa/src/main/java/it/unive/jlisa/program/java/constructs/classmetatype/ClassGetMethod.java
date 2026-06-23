@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
 import it.unive.jlisa.program.operator.JavaIsMethodDefinedOperator;
@@ -19,6 +20,8 @@ import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -31,6 +34,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Modifier;
 
 public class ClassGetMethod extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -69,6 +73,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
+		Type intType = JavaIntType.INSTANCE;
 		Type classMetaType = JavaClassType.getClassMetaType();
 		Type methodType = JavaClassType.getMethodType();
 		Type stringType = getProgram().getTypes().getStringType();
@@ -131,10 +136,10 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		SymbolicExpression[] exprs = exprsList.toArray(new SymbolicExpression[0]);
 
 		it.unive.jlisa.program.operator.NaryExpression isMethodDefined = new it.unive.jlisa.program.operator.NaryExpression(
-			getProgram().getTypes().getBooleanType(),
-			exprs,
-			JavaIsMethodDefinedOperator.INSTANCE,
-			getLocation());
+				getProgram().getTypes().getBooleanType(),
+				exprs,
+				JavaIsMethodDefinedOperator.INSTANCE,
+				getLocation());
 
 		Satisfiability sat = analysis.satisfies(state, isMethodDefined, originating);
 
@@ -142,47 +147,69 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
 			GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
+			GlobalVariable returnTypeVar = new GlobalVariable(Untyped.INSTANCE, "returnType", getLocation());
 			GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "paramTypes", getLocation());
 			GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", getLocation());
 
+			// FIX: stray open call ret value from missing
+			// methodemptyconstructor
 			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(methodType),
-				new Expression[0]);
+					new JavaReferenceType(methodType),
+					new Expression[0]);
 
 			AnalysisState<
-				A> methodAllocated = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
-					expressions);
+					A> methodAllocated = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+							expressions);
 
-			noExceptionState = methodAllocated.topExecution();
+			AnalysisState<A> tmp = methodAllocated.bottomExecution();
 
-			// Assign the declaring class to the `declaringClass` field of
-			// Method
-			// GlobalVariable declaringClassField = new
-			// GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-			//
-			//
-			// it.unive.jlisa.program.operator.NaryExpression getMethod = new
-			// it.unive.jlisa.program.operator.NaryExpression(
-			// methodType,
-			// exprs,
-			// JavaClassGetMethodOperator.INSTANCE,
-			// getLocation());
-			//
-			// AnalysisState<A> tmp2 = state.bottomExecution();
-			// for (SymbolicExpression ref :
-			// callState.getExecutionExpressions()) {
-			//
-			// AccessChild dstDecl = new AccessChild(methodType, ref,
-			// declaringClassField, getLocation());
-			//
-			// AnalysisState<A> sem = analysis.assign(callState, dstDecl,
-			// getMethod, this);
-			// tmp2 = tmp2.lub(sem);
-			// }
+			for (SymbolicExpression expr : methodAllocated.getExecutionExpressions()) {
 
-			// getMetaVariables().addAll(call.getMetaVariables());
-			// noExceptionState =
-			// tmp2.withExecutionExpressions(callState.getExecutionExpressions());
+				HeapDereference derefThisMethod = new HeapDereference(methodType, expr, getLocation());
+
+				// assign name
+				AccessChild accessThisMethodName = new AccessChild(new JavaReferenceType(stringType), derefThisMethod,
+						nameVar, getLocation());
+
+				AnalysisState<A> sem = analysis.assign(methodAllocated, accessThisMethodName, middle, this);
+
+				// assign clazz
+				AccessChild accessThisMethodClazz = new AccessChild(new JavaReferenceType(classMetaType),
+						derefThisMethod,
+						clazzVar, getLocation());
+
+				sem = analysis.assign(sem, accessThisMethodClazz, left, this);
+
+				// assign paramTypes
+				AccessChild accessThisMethodParamTypes = new AccessChild(JavaArrayType.CLASS_ARRAY, derefThisMethod,
+						paramTypesVar, getLocation());
+
+				sem = analysis.assign(sem, accessThisMethodParamTypes, right, this);
+
+				AccessChild accessThisMethodReturnType = new AccessChild(new JavaReferenceType(classMetaType),
+						derefThisMethod, returnTypeVar, getLocation());
+
+				// (*(*method)->returnType)->name
+				HeapDereference derefMethodReturnType = new HeapDereference(classMetaType, accessThisMethodReturnType,
+						getLocation());
+				AccessChild returnTypeName = new AccessChild(stringType, derefMethodReturnType, nameVar, getLocation());
+
+				Constant c = new Constant(stringType, getReturnType(), getLocation());
+				sem = analysis.assign(sem, returnTypeName, c, this);
+
+				// assign modifiers
+				int modifiers = this.getModifiers();
+				c = new Constant(JavaIntType.INSTANCE, modifiers, getLocation());
+
+				AccessChild accessThisMethodModifiers = new AccessChild(JavaIntType.INSTANCE, derefThisMethod,
+						modifiersVar, getLocation());
+				sem = analysis.assign(sem, accessThisMethodModifiers, c, this);
+
+				tmp = tmp.lub(sem);
+			}
+
+			getMetaVariables().addAll(call.getMetaVariables());
+			noExceptionState = tmp.withExecutionExpressions(methodAllocated.getExecutionExpressions());
 
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			// TODO: exception path
@@ -218,6 +245,30 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
+	}
+
+	private int getModifiers() {
+		CodeMember cm = ReflectionCache.getLastMethod();
+		CodeMemberDescriptor d = cm.getDescriptor();
+
+		boolean isInstance = d.isInstance();
+		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
+
+		return modifiers;
+	}
+
+	private String getReturnType() {
+		CodeMember cm = ReflectionCache.getLastMethod();
+		CodeMemberDescriptor d = cm.getDescriptor();
+
+		Type paramType = d.getReturnType();
+		if (paramType.isReferenceType()) {
+			paramType = paramType.asReferenceType().getInnerType();
+		}
+
+		String s = paramType.toString();
+		return s;
+
 	}
 
 }

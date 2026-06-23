@@ -3,7 +3,6 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.SyntheticCodeLocation;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -77,10 +76,7 @@ public class MethodEmptyConstructor extends UnaryExpression implements Pluggable
 
 		JavaReferenceType refType = new JavaReferenceType(methodMetaType);
 
-		GlobalVariable methodClazz = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
-		GlobalVariable methodName = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
 		GlobalVariable methodReturnType = new GlobalVariable(Untyped.INSTANCE, "returnType", getLocation());
-		GlobalVariable methodParamTypes = new GlobalVariable(Untyped.INSTANCE, "paramTypes", getLocation());
 
 		// allocate the method object
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
@@ -93,72 +89,23 @@ public class MethodEmptyConstructor extends UnaryExpression implements Pluggable
 
 		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, method, getLocation());
 
-		AnalysisState<A> tmp = state.bottomExecution();
-
-		// allocate Class object for field `clazz`
+		// allocate Class object for field `returnType`
 		SyntheticCodeLocation s1 = synGen.nextLocation();
 		JavaNewObj call1 = new JavaNewObj(getCFG(), s1,
 				new JavaReferenceType(classMetaType),
 				new Expression[0]);
-		AnalysisState<A> callState1 = call1.forwardSemanticsAux(interprocedural, methodAllocated, new ExpressionSet[0],
-				expressions);
-
-		// assign this->clazz to the newly allocated Class object
-		AccessChild accessThisMethodClazz = new AccessChild(classMetaType, derefThisMethod, methodClazz, getLocation());
-
-		for (SymbolicExpression allocatedClazzExpr : callState1.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState1, accessThisMethodClazz, allocatedClazzExpr, this);
-			tmp = tmp.lub(t);
-		}
-
-		// allocate String object for field `name`
-		SyntheticCodeLocation s2 = synGen.nextLocation();
-		JavaNewObj call2 = new JavaNewObj(getCFG(), s2,
-				new JavaReferenceType(stringType),
-				new Expression[0]);
 		AnalysisState<
-				A> callState2 = call2.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
-
-		// assign this->name to the newly allocated String object
-		AccessChild accessThisMethodName = new AccessChild(stringType, derefThisMethod, methodName, getLocation());
-
-		for (SymbolicExpression allocatedNameExpr : callState2.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState2, accessThisMethodName, allocatedNameExpr, this);
-			tmp = tmp.lub(t);
-		}
-
-		// allocate Class object for field `returnType`
-		SyntheticCodeLocation s3 = synGen.nextLocation();
-		JavaNewObj call3 = new JavaNewObj(getCFG(), s3,
-				new JavaReferenceType(classMetaType),
-				new Expression[0]);
-		AnalysisState<
-				A> callState3 = call3.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
+				A> callState1 = call1.forwardSemanticsAux(interprocedural, methodAllocated, new ExpressionSet[0],
+						expressions);
 
 		// assign this->returnType to the newly allocated Class object
 		AccessChild accessThisMethodReturnType = new AccessChild(classMetaType, derefThisMethod, methodReturnType,
 				getLocation());
 
-		for (SymbolicExpression allocatedTypeExpr : callState3.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState3, accessThisMethodReturnType, allocatedTypeExpr, this);
-			tmp = tmp.lub(t);
-		}
+		AnalysisState<A> tmp = callState1.bottomExecution();
 
-		JavaReferenceType arrType = JavaArrayType.CLASS_ARRAY;
-		created = new MemoryAllocation(arrType.getInnerType(), getLocation(), false);
-		ref = new HeapReference(arrType, created, getLocation());
-
-		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(tmp, created, this);
-
-		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
-		arrAllocated = analysis.assign(arrAllocated, array, ref, this);
-
-		// assign this->paramTypes to the newly allocated Class[] object
-		AccessChild accessThisMethodParamTypes = new AccessChild(arrType, derefThisMethod, methodParamTypes,
-				getLocation());
-
-		for (SymbolicExpression allocatedTypeExpr : arrAllocated.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(arrAllocated, accessThisMethodParamTypes, allocatedTypeExpr, this);
+		for (SymbolicExpression allocatedTypeExpr : callState1.getExecutionExpressions()) {
+			AnalysisState<A> t = analysis.assign(callState1, accessThisMethodReturnType, allocatedTypeExpr, this);
 			tmp = tmp.lub(t);
 		}
 

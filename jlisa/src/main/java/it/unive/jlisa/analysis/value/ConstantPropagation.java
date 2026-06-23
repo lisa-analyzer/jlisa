@@ -1,6 +1,7 @@
 package it.unive.jlisa.analysis.value;
 
 import it.unive.jlisa.lattices.ConstantValue;
+import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
@@ -1410,7 +1411,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				try {
 					left = eval(state, (ValueExpression) exprs[i], pp, oracle);
 				} catch (Exception e) {
-					// if evaluation fails (e.g. unexpected nulls), be conservative
+					// if evaluation fails (e.g. unexpected nulls), be
+					// conservative
 					// and return UNKNOWN so analysis can continue
 					return Satisfiability.UNKNOWN;
 				}
@@ -1522,6 +1524,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				if (codeMembersWithName.isEmpty())
 					return Satisfiability.NOT_SATISFIED;
 			}
+
+			assert (codeMembersWithName.size() == 1);
+
+			ReflectionCache.setLastMethod(codeMembersWithName.iterator().next());
 
 			return Satisfiability.SATISFIED;
 		}
@@ -1859,9 +1865,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			JavaClassType loadingClass = JavaClassType.lookup(l);
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 
-			if (classUnit.getInstanceGlobal(r, true) == null && classUnit.getGlobal(r) == null) {
+			Global field = classUnit.getInstanceGlobal(r, true);
+			if (field == null)
 				return Satisfiability.NOT_SATISFIED;
-			}
+
+			field = classUnit.getGlobal(r);
+			if (field == null)
+				return Satisfiability.NOT_SATISFIED;
+
+			ReflectionCache.setLastField(field);
 			return Satisfiability.SATISFIED;
 		}
 
