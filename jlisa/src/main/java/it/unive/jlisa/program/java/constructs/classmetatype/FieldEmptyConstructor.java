@@ -13,7 +13,6 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -70,8 +69,6 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		String src = ((SourceCodeLocation) getLocation()).getSourceFile();
-
 		Type stringType = getProgram().getTypes().getStringType();
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -94,12 +91,6 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 		HeapDereference derefThisField = new HeapDereference(fieldMetaType, field, getLocation());
 
 		AnalysisState<A> tmp = state.bottomExecution();
-
-		// FIXME: using syntheticCodeLocations like this causes multiple
-		// allocations of
-		// `Field` objects to reside in the same 3 locations.
-		// Switch to syntheticCodeLocationManager if this is the correct
-		// approach
 
 		// allocate Class object for field `clazz`
 		SyntheticCodeLocation s1 = synGen.nextLocation();

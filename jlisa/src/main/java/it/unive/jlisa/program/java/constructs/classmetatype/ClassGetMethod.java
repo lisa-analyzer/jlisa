@@ -124,7 +124,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			AccessChild accessClassName = new AccessChild(stringType, derefArrayAtIndex, classNameVar, getLocation());
 
-			// Add the class name of each parameter type
+			// add the class name of each parameter type
 			exprsList.add(accessClassName);
 		}
 
@@ -139,19 +139,21 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Satisfiability sat = analysis.satisfies(state, isMethodDefined, originating);
 
 		if (sat == Satisfiability.SATISFIED) {
-			// class and method definitely exist, no exception to be thrown
-			// Allocate the Method object
-			JavaNewObj call = new JavaNewObj(getCFG(),
-					(SourceCodeLocation) getLocation(),
-					new JavaReferenceType(methodType),
-					new Expression[0]);
+
+			GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
+			GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
+			GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "paramTypes", getLocation());
+			GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", getLocation());
+
+			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
+				new JavaReferenceType(methodType),
+				new Expression[0]);
 
 			AnalysisState<
-					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				A> methodAllocated = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+					expressions);
 
-			// TODO: same thing as getField, assign each field separately
-
-			noExceptionState = callState.topExecution();
+			noExceptionState = methodAllocated.topExecution();
 
 			// Assign the declaring class to the `declaringClass` field of
 			// Method
