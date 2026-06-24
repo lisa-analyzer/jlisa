@@ -37,7 +37,7 @@ public class ReflectionTest {
 }
 
 class Cat {
-	public static String nickname;
+	public String nickname;
 
 	public int age;
 

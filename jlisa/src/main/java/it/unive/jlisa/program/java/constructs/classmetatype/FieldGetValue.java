@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -18,9 +19,9 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class FieldGetValue extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -55,24 +56,26 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		Global field = ReflectionCache.getLastField();
+		if (field == null)
+			return state.topExecution();
 
-		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type objectType = JavaClassType.getObjectType();
-		Type stringType = getProgram().getTypes().getStringType();
+		CodeLocation loc = getLocation();
 
-		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
+		if (field.isInstance()) {
+			HeapDereference container = new HeapDereference(objectType, right, loc);
+			GlobalVariable var = field.toSymbolicVariable(loc);
+			AccessChild access = new AccessChild(field.getStaticType(), container, var, loc);
+			if (field.getStaticType().isPointerType())
+				return analysis.smallStepSemantics(state, new HeapReference(field.getStaticType(), access, loc), this);
+			return analysis.smallStepSemantics(state, access, this);
+		}
 
-		// (*field)->name
-		HeapDereference derefField = new HeapDereference(fieldMetaType, left, getLocation());
-		AccessChild accessFieldName = new AccessChild(new JavaReferenceType(stringType), derefField, nameVar,
-				getLocation());
-
-		// (*target)->[(*field)->name]
-		HeapDereference derefTarget = new HeapDereference(objectType, right, getLocation());
-		AccessChild accessTargetField = new AccessChild(Untyped.INSTANCE, derefTarget, accessFieldName,
-				getLocation());
-
-		return analysis.smallStepSemantics(state, accessTargetField, this);
+		GlobalVariable access = field.toSymbolicVariable(loc);
+		if (field.getStaticType().isPointerType())
+			return analysis.smallStepSemantics(state, new HeapReference(field.getStaticType(), access, loc), this);
+		return analysis.smallStepSemantics(state, access, this);
 	}
 
 	@Override
