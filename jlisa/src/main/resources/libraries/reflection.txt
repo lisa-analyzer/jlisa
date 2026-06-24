@@ -33,3 +33,20 @@ class java.lang.reflect.Method extends java.lang.Object:
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.reflect.Method*
 
+	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.MethodGetName
+		libtype java.lang.String*
+		param this libtype java.lang.reflect.Method*
+
+	instance method getDeclaringClass: it.unive.jlisa.program.java.constructs.classmetatype.MethodGetDeclaringClass
+		libtype java.lang.Class*
+		param this libtype java.lang.reflect.Method*
+
+	instance method getReturnType: it.unive.jlisa.program.java.constructs.classmetatype.MethodGetReturnType
+		libtype java.lang.Class*
+		param this libtype java.lang.reflect.Method*
+
+	instance method getParameterTypes: it.unive.jlisa.program.java.constructs.classmetatype.MethodGetParameterTypes
+		type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
+		param this libtype java.lang.reflect.Method*
+
+
