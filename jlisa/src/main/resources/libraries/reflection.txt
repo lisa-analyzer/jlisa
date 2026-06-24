@@ -25,6 +25,17 @@ class java.lang.reflect.Field extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.reflect.Field*
 
+	instance method get: it.unive.jlisa.program.java.constructs.classmetatype.FieldGetValue
+		libtype java.lang.Object*
+		param this libtype java.lang.reflect.Field*
+		param obj libtype java.lang.Object*
+
+	instance method set: it.unive.jlisa.program.java.constructs.classmetatype.FieldSetValue
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.reflect.Field*
+		param obj libtype java.lang.Object*
+		param value libtype java.lang.Object*
+
 class java.lang.reflect.Method extends java.lang.Object:
 	field name libtype java.lang.String*
 	field declaringClass libtype java.lang.Class*

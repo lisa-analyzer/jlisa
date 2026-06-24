@@ -13,10 +13,9 @@ public class ReflectionTest {
 
 		Method m = c1.getMethod("sound", arr);
 
-		//Field f1 = c1.getField("nickname");
+		Field f1 = c1.getField("nickname");
 
 		// Field f2 = c1.getField("age");
-
 
 		// String z = f.getName();
 		// String zzz = z.toString();
@@ -24,6 +23,14 @@ public class ReflectionTest {
 		//Class c2 = f1.getDeclaringClass();
 
 		//int mod = f1.getModifiers();
+
+		Cat cat = new Cat("whiskers");
+
+		// field.get: legge il valore di nickname dall'istanza cat
+		Object val = f1.get(cat);
+
+		// field.set: scrive un nuovo valore in nickname sull'istanza cat
+		f1.set(cat, "fluffy");
 
 		return;
 	}
