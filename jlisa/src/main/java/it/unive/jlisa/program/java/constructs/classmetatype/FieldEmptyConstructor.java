@@ -69,14 +69,11 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Type stringType = getProgram().getTypes().getStringType();
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type classMetaType = JavaClassType.getClassMetaType();
 
 		JavaReferenceType refType = new JavaReferenceType(fieldMetaType);
 
-		GlobalVariable fieldClazz = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
-		GlobalVariable fieldName = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
 		GlobalVariable fieldType = new GlobalVariable(Untyped.INSTANCE, "type", getLocation());
 
 		// allocate the field object
@@ -92,51 +89,20 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 
 		AnalysisState<A> tmp = state.bottomExecution();
 
-		// allocate Class object for field `clazz`
-		SyntheticCodeLocation s1 = synGen.nextLocation();
-		JavaNewObj call1 = new JavaNewObj(getCFG(), s1,
-				new JavaReferenceType(classMetaType),
-				new Expression[0]);
-		AnalysisState<A> callState1 = call1.forwardSemanticsAux(interprocedural, fieldAllocated, new ExpressionSet[0],
-				expressions);
-
-		// assign this->clazz to the newly allocated Class object
-		AccessChild accessThisFieldClazz = new AccessChild(classMetaType, derefThisField, fieldClazz, getLocation());
-
-		for (SymbolicExpression allocatedClazzExpr : callState1.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState1, accessThisFieldClazz, allocatedClazzExpr, this);
-			tmp = tmp.lub(t);
-		}
-
-		// allocate String object for field `name`
-		SyntheticCodeLocation s2 = synGen.nextLocation();
-		JavaNewObj call2 = new JavaNewObj(getCFG(), s2,
-				new JavaReferenceType(stringType),
-				new Expression[0]);
-		AnalysisState<
-				A> callState2 = call2.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
-
-		// assign this->name to the newly allocated String object
-		AccessChild accessThisFieldName = new AccessChild(stringType, derefThisField, fieldName, getLocation());
-
-		for (SymbolicExpression allocatedNameExpr : callState2.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState2, accessThisFieldName, allocatedNameExpr, this);
-			tmp = tmp.lub(t);
-		}
-
 		// allocate Class object for field `type`
-		SyntheticCodeLocation s3 = synGen.nextLocation();
-		JavaNewObj call3 = new JavaNewObj(getCFG(), s3,
+		SyntheticCodeLocation s1 = synGen.nextLocation();
+		JavaNewObj call = new JavaNewObj(getCFG(), s1,
 				new JavaReferenceType(classMetaType),
 				new Expression[0]);
 		AnalysisState<
-				A> callState3 = call3.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
+				A> callState = call.forwardSemanticsAux(interprocedural, fieldAllocated, new ExpressionSet[0],
+						expressions);
 
 		// assign this->type to the newly allocated Class object
 		AccessChild accessThisFieldType = new AccessChild(classMetaType, derefThisField, fieldType, getLocation());
 
-		for (SymbolicExpression allocatedTypeExpr : callState3.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState3, accessThisFieldType, allocatedTypeExpr, this);
+		for (SymbolicExpression allocatedTypeExpr : callState.getExecutionExpressions()) {
+			AnalysisState<A> t = analysis.assign(callState, accessThisFieldType, allocatedTypeExpr, this);
 			tmp = tmp.lub(t);
 		}
 

@@ -54,7 +54,6 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
-import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -612,14 +611,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(s);
 		}
 
-		if (operator instanceof JavaFieldSetClassNameOperator && arg.getValue() instanceof String s) {
-			return new ConstantValue(s);
-		}
-
-		if (operator instanceof JavaFieldSetNameOperator && arg.getValue() instanceof String s) {
-			return new ConstantValue(s);
-		}
-
 		return top();
 	}
 
@@ -1115,32 +1106,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(Integer.compare(lv, rv));
-		}
-
-		// reflection
-		if ((operator instanceof JavaFieldSetTypeOperator || operator instanceof JavaFieldSetModifiersOperator)
-				&& left.getValue() instanceof String className
-				&& right.getValue() instanceof String fieldName) {
-
-			JavaClassType loadingClass = JavaClassType.lookup(className);
-
-			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
-			Global field = classUnit.getInstanceGlobal(fieldName, true);
-
-			int modifiers = 0;
-
-			// field is static, we know it exists
-			if (field == null) {
-				modifiers |= Modifier.STATIC;
-				field = classUnit.getGlobal(fieldName);
-				assert (field != null);
-			}
-
-			if (operator instanceof JavaFieldSetTypeOperator) {
-				return new ConstantValue(field.getStaticType().toString());
-			}
-
-			return new ConstantValue(modifiers);
 		}
 
 		return top();
@@ -1865,15 +1830,17 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			JavaClassType loadingClass = JavaClassType.lookup(l);
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 
-			Global field = classUnit.getInstanceGlobal(r, true);
-			if (field == null)
+			Global instanceField = classUnit.getInstanceGlobal(r, true);
+			Global staticField = classUnit.getGlobal(r);
+
+			if (instanceField == null && staticField == null)
 				return Satisfiability.NOT_SATISFIED;
 
-			field = classUnit.getGlobal(r);
-			if (field == null)
-				return Satisfiability.NOT_SATISFIED;
+			if (instanceField == null)
+				ReflectionCache.setLastField(staticField);
+			else
+				ReflectionCache.setLastField(instanceField);
 
-			ReflectionCache.setLastField(field);
 			return Satisfiability.SATISFIED;
 		}
 
