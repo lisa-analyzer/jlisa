@@ -1,11 +1,17 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.jlisa.program.ReflectionCache;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.operator.JavaClassForNameOperator;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -19,24 +25,37 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.literal.StringLiteral;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
+
+	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.Class");
 
 	public ClassForName(
 			CFG cfg,
@@ -126,8 +145,12 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 				AccessChild dst = new AccessChild(stringType, ref, nameField, getLocation());
 				AnalysisState<A> sem = analysis.assign(callState, dst, forName, this);
-				tmp = tmp.lub(sem);
+
+				AnalysisState<A> x = loadGlobals(interprocedural, sem, expressions, getAllGlobals(), ref);
+
+				tmp = tmp.lub(x);
 			}
+
 
 			getMetaVariables().addAll(call.getMetaVariables());
 			noExceptionState = tmp.withExecutionExpressions(callState.getExecutionExpressions());
@@ -190,6 +213,129 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
 
 		return dynamicTypeStr;
+	}
+
+	Collection<Global> getAllGlobals() {
+		UnitType c = ReflectionCache.lastClass;
+		CompilationUnit unit = c.getUnit();
+
+		Collection<Global> globals = new ArrayList<>(unit.getGlobalsRecursively());
+		globals.addAll(unit.getInstanceGlobals(true));
+
+		return globals;
+	}
+
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadGlobals(
+		InterproceduralAnalysis<A, D> interprocedural,
+		AnalysisState<A> state,
+		StatementStore<A> expressions,
+		Collection<Global> globals,
+		SymbolicExpression clazz)
+			throws SemanticException {
+
+		Type stringType = getProgram().getTypes().getStringType();
+		CFG cfg = getCFG();
+		CodeLocation location = getLocation();
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
+		JavaClassType classMetaType = JavaClassType.getClassMetaType();
+		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
+
+		// allocate an array of fields
+		// IntLiteral arrLen = new IntLiteral(getCFG(), getLocation(), globals.size());
+		// JavaNewArray newArray = new JavaNewArray(cfg, location, arrLen, new JavaReferenceType(fieldArrType));
+		//
+		// AnalysisState<A> arrAllocated = newArray.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+
+		MemoryAllocation created = new MemoryAllocation(fieldArrType, synGen.nextLocation(), false);
+		HeapReference ref = new HeapReference(new JavaReferenceType(fieldArrType), created, getLocation());
+
+		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(state, created, this);
+
+		InstrumentedReceiver array = new InstrumentedReceiver(new JavaReferenceType(fieldArrType), true, getLocation());
+		arrAllocated = analysis.assign(arrAllocated, array, ref, this);
+
+
+		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
+
+		// assign to `declaredFields` the newly allocated array
+		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, getLocation());
+		AccessChild accessDeclaredFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar, getLocation());
+
+		arrAllocated = analysis.assign(arrAllocated, accessDeclaredFields, array, this);
+
+		AnalysisState<A> tmp = arrAllocated.bottomExecution();
+
+		int nextIdx = 0;
+
+		for (SymbolicExpression alloc : arrAllocated.getExecutionExpressions()) {
+
+			HeapDereference arrayDeref = new HeapDereference(fieldArrType, alloc, getLocation());
+
+			for (Global global : globals) {
+
+				Constant idx = new Constant(JavaIntType.INSTANCE, nextIdx, location);
+
+				AccessChild accessIdx = new AccessChild(wrappedFieldType, arrayDeref, idx, getLocation());
+
+				LoadField loadField = new LoadField(getCFG(), getLocation(), new Expression[0]);
+
+				ExpressionSet[] params = genLoadFieldParams(clazz, global);
+
+				AnalysisState<A> t = loadField.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
+
+				// assign initialized field to the next index of the array
+				for (SymbolicExpression initializedField : t.getExecutionExpressions()) {
+					AnalysisState<A> t2 = analysis.assign(t, accessIdx, initializedField, this);
+
+					tmp = tmp.lub(t2);
+				}
+
+				++nextIdx;
+
+			}
+		}
+
+		return tmp;
+
+	}
+
+	private ExpressionSet[] genLoadFieldParams(SymbolicExpression clazz, Global global) {
+
+		CodeLocation location = getLocation();
+		Type stringType = JavaClassType.getStringType();
+
+		// 4 parameters flow into loadField
+		ExpressionSet[] params = new ExpressionSet[4];
+
+		// 0 is clazz
+		params[0] = new ExpressionSet(clazz);
+
+		String fieldName = global.getName();
+
+		// 1 is field name
+		Constant c1 = new Constant(stringType, fieldName, location);
+		params[1] = new ExpressionSet(c1);
+
+		// 2 is field type
+		Type t = global.getStaticType();
+		if (t instanceof JavaReferenceType jrt)
+			t = jrt.getInnerType();
+		Constant c2 = new Constant(stringType, global.getStaticType().toString(), location);
+		params[2] = new ExpressionSet(c2);
+
+		// 3 is field modifiers
+		boolean isInstance = global.isInstance();
+		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
+		Constant c3 = new Constant(JavaIntType.INSTANCE, modifiers, location);
+		params[3] = new ExpressionSet(c3);
+
+		return params;
+
+
 	}
 
 }
