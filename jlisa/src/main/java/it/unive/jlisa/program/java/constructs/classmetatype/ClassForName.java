@@ -113,6 +113,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			JavaClassType loadingClass = JavaClassType.lookup(loadingClassStr);
 
 			// execute static initializer
+			// FIXME: initializer of parent classes is not run, see test class-for-name-1
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 			if (classUnit.getCodeMembersByName(loadingClassStr).isEmpty()) {
 				Set<CompilationUnit> superClasses = classUnit
