@@ -1831,6 +1831,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
 
 			Global instanceField = classUnit.getInstanceGlobal(r, true);
+
+			// FIXME: this doesn't automatically look in parent classes
 			Global staticField = classUnit.getGlobal(r);
 
 			if (instanceField == null && staticField == null)
