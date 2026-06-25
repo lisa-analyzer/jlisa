@@ -248,7 +248,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 	}
 
 	private int getModifiers() {
-		CodeMember cm = ReflectionCache.getLastMethod();
+		CodeMember cm = ReflectionCache.lastMethod;
 		CodeMemberDescriptor d = cm.getDescriptor();
 
 		boolean isInstance = d.isInstance();
@@ -258,7 +258,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 	}
 
 	private String getReturnType() {
-		CodeMember cm = ReflectionCache.getLastMethod();
+		CodeMember cm = ReflectionCache.lastMethod;
 		CodeMemberDescriptor d = cm.getDescriptor();
 
 		Type paramType = d.getReturnType();

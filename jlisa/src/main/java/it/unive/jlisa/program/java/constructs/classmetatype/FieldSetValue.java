@@ -57,7 +57,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
             throws SemanticException {
 
         Analysis<A, D> analysis = interprocedural.getAnalysis();
-        Global field = ReflectionCache.getLastField();
+        Global field = ReflectionCache.lastField;
         if (field == null)
             return state.topExecution();
 
