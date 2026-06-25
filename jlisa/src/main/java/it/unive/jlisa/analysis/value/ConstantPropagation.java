@@ -55,7 +55,6 @@ import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -86,8 +85,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			// anyway).
 			return true;
 
-		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType())
-				|| rts.stream().anyMatch(t -> t.equals(JavaClassType.getMethodType()));
+		return rts.stream().anyMatch(Type::isValueType) || rts.stream().anyMatch(t -> t.isStringType());
 	}
 
 	@Override
@@ -1345,18 +1343,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		}
 
-		if (subExpressions.length > 1 && operator instanceof JavaClassGetMethodOperator) {
-			String className = ((String) subExpressions[0].getValue());
-			String methodName = ((String) subExpressions[1].getValue());
-
-			// TODO: actual abstraction of the method meta object
-			HashMap<String, String> res = new HashMap<>();
-
-			res.put("class", className);
-			res.put("name", methodName);
-			return new ConstantValue(res);
-		}
-
 		return top();
 	}
 
@@ -1492,7 +1478,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			assert (codeMembersWithName.size() == 1);
 
-			ReflectionCache.setLastMethod(codeMembersWithName.iterator().next());
+			ReflectionCache.lastMethod = codeMembersWithName.iterator().next();
 
 			return Satisfiability.SATISFIED;
 		}
@@ -1839,9 +1825,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return Satisfiability.NOT_SATISFIED;
 
 			if (instanceField == null)
-				ReflectionCache.setLastField(staticField);
+				ReflectionCache.lastField = staticField;
 			else
-				ReflectionCache.setLastField(instanceField);
+				ReflectionCache.lastField = instanceField;
 
 			return Satisfiability.SATISFIED;
 		}

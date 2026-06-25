@@ -196,7 +196,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 	}
 
 	private int getModifiers() {
-		Global g = ReflectionCache.getLastField();
+		Global g = ReflectionCache.lastField;
 
 		boolean isInstance = g.isInstance();
 		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
@@ -205,7 +205,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 	}
 
 	private String getType() {
-		Global g = ReflectionCache.getLastField();
+		Global g = ReflectionCache.lastField;
 
 		Type paramType = g.getStaticType();
 		if (paramType.isReferenceType()) {
