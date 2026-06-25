@@ -231,8 +231,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		SymbolicExpression clazz)
 			throws SemanticException {
 
-		Type stringType = getProgram().getTypes().getStringType();
-		CFG cfg = getCFG();
 		CodeLocation location = getLocation();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
@@ -240,12 +238,8 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
 
-		// allocate an array of fields
-		// IntLiteral arrLen = new IntLiteral(getCFG(), getLocation(), globals.size());
-		// JavaNewArray newArray = new JavaNewArray(cfg, location, arrLen, new JavaReferenceType(fieldArrType));
-		//
-		// AnalysisState<A> arrAllocated = newArray.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
+		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
 
 		MemoryAllocation created = new MemoryAllocation(fieldArrType, synGen.nextLocation(), false);
 		HeapReference ref = new HeapReference(new JavaReferenceType(fieldArrType), created, getLocation());
@@ -255,46 +249,49 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		InstrumentedReceiver array = new InstrumentedReceiver(new JavaReferenceType(fieldArrType), true, getLocation());
 		arrAllocated = analysis.assign(arrAllocated, array, ref, this);
 
+		AnalysisState<A> tmp = arrAllocated.bottomExecution();
 
-		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
+		HeapDereference arrayDeref = new HeapDereference(fieldArrType, array, getLocation());
+
+		// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
+
+		// assign length to array
+		Constant c = new Constant(JavaIntType.INSTANCE, globals.size(), location);
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
+		tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, c, this));
+
 
 		// assign to `declaredFields` the newly allocated array
 		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, getLocation());
 		AccessChild accessDeclaredFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar, getLocation());
 
-		arrAllocated = analysis.assign(arrAllocated, accessDeclaredFields, array, this);
-
-		AnalysisState<A> tmp = arrAllocated.bottomExecution();
-
 		int nextIdx = 0;
 
-		for (SymbolicExpression alloc : arrAllocated.getExecutionExpressions()) {
+		for (Global global : globals) {
 
-			HeapDereference arrayDeref = new HeapDereference(fieldArrType, alloc, getLocation());
+			Constant idx = new Constant(JavaIntType.INSTANCE, nextIdx, location);
 
-			for (Global global : globals) {
+			AccessChild accessIdx = new AccessChild(wrappedFieldType, arrayDeref, idx, getLocation());
 
-				Constant idx = new Constant(JavaIntType.INSTANCE, nextIdx, location);
+			LoadField loadField = new LoadField(getCFG(), getLocation(), new Expression[0]);
 
-				AccessChild accessIdx = new AccessChild(wrappedFieldType, arrayDeref, idx, getLocation());
+			ExpressionSet[] params = genLoadFieldParams(clazz, global);
 
-				LoadField loadField = new LoadField(getCFG(), getLocation(), new Expression[0]);
+			AnalysisState<A> t = loadField.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
 
-				ExpressionSet[] params = genLoadFieldParams(clazz, global);
+			// assign initialized field to the next index of the array
+			for (SymbolicExpression initializedField : t.getExecutionExpressions()) {
+				AnalysisState<A> t2 = analysis.assign(t, accessIdx, initializedField, this);
 
-				AnalysisState<A> t = loadField.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
-
-				// assign initialized field to the next index of the array
-				for (SymbolicExpression initializedField : t.getExecutionExpressions()) {
-					AnalysisState<A> t2 = analysis.assign(t, accessIdx, initializedField, this);
-
-					tmp = tmp.lub(t2);
-				}
-
-				++nextIdx;
-
+				tmp = tmp.lub(t2);
 			}
+
+			++nextIdx;
+
 		}
+
+		tmp = tmp.lub(analysis.assign(arrAllocated, accessDeclaredFields, array, this));
+		tmp = tmp.forgetIdentifier(array, this);
 
 		return tmp;
 

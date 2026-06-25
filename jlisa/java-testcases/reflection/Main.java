@@ -7,13 +7,16 @@ public class ReflectionTest {
 		String s = new String("Cat");
 
 		Class c1 = Class.forName(s);
-		Class c2 = Class.forName("java.lang.String");
+		// Class c2 = Class.forName("java.lang.String");
+		// //
+		// Class[] arr = new Class[] {c1, c2};
 		//
-		Class[] arr = new Class[] {c1, c2};
+		// Method m = c1.getMethod("sound", arr);
+		//
+		Field f1 = c1.getField("age");
 
-		Method m = c1.getMethod("sound", arr);
-
-		Field f1 = c1.getField("nickname");
+		// TODO AP: this doesn't work
+		String ageFieldName = f1.getName();
 
 		// Field f2 = c1.getField("age");
 
@@ -24,49 +27,48 @@ public class ReflectionTest {
 
 		//int mod = f1.getModifiers();
 
-		Cat cat = new Cat("whiskers");
+		// Cat cat = new Cat("whiskers");
 
 		// field.get: legge il valore di nickname dall'istanza cat
-		Object val = f1.get(cat);
+		// Object val = f1.get(cat);
 
 		// field.set: scrive un nuovo valore in nickname sull'istanza cat
-		f1.set(cat, "fluffy");
+		// f1.set(cat, "fluffy");
 
 		return;
 	}
 }
 
 class Cat {
+	public int age;
 	public String nickname;
 
-	public int age;
-
-	public Cat(String x) {
-		nickname = x;
-	}
-
-	public Cat() {
-		nickname = "ziggy";
-	}
-
-	public String sound(Cat x, String y){
-		return "meow";
-	}
-
-	public String sound(){
-		return "meow";
-	}
-
-	public String sound(int x){
-		return "meow";
-	}
-
-	public String sound(int x, int y, int z){
-		return "meow";
-	}
-
-	public static String sound(int x, int y, int z, int w){
-		return "meow";
-	}
+	// public Cat(String x) {
+	// 	nickname = x;
+	// }
+	//
+	// public Cat() {
+	// 	nickname = "ziggy";
+	// }
+	//
+	// public String sound(Cat x, String y){
+	// 	return "meow";
+	// }
+	//
+	// public String sound(){
+	// 	return "meow";
+	// }
+	//
+	// public String sound(int x){
+	// 	return "meow";
+	// }
+	//
+	// public String sound(int x, int y, int z){
+	// 	return "meow";
+	// }
+	//
+	// public static String sound(int x, int y, int z, int w){
+	// 	return "meow";
+	// }
 }
 

@@ -2,7 +2,12 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.java.constructs.string.StringEquals;
+import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
 import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -69,35 +74,89 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
 
 		Type intType = JavaIntType.INSTANCE;
 		Type stringType = getProgram().getTypes().getStringType();
+		Type refStringType = new JavaReferenceType(stringType);
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
+		Type refFieldMetaType = new JavaReferenceType(fieldMetaType);
+		Type fieldArr = JavaArrayType.lookup(refFieldMetaType, 1);
 		Type classMetaType = JavaClassType.getClassMetaType();
 
 		// access class name (1st arg)
-		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-		HeapDereference derefClassNameExpr = new HeapDereference(stringType, left, getLocation());
-		AccessChild accessClassNameExpr = new AccessChild(stringType, derefClassNameExpr, nameVar, getLocation());
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
+		// HeapDereference derefClassNameExpr = new HeapDereference(stringType, left, location);
+		// AccessChild accessClassNameExpr = new AccessChild(stringType, derefClassNameExpr, nameVar, location);
 
 		// access field name (2nd arg)
-		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefFieldNameExpr = new HeapDereference(stringType, right, getLocation());
-		AccessChild accessFieldNameExpr = new AccessChild(stringType, derefFieldNameExpr, valueVar, getLocation());
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		HeapDereference derefFieldNameExpr = new HeapDereference(stringType, right, location);
+		AccessChild accessFieldNameExpr = new AccessChild(stringType, derefFieldNameExpr, valueVar, location);
 
-		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
-		GlobalVariable typeVar = new GlobalVariable(Untyped.INSTANCE, "type", getLocation());
-		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", getLocation());
+		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", location);
+		GlobalVariable typeVar = new GlobalVariable(Untyped.INSTANCE, "type", location);
+		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", location);
+		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", location);
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
+
+
+		// get number of fields
+		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
+		AccessChild accessClazzFields = new AccessChild(new JavaReferenceType(fieldArr), derefClazz, declaredFieldsVar, location);
+
+		HeapDereference derefArr = new HeapDereference(fieldArr, accessClazzFields, location);
+
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
+
+		// FIXME AP: change this operator name
+		it.unive.lisa.symbolic.value.UnaryExpression ghostLen = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaIntType.INSTANCE,
+				accessLen,
+				GhostGetMethodParameterCountOperator.INSTANCE,
+				location);
+		analysis.satisfies(state, ghostLen, originating);
+		Integer arrLen = JavaClassType.getGetMethodParameterCount();
+
+		Satisfiability sat = Satisfiability.NOT_SATISFIED;
+
+		// look for a field with the same name
+		for (int i = 0; i < arrLen; ++i) {
+
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
+
+			AccessChild accessIdx = new AccessChild(refFieldMetaType, derefArr, idx, getLocation());
+			HeapDereference derefField = new HeapDereference(fieldMetaType, accessIdx, location);
+
+			AccessChild accessName = new AccessChild(refStringType, derefField, nameVar, location);
+			HeapDereference derefName = new HeapDereference(stringType, accessName, location);
+			AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
+
+			it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+					getProgram().getTypes().getBooleanType(),
+					accessValue,
+					accessFieldNameExpr,
+					JavaStringEqualsOperator.INSTANCE,
+					getLocation());
+
+			Satisfiability fieldFound = analysis.satisfies(state, equalsExpr, originating);
+
+			if (fieldFound == Satisfiability.SATISFIED) {
+				return analysis.smallStepSemantics(state, accessIdx, originating);
+			}
+		}
+
+		// TODO AP: field not found
 
 		// check if field actually exists in the given class
-		it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
-				stringType,
-				accessClassNameExpr,
-				accessFieldNameExpr,
-				JavaIsFieldDefinedOperator.INSTANCE,
-				getLocation());
-
-		Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
+		// it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
+		// 		stringType,
+		// 		accessClassNameExpr,
+		// 		accessFieldNameExpr,
+		// 		JavaIsFieldDefinedOperator.INSTANCE,
+		// 		getLocation());
+		//
+		// Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
