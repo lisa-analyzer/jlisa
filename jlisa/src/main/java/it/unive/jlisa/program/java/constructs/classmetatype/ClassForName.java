@@ -3,9 +3,7 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
-import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.operator.JavaClassForNameOperator;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
@@ -32,7 +30,6 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.literal.StringLiteral;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
@@ -221,7 +218,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		CompilationUnit unit = c.getUnit();
 
 		Collection<Global> globals = new ArrayList<>(unit.getGlobalsRecursively());
-		globals.addAll(unit.getInstanceGlobals(true));
 
 		return globals;
 	}

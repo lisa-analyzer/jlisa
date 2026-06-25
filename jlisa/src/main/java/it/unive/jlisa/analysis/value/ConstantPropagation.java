@@ -1565,20 +1565,27 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
 			boolean classLookup = true;
 			boolean interfaceLookup = true;
+
+			JavaClassType foundClass = null;
+			JavaInterfaceType foundInterface = null;
+
 			try {
-				JavaClassType.lookup(v);
+				foundClass = JavaClassType.lookup(v);
 			} catch (IllegalArgumentException e) {
 				classLookup = false;
 			}
 			try {
-				JavaInterfaceType.lookup(v);
+				foundInterface = JavaInterfaceType.lookup(v);
 			} catch (IllegalArgumentException e) {
 				interfaceLookup = false;
 			}
 
 			if (classLookup || interfaceLookup) {
+				assert(foundClass != null || foundInterface != null);
+				ReflectionCache.lastClass = (classLookup) ? foundClass : foundInterface;
 				return Satisfiability.SATISFIED;
 			}
+
 			return Satisfiability.NOT_SATISFIED;
 		}
 
