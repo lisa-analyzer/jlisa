@@ -318,7 +318,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		Type t = global.getStaticType();
 		if (t instanceof JavaReferenceType jrt)
 			t = jrt.getInnerType();
-		Constant c2 = new Constant(stringType, global.getStaticType().toString(), location);
+		Constant c2 = new Constant(stringType, t.toString(), location);
 		params[2] = new ExpressionSet(c2);
 
 		// 3 is field modifiers

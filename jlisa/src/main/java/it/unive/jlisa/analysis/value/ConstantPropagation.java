@@ -1815,30 +1815,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
 		}
 
-		// reflection
-		if (operator instanceof JavaIsFieldDefinedOperator && left.getValue() instanceof String l
-				&& right.getValue() instanceof String r) {
-
-			// safe since class is defined
-			JavaClassType loadingClass = JavaClassType.lookup(l);
-			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
-
-			Global instanceField = classUnit.getInstanceGlobal(r, true);
-
-			// FIXME: this doesn't automatically look in parent classes
-			Global staticField = classUnit.getGlobal(r);
-
-			if (instanceField == null && staticField == null)
-				return Satisfiability.NOT_SATISFIED;
-
-			if (instanceField == null)
-				ReflectionCache.lastField = staticField;
-			else
-				ReflectionCache.lastField = instanceField;
-
-			return Satisfiability.SATISFIED;
-		}
-
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);
 	}
 
