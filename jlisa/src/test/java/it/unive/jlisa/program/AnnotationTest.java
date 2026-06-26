@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.annotations.AnnotationMember;
@@ -53,6 +54,11 @@ public class AnnotationTest {
 				"java-testcases/annotation/M.java",
 				"java-testcases/annotation/N.java",
 
+				// Field-level
+				"java-testcases/annotation/O.java",
+				"java-testcases/annotation/P.java",
+				"java-testcases/annotation/Q.java",
+
 				// Special cases
 				"java-testcases/annotation/S1.java",
 
@@ -87,6 +93,21 @@ public class AnnotationTest {
 				return param.getAnnotationList();
 
 		throw new AssertionError("no parameter named " + parameterName + " in " + classUnitName + "." + codeMemberName);
+	}
+
+	private static Collection<Annotation> getFieldLevelAnnotations(
+			String classUnitName,
+			String fieldName) {
+		CompilationUnit unit = (CompilationUnit) lisaProgram.getUnit(classUnitName);
+
+		Global field = unit.getInstanceGlobal(fieldName, false);
+		if (field == null)
+			field = unit.getGlobal(fieldName);
+
+		if (field == null)
+			throw new AssertionError("no field named " + fieldName + " in " + classUnitName);
+
+		return field.getAnnotationList();
 	}
 
 	private static void assertAnnotationOfClass(
@@ -129,6 +150,16 @@ public class AnnotationTest {
 		assertTrue(anns.isEmpty(),
 				classUnitName + "." + methodUnitName + "(" + parameterName + ") should carry no annotations, got "
 						+ anns);
+	}
+
+	private static void assertAnnotationOfField(
+			String classUnitName,
+			String fieldName,
+			Annotation isAnnotatedWith) {
+		Collection<Annotation> anns = getFieldLevelAnnotations(classUnitName, fieldName);
+
+		assertTrue(anns.contains(isAnnotatedWith),
+				classUnitName + "#" + fieldName + " should carry " + isAnnotatedWith + ", got " + anns);
 	}
 
 	@Test
@@ -231,19 +262,19 @@ public class AnnotationTest {
 
 	@Test
 	public void testParameterLevelNormalAnnotation() {
-		Annotation onParam1 = new Annotation("ParameterLevelNormalAnnotation", List.of(
+		Annotation isAnnotatedWith1 = new Annotation("ParameterLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new IntAnnotationValue(1)),
 				new AnnotationMember("value2", new StringAnnotationValue("\"paramVal\"")),
 				new AnnotationMember("value3", new BoolAnnotationValue(false)),
 				new AnnotationMember("value4", new CharAnnotationValue('p'))));
-		Annotation onParam2 = new Annotation("ParameterLevelNormalAnnotation", List.of(
+		Annotation isAnnotatedWith2 = new Annotation("ParameterLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new IntAnnotationValue(2)),
 				new AnnotationMember("value2", new StringAnnotationValue("\"paramVal2\"")),
 				new AnnotationMember("value3", new BoolAnnotationValue(true)),
 				new AnnotationMember("value4", new CharAnnotationValue('a'))));
 
-		assertAnnotationOfParameter("L", "L_2", "param1", onParam1);
-		assertAnnotationOfParameter("L", "L_2", "param2", onParam2);
+		assertAnnotationOfParameter("L", "L_2", "param1", isAnnotatedWith1);
+		assertAnnotationOfParameter("L", "L_2", "param2", isAnnotatedWith2);
 		assertParameterHasNoAnnotations("L", "L_2", "param3");
 		assertParameterHasNoAnnotations("L", "L_1", "param");
 	}
@@ -271,6 +302,52 @@ public class AnnotationTest {
 		assertAnnotationOfParameter("N", "N", "param1", single);
 		assertAnnotationOfParameter("N", "N", "param2", normal);
 		assertParameterHasNoAnnotations("N", "N", "param3");
+	}
+
+	@Test
+	public void testFieldLevelMarkerAnnotation() {
+		Annotation isAnnotatedWith = new Annotation("FieldLevelMarkerTypeAnnotation");
+
+		assertAnnotationOfField("O", "field1", isAnnotatedWith);
+		assertAnnotationOfField("O", "field2", isAnnotatedWith);
+		assertAnnotationOfField("O", "field3", isAnnotatedWith);
+		assertAnnotationOfField("O", "field4", isAnnotatedWith);
+		assertAnnotationOfField("O", "field5", isAnnotatedWith);
+		assertAnnotationOfField("O", "field6", isAnnotatedWith);
+	}
+
+	@Test
+	public void testFieldLevelSingleMemberAnnotation() {
+		Annotation isAnnotatedWith1 = new Annotation("FieldLevelSingleMemberAnnotation",
+				List.of(new AnnotationMember("value", new IntAnnotationValue(1))));
+		Annotation isAnnotatedWith2 = new Annotation("FieldLevelSingleMemberAnnotation",
+				List.of(new AnnotationMember("value", new IntAnnotationValue(2))));
+		Annotation isAnnotatedWith3 = new Annotation("FieldLevelSingleMemberAnnotation",
+				List.of(new AnnotationMember("value", new IntAnnotationValue(3))));
+
+		assertAnnotationOfField("P", "field1", isAnnotatedWith1);
+		assertAnnotationOfField("P", "field2", isAnnotatedWith2);
+		assertAnnotationOfField("P", "field3", isAnnotatedWith3);
+	}
+
+	@Test
+	public void testFieldLevelNormalAnnotation() {
+		Annotation isAnnotatedWith1 = new Annotation("FieldLevelNormalAnnotation", List.of(
+				new AnnotationMember("value", new LongAnnotationValue(1000L)),
+				new AnnotationMember("value2", new StringAnnotationValue("\"abc\"")),
+				new AnnotationMember("value3", new CharAnnotationValue('x'))));
+		Annotation isAnnotatedWith2 = new Annotation("FieldLevelNormalAnnotation", List.of(
+				new AnnotationMember("value", new LongAnnotationValue(2000L)),
+				new AnnotationMember("value2", new StringAnnotationValue("\"dfg\"")),
+				new AnnotationMember("value3", new CharAnnotationValue('y'))));
+		Annotation isAnnotatedWith3 = new Annotation("FieldLevelNormalAnnotation", List.of(
+				new AnnotationMember("value", new LongAnnotationValue(3000L)),
+				new AnnotationMember("value2", new StringAnnotationValue("\"hji\"")),
+				new AnnotationMember("value3", new CharAnnotationValue('z'))));
+
+		assertAnnotationOfField("Q", "field1", isAnnotatedWith1);
+		assertAnnotationOfField("Q", "field2", isAnnotatedWith2);
+		assertAnnotationOfField("Q", "field3", isAnnotatedWith3);
 	}
 
 	@Test

@@ -25,6 +25,11 @@ public class Main{
 		M m = new M();
 		N n = new N();
 
+		// Field-level
+		O o = new O();
+		P p = new P();
+		Q q = new Q();
+
 		// Special cases
 		S1 s1 = new S1();
 	}
