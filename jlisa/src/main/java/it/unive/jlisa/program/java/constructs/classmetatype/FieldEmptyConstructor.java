@@ -107,6 +107,7 @@ public class FieldEmptyConstructor extends NaryExpression implements PluggableSt
 		}
 
 		tmp = tmp.withExecutionExpressions(fieldAllocated.getExecutionExpressions());
+		tmp = tmp.forgetIdentifier(field, this);
 
 		return tmp;
 	}
