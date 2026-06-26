@@ -21,7 +21,8 @@ public class P1Util {
 		// @RequestMapping(method = RequestMethod.GET) -> "GET".
 		// Enum-valued members are not yet parsed by AnnotationBuilder, so this
 		// branch is currently unreachable.
-		case "RequestMapping" -> throw new UnsupportedOperationException("Unsupported annotation variation");
+		case "RequestMapping" -> throw new UnsupportedOperationException(
+				"Unsupported REST annotation variation: " + annotation);
 		default -> null;
 		};
 	}

@@ -4,14 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
+import it.unive.jlisa.springed.frontend.SpringProjectVisitor;
 import it.unive.jlisa.springed.p1.P1Impl;
 import it.unive.jlisa.springed.p1.constructs.Registry;
 import it.unive.jlisa.springed.p1.output.P1Output;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.List;
 import org.apache.logging.log4j.Logger;
 
@@ -21,38 +20,47 @@ public class Main {
 	private static final String ERROR_FILE_NAME = "-errors.csv";
 
 	private static final Logger LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
-
 	private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-
-	private static final SpringFrontend FRONTEND = new SpringFrontend();
-	private static final P1Impl P1 = new P1Impl();
 
 	public static void main(
 			String[] args)
 			throws IOException {
 
-		if (!areArgsOk(args))
+		if (!isInputOk(args))
 			return;
 
-		String source = args[0];
-		String projectName = projectName(source);
+		Path rootPath = Paths.get(args[0]).normalize();
+		List<Path> springProjects = detectSpringProjects(rootPath);
 
-		P1Output p1Output = run(source, projectName);
-		writeOutput(p1Output, projectName);
-		dumpCollectedErrors(projectName);
+		P1Output p1Output = new P1Output();
+		for (Path project : springProjects) {
+			String projectName = projectName(project);
+			SpringFrontend springFrontend = new SpringFrontend();
+
+			Path sourceRoot = project.resolve("src/main/java");
+			Unit[] projectUnits = springFrontend.parse(sourceRoot.toString());
+
+			Registry registry = new P1Impl().produceRegistry(projectUnits);
+
+			p1Output.addRegistry(projectName(project), registry);
+			dumpCollectedErrors(springFrontend, projectName);
+		}
+
+		writeOutput(p1Output, projectName(rootPath));
 	}
 
-	private static P1Output run(
-			String source,
-			String projectName)
+	public static List<Path> detectSpringProjects(
+			Path rootPath)
 			throws IOException {
-		P1Output output = new P1Output();
+		SpringProjectVisitor springProjectVisitor = new SpringProjectVisitor(rootPath);
+		Files.walkFileTree(rootPath, springProjectVisitor);
 
-		Unit[] units = FRONTEND.parse(source);
-		Registry registry = P1.produceRegistry(units);
-		output.addRegistry(projectName, registry);
+		List<Path> projects = springProjectVisitor.getProjects();
 
-		return output;
+		if (projects.isEmpty())
+			LOG.warn("No Spring project (build file + src/main/java) found under " + rootPath);
+
+		return projects;
 	}
 
 	private static void writeOutput(
@@ -72,7 +80,7 @@ public class Main {
 				+ " mapping(s) total, to " + out.toAbsolutePath());
 	}
 
-	private static boolean areArgsOk(
+	private static boolean isInputOk(
 			String[] args) {
 		if (args.length == 0) {
 			LOG.error("usage: <spring-boot-source-path>");
@@ -83,19 +91,19 @@ public class Main {
 	}
 
 	private static String projectName(
-			String source) {
-		Path p = Paths.get(source).normalize();
+			Path projectDir) {
 
-		for (int i = 1; i < p.getNameCount(); i++)
-			if (p.getName(i).toString().equals("src"))
-				return p.getName(i - 1).toString();
+		for (int i = 1; i < projectDir.getNameCount(); i++)
+			if (projectDir.getName(i).toString().equals("src"))
+				return projectDir.getName(i - 1).toString();
 
-		return p.getFileName().toString();
+		return projectDir.getFileName().toString();
 	}
 
 	private static void dumpCollectedErrors(
+			SpringFrontend springFrontend,
 			String projectName) {
-		List<Throwable> parseExceptions = FRONTEND.getParseExceptions();
+		List<Throwable> parseExceptions = springFrontend.getParseExceptions();
 
 		if (!parseExceptions.isEmpty()) {
 			Path errors = Paths.get(OUTPUT_DIR, projectName + ERROR_FILE_NAME);

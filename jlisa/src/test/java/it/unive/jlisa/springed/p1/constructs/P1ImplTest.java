@@ -27,7 +27,7 @@ public class P1ImplTest {
 	@Test
 	public void case1RegistryOutputCheck() throws IOException {
 		SpringFrontend frontend = new SpringFrontend();
-		Unit[] p = frontend.parse(List.of("spring-testcases/case-1/src/main/java"));
+		Unit[] p = frontend.parse("spring-testcases/case-1");
 
 		P1Impl p1 = new P1Impl();
 		Registry registry = p1.produceRegistry(p);

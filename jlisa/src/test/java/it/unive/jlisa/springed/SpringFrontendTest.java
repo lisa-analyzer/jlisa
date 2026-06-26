@@ -31,7 +31,7 @@ public class SpringFrontendTest {
 	@Test
 	public void case1ClassExtraction() throws IOException {
 		SpringFrontend frontend = new SpringFrontend();
-		Unit[] classes = frontend.parse(List.of("spring-testcases/case-1/src/main/java"));
+		Unit[] classes = frontend.parse("spring-testcases/case-1/src/main/java");
 
 		Set<String> classNames = Arrays.stream(classes)
 				.map(Unit::getName)
@@ -49,7 +49,7 @@ public class SpringFrontendTest {
 	@Test
 	public void case1ControllerExistenceCheck() throws IOException {
 		SpringFrontend frontend = new SpringFrontend();
-		Unit[] p = frontend.parse(List.of("spring-testcases/case-1/src/main/java"));
+		Unit[] p = frontend.parse("spring-testcases/case-1/src/main/java");
 
 		P1Impl p1 = new P1Impl();
 		List<ClassUnit> controllers = p1.getControllerClasses(p);

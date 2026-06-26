@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 public class MainTest {
 
-	private static final Path OUTPUT = Path.of("spring-outputs", "registry.json");
+	private static final Path OUTPUT = Path.of("spring-outputs", "case-1-registry.json");
 
 	@BeforeAll
 	public static void unpackCase() throws IOException {
@@ -36,8 +36,13 @@ public class MainTest {
 	}
 
 	@Test
+	public void case1Test() throws IOException {
+		Main.main(new String[] { "spring-testcases/case-1" });
+	}
+
+	@Test
 	public void case1JsonOutput() throws IOException {
-		Main.main(new String[] { "spring-testcases/case-1/src/main/java" });
+		Main.main(new String[] { "spring-testcases/case-1" });
 		assertTrue(Files.isRegularFile(OUTPUT), () -> "expected output file at " + OUTPUT.toAbsolutePath());
 
 		String json = Files.readString(OUTPUT);

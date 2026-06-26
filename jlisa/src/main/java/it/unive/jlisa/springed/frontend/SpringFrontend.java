@@ -27,16 +27,10 @@ public class SpringFrontend extends JavaFrontend {
 	private final List<Throwable> parseExceptions = new ArrayList<>();
 
 	public Unit[] parse(
-			String filePath)
-			throws IOException {
-		return parse(List.of(filePath));
-	}
-
-	public Unit[] parse(
-			List<String> filePaths)
+			String sourcePath)
 			throws IOException {
 
-		List<String> expandedPaths = this.expandFilePaths(filePaths);
+		List<String> expandedPaths = this.expandFilePaths(List.of(sourcePath));
 		int n = expandedPaths.size();
 
 		LibrarySpecificationProvider.load(getProgram());
