@@ -2,6 +2,7 @@ package it.unive.jlisa.frontend.visitors.structure;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
@@ -31,11 +32,14 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 	public boolean visit(
 			FieldDeclaration node) {
 		int modifiers = node.getModifiers();
+
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
 			type = new JavaReferenceType(type);
+
+		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers());
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
@@ -51,7 +55,7 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 			boolean isStatic = Modifier.isStatic(modifiers) || (getScope().getLisaClassUnit() instanceof InterfaceUnit);
 			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier,
 					!isStatic, type,
-					new Annotations());
+					annotations);
 			if (isStatic) {
 				getScope().getLisaClassUnit().addGlobal(global);
 			} else {
