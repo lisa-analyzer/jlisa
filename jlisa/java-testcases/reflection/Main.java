@@ -15,7 +15,8 @@ public class ReflectionTest {
 
 		Field f1 = c1.getField("nickname");
 
-		// Field f2 = c1.getField("age");
+		// additional field to test multiple field resolution
+		Field f2 = c1.getField("alias");
 
 		// String z = f.getName();
 		// String zzz = z.toString();
@@ -24,7 +25,7 @@ public class ReflectionTest {
 
 		//int mod = f1.getModifiers();
 
-		Cat cat = new Cat("whiskers");
+		Cat cat = new Cat("whiskers", "fluffyAlias");
 
 		// field.get: legge il valore di nickname dall'istanza cat
 		Object val = f1.get(cat);
@@ -32,17 +33,28 @@ public class ReflectionTest {
 		// field.set: scrive un nuovo valore in nickname sull'istanza cat
 		f1.set(cat, "fluffy");
 
+		// test second field
+		Object val2 = f2.get(cat);
+		f2.set(cat, "newAlias");
+
 		return;
 	}
 }
 
 class Cat {
 	public String nickname;
+	public String alias;
 
 	public int age;
 
 	public Cat(String x) {
 		nickname = x;
+		alias = null;
+	}
+
+	public Cat(String x, String a) {
+		nickname = x;
+		alias = a;
 	}
 
 	public Cat() {
