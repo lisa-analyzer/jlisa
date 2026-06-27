@@ -1601,6 +1601,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof GhostTypeLookupOperator && arg.getValue() instanceof String s) {
 			JavaClassType.setDynamicTypeLookup(s);
+			ReflectionCache.loadLastClass(s);
 			return Satisfiability.SATISFIED;
 		}
 

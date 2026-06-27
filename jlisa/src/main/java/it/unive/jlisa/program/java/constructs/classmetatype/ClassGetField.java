@@ -4,7 +4,6 @@ import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.java.constructs.string.StringEquals;
 import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
-import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;

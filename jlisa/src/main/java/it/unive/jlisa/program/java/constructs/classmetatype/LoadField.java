@@ -1,7 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -128,15 +130,17 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		// assign field type
 
-		sem = sem.lub(allocateSubField(interprocedural, fieldAllocated, derefThisField, typeVar, refClassMetaType, expressions));
-
 		AccessChild accessThisFieldType = new AccessChild(refClassMetaType, derefThisField, typeVar, getLocation());
+		sem = lazyLoadClass(interprocedural, sem, exprs[2], expressions);
+		sem = analysis.assign(sem, accessThisFieldType, ReflectionCache.getCachedLastClass(), this);
 
-		HeapDereference derefFieldType = new HeapDereference(classMetaType, accessThisFieldType, getLocation());
-		dst = new AccessChild(stringType, derefFieldType, nameVar, getLocation());
-
-		sem = analysis.assign(sem, dst, exprs[2], this);
-
+		// sem = sem.lub(allocateSubField(interprocedural, fieldAllocated, derefThisField, typeVar, refClassMetaType, expressions));
+		//
+		//
+		// HeapDereference derefFieldType = new HeapDereference(classMetaType, accessThisFieldType, getLocation());
+		// dst = new AccessChild(stringType, derefFieldType, nameVar, getLocation());
+		//
+		// sem = analysis.assign(sem, dst, exprs[2], this);
 
 		// assign field modifiers
 
@@ -185,6 +189,49 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		return tmp;
 
+	}
+
+	// private void getRefToClazz() {
+	//
+	// 	it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+	// 			stringType,
+	// 			accessExpr,
+	// 			GhostTypeLookupOperator.INSTANCE,
+	// 			getLocation());
+	//
+	// 	// weird workaround to get the dynamic type out of Class->name
+	// 	analysis.satisfies(state, un, originating);
+	// 	String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
+	//
+	// }
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> lazyLoadClass(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression clazzName,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		// clazzName is always a constant
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaClassType.getStringType(),
+				clazzName,
+				GhostTypeLookupOperator.INSTANCE,
+				getLocation());
+
+		analysis.satisfies(state, un, this);
+
+		LoadClass loadClass = new LoadClass(getCFG(), getLocation());
+
+		// this can lazily load a new Class object. It also loads a reference to that object in ReflectionCache.lastClass
+		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		assert(ReflectionCache.lastClass != null);
+
+		return classLoaded;
 	}
 
 }
