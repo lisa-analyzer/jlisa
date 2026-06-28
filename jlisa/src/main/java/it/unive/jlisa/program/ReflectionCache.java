@@ -1,6 +1,7 @@
 package it.unive.jlisa.program;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
@@ -16,7 +17,8 @@ public class ReflectionCache {
 	public static CodeMember lastMethod;
 	public static Type lastClass;
 
-	public static final HashMap<Type, SymbolicExpression> loadedClasses = new HashMap<>();
+	private static final HashMap<Type, SymbolicExpression> loadedClasses = new HashMap<>();
+	private static final HashSet<Type> initializedClasses = new HashSet<>();
 
 	public static boolean isLastClassLoaded() {
 		return loadedClasses.containsKey(lastClass);
@@ -68,6 +70,15 @@ public class ReflectionCache {
 
 			// ReflectionCache.lastClass = (classLookup) ? foundClass : foundInterface;
 		}
+	}
+
+	public static void addInitializedClass(Type clazz) {
+		boolean added = initializedClasses.add(clazz);
+		assert(added);
+	}
+
+	public static boolean isClassInitialized(Type clazz) {
+		return initializedClasses.contains(clazz);
 	}
 }
 
