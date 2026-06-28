@@ -10,6 +10,7 @@ import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -116,6 +117,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			LoadClass loadClass = new LoadClass(getCFG(), getLocation());
 			AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
+			// TODO AP: I think this would be better than using reflectionCache.
 			// ExpressionSet x = callState.getExecutionExpressions();
 
 			SymbolicExpression clazz = ReflectionCache.getCachedLastClass();
@@ -129,39 +131,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			tmp = tmp.lub(fieldsLoaded);
 
 			noExceptionState = analysis.smallStepSemantics(tmp, clazz, this);
-
-			// it.unive.lisa.symbolic.value.UnaryExpression forName = new it.unive.lisa.symbolic.value.UnaryExpression(
-			// 		stringType,
-			// 		accessExpr,
-			// 		JavaClassForNameOperator.INSTANCE,
-			// 		getLocation());
-			//
-			// // allocate the Class object
-			// JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-			// 		new JavaReferenceType(classMetaType),
-			// 		new Expression[0]);
-			// AnalysisState<
-			// 		A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			//
-			// // `name` field of Class type
-			// GlobalVariable nameField = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-			//
-			// AnalysisState<A> tmp = state.bottomExecution();
-			// for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			// 	AccessChild dst = new AccessChild(stringType, ref, nameField, getLocation());
-			// 	AnalysisState<A> sem = analysis.assign(callState, dst, forName, this);
-			//
-			// 	AnalysisState<A> x = loadGlobals(interprocedural, sem, expressions, getAllFields(), ref);
-			//
-			// 	AnalysisState<A> y = loadMethods(interprocedural, sem, expressions, getAllMethods(), ref);
-			//
-			// 	AnalysisState<A> allAllocated = x.lub(y);
-			// 	tmp = tmp.lub(allAllocated);
-			// }
-
-
-			// getMetaVariables().addAll(call.getMetaVariables());
-			// noExceptionState = tmp.withExecutionExpressions(callState.getExecutionExpressions());
 		}
 
 		// `ClassNotFoundException to be thrown
@@ -224,12 +193,16 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 	}
 
 	Collection<Global> getAllFields() {
-		UnitType c = ReflectionCache.lastClass;
-		CompilationUnit unit = c.getUnit();
+		Type c = ReflectionCache.lastClass;
+		Collection<Global> fields = new ArrayList<>();
 
-		Collection<Global> globals = new ArrayList<>(unit.getGlobalsRecursively());
+		// c is not a primitive type, fields to load
+		if (c instanceof UnitType cUnitType) {
+			CompilationUnit unit = cUnitType.getUnit();
+			fields = new ArrayList<>(unit.getGlobalsRecursively());
+		}
 
-		return globals;
+		return fields;
 	}
 
 
@@ -341,10 +314,13 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 	}
 
 	Collection<CodeMember> getAllMethods() {
-		UnitType c = ReflectionCache.lastClass;
-		CompilationUnit unit = c.getUnit();
+		Type c = ReflectionCache.lastClass;
+		Collection<CodeMember> methods = new ArrayList<>();
 
-		Collection<CodeMember> methods = new ArrayList<>(unit.getCodeMembersRecursively());
+		if (c instanceof UnitType cUnitType) {
+			CompilationUnit unit = cUnitType.getUnit();
+			methods = new ArrayList<>(unit.getCodeMembersRecursively());
+		}
 
 		return methods;
 	}

@@ -9,6 +9,18 @@ import java.util.stream.Collectors;
 
 public class JavaTypeSystem extends TypeSystem {
 
+	public static Type[] PRIMITIVE_TYPES =
+		new Type[] {
+			JavaBooleanType.INSTANCE,
+			JavaByteType.INSTANCE,
+			JavaCharType.INSTANCE,
+			JavaDoubleType.INSTANCE,
+			JavaFloatType.INSTANCE,
+			JavaIntType.INSTANCE,
+			JavaLongType.INSTANCE,
+			JavaShortType.INSTANCE
+		};
+
 	@Override
 	public BooleanType getBooleanType() {
 		return JavaBooleanType.INSTANCE;

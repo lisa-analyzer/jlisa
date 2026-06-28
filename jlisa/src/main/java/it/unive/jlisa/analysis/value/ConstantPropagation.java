@@ -1562,7 +1562,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.SATISFIED;
 		}
 
+		// used by `Class.forName`
 		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+
+			// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+			//
+			// TODO AP: this code is almost identical to the one in reflectionCache. I think the type lookup should just be in JavaTypeSystem
+			// with a flag telling whether to also look for primitive types or not
 			boolean classLookup = true;
 			boolean interfaceLookup = true;
 
