@@ -97,7 +97,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		Constant c = new Constant(JavaClassType.getStringType(), clazzName, getLocation());
 
-		InternalClassConstructorWithName call = new InternalClassConstructorWithName(getCFG(), (SourceCodeLocation) getLocation());
+		InternalClassConstructorWithName call = new InternalClassConstructorWithName(getCFG(), synGen.nextLocation());
 
 		ExpressionSet param = new ExpressionSet(c);
 		AnalysisState<
