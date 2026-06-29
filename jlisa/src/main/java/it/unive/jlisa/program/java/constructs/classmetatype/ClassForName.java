@@ -1,16 +1,13 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
-import it.unive.jlisa.program.operator.JavaClassForNameOperator;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -22,10 +19,8 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMember;
@@ -43,7 +38,6 @@ import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
-import it.unive.jlisa.program.java.constructs.classmetatype.LoadClass;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
@@ -51,8 +45,6 @@ import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -88,21 +80,23 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+		CFG cfg = getCFG();
 
 		Type stringType = getProgram().getTypes().getStringType();
 		Type classMetaType = JavaClassType.getClassMetaType();
 		Type refClassMetaType = new JavaReferenceType(classMetaType);
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefExpr = new HeapDereference(stringType, expr, getLocation());
-		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		HeapDereference derefExpr = new HeapDereference(stringType, expr, location);
+		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, location);
 
 		// check if class actually exists
 		it.unive.lisa.symbolic.value.UnaryExpression isClassDefined = new it.unive.lisa.symbolic.value.UnaryExpression(
 				stringType,
 				accessExpr,
 				JavaIsClassDefinedOperator.INSTANCE,
-				getLocation());
+				location);
 
 		Satisfiability sat = analysis.satisfies(state, isClassDefined, originating);
 
@@ -112,9 +106,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
 
-			// String loadingClassStr = getDynamicClassType(interprocedural, state, expr);
-
-			LoadClass loadClass = new LoadClass(getCFG(), getLocation());
+			LoadClass loadClass = new LoadClass(cfg, location);
 			AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 			// TODO AP: I think this would be better than using reflectionCache.
@@ -140,12 +132,12 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 			JavaClassType classNotFoundType = JavaClassType.getClassNotFoundException();
 
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+			JavaNewObj call = new JavaNewObj(cfg, location,
 					classNotFoundType.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(getCFG(), classNotFoundType.getReference(), getLocation());
+			CFGThrow throwVar = new CFGThrow(cfg, classNotFoundType.getReference(), location);
 			state = analysis.assign(state, throwVar,
 					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
@@ -168,37 +160,11 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return 0;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> String getDynamicClassType(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression expr)
-			throws SemanticException {
-
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
-
-		Type stringType = getProgram().getTypes().getStringType();
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefExpr = new HeapDereference(stringType, expr, getLocation());
-		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
-
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType,
-				accessExpr,
-				GhostTypeLookupOperator.INSTANCE,
-				getLocation());
-
-		analysis.satisfies(state, un, originating);
-		String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
-
-		return dynamicTypeStr;
-	}
-
 	Collection<Global> getAllFields() {
 		Type c = ReflectionCache.lastClass;
 		Collection<Global> fields = new ArrayList<>();
 
-		// c is not a primitive type, fields to load
+		// c is not a primitive type, there may be fields to load
 		if (c instanceof UnitType cUnitType) {
 			CompilationUnit unit = cUnitType.getUnit();
 			fields = new ArrayList<>(unit.getGlobalsRecursively());
