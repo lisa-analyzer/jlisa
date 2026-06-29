@@ -60,7 +60,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-
+		
 		// Reload reflection cache: evaluate Class name and Field name stored inside the Field meta-object
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -101,6 +101,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			return state.topExecution();
 
 		Global field = ReflectionCache.getLastField();
+
 		if (field == null)
 			return state.topExecution();
 
