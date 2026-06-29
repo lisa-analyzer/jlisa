@@ -112,16 +112,20 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			// TODO AP: I think this would be better than using reflectionCache.
 			// ExpressionSet x = callState.getExecutionExpressions();
 
-			AnalysisState<A> tmp = callState.bottomExecution();
+			AnalysisState<A> tmp = callState;
 			SymbolicExpression clazz = ReflectionCache.getCachedLastClass();
 
-			if (!ReflectionCache.isClassInitialized(ReflectionCache.lastClass)) {
+			Type t = ReflectionCache.lastClass;
+			if (!ReflectionCache.isClassInitialized(t)) {
 
 				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, callState, expressions, getAllFields(), clazz);
 
 				// AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(), clazz);
 
 				tmp = tmp.lub(fieldsLoaded);
+
+				// set it as initialized to avoid reinitialization
+				ReflectionCache.addInitializedClass(t);
 			}
 
 			noExceptionState = analysis.smallStepSemantics(tmp, clazz, this);

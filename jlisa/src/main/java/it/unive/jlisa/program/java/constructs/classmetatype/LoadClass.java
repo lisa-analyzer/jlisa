@@ -1,5 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -12,7 +16,9 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -28,6 +34,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 
 public class LoadClass extends NaryExpression implements PluggableStatement {
@@ -70,53 +77,50 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 
 		// check if class is already loaded
-
 		if (ReflectionCache.isLastClassLoaded()) {
 			SymbolicExpression accessClazz = ReflectionCache.getCachedLastClass();
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
 
-		// load clazz in the global variable with the class name
-		// TODO AP: call static initializer here
-		// FIXME AP: the class could also be a JavaInterfaceType
-		// JavaClassType loadingClass = JavaClassType.lookup(loadingClassStr);
+		// if lastClass is not primitive, there may be a static initializer to run
+		Type lastClass = ReflectionCache.lastClass;
+		if (lastClass instanceof UnitType loadingClazz) {
 
-		// execute static initializer
-		// FIXME: initializer of parent classes is not run, see test class-for-name-1
-		// ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
-		// if (classUnit.getCodeMembersByName(loadingClassStr).isEmpty()) {
-		// 	Set<CompilationUnit> superClasses = classUnit
-		// 			.getImmediateAncestors().stream()
-		// 			.filter(u -> u instanceof ClassUnit)
-		// 			.collect(Collectors.toSet());
-		//
-		// 	classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
-		// }
-		// state = InitializedClassSet.initialize(state, loadingClass.getReference(), this,
-		// 		interprocedural);
-		// END static initializer
-
-		String clazzName = ReflectionCache.lastClass.toString();
-		String internalGlobalVarName = "__" + ReflectionCache.lastClass.toString();
-
-		GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
-
-		Constant c = new Constant(JavaClassType.getStringType(), clazzName, getLocation());
-
-		AnalysisState<A> callState = allocateClass(interprocedural, state, c, expressions);
-
-		AnalysisState<A> resultState = callState.bottomExecution();
-
-		for (SymbolicExpression allocatedClazz : callState.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState, clazzVar, allocatedClazz, this);
-			resultState = resultState.lub(t);
+			// execute static initializer
+			// FIXME: initializer of parent classes is not run, see test class-for-name-1
+			// ClassUnit classUnit = (ClassUnit) loadingClazz.getUnit();
+			// if (classUnit.getCodeMembersByName(loadingClazz.toString()).isEmpty()) {
+			// 	Set<CompilationUnit> superClasses = classUnit
+			// 			.getImmediateAncestors().stream()
+			// 			.filter(u -> u instanceof ClassUnit)
+			// 			.collect(Collectors.toSet());
+			//
+			// 	classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
+			// }
+			// state = InitializedClassSet.initialize(state, new JavaReferenceType(loadingClazz), this, interprocedural);
 		}
 
-		ReflectionCache.cacheLastClass(clazzVar);
+		// String clazzName = ReflectionCache.lastClass.toString();
+		// String internalGlobalVarName = "__" + ReflectionCache.lastClass.toString();
+		//
+		// GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
+		//
+		// Constant c = new Constant(JavaClassType.getStringType(), clazzName, getLocation());
+
+		AnalysisState<A> callState = allocateClass(interprocedural, state, expressions);
+
+		AnalysisState<A> resultState = callState;
+
+		// for (SymbolicExpression allocatedClazz : callState.getExecutionExpressions()) {
+		// 	AnalysisState<A> t = analysis.assign(callState, clazzVar, allocatedClazz, this);
+		// 	resultState = resultState.lub(t);
+		// }
+
+		// ReflectionCache.cacheLastClass(clazzVar);
 
 		// TODO AP: I think there should be a forgetIdentifiers callState.getExecutionExpressions instead.
 		// OR keep the executionExpression but set it to `clazzVar` and don't use the ReflectionCache (this is probably better).
-		resultState = resultState.withExecutionExpressions(callState.getExecutionExpressions());
+		// resultState = resultState.withExecutionExpressions(callState.getExecutionExpressions());
 
 		return resultState;
 	}
@@ -131,9 +135,13 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> allocateClass(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			SymbolicExpression clazzName,
 			StatementStore<A> expressions)
 			throws SemanticException {
+
+		String clazzNameStr = ReflectionCache.lastClass.toString();
+
+		// class name is always a constant
+		Constant clazzName = new Constant(JavaClassType.getStringType(), clazzNameStr, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
@@ -141,7 +149,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Type stringType = JavaClassType.getStringType();
 		Type classMetaType = JavaClassType.getClassMetaType();
 
-		JavaReferenceType refClassType = new JavaReferenceType(classMetaType);
+		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
 
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
@@ -149,16 +157,15 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 
 		// allocate the Class object
-		MemoryAllocation created = new MemoryAllocation(refClassType.getInnerType(), synGen.nextLocation(), false);
-		HeapReference ref = new HeapReference(refClassType, created, getLocation());
+		MemoryAllocation created = new MemoryAllocation(refClassMetaType.getInnerType(), synGen.nextLocation(), false);
+		HeapReference ref = new HeapReference(refClassMetaType, created, getLocation());
 
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
 
-		InstrumentedReceiver clazz = new InstrumentedReceiver(refClassType, false, getLocation());
+		InstrumentedReceiver clazz = new InstrumentedReceiver(refClassMetaType, false, getLocation());
 		AnalysisState<A> clazzAllocated = analysis.assign(allocated, clazz, ref, this);
 
 		HeapDereference derefThisClazz = new HeapDereference(classMetaType, clazz, getLocation());
-
 
 		// allocate String object for field `name`
 		AccessChild accessThisClazzName = new AccessChild(stringType, derefThisClazz, nameVar, location);
@@ -180,10 +187,20 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		tmp = analysis.assign(tmp, accessValue, clazzName, this);
 
-		tmp = tmp.withExecutionExpression(clazz);
+
+		// assign the Class object to a global variable
+		String internalGlobalVarName = "__" + clazzNameStr;
+
+		GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
+		AnalysisState<A> t = analysis.assign(tmp, clazzVar, clazz, this);
+		tmp = tmp.lub(t);
+
+		// getMetaVariables().add(clazz);
+		tmp = tmp.forgetIdentifier(clazz, this);
+
+		ReflectionCache.cacheLastClass(clazzVar);
 
 		return tmp;
-
 	}
 
 }
