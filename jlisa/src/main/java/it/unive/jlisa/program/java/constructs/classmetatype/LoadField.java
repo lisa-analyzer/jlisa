@@ -113,7 +113,7 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		AnalysisState<A> tmp = fieldAllocated.bottomExecution();
 
 		// assign field clazz
-		AccessChild accessThisFieldClazz = new AccessChild(new JavaReferenceType(classMetaType), derefThisField, clazzVar, getLocation());
+		AccessChild accessThisFieldClazz = new AccessChild(refClassMetaType, derefThisField, clazzVar, getLocation());
 
 		AnalysisState<A> sem = analysis.assign(fieldAllocated, accessThisFieldClazz, exprs[0], this);
 

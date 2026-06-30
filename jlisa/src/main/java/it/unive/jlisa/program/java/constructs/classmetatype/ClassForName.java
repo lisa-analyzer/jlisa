@@ -120,9 +120,12 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, callState, expressions, getAllFields(), clazz);
 
-				// AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(), clazz);
+				// TODO AP: temporary, just pass the class string name to both loadGlobals and loadMethods (constraints here)
 
-				tmp = tmp.lub(fieldsLoaded);
+				ReflectionCache.lastClass = t;
+				AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(), clazz);
+
+				tmp = tmp.lub(methodsLoaded);
 
 				// set it as initialized to avoid reinitialization
 				ReflectionCache.addInitializedClass(t);
@@ -289,6 +292,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		Type c = ReflectionCache.lastClass;
 		Collection<CodeMember> methods = new ArrayList<>();
 
+		// TODO AP: I don't think the ctors should be in there, double check this
 		if (c instanceof UnitType cUnitType) {
 			CompilationUnit unit = cUnitType.getUnit();
 			methods = new ArrayList<>(unit.getCodeMembersRecursively());
@@ -347,11 +351,13 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 			AccessChild accessIdx = new AccessChild(wrappedMethodType, arrayDeref, idx, getLocation());
 
-			LoadMethod loadMethod = new LoadMethod(getCFG(), getLocation(), new Expression[0]);
+			// LoadMethod loadMethod = new LoadMethod(getCFG(), getLocation(), new Expression[0]);
 
-			ExpressionSet[] params = genLoadMethodParams(clazz, method);
+			// ExpressionSet[] params = genLoadMethodParams(clazz, method);
 
-			AnalysisState<A> t = loadMethod.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
+			// AnalysisState<A> t = loadMethod.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
+
+			AnalysisState<A> t = loadDeclaredMethod(interprocedural, arrAllocated, clazz, method, expressions);
 
 			// assign initialized method to the next index of the array
 			for (SymbolicExpression initializedMethod : t.getExecutionExpressions()) {
@@ -371,12 +377,11 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 	}
 
-	private ExpressionSet[] genLoadMethodParams(SymbolicExpression clazz, CodeMember method) {
+	private ExpressionSet[] genMethodParams(SymbolicExpression clazz, CodeMemberDescriptor d) {
 
 		CodeLocation location = getLocation();
 		Type stringType = JavaClassType.getStringType();
 
-		CodeMemberDescriptor d = method.getDescriptor();
 		Parameter[] methodParams = d.getFormals();
 		int methodParamsCount = methodParams.length;
 
@@ -418,6 +423,255 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		}
 
 		return params;
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadDeclaredMethod(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression clazz,
+			CodeMember currentMethod,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		CodeMemberDescriptor descriptor = currentMethod.getDescriptor();
+
+		Parameter[] methodParameters = descriptor.getFormals();
+		int paramCount = methodParameters.length;
+
+		// params[0] is clazz, [1] is fieldname, [2] is type, [3] is modifiers
+		// then the other ones are parameter types
+		// ExpressionSet[] params = genMethodParams(clazz, descriptor);
+
+		// assert(params.length >= 4);
+		//
+		// int methodParamCount = params.length - 4;
+		//
+		// SymbolicExpression[] exprs = new SymbolicExpression[params.length];
+		//
+		// for (int i = 0; i < params.length; ++i) {
+		// 	ExpressionSet set = params[i];
+		// 	if (set.size() > 1 || set.size() <= 0)
+		// 		throw new IllegalArgumentException("Number of operands is incorrect!");
+		// 	for (SymbolicExpression expr : set) {
+		// 		exprs[i] = expr;
+		// 	}
+		// }
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+
+		Type intType = JavaIntType.INSTANCE;
+		Type stringType = getProgram().getTypes().getStringType();
+		Type methodMetaType = JavaClassType.getMethodType();
+		Type classMetaType = JavaClassType.getClassMetaType();
+		JavaReferenceType refMethodMetaType = new JavaReferenceType(methodMetaType);
+		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
+		JavaReferenceType refStringType = new JavaReferenceType(stringType);
+		JavaArrayType classArrType = JavaArrayType.lookup(refClassMetaType, 1);
+		JavaReferenceType refClassArrType = new JavaReferenceType(classArrType);
+
+		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", location);
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
+		GlobalVariable typeVar = new GlobalVariable(Untyped.INSTANCE, "returnType", location);
+		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", location);
+		GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "parameterTypes", location);
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
+
+		AnalysisState<A> resultState = state.bottomExecution();
+
+
+		MemoryAllocation created = new MemoryAllocation(methodMetaType, synGen.nextLocation(), false);
+		HeapReference ref = new HeapReference(refMethodMetaType, created, location);
+
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+
+		InstrumentedReceiver method = new InstrumentedReceiver(refMethodMetaType, false, synGen.nextLocation());
+		AnalysisState<A> methodAllocated = analysis.assign(allocated, method, ref, this);
+
+		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, method, location);
+
+
+		// AnalysisState<A> tmp = methodAllocated.bottomExecution();
+
+		// assign method clazz
+		AccessChild accessThisMethodClazz = new AccessChild(refClassMetaType, derefThisMethod, clazzVar, location);
+		AnalysisState<A> sem = analysis.assign(methodAllocated, accessThisMethodClazz, clazz, this);
+
+		// assign method name
+		sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, nameVar, refStringType, expressions));
+
+		AccessChild accessThisMethodName = new AccessChild(refStringType, derefThisMethod, nameVar, location);
+
+		HeapDereference derefMethodName = new HeapDereference(stringType, accessThisMethodName, location);
+		AccessChild dst = new AccessChild(stringType, derefMethodName, valueVar, location);
+
+		Constant methodNameConstant = new Constant(stringType, descriptor.getName(),location);
+		sem = analysis.assign(sem, dst, methodNameConstant, this);
+
+
+		// assign method type
+
+		// sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, typeVar, refClassMetaType, expressions));
+		//
+		// AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
+		//
+		// HeapDereference derefMethodType = new HeapDereference(classMetaType, accessThisMethodType, location);
+		// dst = new AccessChild(stringType, derefMethodType, nameVar, location);
+		//
+		// sem = analysis.assign(sem, dst, exprs[2], this);
+
+
+		Type returnType = descriptor.getReturnType();
+		if (returnType instanceof JavaReferenceType jrt) {
+			returnType = jrt.getInnerType();
+		}
+		String returnTypeStr = returnType.toString();
+
+		AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
+		sem = lazyLoadClass(interprocedural, sem, returnTypeStr, expressions);
+		sem = analysis.assign(sem, accessThisMethodType, ReflectionCache.getCachedLastClass(), this);
+
+
+		// assign parameter types
+		{
+			MemoryAllocation arrCreated = new MemoryAllocation(classArrType, synGen.nextLocation(), false);
+			HeapReference arrRef = new HeapReference(refClassArrType, arrCreated, location);
+
+			AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, this);
+
+			InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, location);
+			arrAllocated = analysis.assign(arrAllocated, array, arrRef, this);
+
+			AnalysisState<A> tmp = arrAllocated.bottomExecution();
+
+			HeapDereference arrayDeref = new HeapDereference(classArrType, array, location);
+
+			// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
+
+			// assign length to array
+			Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount, location);
+			AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
+			tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, arrLen, this));
+
+
+			for (int i = 1; i < paramCount; ++i) {
+
+				Parameter parameter = methodParameters[i];
+
+				Type parameterType = getNoReferenceType(parameter.getStaticType());
+				String parameterClazzGlobalName = "__" + parameterType.toString();
+				// TODO AP: get rid of this cache usage, maybe pass the parameter to lazyLoadClass
+				ReflectionCache.lastClass = parameterType;
+
+				// variable pointing to the corresponding Class object
+				GlobalVariable parameterClazz = new GlobalVariable(refClassMetaType, parameterClazzGlobalName, location);
+
+				Constant idx = new Constant(JavaIntType.INSTANCE, i-1, location);
+				AccessChild accessIdx = new AccessChild(refClassMetaType, arrayDeref, idx, location);
+
+				// if it doesn't exist we need to load it
+				if (!tmp.knowsIdentifier(parameterClazz)) {
+					tmp = tmp.lub(lazyLoadClass(interprocedural, tmp, parameterClazzGlobalName, expressions));
+				}
+
+				AnalysisState<A> t = analysis.assign(tmp, accessIdx, parameterClazz, this);
+				tmp = tmp.lub(t);
+			}
+
+			// assign the array to the parameterTypes field of Method
+			// TODO AP: add it to the stub file too
+
+			AccessChild accessParameterTypes = new AccessChild(refClassArrType, derefThisMethod, paramTypesVar, location);
+
+			tmp = tmp.lub(analysis.assign(tmp, accessParameterTypes, array, this));
+			tmp = tmp.forgetIdentifier(array, this);
+
+			sem = sem.lub(tmp);
+		}
+
+		// assign method modifiers
+		boolean isInstance = descriptor.isInstance();
+		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
+		Constant modifiersConstant = new Constant(JavaIntType.INSTANCE, modifiers, location);
+
+		// (*method)->modifiers
+		AccessChild accessThisMethodModifiers = new AccessChild(intType, derefThisMethod, modifiersVar, location);
+
+		sem = analysis.assign(sem, accessThisMethodModifiers, modifiersConstant, this);
+
+
+		resultState = resultState.lub(sem).withExecutionExpression(method);
+
+		return resultState;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> allocateSubField(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			HeapDereference methodDereference,
+			GlobalVariable subField,
+			JavaReferenceType type,
+			StatementStore<A> expressions
+			) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		JavaNewObj call = new JavaNewObj(getCFG(), synGen.nextLocation(),
+				type,
+				new Expression[0]);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		AccessChild accessSubField = new AccessChild(type, methodDereference, subField, getLocation());
+
+		AnalysisState<A> tmp = state.bottomExecution();
+
+		for (SymbolicExpression allocatedExpr : callState.getExecutionExpressions()) {
+			AnalysisState<A> t = analysis.assign(callState, accessSubField, allocatedExpr, this);
+			tmp = tmp.lub(t);
+		}
+
+		return tmp;
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> lazyLoadClass(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			String clazzName,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		// clazzName is always a constant
+
+		Constant c = new Constant(new JavaReferenceType(JavaClassType.getStringType()), clazzName, getLocation());
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaClassType.getStringType(),
+				c,
+				GhostTypeLookupOperator.INSTANCE,
+				getLocation());
+
+		analysis.satisfies(state, un, this);
+
+		LoadClass loadClass = new LoadClass(getCFG(), getLocation());
+
+		// this can lazily load a new Class object. It also loads a reference to that object in ReflectionCache.lastClass
+		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		assert(ReflectionCache.lastClass != null);
+
+		return classLoaded;
+	}
+
+	private Type getNoReferenceType(Type t) {
+		Type res = t;
+		if (res instanceof JavaReferenceType jrt) {
+			res = jrt.getInnerType();
+		}
+		return res;
 	}
 
 }

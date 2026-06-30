@@ -1,9 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -16,9 +12,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -83,6 +77,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		}
 
 		// if lastClass is not primitive, there may be a static initializer to run
+		// FIXME AP: move this in class.forName
 		Type lastClass = ReflectionCache.lastClass;
 		if (lastClass instanceof UnitType loadingClazz) {
 

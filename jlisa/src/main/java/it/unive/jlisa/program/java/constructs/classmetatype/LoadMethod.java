@@ -1,7 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -90,11 +92,11 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		Type stringType = getProgram().getTypes().getStringType();
 		Type methodMetaType = JavaClassType.getMethodType();
 		Type classMetaType = JavaClassType.getClassMetaType();
-		Type wrappedClassMetaType = new JavaReferenceType(classMetaType);
-		JavaArrayType classArrType = JavaArrayType.lookup(wrappedClassMetaType, 1);
 		JavaReferenceType refMethodMetaType = new JavaReferenceType(methodMetaType);
 		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
+		JavaArrayType classArrType = JavaArrayType.lookup(refClassMetaType, 1);
+		JavaReferenceType refClassArrType = new JavaReferenceType(classArrType);
 
 		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", location);
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
@@ -120,8 +122,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		// AnalysisState<A> tmp = methodAllocated.bottomExecution();
 
-		// assign field clazz
-		AccessChild accessThisMethodClazz = new AccessChild(new JavaReferenceType(classMetaType), derefThisMethod, clazzVar, location);
+		// assign method clazz
+		AccessChild accessThisMethodClazz = new AccessChild(refClassMetaType, derefThisMethod, clazzVar, location);
 
 		AnalysisState<A> sem = analysis.assign(methodAllocated, accessThisMethodClazz, exprs[0], this);
 
@@ -138,25 +140,29 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		// assign method type
 
-		sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, typeVar, refClassMetaType, expressions));
+		// sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, typeVar, refClassMetaType, expressions));
+		//
+		// AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
+		//
+		// HeapDereference derefMethodType = new HeapDereference(classMetaType, accessThisMethodType, location);
+		// dst = new AccessChild(stringType, derefMethodType, nameVar, location);
+		//
+		// sem = analysis.assign(sem, dst, exprs[2], this);
+
 
 		AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
-
-		HeapDereference derefMethodType = new HeapDereference(classMetaType, accessThisMethodType, location);
-		dst = new AccessChild(stringType, derefMethodType, nameVar, location);
-
-		sem = analysis.assign(sem, dst, exprs[2], this);
+		sem = lazyLoadClass(interprocedural, sem, exprs[2], expressions);
+		sem = analysis.assign(sem, accessThisMethodType, ReflectionCache.getCachedLastClass(), this);
 
 
 		// assign parameter types
-
 		{
 			MemoryAllocation arrCreated = new MemoryAllocation(classArrType, synGen.nextLocation(), false);
-			HeapReference arrRef = new HeapReference(new JavaReferenceType(classArrType), arrCreated, location);
+			HeapReference arrRef = new HeapReference(refClassArrType, arrCreated, location);
 
 			AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, this);
 
-			InstrumentedReceiver array = new InstrumentedReceiver(new JavaReferenceType(classArrType), true, location);
+			InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, location);
 			arrAllocated = analysis.assign(arrAllocated, array, arrRef, this);
 
 			AnalysisState<A> tmp = arrAllocated.bottomExecution();
@@ -174,7 +180,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 			for (int i = 0; i < methodParamCount; ++i) {
 
 				Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
-				AccessChild accessIdx = new AccessChild(wrappedClassMetaType, arrayDeref, idx, location);
+				// AccessChild accessIdx = new AccessChild(wrappedClassMetaType, arrayDeref, idx, location);
+
 
 				// TODO assign class type from global arr
 
@@ -231,6 +238,35 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		}
 
 		return tmp;
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> lazyLoadClass(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression clazzName,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		// clazzName is always a constant
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaClassType.getStringType(),
+				clazzName,
+				GhostTypeLookupOperator.INSTANCE,
+				getLocation());
+
+		analysis.satisfies(state, un, this);
+
+		LoadClass loadClass = new LoadClass(getCFG(), getLocation());
+
+		// this can lazily load a new Class object. It also loads a reference to that object in ReflectionCache.lastClass
+		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		assert(ReflectionCache.lastClass != null);
+
+		return classLoaded;
 	}
 
 }

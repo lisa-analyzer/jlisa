@@ -11,6 +11,7 @@ public class JavaTypeSystem extends TypeSystem {
 
 	public static Type[] PRIMITIVE_TYPES =
 		new Type[] {
+			VoidType.INSTANCE,
 			JavaBooleanType.INSTANCE,
 			JavaByteType.INSTANCE,
 			JavaCharType.INSTANCE,
