@@ -78,13 +78,19 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		// (*(*field)->clazz)
 		HeapDereference derefClazz = new HeapDereference(classMetaType, accessClazzRef, loc);
 
-		// (*(*field)->clazz)->name  (string with class name)
+		// (*(*field)->clazz)->name  (actual class name string)
 		GlobalVariable clazzNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
 		AccessChild accessClazzName = new AccessChild(stringType, derefClazz, clazzNameVar, loc);
 
-		// (*field)->name  (string with field name)
+		// (*field)->name  (reference to String object)
 		GlobalVariable fieldNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
-		AccessChild accessFieldName = new AccessChild(stringType, derefField, fieldNameVar, loc);
+		AccessChild accessFieldNameRef = new AccessChild(new JavaReferenceType(stringType), derefField, fieldNameVar,
+				loc);
+
+		// (*(*field)->name)->value  (actual field name constant)
+		HeapDereference derefFieldName = new HeapDereference(stringType, accessFieldNameRef, loc);
+		GlobalVariable fieldValueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
+		AccessChild accessFieldName = new AccessChild(stringType, derefFieldName, fieldValueVar, loc);
 
 		it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
 				stringType,
@@ -93,6 +99,9 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				JavaIsFieldDefinedOperator.INSTANCE,
 				loc);
 
+		// Avoid stale cache values when resolution is unknown.
+		ReflectionCache.lastField = null;
+
 		// force domain to evaluate the predicate so that ReflectionCache gets populated
 		Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
 
@@ -100,7 +109,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		if (sat == Satisfiability.NOT_SATISFIED)
 			return state.topExecution();
 
-		Global field = ReflectionCache.getLastField();
+		Global field = ReflectionCache.lastField;
 
 		if (field == null)
 			return state.topExecution();
