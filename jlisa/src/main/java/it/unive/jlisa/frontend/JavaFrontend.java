@@ -41,8 +41,8 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class JavaFrontend {
-	private final ParserContext parserContext;
-	private int API_LEVEL = AST.getJLSLatest();
+	protected final ParserContext parserContext;
+	protected int API_LEVEL = AST.getJLSLatest();
 
 	public JavaFrontend() {
 		// We are creating a new Program. We need to start from a blank state.
