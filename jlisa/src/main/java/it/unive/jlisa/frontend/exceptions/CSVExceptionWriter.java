@@ -43,7 +43,7 @@ public class CSVExceptionWriter {
 		}
 	}
 
-	private static String toCSVEntry(
+	protected static String toCSVEntry(
 			Throwable e,
 			String separator,
 			String delimiter) {
@@ -65,7 +65,7 @@ public class CSVExceptionWriter {
 
 	}
 
-	private static String clean(
+	protected static String clean(
 			String message) {
 		if (message.indexOf(", location:") != -1)
 			return message.substring(0, message.indexOf(", location:"));
