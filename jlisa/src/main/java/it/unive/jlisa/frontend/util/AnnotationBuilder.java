@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.util;
 
+import it.unive.jlisa.frontend.exceptions.UnsupportedAnnotationException;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.annotations.AnnotationMember;
 import it.unive.lisa.program.annotations.Annotations;
@@ -65,7 +66,7 @@ public final class AnnotationBuilder {
 		case NumberLiteral nl -> getNumericAnnotationValue(nl);
 		case TypeLiteral tl -> new CompilationUnitAnnotationValue(tl.getType().toString());
 		case ArrayInitializer ai -> getArrayAnnotationValue(ai);
-		default -> throw new RuntimeException("Unsupported annotation value type: " + expr.getClass());
+		default -> throw new UnsupportedAnnotationException("Unsupported annotation value type: " + expr.getClass());
 		};
 	}
 
