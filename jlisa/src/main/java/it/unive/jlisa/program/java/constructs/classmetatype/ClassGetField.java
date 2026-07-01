@@ -97,7 +97,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
 
-		// FIXME AP: change this operator name
+		// FIXME AP: instead of this, use the same thing that's used in getMethod.
+		// Check whether the index is within bounds at each iteration.
 		it.unive.lisa.symbolic.value.UnaryExpression ghostLen = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaIntType.INSTANCE,
 				accessLen,
