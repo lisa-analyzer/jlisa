@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -36,18 +37,15 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Field");
 
+	private Global fieldData;
+
 	protected LoadField(
+			Global fieldData,
 			CFG cfg,
 			CodeLocation location,
 			Expression[] subExpressions) {
 		super(cfg, location, "loadField", subExpressions);
-	}
-
-	public static LoadField build(
-			CFG cfg,
-			CodeLocation location,
-			Expression... params) {
-		return new LoadField(cfg, location, params);
+		this.fieldData = fieldData;
 	}
 
 	@Override
@@ -66,6 +64,10 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 			throws SemanticException {
 
 		// params[0] is clazz, [1] is fieldname, [2] is type, [3] is modifiers
+
+		Type thisFieldType = fieldData.getStaticType();
+		if (thisFieldType instanceof JavaReferenceType jrt)
+			thisFieldType = jrt.getInnerType();
 
 		assert(params.length == 4);
 
@@ -131,20 +133,13 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		// assign field type
 
 		AccessChild accessThisFieldType = new AccessChild(refClassMetaType, derefThisField, typeVar, getLocation());
-		sem = lazyLoadClass(interprocedural, sem, exprs[2], expressions);
-		sem = analysis.assign(sem, accessThisFieldType, ReflectionCache.getCachedLastClass(), this);
+		sem = lazyLoadClass(fieldData.getStaticType(), interprocedural, sem, expressions);
 
-		// sem = sem.lub(allocateSubField(interprocedural, fieldAllocated, derefThisField, typeVar, refClassMetaType, expressions));
-		//
-		//
-		// HeapDereference derefFieldType = new HeapDereference(classMetaType, accessThisFieldType, getLocation());
-		// dst = new AccessChild(stringType, derefFieldType, nameVar, getLocation());
-		//
-		// sem = analysis.assign(sem, dst, exprs[2], this);
+		// TODO AP: substitute this reflectionCache usage with getExecutionExpressions()
+		sem = analysis.assign(sem, accessThisFieldType, ReflectionCache.getCachedClass(thisFieldType), this);
+
 
 		// assign field modifiers
-
-		// (*field)->modifiers
 		AccessChild accessThisFieldModifiers = new AccessChild(intType, derefThisField, modifiersVar, getLocation());
 		sem = analysis.assign(sem, accessThisFieldModifiers, exprs[3], this);
 
@@ -191,45 +186,19 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 	}
 
-	// private void getRefToClazz() {
-	//
-	// 	it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-	// 			stringType,
-	// 			accessExpr,
-	// 			GhostTypeLookupOperator.INSTANCE,
-	// 			getLocation());
-	//
-	// 	// weird workaround to get the dynamic type out of Class->name
-	// 	analysis.satisfies(state, un, originating);
-	// 	String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
-	//
-	// }
-
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> lazyLoadClass(
+			Type t,
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			SymbolicExpression clazzName,
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		// clazzName is always a constant
+		if (t instanceof JavaReferenceType jrt)
+			t = jrt.getInnerType();
 
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		LoadClass loadClass = new LoadClass(t, getCFG(), getLocation());
 
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaClassType.getStringType(),
-				clazzName,
-				GhostTypeLookupOperator.INSTANCE,
-				getLocation());
-
-		analysis.satisfies(state, un, this);
-
-		LoadClass loadClass = new LoadClass(getCFG(), getLocation());
-
-		// this can lazily load a new Class object. It also loads a reference to that object in ReflectionCache.lastClass
 		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-		assert(ReflectionCache.lastClass != null);
 
 		return classLoaded;
 	}

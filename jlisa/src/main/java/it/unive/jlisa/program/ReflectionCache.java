@@ -24,12 +24,20 @@ public class ReflectionCache {
 		return loadedClasses.containsKey(lastClass);
 	}
 
+	public static boolean isClassLoaded(Type t) {
+		return loadedClasses.containsKey(t);
+	}
+
 	public static void cacheLastClass(SymbolicExpression expr) {
 		loadedClasses.put(lastClass, expr);
 	}
 
-	public static SymbolicExpression getCachedLastClass() {
-		return loadedClasses.get(lastClass);
+	public static void cacheLoadedClass(Type t, SymbolicExpression expr) {
+		loadedClasses.put(t, expr);
+	}
+
+	public static SymbolicExpression getCachedClass(Type t) {
+		return loadedClasses.get(t);
 	}
 
 	public static void loadLastClass(String clazzName) {

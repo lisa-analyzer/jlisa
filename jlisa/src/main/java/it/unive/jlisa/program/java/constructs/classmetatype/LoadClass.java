@@ -36,18 +36,24 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.LoadClass");
 
+	private Type loadingType;
+
 	public LoadClass(
+			Type t,
 			CFG cfg,
 			CodeLocation location) {
 		super(cfg, location, "internal-load-class");
+		loadingType = t;
+		if (loadingType instanceof JavaReferenceType jrt)
+			loadingType = jrt.getInnerType();
 	}
 
-	public static LoadClass build(
-			CFG cfg,
-			CodeLocation location,
-			Expression... params) {
-		return new LoadClass(cfg, location);
-	}
+	// public static LoadClass build(
+	// 		CFG cfg,
+	// 		CodeLocation location,
+	// 		Expression... params) {
+	// 	return new LoadClass(cfg, location);
+	// }
 
 	@Override
 	public void setOriginatingStatement(
@@ -65,21 +71,15 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Type stringType = getProgram().getTypes().getStringType();
-		Type classMetaType = JavaClassType.getClassMetaType();
-		Type refClassMetaType = new JavaReferenceType(classMetaType);
-
-
 		// check if class is already loaded
-		if (ReflectionCache.isLastClassLoaded()) {
-			SymbolicExpression accessClazz = ReflectionCache.getCachedLastClass();
+		if (ReflectionCache.isClassLoaded(loadingType)) {
+			SymbolicExpression accessClazz = ReflectionCache.getCachedClass(loadingType);
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
 
 		// if lastClass is not primitive, there may be a static initializer to run
 		// FIXME AP: move this in class.forName
-		Type lastClass = ReflectionCache.lastClass;
-		if (lastClass instanceof UnitType loadingClazz) {
+		if (loadingType instanceof UnitType loadingClazz) {
 
 			// execute static initializer
 			// FIXME: initializer of parent classes is not run, see test class-for-name-1
@@ -95,29 +95,10 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			// state = InitializedClassSet.initialize(state, new JavaReferenceType(loadingClazz), this, interprocedural);
 		}
 
-		// String clazzName = ReflectionCache.lastClass.toString();
-		// String internalGlobalVarName = "__" + ReflectionCache.lastClass.toString();
-		//
-		// GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
-		//
-		// Constant c = new Constant(JavaClassType.getStringType(), clazzName, getLocation());
 
 		AnalysisState<A> callState = allocateClass(interprocedural, state, expressions);
 
-		AnalysisState<A> resultState = callState;
-
-		// for (SymbolicExpression allocatedClazz : callState.getExecutionExpressions()) {
-		// 	AnalysisState<A> t = analysis.assign(callState, clazzVar, allocatedClazz, this);
-		// 	resultState = resultState.lub(t);
-		// }
-
-		// ReflectionCache.cacheLastClass(clazzVar);
-
-		// TODO AP: I think there should be a forgetIdentifiers callState.getExecutionExpressions instead.
-		// OR keep the executionExpression but set it to `clazzVar` and don't use the ReflectionCache (this is probably better).
-		// resultState = resultState.withExecutionExpressions(callState.getExecutionExpressions());
-
-		return resultState;
+		return callState;
 	}
 
 	@Override
@@ -133,7 +114,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		String clazzNameStr = ReflectionCache.lastClass.toString();
+		String clazzNameStr = loadingType.toString();
 
 		// class name is always a constant
 		Constant clazzName = new Constant(JavaClassType.getStringType(), clazzNameStr, getLocation());
@@ -190,10 +171,9 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		AnalysisState<A> t = analysis.assign(tmp, clazzVar, clazz, this);
 		tmp = tmp.lub(t);
 
-		// getMetaVariables().add(clazz);
 		tmp = tmp.forgetIdentifier(clazz, this);
 
-		ReflectionCache.cacheLastClass(clazzVar);
+		ReflectionCache.cacheLoadedClass(loadingType, clazzVar);
 
 		return tmp;
 	}

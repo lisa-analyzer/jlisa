@@ -1,12 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.java.constructs.string.StringEquals;
 import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -20,8 +17,6 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -37,7 +32,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Modifier;
 
 public class ClassGetField extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -176,28 +170,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
-	}
-
-	private int getModifiers() {
-		Global g = ReflectionCache.lastField;
-
-		boolean isInstance = g.isInstance();
-		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
-
-		return modifiers;
-	}
-
-	private String getType() {
-		Global g = ReflectionCache.lastField;
-
-		Type paramType = g.getStaticType();
-		if (paramType.isReferenceType()) {
-			paramType = paramType.asReferenceType().getInnerType();
-		}
-
-		String s = paramType.toString();
-		return s;
-
 	}
 
 }
