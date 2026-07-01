@@ -2,6 +2,7 @@ package it.unive.jlisa.frontend.visitors.expression;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.springed.exceptions.UnresolvedTypeException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
@@ -273,24 +274,24 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope>
 	@Override
 	public boolean visit(
 			SimpleName node) {
-		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), getScope());
+		type = Untyped.INSTANCE;
 
+		String nodeName = node.getFullyQualifiedName();
+		Unit u = getUnit(node.getFullyQualifiedName(), getProgram(), getScope());
 		if (u == null) {
-			getParserContext().addException(new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " does not exist in the program (referenced at "
-							+ getSourceCodeLocation(node) + ")"));
-			type = Untyped.INSTANCE;
+			getParserContext().addException(new UnresolvedTypeException(
+					nodeName + " does not exist in the program (referenced at " + getSourceCodeLocation(node) + ")",
+					nodeName));
 			return false;
 		}
 
-		type = Untyped.INSTANCE;
 		if (u instanceof ClassUnit)
 			type = JavaClassType.lookup(u.getName());
 		else if (u instanceof InterfaceUnit)
 			type = JavaInterfaceType.lookup(u.getName());
 		else
 			getParserContext().addException(new UnsupportedStatementException(
-					node.getFullyQualifiedName() + " is not a class or interface unit"));
+					nodeName + " is not a class or interface unit"));
 
 		return false;
 	}

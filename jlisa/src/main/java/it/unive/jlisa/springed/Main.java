@@ -3,6 +3,7 @@ package it.unive.jlisa.springed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
+import it.unive.jlisa.springed.exceptions.SpringCSVExceptionWriter;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
 import it.unive.jlisa.springed.frontend.SpringProjectVisitor;
 import it.unive.jlisa.springed.p1.P1Impl;
@@ -16,8 +17,8 @@ import org.apache.logging.log4j.Logger;
 
 public class Main {
 	private static final String OUTPUT_DIR = "spring-outputs";
-	private static final String OUTPUT_FILE_NAME = "-registry.json";
-	private static final String ERROR_FILE_NAME = "-errors.csv";
+	private static final String OUTPUT_FILE_NAME = "registry.json";
+	private static final String ERROR_FILE_NAME = "errors-from-{}.csv";
 
 	private static final Logger LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
 	private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -42,11 +43,11 @@ public class Main {
 
 			Registry registry = new P1Impl().produceRegistry(projectUnits);
 
-			p1Output.addRegistry(projectName(project), registry);
+			p1Output.addRegistry(projectName, registry);
 			dumpCollectedErrors(springFrontend, projectName);
 		}
 
-		writeOutput(p1Output, projectName(rootPath));
+		writeOutput(p1Output);
 	}
 
 	public static List<Path> detectSpringProjects(
@@ -58,16 +59,15 @@ public class Main {
 		List<Path> projects = springProjectVisitor.getProjects();
 
 		if (projects.isEmpty())
-			LOG.warn("No Spring project (build file + src/main/java) found under " + rootPath);
+            LOG.warn("No Spring project (build file + src/main/java) found under {}", rootPath);
 
 		return projects;
 	}
 
 	private static void writeOutput(
-			P1Output output,
-			String projectName)
+			P1Output output)
 			throws IOException {
-		Path out = Paths.get(OUTPUT_DIR, projectName + OUTPUT_FILE_NAME);
+		Path out = Paths.get(OUTPUT_DIR, OUTPUT_FILE_NAME);
 		Files.createDirectories(out.getParent());
 
 		MAPPER.writeValue(out.toFile(), output);
@@ -76,8 +76,8 @@ public class Main {
 				.mapToInt(r -> r.getMappings().size())
 				.sum();
 
-		LOG.info("Wrote " + output.get().size() + " project(s), " + mappings
-				+ " mapping(s) total, to " + out.toAbsolutePath());
+        LOG.info("Wrote {} project(s), {} mapping(s) total, to {}",
+				output.get().size(), mappings, out.toAbsolutePath());
 	}
 
 	private static boolean isInputOk(
@@ -97,7 +97,7 @@ public class Main {
 			if (projectDir.getName(i).toString().equals("src"))
 				return projectDir.getName(i - 1).toString();
 
-		return projectDir.getFileName().toString();
+		return projectDir.getFileName().toString().toLowerCase();
 	}
 
 	private static void dumpCollectedErrors(
@@ -106,11 +106,11 @@ public class Main {
 		List<Throwable> parseExceptions = springFrontend.getParseExceptions();
 
 		if (!parseExceptions.isEmpty()) {
-			Path errors = Paths.get(OUTPUT_DIR, projectName + ERROR_FILE_NAME);
-			CSVExceptionWriter.writeCSV(errors.toString(), parseExceptions);
+			Path errors = Paths.get(OUTPUT_DIR, ERROR_FILE_NAME.replace("{}", projectName));
+			SpringCSVExceptionWriter.writeCSV(errors.toString(), parseExceptions);
 
-			LOG.warn("Collected " + parseExceptions.size() + " parsing issue(s); written to "
-					+ errors.toAbsolutePath());
+            LOG.warn("Collected {} parsing issue(s); written to {}",
+					parseExceptions.size(), errors.toAbsolutePath());
 		}
 	}
 }
