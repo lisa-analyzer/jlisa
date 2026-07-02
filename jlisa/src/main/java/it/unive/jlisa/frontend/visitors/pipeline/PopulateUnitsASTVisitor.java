@@ -97,10 +97,12 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 						new ProgramValidationException("illegal combination of modifiers: abstract and final"));
 			else
 				cUnit = new AbstractClassUnit(loc, program, name,
-						AnnotationBuilder.fromDeclarationModifiers(modifiers), Modifier.isFinal(modifierFlags));
+						AnnotationBuilder.fromDeclarationModifiers(modifiers, getEnvironment(), getScope()),
+						Modifier.isFinal(modifierFlags));
 		else
 			cUnit = new ClassUnit(loc, program, name,
-					AnnotationBuilder.fromDeclarationModifiers(modifiers), Modifier.isFinal(modifierFlags));
+					AnnotationBuilder.fromDeclarationModifiers(modifiers, getEnvironment(), getScope()),
+					Modifier.isFinal(modifierFlags));
 
 		program.addUnit(cUnit);
 		JavaClassType.register(cUnit.getName(), cUnit);

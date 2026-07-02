@@ -44,12 +44,13 @@ public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> impl
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 		String identifier = node.getName().getIdentifier();
 
-		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers());
+		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers(), getEnvironment(),
+				getScope());
 
 		List<Annotation> varargsAnns = node.varargsAnnotations();
 		if (!varargsAnns.isEmpty()) {
 			for (Annotation varargAnn : varargsAnns) {
-				annotations.addAnnotation(AnnotationBuilder.fromJdt(varargAnn));
+				annotations.addAnnotation(AnnotationBuilder.fromJdt(varargAnn, getEnvironment(), getScope()));
 			}
 		}
 

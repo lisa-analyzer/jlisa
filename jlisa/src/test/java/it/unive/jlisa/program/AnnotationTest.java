@@ -14,6 +14,7 @@ import it.unive.lisa.program.annotations.values.BoolAnnotationValue;
 import it.unive.lisa.program.annotations.values.CharAnnotationValue;
 import it.unive.lisa.program.annotations.values.CompilationUnitAnnotationValue;
 import it.unive.lisa.program.annotations.values.DoubleAnnotationValue;
+import it.unive.lisa.program.annotations.values.EnumAnnotationValue;
 import it.unive.lisa.program.annotations.values.FloatAnnotationValue;
 import it.unive.lisa.program.annotations.values.IntAnnotationValue;
 import it.unive.lisa.program.annotations.values.LongAnnotationValue;
@@ -22,6 +23,14 @@ import it.unive.lisa.program.cfg.Parameter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -29,38 +38,68 @@ public class AnnotationTest {
 
 	private static Program lisaProgram;
 
+	private static final List<String> capturedLoggerWarnings = new CopyOnWriteArrayList<>();
+	private static Logger annotationBuilderLogger;
+	private static AbstractAppender captureAppender;
+
+	private static final class CapturingAppender extends AbstractAppender {
+		CapturingAppender() {
+			super("AnnotationTestCapture", null, null, false, Property.EMPTY_ARRAY);
+		}
+
+		@Override
+		public void append(
+				LogEvent event) {
+			if (event.getLevel().isMoreSpecificThan(Level.WARN))
+				capturedLoggerWarnings.add(event.getMessage().getFormattedMessage());
+		}
+	}
+
 	@BeforeAll
 	static void parse() throws IOException {
+		captureAppender = new CapturingAppender();
+		captureAppender.start();
+		annotationBuilderLogger = (Logger) LogManager.getLogger("it.unive.jlisa.frontend.util.AnnotationBuilder");
+		annotationBuilderLogger.addAppender(captureAppender);
+
 		lisaProgram = new JavaFrontend().parseFromListOfFile(List.of(
-				// Class-level
+
+				// Load definitions first
+				"java-testcases/annotation/special-case/Constants.java",
+				"java-testcases/annotation/special-case/Enumeration.java",
+
+//				// Class-level
 				"java-testcases/annotation/A.java",
 				"java-testcases/annotation/B.java",
 				"java-testcases/annotation/C.java",
 				"java-testcases/annotation/D.java",
 
-				// Method-level
+//				// Method-level
 				"java-testcases/annotation/E.java",
 				"java-testcases/annotation/F.java",
 				"java-testcases/annotation/G.java",
 
-				// Constructor-level
+//				// Constructor-level
 				"java-testcases/annotation/H.java",
 				"java-testcases/annotation/I.java",
 
-				// Parameter-level in methods
+//				// Parameter-level in methods
 				"java-testcases/annotation/J.java",
 				"java-testcases/annotation/K.java",
 				"java-testcases/annotation/L.java",
 				"java-testcases/annotation/M.java",
 				"java-testcases/annotation/N.java",
 
-				// Field-level
+//				// Field-level
 				"java-testcases/annotation/O.java",
 				"java-testcases/annotation/P.java",
 				"java-testcases/annotation/Q.java",
 
 				// Special cases
 				"java-testcases/annotation/S1.java",
+				"java-testcases/annotation/S2.java",
+				"java-testcases/annotation/S3.java",
+				"java-testcases/annotation/S4.java",
 
 				"java-testcases/annotation/Main.java"));
 	}
@@ -356,5 +395,43 @@ public class AnnotationTest {
 				List.of(new AnnotationMember("value", new CompilationUnitAnnotationValue("A"))));
 
 		assertAnnotationOfClass("S1", isAnnotatedWith);
+	}
+
+	@Test
+	public void testQualifiedNameMemberAnnotation() {
+		Annotation isAnnotatedWith = new Annotation("AnnotationWithQualifiedNameMember", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("\"string-constant-value\"")),
+				new AnnotationMember("value2", new IntAnnotationValue(100)),
+				new AnnotationMember("value3", new BoolAnnotationValue(true))));
+
+		assertAnnotationOfMethod("S2", "s2", isAnnotatedWith);
+	}
+
+	@Test
+	public void testUnresolvableQualifiedNameMember() {
+		Annotation isAnnotatedWith = new Annotation("AnnotationWithQualifiedNameMember", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("Constants.UNDEFINED_CONSTANT"))));
+
+		assertAnnotationOfMethod("S3", "s3", isAnnotatedWith);
+		assertTrue(
+				capturedLoggerWarnings.stream().anyMatch(m -> m.contains("Constants.UNDEFINED_CONSTANT")),
+				"expected a WARN about the unresolved QualifiedName, captured: " + capturedLoggerWarnings);
+	}
+
+	@Test
+	public void testEnumAsQualifiedNameMemberAnnotation() {
+		Annotation isAnnotatedWith = new Annotation("AnnotationWithEnumAsQualifiedNameMember", List.of(
+				new AnnotationMember("value", new EnumAnnotationValue("Enumeration", "Enum1")),
+				new AnnotationMember("value2", new EnumAnnotationValue("Enumeration", "Enum3"))));
+
+		assertAnnotationOfMethod("S4", "s4", isAnnotatedWith);
+	}
+
+	@AfterAll
+	static void tearDown() {
+		if (annotationBuilderLogger != null && captureAppender != null)
+			annotationBuilderLogger.removeAppender(captureAppender);
+		if (captureAppender != null)
+			captureAppender.stop();
 	}
 }

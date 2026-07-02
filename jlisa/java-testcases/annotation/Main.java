@@ -32,5 +32,8 @@ public class Main{
 
 		// Special cases
 		S1 s1 = new S1();
+		S2 s2 = new S2();
+		S3 s3 = new S3();
+		S4 s4 = new S4();
 	}
 }
