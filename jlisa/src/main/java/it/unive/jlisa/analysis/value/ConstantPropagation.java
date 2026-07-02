@@ -51,7 +51,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 	@Override
 	public boolean canProcess(
-			SymbolicExpression expression,
+			ValueExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle) {
 		if (expression instanceof PushInv)
@@ -1691,7 +1691,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		// TODO Auto-generated method stub
 		return BaseNonRelationalValueDomain.super.satisfiesTernaryExpression(expression, left, middle, right, pp,
 				oracle);
 	}

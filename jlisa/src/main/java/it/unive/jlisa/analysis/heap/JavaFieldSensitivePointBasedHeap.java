@@ -32,63 +32,44 @@ public class JavaFieldSensitivePointBasedHeap
 		extends
 		FieldSensitivePointBasedHeap {
 
-	private final Rewriter rewriter = new Rewriter();
-
 	@Override
-	public ExpressionSet rewrite(
+	public ExpressionSet rewritePushAny(
+			PushAny expression,
 			HeapEnvWithFields state,
-			SymbolicExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		return expression.accept(rewriter, state, pp);
+		if (expression.getStaticType().isPointerType()) {
+			Type inner = expression.getStaticType().asPointerType().getInnerType();
+			CodeLocation loc = expression.getCodeLocation();
+			HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
+			return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
+		}
+		return new ExpressionSet(expression);
 	}
 
-	/**
-	 * A {@link it.unive.lisa.analysis.heap.BaseHeapDomain.Rewriter} for the
-	 * {@link FieldSensitivePointBasedHeap} domain.
-	 * 
-	 * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
-	 */
-	public class Rewriter
-			extends
-			FieldSensitivePointBasedHeap.Rewriter {
-
-		@Override
-		public ExpressionSet visit(
-				PushAny expression,
-				Object... params)
-				throws SemanticException {
-			if (expression.getStaticType().isPointerType()) {
-				Type inner = expression.getStaticType().asPointerType().getInnerType();
-				CodeLocation loc = expression.getCodeLocation();
-				HeapAllocationSite site = new HeapAllocationSite(inner, "unknown@" + loc.getCodeLocation(), false, loc);
-				return new ExpressionSet(new MemoryPointer(expression.getStaticType(), site, loc));
+	@Override
+	public ExpressionSet rewriteValueExpression(
+			ValueExpression expression,
+			ExpressionSet[] subExpressions,
+			HeapEnvWithFields state,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Set<SymbolicExpression> result = new HashSet<>();
+		SymbolicExpression[] res = new SymbolicExpression[subExpressions.length];
+		for (int i = 0; i < subExpressions.length; ++i) {
+			ExpressionSet set = subExpressions[i];
+			for (SymbolicExpression expr : set) {
+				res[i] = expr;
 			}
-			return new ExpressionSet(expression);
 		}
-
-		@Override
-		public ExpressionSet visit(
-				ValueExpression expression,
-				ExpressionSet[] subExpressions,
-				Object... params)
-				throws SemanticException {
-			Set<SymbolicExpression> result = new HashSet<>();
-			SymbolicExpression[] res = new SymbolicExpression[subExpressions.length];
-			for (int i = 0; i < subExpressions.length; ++i) {
-				ExpressionSet set = subExpressions[i];
-				for (SymbolicExpression expr : set) {
-					res[i] = expr;
-				}
-			}
-			NaryExpression e = new NaryExpression(
-					expression.getStaticType(),
-					res,
-					((NaryExpression) expression).getOperator(),
-					expression.getCodeLocation());
-			result.add(e);
-			return new ExpressionSet(result);
-		}
+		NaryExpression e = new NaryExpression(
+				expression.getStaticType(),
+				res,
+				((NaryExpression) expression).getOperator(),
+				expression.getCodeLocation());
+		result.add(e);
+		return new ExpressionSet(result);
 	}
 }
