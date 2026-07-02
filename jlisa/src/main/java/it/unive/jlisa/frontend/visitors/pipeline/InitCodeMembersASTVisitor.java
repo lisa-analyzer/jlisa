@@ -193,7 +193,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance,
 				node.getName().getIdentifier(),
 				returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType,
-				AnnotationBuilder.fromDeclarationModifiers(modifiers),
+				AnnotationBuilder.fromDeclarationModifiers(modifiers, getEnvironment(), getScope()),
 				paramArray);
 
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
@@ -234,7 +234,8 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, lisaCU, instance, node.getName().getIdentifier(),
-				VoidType.INSTANCE, AnnotationBuilder.fromDeclarationModifiers(modifiers), paramArray);
+				VoidType.INSTANCE, AnnotationBuilder.fromDeclarationModifiers(modifiers, getEnvironment(), getScope()),
+				paramArray);
 
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
 			codeMemberDescriptor.setOverridable(false);

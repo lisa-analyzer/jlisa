@@ -1,23 +1,38 @@
 package it.unive.jlisa.frontend.util;
 
+import it.unive.jlisa.frontend.EnumUnit;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.UnsupportedAnnotationException;
+import it.unive.jlisa.frontend.visitors.expression.QualifiedNameVisitor;
+import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.lisa.program.ConstantGlobal;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.annotations.AnnotationMember;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.annotations.values.*;
+import it.unive.lisa.symbolic.value.Constant;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.*;
 
 public final class AnnotationBuilder {
 
-	public static Annotations fromDeclarationModifiers(
-			List<?> modifiers) {
-		Annotations anns = new Annotations();
+	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(AnnotationBuilder.class);
 
+	private static ParsingEnvironment env;
+	private static UnitScope scope;
+
+	public static Annotations fromDeclarationModifiers(
+			List<?> modifiers,
+			ParsingEnvironment env,
+			UnitScope scope) {
+
+		Annotations anns = new Annotations();
 		for (Object modifier : modifiers) {
 			if (modifier instanceof org.eclipse.jdt.core.dom.Annotation jdtAnn) {
-				anns.addAnnotation(fromJdt(jdtAnn));
+				anns.addAnnotation(fromJdt(jdtAnn, env, scope));
 			}
 		}
 
@@ -26,7 +41,12 @@ public final class AnnotationBuilder {
 
 	// TODO: support @Inherited annotations.
 	public static Annotation fromJdt(
-			org.eclipse.jdt.core.dom.Annotation jdtAnn) {
+			org.eclipse.jdt.core.dom.Annotation jdtAnn,
+			ParsingEnvironment env,
+			UnitScope scope) {
+		AnnotationBuilder.env = env;
+		AnnotationBuilder.scope = scope;
+
 		String annName = jdtAnn.getTypeName().getFullyQualifiedName();
 
 		return switch (jdtAnn) {
@@ -66,8 +86,37 @@ public final class AnnotationBuilder {
 		case NumberLiteral nl -> getNumericAnnotationValue(nl);
 		case TypeLiteral tl -> new CompilationUnitAnnotationValue(tl.getType().toString());
 		case ArrayInitializer ai -> getArrayAnnotationValue(ai);
+		case QualifiedName qn -> getQualifiedNameValue(qn);
 		default -> throw new UnsupportedAnnotationException("Unsupported annotation value type: " + expr.getClass());
 		};
+	}
+
+	/*
+	 * TODO: Code below manages final static constants and enumerations for
+	 * method annotations. For class level that global arrives as null. Constant
+	 * and enum globals are registered in pass 3, but class units are built on
+	 * pass 1, hence some additional handling is required for earlier visitors
+	 * in the pipeline.
+	 */
+	private static AnnotationValue getQualifiedNameValue(
+			QualifiedName qn) {
+		Global global = env.parserContext().evaluate(qn, () -> new QualifiedNameVisitor(env, scope));
+
+		if (global instanceof ConstantGlobal constantGlobal) {
+			Constant constant = constantGlobal.getConstant();
+			Expression expr = ((VariableDeclarationFragment) constant.getValue()).getInitializer();
+			return parseAnnotationValue(expr);
+
+		} else if (global != null && global.getContainer() instanceof EnumUnit enumUnit) {
+			String enumName = enumUnit.getName();
+			String enumValue = global.getName();
+			return new EnumAnnotationValue(enumName, enumValue);
+		}
+
+		LOG.warn("Annotation-buildup: Failure to find/resolve value for following QualifiedName:{}. " +
+				"Keeping it as a symbolic reference.", qn.getFullyQualifiedName());
+
+		return new StringAnnotationValue(qn.getFullyQualifiedName());
 	}
 
 	/*
