@@ -48,13 +48,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			loadingType = jrt.getInnerType();
 	}
 
-	// public static LoadClass build(
-	// 		CFG cfg,
-	// 		CodeLocation location,
-	// 		Expression... params) {
-	// 	return new LoadClass(cfg, location);
-	// }
-
 	@Override
 	public void setOriginatingStatement(
 			Statement st) {

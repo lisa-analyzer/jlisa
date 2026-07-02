@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionCache;
-import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -60,69 +59,71 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
             StatementStore<A> expressions)
             throws SemanticException {
 
-        Analysis<A, D> analysis = interprocedural.getAnalysis();
+            return state;
 
-        // Reload reflection cache: evaluate Class name and Field name stored inside the Field meta-object
-        Type fieldMetaType = JavaClassType.getFieldMetaType();
-        Type classMetaType = JavaClassType.getClassMetaType();
-        Type objectType = JavaClassType.getObjectType();
-        Type stringType = getProgram().getTypes().getStringType();
-        CodeLocation loc = getLocation();
-
-        // dereference the Field meta-object: (*field)
-        HeapDereference derefField = new HeapDereference(fieldMetaType, left, loc);
-
-        // (*field)->clazz  (reference to Class meta-object)
-        GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", loc);
-        AccessChild accessClazzRef = new AccessChild(new JavaReferenceType(classMetaType), derefField, clazzVar, loc);
-
-        // (*(*field)->clazz)
-        HeapDereference derefClazz = new HeapDereference(classMetaType, accessClazzRef, loc);
-
-        // (*(*field)->clazz)->name  (actual class name string)
-        GlobalVariable clazzNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
-        AccessChild accessClazzName = new AccessChild(stringType, derefClazz, clazzNameVar, loc);
-
-        // (*field)->name  (reference to String object)
-        GlobalVariable fieldNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
-        AccessChild accessFieldNameRef = new AccessChild(new JavaReferenceType(stringType), derefField,
-            fieldNameVar, loc);
-
-        // (*(*field)->name)->value  (actual field name constant)
-        HeapDereference derefFieldName = new HeapDereference(stringType, accessFieldNameRef, loc);
-        GlobalVariable fieldValueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
-        AccessChild accessFieldName = new AccessChild(stringType, derefFieldName, fieldValueVar, loc);
-
-        it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
-                stringType,
-                accessClazzName,
-                accessFieldName,
-                JavaIsFieldDefinedOperator.INSTANCE,
-                loc);
-
-        // Avoid stale cache values when resolution is unknown.
-        ReflectionCache.lastField = null;
-
-        // force domain to evaluate the predicate so that ReflectionCache gets populated
-        Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
-
-        // if predicate unsat, we cannot resolve the field here
-        if (sat == Satisfiability.NOT_SATISFIED)
-            return state.topExecution();
-
-        Global field = ReflectionCache.lastField;
-
-        if (field == null)
-            return state.topExecution();
-        if (field.isInstance()) {
-            HeapDereference container = new HeapDereference(objectType, middle, loc);
-            GlobalVariable var = field.toSymbolicVariable(loc);
-            AccessChild access = new AccessChild(field.getStaticType(), container, var, loc);
-            return analysis.assign(state, access, right, this);
-        }
-
-        GlobalVariable access = field.toSymbolicVariable(loc);
-        return analysis.assign(state, access, right, this);
+        // Analysis<A, D> analysis = interprocedural.getAnalysis();
+        //
+        // // Reload reflection cache: evaluate Class name and Field name stored inside the Field meta-object
+        // Type fieldMetaType = JavaClassType.getFieldMetaType();
+        // Type classMetaType = JavaClassType.getClassMetaType();
+        // Type objectType = JavaClassType.getObjectType();
+        // Type stringType = getProgram().getTypes().getStringType();
+        // CodeLocation loc = getLocation();
+        //
+        // // dereference the Field meta-object: (*field)
+        // HeapDereference derefField = new HeapDereference(fieldMetaType, left, loc);
+        //
+        // // (*field)->clazz  (reference to Class meta-object)
+        // GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", loc);
+        // AccessChild accessClazzRef = new AccessChild(new JavaReferenceType(classMetaType), derefField, clazzVar, loc);
+        //
+        // // (*(*field)->clazz)
+        // HeapDereference derefClazz = new HeapDereference(classMetaType, accessClazzRef, loc);
+        //
+        // // (*(*field)->clazz)->name  (actual class name string)
+        // GlobalVariable clazzNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
+        // AccessChild accessClazzName = new AccessChild(stringType, derefClazz, clazzNameVar, loc);
+        //
+        // // (*field)->name  (reference to String object)
+        // GlobalVariable fieldNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
+        // AccessChild accessFieldNameRef = new AccessChild(new JavaReferenceType(stringType), derefField,
+        //     fieldNameVar, loc);
+        //
+        // // (*(*field)->name)->value  (actual field name constant)
+        // HeapDereference derefFieldName = new HeapDereference(stringType, accessFieldNameRef, loc);
+        // GlobalVariable fieldValueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
+        // AccessChild accessFieldName = new AccessChild(stringType, derefFieldName, fieldValueVar, loc);
+        //
+        // it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
+        //         stringType,
+        //         accessClazzName,
+        //         accessFieldName,
+        //         JavaIsFieldDefinedOperator.INSTANCE,
+        //         loc);
+        //
+        // // Avoid stale cache values when resolution is unknown.
+        // ReflectionCache.lastField = null;
+        //
+        // // force domain to evaluate the predicate so that ReflectionCache gets populated
+        // Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
+        //
+        // // if predicate unsat, we cannot resolve the field here
+        // if (sat == Satisfiability.NOT_SATISFIED)
+        //     return state.topExecution();
+        //
+        // Global field = ReflectionCache.lastField;
+        //
+        // if (field == null)
+        //     return state.topExecution();
+        // if (field.isInstance()) {
+        //     HeapDereference container = new HeapDereference(objectType, middle, loc);
+        //     GlobalVariable var = field.toSymbolicVariable(loc);
+        //     AccessChild access = new AccessChild(field.getStaticType(), container, var, loc);
+        //     return analysis.assign(state, access, right, this);
+        // }
+        //
+        // GlobalVariable access = field.toSymbolicVariable(loc);
+        // return analysis.assign(state, access, right, this);
     }
 
     @Override
