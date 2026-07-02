@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.util.Collection;
+
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -15,6 +17,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -74,6 +77,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
 
 		// check if class is already loaded
 		if (ReflectionCache.isClassLoaded(loadingType)) {
@@ -81,10 +85,10 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
 
+
 		// if lastClass is not primitive, there may be a static initializer to run
 		// FIXME AP: move this in class.forName
 		if (loadingType instanceof UnitType loadingClazz) {
-
 			// execute static initializer
 			// FIXME: initializer of parent classes is not run, see test class-for-name-1
 			// ClassUnit classUnit = (ClassUnit) loadingClazz.getUnit();
@@ -102,7 +106,42 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> callState = allocateClass(interprocedural, state, expressions);
 
-		return callState;
+		AnalysisState<A> tmp = callState;
+
+		if (loadingType instanceof UnitType loadingClazz) {
+
+			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors();
+
+			// find the superclass
+			for (CompilationUnit ancestor : ancestors) {
+				Type superClass = null;
+				try {
+					superClass = JavaClassType.lookup(ancestor.getName());
+				}
+				catch(Exception e) {}
+
+				if (superClass != null) {
+					LoadClass loadClass = new LoadClass(superClass, getCFG(), location);
+					tmp = loadClass.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
+
+					GlobalVariable superClassVar =
+						new GlobalVariable(Untyped.INSTANCE, "superClass", location);
+
+					assert(tmp.getExecutionExpressions().size() == 1);
+					SymbolicExpression superClazz = tmp.getExecutionExpressions().iterator().next();
+					assert(callState.getExecutionExpressions().size() == 1);
+					SymbolicExpression currentClazz = callState.getExecutionExpressions().iterator().next();
+
+					HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), currentClazz, location);
+
+					AccessChild accessSuperClazz = new AccessChild(new JavaReferenceType(JavaClassType.getClassMetaType()), derefClazz, superClassVar, location);
+
+					tmp = tmp.lub(analysis.assign(tmp, accessSuperClazz, superClazz, this));
+				}
+			}
+		}
+
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 
 	@Override
