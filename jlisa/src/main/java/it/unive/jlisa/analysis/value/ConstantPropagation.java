@@ -1562,23 +1562,36 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.SATISFIED;
 		}
 
+		// used by `Class.forName`
 		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+
+			// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+			//
+			// TODO AP: this code is almost identical to the one in reflectionCache. I think the type lookup should just be in JavaTypeSystem
+			// with a flag telling whether to also look for primitive types or not
 			boolean classLookup = true;
 			boolean interfaceLookup = true;
+
+			JavaClassType foundClass = null;
+			JavaInterfaceType foundInterface = null;
+
 			try {
-				JavaClassType.lookup(v);
+				foundClass = JavaClassType.lookup(v);
 			} catch (IllegalArgumentException e) {
 				classLookup = false;
 			}
 			try {
-				JavaInterfaceType.lookup(v);
+				foundInterface = JavaInterfaceType.lookup(v);
 			} catch (IllegalArgumentException e) {
 				interfaceLookup = false;
 			}
 
 			if (classLookup || interfaceLookup) {
+				assert(foundClass != null || foundInterface != null);
+				ReflectionCache.lastClass = (classLookup) ? foundClass : foundInterface;
 				return Satisfiability.SATISFIED;
 			}
+
 			return Satisfiability.NOT_SATISFIED;
 		}
 
@@ -1594,6 +1607,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof GhostTypeLookupOperator && arg.getValue() instanceof String s) {
 			JavaClassType.setDynamicTypeLookup(s);
+			ReflectionCache.loadLastClass(s);
 			return Satisfiability.SATISFIED;
 		}
 
@@ -1806,30 +1820,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			String lv = ((String) left.getValue());
 			String rv = ((String) right.getValue());
 			return lv.matches(rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
-		}
-
-		// reflection
-		if (operator instanceof JavaIsFieldDefinedOperator && left.getValue() instanceof String l
-				&& right.getValue() instanceof String r) {
-
-			// safe since class is defined
-			JavaClassType loadingClass = JavaClassType.lookup(l);
-			ClassUnit classUnit = (ClassUnit) loadingClass.getUnit();
-
-			Global instanceField = classUnit.getInstanceGlobal(r, true);
-
-			// FIXME: this doesn't automatically look in parent classes
-			Global staticField = classUnit.getGlobal(r);
-
-			if (instanceField == null && staticField == null)
-				return Satisfiability.NOT_SATISFIED;
-
-			if (instanceField == null)
-				ReflectionCache.lastField = staticField;
-			else
-				ReflectionCache.lastField = instanceField;
-
-			return Satisfiability.SATISFIED;
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfiesBinaryExpression(expression, left, right, pp, oracle);

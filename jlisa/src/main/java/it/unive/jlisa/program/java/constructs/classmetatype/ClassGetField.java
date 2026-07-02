@@ -1,8 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaIsFieldDefinedOperator;
+import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -16,8 +17,6 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -28,11 +27,11 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Modifier;
 
 public class ClassGetField extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -69,100 +68,79 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
 
-		Type intType = JavaIntType.INSTANCE;
 		Type stringType = getProgram().getTypes().getStringType();
+		Type refStringType = new JavaReferenceType(stringType);
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
+		Type refFieldMetaType = new JavaReferenceType(fieldMetaType);
+		Type fieldArr = JavaArrayType.lookup(refFieldMetaType, 1);
 		Type classMetaType = JavaClassType.getClassMetaType();
 
 		// access class name (1st arg)
-		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-		HeapDereference derefClassNameExpr = new HeapDereference(stringType, left, getLocation());
-		AccessChild accessClassNameExpr = new AccessChild(stringType, derefClassNameExpr, nameVar, getLocation());
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 
 		// access field name (2nd arg)
-		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefFieldNameExpr = new HeapDereference(stringType, right, getLocation());
-		AccessChild accessFieldNameExpr = new AccessChild(stringType, derefFieldNameExpr, valueVar, getLocation());
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		HeapDereference derefFieldNameExpr = new HeapDereference(stringType, right, location);
+		AccessChild accessFieldNameExpr = new AccessChild(stringType, derefFieldNameExpr, valueVar, location);
 
-		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", getLocation());
-		GlobalVariable typeVar = new GlobalVariable(Untyped.INSTANCE, "type", getLocation());
-		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", getLocation());
+		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", location);
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 
-		// check if field actually exists in the given class
-		it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
-				stringType,
-				accessClassNameExpr,
-				accessFieldNameExpr,
-				JavaIsFieldDefinedOperator.INSTANCE,
-				getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
+		// get number of fields
+		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
+		AccessChild accessClazzFields = new AccessChild(new JavaReferenceType(fieldArr), derefClazz, declaredFieldsVar, location);
+
+		HeapDereference derefArr = new HeapDereference(fieldArr, accessClazzFields, location);
+
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
+
+		// FIXME AP: instead of this, use the same thing that's used in getMethod.
+		// Check whether the index is within bounds at each iteration.
+		it.unive.lisa.symbolic.value.UnaryExpression ghostLen = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaIntType.INSTANCE,
+				accessLen,
+				GhostGetMethodParameterCountOperator.INSTANCE,
+				location);
+		analysis.satisfies(state, ghostLen, originating);
+		Integer arrLen = JavaClassType.getGetMethodParameterCount();
+
+		Satisfiability sat = Satisfiability.NOT_SATISFIED;
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
-		if (sat != Satisfiability.NOT_SATISFIED) {
+		// look for a field with the same name
+		for (int i = 0; i < arrLen; ++i) {
 
-			// allocate the Field object
-			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-					new JavaReferenceType(fieldMetaType),
-					new Expression[0]);
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
 
-			AnalysisState<
-					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			AccessChild accessIdx = new AccessChild(refFieldMetaType, derefArr, idx, getLocation());
+			HeapDereference derefField = new HeapDereference(fieldMetaType, accessIdx, location);
 
-			AnalysisState<A> tmp = callState.bottomExecution();
+			AccessChild accessName = new AccessChild(refStringType, derefField, nameVar, location);
+			HeapDereference derefName = new HeapDereference(stringType, accessName, location);
+			AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
-			for (SymbolicExpression expr : callState.getExecutionExpressions()) {
+			it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+					getProgram().getTypes().getBooleanType(),
+					accessValue,
+					accessFieldNameExpr,
+					JavaStringEqualsOperator.INSTANCE,
+					getLocation());
 
-				// *field
-				HeapDereference derefThisField = new HeapDereference(fieldMetaType, expr, getLocation());
+			Satisfiability fieldFound = analysis.satisfies(state, equalsExpr, originating);
 
-				// assign field name
-
-				// (*field)->name
-				AccessChild accessThisFieldName = new AccessChild(new JavaReferenceType(stringType), derefThisField,
-						nameVar, getLocation());
-
-				AnalysisState<A> sem = analysis.assign(callState, accessThisFieldName, right, this);
-
-				// assign field clazz
-
-				// (*field)->clazz
-				AccessChild accessThisFieldClazz = new AccessChild(new JavaReferenceType(classMetaType), derefThisField,
-						clazzVar, getLocation());
-
-				sem = analysis.assign(sem, accessThisFieldClazz, left, this);
-
-				// assign field type
-
-				Constant fieldTypeValue = new Constant(stringType, this.getType(), getLocation());
-
-				// (*field)->type
-				AccessChild accessThisFieldType = new AccessChild(new JavaReferenceType(classMetaType), derefThisField,
-						typeVar, getLocation());
-
-				// (*(*field)->type)->name
-				HeapDereference derefFieldType = new HeapDereference(classMetaType, accessThisFieldType, getLocation());
-				AccessChild dst = new AccessChild(stringType, derefFieldType, nameVar, getLocation());
-
-				sem = analysis.assign(sem, dst, fieldTypeValue, this);
-
-				// assign field modifiers
-
-				Constant fieldModifiersValue = new Constant(JavaIntType.INSTANCE, this.getModifiers(), getLocation());
-
-				// (*field)->modifiers
-				dst = new AccessChild(intType, derefThisField, modifiersVar, getLocation());
-				sem = analysis.assign(sem, dst, fieldModifiersValue, this);
-
-				tmp = tmp.lub(sem);
-
-				getMetaVariables().addAll(call.getMetaVariables());
-				noExceptionState = tmp.withExecutionExpressions(callState.getExecutionExpressions());
+			if (fieldFound == Satisfiability.SATISFIED) {
+				sat = Satisfiability.SATISFIED;
+				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
+				noExceptionState = analysis.smallStepSemantics(state, refField, originating);
+				break;
 			}
 		}
+
 		if (sat != Satisfiability.SATISFIED) {
 
 			JavaClassType noSuchFieldType = JavaClassType.getNoSuchFieldException();
@@ -193,28 +171,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
-	}
-
-	private int getModifiers() {
-		Global g = ReflectionCache.lastField;
-
-		boolean isInstance = g.isInstance();
-		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
-
-		return modifiers;
-	}
-
-	private String getType() {
-		Global g = ReflectionCache.lastField;
-
-		Type paramType = g.getStaticType();
-		if (paramType.isReferenceType()) {
-			paramType = paramType.asReferenceType().getInnerType();
-		}
-
-		String s = paramType.toString();
-		return s;
-
 	}
 
 }

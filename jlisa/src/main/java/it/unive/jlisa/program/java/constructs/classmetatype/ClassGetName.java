@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -23,23 +22,21 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement.UnaryExpression
-		implements
-		PluggableStatement {
+public class ClassGetName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public MethodGetParameterTypes(
+	public ClassGetName(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "getParameterTypes", new JavaReferenceType(JavaClassType.getClassMetaType()), expr);
+		super(cfg, location, "getName", new JavaReferenceType(JavaClassType.getStringType()), expr);
 	}
 
-	public static MethodGetParameterTypes build(
+	public static ClassGetName build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new MethodGetParameterTypes(cfg, location, params[0]);
+		return new ClassGetName(cfg, location, params[0]);
 	}
 
 	@Override
@@ -58,16 +55,18 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Type methodMetaType = JavaClassType.getMethodType();
-		JavaReferenceType reftype = JavaArrayType.CLASS_ARRAY;
+		Type stringType = getProgram().getTypes().getStringType();
+		Type classMetaType = JavaClassType.getClassMetaType();
+		JavaReferenceType reftype = new JavaReferenceType(stringType);
 
-		GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "parameterTypes", getLocation());
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
 
-		// (*method)->parameterTypes
-		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, expr, getLocation());
-		AccessChild accessThisMethodParamTypes = new AccessChild(reftype, derefThisMethod, paramTypesVar, getLocation());
+		// (*clazz)->name
+		HeapDereference derefThisClass = new HeapDereference(classMetaType, expr, getLocation());
+		AccessChild accessThisClassName = new AccessChild(new JavaReferenceType(stringType), derefThisClass, nameVar,
+				getLocation());
 
-		HeapReference ref = new HeapReference(reftype, accessThisMethodParamTypes, getLocation());
+		HeapReference ref = new HeapReference(reftype, accessThisClassName, getLocation());
 
 		return analysis.smallStepSemantics(state, ref, this);
 	}
@@ -78,5 +77,4 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 		return 0;
 	}
 }
-
 

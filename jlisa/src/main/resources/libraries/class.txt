@@ -1,5 +1,7 @@
 class java.lang.Class extends java.lang.Object:
 
+	instance field name libtype java.lang.String*
+
 	instance method Class: it.unive.jlisa.program.java.constructs.ClassEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.Class*
@@ -22,4 +24,8 @@ class java.lang.Class extends java.lang.Object:
 		param v libtype java.lang.Class*
 		param name libtype java.lang.String*
 		param parameterTypes type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
+
+	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetName
+		libtype java.lang.String*
+		param this libtype java.lang.Class*
 
