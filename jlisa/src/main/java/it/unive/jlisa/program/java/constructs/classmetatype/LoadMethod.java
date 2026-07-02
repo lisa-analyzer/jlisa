@@ -133,65 +133,58 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
 		sem = lazyLoadClass(returnType, interprocedural, sem, expressions);
 
+		assert(sem.getExecutionExpressions().size() == 1);
 		SymbolicExpression returnTypeClazzVar = sem.getExecutionExpressions().iterator().next();
 		sem = analysis.assign(sem, accessThisMethodType, returnTypeClazzVar, this);
 
 
 		// assign parameter types
-		{
-			MemoryAllocation arrCreated = new MemoryAllocation(classArrType, synGen.nextLocation(), false);
-			HeapReference arrRef = new HeapReference(refClassArrType, arrCreated, location);
+		MemoryAllocation arrCreated = new MemoryAllocation(classArrType, synGen.nextLocation(), false);
+		HeapReference arrRef = new HeapReference(refClassArrType, arrCreated, location);
 
-			AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, this);
+		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, this);
 
-			InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, location);
-			arrAllocated = analysis.assign(arrAllocated, array, arrRef, this);
+		InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, location);
+		arrAllocated = analysis.assign(arrAllocated, array, arrRef, this);
 
-			AnalysisState<A> tmp = arrAllocated.bottomExecution();
+		AnalysisState<A> tmp = arrAllocated.bottomExecution();
 
-			HeapDereference arrayDeref = new HeapDereference(classArrType, array, location);
+		HeapDereference arrayDeref = new HeapDereference(classArrType, array, location);
 
-			// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
+		// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
 
-			// assign length to array
-			Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount - 1, location);
-			AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
-			tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, arrLen, this));
+		// assign length to array
+		Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount - 1, location);
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
+		tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, arrLen, this));
 
 
-			for (int i = 1; i < paramCount; ++i) {
+		for (int i = 1; i < paramCount; ++i) {
 
-				Parameter parameter = methodParameters[i];
+			Parameter parameter = methodParameters[i];
 
-				// FIXME AP: this breaks when loading methods that take arrays
-				Type parameterType = getNoReferenceType(parameter.getStaticType());
-				String parameterClazzGlobalName = "__" + parameterType.toString();
+			Type parameterType = parameter.getStaticType();
 
-				// variable pointing to the corresponding Class object
-				GlobalVariable parameterClazz = new GlobalVariable(refClassMetaType, parameterClazzGlobalName, location);
+			Constant idx = new Constant(JavaIntType.INSTANCE, i-1, location);
+			AccessChild accessIdx = new AccessChild(refClassMetaType, arrayDeref, idx, location);
 
-				Constant idx = new Constant(JavaIntType.INSTANCE, i-1, location);
-				AccessChild accessIdx = new AccessChild(refClassMetaType, arrayDeref, idx, location);
+			AnalysisState<A> t = lazyLoadClass(parameterType, interprocedural, tmp, expressions);
 
-				// if it doesn't exist we need to load it
-				if (!ReflectionCache.isClassLoaded(parameterType)) {
-					tmp = tmp.lub(lazyLoadClass(parameterType, interprocedural, tmp, expressions));
-				}
+			assert(t.getExecutionExpressions().size() == 1);
+			SymbolicExpression parameterClazzVar = t.getExecutionExpressions().iterator().next();
+			tmp = tmp.lub(analysis.assign(t, accessIdx, parameterClazzVar, this));
 
-				AnalysisState<A> t = analysis.assign(tmp, accessIdx, parameterClazz, this);
-				tmp = tmp.lub(t);
-			}
-
-			// assign the array to the parameterTypes field of Method
-			// TODO AP: add it to the stub file too
-
-			AccessChild accessParameterTypes = new AccessChild(refClassArrType, derefThisMethod, paramTypesVar, location);
-
-			tmp = tmp.lub(analysis.assign(tmp, accessParameterTypes, array, this));
-			tmp = tmp.forgetIdentifier(array, this);
-
-			sem = sem.lub(tmp);
 		}
+
+		// assign the array to the parameterTypes field of Method
+		// TODO AP: add it to the stub file too
+
+		AccessChild accessParameterTypes = new AccessChild(refClassArrType, derefThisMethod, paramTypesVar, location);
+
+		tmp = tmp.lub(analysis.assign(tmp, accessParameterTypes, array, this));
+		tmp = tmp.forgetIdentifier(array, this);
+
+		sem = sem.lub(tmp);
 
 		// assign method modifiers
 		boolean isInstance = methodData.isInstance();

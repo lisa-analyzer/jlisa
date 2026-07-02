@@ -40,12 +40,12 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 	private Global fieldData;
 
 	protected LoadField(
-			Global fieldData,
+			Global g,
 			CFG cfg,
 			CodeLocation location,
 			Expression[] subExpressions) {
 		super(cfg, location, "loadField", subExpressions);
-		this.fieldData = fieldData;
+		fieldData = g;
 	}
 
 	@Override
@@ -131,13 +131,12 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 
 		// assign field type
-
 		AccessChild accessThisFieldType = new AccessChild(refClassMetaType, derefThisField, typeVar, getLocation());
 		sem = lazyLoadClass(fieldData.getStaticType(), interprocedural, sem, expressions);
 
-		// TODO AP: substitute this reflectionCache usage with getExecutionExpressions()
-		sem = analysis.assign(sem, accessThisFieldType, ReflectionCache.getCachedClass(thisFieldType), this);
-
+		assert(sem.getExecutionExpressions().size() == 1);
+		SymbolicExpression fieldClazzExpr = sem.getExecutionExpressions().iterator().next();
+		sem = analysis.assign(sem, accessThisFieldType, fieldClazzExpr, this);
 
 		// assign field modifiers
 		AccessChild accessThisFieldModifiers = new AccessChild(intType, derefThisField, modifiersVar, getLocation());

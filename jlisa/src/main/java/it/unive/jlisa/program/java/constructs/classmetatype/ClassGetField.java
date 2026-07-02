@@ -88,7 +88,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", location);
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 
-
 		// get number of fields
 		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 		AccessChild accessClazzFields = new AccessChild(new JavaReferenceType(fieldArr), derefClazz, declaredFieldsVar, location);

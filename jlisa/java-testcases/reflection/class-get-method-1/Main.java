@@ -6,12 +6,14 @@ public class ReflectionTest {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		Class stringClazz = Class.forName("java.lang.String");
+		Class c1 = Class.forName("java.lang.Integer");
 
-		Method fooMethod = c.getMethod("bar", new Class[] {stringClazz});
-		String methodName = fooMethod.getName();
+		Method method = c.getMethod("bar", new Class[] {c1});
+		String methodName = method.getName();
 
-		Class[] methodParams = fooMethod.getParameterTypes();
+		Class[] methodParams = method.getParameterTypes();
+
+		Class methodRetType = method.getReturnType();
 
 		return;
 	}
@@ -24,10 +26,9 @@ class Cat {
 		age = 0;
 	}
 
-	public void foo() { }
+	public void foo(int[] x) { }
 
-	public void bar(String s) { }
-
+	public String[] bar(Integer x) { return new String[0]; }
 }
 
 

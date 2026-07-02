@@ -4,6 +4,7 @@ import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -49,12 +50,13 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		if (loadingType instanceof JavaReferenceType jrt)
 			loadingType = jrt.getInnerType();
 
-		if (loadingType instanceof JavaArrayType arrType)
-			loadingType = arrType.getBaseType();
-
-		if (loadingType instanceof JavaReferenceType jrt)
-			loadingType = jrt.getInnerType();
-
+		if (loadingType instanceof JavaArrayType arrType) {
+			if (arrType.getBaseType() instanceof JavaReferenceType baseType) {
+				Type baseTypeNoRef = baseType.getInnerType();
+				Type newArrType = arrType = JavaArrayType.lookup(baseTypeNoRef, arrType.getDimensions());
+				loadingType = newArrType;
+			}
+		}
 	}
 
 	@Override
@@ -130,20 +132,21 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
 
-		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable isArrayVar = new GlobalVariable(Untyped.INSTANCE, "isArray", location);
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 
 
 		// allocate the Class object
 		MemoryAllocation created = new MemoryAllocation(refClassMetaType.getInnerType(), synGen.nextLocation(), false);
-		HeapReference ref = new HeapReference(refClassMetaType, created, getLocation());
+		HeapReference ref = new HeapReference(refClassMetaType, created, location);
 
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
 
-		InstrumentedReceiver clazz = new InstrumentedReceiver(refClassMetaType, false, getLocation());
+		InstrumentedReceiver clazz = new InstrumentedReceiver(refClassMetaType, false, location);
 		AnalysisState<A> clazzAllocated = analysis.assign(allocated, clazz, ref, this);
 
-		HeapDereference derefThisClazz = new HeapDereference(classMetaType, clazz, getLocation());
+		HeapDereference derefThisClazz = new HeapDereference(classMetaType, clazz, location);
 
 		// allocate String object for field `name`
 		AccessChild accessThisClazzName = new AccessChild(stringType, derefThisClazz, nameVar, location);
@@ -165,6 +168,13 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		tmp = analysis.assign(tmp, accessValue, clazzName, this);
 
+		// assign the isArray field
+		AccessChild accessIsArray = new AccessChild(JavaBooleanType.INSTANCE, derefThisClazz, isArrayVar, location);
+		Constant isArrayConstant = new Constant(JavaBooleanType.INSTANCE, loadingType instanceof JavaArrayType, location);
+
+		AnalysisState<A> assigned = analysis.assign(tmp, accessIsArray, isArrayConstant, this);
+		tmp = tmp.lub(assigned);
+
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + clazzNameStr;
@@ -175,7 +185,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		tmp = tmp.forgetIdentifier(clazz, this);
 
-		tmp.withExecutionExpression(clazzVar);
+		tmp = tmp.withExecutionExpression(clazzVar);
 
 		ReflectionCache.cacheLoadedClass(loadingType, clazzVar);
 
