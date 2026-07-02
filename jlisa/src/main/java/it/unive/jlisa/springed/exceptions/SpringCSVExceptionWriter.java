@@ -4,13 +4,12 @@ import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedAnnotationException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
-import org.apache.logging.log4j.Logger;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import org.apache.logging.log4j.Logger;
 
 public class SpringCSVExceptionWriter extends CSVExceptionWriter {
 
@@ -22,7 +21,8 @@ public class SpringCSVExceptionWriter extends CSVExceptionWriter {
 		File file = new File(fileName);
 		File parentDir = file.getParentFile();
 
-		if (!parentDir.exists()) parentDir.mkdirs();
+		if (!parentDir.exists())
+			parentDir.mkdirs();
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 
@@ -33,7 +33,7 @@ public class SpringCSVExceptionWriter extends CSVExceptionWriter {
 				writer.write(SpringCSVExceptionWriter.toCSVEntry(exception, ";", "\""));
 				writer.newLine();
 			}
-            LOG.info("CSV file written successfully: {}", fileName);
+			LOG.info("CSV file written successfully: {}", fileName);
 
 		} catch (IOException e) {
 			LOG.error("Error occurred while writing a .csv error file: {}", e.getMessage());
@@ -44,25 +44,26 @@ public class SpringCSVExceptionWriter extends CSVExceptionWriter {
 			Throwable e,
 			String separator,
 			String delimiter) {
-		if (e instanceof ParsingException) return ((ParsingException) e).toCSVEntry(separator, delimiter);
+		if (e instanceof ParsingException)
+			return ((ParsingException) e).toCSVEntry(separator, delimiter);
 
 		String category;
 		String location = e.getStackTrace()[0].getFileName() + ":" + e.getStackTrace()[0].getLineNumber();
 		String cause = null;
 
 		switch (e) {
-			case UnsupportedStatementException ignored:
-				category = "Unsupported Statement";
-				break;
-			case UnresolvedTypeException ut:
-				category = "Unresolvable Type";
-				cause = ut.getUnresolvedName();
-				break;
-			case UnsupportedAnnotationException ua:
-				category = "Unsupported Annotation Variation";
-				break;
-			default:
-				category = "Uncategorized";
+		case UnsupportedStatementException ignored:
+			category = "Unsupported Statement";
+			break;
+		case UnresolvedTypeException ut:
+			category = "Unresolvable Type";
+			cause = ut.getUnresolvedName();
+			break;
+		case UnsupportedAnnotationException ua:
+			category = "Unsupported Annotation Variation";
+			break;
+		default:
+			category = "Uncategorized";
 
 		}
 

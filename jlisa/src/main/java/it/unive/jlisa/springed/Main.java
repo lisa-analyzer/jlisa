@@ -2,7 +2,6 @@ package it.unive.jlisa.springed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.springed.exceptions.SpringCSVExceptionWriter;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
 import it.unive.jlisa.springed.frontend.SpringProjectVisitor;
@@ -59,7 +58,7 @@ public class Main {
 		List<Path> projects = springProjectVisitor.getProjects();
 
 		if (projects.isEmpty())
-            LOG.warn("No Spring project (build file + src/main/java) found under {}", rootPath);
+			LOG.warn("No Spring project (build file + src/main/java) found under {}", rootPath);
 
 		return projects;
 	}
@@ -76,7 +75,7 @@ public class Main {
 				.mapToInt(r -> r.getMappings().size())
 				.sum();
 
-        LOG.info("Wrote {} project(s), {} mapping(s) total, to {}",
+		LOG.info("Wrote {} project(s), {} mapping(s) total, to {}",
 				output.get().size(), mappings, out.toAbsolutePath());
 	}
 
@@ -109,7 +108,7 @@ public class Main {
 			Path errors = Paths.get(OUTPUT_DIR, ERROR_FILE_NAME.replace("{}", projectName));
 			SpringCSVExceptionWriter.writeCSV(errors.toString(), parseExceptions);
 
-            LOG.warn("Collected {} parsing issue(s); written to {}",
+			LOG.warn("Collected {} parsing issue(s); written to {}",
 					parseExceptions.size(), errors.toAbsolutePath());
 		}
 	}
