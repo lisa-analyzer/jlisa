@@ -6,7 +6,9 @@ public class ReflectionTest {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		Method fooMethod = c.getMethod("foo", new Class[0]);
+		Class stringClazz = Class.forName("java.lang.String");
+
+		Method fooMethod = c.getMethod("bar", new Class[] {stringClazz});
 		String methodName = fooMethod.getName();
 
 		Class[] methodParams = fooMethod.getParameterTypes();
@@ -23,6 +25,8 @@ class Cat {
 	}
 
 	public void foo() { }
+
+	public void bar(String s) { }
 
 }
 

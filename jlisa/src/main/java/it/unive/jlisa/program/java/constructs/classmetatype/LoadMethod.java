@@ -128,15 +128,13 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 
 		// assign method type
-
 		Type returnType = methodData.getReturnType();
-		if (returnType instanceof JavaReferenceType jrt) {
-			returnType = jrt.getInnerType();
-		}
 
 		AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
 		sem = lazyLoadClass(returnType, interprocedural, sem, expressions);
-		sem = analysis.assign(sem, accessThisMethodType, ReflectionCache.getCachedClass(returnType), this);
+
+		SymbolicExpression returnTypeClazzVar = sem.getExecutionExpressions().iterator().next();
+		sem = analysis.assign(sem, accessThisMethodType, returnTypeClazzVar, this);
 
 
 		// assign parameter types
@@ -165,6 +163,7 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 				Parameter parameter = methodParameters[i];
 
+				// FIXME AP: this breaks when loading methods that take arrays
 				Type parameterType = getNoReferenceType(parameter.getStaticType());
 				String parameterClazzGlobalName = "__" + parameterType.toString();
 
@@ -253,9 +252,6 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
-		if (t instanceof JavaReferenceType jrt)
-			t = jrt.getInnerType();
 
 		LoadClass loadClass = new LoadClass(t, getCFG(), getLocation());
 

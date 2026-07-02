@@ -3,6 +3,7 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -44,8 +45,16 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			CodeLocation location) {
 		super(cfg, location, "internal-load-class");
 		loadingType = t;
+
 		if (loadingType instanceof JavaReferenceType jrt)
 			loadingType = jrt.getInnerType();
+
+		if (loadingType instanceof JavaArrayType arrType)
+			loadingType = arrType.getBaseType();
+
+		if (loadingType instanceof JavaReferenceType jrt)
+			loadingType = jrt.getInnerType();
+
 	}
 
 	@Override
@@ -165,6 +174,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		tmp = tmp.lub(t);
 
 		tmp = tmp.forgetIdentifier(clazz, this);
+
+		tmp.withExecutionExpression(clazzVar);
 
 		ReflectionCache.cacheLoadedClass(loadingType, clazzVar);
 

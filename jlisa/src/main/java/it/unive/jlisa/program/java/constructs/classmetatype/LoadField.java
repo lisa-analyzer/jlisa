@@ -193,9 +193,6 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		if (t instanceof JavaReferenceType jrt)
-			t = jrt.getInnerType();
-
 		LoadClass loadClass = new LoadClass(t, getCFG(), getLocation());
 
 		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
