@@ -213,7 +213,8 @@ public class JavaNumericInterval extends Interval {
 			UnaryExpression expression,
 			IntInterval arg,
 			ProgramPoint pp,
-			SemanticOracle oracle) {
+			SemanticOracle oracle)
+			throws SemanticException {
 		if (arg.isTop() || arg.isBottom())
 			return arg;
 
@@ -369,7 +370,8 @@ public class JavaNumericInterval extends Interval {
 			IntInterval left,
 			IntInterval right,
 			ProgramPoint pp,
-			SemanticOracle oracle) {
+			SemanticOracle oracle)
+			throws SemanticException {
 		// if left or right is top, top is returned
 		if (left.isTop() || right.isTop())
 			return top();

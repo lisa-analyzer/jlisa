@@ -42,7 +42,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 
 	@Override
 	public boolean canProcess(
-			SymbolicExpression expression,
+			ValueExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle) {
 		return constantPropagation.canProcess(expression, pp, oracle) || interval.canProcess(expression, pp, oracle);

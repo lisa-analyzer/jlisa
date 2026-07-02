@@ -41,7 +41,7 @@ public class TestHelpers {
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		// conf.forceUpdate = true;
+		conf.forceUpdate = true;
 		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
