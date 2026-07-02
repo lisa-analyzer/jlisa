@@ -61,9 +61,9 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 		Type methodMetaType = JavaClassType.getMethodType();
 		JavaReferenceType reftype = JavaArrayType.CLASS_ARRAY;
 
-		GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "paramTypes", getLocation());
+		GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "parameterTypes", getLocation());
 
-		// (*method)->paramTypes
+		// (*method)->parameterTypes
 		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, expr, getLocation());
 		AccessChild accessThisMethodParamTypes = new AccessChild(reftype, derefThisMethod, paramTypesVar, getLocation());
 

@@ -36,9 +36,11 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+
 import java.lang.reflect.Modifier;
 
 public class ClassGetMethod extends TernaryExpression implements PluggableStatement {
@@ -153,9 +155,15 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Type stringType = JavaClassType.getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
 		Type methodMetaType = JavaClassType.getMethodType();
+		Type classMetaType = JavaClassType.getClassMetaType();
+		Type refClassMetaType = new JavaReferenceType(classMetaType);
+		JavaArrayType classArrType = JavaArrayType.lookup(refClassMetaType, 1);
+		JavaReferenceType refClassArrType = new JavaReferenceType(classArrType);
 
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
+		GlobalVariable parameterTypesVar = new GlobalVariable(Untyped.INSTANCE, "parameterTypes", location);
 
 		// candidateMethod is of type Method*
 
@@ -182,10 +190,75 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			return false;
 		}
 
-		// TODO AP: == on every single parameter type
+		// strequals on the name of every Class object
+		// NOTE AP: ideally I think one would do just `==` on the Class objects
+
+		AccessChild accessCandidateParameterTypes = new AccessChild(refClassArrType, derefMethod, parameterTypesVar, location);
+		HeapDereference derefCandidateArr = new HeapDereference(classArrType, accessCandidateParameterTypes, location);
+		AccessChild candidateLenAccess = new AccessChild(JavaIntType.INSTANCE, derefCandidateArr, lengthVar, location);
 
 
-		return true;
+		HeapDereference derefTargetArr = new HeapDereference(classArrType, targetMethodParameterTypes, location);
+		AccessChild targetLenAccess = new AccessChild(JavaIntType.INSTANCE, derefTargetArr, lengthVar, location);
+
+
+		it.unive.lisa.symbolic.value.BinaryExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE,
+			candidateLenAccess, targetLenAccess, ComparisonEq.INSTANCE, location);
+
+		Satisfiability sameLen = analysis.satisfies(state, eq, this);
+
+		if (sameLen == Satisfiability.NOT_SATISFIED) {
+			return false;
+		}
+
+		boolean outOfBoundsParamsArr = false;
+		boolean allParametersMatch = true;
+
+		// stop when we are out of bounds
+		for (int i = 0; outOfBoundsParamsArr == false; ++i) {
+
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
+
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
+				idx, targetLenAccess, ComparisonLt.INSTANCE, location);
+
+			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			if (sat == Satisfiability.NOT_SATISFIED) {
+				outOfBoundsParamsArr = true;
+				break;
+			}
+
+			AccessChild accessCandidateClazz = new AccessChild(refClassMetaType, derefCandidateArr, idx, location);
+			AccessChild accessTargetClazz = new AccessChild(refClassMetaType, derefTargetArr, idx, location);
+
+			HeapDereference derefCandidateClazz = new HeapDereference(classMetaType, accessCandidateClazz, location);
+			HeapDereference derefTargetClazz = new HeapDereference(classMetaType, accessTargetClazz, location);
+
+			AccessChild accessCandidateName = new AccessChild(refStringType, derefCandidateClazz, nameVar, location);
+			AccessChild accessTargetName = new AccessChild(refStringType, derefTargetClazz, nameVar, location);
+
+			HeapDereference derefCandidateName = new HeapDereference(stringType, accessCandidateName, location);
+			HeapDereference derefTargetName = new HeapDereference(stringType, accessTargetName, location);
+
+			AccessChild accessCandidateValue = new AccessChild(stringType, derefCandidateName, valueVar, location);
+			AccessChild accessTargetValue = new AccessChild(stringType, derefTargetName, valueVar, location);
+
+			equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
+					getProgram().getTypes().getBooleanType(),
+					accessCandidateValue,
+					accessTargetValue,
+					JavaStringEqualsOperator.INSTANCE,
+					getLocation());
+
+			nameMatches = analysis.satisfies(state, equalsExpr, this);
+
+			if (nameMatches == Satisfiability.NOT_SATISFIED) {
+				allParametersMatch = false;
+				break;
+			}
+		}
+
+		return allParametersMatch;
 	}
 
 }
