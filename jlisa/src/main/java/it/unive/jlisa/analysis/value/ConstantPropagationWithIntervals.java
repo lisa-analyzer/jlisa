@@ -536,8 +536,6 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		// return constantPropagation.constraints(requesting, constantPropagation.makeLattice(), e, pp, oracle);
-		//
 
 		if (state.isTop())
 			return Collections.emptySet();

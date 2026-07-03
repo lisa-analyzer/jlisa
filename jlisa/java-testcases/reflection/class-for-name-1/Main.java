@@ -6,12 +6,19 @@ public class ReflectionTest {
 }
 
 // class Baz {
-// 	public static String x = "hello";
+// 	public String x = "hello";
 // }
+//
 
 class Foo {
+
+	public int zz;
+
 	public static String x = "hello";
 	public static double pi = 3.14;
 
+	public int[] ages;
+
+	public String[] nicknames;
 }
 

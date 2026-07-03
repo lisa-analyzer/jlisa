@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
@@ -55,6 +56,7 @@ import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -1564,6 +1566,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		// used by `Class.forName`
 		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+
+			v = v.replace('$', '.');
 
 			// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
 			//

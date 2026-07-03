@@ -7,6 +7,7 @@ import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -54,6 +55,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
@@ -116,6 +118,8 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
 
+			Set<BinaryExpression> constraints = new HashSet<>();
+
 			try {
 
 				Class<?> c = Reachability.class;
@@ -138,39 +142,43 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 				ValueExpression ex = (ValueExpression) analysis.rewrite(state, accessExpr, this).iterator().next();
 
-				Set<BinaryExpression> constraints = vdom.constraints(null, env, ex, this, oracle);
-
+				constraints = vdom.constraints(null, env, ex, this, oracle);
 			}
 			catch (Exception e) {
 			}
 
 
+			assert(constraints.size() >= 1);
 
-			// TODO AP: static initializer goes here
+			for (BinaryExpression constraint : constraints) {
 
-			// TODO AP: use constraints to extract the class name/type
-			Type t = ReflectionCache.lastClass;
+				// TODO AP: static initializer goes here
 
-			LoadClass loadClass = new LoadClass(t, cfg, location);
-			AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				String clazzName = (String)((Constant)constraint.getLeft()).getValue();
 
-			AnalysisState<A> tmp = callState;
+				Type t = getTypeFromStr(clazzName);
 
-			SymbolicExpression clazz = callState.getExecutionExpressions().iterator().next();
+				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);
+				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-			if (!ReflectionCache.isClassInitialized(t)) {
+				AnalysisState<A> tmp = callState;
 
-				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, callState, expressions, getAllFields(t), clazz);
+				SymbolicExpression clazz = callState.getExecutionExpressions().iterator().next();
 
-				AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(t), clazz);
+				if (!ReflectionCache.isClassInitialized(t)) {
 
-				tmp = tmp.lub(methodsLoaded);
+					AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, callState, expressions, getAllFields(t), clazz);
 
-				// set it as initialized to avoid reinitialization
-				ReflectionCache.addInitializedClass(t);
+					AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(t), clazz);
+
+					tmp = tmp.lub(methodsLoaded);
+
+					// set it as initialized to avoid reinitialization
+					ReflectionCache.addInitializedClass(t);
+				}
+
+				noExceptionState = analysis.smallStepSemantics(tmp, clazz, this);
 			}
-
-			noExceptionState = analysis.smallStepSemantics(tmp, clazz, this);
 		}
 
 		// `ClassNotFoundException to be thrown
@@ -461,6 +469,28 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return params;
 	}
 
+
+	private Type getTypeFromStr(String clazzName) {
+
+		clazzName = clazzName.replace('$', '.');
+
+		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+
+		JavaClassType foundClass = null;
+		JavaInterfaceType foundInterface = null;
+
+		try {
+			foundClass = JavaClassType.lookup(clazzName);
+		} catch (IllegalArgumentException e) {
+		}
+		try {
+			foundInterface = JavaInterfaceType.lookup(clazzName);
+		} catch (IllegalArgumentException e) {
+		}
+
+		Type t = (foundClass != null) ? foundClass : foundInterface;
+		return t;
+	}
 
 }
 

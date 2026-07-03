@@ -43,6 +43,11 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 	private Type loadingType;
 
+	// NOTE: this is technically a duplicate of loadingType.toString(), except in one case:
+	// A$B (nested classes). In that case (only reachable via forName), the type is:
+	// A.B, but the name is A$B
+	private String loadingClazzName;
+
 	public LoadClass(
 			Type t,
 			CFG cfg,
@@ -60,6 +65,30 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 				loadingType = newArrType;
 			}
 		}
+
+		loadingClazzName = loadingType.toString();
+	}
+
+	public LoadClass(
+			Type t,
+			String clazzName,
+			CFG cfg,
+			CodeLocation location) {
+		super(cfg, location, "internal-load-class");
+		loadingType = t;
+
+		if (loadingType instanceof JavaReferenceType jrt)
+			loadingType = jrt.getInnerType();
+
+		if (loadingType instanceof JavaArrayType arrType) {
+			if (arrType.getBaseType() instanceof JavaReferenceType baseType) {
+				Type baseTypeNoRef = baseType.getInnerType();
+				Type newArrType = arrType = JavaArrayType.lookup(baseTypeNoRef, arrType.getDimensions());
+				loadingType = newArrType;
+			}
+		}
+
+		loadingClazzName = clazzName;
 	}
 
 	@Override
@@ -112,6 +141,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors();
 
+			// TODO AP: if no ancestors, store a null literal in the superclass field
+
 			// find the superclass
 			for (CompilationUnit ancestor : ancestors) {
 				Type superClass = null;
@@ -157,10 +188,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		String clazzNameStr = loadingType.toString();
-
 		// class name is always a constant
-		Constant clazzName = new Constant(JavaClassType.getStringType(), clazzNameStr, getLocation());
+		Constant clazzName = new Constant(JavaClassType.getStringType(), loadingClazzName, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
@@ -216,7 +245,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 
 		// assign the Class object to a global variable
-		String internalGlobalVarName = "__" + clazzNameStr;
+		String internalGlobalVarName = "__" + loadingClazzName;
 
 		GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
 		AnalysisState<A> t = analysis.assign(tmp, clazzVar, clazz, this);
