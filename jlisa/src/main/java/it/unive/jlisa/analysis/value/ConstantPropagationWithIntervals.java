@@ -7,6 +7,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -19,8 +20,10 @@ import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.util.numeric.IntInterval;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
@@ -523,6 +526,39 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfies(environment, expression, pp, oracle);
+	}
+
+	@Override
+	public Set<BinaryExpression> constraints(
+			ValueDomain<?> requesting,
+			ValueEnvironment<ConstantValueIntInterval> state,
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		// return constantPropagation.constraints(requesting, constantPropagation.makeLattice(), e, pp, oracle);
+		//
+
+		if (state.isTop())
+			return Collections.emptySet();
+		if (state.isBottom())
+			return null;
+
+		ConstantValue value = eval(state, e, pp, oracle).getConstantValue();
+		if (value.isTop())
+			return Collections.emptySet();
+		if (value.isBottom())
+			return null;
+		return Collections.singleton(
+				new BinaryExpression(
+						pp.getProgram().getTypes().getBooleanType(),
+						new Constant(pp.getProgram().getTypes().getIntegerType(), value.getValue(),
+								e.getCodeLocation()),
+						e,
+						ComparisonEq.INSTANCE,
+						pp.getLocation()));
+
+
 	}
 
 }

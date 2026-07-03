@@ -12,12 +12,19 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.SemanticOracle;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.value.ValueDomain;
+import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
+import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
@@ -34,16 +41,20 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -104,6 +115,36 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
+
+			try {
+
+				Class<?> c = Reachability.class;
+				Field f = c.getDeclaredField("domain");
+
+				f.setAccessible(true);
+
+				SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+
+				ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+				Object executionState = state.getExecutionState();
+				ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+				SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+				ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+				SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+				ValueExpression ex = (ValueExpression) analysis.rewrite(state, accessExpr, this).iterator().next();
+
+				Set<BinaryExpression> constraints = vdom.constraints(null, env, ex, this, oracle);
+
+			}
+			catch (Exception e) {
+			}
+
+
 
 			// TODO AP: static initializer goes here
 
@@ -353,9 +394,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			ExpressionSet[] params = genMethodParams(clazz, method.getDescriptor());
 
 			AnalysisState<A> t = loadMethod.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
-
-			// TODO AP: OLD
-			// AnalysisState<A> t = loadDeclaredMethod(interprocedural, arrAllocated, clazz, method, expressions);
 
 			// assign initialized method to the next index of the array
 			for (SymbolicExpression initializedMethod : t.getExecutionExpressions()) {
