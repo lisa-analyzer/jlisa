@@ -1,0 +1,44 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':119:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "bool_Main.BinaryTree.search(Main.BinaryTree__this,_int_v)_1707429257.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707444633.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707447175.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707471324.graph.json", "report.json", "void_Main.BinaryTree.BinaryTree(Main.BinaryTree__this)_1707440541.graph.json", "void_Main.BinaryTree.Node.Node(Main.BinaryTree.Node__this,_int_v,_Main.BinaryTree.Node__l,_Main.BinaryTree.Node__r)_-1195997222.graph.json", "void_Main.BinaryTree.Node.Node(Main.BinaryTree.Node__this,_int_v,_Main.BinaryTree.Node__l,_Main.BinaryTree.Node__r)_-1195997966.graph.json", "void_Main.BinaryTree.Node.Node(Main.BinaryTree.Node__this,_int_v,_Main.BinaryTree.Node__l,_Main.BinaryTree.Node__r)_-1196007142.graph.json", "void_Main.BinaryTree.insert(Main.BinaryTree__this,_int_v)_1707455948.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "19",
+    "duration" : "615ms",
+    "end" : "2026-07-02T16:44:31.563+02:00",
+    "expressions" : "139",
+    "files" : "10",
+    "globals" : "36",
+    "members" : "256",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-07-02T16:44:30.948+02:00",
+    "statements" : "67",
+    "units" : "53",
+    "version" : "1.0",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/BinaryTreeSearch-MemSat01"
+  }
+}
