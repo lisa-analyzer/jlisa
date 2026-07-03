@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -26,6 +27,7 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
@@ -57,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -148,15 +151,24 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			}
 
 
-			assert(constraints.size() >= 1);
+			assert(constraints.size() == 1);
 
 			for (BinaryExpression constraint : constraints) {
 
-				// TODO AP: static initializer goes here
-
 				String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+				UnitType t = getTypeFromStr(clazzName);
 
-				Type t = getTypeFromStr(clazzName);
+				// TODO AP: static initializer goes here
+				// ClassUnit classUnit = (ClassUnit) t.getUnit();
+				// if (classUnit.getCodeMembersByName(t.toString()).isEmpty()) {
+				// 	Set<CompilationUnit> superClasses = classUnit
+				// 			.getImmediateAncestors().stream()
+				// 			.filter(u -> u instanceof ClassUnit)
+				// 			.collect(Collectors.toSet());
+				//
+				// 	classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
+				// }
+				// state = InitializedClassSet.initialize(state, new JavaReferenceType(t), this, interprocedural);
 
 				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);
 				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -470,7 +482,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 	}
 
 
-	private Type getTypeFromStr(String clazzName) {
+	private UnitType getTypeFromStr(String clazzName) {
 
 		clazzName = clazzName.replace('$', '.');
 
@@ -488,7 +500,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		} catch (IllegalArgumentException e) {
 		}
 
-		Type t = (foundClass != null) ? foundClass : foundInterface;
+		UnitType t = (foundClass != null) ? foundClass : foundInterface;
 		return t;
 	}
 

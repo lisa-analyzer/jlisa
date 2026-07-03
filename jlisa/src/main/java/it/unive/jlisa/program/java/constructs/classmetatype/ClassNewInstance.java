@@ -1,5 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
+
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -9,10 +13,17 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.SemanticOracle;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.value.ValueDomain;
+import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.ReachabilityProduct;
+import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -23,7 +34,12 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -61,75 +77,146 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
 
 		Type stringType = getProgram().getTypes().getStringType();
 		Type classMetaType = JavaClassType.getClassMetaType();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "name", getLocation());
-		HeapDereference derefExpr = new HeapDereference(classMetaType, expr, getLocation());
-		AccessChild accessExpr = new AccessChild(stringType, derefExpr, var, getLocation());
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		HeapDereference derefClazz = new HeapDereference(classMetaType, expr, location);
+		AccessChild accessName = new AccessChild(stringType, derefClazz, nameVar, location);
 
-		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType,
-				accessExpr,
-				GhostTypeLookupOperator.INSTANCE,
-				getLocation());
+		HeapDereference derefName = new HeapDereference(stringType, accessName, location);
+		AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
-		// weird workaround to get the dynamic type out of Class->name
-		analysis.satisfies(state, un, originating);
-		String dynamicTypeStr = JavaClassType.getDynamicTypeLookup();
+		Set<BinaryExpression> constraints = getConstraints(analysis, state, accessValue);
 
-		// if this fails, throw a `InstantiationException`, meaning that
-		// the class is an abstract class, or interface etc...
-		boolean canInstantiate = true;
-		Type dynamicType = null;
-		try {
-			dynamicType = JavaClassType.lookup(dynamicTypeStr);
-		} catch (IllegalArgumentException e) {
-			canInstantiate = false;
+		AnalysisState<A> noExceptionState = state.bottomExecution();
+		AnalysisState<A> exceptionState = state.bottomExecution();
+
+		ExpressionSet execExpressions = new ExpressionSet();
+
+		for (BinaryExpression constraint : constraints) {
+
+			String dynamicTypeStr = (String) ((Constant)constraint.getLeft()).getValue();
+			dynamicTypeStr = dynamicTypeStr.replace('$', '.');
+
+			// if this fails, throw a `InstantiationException`, meaning that
+			// the class is an abstract class, or interface etc...
+			boolean canInstantiate = true;
+			Type dynamicType = null;
+			try {
+				dynamicType = JavaClassType.lookup(dynamicTypeStr);
+			} catch (IllegalArgumentException e) {
+				canInstantiate = false;
+			}
+
+			if (canInstantiate) {
+				JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) location,
+						new JavaReferenceType(dynamicType),
+						new Expression[0]);
+				AnalysisState<
+						A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+
+				execExpressions = execExpressions.lub(callState.getExecutionExpressions());
+				noExceptionState = noExceptionState.lub(callState);
+
+				// getMetaVariables().addAll(call.getMetaVariables());
+			}
+			else {
+				JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
+
+				JavaNewObj call = new JavaNewObj(getCFG(), location,
+						instantiationExceptionType.getReference(), new Expression[0]);
+				AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+				// assign exception to variable thrower
+				CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), location);
+				callState = analysis.assign(callState, throwVar,
+						callState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+				// deletes the receiver of the constructor
+				// and all the metavariables from subexpressions
+				callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
+				callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+
+				exceptionState = exceptionState.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+						new Error(instantiationExceptionType.getReference(), originating), this));
+
+			}
 		}
 
-		// exception path for `InstantiationException`
-		if (!canInstantiate) {
-			JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
+		noExceptionState = noExceptionState.withExecutionExpressions(execExpressions);
+		return noExceptionState.lub(exceptionState);
 
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-					instantiationExceptionType.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), getLocation());
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-
-			// deletes the receiver of the constructor
-			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(instantiationExceptionType.getReference(), originating), this);
-
-			return exceptionState;
-		}
+		// // allocate the new object
+		// // exception path for `InstantiationException`
+		// if (!canInstantiate) {
+		// 	JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
+		//
+		// 	JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+		// 			instantiationExceptionType.getReference(), new Expression[0]);
+		// 	state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		//
+		// 	// assign exception to variable thrower
+		// 	CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), getLocation());
+		// 	state = analysis.assign(state, throwVar,
+		// 			state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+		//
+		// 	// deletes the receiver of the constructor
+		// 	// and all the metavariables from subexpressions
+		// 	state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		// 	state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+		//
+		// 	AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+		// 			new Error(instantiationExceptionType.getReference(), originating), this);
+		//
+		// 	return exceptionState;
+		// }
 
 		// TODO: IllegalAccessException
 
-		// allocate the new object
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-				new JavaReferenceType(dynamicType),
-				new Expression[0]);
-		AnalysisState<
-				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-		getMetaVariables().addAll(call.getMetaVariables());
-
-		return callState;
 	}
 
 	@Override
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Set<BinaryExpression> getConstraints(Analysis<A, D> analysis, AnalysisState<A> state, SymbolicExpression expr) {
+
+		Set<BinaryExpression> constraints = new HashSet<>();
+
+		try {
+
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
+
+			f.setAccessible(true);
+
+			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+
+			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+			Object executionState = state.getExecutionState();
+			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+			ValueExpression ex = (ValueExpression) analysis.rewrite(state, expr, this).iterator().next();
+
+			constraints = vdom.constraints(null, env, ex, this, oracle);
+		}
+		catch (Exception e) {
+		}
+
+		return constraints;
 	}
 }

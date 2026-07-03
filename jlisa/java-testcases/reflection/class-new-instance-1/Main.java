@@ -18,7 +18,7 @@ interface Animal {
 }
 
 class Mammal implements Animal {
-	private static boolean foo = true;
+	private boolean baz = true;
 }
 
 class Felid extends Mammal {
@@ -26,16 +26,6 @@ class Felid extends Mammal {
 }
 
 class Cat extends Felid {
-	private String nickname;
-
-	private static int age = 2;
-
-	public Cat(String x) {
-		nickname = x;
-	}
-
-	public Cat() {
-		nickname = "ziggy";
-	}
+	private double foo = 10;
 }
 

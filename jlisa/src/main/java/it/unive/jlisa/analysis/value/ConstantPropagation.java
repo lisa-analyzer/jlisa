@@ -1592,7 +1592,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			if (classLookup || interfaceLookup) {
 				assert(foundClass != null || foundInterface != null);
-				ReflectionCache.lastClass = (classLookup) ? foundClass : foundInterface;
 				return Satisfiability.SATISFIED;
 			}
 
