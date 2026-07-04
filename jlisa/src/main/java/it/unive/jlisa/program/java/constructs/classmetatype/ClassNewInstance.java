@@ -122,8 +122,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 				execExpressions = execExpressions.lub(callState.getExecutionExpressions());
 				noExceptionState = noExceptionState.lub(callState);
-
-				// getMetaVariables().addAll(call.getMetaVariables());
 			}
 			else {
 				JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
@@ -150,31 +148,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		noExceptionState = noExceptionState.withExecutionExpressions(execExpressions);
 		return noExceptionState.lub(exceptionState);
-
-		// // allocate the new object
-		// // exception path for `InstantiationException`
-		// if (!canInstantiate) {
-		// 	JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
-		//
-		// 	JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-		// 			instantiationExceptionType.getReference(), new Expression[0]);
-		// 	state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-		//
-		// 	// assign exception to variable thrower
-		// 	CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), getLocation());
-		// 	state = analysis.assign(state, throwVar,
-		// 			state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-		//
-		// 	// deletes the receiver of the constructor
-		// 	// and all the metavariables from subexpressions
-		// 	state = state.forgetIdentifiers(call.getMetaVariables(), this);
-		// 	state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-		//
-		// 	AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-		// 			new Error(instantiationExceptionType.getReference(), originating), this);
-		//
-		// 	return exceptionState;
-		// }
 
 		// TODO: IllegalAccessException
 
