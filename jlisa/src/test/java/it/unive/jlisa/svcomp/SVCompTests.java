@@ -3,6 +3,8 @@ package it.unive.jlisa.svcomp;
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
+import it.unive.lisa.outputs.HtmlResults;
+
 import java.io.IOException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -345,6 +347,19 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../mock/",
 				"../mockx/",
 				"../securibench/");
+		perform(conf);
+	}
+
+	@Test
+	public void Refl3_test() throws IOException {
+		// TODO: this test has been slightly modified to remove the need of parsing
+		// an interface with a static field that causes a crash during parsing (issue #259)
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl3",
+				"Main.java",
+				"../../common/",
+				"../micro/reflection/Refl3.java",
+				"../../mockx/");
+		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
