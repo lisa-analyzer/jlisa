@@ -2,7 +2,7 @@ class java.lang.reflect.Field extends java.lang.Object:
 
 	instance field clazz libtype java.lang.Class*
 	instance field name libtype java.lang.String*
-	instance field t libtype java.lang.Class*
+	instance field fieldType libtype java.lang.Class*
 	instance field modifiers type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	instance method Field: it.unive.jlisa.program.java.constructs.classmetatype.FieldEmptyConstructor
@@ -37,8 +37,12 @@ class java.lang.reflect.Field extends java.lang.Object:
 		param value libtype java.lang.Object*
 
 class java.lang.reflect.Method extends java.lang.Object:
-	field name libtype java.lang.String*
-	field declaringClass libtype java.lang.Class*
+
+	instance field clazz libtype java.lang.Class*
+	instance field name libtype java.lang.String*
+	instance field returnType libtype java.lang.Class*
+	instance field modifiers type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	instance field parameterTypes type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
 
 	instance method Method: it.unive.jlisa.program.java.constructs.classmetatype.MethodEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
