@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.Modifier;
 
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -84,14 +85,11 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
         CodeLocation loc = getLocation();
 
         Type fieldMetaType = JavaClassType.getFieldMetaType();
-        Type classMetaType = JavaClassType.getClassMetaType();
-        Type objectType = JavaClassType.getObjectType();
         Type stringType = getProgram().getTypes().getStringType();
         JavaReferenceType refStringType = new JavaReferenceType(stringType);
 
         GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
         GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
-        GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", loc);
 
         HeapDereference derefField = new HeapDereference(fieldMetaType, left, loc);
         AccessChild accessName = new AccessChild(refStringType, derefField, nameVar, loc);
@@ -100,22 +98,15 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
         HeapDereference derefName = new HeapDereference(stringType, accessName, loc);
         AccessChild accessFieldNameValue = new AccessChild(refStringType, derefName, valueVar, loc);
 
-        // access clazz name
-        // AccessChild accessClazzRef = new AccessChild(new JavaReferenceType(classMetaType), derefField, clazzVar, loc);
-        //
-        // HeapDereference derefClazz = new HeapDereference(classMetaType, accessClazzRef, loc);
-        //
-        // AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, loc);
-        // HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, loc);
-        // AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, loc);
-
         Set<BinaryExpression> constraints = getConstraints(analysis, state, accessFieldNameValue);
 
-        Satisfiability sat = isStaticField(interprocedural, state, derefField, expressions);
+        Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, middle, this);
 
-        AnalysisState<A> result = state;
+        AnalysisState<A> result = state.bottomExecution();
 
         for (BinaryExpression fieldNameConstraint : constraints) {
+
+            Satisfiability sat = isStaticField(interprocedural, state, derefField, expressions);
 
             if (sat == Satisfiability.SATISFIED) {
                 // TODO
@@ -125,9 +116,27 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
                 String fieldName = (String) ((Constant)fieldNameConstraint.getLeft()).getValue();
                 GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
 
-                AccessChild access = new AccessChild(Untyped.INSTANCE, middle, fieldVar, loc);
+                // for every target type
+                for (Type targetType : targetTypes) {
 
-                result = analysis.assign(result, access, right, this);
+                    // safety: the cast is safe since the targetType is always a subclass of Object
+                    HeapDereference derefTarget = new HeapDereference((JavaReferenceType)targetType, middle, loc);
+
+                    AccessChild access = new AccessChild(Untyped.INSTANCE, middle, fieldVar, loc);
+                    Set<Type> targetFieldTypes = analysis.getRuntimeTypesOf(state, access, this);
+
+                    for (Type targetFieldType : targetFieldTypes) {
+
+                        access = new AccessChild(targetFieldType, derefTarget, fieldVar, loc);
+
+                        // NOTE: this getMiddle() is wrong, it should be a FieldAccess
+                        JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
+
+                        AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
+
+                        result = result.lub(t);
+                    }
+                }
             }
             else {
                 result = state.topExecution();

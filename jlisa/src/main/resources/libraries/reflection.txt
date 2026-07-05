@@ -64,4 +64,10 @@ class java.lang.reflect.Method extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
 		param this libtype java.lang.reflect.Method*
 
+	instance method invoke: it.unive.jlisa.program.java.constructs.classmetatype.MethodInvoke
+		libtype java.lang.Object*
+		param this libtype java.lang.reflect.Method*
+		param obj libtype java.lang.Object*
+		param arguments type it.unive.jlisa.program.type.JavaArrayType::OBJECT_ARRAY
+
 
