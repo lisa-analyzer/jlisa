@@ -1,9 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.GhostGetMethodParameterCountOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -30,6 +30,7 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -96,25 +97,27 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
 
-		// FIXME AP: instead of this, use the same thing that's used in getMethod.
-		// Check whether the index is within bounds at each iteration.
-		it.unive.lisa.symbolic.value.UnaryExpression ghostLen = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE,
-				accessLen,
-				GhostGetMethodParameterCountOperator.INSTANCE,
-				location);
-		analysis.satisfies(state, ghostLen, originating);
-		Integer arrLen = JavaClassType.getGetMethodParameterCount();
-
-		Satisfiability sat = Satisfiability.NOT_SATISFIED;
+		boolean outOfBoundsFieldArr = false;
+		boolean fieldFound = false;
+		int i = 0;
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
 		// look for a field with the same name
-		for (int i = 0; i < arrLen; ++i) {
+		while (outOfBoundsFieldArr == false) {
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
+
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				idx, accessLen, ComparisonLt.INSTANCE, location);
+
+			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			if (sat == Satisfiability.NOT_SATISFIED) {
+				outOfBoundsFieldArr = true;
+				break;
+			}
 
 			AccessChild accessIdx = new AccessChild(refFieldMetaType, derefArr, idx, getLocation());
 			HeapDereference derefField = new HeapDereference(fieldMetaType, accessIdx, location);
@@ -130,17 +133,18 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					JavaStringEqualsOperator.INSTANCE,
 					getLocation());
 
-			Satisfiability fieldFound = analysis.satisfies(state, equalsExpr, originating);
+			Satisfiability match = analysis.satisfies(state, equalsExpr, this);
 
-			if (fieldFound == Satisfiability.SATISFIED) {
-				sat = Satisfiability.SATISFIED;
+			if (match == Satisfiability.SATISFIED) {
+				fieldFound = true;
 				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
-				noExceptionState = analysis.smallStepSemantics(state, refField, originating);
+				noExceptionState = analysis.smallStepSemantics(state, refField, this);
 				break;
 			}
+			++i;
 		}
 
-		if (sat != Satisfiability.SATISFIED) {
+		if (!fieldFound) {
 
 			JavaClassType noSuchFieldType = JavaClassType.getNoSuchFieldException();
 

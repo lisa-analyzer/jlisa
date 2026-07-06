@@ -1598,16 +1598,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.NOT_SATISFIED;
 		}
 
-		if (operator instanceof GhostGetMethodParameterCountOperator) {
-			if (arg.getValue() instanceof Integer v) {
-				JavaClassType.setGetMethodParameterCount(v);
-				return Satisfiability.SATISFIED;
-			} else {
-				JavaClassType.setGetMethodParameterCount(null);
-				return Satisfiability.UNKNOWN;
-			}
-		}
-
 		if (operator instanceof GhostTypeLookupOperator && arg.getValue() instanceof String s) {
 			JavaClassType.setDynamicTypeLookup(s);
 			ReflectionCache.loadLastClass(s);
