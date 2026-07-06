@@ -156,7 +156,6 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
             Set<BinaryExpression> constraints = new HashSet<>();
 
             try {
-
                     Class<?> c = Reachability.class;
                     Field f = c.getDeclaredField("domain");
 

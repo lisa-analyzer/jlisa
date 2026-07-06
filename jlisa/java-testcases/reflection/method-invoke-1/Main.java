@@ -5,29 +5,32 @@ public class ReflectionTest {
 	public static void main(String[] args) throws Exception {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
-		Class intClass = Class.forName("java.lang.Integer");
 
-		Method method = c.getMethod("foo", new Class[] {intClass});
+		Method method = c.getMethod("foo", new Class[0]);
 
 		Cat cat = new Cat();
-		Integer x = 43;
 
-		Integer zz = method.invoke(cat, new Object[] {x});
+		String x = "ron";
+
+		Object zz = method.invoke(cat, new Object[0]);
 
 		return;
 	}
 }
 
 class Cat {
-	private Integer age;
+	public String nickname;
+	public int age;
 
 	public Cat() {
-		age = 0;
+		nickname = "ziggy";
+		age = 90;
 	}
 
-	public Integer foo(Integer x) {
-		age = x;
-		return (age + 5);
+	public int foo() {
+		nickname = "gatto";
+		age = 91;
+		return 42;
 	}
 }
 

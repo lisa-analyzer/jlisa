@@ -1598,12 +1598,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.NOT_SATISFIED;
 		}
 
-		if (operator instanceof GhostTypeLookupOperator && arg.getValue() instanceof String s) {
-			JavaClassType.setDynamicTypeLookup(s);
-			ReflectionCache.loadLastClass(s);
-			return Satisfiability.SATISFIED;
-		}
-
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);
 	}
 

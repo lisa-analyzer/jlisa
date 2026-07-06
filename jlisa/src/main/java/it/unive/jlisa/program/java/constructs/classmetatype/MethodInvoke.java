@@ -3,12 +3,26 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -28,16 +42,22 @@ import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.InstrumentedReceiverRef;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
+import it.unive.lisa.program.cfg.statement.literal.Literal;
+import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
@@ -89,18 +109,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		Type stringType = JavaClassType.getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
-
-		Type classMetaType = JavaClassType.getClassMetaType();
-		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
 		Type methodType = JavaClassType.getMethodType();
-		JavaReferenceType refMethodType = new JavaReferenceType(methodType);
-
-		Type objectType = JavaClassType.getObjectType();
-		Type refObjectType = new JavaReferenceType(objectType);
 		JavaReferenceType refObjectArrType = JavaArrayType.OBJECT_ARRAY;
 
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
-		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", location);
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 
@@ -158,9 +170,13 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 			args.add(expr);
 
-			AccessChild accessExpr = new AccessChild(refObjectType, derefArr, idx, location);
-
-			symbolicArgs.add(new ExpressionSet(accessExpr));
+			AccessChild accessExpr = new AccessChild(Untyped.INSTANCE, derefArr, idx, location);
+			ExpressionSet exprSet = new ExpressionSet();
+			for (Type t : analysis.getRuntimeTypesOf(state, accessExpr, this)) {
+				accessExpr = new AccessChild(t, derefArr, idx, location);
+				exprSet = exprSet.lub(new ExpressionSet(accessExpr));
+			}
+			symbolicArgs.add(exprSet);
 		}
 
 		Expression[] expressionsArgs = args.toArray(new Expression[0]);
@@ -183,7 +199,44 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				expressionsArgs);
 		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, state, symbolicExpressionsArgs, expressions);
 
-		return sem;
+		// if returns void, do nothing
+		if (sem.getExecutionExpressions().equals(new ExpressionSet(new Skip(location)))) {
+			return sem;
+		}
+
+		ExpressionSet returnValues = sem.getExecutionExpressions();
+		ExpressionSet processedReturnValues = new ExpressionSet();
+
+		SymbolicExpression returnValue = returnValues.iterator().next();
+
+		Type exprType = analysis.getRuntimeTypesOf(sem, returnValue, this).iterator().next();
+
+		AnalysisState<A> boxedState = sem.bottomExecution();
+
+		if (JavaTypeSystem.PRIMITIVE_TYPES.contains(exprType)) {
+
+			JavaReferenceType boxedType = new JavaReferenceType(JavaClassType.getWrappedType(exprType));
+
+			// this is a placeholder literal of the return type of the just invoked method.
+			// Its value has no meaning, but is used by the resolve call inside
+			// JavaNewObj to "choose" the appropriate constructor
+			Literal<?> placeholderLiteral = getPlaceholderLiteral(exprType, cfg, location);
+			expressions.put(placeholderLiteral, sem);
+
+			JavaNewObj box = new JavaNewObj(cfg, location, boxedType, new Expression[] {placeholderLiteral});
+
+			ExpressionSet[] ctorParam = new ExpressionSet[] {new ExpressionSet(returnValue) };
+			AnalysisState<A> t = box.forwardSemanticsAux(interprocedural, sem, ctorParam, expressions);
+
+			processedReturnValues = processedReturnValues.lub(t.getExecutionExpressions());
+			boxedState = boxedState.lub(t);
+		}
+		else {
+			boxedState = boxedState.lub(sem);
+			processedReturnValues = processedReturnValues.lub(new ExpressionSet(returnValue));
+		}
+
+		return boxedState.withExecutionExpressions(processedReturnValues);
 	}
 
 	@Override
@@ -226,6 +279,28 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		}
 
 		return constraints;
+	}
+
+
+	private Literal<?> getPlaceholderLiteral(Type t, CFG cfg, CodeLocation location) {
+		if (t == JavaIntType.INSTANCE)
+			return new IntLiteral(cfg, location, 0);
+		if (t == JavaFloatType.INSTANCE)
+			return new FloatLiteral(cfg, location, 0.0F);
+		if (t == JavaDoubleType.INSTANCE)
+			return new DoubleLiteral(cfg, location, 0.0);
+		if (t == JavaLongType.INSTANCE)
+			return new LongLiteral(cfg, location, 0);
+		if (t == JavaCharType.INSTANCE)
+			return new CharLiteral(cfg, location, 0);
+		if (t == JavaByteType.INSTANCE)
+			return new ByteLiteral(cfg, location, 0);
+		if (t == JavaShortType.INSTANCE)
+			return new ShortLiteral(cfg, location, 0);
+		if (t == JavaBooleanType.INSTANCE)
+			return new TrueLiteral(cfg, location);
+
+		return null;
 	}
 
 }
