@@ -7,6 +7,7 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.Modifier;
 
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -26,6 +27,10 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -87,9 +92,12 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
         Type fieldMetaType = JavaClassType.getFieldMetaType();
         Type stringType = getProgram().getTypes().getStringType();
         JavaReferenceType refStringType = new JavaReferenceType(stringType);
+        Type classMetaType = JavaClassType.getClassMetaType();
+        JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
 
         GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
         GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
+        GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", loc);
 
         HeapDereference derefField = new HeapDereference(fieldMetaType, left, loc);
         AccessChild accessName = new AccessChild(refStringType, derefField, nameVar, loc);
@@ -98,49 +106,72 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
         HeapDereference derefName = new HeapDereference(stringType, accessName, loc);
         AccessChild accessFieldNameValue = new AccessChild(refStringType, derefName, valueVar, loc);
 
-        Set<BinaryExpression> constraints = getConstraints(analysis, state, accessFieldNameValue);
+        // access field clazz
+        AccessChild accessClazz = new AccessChild(refClassMetaType, derefField, clazzVar, loc);
+        HeapDereference derefClazz = new HeapDereference(classMetaType, accessClazz, loc);
 
-        Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, middle, this);
+        AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, loc);
+        HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, loc);
+        AccessChild accessClazzNameValue = new AccessChild(refStringType, derefClazzName, valueVar, loc);
+
+        Set<BinaryExpression> fieldNameConstraints = getConstraints(analysis, state, accessFieldNameValue);
+        Set<BinaryExpression> clazzNameConstraints = getConstraints(analysis, state, accessClazzNameValue);
 
         AnalysisState<A> result = state.bottomExecution();
 
-        for (BinaryExpression fieldNameConstraint : constraints) {
+        for (BinaryExpression clazzNameConstraint : clazzNameConstraints) {
 
-            Satisfiability sat = isStaticField(interprocedural, state, derefField, expressions);
+            String clazzName = (String) ((Constant)clazzNameConstraint.getLeft()).getValue();
+            clazzName = clazzName.replace('$', '.');
+            Unit clazzUnit = getProgram().getUnit(clazzName);
 
-            if (sat == Satisfiability.SATISFIED) {
-                // TODO
-            }
-            else if (sat == Satisfiability.NOT_SATISFIED) {
-                // instance field
+            for (BinaryExpression fieldNameConstraint : fieldNameConstraints) {
+
                 String fieldName = (String) ((Constant)fieldNameConstraint.getLeft()).getValue();
-                GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
 
-                // for every target type
-                for (Type targetType : targetTypes) {
+                Global reflectedGlobal;
+                if (clazzUnit instanceof ClassUnit cu) {
+                    reflectedGlobal = cu.getInstanceGlobal(fieldName, false);
+                }
+                else if (clazzUnit instanceof InterfaceUnit iu) {
+                    reflectedGlobal = iu.getGlobal(fieldName);
+                }
+                else {
+                    return state.topExecution();
+                }
+
+                Type reflectedFieldType = reflectedGlobal.getStaticType();
+
+                if (reflectedGlobal.isInstance()) {
+                    // instance field
+                    GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
+
+                    Type targetType = getMiddle().getStaticType();
 
                     // safety: the cast is safe since the targetType is always a subclass of Object
                     HeapDereference derefTarget = new HeapDereference((JavaReferenceType)targetType, middle, loc);
 
-                    AccessChild access = new AccessChild(Untyped.INSTANCE, middle, fieldVar, loc);
-                    Set<Type> targetFieldTypes = analysis.getRuntimeTypesOf(state, access, this);
+                    // safety: the cast is safe since we know that the field is not static, hence it must belong to a classunit
+                    // Also, we don't look in parent classes since the clazzName will point us towards the correct class unit
+                    AccessChild access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, loc);
 
-                    for (Type targetFieldType : targetFieldTypes) {
+                    // NOTE: this getMiddle() is wrong, it should be a FieldAccess
+                    JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
 
-                        access = new AccessChild(targetFieldType, derefTarget, fieldVar, loc);
+                    AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
 
-                        // NOTE: this getMiddle() is wrong, it should be a FieldAccess
-                        JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
+                    result = result.lub(t);
+                }
+                else {
+                    // static field, can either be in a class or in an interface
 
-                        AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
+                    // you can do reflectedGlobal.toSymbolicVariable()
 
-                        result = result.lub(t);
-                    }
+                    // TODO: the static variable is just a global variable with the Class name in front and '::' as separator
+
                 }
             }
-            else {
-                result = state.topExecution();
-            }
+
         }
 
         return result;
