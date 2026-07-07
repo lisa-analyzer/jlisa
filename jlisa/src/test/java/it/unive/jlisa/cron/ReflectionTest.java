@@ -53,6 +53,13 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void testFieldSetStatic1() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-set-static-1", "Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
 	public void testClassGetMethod1() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-get-method-1", "Main.java");
 		conf.outputs.add(new HtmlResults(true));
