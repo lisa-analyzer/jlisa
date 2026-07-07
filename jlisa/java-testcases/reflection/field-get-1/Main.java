@@ -12,14 +12,9 @@ public class ReflectionTest {
 
 		Object catAge = f1.get(cat);
 
-		// if (args.length == 3) {
-		// 	cat.nickname = "ron";
-		// }
-		// else {
-		// 	cat.nickname = "jimmy";
-		// }
+		Field f2 = c.getField("agePrimitive");
 
-		// String nickname = c.getField("nickname").get("nickname");
+		Object catAgePrimitive = f2.get(cat);
 
 		return;
 	}
@@ -28,9 +23,11 @@ public class ReflectionTest {
 class Cat {
 	public String nickname;
 	public Integer age;
+	public int agePrimitive;
 
 	Cat() {
 		nickname = "ziggy";
 		age = 5;
+		agePrimitive = 78;
 	}
 }

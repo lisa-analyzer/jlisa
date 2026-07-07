@@ -4,10 +4,28 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
+import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.jlisa.program.ReflectionCache;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.jlisa.type.JavaTypeSystem;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -20,6 +38,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
@@ -33,6 +52,7 @@ import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -115,29 +135,32 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			clazzName = clazzName.replace('$', '.');
 			Unit clazzUnit = getProgram().getUnit(clazzName);
 
+			AnalysisState<A> accessedFieldState = state.bottomExecution();
+
 			for (it.unive.lisa.symbolic.value.BinaryExpression fieldNameConstraint : fieldNameConstraints) {
 
 				String fieldName = (String) ((Constant)fieldNameConstraint.getLeft()).getValue();
 
 				Global reflectedGlobal;
 				if (clazzUnit instanceof ClassUnit cu) {
-				    reflectedGlobal = cu.getInstanceGlobal(fieldName, false);
+					reflectedGlobal = cu.getInstanceGlobal(fieldName, false);
+					if (reflectedGlobal == null)
+						reflectedGlobal = cu.getGlobal(fieldName);
 				}
 				else if (clazzUnit instanceof InterfaceUnit iu) {
-				    reflectedGlobal = iu.getGlobal(fieldName);
+					reflectedGlobal = iu.getGlobal(fieldName);
 				}
 				else {
-				    return state.topExecution();
+					return state.topExecution();
 				}
 
+				assert(reflectedGlobal != null);
 				Type reflectedFieldType = reflectedGlobal.getStaticType();
+
+				SymbolicExpression fieldVar = reflectedGlobal.toSymbolicVariable(location);
 
 				if (reflectedGlobal.isInstance()) {
 
-					// instance field
-					GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, location);
-
-					// safety: the cast is safe since the targetType is always a subclass of Object
 					JavaReferenceType targetType = (JavaReferenceType) getRight().getStaticType();
 
 					HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), right, location);
@@ -148,90 +171,18 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						access = new HeapReference(reflectedFieldType, access, location);
 					}
 
-					AnalysisState<A> t = analysis.smallStepSemantics(state, access, this);
-
-					// TODO: box if field is a primitive type
-
-					// JavaAssignment assign = new JavaAssignment(getCFG(), location, getRight(), getRight());
-					//
-					// AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
-
-					result = result.lub(t);
+					accessedFieldState = analysis.smallStepSemantics(state, access, this);
 				}
 				else {
-					// static field, can either be in a class or in an interface
-
-					// you can do reflectedGlobal.toSymbolicVariable()
-
-					// TODO: the static variable is just a global variable with the Class name in front and '::' as separator
+					// TODO static fields
 				}
 
+				AnalysisState<A> boxedState = getBoxedState(interprocedural, accessedFieldState, reflectedFieldType, expressions);
+				result = result.lub(boxedState);
 			}
 		}
 
 		return result;
-
-		//
-		//
-		// // dereference the Field meta-object: (*field)
-		// HeapDereference derefField = new HeapDereference(fieldMetaType, left, loc);
-		//
-		// // (*field)->clazz  (reference to Class meta-object)
-		// GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", loc);
-		// AccessChild accessClazzRef = new AccessChild(new JavaReferenceType(classMetaType), derefField, clazzVar, loc);
-		//
-		// // (*(*field)->clazz)
-		// HeapDereference derefClazz = new HeapDereference(classMetaType, accessClazzRef, loc);
-		//
-		// // (*(*field)->clazz)->name  (actual class name string)
-		// GlobalVariable clazzNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
-		// AccessChild accessClazzName = new AccessChild(stringType, derefClazz, clazzNameVar, loc);
-		//
-		// // (*field)->name  (reference to String object)
-		// GlobalVariable fieldNameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
-		// AccessChild accessFieldNameRef = new AccessChild(new JavaReferenceType(stringType), derefField, fieldNameVar,
-		// 		loc);
-		//
-		// // (*(*field)->name)->value  (actual field name constant)
-		// HeapDereference derefFieldName = new HeapDereference(stringType, accessFieldNameRef, loc);
-		// GlobalVariable fieldValueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
-		// AccessChild accessFieldName = new AccessChild(stringType, derefFieldName, fieldValueVar, loc);
-		//
-		// it.unive.lisa.symbolic.value.BinaryExpression isFieldDefined = new it.unive.lisa.symbolic.value.BinaryExpression(
-		// 		stringType,
-		// 		accessClazzName,
-		// 		accessFieldName,
-		// 		JavaIsFieldDefinedOperator.INSTANCE,
-		// 		loc);
-		//
-		// // Avoid stale cache values when resolution is unknown.
-		// ReflectionCache.lastField = null;
-		//
-		// // force domain to evaluate the predicate so that ReflectionCache gets populated
-		// Satisfiability sat = analysis.satisfies(state, isFieldDefined, originating);
-		//
-		// // if predicate unsat, we cannot resolve the field here
-		// if (sat == Satisfiability.NOT_SATISFIED)
-		// 	return state.topExecution();
-		//
-		// Global field = ReflectionCache.lastField;
-		//
-		// if (field == null)
-		// 	return state.topExecution();
-		//
-		// if (field.isInstance()) {
-		// 	HeapDereference container = new HeapDereference(objectType, right, loc);
-		// 	GlobalVariable var = field.toSymbolicVariable(loc);
-		// 	AccessChild access = new AccessChild(field.getStaticType(), container, var, loc);
-		// 	if (field.getStaticType().isPointerType())
-		// 		return analysis.smallStepSemantics(state, new HeapReference(field.getStaticType(), access, loc), this);
-		// 	return analysis.smallStepSemantics(state, access, this);
-		// }
-		//
-		// GlobalVariable access = field.toSymbolicVariable(loc);
-		// if (field.getStaticType().isPointerType())
-		// 	return analysis.smallStepSemantics(state, new HeapReference(field.getStaticType(), access, loc), this);
-		// return analysis.smallStepSemantics(state, access, this);
 	}
 
 	@Override
@@ -274,4 +225,66 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 		return constraints;
 	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> getBoxedState(
+		InterproceduralAnalysis<A, D> interprocedural,
+		AnalysisState<A> state,
+		Type reflectedFieldType,
+		StatementStore<A> expressions)
+		throws SemanticException {
+
+		CFG cfg = getCFG();
+		CodeLocation location = getLocation();
+
+		if (JavaTypeSystem.PRIMITIVE_TYPES.contains(reflectedFieldType)) {
+
+			ExpressionSet processedReturnValues = new ExpressionSet();
+			AnalysisState<A> boxedState = state.bottomExecution();
+
+			for (SymbolicExpression returnValue : state.getExecutionExpressions()) {
+
+				JavaReferenceType boxedType = new JavaReferenceType(JavaClassType.getWrappedType(reflectedFieldType));
+
+				// this is a placeholder literal of the return type of the just invoked method.
+				// Its value has no meaning, but is used by the resolve call inside
+				// JavaNewObj to "choose" the appropriate constructor
+				Literal<?> placeholderLiteral = getPlaceholderLiteral(reflectedFieldType, cfg, location);
+				expressions.put(placeholderLiteral, state);
+
+				JavaNewObj box = new JavaNewObj(cfg, location, boxedType, new Expression[] {placeholderLiteral});
+
+				ExpressionSet[] ctorParam = new ExpressionSet[] {new ExpressionSet(returnValue) };
+				AnalysisState<A> t = box.forwardSemanticsAux(interprocedural, state, ctorParam, expressions);
+
+				processedReturnValues = processedReturnValues.lub(t.getExecutionExpressions());
+				boxedState = boxedState.lub(t);
+			}
+			return boxedState.withExecutionExpressions(processedReturnValues);
+		}
+		else {
+			return state;
+		}
+	}
+
+	private Literal<?> getPlaceholderLiteral(Type t, CFG cfg, CodeLocation location) {
+		if (t == JavaIntType.INSTANCE)
+			return new IntLiteral(cfg, location, 0);
+		if (t == JavaFloatType.INSTANCE)
+			return new FloatLiteral(cfg, location, 0.0F);
+		if (t == JavaDoubleType.INSTANCE)
+			return new DoubleLiteral(cfg, location, 0.0);
+		if (t == JavaLongType.INSTANCE)
+			return new LongLiteral(cfg, location, 0);
+		if (t == JavaCharType.INSTANCE)
+			return new CharLiteral(cfg, location, 0);
+		if (t == JavaByteType.INSTANCE)
+			return new ByteLiteral(cfg, location, 0);
+		if (t == JavaShortType.INSTANCE)
+			return new ShortLiteral(cfg, location, 0);
+		if (t == JavaBooleanType.INSTANCE)
+			return new TrueLiteral(cfg, location);
+
+		return null;
+	}
+
 }
