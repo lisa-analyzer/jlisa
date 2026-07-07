@@ -146,13 +146,11 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
                     // instance field
                     GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
 
-                    Type targetType = getMiddle().getStaticType();
+                    JavaReferenceType targetType = (JavaReferenceType) getMiddle().getStaticType();
 
                     // safety: the cast is safe since the targetType is always a subclass of Object
-                    HeapDereference derefTarget = new HeapDereference((JavaReferenceType)targetType, middle, loc);
+                    HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), middle, loc);
 
-                    // safety: the cast is safe since we know that the field is not static, hence it must belong to a classunit
-                    // Also, we don't look in parent classes since the clazzName will point us towards the correct class unit
                     AccessChild access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, loc);
 
                     // NOTE: this getMiddle() is wrong, it should be a FieldAccess
@@ -215,39 +213,39 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
             return constraints;
     }
 
-    private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Satisfiability isStaticField(
-            InterproceduralAnalysis<A, D> interprocedural,
-            AnalysisState<A> state,
-            HeapDereference derefField,
-            StatementStore<A> expressions)
-            throws SemanticException {
-
-            Analysis<A, D> analysis = interprocedural.getAnalysis();
-            CodeLocation location = getLocation();
-            Constant staticModifier = new Constant(JavaIntType.INSTANCE, Modifier.STATIC, location);
-
-            GlobalVariable modifiersVar = new GlobalVariable(JavaIntType.INSTANCE, "modifiers", location);
-            AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefField, modifiersVar, location);
-
-            it.unive.lisa.symbolic.value.BinaryExpression and =
-                new it.unive.lisa.symbolic.value.BinaryExpression(
-                        JavaIntType.INSTANCE,
-                        accessModifiers,
-                        staticModifier,
-                        it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd.INSTANCE,
-                        location);
-
-            AnalysisState<A> andState = analysis.smallStepSemantics(state, and, this);
-
-            Satisfiability sat = Satisfiability.BOTTOM;
-
-            for (SymbolicExpression expr : andState.getExecutionExpressions()) {
-                it.unive.lisa.symbolic.value.BinaryExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
-                        staticModifier, expr, ComparisonEq.INSTANCE, location);
-
-                sat = sat.lub(analysis.satisfies(state, eq, this));
-            }
-
-            return sat;
-        }
+    // private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Satisfiability isStaticField(
+    //         InterproceduralAnalysis<A, D> interprocedural,
+    //         AnalysisState<A> state,
+    //         HeapDereference derefField,
+    //         StatementStore<A> expressions)
+    //         throws SemanticException {
+    //
+    //         Analysis<A, D> analysis = interprocedural.getAnalysis();
+    //         CodeLocation location = getLocation();
+    //         Constant staticModifier = new Constant(JavaIntType.INSTANCE, Modifier.STATIC, location);
+    //
+    //         GlobalVariable modifiersVar = new GlobalVariable(JavaIntType.INSTANCE, "modifiers", location);
+    //         AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefField, modifiersVar, location);
+    //
+    //         it.unive.lisa.symbolic.value.BinaryExpression and =
+    //             new it.unive.lisa.symbolic.value.BinaryExpression(
+    //                     JavaIntType.INSTANCE,
+    //                     accessModifiers,
+    //                     staticModifier,
+    //                     it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd.INSTANCE,
+    //                     location);
+    //
+    //         AnalysisState<A> andState = analysis.smallStepSemantics(state, and, this);
+    //
+    //         Satisfiability sat = Satisfiability.BOTTOM;
+    //
+    //         for (SymbolicExpression expr : andState.getExecutionExpressions()) {
+    //             it.unive.lisa.symbolic.value.BinaryExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
+    //                     staticModifier, expr, ComparisonEq.INSTANCE, location);
+    //
+    //             sat = sat.lub(analysis.satisfies(state, eq, this));
+    //         }
+    //
+    //         return sat;
+    // }
 }
