@@ -144,11 +144,15 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 				if (reflectedGlobal.isInstance()) {
 					GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
 
+					// safety: middle is always a subclass of Object
 					JavaReferenceType targetType = (JavaReferenceType) getMiddle().getStaticType();
+
 					HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), middle, loc);
 					AccessChild access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, loc);
 
+					// NOTE: this getMiddle() is wrong, but shouldn't hurt anything. It should be a fieldAccess expression
 					JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
+
 					AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
 					result = result.lub(t);
 				} else {

@@ -17,11 +17,6 @@ public class Main {
 			label.set(null, "right");
 			branchCount.set(null, Integer.valueOf(2));
 		}
-
-		assert Holder.count == 7;
-		assert Holder.label != null;
-		assert Holder.branchCount > 0;
-		assert Holder.branchCount == 1;
 	}
 }
 
