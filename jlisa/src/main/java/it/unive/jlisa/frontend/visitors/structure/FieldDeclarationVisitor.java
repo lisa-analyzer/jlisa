@@ -9,7 +9,6 @@ import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.*;
 import it.unive.lisa.program.annotations.Annotations;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.type.Type;
 import java.util.Set;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -31,40 +30,36 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 	@Override
 	public boolean visit(
 			FieldDeclaration node) {
+		int modifiers = node.getModifiers();
 		TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
 		node.getType().accept(typeVisitor);
 		Type type = typeVisitor.getType();
 		if (type.isInMemoryType())
 			type = new JavaReferenceType(type);
 
-		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers(),
-				getEnvironment(), getScope().getUnitScope());
-
-		CompilationUnit unit = getScope().getLisaClassUnit();
-
-		int modifiers = node.getModifiers();
-		boolean isStatic = Modifier.isStatic(modifiers) || (unit instanceof InterfaceUnit);
-		boolean isFinal = Modifier.isFinal(modifiers);
+		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers(), getEnvironment(),
+				getScope().getUnitScope());
 
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String identifier = fragment.getName().getIdentifier();
 
-			if (!visitedFieldNames.add(identifier))
+			if (visitedFieldNames.contains(identifier))
 				throw new ParsingException("variable-declaration", ParsingException.Type.VARIABLE_ALREADY_DECLARED,
 						"Global variable " + identifier + " already exists in the cfg", getSourceCodeLocation(node));
+			else
+				visitedFieldNames.add(identifier);
 
 			type = typeVisitor.liftToArray(type, fragment);
-			var loc = getSourceCodeLocation(fragment);
-
-			Global global = isStatic && isFinal
-					? new ConstantGlobal(loc, unit, identifier, new Constant(type, fragment, loc), annotations)
-					: new Global(loc, unit, identifier, !isStatic, type, annotations);
-
-			if (isStatic)
-				unit.addGlobal(global);
-			else
-				unit.addInstanceGlobal(global);
+			boolean isStatic = Modifier.isStatic(modifiers) || (getScope().getLisaClassUnit() instanceof InterfaceUnit);
+			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier,
+					!isStatic, type,
+					annotations);
+			if (isStatic) {
+				getScope().getLisaClassUnit().addGlobal(global);
+			} else {
+				getScope().getLisaClassUnit().addInstanceGlobal(global);
+			}
 		}
 
 		return false;

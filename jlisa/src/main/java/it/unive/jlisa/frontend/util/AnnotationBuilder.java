@@ -4,14 +4,13 @@ import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.UnsupportedAnnotationException;
 import it.unive.jlisa.frontend.visitors.expression.QualifiedNameVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
-import it.unive.lisa.program.ConstantGlobal;
-import it.unive.lisa.program.Global;
+import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.annotations.AnnotationMember;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.annotations.values.*;
-import it.unive.lisa.symbolic.value.Constant;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.Logger;
@@ -92,26 +91,24 @@ public final class AnnotationBuilder {
 	}
 
 	/*
-	 * TODO: Code below manages final static constants and enumerations for
-	 * method annotations. For class level that global arrives as null. Constant
-	 * and enum globals are registered in pass 3, but class units are built on
-	 * pass 1, hence some additional handling is required for earlier visitors
-	 * in the pipeline.
+	 * TODO: Class-level annotations are built while units are still being
+	 * populated, so a constant reference to a type whose file has not been
+	 * visited yet resolves to a null unit and falls back to the symbolic value
+	 * below.
 	 */
 	private static AnnotationValue getQualifiedNameValue(
 			QualifiedName qn) {
-		Global global = env.parserContext().evaluate(qn, () -> new QualifiedNameVisitor(env, scope));
 
-		if (global instanceof ConstantGlobal constantGlobal) {
-			Constant constant = constantGlobal.getConstant();
-			Expression expr = ((VariableDeclarationFragment) constant.getValue()).getInitializer();
-			return parseAnnotationValue(expr);
+		Unit unit = TypeASTVisitor.getUnit(qn.getQualifier().getFullyQualifiedName(),
+				env.parserContext().getProgram(), scope);
 
-		} else if (global != null && global.getContainer() instanceof EnumUnit enumUnit) {
-			String enumName = enumUnit.getName();
-			String enumValue = global.getName();
-			return new EnumAnnotationValue(enumName, enumValue);
-		}
+		if (unit instanceof EnumUnit enumUnit)
+			return new EnumAnnotationValue(enumUnit.getName(), qn.getName().getIdentifier());
+
+		Expression init = env.parserContext().evaluate(qn, () -> new QualifiedNameVisitor(env, scope));
+
+		if (init != null)
+			return parseAnnotationValue(init);
 
 		LOG.warn("Annotation-buildup: Failure to find/resolve value for following QualifiedName:{}. " +
 				"Keeping it as a symbolic reference.", qn.getFullyQualifiedName());
