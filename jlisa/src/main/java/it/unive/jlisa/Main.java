@@ -15,6 +15,9 @@ import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.listeners.BottomTopListener;
+import it.unive.lisa.listeners.CallResolutionListener;
+import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
@@ -97,9 +100,16 @@ public class Main {
 				.desc("Disable HTML output (enabled by default)")
 				.required(false)
 				.build();
+
 		Option dumpExcs = Option.builder("e")
 				.longOpt("dump-exceptions")
 				.desc("When in statistics mode, log exceptions to standard output")
+				.required(false)
+				.build();
+
+		Option debugInfo = Option.builder("d")
+				.longOpt("debug-information")
+				.desc("Produce debug information for the analysis (open calls, bottom states, ...)")
 				.required(false)
 				.build();
 
@@ -115,6 +125,7 @@ public class Main {
 		options.addOption(version);
 		options.addOption(noHtmlOutput);
 		options.addOption(dumpExcs);
+		options.addOption(debugInfo);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -123,6 +134,7 @@ public class Main {
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
 		boolean htmlOutput = true;
 		boolean dumpExceptions = false;
+		boolean debug = false;
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
@@ -166,6 +178,10 @@ public class Main {
 				dumpExceptions = true;
 			}
 
+			if (cmd.hasOption("d")) {
+				debug = true;
+			}
+
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
 
@@ -193,10 +209,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput);
+			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions);
+			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -209,12 +225,13 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
-			boolean htmlOutput)
+			boolean htmlOutput,
+			boolean debug)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
+		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 	}
 
 	private static void runStatistics(
@@ -223,7 +240,8 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
-			boolean dumpExceptions) {
+			boolean dumpExceptions,
+			boolean debug) {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
@@ -236,7 +254,7 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
+			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 		} catch (Throwable e) {
 			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
@@ -261,7 +279,8 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			JavaFrontend frontend,
-			boolean htmlOutput)
+			boolean htmlOutput,
+			boolean debug)
 			throws ParseException {
 		Program p = frontend.getProgram();
 		LiSAConfiguration conf = new LiSAConfiguration();
@@ -295,6 +314,14 @@ public class Main {
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
 				new JavaInferredTypes()));
+
+		if (htmlOutput)
+			conf.outputs.add(new HtmlResults<>(true));
+
+		if (debug) {
+			conf.asynchronousListeners.add(new BottomTopListener(false));
+			conf.asynchronousListeners.add(new CallResolutionListener());
+		}
 
 		LiSA lisa = new LiSA(conf);
 		lisa.run(p);
