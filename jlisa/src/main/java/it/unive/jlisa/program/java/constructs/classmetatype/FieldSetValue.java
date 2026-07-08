@@ -156,14 +156,6 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 					AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
 					result = result.lub(t);
 				} else {
-					AnalysisState<A> initialized = state;
-					if (clazzUnit instanceof ClassUnit)
-						initialized = InitializedClassSet.initialize(
-								state,
-								JavaClassType.lookup(clazzUnit.getName()).getReference(),
-								this,
-								interprocedural);
-
 					GlobalVariable reflectedAccess = new GlobalVariable(
 							reflectedGlobal.getStaticType(),
 							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
@@ -174,7 +166,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 					AnalysisState<A> t = assign.fwdBinarySemantics(
 							interprocedural,
-							initialized,
+							state,
 							reflectedAccess,
 							right,
 							expressions);

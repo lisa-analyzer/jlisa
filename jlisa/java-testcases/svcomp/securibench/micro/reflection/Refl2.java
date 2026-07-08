@@ -17,14 +17,12 @@ import java.lang.reflect.Field;
 // import javax.servlet.ServletResponse;
 import mockx.servlet.http.HttpServletRequest;
 import mockx.servlet.http.HttpServletResponse;
-import securibench.micro.BasicTestCase;
-import securibench.micro.MicroTestCase;
 
 /**
  * @servlet description="reflectively access a field"
  * @servlet vuln_count = "1"
  */
-public class Refl2 extends BasicTestCase implements MicroTestCase {
+public class Refl2 {
   private static final String FIELD_NAME = "name";
   public String name;
 

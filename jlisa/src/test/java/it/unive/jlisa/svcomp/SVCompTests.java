@@ -351,6 +351,20 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void Refl2_test() throws IOException {
+		// TODO: this test has been slightly modified to remove the need of parsing
+		// an interface with a static field that causes a crash during parsing (issue #259).
+		// The anonymous class in HttpServletResponse has also been replaced by a nested class.
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl2",
+				"Main.java",
+				"../../common/",
+				"../micro/reflection/Refl2.java",
+				"../../mockx/");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
 	public void Refl3_test() throws IOException {
 		// TODO: this test has been slightly modified to remove the need of parsing
 		// an interface with a static field that causes a crash during parsing (issue #259).
