@@ -126,7 +126,7 @@ public class ClassDef {
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(program, locationManager.nextRow(), unit);
+			Global field = fld.toLiSAObject(program, locationManager.nextRow(), init, unit);
 			if (field.isInstance())
 				unit.addInstanceGlobal(field);
 			else

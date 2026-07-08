@@ -66,7 +66,7 @@ public class Runtime {
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(program, locationManager.nextRow(), program);
+			Global field = fld.toLiSAObject(program, locationManager.nextRow(), init, program);
 			if (field.isInstance())
 				throw new LibraryCreationException();
 			program.addGlobal(field);
