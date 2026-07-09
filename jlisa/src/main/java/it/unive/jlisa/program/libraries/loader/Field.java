@@ -1,12 +1,11 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import it.unive.jlisa.program.libraries.loader.extensions.GlobalWithDefault;
+import it.unive.jlisa.program.libraries.loader.extensions.CompileTimeGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
-import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.symbolic.value.Constant;
 import java.util.Objects;
 
 public class Field {
@@ -77,16 +76,28 @@ public class Field {
 	public Global toLiSAObject(
 			Program program,
 			CodeLocation location,
-			CFG init,
 			Unit container) {
 		it.unive.lisa.type.Type type = this.type.toLiSAType(program);
 
-		Expression defValue;
+		Constant defValue;
 		if (this.value == null) {
 			return new Global(location, container, name, this.instance, type);
 		} else {
-			defValue = this.value.toLiSAExpression(init);
-			return new GlobalWithDefault(location, container, name, this.instance, type, defValue);
+			defValue = new Constant(type, getRawValue(this.value), location);
+			return new CompileTimeGlobal(location, container, name, this.instance, type, defValue);
 		}
+	}
+
+	private static Object getRawValue(
+			Value value) {
+		return switch (value) {
+		case NumberValue number -> number.getValue();
+		case BooleanValue bool -> bool.getValue();
+		case StringValue string -> {
+			String raw = string.getValue();
+			yield raw.substring(1, raw.length() - 1);
+		}
+		default -> null;
+		};
 	}
 }

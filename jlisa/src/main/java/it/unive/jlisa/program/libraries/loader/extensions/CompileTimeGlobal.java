@@ -3,25 +3,25 @@ package it.unive.jlisa.program.libraries.loader.extensions;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.type.Type;
 
-public class GlobalWithDefault extends Global {
+public class CompileTimeGlobal extends Global {
 
-	private final Expression defaultValue;
+	private final Constant defaultValue;
 
-	public GlobalWithDefault(
+	public CompileTimeGlobal(
 			CodeLocation location,
 			Unit container,
 			String name,
 			boolean isInstance,
 			Type staticType,
-			Expression defaultValue) {
+			Constant defaultValue) {
 		super(location, container, name, isInstance, staticType);
 		this.defaultValue = defaultValue;
 	}
 
-	public Expression getDefaultValue() {
+	public Constant getDefaultValue() {
 		return defaultValue;
 	}
 }
