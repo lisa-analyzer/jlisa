@@ -161,6 +161,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 				if (reflectedGlobal.isInstance()) {
 
+					// safety: getRight() is always of Object type
 					JavaReferenceType targetType = (JavaReferenceType) getRight().getStaticType();
 
 					HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), right, location);

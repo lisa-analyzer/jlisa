@@ -49,19 +49,25 @@ import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.heap.NullConstant;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
+import it.unive.lisa.type.VoidType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -128,10 +134,14 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// TODO AP: temporary assumption
 		assert(thisObjTypes.size() == 1);
 
+
+
 		Type thisObjType = thisObjTypes.iterator().next();
 
 		if (thisObjType instanceof JavaReferenceType jrt)
 			thisObjType = jrt.getInnerType();
+
+		// TODO check that the type can be a receiver of the method call, else throw the exception
 
 		String clazz = thisObjType.toString();
 
@@ -199,16 +209,26 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				expressionsArgs);
 		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, state, symbolicExpressionsArgs, expressions);
 
-		// if returns void, do nothing
+		// if returns void, just return a null value
 		if (sem.getExecutionExpressions().equals(new ExpressionSet(new Skip(location)))) {
-			return sem;
+			NullConstant nc = new NullConstant(location);
+
+			Type refObjectType = new JavaReferenceType(JavaClassType.getObjectType());
+			Set<Type> types = new HashSet<>();
+			types.add(refObjectType);
+			TypeTokenType t = new TypeTokenType(types);
+
+			Constant castTo = new Constant(t, refObjectType, location);
+
+			BinaryExpression castAs = new BinaryExpression(refObjectType, nc, castTo, TypeCast.INSTANCE, location);
+			return analysis.smallStepSemantics(sem, castAs, this);
 		}
 
 		ExpressionSet returnValues = sem.getExecutionExpressions();
 		ExpressionSet processedReturnValues = new ExpressionSet();
 
+		// TODO could return more than one value
 		SymbolicExpression returnValue = returnValues.iterator().next();
-
 		Type exprType = analysis.getRuntimeTypesOf(sem, returnValue, this).iterator().next();
 
 		AnalysisState<A> boxedState = sem.bottomExecution();

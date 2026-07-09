@@ -72,4 +72,18 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
+
+	// @Test
+	// public void testClassGetMethods1() throws IOException {
+	// 	CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-get-methods-1", "Main.java");
+	// 	conf.outputs.add(new HtmlResults(true));
+	// 	perform(conf);
+	// }
+
+	@Test
+	public void testMethodInvoke1() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "method-invoke-1", "Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
 }

@@ -10,9 +10,11 @@ public class ReflectionTest {
 
 		Cat cat = new Cat();
 
-		String x = "ron";
-
 		Object zz = method.invoke(cat, new Object[0]);
+
+		Method method2 = c.getMethod("bar", new Class[0]);
+
+		Object barResult = method2.invoke(cat, new Object[0]);
 
 		return;
 	}
@@ -31,6 +33,10 @@ class Cat {
 		nickname = "gatto";
 		age = 91;
 		return 42;
+	}
+
+	public void bar() {
+		age = 92;
 	}
 }
 
