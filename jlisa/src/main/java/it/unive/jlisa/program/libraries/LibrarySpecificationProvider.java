@@ -21,7 +21,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,6 +41,8 @@ public class LibrarySpecificationProvider {
 	private static CFG init;
 
 	private static final Collection<String> LOADED_LIB_CLASSES = new TreeSet<>();
+
+	private static final Queue<Runnable> PENDING_POPULATIONS = new LinkedList<>();
 
 	public static void load(
 			Program program)
@@ -58,6 +62,7 @@ public class LibrarySpecificationProvider {
 		hierarchyRoot = null;
 		AVAILABLE_LIB_CLASSES.clear();
 		LOADED_LIB_CLASSES.clear();
+		PENDING_POPULATIONS.clear();
 	}
 
 	private static void readLibrary(
@@ -91,12 +96,15 @@ public class LibrarySpecificationProvider {
 
 	public static void importJavaLang(
 			Program program) {
-		importClass(program, "java.lang.Object");
-		importClass(program, "java.lang.Class");
-		importClass(program, "java.lang.String");
+		forceImportClass(program, "java.lang.Object");
+		forceImportClass(program, "java.lang.reflect.Method");
+		forceImportClass(program, "java.lang.Class");
+		forceImportClass(program, "java.lang.String");
 		for (String lib : AVAILABLE_LIB_CLASSES.keySet())
 			if (getPackage(lib).equals("java.lang"))
 				importClass(program, lib);
+
+		executePendingPopulations();
 	}
 
 	private static String getPackage(
@@ -151,6 +159,62 @@ public class LibrarySpecificationProvider {
 		// nested classes should be loaded as well
 		for (String n : getNestedUnits(name))
 			importClass(program, n);
+	}
+
+	private static void forceImportClass(
+			Program program,
+			String name) {
+
+		if (LOADED_LIB_CLASSES.contains(name))
+			return;
+
+		ClassDef library = AVAILABLE_LIB_CLASSES.get(name);
+		if (library == null)
+			throw new IllegalArgumentException("Class " + name + " is not available in the loaded libraries");
+
+		AtomicReference<CompilationUnit> root = new AtomicReference<>(hierarchyRoot);
+		ClassUnit lib = library.toLiSAUnit(program, root);
+		if (hierarchyRoot == null)
+			hierarchyRoot = root.get();
+
+		program.addUnit(lib);
+		// create the corresponding type
+		if (library.getTypeName() == null)
+			JavaClassType.register(lib.getName(), lib);
+		else
+			try {
+				Class<?> type = Class.forName(library.getTypeName());
+				Constructor<?> constructor = type.getConstructor(CompilationUnit.class);
+				constructor.newInstance(lib);
+			} catch (ClassNotFoundException
+					| SecurityException
+					| IllegalArgumentException
+					| IllegalAccessException
+					| NoSuchMethodException
+					| InstantiationException
+					| InvocationTargetException e) {
+				throw new LibraryCreationException(e);
+			}
+
+		LOADED_LIB_CLASSES.add(name);
+
+		final CompilationUnit capturedRoot = hierarchyRoot;
+		PENDING_POPULATIONS.add(() -> {
+			library.populateUnit(program, init, capturedRoot);
+		});
+
+		// library.populateUnit(program, init, hierarchyRoot);
+		// nested classes should be loaded as well
+
+		for (String n : getNestedUnits(name))
+			importClass(program, n);
+	}
+
+	private static void executePendingPopulations() {
+		while (!PENDING_POPULATIONS.isEmpty()) {
+			Runnable task = PENDING_POPULATIONS.poll();
+			task.run();
+		}
 	}
 
 	public static boolean isLibraryAvailable(
