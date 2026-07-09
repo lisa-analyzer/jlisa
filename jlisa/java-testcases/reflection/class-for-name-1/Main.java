@@ -5,12 +5,12 @@ public class ReflectionTest {
 	}
 }
 
-// class Baz {
-// 	public String x = "hello";
-// }
-//
+class Baz {
+	public String bazString;
+}
 
-class Foo {
+
+class Foo extends Baz {
 
 	public int zz;
 

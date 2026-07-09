@@ -30,6 +30,7 @@ import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMember;
@@ -59,7 +60,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -179,14 +179,16 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 				if (!ReflectionCache.isClassInitialized(t)) {
 
-					AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, callState, expressions, getAllFields(t), clazz);
+					AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, callState, expressions, getAllFields(t.getUnit()), clazz);
 
-					AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(t), clazz);
-
-					tmp = tmp.lub(methodsLoaded);
+					AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(t.getUnit()), clazz);
 
 					// set it as initialized to avoid reinitialization
 					ReflectionCache.addInitializedClass(t);
+
+					AnalysisState<A> superclassesInit = initializeSuperclasses(interprocedural, methodsLoaded, expressions, clazz, t);
+
+					tmp = tmp.lub(superclassesInit);
 				}
 
 				noExceptionState = analysis.smallStepSemantics(tmp, clazz, this);
@@ -226,15 +228,8 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return 0;
 	}
 
-	Collection<Global> getAllFields(Type t) {
-		Collection<Global> fields = new ArrayList<>();
-
-		// c is not a primitive type, there may be fields to load
-		if (t instanceof UnitType cUnitType) {
-			CompilationUnit unit = cUnitType.getUnit();
-			fields = new ArrayList<>(unit.getGlobalsRecursively());
-		}
-
+	Collection<Global> getAllFields(CompilationUnit unit) {
+		Collection<Global> fields = new ArrayList<>(unit.getGlobalsRecursively());
 		return fields;
 	}
 
@@ -346,15 +341,11 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return params;
 	}
 
-	Collection<CodeMember> getAllMethods(Type t) {
-		Collection<CodeMember> methods = new ArrayList<>();
+	Collection<CodeMember> getAllMethods(CompilationUnit unit) {
 
 		// TODO AP: I don't think the ctors should be in there, double check this
 		// TODO AP: get rid of the static initializer that sneaks in there
-		if (t instanceof UnitType cUnitType) {
-			CompilationUnit unit = cUnitType.getUnit();
-			methods = new ArrayList<>(unit.getCodeMembersRecursively());
-		}
+		Collection<CodeMember> methods = new ArrayList<>(unit.getCodeMembersRecursively());
 
 		return methods;
 	}
@@ -502,6 +493,55 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 		UnitType t = (foundClass != null) ? foundClass : foundInterface;
 		return t;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> initializeSuperclasses(
+		InterproceduralAnalysis<A, D> interprocedural,
+		AnalysisState<A> state,
+		StatementStore<A> expressions,
+		SymbolicExpression clazz,
+		UnitType unitType)
+			throws SemanticException {
+
+		CodeLocation location = getLocation();
+		Type classMetaType = JavaClassType.getClassMetaType();
+		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
+
+		Collection<CompilationUnit> ancestors = unitType.getUnit().getImmediateAncestors();
+		ancestors.removeIf(t -> t instanceof InterfaceUnit);
+
+		// no superclass
+		if (ancestors.isEmpty())
+			return state;
+
+		assert(ancestors.size() == 1);
+
+		CompilationUnit superclassUnit = ancestors.iterator().next();
+		assert(superclassUnit instanceof ClassUnit);
+
+		JavaClassType superclassType = JavaClassType.lookup(superclassUnit.getName());
+
+		GlobalVariable superclassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
+
+		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, location);
+
+		// ancestor clazz Class object
+		AccessChild accessSuperclass = new AccessChild(refClassMetaType, derefClazz, superclassVar, location);
+
+		AnalysisState<A> tmp = state;
+
+		// initialize the class if not already initialized
+		if (!ReflectionCache.isClassInitialized(superclassType)) {
+			AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, state, expressions, getAllFields(superclassUnit), accessSuperclass);
+
+			AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(superclassUnit), accessSuperclass);
+
+			ReflectionCache.addInitializedClass(superclassType);
+
+			tmp = methodsLoaded;
+		}
+
+		return tmp.lub(initializeSuperclasses(interprocedural, tmp, expressions, accessSuperclass, superclassType));
 	}
 
 }
