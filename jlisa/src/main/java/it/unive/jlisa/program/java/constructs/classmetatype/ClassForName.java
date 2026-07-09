@@ -173,7 +173,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);
 				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-				AnalysisState<A> tmp = callState;
+				AnalysisState<A> tmp = callState.bottomExecution();
 
 				SymbolicExpression clazz = callState.getExecutionExpressions().iterator().next();
 

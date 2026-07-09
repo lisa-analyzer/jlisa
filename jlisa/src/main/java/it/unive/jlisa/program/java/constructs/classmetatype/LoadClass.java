@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -17,7 +19,9 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -29,10 +33,14 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.heap.NullConstant;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
+import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 
@@ -137,21 +145,21 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> tmp = callState;
 
+		// TODO if loadingType instanceof JavaArrayType, then the superclass shall
+		// be java.lang.Object
+
 		if (loadingType instanceof UnitType loadingClazz) {
 
 			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors();
 
-			// TODO AP: if no ancestors, store a null literal in the superclass field
-
 			// find the superclass
 			for (CompilationUnit ancestor : ancestors) {
-				Type superClass = null;
-				try {
-					superClass = JavaClassType.lookup(ancestor.getName());
-				}
-				catch(Exception e) {}
 
-				if (superClass != null) {
+				// found a superclass
+				if (ancestor instanceof ClassUnit) {
+
+					JavaClassType superClass = JavaClassType.lookup(ancestor.getName());
+
 					LoadClass loadClass = new LoadClass(superClass, getCFG(), location);
 					tmp = loadClass.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
 
@@ -167,7 +175,9 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 					AccessChild accessSuperClazz = new AccessChild(new JavaReferenceType(JavaClassType.getClassMetaType()), derefClazz, superClassVar, location);
 
-					tmp = tmp.lub(analysis.assign(tmp, accessSuperClazz, superClazz, this));
+					tmp = analysis.assign(tmp, accessSuperClazz, superClazz, this);
+				}
+				else if (ancestor instanceof InterfaceUnit) {
 				}
 			}
 		}
@@ -203,6 +213,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		GlobalVariable isArrayVar = new GlobalVariable(Untyped.INSTANCE, "isArray", location);
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
 
 		// allocate the Class object
@@ -243,6 +254,21 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		AnalysisState<A> assigned = analysis.assign(tmp, accessIsArray, isArrayConstant, this);
 		tmp = tmp.lub(assigned);
 
+		// assign the superClass field with null
+		AccessChild accessSuperClass = new AccessChild(refClassMetaType, derefThisClazz, superClassVar, location);
+		NullConstant nc = new NullConstant(location);
+		Set<Type> types = new HashSet<>();
+		types.add(refClassMetaType);
+		TypeTokenType typeToken = new TypeTokenType(types);
+
+		Constant castTo = new Constant(typeToken, refClassMetaType, location);
+
+		BinaryExpression castAs = new BinaryExpression(refClassMetaType, nc, castTo, TypeCast.INSTANCE, location);
+
+		tmp = analysis.assign(tmp, accessSuperClass, castAs, this);
+
+
+		// TODO: allocate the array of superinterfaces, with len 0
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingClazzName;
