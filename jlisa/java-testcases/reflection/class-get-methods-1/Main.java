@@ -6,11 +6,21 @@ public class ReflectionTest {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
+		Cat cat = new Cat();
+
 		Method[] methods = c.getMethods();
 
 		int methodCount = methods.length;
 
-		String firstMethodName = methods[0].getName().toString();
+		// String firstMethodName = methods[0].getName().toString();
+		// int i = 0;
+		// if (args.length == 1){
+		// 	i = 2;
+		// }
+
+		Method method = methods[1];
+
+		Object o = method.invoke(cat, new Object[0]);
 
 		return;
 	}

@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -26,8 +25,6 @@ import it.unive.lisa.type.Untyped;
 
 public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
-
-	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.Class");
 
 	public ClassGetMethods(
 			CFG cfg,

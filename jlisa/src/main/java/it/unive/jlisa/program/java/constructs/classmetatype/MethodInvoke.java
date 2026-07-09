@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
@@ -51,6 +52,7 @@ import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -64,6 +66,7 @@ import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
+import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
@@ -131,22 +134,50 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 
 		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
+
 		// TODO AP: temporary assumption
 		assert(thisObjTypes.size() == 1);
 
+		AnalysisState<A> exceptionState = state.bottomExecution();
+		AnalysisState<A> noExceptionState = state.bottomExecution();
 
+		if (thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
+			JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
+
+			JavaNewObj call = new JavaNewObj(cfg, location,
+					nullPointerExceptionType.getReference(), new Expression[0]);
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+			// assign exception to variable thrower
+			CFGThrow throwVar = new CFGThrow(cfg, nullPointerExceptionType.getReference(), location);
+			state = analysis.assign(state, throwVar,
+					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
+			state = state.forgetIdentifiers(call.getMetaVariables(), this);
+			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+			state = state.forgetIdentifiers(getMiddle().getMetaVariables(), this);
+			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+					new Error(nullPointerExceptionType.getReference(), originating), this);
+		}
+
+		// if the receiver is certainly null, stop immediately
+		if (thisObjTypes.isEmpty())
+			return exceptionState;
 
 		Type thisObjType = thisObjTypes.iterator().next();
 
 		if (thisObjType instanceof JavaReferenceType jrt)
 			thisObjType = jrt.getInnerType();
 
-		// TODO check that the type can be a receiver of the method call, else throw the exception
-
 		String clazz = thisObjType.toString();
 
-		// extract all the symbolic expressions from the third argument
-		// and pass them to UnresolvedCall
+		// TODO: check whether middle can be a receiver for that method.
+		// Extract the declaringClass from the first argument (left) and check whether
+		// the runtime type of middle is a subclass of that class (or an implementor)
 
 		ArrayList<Expression> args = new ArrayList<>();
 		args.add(getMiddle());
@@ -159,7 +190,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		boolean outOfBoundsMethodArr = false;
 
-		// stop when we are out of bounds
+		// extract all the symbolic expressions from the third argument
+		// to pass them to UnresolvedCall
 		for (int i = 0; outOfBoundsMethodArr == false; ++i) {
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
@@ -256,7 +288,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			processedReturnValues = processedReturnValues.lub(new ExpressionSet(returnValue));
 		}
 
-		return boxedState.withExecutionExpressions(processedReturnValues);
+		noExceptionState = boxedState.withExecutionExpressions(processedReturnValues);
+		return noExceptionState.lub(exceptionState);
 	}
 
 	@Override
@@ -321,6 +354,14 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			return new TrueLiteral(cfg, location);
 
 		return null;
+	}
+
+	private boolean isNull(Set<Type> types, CFG cfg, CodeLocation location) {
+		for (Type t : types) {
+			if (t == NullType.INSTANCE)
+				return true;
+		}
+		return false;
 	}
 
 }
