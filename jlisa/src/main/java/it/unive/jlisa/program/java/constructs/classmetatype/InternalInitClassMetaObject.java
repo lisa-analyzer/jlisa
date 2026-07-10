@@ -404,9 +404,12 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		// initialize the class if not already initialized
 		if (!ReflectionCache.isClassInitialized(superclassType)) {
-			AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, state, expressions, getAllFields(superclassUnit), accessSuperclass);
 
-			AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(superclassUnit), accessSuperclass);
+			SymbolicExpression expr = new HeapReference(refClassMetaType, accessSuperclass, location);
+
+			AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, state, expressions, getAllFields(superclassUnit), expr);
+
+			AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(superclassUnit), expr);
 
 			ReflectionCache.addInitializedClass(superclassType);
 

@@ -15,11 +15,20 @@ public class ReflectionTest {
 		Field fooValueField = fooClass.getField("fooValue");
 		String fooValueFieldName = fooValueField.getName().toString(); // expected "fooValue"
 
+		Field superclassField1 = c.getField("height"); // expected Field height
+
+		Field superClassField2 = c.getField("hasWings");
+
 		return;
 	}
 }
 
-class Felid {
+class Animal {
+	private boolean hasWings;
+}
+
+class Felid extends Animal {
+	private float height;
 }
 
 
