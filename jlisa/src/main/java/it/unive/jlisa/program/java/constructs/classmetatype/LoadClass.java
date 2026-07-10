@@ -6,10 +6,14 @@ import java.util.Set;
 
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.JavaNewArray;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -209,11 +213,13 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
+		JavaReferenceType refClassArray = JavaArrayType.CLASS_ARRAY;
 
 		GlobalVariable isArrayVar = new GlobalVariable(Untyped.INSTANCE, "isArray", location);
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
+		GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
 
 
 		// allocate the Class object
@@ -268,7 +274,18 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		tmp = analysis.assign(tmp, accessSuperClass, castAs, this);
 
 
-		// TODO: allocate the array of superinterfaces, with len 0
+		// assign the array of interfaces that the class implements.
+		// Default is an empty array
+		AccessChild accessInterfaces = new AccessChild(refClassArray, derefThisClazz, interfacesVar, location);
+
+		IntLiteral len = new IntLiteral(getCFG(), location, 0);
+		Constant c = new Constant(JavaIntType.INSTANCE, 0, location);
+		JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), len, refClassArray);
+
+		AnalysisState<A> interfacesAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
+		for (SymbolicExpression expr : interfacesAllocated.getExecutionExpressions()) {
+			tmp = analysis.assign(interfacesAllocated, accessInterfaces, expr, this);
+		}
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingClazzName;
