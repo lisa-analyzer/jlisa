@@ -182,6 +182,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 					tmp = analysis.assign(tmp, accessSuperClazz, superClazz, this);
 				}
 				else if (ancestor instanceof InterfaceUnit) {
+					// load interface Class
 				}
 			}
 		}
