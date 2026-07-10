@@ -356,12 +356,4 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return null;
 	}
 
-	private boolean isNull(Set<Type> types, CFG cfg, CodeLocation location) {
-		for (Type t : types) {
-			if (t == NullType.INSTANCE)
-				return true;
-		}
-		return false;
-	}
-
 }

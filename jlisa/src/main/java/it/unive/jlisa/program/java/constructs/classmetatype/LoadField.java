@@ -120,7 +120,7 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		AnalysisState<A> sem = analysis.assign(fieldAllocated, accessThisFieldClazz, exprs[0], this);
 
 		// assign field name
-		sem = sem.lub(allocateSubField(interprocedural, fieldAllocated, derefThisField, nameVar, refStringType, expressions));
+		sem = allocateSubField(interprocedural, sem, derefThisField, nameVar, refStringType, expressions);
 
 		AccessChild accessThisFieldName = new AccessChild(refStringType, derefThisField, nameVar, getLocation());
 
