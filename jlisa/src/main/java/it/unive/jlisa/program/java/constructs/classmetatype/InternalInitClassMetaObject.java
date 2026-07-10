@@ -84,7 +84,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 
-		AnalysisState<A> tmp = state.bottomExecution();
+		AnalysisState<A> tmp = state;
 
 		if (!ReflectionCache.isClassInitialized(initializingClassType)) {
 

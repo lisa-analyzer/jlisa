@@ -1,19 +1,33 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
+
+import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.SemanticOracle;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.value.ValueDomain;
+import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
+import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -26,9 +40,11 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 
 public class ClassGetMethod extends TernaryExpression implements PluggableStatement {
@@ -69,17 +85,44 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
+		Type stringType = getProgram().getTypes().getStringType();
+		Type refStringType = new JavaReferenceType(stringType);
 		Type classMetaType = JavaClassType.getClassMetaType();
 		Type methodType = JavaClassType.getMethodType();
 		JavaReferenceType refMethodType = new JavaReferenceType(methodType);
 		JavaArrayType methodArrType = JavaArrayType.lookup(refMethodType, 1);
 		JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
 
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
 
-		// (*left)->declaredMethods
 		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
+
+		AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, location);
+		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
+		AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, location);
+
+		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = getConstraints(analysis, state, accessClazzNameValue);
+
+		// TODO: temporary assumption
+		assert(constraints.size() == 1);
+
+		it.unive.lisa.symbolic.value.BinaryExpression constraint = constraints.iterator().next();
+		String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+		UnitType t = getTypeFromStr(clazzName);
+
+		if (!ReflectionCache.isClassInitialized(t)) {
+			ExpressionSet clazz = new ExpressionSet(ReflectionCache.getCachedClass(t));
+
+			InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
+			AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
+
+			state = initState;
+		}
+
+		// (*left)->declaredMethods
 		AccessChild accessDeclaredMethods = new AccessChild(refMethodArrType, derefClazz, declaredMethodsVar, location);
 
 		// *((*left)->declaredMethods)
@@ -247,6 +290,64 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		}
 
 		return allParametersMatch;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Set<it.unive.lisa.symbolic.value.BinaryExpression> getConstraints(
+			Analysis<A, D> analysis,
+			AnalysisState<A> state,
+			SymbolicExpression expr) {
+
+		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = new HashSet<>();
+
+		try {
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
+
+			f.setAccessible(true);
+
+			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+
+			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+			Object executionState = state.getExecutionState();
+			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+			ValueExpression ex = (ValueExpression) analysis.rewrite(state, expr, this).iterator().next();
+
+			constraints = vdom.constraints(null, env, ex, this, oracle);
+		}
+		catch (Exception e) {
+		}
+
+		return constraints;
+	}
+
+	private UnitType getTypeFromStr(String clazzName) {
+
+		clazzName = clazzName.replace('$', '.');
+
+		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+
+		JavaClassType foundClass = null;
+		JavaInterfaceType foundInterface = null;
+
+		try {
+			foundClass = JavaClassType.lookup(clazzName);
+		} catch (IllegalArgumentException e) {
+		}
+		try {
+			foundInterface = JavaInterfaceType.lookup(clazzName);
+		} catch (IllegalArgumentException e) {
+		}
+
+		UnitType t = (foundClass != null) ? foundClass : foundInterface;
+		return t;
 	}
 
 }
