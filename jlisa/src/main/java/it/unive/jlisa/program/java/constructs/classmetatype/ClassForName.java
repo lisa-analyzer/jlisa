@@ -1,5 +1,13 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -14,8 +22,8 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.AnalysisState.Error;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -53,13 +61,6 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -343,9 +344,18 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 	Collection<CodeMember> getAllMethods(CompilationUnit unit) {
 
-		// TODO AP: I don't think the ctors should be in there, double check this
-		// TODO AP: get rid of the static initializer that sneaks in there
-		Collection<CodeMember> methods = new ArrayList<>(unit.getCodeMembersRecursively());
+		String unitSimpleName = unit.getName().contains(".")
+				? unit.getName().substring(unit.getName().lastIndexOf('.') + 1)
+				: unit.getName();
+
+		Collection<CodeMember> methods = unit.getCodeMembersRecursively().stream()
+				.filter(cm -> {
+					String name = cm.getDescriptor().getName();
+					boolean isCtor = name.equals(unitSimpleName);
+					boolean isSyntheticClinit = name.endsWith(InitializedClassSet.SUFFIX_CLINIT);
+					return !isCtor && !isSyntheticClinit;
+				})
+				.collect(Collectors.toCollection(ArrayList::new));
 
 		return methods;
 	}
