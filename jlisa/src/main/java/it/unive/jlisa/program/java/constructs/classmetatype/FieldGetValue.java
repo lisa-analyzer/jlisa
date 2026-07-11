@@ -4,10 +4,14 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
-import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
@@ -19,13 +23,6 @@ import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.jlisa.type.JavaTypeSystem;
-import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -40,7 +37,6 @@ import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
-import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -53,6 +49,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
+import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -157,26 +154,30 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				assert(reflectedGlobal != null);
 				Type reflectedFieldType = reflectedGlobal.getStaticType();
 
-				SymbolicExpression fieldVar = reflectedGlobal.toSymbolicVariable(location);
-
+				SymbolicExpression access;
 				if (reflectedGlobal.isInstance()) {
 
 					// safety: getRight() is always of Object type
 					JavaReferenceType targetType = (JavaReferenceType) getRight().getStaticType();
 
 					HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), right, location);
+					SymbolicExpression fieldVar = reflectedGlobal.toSymbolicVariable(location);
 
-					SymbolicExpression access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, location);
-
-					if (reflectedFieldType.isReferenceType()) {
-						access = new HeapReference(reflectedFieldType, access, location);
-					}
-
-					accessedFieldState = analysis.smallStepSemantics(state, access, this);
+					access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, location);
 				}
 				else {
-					// TODO static fields
+					access = new GlobalVariable(
+							reflectedGlobal.getStaticType(),
+							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
+							reflectedGlobal.getAnnotations(),
+							location);
 				}
+
+				if (reflectedFieldType.isReferenceType()) {
+					access = new HeapReference(reflectedFieldType, access, location);
+				}
+
+				accessedFieldState = analysis.smallStepSemantics(state, access, this);
 
 				AnalysisState<A> boxedState = getBoxedState(interprocedural, accessedFieldState, reflectedFieldType, expressions);
 				result = result.lub(boxedState);
