@@ -222,10 +222,80 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			++i;
 		}
 
-
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
+		state = searchMethod(interprocedural, state, superClass, middle, right, expressions);
 
-		return searchMethod(interprocedural, state, superClass, middle, right, expressions);
+		// we didn't find anything in the superclasses.
+		// NOTE: this is not handling the "unknown" case: we should search the interfaces
+		// even when we are not sure the method we found is the correct one
+		if (state.getExecutionExpressions().isEmpty()) {
+			state = searchInterfaces(interprocedural, state, derefClazz, middle, right, expressions);
+		}
+
+		return state;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> searchInterfaces(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression derefClazz,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+
+		Type stringType = getProgram().getTypes().getStringType();
+		Type refStringType = new JavaReferenceType(stringType);
+		Type classMetaType = JavaClassType.getClassMetaType();
+		Type refClassMetaType = new JavaReferenceType(classMetaType);
+		JavaReferenceType refClassArr = JavaArrayType.CLASS_ARRAY;
+		Type methodType = JavaClassType.getMethodType();
+		JavaReferenceType refMethodType = new JavaReferenceType(methodType);
+		JavaArrayType methodArrType = JavaArrayType.lookup(refMethodType, 1);
+		JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
+
+		GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "len", location);
+
+		AccessChild accessInterfaces = new AccessChild(refClassArr, derefClazz, interfacesVar, location);
+		HeapDereference derefInterfaces = new HeapDereference(refClassArr.getInnerType(), accessInterfaces, location);
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefInterfaces, interfacesVar, location);
+
+		boolean outOfBoundsMethodArr = false;
+		int i = 0;
+
+		AnalysisState<A> tmp = state.bottomExecution();
+
+		// stop when we are out of bounds
+		while (outOfBoundsMethodArr == false) {
+
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
+
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
+				idx, accessLen, ComparisonLt.INSTANCE, location);
+
+			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			if (sat == Satisfiability.NOT_SATISFIED) {
+				outOfBoundsMethodArr = true;
+				break;
+			}
+
+			// access the interface and call searchMethod on it
+			AccessChild accessInterface = new AccessChild(refClassMetaType, derefInterfaces, idx, location);
+			tmp = tmp.lub(searchMethod(interprocedural, state, accessInterface, middle, right, expressions));
+
+			// NOTE: this stops as soon as any matching method is found.
+			// This however, should only happen when we know for sure that the method
+			// we found is the correct one
+			if (!tmp.getExecutionExpressions().isEmpty()) {
+				return tmp;
+			}
+		}
+
+		return tmp.withExecutionExpressions(new ExpressionSet());
 	}
 
 	// check whether a target method matches the signature of the candidate one
