@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,6 +17,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
@@ -154,7 +156,12 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		if (loadingType instanceof UnitType loadingClazz) {
 
+			SymbolicExpression currentClazz = callState.getExecutionExpressions().iterator().next();
+			HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), currentClazz, location);
+
 			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors();
+
+			ArrayList<ExpressionSet> loadedInterfaces = new ArrayList<>();
 
 			// find the superclass
 			for (CompilationUnit ancestor : ancestors) {
@@ -172,10 +179,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 					assert(tmp.getExecutionExpressions().size() == 1);
 					SymbolicExpression superClazz = tmp.getExecutionExpressions().iterator().next();
-					assert(callState.getExecutionExpressions().size() == 1);
-					SymbolicExpression currentClazz = callState.getExecutionExpressions().iterator().next();
-
-					HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), currentClazz, location);
 
 					AccessChild accessSuperClazz = new AccessChild(new JavaReferenceType(JavaClassType.getClassMetaType()), derefClazz, superClassVar, location);
 
@@ -183,8 +186,51 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 				}
 				else if (ancestor instanceof InterfaceUnit) {
 					// load interface Class
+
+					JavaInterfaceType interf = JavaInterfaceType.lookup(ancestor.getName());
+
+					LoadClass loadClass = new LoadClass(interf, getCFG(), location);
+					tmp = loadClass.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
+
+					loadedInterfaces.add(tmp.getExecutionExpressions());
 				}
 			}
+
+			// if we loaded interfaces, assign them to the `interfaces` array of the current Class
+			if (!loadedInterfaces.isEmpty()) {
+
+				GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
+				GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
+
+
+				JavaReferenceType refArrType = JavaArrayType.CLASS_ARRAY;
+				JavaReferenceType refClassType = new JavaReferenceType(JavaClassType.getClassMetaType());
+
+				AccessChild accessInterfaces = new AccessChild(refArrType, derefClazz, interfacesVar, location);
+				HeapDereference derefInterfaces = new HeapDereference(refArrType.getInnerType(), accessInterfaces, location);
+
+				AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefInterfaces, lengthVar, location);
+
+				// update the length of the array
+				Constant c = new Constant(JavaIntType.INSTANCE, loadedInterfaces.size(), location);
+				tmp = analysis.assign(tmp, accessLen, c, this);
+
+				int i = 0;
+				// assign the single values
+				for(ExpressionSet loadedInterfaceAllocs : loadedInterfaces) {
+
+					Constant idxConstant = new Constant(JavaIntType.INSTANCE, i, location);
+
+					for (SymbolicExpression loadedInterface : loadedInterfaceAllocs) {
+						AccessChild accessIdx = new AccessChild(refClassType, derefInterfaces, idxConstant, location);
+
+						tmp = analysis.assign(tmp, accessIdx, loadedInterface, this);
+					}
+
+					++i;
+				}
+			}
+
 		}
 
 		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
