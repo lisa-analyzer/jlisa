@@ -14,11 +14,24 @@ public class ReflectionTest {
 
 		String returnTypeStr = m.getReturnType().getName(); // expected "void"
 
+		Class c4 = Class.forName("Felid");
+		Method m2 = c.getMethod("baz", new Class[] {c4});
+		String m2Name = m2.getName();
+
+		Method m3 = c.getMethod("bazz", new Class[] {c4}); // expected NoSuchMethodException
+		String m3Name = m2.getName();
+
 		return;
 	}
 }
 
-class Cat {
+class Felid {
+
+	void baz(Felid f) { }
+
+}
+
+class Cat extends Felid {
 	private int age;
 
 	private Foo foo;

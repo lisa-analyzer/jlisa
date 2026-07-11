@@ -144,3 +144,14 @@ class java.lang.NoSuchFieldException extends java.lang.Exception:
 		param this libtype java.lang.NoSuchFieldException*
 
 
+class java.lang.NoSuchMethodException extends java.lang.Exception:
+
+	instance method NoSuchMethodException: it.unive.jlisa.program.java.constructs.exceptions.NoSuchMethodExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.NoSuchMethodException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method NoSuchMethodException: it.unive.jlisa.program.java.constructs.exceptions.NoSuchMethodExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.NoSuchMethodException*
+

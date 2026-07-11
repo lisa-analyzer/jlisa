@@ -19,6 +19,8 @@ public class ReflectionTest {
 
 		Field superClassField2 = c.getField("hasWings");
 
+		Field noSuchField = c.getField("hasLegs");
+
 		return;
 	}
 }

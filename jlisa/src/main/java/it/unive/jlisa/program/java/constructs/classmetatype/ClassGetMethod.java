@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import it.unive.jlisa.program.ReflectionCache;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -34,6 +36,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -43,6 +46,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
@@ -85,9 +89,57 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
+		// TODO: handle unknown case
+		AnalysisState<A> methodSearched = searchMethod(interprocedural, state, left, middle, right, expressions);
+
+		if (!methodSearched.getExecutionExpressions().isEmpty()) {
+			return methodSearched;
+		}
+
+		// no method found, build the exception
+		JavaClassType noSuchMethodType = JavaClassType.getNoSuchMethodException();
+
+		JavaNewObj call = new JavaNewObj(getCFG(), location,
+				noSuchMethodType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, methodSearched, new ExpressionSet[0], expressions);
+
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchMethodType.getReference(), location);
+		state = analysis.assign(methodSearched, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(noSuchMethodType.getReference(), originating), this);
+	}
+
+	@Override
+	protected int compareSameClassAndParams(
+			Statement o) {
+		return 0;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> searchMethod(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+
 		Type stringType = getProgram().getTypes().getStringType();
 		Type refStringType = new JavaReferenceType(stringType);
 		Type classMetaType = JavaClassType.getClassMetaType();
+		Type refClassMetaType = new JavaReferenceType(classMetaType);
 		Type methodType = JavaClassType.getMethodType();
 		JavaReferenceType refMethodType = new JavaReferenceType(methodType);
 		JavaArrayType methodArrType = JavaArrayType.lookup(refMethodType, 1);
@@ -97,6 +149,16 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
+		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
+
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+
+		// TODO: this should throw an exception if null is the only runtime type (method not found).
+		// Also if null is not the only runtime type, both the exception and the result
+		// of the normal search must continue
+		if (clazzTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
+			return state.withExecutionExpressions(new ExpressionSet());
+		}
 
 		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 
@@ -160,15 +222,10 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			++i;
 		}
 
-		// TODO AP: method not found here
 
-		return state.bottomExecution();
-	}
+		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
 
-	@Override
-	protected int compareSameClassAndParams(
-			Statement o) {
-		return 0;
+		return searchMethod(interprocedural, state, superClass, middle, right, expressions);
 	}
 
 	// check whether a target method matches the signature of the candidate one

@@ -86,8 +86,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		// TODO: handle handle unknown case
-
+		// TODO: handle unknown case
 		AnalysisState<A> fieldSearched = searchField(interprocedural, state, left, right, expressions);
 
 		if (!fieldSearched.getExecutionExpressions().isEmpty()) {
@@ -99,11 +98,11 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 				noSuchFieldType.getReference(), new Expression[0]);
-		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		state = call.forwardSemanticsAux(interprocedural, fieldSearched, new ExpressionSet[0], expressions);
 
 		// assign exception to variable thrower
 		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchFieldType.getReference(), getLocation());
-		state = analysis.assign(state, throwVar,
+		state = analysis.assign(fieldSearched, throwVar,
 				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 		// deletes the receiver of the constructor
@@ -206,17 +205,21 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+
+		// TODO: this should throw an exception if null is the only runtime type (field not found).
+		// Also if null is not the only runtime type, both the exception and the result
+		// of the normal search must continue
+		if (clazzTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
+			return state.withExecutionExpressions(new ExpressionSet());
+		}
+
 		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 
 		AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, location);
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
 		AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, derefClazz, this);
-
-		if (clazzTypes.remove(new JavaReferenceType(NullType.INSTANCE)) && clazzTypes.isEmpty()) {
-			return state.withExecutionExpressions(new ExpressionSet());
-		}
 
 		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = getConstraints(analysis, state, accessClazzNameValue);
 
