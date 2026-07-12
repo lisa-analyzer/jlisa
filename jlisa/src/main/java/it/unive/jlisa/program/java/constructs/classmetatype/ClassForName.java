@@ -47,8 +47,6 @@ import it.unive.lisa.type.Untyped;
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.Class");
-
 	public ClassForName(
 			CFG cfg,
 			CodeLocation location,
