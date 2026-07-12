@@ -144,7 +144,7 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		tmp = tmp.lub(sem);
 
-		resultState = tmp.withExecutionExpression(field);
+		resultState = tmp.forgetIdentifier(field, this).withExecutionExpression(ref);
 
 		return resultState;
 	}
@@ -180,6 +180,8 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 			AnalysisState<A> t = analysis.assign(callState, accessThisFieldName, allocatedTypeExpr, this);
 			tmp = tmp.lub(t);
 		}
+
+		tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this);
 
 		return tmp;
 

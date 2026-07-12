@@ -176,9 +176,6 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		}
 
-		// assign the array to the parameterTypes field of Method
-		// TODO AP: add it to the stub file too
-
 		AccessChild accessParameterTypes = new AccessChild(refClassArrType, derefThisMethod, paramTypesVar, location);
 
 		tmp = tmp.lub(analysis.assign(tmp, accessParameterTypes, array, this));
@@ -196,8 +193,7 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		sem = analysis.assign(sem, accessThisMethodModifiers, modifiersConstant, this);
 
-
-		resultState = resultState.lub(sem).withExecutionExpression(method);
+		resultState = resultState.lub(sem).forgetIdentifier(method, this).withExecutionExpression(ref);
 
 		return resultState;
 	}
@@ -234,6 +230,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 			AnalysisState<A> t = analysis.assign(callState, accessThisFieldName, allocatedTypeExpr, this);
 			tmp = tmp.lub(t);
 		}
+
+		tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this);
 
 		return tmp;
 

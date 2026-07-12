@@ -288,7 +288,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		AnalysisState<A> stringAllocated =
 			allocString.forwardSemanticsAux(interprocedural, clazzAllocated, new ExpressionSet[0], expressions);
 
-
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression allocatedStringExpr : stringAllocated.getExecutionExpressions()) {
 			AnalysisState<A> t = analysis.assign(stringAllocated, accessThisClazzName, allocatedStringExpr, this);
@@ -299,6 +298,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		AccessChild accessValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
 		tmp = analysis.assign(tmp, accessValue, clazzName, this);
+		tmp = tmp.forgetIdentifiers(allocString.getMetaVariables(), this);
 
 		// assign the isArray field
 		AccessChild accessIsArray = new AccessChild(JavaBooleanType.INSTANCE, derefThisClazz, isArrayVar, location);
@@ -329,10 +329,13 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Constant c = new Constant(JavaIntType.INSTANCE, 0, location);
 		JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), len, refClassArray);
 
+
 		AnalysisState<A> interfacesAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
 		for (SymbolicExpression expr : interfacesAllocated.getExecutionExpressions()) {
 			tmp = analysis.assign(interfacesAllocated, accessInterfaces, expr, this);
 		}
+
+		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingClazzName;
