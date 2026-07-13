@@ -1,11 +1,13 @@
 package it.unive.jlisa.cron;
 
+import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
+
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import it.unive.lisa.outputs.HtmlResults;
-import java.io.IOException;
-import org.junit.jupiter.api.Test;
 
 public class ReflectionTest extends JLiSAAnalysisExecutor {
 	@Test
@@ -139,6 +141,22 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	@Test
 	public void testFieldGetStatic2() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-static-2",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testFieldGet3() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-3",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testFieldSet2() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-set-2",
 				"Main.java");
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);

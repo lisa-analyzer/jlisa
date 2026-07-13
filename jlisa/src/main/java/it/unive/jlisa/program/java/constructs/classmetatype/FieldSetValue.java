@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -20,6 +21,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
@@ -33,6 +35,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -40,6 +43,7 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -84,6 +88,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation loc = getLocation();
+		CFG cfg = getCFG();
 
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type stringType = getProgram().getTypes().getStringType();
@@ -130,8 +135,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 					reflectedGlobal = cu.getInstanceGlobal(fieldName, false);
 					if (reflectedGlobal == null)
 						reflectedGlobal = cu.getGlobal(fieldName);
-				}
-				else if (clazzUnit instanceof InterfaceUnit iu)
+				} else if (clazzUnit instanceof InterfaceUnit iu)
 					reflectedGlobal = iu.getGlobal(fieldName);
 				else
 					return state.topExecution();
@@ -142,26 +146,66 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 				Type reflectedFieldType = reflectedGlobal.getStaticType();
 
 				if (reflectedGlobal.isInstance()) {
-					GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
 
-					// safety: middle is always a subclass of Object
-					JavaReferenceType targetType = (JavaReferenceType) getMiddle().getStaticType();
+					// get the runtime types of the target object
+					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, middle, this);
 
-					HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), middle, loc);
-					AccessChild access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, loc);
+					// remove null, if present
+					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
-					// NOTE: this getMiddle() is wrong, but shouldn't hurt anything. It should be a fieldAccess expression
-					JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
+					AnalysisState<A> setState = state.bottomExecution();
 
-					AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right, expressions);
-					result = result.lub(t);
+					if (mightBeNull) {
+						// create NullPointerException for the null case
+						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
+
+						JavaNewObj npeCall = new JavaNewObj(cfg, loc,
+								npeType.getReference(), new Expression[0]);
+						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, state,
+								new ExpressionSet[0], expressions);
+
+						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), loc);
+						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
+								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
+						nullAnalysisState = nullAnalysisState
+								.forgetIdentifiers(getMiddle().getMetaVariables(), this);
+
+						AnalysisState<A> npeState = analysis.moveExecutionToError(
+								nullAnalysisState.withExecutionExpression(throwVar),
+								new Error(npeType.getReference(), originating), this);
+						setState = setState.lub(npeState);
+					}
+
+					// if there are non-null targets, proceed normally
+					if (!targetTypes.isEmpty()) {
+						GlobalVariable fieldVar = new GlobalVariable(Untyped.INSTANCE, fieldName, loc);
+
+						// safety: middle is always a subclass of Object
+						JavaReferenceType targetType = (JavaReferenceType) getMiddle().getStaticType();
+
+						HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), middle, loc);
+						AccessChild access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, loc);
+
+						// NOTE: this getMiddle() is wrong, but shouldn't hurt
+						// anything. It should be a fieldAccess expression
+						JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
+
+						AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right,
+								expressions);
+						setState = setState.lub(t);
+					}
+
+					result = result.lub(setState);
 				} else {
 					GlobalVariable reflectedAccess = new GlobalVariable(
 							reflectedGlobal.getStaticType(),
 							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
 							reflectedGlobal.getAnnotations(),
 							loc);
-					VariableRef target = new VariableRef(getCFG(), loc, reflectedAccess.getName(), reflectedGlobal.getStaticType());
+					VariableRef target = new VariableRef(getCFG(), loc, reflectedAccess.getName(),
+							reflectedGlobal.getStaticType());
 					JavaAssignment assign = new JavaAssignment(getCFG(), loc, target, getRight());
 
 					AnalysisState<A> t = assign.fwdBinarySemantics(

@@ -1,5 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
+
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -23,6 +27,7 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -46,6 +51,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
+import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -53,11 +59,9 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
 
 public class FieldGetValue extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -94,6 +98,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
+		CFG cfg = getCFG();
 
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type stringType = getProgram().getTypes().getStringType();
@@ -133,8 +138,6 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			clazzName = clazzName.replace('$', '.');
 			Unit clazzUnit = getProgram().getUnit(clazzName);
 
-			AnalysisState<A> accessedFieldState = state.bottomExecution();
-
 			for (it.unive.lisa.symbolic.value.BinaryExpression fieldNameConstraint : fieldNameConstraints) {
 
 				String fieldName = (String) ((Constant) fieldNameConstraint.getLeft()).getValue();
@@ -157,30 +160,74 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				SymbolicExpression access;
 				if (reflectedGlobal.isInstance()) {
 
-					// safety: getRight() is always of Object type
-					JavaReferenceType targetType = (JavaReferenceType) getRight().getStaticType();
+					// get the runtime types of the target object
+					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, right, this);
 
-					HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), right, location);
-					SymbolicExpression fieldVar = reflectedGlobal.toSymbolicVariable(location);
+					// remove null, if present
+					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
-					access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, location);
+					AnalysisState<A> accessState = state.bottomExecution();
+
+					if (mightBeNull) {
+						// create NullPointerException for the null case
+						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
+
+						JavaNewObj npeCall = new JavaNewObj(cfg, location,
+								npeType.getReference(), new Expression[0]);
+						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, state,
+								new ExpressionSet[0], expressions);
+
+						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), location);
+						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
+								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
+						nullAnalysisState = nullAnalysisState
+								.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+						AnalysisState<A> npeState = analysis.moveExecutionToError(
+								nullAnalysisState.withExecutionExpression(throwVar),
+								new Error(npeType.getReference(), originating), this);
+						accessState = accessState.lub(npeState);
+					}
+
+					// if there are non-null targets, proceed normally
+					if (!targetTypes.isEmpty()) {
+						// safety: getRight() is always of Object type
+						JavaReferenceType targetType = (JavaReferenceType) getRight().getStaticType();
+
+						HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), right, location);
+						SymbolicExpression fieldVar = reflectedGlobal.toSymbolicVariable(location);
+
+						access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, location);
+
+						if (reflectedFieldType.isReferenceType()) {
+							access = new HeapReference(reflectedFieldType, access, location);
+						}
+
+						AnalysisState<A> okState = analysis.smallStepSemantics(state, access, this);
+						AnalysisState<A> boxedState = getBoxedState(interprocedural, okState, reflectedFieldType,
+								expressions);
+						accessState = accessState.lub(boxedState);
+					}
+
+					result = result.lub(accessState);
 				} else {
 					access = new GlobalVariable(
 							reflectedGlobal.getStaticType(),
 							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
 							reflectedGlobal.getAnnotations(),
 							location);
+
+					if (reflectedFieldType.isReferenceType()) {
+						access = new HeapReference(reflectedFieldType, access, location);
+					}
+
+					AnalysisState<A> accessedFieldState = analysis.smallStepSemantics(state, access, this);
+					AnalysisState<A> boxedState = getBoxedState(interprocedural, accessedFieldState,
+							reflectedFieldType, expressions);
+					result = result.lub(boxedState);
 				}
-
-				if (reflectedFieldType.isReferenceType()) {
-					access = new HeapReference(reflectedFieldType, access, location);
-				}
-
-				accessedFieldState = analysis.smallStepSemantics(state, access, this);
-
-				AnalysisState<A> boxedState = getBoxedState(interprocedural, accessedFieldState, reflectedFieldType,
-						expressions);
-				result = result.lub(boxedState);
 			}
 		}
 
