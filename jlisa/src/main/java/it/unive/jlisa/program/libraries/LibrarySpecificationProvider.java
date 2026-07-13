@@ -30,7 +30,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 
 public class LibrarySpecificationProvider {
 
-	public static final String LIBS_FOLDER = "/libraries/";
+	public static final String LIBS_FOLDER = "/java-libraries/";
 
 	private static final Map<String, ClassDef> AVAILABLE_LIB_CLASSES = new TreeMap<>();
 
