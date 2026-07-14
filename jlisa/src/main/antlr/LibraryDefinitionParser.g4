@@ -31,7 +31,7 @@ param
    ;
 
 field
-   : INSTANCE? FIELD name = IDENTIFIER type
+   : INSTANCE? FIELD name = IDENTIFIER type (DEFAULT val = value)?
    ;
 
 method

@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.libraries;
 
+import it.unive.jlisa.antlr.LibraryDefinitionParser;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FileContext;
@@ -57,10 +58,17 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	@Override
 	public Field visitField(
 			FieldContext ctx) {
-		return new Field(
-				ctx.INSTANCE() != null,
-				ctx.name.getText(),
-				visitType(ctx.type()));
+		boolean instance = ctx.INSTANCE() != null;
+		String name = ctx.name.getText();
+		Type type = visitType(ctx.type());
+		if (ctx.DEFAULT() == null)
+			return new Field(instance, name, type);
+
+		Value def = getDefaultValue(ctx.val);
+		if (def == null)
+			throw new LibraryParsingException(file, "Unsupported default field type: " + type);
+
+		return new Field(instance, name, type, def);
 	}
 
 	@Override
@@ -71,16 +79,8 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 		if (ctx.DEFAULT() == null)
 			return new Parameter(name, type);
 
-		Value def;
-		if (ctx.val.NONE() != null)
-			def = new NoneValue();
-		else if (ctx.val.BOOLEAN() != null)
-			def = new BooleanValue(ctx.val.BOOLEAN().getText().equals("true"));
-		else if (ctx.val.STRING() != null)
-			def = new StringValue(ctx.val.STRING().getText());
-		else if (ctx.val.NUMBER() != null)
-			def = new NumberValue(Integer.parseInt(ctx.val.NUMBER().getText()));
-		else
+		Value def = getDefaultValue(ctx.val);
+		if (def == null)
 			throw new LibraryParsingException(file, "Unsupported default parameter type: " + type);
 
 		return new Parameter(name, type, def);
@@ -133,6 +133,20 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 		for (MethodContext meth : ctx.method())
 			runtime.getMethods().add(visitMethod(meth));
 		return runtime;
+	}
+
+	private Value getDefaultValue(
+			LibraryDefinitionParser.ValueContext val) {
+		if (val.NONE() != null)
+			return new NoneValue();
+		else if (val.BOOLEAN() != null)
+			return new BooleanValue(val.BOOLEAN().getText().equals("true"));
+		else if (val.STRING() != null)
+			return new StringValue(val.STRING().getText());
+		else if (val.NUMBER() != null)
+			return new NumberValue(Integer.parseInt(val.NUMBER().getText()));
+		else
+			return null;
 	}
 
 	public static class LibraryParsingException extends RuntimeException {
