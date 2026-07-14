@@ -9,8 +9,8 @@ public final class FQNUtils {
 	}
 
 	/**
-	 * Builds the fully qualified name of a top-level type declared in the
-	 * given compilation unit.
+	 * Builds the fully qualified name of a top-level type declared in the given
+	 * compilation unit.
 	 *
 	 * @param cu   the compilation unit declaring the type
 	 * @param type the top-level type declaration

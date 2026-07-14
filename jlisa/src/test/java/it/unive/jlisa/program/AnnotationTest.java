@@ -100,6 +100,7 @@ public class AnnotationTest {
 				"java-testcases/annotation/S2.java",
 				"java-testcases/annotation/S3.java",
 				"java-testcases/annotation/S4.java",
+				"java-testcases/annotation/S5.java",
 
 				"java-testcases/annotation/Main.java"));
 	}
@@ -425,6 +426,16 @@ public class AnnotationTest {
 				new AnnotationMember("value2", new EnumAnnotationValue("Enumeration", "Enum3"))));
 
 		assertAnnotationOfMethod("S4", "s4", isAnnotatedWith);
+	}
+
+	@Test
+	public void testLibraryConstantAsQualifiedNameMemberAnnotation() {
+		Annotation isAnnotatedWith = new Annotation("AnnotationWithQualifiedNameMember", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("\"x\"")),
+				new AnnotationMember("value2", new IntAnnotationValue(5)),
+				new AnnotationMember("value3", new BoolAnnotationValue(true))));
+
+		assertAnnotationOfMethod("S5", "s5", isAnnotatedWith);
 	}
 
 	@AfterAll
