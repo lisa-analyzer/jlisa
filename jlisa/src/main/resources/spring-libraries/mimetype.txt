@@ -1,0 +1,1 @@
+class org.springframework.util.MimeType extends java.lang.Object:

@@ -1,0 +1,4 @@
+class org.springframework.http.MediaType extends org.springframework.util.MimeType:
+
+field APPLICATION_JSON_VALUE libtype java.lang.String* default "application/json"
+field TEXT_HTML_VALUE libtype java.lang.String* default "text/html"

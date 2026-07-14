@@ -29,7 +29,9 @@ public class LibrarySpecificationProvider {
 
 	// Add here other source folders with libraries
 	public static final List<String> LIBS_FOLDER = List.of(
-			"/java-libraries/");
+			"/java-libraries/",
+			"/spring-libraries"
+	);
 
 	private static final Map<String, ClassDef> AVAILABLE_LIB_CLASSES = new TreeMap<>();
 

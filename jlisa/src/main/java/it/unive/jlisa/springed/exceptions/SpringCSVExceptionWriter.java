@@ -59,7 +59,7 @@ public class SpringCSVExceptionWriter extends CSVExceptionWriter {
 			category = "Unresolvable Type";
 			cause = ut.getUnresolvedName();
 			break;
-		case UnsupportedAnnotationException ua:
+		case UnsupportedAnnotationException ignored:
 			category = "Unsupported Annotation Variation";
 			break;
 		default:
