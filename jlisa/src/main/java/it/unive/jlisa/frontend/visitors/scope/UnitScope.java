@@ -153,11 +153,12 @@ public final class UnitScope extends Scope {
 
 		for (ImportDeclaration i : imports) {
 			if (i.isStatic()) {
-				throw new ParsingException(
+				environment.parserContext().addException(new ParsingException(
 						"java-import",
 						ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Static imports are not supported.",
-						environment.getSourceCodeLocation(i));
+						environment.getSourceCodeLocation(i)));
+				continue;
 			}
 
 			String importName = i.getName().getFullyQualifiedName();
