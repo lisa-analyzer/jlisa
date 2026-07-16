@@ -128,25 +128,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
 
-
-		// if lastClass is not primitive, there may be a static initializer to run
-		// FIXME AP: move this in class.forName
-		if (loadingType instanceof UnitType loadingClazz) {
-			// execute static initializer
-			// FIXME: initializer of parent classes is not run, see test class-for-name-1
-			// ClassUnit classUnit = (ClassUnit) loadingClazz.getUnit();
-			// if (classUnit.getCodeMembersByName(loadingClazz.toString()).isEmpty()) {
-			// 	Set<CompilationUnit> superClasses = classUnit
-			// 			.getImmediateAncestors().stream()
-			// 			.filter(u -> u instanceof ClassUnit)
-			// 			.collect(Collectors.toSet());
-			//
-			// 	classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
-			// }
-			// state = InitializedClassSet.initialize(state, new JavaReferenceType(loadingClazz), this, interprocedural);
-		}
-
-
 		AnalysisState<A> callState = allocateClass(interprocedural, state, expressions);
 
 		AnalysisState<A> tmp = callState;
@@ -262,11 +243,20 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
 		JavaReferenceType refClassArray = JavaArrayType.CLASS_ARRAY;
 
+		Type fieldType = JavaClassType.getFieldMetaType();
+		Type refFieldType = new JavaReferenceType(fieldType);
+		JavaArrayType fieldArray = JavaArrayType.lookup(refFieldType, 1);
+		JavaReferenceType refFieldArray = new JavaReferenceType(fieldArray);
+
+		JavaReferenceType refMethodArray = new JavaReferenceType(JavaArrayType.lookup(new JavaReferenceType(JavaClassType.getMethodType()), 1));
+
 		GlobalVariable isArrayVar = new GlobalVariable(Untyped.INSTANCE, "isArray", location);
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 		GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
+		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", location);
+		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
 
 
 		// allocate the Class object
@@ -336,6 +326,32 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		}
 
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+
+		// allocate an empty array of fields
+		AccessChild accessDeclaredFields = new AccessChild(refFieldArray, derefThisClazz, declaredFieldsVar, location);
+
+		IntLiteral zero = new IntLiteral(getCFG(), location, 0);
+		c = new Constant(JavaIntType.INSTANCE, 0, location);
+		newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refFieldArray);
+
+		AnalysisState<A> fieldsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
+		for (SymbolicExpression expr : fieldsAllocated.getExecutionExpressions()) {
+			tmp = analysis.assign(fieldsAllocated, accessDeclaredFields, expr, this);
+		}
+		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+
+
+		// allocate an empty array of methods
+		AccessChild accessDeclaredMethods = new AccessChild(refMethodArray, derefThisClazz, declaredMethodsVar, location);
+
+		newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refMethodArray);
+
+		AnalysisState<A> methodsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
+		for (SymbolicExpression expr : methodsAllocated.getExecutionExpressions()) {
+			tmp = analysis.assign(methodsAllocated, accessDeclaredMethods, expr, this);
+		}
+		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingClazzName;

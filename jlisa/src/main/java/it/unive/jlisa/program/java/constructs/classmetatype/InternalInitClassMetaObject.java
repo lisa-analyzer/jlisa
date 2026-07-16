@@ -37,10 +37,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
@@ -49,8 +47,6 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 	protected Statement originating;
 
 	private Type initializingClassType;
-
-	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("InternalInitClassMetaObject");
 
 	public InternalInitClassMetaObject(
 			CFG cfg,
@@ -137,60 +133,41 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
 
-		MemoryAllocation created = new MemoryAllocation(fieldArrType, synGen.nextLocation(), false);
-		HeapReference ref = new HeapReference(new JavaReferenceType(fieldArrType), created, getLocation());
+		AnalysisState<A> tmp = state;
 
-		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(state, created, this);
+		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, location);
+		AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar, location);
 
-		InstrumentedReceiver array = new InstrumentedReceiver(new JavaReferenceType(fieldArrType), true, getLocation());
-		arrAllocated = analysis.assign(arrAllocated, array, ref, this);
+		HeapDereference derefArr = new HeapDereference(fieldArrType, accessFields, location);
 
-		AnalysisState<A> tmp = arrAllocated.bottomExecution();
-
-		HeapDereference arrayDeref = new HeapDereference(fieldArrType, array, getLocation());
-
-		// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
 
 		// assign length to array
 		Constant c = new Constant(JavaIntType.INSTANCE, globals.size(), location);
-		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
-		tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, c, this));
-
-
-		// assign to `declaredFields` the newly allocated array
-		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, getLocation());
-		AccessChild accessDeclaredFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar, getLocation());
+		tmp = analysis.assign(tmp, accessLen, c, this);
 
 		int nextIdx = 0;
-
 		for (Global global : globals) {
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, nextIdx, location);
 
-			AccessChild accessIdx = new AccessChild(wrappedFieldType, arrayDeref, idx, getLocation());
+			AccessChild accessIdx = new AccessChild(wrappedFieldType, derefArr, idx, getLocation());
 
 			LoadField loadField = new LoadField(global, getCFG(), getLocation(), new Expression[0]);
 
 			ExpressionSet[] params = genLoadFieldParams(clazz, global);
 
-			AnalysisState<A> t = loadField.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
+			AnalysisState<A> t = loadField.forwardSemanticsAux(interprocedural, tmp, params, expressions);
 
 			// assign initialized field to the next index of the array
 			for (SymbolicExpression initializedField : t.getExecutionExpressions()) {
-				AnalysisState<A> t2 = analysis.assign(t, accessIdx, initializedField, this);
-
-				tmp = tmp.lub(t2);
+				tmp = analysis.assign(t, accessIdx, initializedField, this);
 			}
 
 			++nextIdx;
-
 		}
 
-		tmp = tmp.lub(analysis.assign(arrAllocated, accessDeclaredFields, array, this));
-		tmp = tmp.forgetIdentifier(array, this);
-
 		return tmp;
-
 	}
 
 	private ExpressionSet[] genLoadFieldParams(SymbolicExpression clazz, Global global) {
@@ -262,29 +239,19 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", getLocation());
 
-		MemoryAllocation created = new MemoryAllocation(methodArrType, synGen.nextLocation(), false);
-		HeapReference ref = new HeapReference(new JavaReferenceType(methodArrType), created, getLocation());
 
-		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(state, created, this);
+		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, location);
+		AccessChild accessMethods = new AccessChild(new JavaReferenceType(methodArrType), derefClazz, declaredMethodsVar, location);
 
-		InstrumentedReceiver array = new InstrumentedReceiver(new JavaReferenceType(methodArrType), true, getLocation());
-		arrAllocated = analysis.assign(arrAllocated, array, ref, this);
+		HeapDereference derefArr = new HeapDereference(methodArrType, accessMethods, location);
 
-		AnalysisState<A> tmp = arrAllocated.bottomExecution();
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
 
-		HeapDereference arrayDeref = new HeapDereference(methodArrType, array, getLocation());
-
-		// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
+		AnalysisState<A> tmp = state;
 
 		// assign length to array
 		Constant c = new Constant(JavaIntType.INSTANCE, methods.size(), location);
-		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
-		tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, c, this));
-
-
-		// assign to `declaredMethods` the newly allocated array
-		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, getLocation());
-		AccessChild accessDeclaredMethods = new AccessChild(new JavaReferenceType(methodArrType), derefClazz, declaredMethodsVar, getLocation());
+		tmp = analysis.assign(tmp, accessLen, c, this);
 
 		int nextIdx = 0;
 
@@ -292,27 +259,22 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, nextIdx, location);
 
-			AccessChild accessIdx = new AccessChild(wrappedMethodType, arrayDeref, idx, getLocation());
+			AccessChild accessIdx = new AccessChild(wrappedMethodType, derefArr, idx, getLocation());
 
 			LoadMethod loadMethod = new LoadMethod(method.getDescriptor(), getCFG(), getLocation(), new Expression[0]);
 
 			ExpressionSet[] params = genMethodParams(clazz, method.getDescriptor());
 
-			AnalysisState<A> t = loadMethod.forwardSemanticsAux(interprocedural, arrAllocated, params, expressions);
+			AnalysisState<A> t = loadMethod.forwardSemanticsAux(interprocedural, tmp, params, expressions);
 
 			// assign initialized method to the next index of the array
 			for (SymbolicExpression initializedMethod : t.getExecutionExpressions()) {
-				AnalysisState<A> t2 = analysis.assign(t, accessIdx, initializedMethod, this);
-
-				tmp = tmp.lub(t2);
+				tmp = analysis.assign(t, accessIdx, initializedMethod, this);
 			}
 
 			++nextIdx;
 
 		}
-
-		tmp = tmp.lub(analysis.assign(arrAllocated, accessDeclaredMethods, array, this));
-		tmp = tmp.forgetIdentifier(array, this);
 
 		return tmp;
 
