@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import java.lang.reflect.Modifier;
 
-import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaArrayType;

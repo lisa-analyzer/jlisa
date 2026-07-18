@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;

@@ -4,7 +4,8 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import it.unive.jlisa.program.ReflectionCache;
+import it.unive.jlisa.program.CachedReflectionDataSet;
+import it.unive.jlisa.program.LoadedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
@@ -175,8 +176,12 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		String clazzName = (String)((Constant)constraint.getLeft()).getValue();
 		UnitType t = getTypeFromStr(clazzName);
 
-		if (!ReflectionCache.isClassInitialized(t)) {
-			ExpressionSet clazz = new ExpressionSet(ReflectionCache.getCachedClass(t));
+		if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
+
+			assert(LoadedClassSet.isClassLoaded(state, t));
+			ExpressionSet clazz = new ExpressionSet(
+					LoadedClassSet.getLoadedClassHandle(t, location)
+					);
 
 			InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
 			AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);

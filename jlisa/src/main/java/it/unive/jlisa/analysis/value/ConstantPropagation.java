@@ -1,7 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
 import it.unive.jlisa.lattices.ConstantValue;
-import it.unive.jlisa.program.ReflectionCache;
 import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
@@ -1417,74 +1416,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
-		if (operator instanceof JavaIsMethodDefinedOperator && arg.length > 1) {
-
-			// we have at least class and method name
-			String className = (String) arg[0].getValue();
-			String methodName = (String) arg[1].getValue();
-
-			JavaClassType ct = JavaClassType.lookup(className);
-			CompilationUnit cu = ct.getUnit();
-
-			// all methods with that name, both instance and static
-			Collection<CodeMember> codeMembersWithName = cu.getInstanceCodeMembersByName(methodName, true);
-			codeMembersWithName.addAll(cu.getCodeMembersByName(methodName));
-
-			int actualParamCount = Math.max(0, arg.length - 2);
-
-			// filter methods by the number of parameters inferred from the
-			// number of
-			// provided class arguments (arg.length - 2). For instance methods
-			// the
-			// descriptor contains an extra implicit receiver formal, so
-			// subtract 1.
-			codeMembersWithName.removeIf(cm -> {
-				CodeMemberDescriptor descriptor = cm.getDescriptor();
-				int expected = descriptor.isInstance() ? descriptor.getFormals().length - 1
-						: descriptor.getFormals().length;
-				return expected != actualParamCount;
-			});
-
-			if (codeMembersWithName.isEmpty())
-				return Satisfiability.NOT_SATISFIED;
-
-			// filter using types
-			for (int i = 0; i < actualParamCount; ++i) {
-
-				String getMethodParamType = (String) arg[2 + i].getValue();
-
-				Set<CodeMember> toRemove = new HashSet<CodeMember>();
-
-				for (CodeMember possibleMethod : codeMembersWithName) {
-					CodeMemberDescriptor descriptor = possibleMethod.getDescriptor();
-					Parameter[] parameters = descriptor.getFormals();
-
-					int skipFirst = (descriptor.isInstance()) ? 1 : 0;
-					Parameter currentParam = parameters[i + skipFirst];
-
-					Type paramType = currentParam.getStaticType();
-					if (paramType.isReferenceType()) {
-						paramType = paramType.asReferenceType().getInnerType();
-					}
-
-					if (!paramType.toString().equals(getMethodParamType)) {
-						toRemove.add(possibleMethod);
-					}
-				}
-
-				codeMembersWithName.removeAll(toRemove);
-
-				if (codeMembersWithName.isEmpty())
-					return Satisfiability.NOT_SATISFIED;
-			}
-
-			assert (codeMembersWithName.size() == 1);
-
-			ReflectionCache.lastMethod = codeMembersWithName.iterator().next();
-
-			return Satisfiability.SATISFIED;
-		}
-
 		return Satisfiability.UNKNOWN;
 	}
 
@@ -1570,9 +1501,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			v = v.replace('$', '.');
 
 			// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
-			//
-			// TODO AP: this code is almost identical to the one in reflectionCache. I think the type lookup should just be in JavaTypeSystem
-			// with a flag telling whether to also look for primitive types or not
+
 			boolean classLookup = true;
 			boolean interfaceLookup = true;
 

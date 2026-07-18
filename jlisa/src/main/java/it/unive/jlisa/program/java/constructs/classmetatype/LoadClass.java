@@ -5,10 +5,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import it.unive.jlisa.program.ReflectionCache;
+import it.unive.jlisa.program.LoadedClassSet;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
-import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -122,9 +121,9 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-		// check if class is already loaded
-		if (ReflectionCache.isClassLoaded(loadingType)) {
-			SymbolicExpression accessClazz = ReflectionCache.getCachedClass(loadingType);
+
+		if (LoadedClassSet.isClassLoaded(state, loadingType)) {
+			SymbolicExpression accessClazz = LoadedClassSet.getLoadedClassHandle(loadingType, location);
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
 
@@ -364,7 +363,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		tmp = tmp.withExecutionExpression(clazzVar);
 
-		ReflectionCache.cacheLoadedClass(loadingType, clazzVar);
+		tmp = LoadedClassSet.addLoadedClass(tmp, interprocedural, loadingType);
 
 		return tmp;
 	}

@@ -4,7 +4,8 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import it.unive.jlisa.program.ReflectionCache;
+import it.unive.jlisa.program.CachedReflectionDataSet;
+import it.unive.jlisa.program.LoadedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -230,8 +231,10 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		String clazzName = (String)((Constant)constraint.getLeft()).getValue();
 		UnitType t = getTypeFromStr(clazzName);
 
-		if (!ReflectionCache.isClassInitialized(t)) {
-			ExpressionSet clazz = new ExpressionSet(ReflectionCache.getCachedClass(t));
+		if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
+
+			assert(LoadedClassSet.isClassLoaded(state, t));
+			ExpressionSet clazz = new ExpressionSet(LoadedClassSet.getLoadedClassHandle(t, location));
 
 			InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
 			AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
@@ -258,8 +261,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
-
-		ExpressionSet foundField = new ExpressionSet();
 
 		// look for a field with the same name
 		while (outOfBoundsFieldArr == false) {
@@ -302,6 +303,9 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		// try to look in superclasses first
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
+
+		// TODO: look in interfaces too.
+		// we aren't doing that since static fields in interfaces are not allowed as of now
 
 		return searchField(interprocedural, state, superClass, right, expressions);
 	}

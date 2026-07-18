@@ -6,8 +6,8 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.program.ReflectionCache;
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.CachedReflectionDataSet;
+import it.unive.jlisa.program.LoadedClassSet;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -72,7 +72,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		assert(params.length == 1);
 		assert(params[0].size() == 1);
-		assert(ReflectionCache.isClassLoaded(initializingClassType));
+		assert(LoadedClassSet.isClassLoaded(state, initializingClassType));
 
 		SymbolicExpression clazz = params[0].iterator().next();
 
@@ -82,13 +82,12 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		AnalysisState<A> tmp = state;
 
-		if (!ReflectionCache.isClassInitialized(initializingClassType)) {
-
+		if (!CachedReflectionDataSet.isClassReflectionDataCached(tmp, initializingClassType)) {
 			// set it as initialized to avoid reinitialization
-			ReflectionCache.addInitializedClass(initializingClassType);
+			tmp = CachedReflectionDataSet.cacheReflectionData(tmp, interprocedural, initializingClassType);
 
 			if (initializingClassType instanceof UnitType ut) {
-				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, state, expressions, getAllFields(ut.getUnit()), clazz);
+				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, tmp, expressions, getAllFields(ut.getUnit()), clazz);
 
 				AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(ut.getUnit()), clazz);
 
@@ -365,7 +364,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		AnalysisState<A> tmp = state;
 
 		// initialize the class if not already initialized
-		if (!ReflectionCache.isClassInitialized(superclassType)) {
+		if (!CachedReflectionDataSet.isClassReflectionDataCached(tmp, superclassType)) {
 
 			SymbolicExpression expr = new HeapReference(refClassMetaType, accessSuperclass, location);
 
@@ -373,9 +372,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 			AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(superclassUnit), expr);
 
-			ReflectionCache.addInitializedClass(superclassType);
-
 			tmp = methodsLoaded;
+
+			tmp = CachedReflectionDataSet.cacheReflectionData(tmp, interprocedural, superclassType);
 		}
 
 		return tmp.lub(initializeSuperclasses(interprocedural, tmp, expressions, accessSuperclass, superclassType));
