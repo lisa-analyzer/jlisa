@@ -610,6 +610,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return new ConstantValue(s);
 		}
 
+		if (operator instanceof IsMemberStaticOperator) {
+			if (arg.getValue() instanceof Integer i)
+				return new ConstantValue((i & java.lang.reflect.Modifier.STATIC) != 0);
+		}
+
 		return top();
 	}
 

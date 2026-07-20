@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.jlisa.program.operator.IsMemberStaticOperator;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
@@ -131,6 +132,21 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		HeapDereference derefName = new HeapDereference(stringType, accessName, location);
 		AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
+		// check if method is static via modifiers
+		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", location);
+		HeapDereference derefMethodModifiers = new HeapDereference(methodType, left, location);
+		AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefMethodModifiers, modifiersVar,
+				location);
+
+		it.unive.lisa.symbolic.value.UnaryExpression isStaticExpr = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaBooleanType.INSTANCE, accessModifiers, IsMemberStaticOperator.INSTANCE, location);
+
+		Satisfiability isStaticSat = Satisfiability.NOT_SATISFIED;
+		try {
+			isStaticSat = analysis.satisfies(state, isStaticExpr, this);
+		} catch (SemanticException e) {
+			// conservative: if we can't determine, treat as non-static
+		}
 
 		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
 
