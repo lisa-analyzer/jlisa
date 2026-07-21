@@ -45,7 +45,7 @@ public class TestHelpers {
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new HtmlResults<>(true));
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		// conf.forceUpdate = true;
+		conf.forceUpdate = true;
 		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 		// the abstract domain
@@ -92,6 +92,7 @@ public class TestHelpers {
 
 		return conf;
 	}
+<<<<<<< HEAD
 
 	public static CronConfiguration recency(
 			String testDir,
@@ -113,3 +114,6 @@ public class TestHelpers {
 		return conf;
 	}
 }
+=======
+}
+>>>>>>> refs/remotes/origin/master

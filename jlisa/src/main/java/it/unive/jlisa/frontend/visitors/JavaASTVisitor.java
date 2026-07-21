@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -9,31 +10,28 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public abstract class JavaASTVisitor extends ASTVisitor {
-	protected String source;
-	protected CompilationUnit compilationUnit;
-	protected ParserContext parserContext;
+	private final ParsingEnvironment environment;
 
 	public JavaASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit) {
-		this.parserContext = parserContext;
-		this.source = source;
-		this.compilationUnit = compilationUnit;
+			ParsingEnvironment environment) {
+		this.environment = environment;
 	}
 
 	public SourceCodeLocation getSourceCodeLocation(
 			ASTNode node) {
 		int startPos = node.getStartPosition();
-		return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
-				compilationUnit.getColumnNumber(startPos)).getCurrentLocation();
+		return environment.parserContext()
+				.getLocationManager(environment.source(), environment.astUnit().getLineNumber(startPos),
+						environment.astUnit().getColumnNumber(startPos))
+				.getCurrentLocation();
 	}
 
 	public SourceCodeLocationManager getSourceCodeLocationManager(
 			ASTNode node) {
 		int startPos = node.getStartPosition();
-		return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
-				compilationUnit.getColumnNumber(startPos));
+		return environment.parserContext().getLocationManager(environment.source(),
+				environment.astUnit().getLineNumber(startPos),
+				environment.astUnit().getColumnNumber(startPos));
 	}
 
 	public SourceCodeLocationManager getSourceCodeLocationManager(
@@ -41,22 +39,36 @@ public abstract class JavaASTVisitor extends ASTVisitor {
 			boolean end) {
 		int startPos = node.getStartPosition();
 		if (end) {
-			return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
-					compilationUnit.getColumnNumber(startPos) + node.getLength());
+			return environment.parserContext().getLocationManager(environment.source(),
+					environment.astUnit().getLineNumber(startPos),
+					environment.astUnit().getColumnNumber(startPos) + node.getLength());
 		}
-		return parserContext.getLocationManager(this.source, compilationUnit.getLineNumber(startPos),
-				compilationUnit.getColumnNumber(startPos));
+		return environment.parserContext().getLocationManager(environment.source(),
+				environment.astUnit().getLineNumber(startPos),
+				environment.astUnit().getColumnNumber(startPos));
 	}
 
 	public Program getProgram() {
-		return parserContext.getProgram();
+		return environment.parserContext().getProgram();
 	}
 
 	public int getApiLevel() {
-		return parserContext.getApiLevel();
+		return environment.parserContext().getApiLevel();
 	}
 
 	public ParserContext getParserContext() {
-		return parserContext;
+		return environment.parserContext();
+	}
+
+	public String getSource() {
+		return environment.source();
+	}
+
+	public CompilationUnit getAstUnit() {
+		return environment.astUnit();
+	}
+
+	public ParsingEnvironment getEnvironment() {
+		return environment;
 	}
 }

@@ -1,18 +1,18 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.util.VariableInfo;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.Program;
-import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.*;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
  * Central context for parsing operations that manages program state, variable
@@ -246,5 +246,33 @@ public class ParserContext {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Evaluates an AST node with the given visitor and returns its result.
+	 *
+	 * @param <R>             the result type
+	 * @param <V>             the visitor type (must extend ASTVisitor and
+	 *                            implement ResultHolder)
+	 * @param node            the AST node to visit
+	 * @param visitorSupplier supplier for creating a fresh visitor
+	 * 
+	 * @return the result of visiting the node
+	 */
+	public <R, V extends org.eclipse.jdt.core.dom.ASTVisitor & ResultHolder<R>> R evaluate(
+			ASTNode node,
+			Supplier<V> visitorSupplier) {
+		V visitor = visitorSupplier.get();
+		node.accept(visitor);
+		return visitor.getResult();
+	}
+
+	/**
+	 * Optional variant for evaluating pre-created results (like passing the
+	 * node itself).
+	 */
+	public <R> R evaluate(
+			Supplier<R> computation) {
+		return computation.get();
 	}
 }
