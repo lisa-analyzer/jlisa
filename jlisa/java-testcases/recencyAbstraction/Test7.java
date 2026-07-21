@@ -17,11 +17,9 @@ public class Main{
 		
 		A a;
 		A b;
-		A c;
 		
 		a = create(0);
 		b = create(1);
-		c = create(2);
 		
 		int t = args.length * (-args.length);
 		
@@ -30,9 +28,7 @@ public class Main{
 		} else {
 			b = create(7);
 		}
-		
-		int i = 1;
-		
+				
 		a.a += 10;
 		b.a = 200;
 	}

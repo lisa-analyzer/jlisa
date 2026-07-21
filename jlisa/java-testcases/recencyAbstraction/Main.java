@@ -18,27 +18,12 @@ public class Main{
 		A a;
 		A b;
 		A c;
-		A d;
-		A e;
 		
-		a = create(1);
-		a = create(2);
-		a.a = 0;
-		a = create(3);
+		a = create(0);
 		b = create(7);
-		//c = create(3);
+		c = create(-1);	
 		
-		b.a = 8;
-		a.a += 5;
-		
-		c = create(10);
-		
-		a.a = 17;
-		
-		d = create(-3);
-		
-		e = create(50);
-		
-		
+		a.a += 2;
+		c.a += 5;
 	}
 }
