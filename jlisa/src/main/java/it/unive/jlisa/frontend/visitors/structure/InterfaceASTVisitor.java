@@ -38,7 +38,7 @@ public class InterfaceASTVisitor extends ClassASTVisitor {
 					// using first permitted type for location
 					getSourceCodeLocation((ASTNode) node.permittedTypes().get(0)));
 
-		createClassInitializer(getScope().getLisaClassUnit(), node);
+		createClassInitializer(getScope().getLiSACompilationUnit(), node);
 
 		return false;
 	}

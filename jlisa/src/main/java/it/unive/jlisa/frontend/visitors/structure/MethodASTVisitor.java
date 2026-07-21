@@ -67,10 +67,10 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		CodeMember codeMember;
 		if (!Modifier.isStatic(modifiers)) {
-			codeMember = getScope().getLisaClassUnit().getInstanceCodeMember(codeMemberDescriptor.getSignature(),
+			codeMember = getScope().getLiSACompilationUnit().getInstanceCodeMember(codeMemberDescriptor.getSignature(),
 					false);
 		} else {
-			codeMember = getScope().getLisaClassUnit().getCodeMember(codeMemberDescriptor.getSignature());
+			codeMember = getScope().getLiSACompilationUnit().getCodeMember(codeMemberDescriptor.getSignature());
 		}
 
 		if (codeMember == null) {
@@ -78,7 +78,7 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 			throw new ParsingException("missing_method_descriptor",
 					ParsingException.Type.PARSING_ERROR,
 					"Missing code member descriptor for " + codeMemberDescriptor + " in unit "
-							+ getScope().getLisaClassUnit().getName(),
+							+ getScope().getLiSACompilationUnit().getName(),
 					getSourceCodeLocation(node));
 		}
 
@@ -118,7 +118,8 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 		cfg.getNodeList().mergeWith(block.getBody());
 
 		if (node.isConstructor() && getScope().getEnclosingClass() != null) {
-			it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLisaClassUnit().getName());
+			it.unive.lisa.type.Type type = getProgram().getTypes()
+					.getType(getScope().getLiSACompilationUnit().getName());
 			JavaAssignment asg = new JavaAssignment(
 					cfg,
 					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
@@ -218,7 +219,8 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		if (instance) {
-			it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLisaClassUnit().getName());
+			it.unive.lisa.type.Type type = getProgram().getTypes()
+					.getType(getScope().getLiSACompilationUnit().getName());
 			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 					new Annotations()));
 		}
@@ -233,7 +235,7 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 		// TODO annotations
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLisaClassUnit(), instance,
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLiSACompilationUnit(), instance,
 				node.getName().getIdentifier(),
 				returnType.isInMemoryType() ? new JavaReferenceType(returnType) : returnType, annotations, paramArray);
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
@@ -251,7 +253,7 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 		CodeLocation loc = getSourceCodeLocation(node);
 		JavaCodeMemberDescriptor codeMemberDescriptor;
 		boolean instance = !Modifier.isStatic(node.getModifiers());
-		it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLisaClassUnit().getName());
+		it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLiSACompilationUnit().getName());
 
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
@@ -273,7 +275,7 @@ class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder
 		// TODO annotations
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
-		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLisaClassUnit(), instance,
+		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLiSACompilationUnit(), instance,
 				node.getName().getIdentifier(), VoidType.INSTANCE, annotations, paramArray);
 		if (node.isConstructor() || Modifier.isStatic(node.getModifiers())) {
 			codeMemberDescriptor.setOverridable(false);

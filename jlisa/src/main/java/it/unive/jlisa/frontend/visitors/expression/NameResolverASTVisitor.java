@@ -220,7 +220,7 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 			type = JavaInterfaceType.lookup(getScope().getCFG().getUnit().getName()).getReference();
 		expression = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", type);
 		while (cursor != null) {
-			CompilationUnit encl = cursor.getLisaClassUnit();
+			CompilationUnit encl = cursor.getLiSACompilationUnit();
 			expression = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(), expression,
 					"$enclosing");
 			global = getParserContext().getGlobal(encl, identifier, true);

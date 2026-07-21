@@ -61,7 +61,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 	@Override
 	public boolean visit(
 			EnumDeclaration node) {
-		EnumUnit enUnit = (EnumUnit) getScope().getLisaClassUnit();
+		EnumUnit enUnit = (EnumUnit) getScope().getLiSACompilationUnit();
 
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
@@ -80,7 +80,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
 
-		createClassInitializer(getScope().getLisaClassUnit(), node);
+		createClassInitializer(getScope().getLiSACompilationUnit(), node);
 
 		// for (MethodDeclaration md : node.getMethods()) {
 		// MethodASTVisitor visitor = new MethodASTVisitor(parserContext,
@@ -101,7 +101,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			}
 		}
 		if (createDefaultConstructor) {
-			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLisaClassUnit());
+			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLiSACompilationUnit());
 			fixConstructorCFG(defaultConstructor, node.getFields());
 		}
 

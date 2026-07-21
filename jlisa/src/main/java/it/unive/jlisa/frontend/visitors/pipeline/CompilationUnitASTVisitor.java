@@ -29,7 +29,6 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean visit(
 			CompilationUnit node) {
 		List<?> types = node.types();
@@ -58,11 +57,12 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 		ClassASTVisitor classVisitor = null;
 		boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
 		JavaClassType enclosingType = null;
-		if (!isStatic && enclosingClassScope != null && enclosingClassScope.getLisaClassUnit() instanceof ClassUnit)
-			enclosingType = JavaClassType.lookup(enclosingClassScope.getLisaClassUnit().getName());
+		if (!isStatic && enclosingClassScope != null
+				&& enclosingClassScope.getLiSACompilationUnit() instanceof ClassUnit)
+			enclosingType = JavaClassType.lookup(enclosingClassScope.getLiSACompilationUnit().getName());
 		ClassScope scope = null;
 		scope = new ClassScope(getScope(), enclosingClassScope, enclosingType, cUnit);
-		if ((typeDecl.isInterface())) {
+		if (typeDecl.isInterface()) {
 			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(getEnvironment(), scope);
 			typeDecl.accept(interfaceVisitor);
 		} else {
@@ -98,8 +98,8 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 			scope = getScope().toClassScope(null, cUnit);
 		} else {
 			JavaClassType enclosingEnumType = null;
-			if (enclosingClassScope.getLisaClassUnit() instanceof ClassUnit)
-				enclosingEnumType = JavaClassType.lookup(enclosingClassScope.getLisaClassUnit().getName());
+			if (enclosingClassScope.getLiSACompilationUnit() instanceof ClassUnit)
+				enclosingEnumType = JavaClassType.lookup(enclosingClassScope.getLiSACompilationUnit().getName());
 			scope = new ClassScope(getScope(), enclosingClassScope, enclosingEnumType, cUnit);
 		}
 		ClassASTVisitor classVisitor = new ClassASTVisitor(getEnvironment(), scope);

@@ -48,14 +48,15 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 				visitedFieldNames.add(identifier);
 
 			type = typeVisitor.liftToArray(type, fragment);
-			boolean isStatic = Modifier.isStatic(modifiers) || (getScope().getLisaClassUnit() instanceof InterfaceUnit);
-			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier,
+			boolean isStatic = Modifier.isStatic(modifiers)
+					|| (getScope().getLiSACompilationUnit() instanceof InterfaceUnit);
+			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLiSACompilationUnit(), identifier,
 					!isStatic, type,
 					new Annotations());
 			if (isStatic) {
-				getScope().getLisaClassUnit().addGlobal(global);
+				getScope().getLiSACompilationUnit().addGlobal(global);
 			} else {
-				getScope().getLisaClassUnit().addInstanceGlobal(global);
+				getScope().getLiSACompilationUnit().addInstanceGlobal(global);
 			}
 		}
 
