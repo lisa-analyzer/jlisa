@@ -402,7 +402,13 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			return 0;
 		if (paramType instanceof Untyped)
 			return 0;
-		if (paramType instanceof JavaNumericType numericParam)
+		if (JavaClassType.isWrapperOf(formalType, paramType))
+			// boxing
+			return 10;
+		else if (JavaClassType.isWrapperOf(paramType, formalType))
+			// unboxing
+			return 10;
+		else if (paramType instanceof JavaNumericType numericParam) {
 			if (formalType instanceof JavaNumericType numericFormal) {
 				int paramDist = numericParam.distance(numericFormal);
 				if (paramDist < 0)
@@ -410,14 +416,8 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				return paramDist;
 			} else
 				return -1;
-		else if (paramType.isBooleanType() && formalType.isBooleanType())
+		} else if (paramType.isBooleanType() && formalType.isBooleanType())
 			return 0;
-		else if (JavaClassType.isWrapperOf(formalType, paramType))
-			// boxing
-			return 10;
-		else if (JavaClassType.isWrapperOf(paramType, formalType))
-			// unboxing
-			return 10;
 		else if (paramType instanceof ReferenceType refTypeParam
 				&& formalType instanceof ReferenceType refTypeFormal) {
 			if (refTypeParam.getInnerType().isNullType())
