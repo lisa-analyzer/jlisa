@@ -2,6 +2,8 @@ package it.unive.jlisa.program.cfg.statement.global;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -145,20 +147,25 @@ public class JavaAccessGlobal extends Expression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		// we need to check whether to call the clinit of the container unit or
-		// to call the one of its superclass
-		ClassUnit classUnit = (ClassUnit) container;
-		if (classUnit.getGlobal(target.getName()) == null) {
-			Set<CompilationUnit> superClasses = classUnit
+		// to call the one of its ancestors (a superclass for a ClassUnit, or a
+		// superinterface for an InterfaceUnit)
+		CompilationUnit definingUnit = (CompilationUnit) container;
+		if (definingUnit.getGlobal(target.getName()) == null) {
+			Class<? extends CompilationUnit> containerKind = definingUnit.getClass();
+			Set<CompilationUnit> ancestors = definingUnit
 					.getImmediateAncestors().stream()
-					.filter(u -> u instanceof ClassUnit)
+					.filter(u -> u.getClass() == containerKind)
 					.collect(Collectors.toSet());
 
-			// we can safely suppose that there exist a single superclass
-			classUnit = (ClassUnit) superClasses.stream().findFirst().get();
+			// we can safely suppose that there exist a single ancestor
+			// declaring the global
+			definingUnit = ancestors.stream().findFirst().get();
 		}
 
-		state = InitializedClassSet.initialize(state, JavaClassType.lookup(classUnit.getName()).getReference(), this,
-				interprocedural);
+		JavaReferenceType definingUnitType = definingUnit instanceof ClassUnit
+				? JavaClassType.lookup(definingUnit.getName()).getReference()
+				: JavaInterfaceType.lookup(definingUnit.getName()).getReference();
+		state = InitializedClassSet.initialize(state, definingUnitType, this, interprocedural);
 
 		if (target instanceof ConstantGlobal)
 			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);
@@ -167,7 +174,7 @@ public class JavaAccessGlobal extends Expression {
 
 		GlobalVariable access = new GlobalVariable(
 				target.getStaticType(),
-				classUnit.getName() + "::" + target.getName(),
+				definingUnit.getName() + "::" + target.getName(),
 				target.getAnnotations(),
 				getLocation());
 		CodeLocation loc = getLocation();

@@ -2,6 +2,7 @@ package it.unive.jlisa.interprocedural.callgraph;
 
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.symbols.Aliases;
 import it.unive.lisa.analysis.symbols.NameSymbol;
@@ -95,7 +96,9 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			Collection<NativeCFG> natives,
 			SymbolAliasing aliasing)
 			throws CallResolutionException {
-		CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier()).getUnit();
+		CompilationUnit targetUnit = JavaClassType.hasType(call.getQualifier())
+				? JavaClassType.lookup(call.getQualifier()).getUnit()
+				: JavaInterfaceType.lookup(call.getQualifier()).getUnit();
 		HierarchyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
 		Set<CompilationUnit> seen = new HashSet<>();
 		int lowestDistance = Integer.MAX_VALUE;

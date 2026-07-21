@@ -63,13 +63,7 @@ public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
 		ClassScope scope = null;
 		scope = new ClassScope(getScope(), enclosingClassScope, enclosingType, cUnit);
 		if ((typeDecl.isInterface())) {
-			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(
-					getParserContext(),
-					getSource(),
-					unit,
-					getScope().getPackage(),
-					getScope().getExplicitImports(),
-					name);
+			InterfaceASTVisitor interfaceVisitor = new InterfaceASTVisitor(getEnvironment(), scope);
 			typeDecl.accept(interfaceVisitor);
 		} else {
 			classVisitor = new ClassASTVisitor(
