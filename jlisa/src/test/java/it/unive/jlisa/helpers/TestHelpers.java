@@ -92,7 +92,6 @@ public class TestHelpers {
 
 		return conf;
 	}
-<<<<<<< HEAD
 
 	public static CronConfiguration recency(
 			String testDir,
@@ -114,6 +113,4 @@ public class TestHelpers {
 		return conf;
 	}
 }
-=======
-}
->>>>>>> refs/remotes/origin/master
+
