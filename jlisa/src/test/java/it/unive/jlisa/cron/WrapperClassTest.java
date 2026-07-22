@@ -13,7 +13,7 @@ public class WrapperClassTest extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.constantPropagation("wrapper", "", "Main.java");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void staticCallAutoboxingTest() throws IOException {
 		CronConfiguration conf = TestHelpers.constantPropagation("static-call-autobox", "", "Main.java", "A.java");
