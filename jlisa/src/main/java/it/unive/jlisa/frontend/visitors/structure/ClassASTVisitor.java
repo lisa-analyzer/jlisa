@@ -22,6 +22,7 @@ import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -60,7 +61,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 	@Override
 	public boolean visit(
 			EnumDeclaration node) {
-		EnumUnit enUnit = (EnumUnit) getScope().getLisaClassUnit();
+		EnumUnit enUnit = (EnumUnit) getScope().getLiSACompilationUnit();
 
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
@@ -79,7 +80,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
 
-		createClassInitializer((ClassUnit) getScope().getLisaClassUnit(), node);
+		createClassInitializer(getScope().getLiSACompilationUnit(), node);
 
 		// for (MethodDeclaration md : node.getMethods()) {
 		// MethodASTVisitor visitor = new MethodASTVisitor(parserContext,
@@ -100,7 +101,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			}
 		}
 		if (createDefaultConstructor) {
-			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLisaClassUnit());
+			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLiSACompilationUnit());
 			fixConstructorCFG(defaultConstructor, node.getFields());
 		}
 
@@ -190,15 +191,16 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		enumUnit.addInstanceCodeMember(cfg);
 	}
 
-	private void createClassInitializer(
-			ClassUnit unit,
+	protected void createClassInitializer(
+			it.unive.lisa.program.CompilationUnit unit,
 			TypeDeclaration node) {
 
-		// we add a class initializer only if the class has
-		// static fields
+		// we add a class initializer only if the unit has static fields
+		// (all fields of an interface are implicitly static)
+		boolean isInterface = unit instanceof InterfaceUnit;
 		Set<FieldDeclaration> staticFields = new LinkedHashSet<FieldDeclaration>();
 		for (FieldDeclaration fd : node.getFields()) {
-			if (Modifier.isStatic(fd.getModifiers()))
+			if (isInterface || Modifier.isStatic(fd.getModifiers()))
 				staticFields.add(fd);
 		}
 
@@ -221,30 +223,33 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
-		// first, we add the clinit call to the superclass
-		// TODO this might also retrieve interfaces defined in the txts
-		// we have to fix interfaces and replace SingleHierarchyTraversal
-		Set<it.unive.lisa.program.CompilationUnit> superClasses = unit
+		// first, we add the clinit call to the ancestor of the same kind
+		// (superclass for a ClassUnit, superinterface for an InterfaceUnit),
+		// if any: interfaces currently have none, since extending other
+		// interfaces is not supported yet
+		Set<it.unive.lisa.program.CompilationUnit> ancestorsOfSameKind = unit
 				.getImmediateAncestors().stream()
-				.filter(u -> u instanceof ClassUnit)
+				.filter(u -> u.getClass() == unit.getClass())
 				.collect(Collectors.toSet());
 
-		// we can safely suppose that there exist a single superclass
-		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
-		String superSimpleName = superClass.getName().contains(".")
-				? superClass.getName().substring(superClass.getName().lastIndexOf(".") + 1)
-				: superClass.getName();
-		JavaUnresolvedStaticCall superClassInit = new JavaUnresolvedStaticCall(
-				cfg,
-				locationManager.nextLocation(),
-				superClass.toString(),
-				superSimpleName + InitializedClassSet.SUFFIX_CLINIT,
-				new Expression[0]);
+		Statement last = null;
+		if (!ancestorsOfSameKind.isEmpty()) {
+			// we can safely suppose that there exist a single ancestor
+			it.unive.lisa.program.CompilationUnit ancestor = ancestorsOfSameKind.stream().findFirst().get();
+			String ancestorSimpleName = ancestor.getName().contains(".")
+					? ancestor.getName().substring(ancestor.getName().lastIndexOf(".") + 1)
+					: ancestor.getName();
+			JavaUnresolvedStaticCall ancestorInit = new JavaUnresolvedStaticCall(
+					cfg,
+					locationManager.nextLocation(),
+					ancestor.toString(),
+					ancestorSimpleName + InitializedClassSet.SUFFIX_CLINIT,
+					new Expression[0]);
 
-		cfg.addNode(superClassInit);
-		cfg.getEntrypoints().add(superClassInit);
-
-		Statement last = superClassInit;
+			cfg.addNode(ancestorInit);
+			cfg.getEntrypoints().add(ancestorInit);
+			last = ancestorInit;
+		}
 
 		// just static fields are considered to build the class initializer
 		for (FieldDeclaration fd : staticFields) {
@@ -279,7 +284,10 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
 				JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
 				cfg.addNode(asg);
-				cfg.addEdge(new SequentialEdge(last, asg));
+				if (last == null)
+					cfg.getEntrypoints().add(asg);
+				else
+					cfg.addEdge(new SequentialEdge(last, asg));
 				last = asg;
 			}
 		}
@@ -287,7 +295,10 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		// TODO: static block
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
-		cfg.addEdge(new SequentialEdge(last, ret));
+		if (last == null)
+			cfg.getEntrypoints().add(ret);
+		else
+			cfg.addEdge(new SequentialEdge(last, ret));
 		unit.addCodeMember(cfg);
 		return;
 	}

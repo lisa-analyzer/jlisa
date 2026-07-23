@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -115,7 +116,10 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 				: className;
 		String name = simpleName + InitializedClassSet.SUFFIX_CLINIT;
 
-		Collection<CodeMember> target = JavaClassType.lookup(className).getUnit().getCodeMembersByName(name);
+		it.unive.lisa.program.CompilationUnit unit = JavaClassType.hasType(className)
+				? JavaClassType.lookup(className).getUnit()
+				: JavaInterfaceType.lookup(className).getUnit();
+		Collection<CodeMember> target = unit.getCodeMembersByName(name);
 		// we perform the call if (i) the clinit exits, (ii) we are not already
 		// executing
 		// it (to avoid recursion) and (iii) it has not been executed yet

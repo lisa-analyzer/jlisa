@@ -1,34 +1,22 @@
 package it.unive.jlisa.frontend.visitors.structure;
 
-import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.visitors.BaseUnitASTVisitor;
-import java.util.Map;
+import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-public class InterfaceASTVisitor extends BaseUnitASTVisitor {
-
-	private final String fullName;
+public class InterfaceASTVisitor extends ClassASTVisitor {
 
 	public InterfaceASTVisitor(
-			ParserContext parserContext,
-			String source,
-			CompilationUnit compilationUnit,
-			String pkg,
-			Map<String, String> imports,
-			String fullName) {
-		super(new ParsingEnvironment(parserContext, source, compilationUnit), pkg, imports);
-		this.fullName = fullName;
+			ParsingEnvironment environment,
+			ClassScope scope) {
+		super(environment, scope);
 	}
 
 	@Override
 	public boolean visit(
 			TypeDeclaration node) {
-		// InterfaceUnit iUnit = (InterfaceUnit)
-		// getProgram().getUnit(node.getName().toString());
 		// TODO manage superinterfaces
 		if (node.getSuperclassType() != null)
 			throw new ParsingException("extends-clause",
@@ -49,6 +37,9 @@ public class InterfaceASTVisitor extends BaseUnitASTVisitor {
 					"The 'permits' clause is not supported yet.",
 					// using first permitted type for location
 					getSourceCodeLocation((ASTNode) node.permittedTypes().get(0)));
+
+		createClassInitializer(getScope().getLiSACompilationUnit(), node);
+
 		return false;
 	}
 
