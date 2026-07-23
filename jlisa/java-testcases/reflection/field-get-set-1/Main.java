@@ -5,16 +5,27 @@ public class ReflectionTest {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		Field f1 = c.getField("nickname");
-		Field f2 = c.getField("alias");
+		assert(c == Cat.class);
 
 		Cat cat = new Cat("whiskers", "fluffyAlias");
+		assert(cat.nickname.equals("whiskers"));
+		assert(cat.alias.equals("fluffyAlias"));
+
+		Field f1 = c.getField("nickname");
 
 		Object val = f1.get(cat);
+		assert(val instanceof String);
+
 		f1.set(cat, "fluffy");
+		assert(cat.nickname.equals("fluffy"));
+
+		Field f2 = c.getField("alias");
 
 		Object val2 = f2.get(cat);
+		assert(val2 instanceof String);
+
 		f2.set(cat, "newAlias");
+		assert(cat.alias.equals("newAlias"));
 
 		return;
 	}

@@ -5,21 +5,36 @@ public class ReflectionTest {
 		String s = new String("Cat");
 		Class c = Class.forName(s);
 
-		Field f2 = c.getField("nickname");
+		Class c2 = Felid.class;
+		Class c3 = Animal.class;
 
-		Field fooField = c.getField("foo");
-		String fooFieldName = fooField.getName().toString(); // expected "foo"
+		Field f = c.getField("nickname");
+		assert(f.getName().equals("nickname"));
+		assert(f.getDeclaringClass() == c);
+		assert(f.getType() == java.lang.String.class);
 
-		Class fooClass = fooField.getType(); // expected Class Foo
 
-		Field fooValueField = fooClass.getField("fooValue");
-		String fooValueFieldName = fooValueField.getName().toString(); // expected "fooValue"
+		Field f2 = c.getField("foo");
+		assert(f2.getName().equals("foo"));
+		assert(f2.getDeclaringClass() == c);
+		assert(f2.getType() == Foo.class);
 
-		Field superclassField1 = c.getField("height"); // expected Field height
+		Class fooClass = f2.getType();
+		assert(fooClass == Foo.class);
 
-		Field superClassField2 = c.getField("hasWings");
+		Field f3 = fooClass.getField("fooValue");
+		assert(f3.getName().equals("fooValue"));
 
-		Field noSuchField = c.getField("hasLegs");
+		Field f4 = c.getField("hasWings");
+		assert(f4.getName().equals("hasWings"));
+		assert(f4.getDeclaringClass() == Animal.class);
+
+		try {
+			Field noSuchField = c.getField("hasLegs");
+		}
+		catch (NoSuchFieldException e) {
+			assert false;
+		}
 
 		return;
 	}

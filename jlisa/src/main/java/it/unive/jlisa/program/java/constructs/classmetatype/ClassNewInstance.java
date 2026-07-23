@@ -76,6 +76,9 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			StatementStore<A> expressions)
 			throws SemanticException {
 
+		// TODO: missing the $enclosing parameter during the call
+		// to JavaNewObj for nested classes
+
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 

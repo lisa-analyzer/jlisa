@@ -2,6 +2,11 @@ public class ReflectionTest {
 	public static void main(String[] args) throws Exception {
 		String s = new String("Foo");
 		Class c = Class.forName(s);
+
+		assert(c.getName().equals("Foo"));
+
+		Class c2 = Class.forName("Foo");
+		assert(c == c2);
 	}
 }
 

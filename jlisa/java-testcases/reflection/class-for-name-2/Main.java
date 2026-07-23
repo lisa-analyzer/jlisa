@@ -6,17 +6,22 @@ public class ReflectionTest {
 		Class c = Class.forName("ReflectionTest$ReflectivelyCreated");
 		Class c2 = Class.forName("ReflectionTest");
 
-		String innerName = c.getName().toString();
+		assert(c.getName().equals("ReflectionTest$ReflectivelyCreated"));
+		assert(c2.getName().equals("ReflectionTest"));
+		assert(c != c2);
 
-		String outerName = c2.getName().toString();
+		Class c3 = ReflectionTest.class;
 
-		Field innerValueField = c.getField("innerValue");
-		String fieldName1 = innerValueField.getName().toString();
-		Class fieldType1 = innerValueField.getType();
+		assert(c3.getName().equals("ReflectionTest"));
+		assert(c2 == c3);
 
-		Field outerValueField = c2.getField("rc");
-		String fieldName2 = outerValueField.getName().toString();
-		Class fieldType2 = outerValueField.getType();
+		Class c4 = int.class;
+		Class c5 = double.class;
+
+		assert(c4 != c5);
+
+		assert(c4.getName().equals("int"));
+		assert(c5.getName().equals("double"));
 	}
 
 	class ReflectivelyCreated {

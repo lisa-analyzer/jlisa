@@ -59,6 +59,8 @@ public class JavaClassLiteral extends Literal<String> {
 					StatementStore<A> expressions)
 					throws SemanticException {
 
+		// TODO: simple names, for example: String.class should be valid
+
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
