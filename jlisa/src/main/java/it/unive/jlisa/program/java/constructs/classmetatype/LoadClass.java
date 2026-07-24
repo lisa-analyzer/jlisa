@@ -121,7 +121,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-
 		if (LoadedClassSet.isClassLoaded(state, loadingType)) {
 			SymbolicExpression accessClazz = LoadedClassSet.getLoadedClassHandle(loadingType, location);
 			return analysis.smallStepSemantics(state, accessClazz, this);

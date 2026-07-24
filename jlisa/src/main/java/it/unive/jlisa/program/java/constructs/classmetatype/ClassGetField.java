@@ -1,8 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import java.lang.reflect.Field;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import it.unive.jlisa.program.CachedReflectionDataSet;
 import it.unive.jlisa.program.LoadedClassSet;
@@ -12,7 +13,6 @@ import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -46,7 +46,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
-import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
@@ -92,12 +91,19 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		for (Type t : clazzTypes) {
 			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-				result = result.lub(throwNoSuchFieldException(interprocedural, state, expressions));
+				result = result.lub(throwNullPointerException(interprocedural, state, expressions));
 			}
 			// search the field
 			else {
 				AnalysisState<A> fieldSearched = searchField(interprocedural, state, left, right, expressions);
 
+				if (fieldSearched.isTop() || fieldSearched.isBottom())
+					return fieldSearched;
+
+				// didn't find any matching field
+				if (fieldSearched.getExecutionExpressions().isEmpty()) {
+					fieldSearched = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
+				}
 				result = result.lub(fieldSearched);
 			}
 		}
@@ -111,66 +117,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		return 0;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Set<it.unive.lisa.symbolic.value.BinaryExpression> getConstraints(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression expr) {
-
-		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = new HashSet<>();
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-
-			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-			Object executionState = state.getExecutionState();
-			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-			ValueExpression ex = (ValueExpression) analysis.rewrite(state, expr, this).iterator().next();
-
-			constraints = vdom.constraints(null, env, ex, this, oracle);
-		}
-		catch (Exception e) {
-		}
-
-		return constraints;
-	}
-
-	private UnitType getTypeFromStr(String clazzName) {
-
-		clazzName = clazzName.replace('$', '.');
-
-		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
-
-		JavaClassType foundClass = null;
-		JavaInterfaceType foundInterface = null;
-
-		try {
-			foundClass = JavaClassType.lookup(clazzName);
-		} catch (IllegalArgumentException e) {
-		}
-		try {
-			foundInterface = JavaInterfaceType.lookup(clazzName);
-		} catch (IllegalArgumentException e) {
-		}
-
-		UnitType t = (foundClass != null) ? foundClass : foundInterface;
-		return t;
-	}
-
-
-
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> searchField(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -181,6 +127,17 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
+
+		// get the type of the left expression
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+		// NOTE: this is always either Class or null (in case we reached the top of the class hierarchy)
+
+		assert(clazzTypes.size() == 1);
+		Type clazzType = clazzTypes.iterator().next();
+		// if we have a null, don't proceed with the field search
+		if (clazzType instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
+			return state.withExecutionExpressions(new ExpressionSet());
+		}
 
 		Type stringType = getProgram().getTypes().getStringType();
 		Type refStringType = new JavaReferenceType(stringType);
@@ -200,13 +157,17 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
 		AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
-		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = getConstraints(analysis, state, accessClazzNameValue);
 
-		AnalysisState<A> tmp = state;
-		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints) {
+		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = extractConstraints(interprocedural, state, accessClazzNameValue);
+		if (constraints == null) return state.topExecution();
+
+		// make sure that all classes we are searching have thei reflection data loaded
+		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
 
 			String clazzName = (String)((Constant)constraint.getLeft()).getValue();
 			UnitType t = getTypeFromStr(clazzName);
+			assert(t != null);
+			if (t == null) return state.topExecution();
 
 			// cache reflection data if necessary
 			if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
@@ -217,11 +178,9 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
 
-				tmp = tmp.lub(initState);
+				state = initState;
 			}
 		}
-
-		state = tmp;
 
 		// access field name (2nd arg)
 		HeapDereference derefFieldNameExpr = new HeapDereference(stringType, right, location);
@@ -327,4 +286,88 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				new Error(noSuchFieldType.getReference(), originating), this);
 	}
 
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
+
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				nullPointerExceptionType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), nullPointerExceptionType.getReference(), getLocation());
+		state = analysis.assign(state, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(nullPointerExceptionType.getReference(), originating), this);
+	}
+
+
+	private UnitType getTypeFromStr(String clazzName) {
+
+		clazzName = clazzName.replace('$', '.');
+
+		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+		Type t = getProgram().getTypes().getType(clazzName);
+
+		if (!(t instanceof UnitType))
+			return null;
+
+		return (UnitType) t;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		SimpleAbstractDomain<?, ?, ?> innerDomain;
+
+		try {
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
+
+			f.setAccessible(true);
+
+			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		}
+		catch (Exception e) { return null; }
+
+		assert(innerDomain != null);
+		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+		Object executionState = state.getExecutionState();
+		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+
+		return StreamSupport.stream(rewritten.spliterator(), false)
+			.map(ex -> (ValueExpression) ex)
+			.flatMap(vex -> {
+				try {
+					return vdom.constraints(null, env, vex, this, oracle).stream();
+				}
+				catch (SemanticException e) {return null;}
+			});
+	}
 }

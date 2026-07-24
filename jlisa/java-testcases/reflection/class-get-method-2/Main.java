@@ -4,22 +4,26 @@ import java.lang.Math;
 public class ReflectionTest {
 	public static void main(String[] args) throws Exception {
 		String s = new String("Cat");
-		Class c = Class.forName(s);
+		Class c1 = Class.forName(s);
+		Class c2 = Class.forName("Foo");
 
-		Class c2 = c.getField("foo").getType(); // expected Foo
+		Method m1 = c2.getMethod("bar", new Class[]{java.lang.Object.class});
 
-		Class c3 = Class.forName("java.lang.Object");
+		assert(m1.getName().equals("bar"));
+		assert(m1.getReturnType() == void.class);
+		assert(m1.getDeclaringClass() == Foo.class);
 
-		Method m = c2.getMethod("bar", new Class[]{c3});
+		Method m2 = c1.getMethod("baz", new Class[] {Felid.class});
+		assert(m2.getName().equals("baz"));
+		assert(m2.getReturnType() == int.class);
+		assert(m2.getDeclaringClass() == Felid.class);
 
-		String returnTypeStr = m.getReturnType().getName(); // expected "void"
-
-		Class c4 = Class.forName("Felid");
-		Method m2 = c.getMethod("baz", new Class[] {c4});
-		String m2Name = m2.getName();
-
-		Method m3 = c.getMethod("bazz", new Class[] {c4}); // expected NoSuchMethodException
-		String m3Name = m2.getName();
+		try {
+			Method m3 = c1.getMethod("bazz", new Class[0]); // noSuchMethod
+		}
+		catch (NoSuchMethodException e) {
+			assert false;
+		}
 
 		return;
 	}
@@ -27,7 +31,7 @@ public class ReflectionTest {
 
 class Felid {
 
-	void baz(Felid f) { }
+	int baz(Felid f) { return 42; }
 
 }
 

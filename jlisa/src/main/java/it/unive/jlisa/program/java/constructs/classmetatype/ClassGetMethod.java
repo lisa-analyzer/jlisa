@@ -1,8 +1,9 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import java.lang.reflect.Field;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import it.unive.jlisa.program.CachedReflectionDataSet;
 import it.unive.jlisa.program.LoadedClassSet;
@@ -13,7 +14,6 @@ import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -42,12 +42,12 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
-import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
@@ -88,35 +88,32 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		CodeLocation location = getLocation();
 
-		// TODO: handle unknown case
-		AnalysisState<A> methodSearched = searchMethod(interprocedural, state, left, middle, right, expressions);
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+		AnalysisState<A> result = state;
 
-		if (!methodSearched.getExecutionExpressions().isEmpty()) {
-			return methodSearched;
+		for (Type t : clazzTypes) {
+			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
+				result = result.lub(throwNullPointerException(interprocedural, state, expressions));
+			}
+			// search for the method
+			else {
+				AnalysisState<A> methodSearched = searchMethod(interprocedural, state, left, middle, right, expressions);
+
+				if (methodSearched.isTop() || methodSearched.isBottom()) {
+					return methodSearched;
+				}
+
+				// didn't find any matching method
+				if (methodSearched.getExecutionExpressions().isEmpty()) {
+					methodSearched = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
+				}
+
+				result = result.lub(methodSearched);
+			}
 		}
 
-		// no method found, build the exception
-		JavaClassType noSuchMethodType = JavaClassType.getNoSuchMethodException();
-
-		JavaNewObj call = new JavaNewObj(getCFG(), location,
-				noSuchMethodType.getReference(), new Expression[0]);
-		state = call.forwardSemanticsAux(interprocedural, methodSearched, new ExpressionSet[0], expressions);
-
-		// assign exception to variable thrower
-		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchMethodType.getReference(), location);
-		state = analysis.assign(methodSearched, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-
-		// deletes the receiver of the constructor
-		// and all the metavariables from subexpressions
-		state = state.forgetIdentifiers(call.getMetaVariables(), this);
-		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
-		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchMethodType.getReference(), originating), this);
+		return result;
 	}
 
 	@Override
@@ -137,6 +134,17 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
+		// get the type of the left expression
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+
+		// NOTE: this is always either Class or null (in case we reached the top of the class hierarchy)
+		assert(clazzTypes.size() <= 2);
+
+		// we only have the null type. Stop the search
+		if (clazzTypes.removeIf((t) -> ((JavaReferenceType) t).getInnerType().isNullType() ) && clazzTypes.isEmpty()) {
+			return state.withExecutionExpressions(new ExpressionSet());
+		}
+
 		Type stringType = getProgram().getTypes().getStringType();
 		Type refStringType = new JavaReferenceType(stringType);
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -152,41 +160,37 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
-
-		// TODO: this should throw an exception if null is the only runtime type (method not found).
-		// Also if null is not the only runtime type, both the exception and the result
-		// of the normal search must continue
-		if (clazzTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
-			return state.withExecutionExpressions(new ExpressionSet());
-		}
-
 		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 
 		AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, location);
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
 		AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
-		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = getConstraints(analysis, state, accessClazzNameValue);
 
-		// TODO: temporary assumption
-		assert(constraints.size() == 1);
+		Stream<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessClazzNameValue);
 
-		it.unive.lisa.symbolic.value.BinaryExpression constraint = constraints.iterator().next();
-		String clazzName = (String)((Constant)constraint.getLeft()).getValue();
-		UnitType t = getTypeFromStr(clazzName);
+		if (constraints == null) return state.topExecution();
 
-		if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
+		// make sure that all classes we are searching have thei reflection data loaded
+		for (BinaryExpression constraint: constraints.toList()) {
+			String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+			UnitType t = getTypeFromStr(clazzName);
 
-			assert(LoadedClassSet.isClassLoaded(state, t));
-			ExpressionSet clazz = new ExpressionSet(
-					LoadedClassSet.getLoadedClassHandle(t, location)
-					);
+			assert(t != null);
+			if (t == null) return state.topExecution();
 
-			InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
-			AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
+			if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
 
-			state = initState;
+				assert(LoadedClassSet.isClassLoaded(state, t));
+				ExpressionSet clazz = new ExpressionSet(
+						LoadedClassSet.getLoadedClassHandle(t, location)
+						);
+
+				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
+				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
+
+				state = initState;
+			}
 		}
 
 		// (*left)->declaredMethods
@@ -216,8 +220,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			}
 
 			// check if the two methods' signatures are the same
-
 			AccessChild accessMethod = new AccessChild(refMethodType, derefArr, idx, location);
+
+			// TODO: this should be a satisfiability value. If unknown, keep searching
 			boolean methodFound = matchesTarget(interprocedural, state, accessMethod, middle, right);
 
 			if (methodFound) {
@@ -226,6 +231,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			}
 			++i;
 		}
+
+		// haven't found the method. Look in the superclasses
 
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
 		state = searchMethod(interprocedural, state, superClass, middle, right, expressions);
@@ -252,34 +259,28 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-		Type stringType = getProgram().getTypes().getStringType();
-		Type refStringType = new JavaReferenceType(stringType);
 		Type classMetaType = JavaClassType.getClassMetaType();
 		Type refClassMetaType = new JavaReferenceType(classMetaType);
 		JavaReferenceType refClassArr = JavaArrayType.CLASS_ARRAY;
-		Type methodType = JavaClassType.getMethodType();
-		JavaReferenceType refMethodType = new JavaReferenceType(methodType);
-		JavaArrayType methodArrType = JavaArrayType.lookup(refMethodType, 1);
-		JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
 
 		GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
-		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "len", location);
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 
 		AccessChild accessInterfaces = new AccessChild(refClassArr, derefClazz, interfacesVar, location);
 		HeapDereference derefInterfaces = new HeapDereference(refClassArr.getInnerType(), accessInterfaces, location);
-		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefInterfaces, interfacesVar, location);
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefInterfaces, lenVar, location);
 
 		boolean outOfBoundsMethodArr = false;
 		int i = 0;
 
-		AnalysisState<A> tmp = state.bottomExecution();
+		AnalysisState<A> tmp = state;
 
 		// stop when we are out of bounds
 		while (outOfBoundsMethodArr == false) {
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
 
-			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE,
 				idx, accessLen, ComparisonLt.INSTANCE, location);
 
 			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
@@ -290,7 +291,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			// access the interface and call searchMethod on it
 			AccessChild accessInterface = new AccessChild(refClassMetaType, derefInterfaces, idx, location);
-			tmp = tmp.lub(searchMethod(interprocedural, state, accessInterface, middle, right, expressions));
+			tmp = searchMethod(interprocedural, tmp, accessInterface, middle, right, expressions);
 
 			// NOTE: this stops as soon as any matching method is found.
 			// This however, should only happen when we know for sure that the method
@@ -298,6 +299,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			if (!tmp.getExecutionExpressions().isEmpty()) {
 				return tmp;
 			}
+
+			++i;
 		}
 
 		return tmp.withExecutionExpressions(new ExpressionSet());
@@ -424,40 +427,62 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return allParametersMatch;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Set<it.unive.lisa.symbolic.value.BinaryExpression> getConstraints(
-			Analysis<A, D> analysis,
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			SymbolicExpression expr) {
+			StatementStore<A> expressions)
+			throws SemanticException {
 
-		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = new HashSet<>();
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
+		JavaClassType noSuchMethodType = JavaClassType.getNoSuchMethodException();
 
-			f.setAccessible(true);
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				noSuchMethodType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchMethodType.getReference(), getLocation());
+		state = analysis.assign(state, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
-			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-			Object executionState = state.getExecutionState();
-			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(noSuchMethodType.getReference(), originating), this);
+	}
 
-			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
 
-			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
 
-			ValueExpression ex = (ValueExpression) analysis.rewrite(state, expr, this).iterator().next();
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				nullPointerExceptionType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-			constraints = vdom.constraints(null, env, ex, this, oracle);
-		}
-		catch (Exception e) {
-		}
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), nullPointerExceptionType.getReference(), getLocation());
+		state = analysis.assign(state, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
-		return constraints;
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(nullPointerExceptionType.getReference(), originating), this);
 	}
 
 	private UnitType getTypeFromStr(String clazzName) {
@@ -465,21 +490,55 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		clazzName = clazzName.replace('$', '.');
 
 		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+		Type t = getProgram().getTypes().getType(clazzName);
 
-		JavaClassType foundClass = null;
-		JavaInterfaceType foundInterface = null;
+		if (!(t instanceof UnitType))
+			return null;
+
+		return (UnitType) t;
+	}
+
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		SimpleAbstractDomain<?, ?, ?> innerDomain;
 
 		try {
-			foundClass = JavaClassType.lookup(clazzName);
-		} catch (IllegalArgumentException e) {
-		}
-		try {
-			foundInterface = JavaInterfaceType.lookup(clazzName);
-		} catch (IllegalArgumentException e) {
-		}
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
 
-		UnitType t = (foundClass != null) ? foundClass : foundInterface;
-		return t;
+			f.setAccessible(true);
+
+			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		}
+		catch (Exception e) { return null; }
+
+		assert(innerDomain != null);
+		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+		Object executionState = state.getExecutionState();
+		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+
+		return StreamSupport.stream(rewritten.spliterator(), false)
+			.map(ex -> (ValueExpression) ex)
+			.flatMap(vex -> {
+				try {
+					return vdom.constraints(null, env, vex, this, oracle).stream();
+				}
+				catch (SemanticException e) {return null;}
+			});
 	}
 
 }

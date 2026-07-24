@@ -36,6 +36,14 @@ public class ReflectionTest {
 			assert false;
 		}
 
+		try {
+			Class tmp = null;
+			tmp.getField("hasLegs");
+		}
+		catch (NullPointerException e) {
+			assert false;
+		}
+
 		return;
 	}
 }

@@ -1,14 +1,13 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import java.lang.reflect.Field;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -80,8 +79,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		CFG cfg = getCFG();
 
 		Type stringType = getProgram().getTypes().getStringType();
-		Type classMetaType = JavaClassType.getClassMetaType();
-		Type refClassMetaType = new JavaReferenceType(classMetaType);
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		HeapDereference derefExpr = new HeapDereference(stringType, expr, location);
@@ -102,36 +99,11 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
 
-			Set<BinaryExpression> constraints = new HashSet<>();
+			Stream<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessExpr);
+			if (constraints == null)
+				return state.topExecution();
 
-			try {
-
-				Class<?> c = Reachability.class;
-				Field f = c.getDeclaredField("domain");
-
-				f.setAccessible(true);
-
-				SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-
-				ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-				Object executionState = state.getExecutionState();
-				ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-				SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-				ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-				SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-				ValueExpression ex = (ValueExpression) analysis.rewrite(state, accessExpr, this).iterator().next();
-
-				constraints = vdom.constraints(null, env, ex, this, oracle);
-			}
-			catch (Exception e) {
-			}
-
-			for (BinaryExpression constraint : constraints) {
+			for (BinaryExpression constraint : constraints.toList()) {
 
 				String clazzName = (String)((Constant)constraint.getLeft()).getValue();
 				UnitType t = getTypeFromStr(clazzName);
@@ -183,7 +155,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
 					new Error(classNotFoundType.getReference(), originating), this);
-
 		}
 
 		return exceptionState.lub(noExceptionState);
@@ -206,6 +177,48 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			return null;
 
 		return (UnitType) t;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		SimpleAbstractDomain<?, ?, ?> innerDomain;
+
+		try {
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
+
+			f.setAccessible(true);
+
+			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		}
+		catch (Exception e) { return null; }
+
+		assert(innerDomain != null);
+		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+		Object executionState = state.getExecutionState();
+		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+
+		return StreamSupport.stream(rewritten.spliterator(), false)
+			.map(ex -> (ValueExpression) ex)
+			.flatMap(vex -> {
+				try {
+					return vdom.constraints(null, env, vex, this, oracle).stream();
+				}
+				catch (SemanticException e) {return null;}
+			});
 	}
 
 }
