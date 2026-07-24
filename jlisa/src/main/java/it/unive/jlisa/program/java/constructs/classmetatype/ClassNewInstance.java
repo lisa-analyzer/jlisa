@@ -90,61 +90,91 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		HeapDereference derefName = new HeapDereference(stringType, accessName, location);
 		AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
-		Set<BinaryExpression> constraints = getConstraints(analysis, state, accessValue);
+		ExpressionSet execExpressions = new ExpressionSet();
+
+		SimpleAbstractDomain<?, ?, ?> innerDomain;
+
+		try {
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
+
+			f.setAccessible(true);
+
+			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		}
+		catch (Exception e) { return state.topExecution(); }
+
+		assert(innerDomain != null);
+
+		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+		Object executionState = state.getExecutionState();
+		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		ExpressionSet rewritten = analysis.rewrite(state, accessValue, this);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
-		ExpressionSet execExpressions = new ExpressionSet();
+		for (SymbolicExpression ex: rewritten) {
 
-		for (BinaryExpression constraint : constraints) {
+			ValueExpression vex = (ValueExpression) ex;
 
-			String dynamicTypeStr = (String) ((Constant)constraint.getLeft()).getValue();
-			dynamicTypeStr = dynamicTypeStr.replace('$', '.');
+			Set<BinaryExpression> constraints = vdom.constraints(null, env, vex, this, oracle);
 
-			// if this fails, throw a `InstantiationException`, meaning that
-			// the class is an abstract class, or interface etc...
-			boolean canInstantiate = true;
-			Type dynamicType = null;
-			try {
-				dynamicType = JavaClassType.lookup(dynamicTypeStr);
-			} catch (IllegalArgumentException e) {
-				canInstantiate = false;
-			}
+			for (BinaryExpression constraint : constraints) {
 
-			if (canInstantiate) {
+				String dynamicTypeStr = (String) ((Constant)constraint.getLeft()).getValue();
+				dynamicTypeStr = dynamicTypeStr.replace('$', '.');
 
-				// TODO: get the enclosing unit and if needed add the enclosing parameter
+				// if this fails, throw a `InstantiationException`, meaning that
+				// the class is an abstract class, or interface etc...
+				boolean canInstantiate = true;
+				Type dynamicType = null;
+				try {
+					dynamicType = JavaClassType.lookup(dynamicTypeStr);
+				} catch (IllegalArgumentException e) {
+					canInstantiate = false;
+				}
 
-				JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) location,
-						new JavaReferenceType(dynamicType),
-						new Expression[0]);
-				AnalysisState<
-						A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				if (canInstantiate) {
 
-				execExpressions = execExpressions.lub(callState.getExecutionExpressions());
-				noExceptionState = noExceptionState.lub(callState);
-			}
-			else {
-				JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
+					// TODO: get the enclosing unit and if needed add the enclosing parameter
 
-				JavaNewObj call = new JavaNewObj(getCFG(), location,
-						instantiationExceptionType.getReference(), new Expression[0]);
-				AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) location,
+							new JavaReferenceType(dynamicType),
+							new Expression[0]);
+					AnalysisState<
+							A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), location);
-				callState = analysis.assign(callState, throwVar,
-						callState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					execExpressions = execExpressions.lub(callState.getExecutionExpressions());
+					noExceptionState = noExceptionState.lub(callState);
+				}
+				else {
+					JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
 
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
-				callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+					JavaNewObj call = new JavaNewObj(getCFG(), location,
+							instantiationExceptionType.getReference(), new Expression[0]);
+					AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-						new Error(instantiationExceptionType.getReference(), originating), this));
+					// assign exception to variable thrower
+					CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), location);
+					callState = analysis.assign(callState, throwVar,
+							callState.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
+					// deletes the receiver of the constructor
+					// and all the metavariables from subexpressions
+					callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
+					callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+
+					exceptionState = exceptionState.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+							new Error(instantiationExceptionType.getReference(), originating), this));
+
+				}
 			}
 		}
 
@@ -159,39 +189,5 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
-	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Set<BinaryExpression> getConstraints(Analysis<A, D> analysis, AnalysisState<A> state, SymbolicExpression expr) {
-
-		Set<BinaryExpression> constraints = new HashSet<>();
-
-		try {
-
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-
-			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-			Object executionState = state.getExecutionState();
-			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-			ValueExpression ex = (ValueExpression) analysis.rewrite(state, expr, this).iterator().next();
-
-			constraints = vdom.constraints(null, env, ex, this, oracle);
-		}
-		catch (Exception e) {
-		}
-
-		return constraints;
 	}
 }
