@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.GhostTypeLookupOperator;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -34,12 +33,10 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -116,12 +113,14 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			}
 
 			if (canInstantiate) {
+
+				// TODO: get the enclosing unit and if needed add the enclosing parameter
+
 				JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) location,
 						new JavaReferenceType(dynamicType),
 						new Expression[0]);
 				AnalysisState<
 						A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
 
 				execExpressions = execExpressions.lub(callState.getExecutionExpressions());
 				noExceptionState = noExceptionState.lub(callState);

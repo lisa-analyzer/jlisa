@@ -87,34 +87,22 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		// TODO: handle unknown case
-		AnalysisState<A> fieldSearched = searchField(interprocedural, state, left, right, expressions);
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+		AnalysisState<A> result = state;
 
-		if (!fieldSearched.getExecutionExpressions().isEmpty()) {
-			return fieldSearched;
+		for (Type t : clazzTypes) {
+			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
+				result = result.lub(throwNoSuchFieldException(interprocedural, state, expressions));
+			}
+			// search the field
+			else {
+				AnalysisState<A> fieldSearched = searchField(interprocedural, state, left, right, expressions);
+
+				result = result.lub(fieldSearched);
+			}
 		}
 
-		// no field found, build the exception
-		JavaClassType noSuchFieldType = JavaClassType.getNoSuchFieldException();
-
-		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-				noSuchFieldType.getReference(), new Expression[0]);
-		state = call.forwardSemanticsAux(interprocedural, fieldSearched, new ExpressionSet[0], expressions);
-
-		// assign exception to variable thrower
-		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchFieldType.getReference(), getLocation());
-		state = analysis.assign(fieldSearched, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-
-		// deletes the receiver of the constructor
-		// and all the metavariables from subexpressions
-		state = state.forgetIdentifiers(call.getMetaVariables(), this);
-		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
-		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchFieldType.getReference(), originating), this);
-
+		return result;
 	}
 
 	@Override
@@ -206,41 +194,34 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
-
-		// TODO: this should throw an exception if null is the only runtime type (field not found).
-		// Also if null is not the only runtime type, both the exception and the result
-		// of the normal search must continue
-		if (clazzTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
-			return state.withExecutionExpressions(new ExpressionSet());
-		}
-
 		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 
 		AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, location);
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
 		AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
-
 		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = getConstraints(analysis, state, accessClazzNameValue);
 
-		// TODO: temporary assumption
-		assert(constraints.size() == 1);
+		AnalysisState<A> tmp = state;
+		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints) {
 
-		it.unive.lisa.symbolic.value.BinaryExpression constraint = constraints.iterator().next();
-		String clazzName = (String)((Constant)constraint.getLeft()).getValue();
-		UnitType t = getTypeFromStr(clazzName);
+			String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+			UnitType t = getTypeFromStr(clazzName);
 
-		if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
+			// cache reflection data if necessary
+			if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
 
-			assert(LoadedClassSet.isClassLoaded(state, t));
-			ExpressionSet clazz = new ExpressionSet(LoadedClassSet.getLoadedClassHandle(t, location));
+				assert(LoadedClassSet.isClassLoaded(state, t));
+				ExpressionSet clazz = new ExpressionSet(LoadedClassSet.getLoadedClassHandle(t, location));
 
-			InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
-			AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
+				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
+				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
 
-			state = initState;
+				tmp = tmp.lub(initState);
+			}
 		}
+
+		state = tmp;
 
 		// access field name (2nd arg)
 		HeapDereference derefFieldNameExpr = new HeapDereference(stringType, right, location);
@@ -258,9 +239,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		boolean outOfBoundsFieldArr = false;
 		int i = 0;
-
-		AnalysisState<A> noExceptionState = state.bottomExecution();
-		AnalysisState<A> exceptionState = state.bottomExecution();
 
 		// look for a field with the same name
 		while (outOfBoundsFieldArr == false) {
@@ -295,9 +273,18 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 			if (match == Satisfiability.SATISFIED) {
 				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
-				noExceptionState = analysis.smallStepSemantics(state, refField, this);
+				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, this);
 				return noExceptionState;
 			}
+			else if (match == Satisfiability.UNKNOWN) {
+				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
+				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, this);
+
+				AnalysisState<A> exceptionState = throwNoSuchFieldException(interprocedural, state, expressions);
+
+				state = noExceptionState.lub(exceptionState);
+			}
+
 			++i;
 		}
 
@@ -308,6 +295,36 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		// we aren't doing that since static fields in interfaces are not allowed as of now
 
 		return searchField(interprocedural, state, superClass, right, expressions);
+	}
+
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		JavaClassType noSuchFieldType = JavaClassType.getNoSuchFieldException();
+
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				noSuchFieldType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchFieldType.getReference(), getLocation());
+		state = analysis.assign(state, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(noSuchFieldType.getReference(), originating), this);
 	}
 
 }

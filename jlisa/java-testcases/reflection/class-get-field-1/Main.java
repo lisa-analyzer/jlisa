@@ -23,8 +23,8 @@ public class ReflectionTest {
 		assert(f2.getType().getName().equals("int"));
 		assert(f3.getType().getName().equals("double"));
 
-		// should check that
-		// getModifiers() & Modifier.STATIC == Modifier.STATIC
+		assert(f1.getModifiers() == 0);
+		assert(f2.getModifiers() == 0);
 		assert(f3.getModifiers() != 0);
 
 		return;

@@ -200,21 +200,12 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		clazzName = clazzName.replace('$', '.');
 
 		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+		Type t = getProgram().getTypes().getType(clazzName);
 
-		JavaClassType foundClass = null;
-		JavaInterfaceType foundInterface = null;
+		if (!(t instanceof UnitType))
+			return null;
 
-		try {
-			foundClass = JavaClassType.lookup(clazzName);
-		} catch (IllegalArgumentException e) {
-		}
-		try {
-			foundInterface = JavaInterfaceType.lookup(clazzName);
-		} catch (IllegalArgumentException e) {
-		}
-
-		UnitType t = (foundClass != null) ? foundClass : foundInterface;
-		return t;
+		return (UnitType) t;
 	}
 
 }
