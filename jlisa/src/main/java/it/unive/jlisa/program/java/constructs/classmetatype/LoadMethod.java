@@ -155,8 +155,7 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		// assign length to array
 		Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount - 1, location);
 		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
-		tmp = tmp.lub(analysis.assign(arrAllocated, accessLen, arrLen, this));
-
+		sem = analysis.assign(arrAllocated, accessLen, arrLen, this);
 
 		for (int i = 1; i < paramCount; ++i) {
 
@@ -167,20 +166,18 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 			Constant idx = new Constant(JavaIntType.INSTANCE, i-1, location);
 			AccessChild accessIdx = new AccessChild(refClassMetaType, arrayDeref, idx, location);
 
-			AnalysisState<A> t = lazyLoadClass(parameterType, interprocedural, tmp, expressions);
+			AnalysisState<A> t = lazyLoadClass(parameterType, interprocedural, sem, expressions);
 
 			assert(t.getExecutionExpressions().size() == 1);
 			SymbolicExpression parameterClazzVar = t.getExecutionExpressions().iterator().next();
-			tmp = tmp.lub(analysis.assign(t, accessIdx, parameterClazzVar, this));
 
+			sem = analysis.assign(t, accessIdx, parameterClazzVar, this);
 		}
 
 		AccessChild accessParameterTypes = new AccessChild(refClassArrType, derefThisMethod, paramTypesVar, location);
 
-		tmp = tmp.lub(analysis.assign(tmp, accessParameterTypes, array, this));
-		tmp = tmp.forgetIdentifier(array, this);
-
-		sem = sem.lub(tmp);
+		sem = analysis.assign(sem, accessParameterTypes, array, this);
+		sem = sem.forgetIdentifier(array, this);
 
 		// assign method modifiers
 		boolean isInstance = methodData.isInstance();
@@ -192,7 +189,12 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		sem = analysis.assign(sem, accessThisMethodModifiers, modifiersConstant, this);
 
-		resultState = resultState.lub(sem).forgetIdentifier(method, this).withExecutionExpression(ref);
+		tmp = tmp.lub(sem);
+
+		// FIX: the forgetIdentifier is causing the symbolicExpression to be rewritten,
+		// resulting in the primitive fields tracked by the value domain
+		// to be removed from the abstract state
+		resultState = tmp.forgetIdentifier(method, this).withExecutionExpression(ref);
 
 		return resultState;
 	}

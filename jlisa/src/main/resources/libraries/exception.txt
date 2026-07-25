@@ -71,6 +71,15 @@ class java.lang.ArrayIndexOutOfBoundsException extends java.lang.IndexOutOfBound
 
 class java.lang.IllegalArgumentException extends java.lang.RuntimeException:
 
+	instance method IllegalArgumentException: it.unive.jlisa.program.java.constructs.exceptions.IllegalArgumentExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.IllegalArgumentException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method IllegalArgumentException: it.unive.jlisa.program.java.constructs.exceptions.IllegalArgumentExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.IllegalArgumentException*
+
 class java.lang.NumberFormatException extends java.lang.IllegalArgumentException:
 
 	instance method NumberFormatException: it.unive.jlisa.program.java.constructs.exceptions.NumberFormatExceptionConstructor

@@ -43,21 +43,17 @@ import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.InstrumentedReceiverRef;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
-import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.HeapReference;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
@@ -69,13 +65,15 @@ import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import it.unive.lisa.type.VoidType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class MethodInvoke extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -142,11 +140,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				JavaBooleanType.INSTANCE, accessModifiers, IsMemberStaticOperator.INSTANCE, location);
 
 		Satisfiability isStaticSat = Satisfiability.NOT_SATISFIED;
-		try {
-			isStaticSat = analysis.satisfies(state, isStaticExpr, this);
-		} catch (SemanticException e) {
-			// conservative: if we can't determine, treat as non-static
-		}
+		isStaticSat = analysis.satisfies(state, isStaticExpr, this);
+
+		// we don't know whether the method is static or not
+		if (isStaticSat == Satisfiability.UNKNOWN) return state.topExecution();
 
 		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
 
@@ -156,27 +153,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		AnalysisState<A> exceptionState = state.bottomExecution();
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 
-		if (thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
-			JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
-
-			JavaNewObj call = new JavaNewObj(cfg, location,
-					nullPointerExceptionType.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-			// assign exception to variable thrower
-			CFGThrow throwVar = new CFGThrow(cfg, nullPointerExceptionType.getReference(), location);
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-
-			// deletes the receiver of the constructor
-			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
-			state = state.forgetIdentifiers(getMiddle().getMetaVariables(), this);
-			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-
-			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nullPointerExceptionType.getReference(), originating), this);
+		// throw a NullPointerException if the method is not static and the runtime type
+		// of the receiver could be null
+		if (isStaticSat == Satisfiability.NOT_SATISFIED && thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
+			exceptionState = throwNullPointerException(interprocedural, state, expressions);
 		}
 
 		// if the receiver is certainly null, stop immediately
@@ -190,15 +170,23 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		String clazz = thisObjType.toString();
 
-		// TODO: check whether middle can be a receiver for that method.
-		// Extract the declaringClass from the first argument (left) and check whether
-		// the runtime type of middle is a subclass of that class (or an implementor)
+		// if not static, check the types of the receiver against the type of the declaring class.
+		// If they do not match, throw an IllegalArgumentException
+		if (isStaticSat == Satisfiability.NOT_SATISFIED) {
+			boolean mayThrowIA = checkMayThrowIllegalArgumentReceiver(interprocedural, state, thisObjTypes, derefMethod);
+			if (mayThrowIA) {
+				exceptionState = exceptionState.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+			}
+		}
 
 		ArrayList<Expression> args = new ArrayList<>();
-		args.add(getMiddle());
-
 		ArrayList<ExpressionSet> symbolicArgs = new ArrayList<>();
-		symbolicArgs.add(new ExpressionSet(middle));
+
+		// if not static, add the receiver
+		if (isStaticSat == Satisfiability.NOT_SATISFIED) {
+			args.add(getMiddle());
+			symbolicArgs.add(new ExpressionSet(middle));
+		}
 
 		HeapDereference derefArr = new HeapDereference(refObjectArrType.getInnerType(), right, location);
 		AccessChild lenAccess = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
@@ -224,8 +212,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			Expression accessIdx = new IntLiteral(cfg, location, i);
 
 			JavaArrayAccess expr = new JavaArrayAccess(cfg, location, arrExpression, accessIdx);
-
 			args.add(expr);
+
+			// TODO: check the types of the arguments. If one does not match with the corresponding
+			// formal parameter, throw an IllegalArgumentException
 
 			AccessChild accessExpr = new AccessChild(Untyped.INSTANCE, derefArr, idx, location);
 			ExpressionSet exprSet = new ExpressionSet();
@@ -233,77 +223,55 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				accessExpr = new AccessChild(t, derefArr, idx, location);
 				exprSet = exprSet.lub(new ExpressionSet(accessExpr));
 			}
+
+			assert(!exprSet.isBottom());
 			symbolicArgs.add(exprSet);
 		}
 
 		Expression[] expressionsArgs = args.toArray(new Expression[0]);
 		ExpressionSet[] symbolicExpressionsArgs = symbolicArgs.toArray(new ExpressionSet[0]);
 
-		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = getConstraints(analysis, state, accessValue);
+		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = extractConstraints(interprocedural, state, accessValue);
 
-		// TODO AP: temporary assumption, just one value
-		assert(constraints.size() == 1);
-		it.unive.lisa.symbolic.value.BinaryExpression constraint = constraints.iterator().next();
+		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
 
-		String methodName = (String)((Constant)constraint.getLeft()).getValue();
+			String methodName = (String)((Constant)constraint.getLeft()).getValue();
 
-		UnresolvedCall call = new UnresolvedCall(
-				cfg,
-				location,
-				CallType.INSTANCE,
-				clazz,
-				methodName,
-				expressionsArgs);
-		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, state, symbolicExpressionsArgs, expressions);
+			UnresolvedCall call = new UnresolvedCall(
+					cfg,
+					location,
+					CallType.INSTANCE,
+					clazz,
+					methodName,
+					expressionsArgs);
+			AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, state, symbolicExpressionsArgs, expressions);
 
-		// if returns void, just return a null value
-		if (sem.getExecutionExpressions().equals(new ExpressionSet(new Skip(location)))) {
-			NullConstant nc = new NullConstant(location);
+			assert(!sem.getExecutionExpressions().isEmpty());
 
-			Type refObjectType = new JavaReferenceType(JavaClassType.getObjectType());
-			Set<Type> types = new HashSet<>();
-			types.add(refObjectType);
-			TypeTokenType t = new TypeTokenType(types);
+			// TODO: if the method call threw an exception, wrap it into a InvocationException
 
-			Constant castTo = new Constant(t, refObjectType, location);
+			// if returns void, just return a null value
+			if (sem.getExecutionExpressions().equals(new ExpressionSet(new Skip(location)))) {
+				NullConstant nc = new NullConstant(location);
 
-			BinaryExpression castAs = new BinaryExpression(refObjectType, nc, castTo, TypeCast.INSTANCE, location);
-			return analysis.smallStepSemantics(sem, castAs, this);
+				Type refObjectType = new JavaReferenceType(JavaClassType.getObjectType());
+				Set<Type> types = new HashSet<>();
+				types.add(refObjectType);
+				TypeTokenType t = new TypeTokenType(types);
+
+				Constant castTo = new Constant(t, refObjectType, location);
+
+				BinaryExpression castAs = new BinaryExpression(refObjectType, nc, castTo, TypeCast.INSTANCE, location);
+				return analysis.smallStepSemantics(sem, castAs, this);
+			}
+
+			// if the return value(s) is of primitive type, we need to box it
+			AnalysisState<A> boxedState = getBoxedState(interprocedural, sem, derefMethod, expressions);
+
+			noExceptionState = noExceptionState.lub(boxedState);
 		}
 
-		ExpressionSet returnValues = sem.getExecutionExpressions();
-		ExpressionSet processedReturnValues = new ExpressionSet();
-
-		// TODO could return more than one value
-		SymbolicExpression returnValue = returnValues.iterator().next();
-		Type exprType = analysis.getRuntimeTypesOf(sem, returnValue, this).iterator().next();
-
-		AnalysisState<A> boxedState = sem.bottomExecution();
-
-		if (JavaTypeSystem.PRIMITIVE_TYPES.contains(exprType)) {
-
-			JavaReferenceType boxedType = new JavaReferenceType(JavaClassType.getWrappedType(exprType));
-
-			// this is a placeholder literal of the return type of the just invoked method.
-			// Its value has no meaning, but is used by the resolve call inside
-			// JavaNewObj to "choose" the appropriate constructor
-			Literal<?> placeholderLiteral = getPlaceholderLiteral(exprType, cfg, location);
-			expressions.put(placeholderLiteral, sem);
-
-			JavaNewObj box = new JavaNewObj(cfg, location, boxedType, new Expression[] {placeholderLiteral});
-
-			ExpressionSet[] ctorParam = new ExpressionSet[] {new ExpressionSet(returnValue) };
-			AnalysisState<A> t = box.forwardSemanticsAux(interprocedural, sem, ctorParam, expressions);
-
-			processedReturnValues = processedReturnValues.lub(t.getExecutionExpressions());
-			boxedState = boxedState.lub(t);
-		}
-		else {
-			boxedState = boxedState.lub(sem);
-			processedReturnValues = processedReturnValues.lub(new ExpressionSet(returnValue));
-		}
-
-		noExceptionState = boxedState.withExecutionExpressions(processedReturnValues);
+		assert(!noExceptionState.isBottom());
 		return noExceptionState.lub(exceptionState);
 	}
 
@@ -312,43 +280,6 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			Statement o) {
 		return 0;
 	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Set<it.unive.lisa.symbolic.value.BinaryExpression> getConstraints(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression expr) {
-
-		Set<it.unive.lisa.symbolic.value.BinaryExpression> constraints = new HashSet<>();
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-
-			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-			Object executionState = state.getExecutionState();
-			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-			ValueExpression ex = (ValueExpression) analysis.rewrite(state, expr, this).iterator().next();
-
-			constraints = vdom.constraints(null, env, ex, this, oracle);
-		}
-		catch (Exception e) {
-		}
-
-		return constraints;
-	}
-
 
 	private Literal<?> getPlaceholderLiteral(Type t, CFG cfg, CodeLocation location) {
 		if (t == JavaIntType.INSTANCE)
@@ -369,6 +300,224 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			return new TrueLiteral(cfg, location);
 
 		return null;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		SimpleAbstractDomain<?, ?, ?> innerDomain;
+
+		try {
+			Class<?> c = Reachability.class;
+			Field f = c.getDeclaredField("domain");
+
+			f.setAccessible(true);
+
+			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		}
+		catch (Exception e) { return null; }
+
+		assert(innerDomain != null);
+		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
+
+		Object executionState = state.getExecutionState();
+		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
+
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+
+		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
+
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+
+		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+
+		return StreamSupport.stream(rewritten.spliterator(), false)
+			.map(ex -> (ValueExpression) ex)
+			.flatMap(vex -> {
+				try {
+					return vdom.constraints(null, env, vex, this, oracle).stream();
+				}
+				catch (SemanticException e) {return null;}
+			});
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
+
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				nullPointerExceptionType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), nullPointerExceptionType.getReference(), getLocation());
+		state = analysis.assign(state, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+		assert(!state.isBottom());
+
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(nullPointerExceptionType.getReference(), originating), this);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean checkMayThrowIllegalArgumentReceiver(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			Set<Type> receiverTypes,
+			HeapDereference derefMethod) throws SemanticException {
+
+		CodeLocation loc = getLocation();
+
+		GlobalVariable declaringClassVar = new GlobalVariable(Untyped.INSTANCE, "declaringClass", loc);
+		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", loc);
+		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
+
+		AccessChild accessClazz = new AccessChild(JavaClassType.getClassMetaType().getReference(), derefMethod, declaringClassVar, loc);
+		HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), accessClazz, loc);
+
+		AccessChild accessName = new AccessChild(JavaClassType.getStringType().getReference(), derefClazz, nameVar, loc);
+		HeapDereference derefName = new HeapDereference(JavaClassType.getStringType(), accessName, loc);
+
+		// method->declaringClass->name->value
+		AccessChild accessValue = new AccessChild(JavaClassType.getStringType(), derefName, valueVar, loc);
+
+		Stream<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessValue);
+
+		// NOTE: should never happen
+		assert(constraints != null);
+		if (constraints == null) return true;
+
+		for (BinaryExpression constraint : constraints.toList()) {
+
+			String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+			UnitType clazzUt = getTypeFromStr(clazzName);
+
+			// NOTE: should never happen
+			assert(clazzUt != null);
+			if (clazzUt == null) return true;
+
+			for (Type t : receiverTypes) {
+
+				int distance = getProgram().getTypes().distanceBetweenTypes(clazzUt, t);
+				if (distance == -1)
+					return true;
+			}
+
+		}
+		return false;
+	}
+
+	private UnitType getTypeFromStr(String clazzName) {
+
+		clazzName = clazzName.replace('$', '.');
+
+		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+		Type t = getProgram().getTypes().getType(clazzName);
+
+		if (!(t instanceof UnitType))
+			return null;
+
+		return (UnitType) t;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwIllegalArgumentException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		JavaClassType illegalArgumentExceptionType = JavaClassType.getIllegalArgumentExceptionType();
+
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				illegalArgumentExceptionType.getReference(), new Expression[0]);
+		state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		// assign exception to variable thrower
+		CFGThrow throwVar = new CFGThrow(getCFG(), illegalArgumentExceptionType.getReference(), getLocation());
+		state = analysis.assign(state, throwVar,
+				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+		// deletes the receiver of the constructor
+		// and all the metavariables from subexpressions
+		state = state.forgetIdentifiers(call.getMetaVariables(), this);
+		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
+		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
+
+		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+				new Error(illegalArgumentExceptionType.getReference(), originating), this);
+	}
+
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> getBoxedState(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression derefMethod,
+			StatementStore<A> expressions) throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CFG cfg = getCFG();
+		CodeLocation location = getLocation();
+
+		ExpressionSet returnValues = state.getExecutionExpressions();
+		ExpressionSet processedReturnValues = new ExpressionSet();
+
+		AnalysisState<A> res = state.bottomExecution();
+
+		for (SymbolicExpression returnValue : returnValues) {
+
+			for (Type exprType : analysis.getRuntimeTypesOf(state, returnValue, this)) {
+				AnalysisState<A> boxedState = state.bottomExecution();
+
+				if (JavaTypeSystem.PRIMITIVE_TYPES.contains(exprType)) {
+
+					JavaReferenceType boxedType = new JavaReferenceType(JavaClassType.getWrappedType(exprType));
+
+					// this is a placeholder literal of the return type of the just invoked method.
+					// Its value has no meaning, but is used by the resolve call inside
+					// JavaNewObj to "choose" the appropriate constructor
+					Literal<?> placeholderLiteral = getPlaceholderLiteral(exprType, cfg, location);
+					expressions.put(placeholderLiteral, state);
+
+					JavaNewObj box = new JavaNewObj(cfg, location, boxedType, new Expression[] {placeholderLiteral});
+
+					ExpressionSet[] ctorParam = new ExpressionSet[] {new ExpressionSet(returnValue) };
+					AnalysisState<A> t = box.forwardSemanticsAux(interprocedural, state, ctorParam, expressions);
+
+					processedReturnValues = processedReturnValues.lub(t.getExecutionExpressions());
+					boxedState = boxedState.lub(t);
+
+					expressions.forget(placeholderLiteral);
+				}
+				else {
+					boxedState = boxedState.lub(state);
+					processedReturnValues = processedReturnValues.lub(new ExpressionSet(returnValue));
+				}
+
+				assert(!boxedState.isBottom());
+				res = res.lub(boxedState);
+			}
+		}
+
+		assert(!processedReturnValues.isBottom());
+		assert(!res.isBottom());
+		return res.withExecutionExpressions(processedReturnValues);
 	}
 
 }

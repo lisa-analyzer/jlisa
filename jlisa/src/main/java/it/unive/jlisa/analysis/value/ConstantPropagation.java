@@ -54,6 +54,8 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -607,11 +609,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		// reflection
 		if (operator instanceof JavaClassForNameOperator && arg.getValue() instanceof String s) {
 			return new ConstantValue(s);
-		}
-
-		if (operator instanceof IsMemberStaticOperator) {
-			if (arg.getValue() instanceof Integer i)
-				return new ConstantValue((i & java.lang.reflect.Modifier.STATIC) != 0);
 		}
 
 		return top();
@@ -1526,6 +1523,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return Satisfiability.SATISFIED;
 			}
 			return Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof IsMemberStaticOperator) {
+			if (arg.getValue() instanceof Integer i)
+				if ((i & Modifier.STATIC) != 0)
+					return Satisfiability.SATISFIED;
+				return Satisfiability.NOT_SATISFIED;
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);

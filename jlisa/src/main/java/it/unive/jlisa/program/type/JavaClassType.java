@@ -258,6 +258,10 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.ArrayIndexOutOfBoundsException");
 	}
 
+	public static JavaClassType getIllegalArgumentExceptionType() {
+		return lookup("java.lang.IllegalArgumentException");
+	}
+
 	public static JavaClassType getArithmeticExceptionType() {
 		return lookup("java.lang.ArithmeticException");
 	}

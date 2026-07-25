@@ -3,41 +3,53 @@ import java.lang.Math;
 
 public class ReflectionTest {
 	public static void main(String[] args) throws Exception {
-		String s = new String("Cat");
-		Class c = Class.forName(s);
 
-		Method method = c.getMethod("foo", new Class[0]);
+		Class c = Class.forName("B");
+		B b = new B();
 
-		Cat cat = Cat.baz();
+		Method method = c.getMethod("foo", new Class[] {int.class});
+		assert(method.getName().equals("foo"));
+		assert(method.getReturnType() == double.class);
 
-		Object zz = method.invoke(cat, new Object[0]);
+		Integer i = Integer.valueOf(10);
+
+		Object zz = method.invoke(b, new Object[] {i});
+
+		assert(b.y.equals("ctor"));
+		assert(b.z == false);
+
+		assert(zz instanceof Double);
 
 		return;
 	}
 }
 
-class Cat {
-	public String nickname;
-	public int age;
+class A {
+	int x = 0;
+}
 
-	public Cat() {
-		nickname = "ziggy";
-		age = 90;
+class B extends A {
+
+	public String y;
+	public boolean z;
+
+	public B() {
+		y = "ctor";
+		z = true;
 	}
 
-	public int foo() {
-		nickname = "gatto";
-		age = 91;
-		return 42;
+	public double foo(int i) {
+		z = false;
+		return i;
 	}
 
-	public void bar() {
-		age = 92;
-	}
-
-	public static Object baz() {
-		return null;
-	}
+	// public void bar() {
+	// 	age = 92;
+	// }
+	//
+	// public static Object baz() {
+	// 	return null;
+	// }
 }
 
 
