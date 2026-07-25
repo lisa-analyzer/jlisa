@@ -287,7 +287,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		Parameter[] methodParams = d.getFormals();
 		int methodParamsCount = methodParams.length;
 
-		// 4 parameters flow into loadField
+		// 4 + number of formals
 		ExpressionSet[] params = new ExpressionSet[4 + methodParamsCount];
 
 		// 0 is clazz

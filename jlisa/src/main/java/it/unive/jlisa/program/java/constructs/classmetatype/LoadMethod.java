@@ -153,7 +153,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
 
 		// assign length to array
-		Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount - 1, location);
+		int subtractReceiver = methodData.isInstance() ? 1 : 0;
+		Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount - subtractReceiver, location);
 		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
 		sem = analysis.assign(arrAllocated, accessLen, arrLen, this);
 
