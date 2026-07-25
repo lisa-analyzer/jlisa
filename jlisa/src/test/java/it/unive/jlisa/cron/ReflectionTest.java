@@ -75,6 +75,23 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void testFieldGet2() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-2",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testFieldGet3() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-3",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+
+	@Test
 	public void testFieldSetStatic1() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-set-static-1",
 				"Main.java");
@@ -93,6 +110,14 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	@Test
 	public void testClassGetMethod2() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-get-method-2",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testClassGetMethod3() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-get-method-3",
 				"Main.java");
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
@@ -126,30 +151,6 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	public void testClassForNameInterface() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection",
 				"class-for-name-interface", "Main.java");
-		conf.outputs.add(new HtmlResults(true));
-		perform(conf);
-	}
-
-	@Test
-	public void testFieldGetStatic1() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-static-1",
-				"Main.java");
-		conf.outputs.add(new HtmlResults(true));
-		perform(conf);
-	}
-
-	@Test
-	public void testFieldGetStatic2() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-static-2",
-				"Main.java");
-		conf.outputs.add(new HtmlResults(true));
-		perform(conf);
-	}
-
-	@Test
-	public void testFieldGet3() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-3",
-				"Main.java");
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
