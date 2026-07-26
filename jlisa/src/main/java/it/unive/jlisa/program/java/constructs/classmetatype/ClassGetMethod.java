@@ -1,14 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Field;
-import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import it.unive.jlisa.program.CachedReflectionDataSet;
 import it.unive.jlisa.program.LoadedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -19,6 +13,7 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -51,6 +46,10 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Field;
+import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class ClassGetMethod extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -98,7 +97,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			}
 			// search for the method
 			else {
-				AnalysisState<A> methodSearched = searchMethod(interprocedural, state, left, middle, right, expressions);
+				AnalysisState<
+						A> methodSearched = searchMethod(interprocedural, state, left, middle, right, expressions);
 
 				if (methodSearched.isTop() || methodSearched.isBottom()) {
 					return methodSearched;
@@ -137,11 +137,13 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		// get the type of the left expression
 		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
 
-		// NOTE: this is always either Class or null (in case we reached the top of the class hierarchy)
-		assert(clazzTypes.size() <= 2);
+		// NOTE: this is always either Class or null (in case we reached the top
+		// of the class hierarchy)
+		assert (clazzTypes.size() <= 2);
 
 		// we only have the null type. Stop the search
-		if (clazzTypes.removeIf((t) -> ((JavaReferenceType) t).getInnerType().isNullType() ) && clazzTypes.isEmpty()) {
+		if (clazzTypes.removeIf((
+				t) -> ((JavaReferenceType) t).getInnerType().isNullType()) && clazzTypes.isEmpty()) {
 			return state.withExecutionExpressions(new ExpressionSet());
 		}
 
@@ -166,28 +168,30 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
 		AccessChild accessClazzNameValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
-
 		Stream<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessClazzNameValue);
 
-		if (constraints == null) return state.topExecution();
+		if (constraints == null)
+			return state.topExecution();
 
-		// make sure that all classes we are searching have thei reflection data loaded
-		for (BinaryExpression constraint: constraints.toList()) {
-			String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+		// make sure that all classes we are searching have thei reflection data
+		// loaded
+		for (BinaryExpression constraint : constraints.toList()) {
+			String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 			UnitType t = getTypeFromStr(clazzName);
 
-			assert(t != null);
-			if (t == null) return state.topExecution();
+			assert (t != null);
+			if (t == null)
+				return state.topExecution();
 
 			if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
 
-				assert(LoadedClassSet.isClassLoaded(state, t));
+				assert (LoadedClassSet.isClassLoaded(state, t));
 				ExpressionSet clazz = new ExpressionSet(
-						LoadedClassSet.getLoadedClassHandle(t, location)
-						);
+						LoadedClassSet.getLoadedClassHandle(t, location));
 
 				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
-				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state, new ExpressionSet[] {clazz}, expressions);
+				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state,
+						new ExpressionSet[] { clazz }, expressions);
 
 				state = initState;
 			}
@@ -210,8 +214,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
 
-			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
-				idx, lenAccess, ComparisonLt.INSTANCE, location);
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaBooleanType.INSTANCE,
+					idx, lenAccess, ComparisonLt.INSTANCE, location);
 
 			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
@@ -222,7 +227,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			// check if the two methods' signatures are the same
 			AccessChild accessMethod = new AccessChild(refMethodType, derefArr, idx, location);
 
-			// TODO: this should be a satisfiability value. If unknown, keep searching
+			// TODO: this should be a satisfiability value. If unknown, keep
+			// searching
 			boolean methodFound = matchesTarget(interprocedural, state, accessMethod, middle, right);
 
 			if (methodFound) {
@@ -238,7 +244,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		state = searchMethod(interprocedural, state, superClass, middle, right, expressions);
 
 		// we didn't find anything in the superclasses.
-		// NOTE: this is not handling the "unknown" case: we should search the interfaces
+		// NOTE: this is not handling the "unknown" case: we should search the
+		// interfaces
 		// even when we are not sure the method we found is the correct one
 		if (state.getExecutionExpressions().isEmpty()) {
 			state = searchInterfaces(interprocedural, state, derefClazz, middle, right, expressions);
@@ -280,8 +287,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
 
-			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE,
-				idx, accessLen, ComparisonLt.INSTANCE, location);
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaBooleanType.INSTANCE,
+					idx, accessLen, ComparisonLt.INSTANCE, location);
 
 			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
@@ -294,7 +302,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			tmp = searchMethod(interprocedural, tmp, accessInterface, middle, right, expressions);
 
 			// NOTE: this stops as soon as any matching method is found.
-			// This however, should only happen when we know for sure that the method
+			// This however, should only happen when we know for sure that the
+			// method
 			// we found is the correct one
 			if (!tmp.getExecutionExpressions().isEmpty()) {
 				return tmp;
@@ -341,7 +350,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		AccessChild accessMethodNameValue = new AccessChild(stringType, derefMethodName, valueVar, location);
 
 		HeapDereference derefTargetMethodName = new HeapDereference(stringType, targetMethodName, location);
-		AccessChild accessTargetMethodNameValue = new AccessChild(stringType, derefTargetMethodName, valueVar, location);
+		AccessChild accessTargetMethodNameValue = new AccessChild(stringType, derefTargetMethodName, valueVar,
+				location);
 
 		it.unive.lisa.symbolic.value.BinaryExpression equalsExpr = new it.unive.lisa.symbolic.value.BinaryExpression(
 				getProgram().getTypes().getBooleanType(),
@@ -359,17 +369,17 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		// strequals on the name of every Class object
 		// NOTE AP: ideally I think one would do just `==` on the Class objects
 
-		AccessChild accessCandidateParameterTypes = new AccessChild(refClassArrType, derefMethod, parameterTypesVar, location);
+		AccessChild accessCandidateParameterTypes = new AccessChild(refClassArrType, derefMethod, parameterTypesVar,
+				location);
 		HeapDereference derefCandidateArr = new HeapDereference(classArrType, accessCandidateParameterTypes, location);
 		AccessChild candidateLenAccess = new AccessChild(JavaIntType.INSTANCE, derefCandidateArr, lengthVar, location);
-
 
 		HeapDereference derefTargetArr = new HeapDereference(classArrType, targetMethodParameterTypes, location);
 		AccessChild targetLenAccess = new AccessChild(JavaIntType.INSTANCE, derefTargetArr, lengthVar, location);
 
-
-		it.unive.lisa.symbolic.value.BinaryExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE,
-			candidateLenAccess, targetLenAccess, ComparisonEq.INSTANCE, location);
+		it.unive.lisa.symbolic.value.BinaryExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				candidateLenAccess, targetLenAccess, ComparisonEq.INSTANCE, location);
 
 		Satisfiability sameLen = analysis.satisfies(state, eq, this);
 
@@ -385,8 +395,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
 
-			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression( JavaBooleanType.INSTANCE,
-				idx, targetLenAccess, ComparisonLt.INSTANCE, location);
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaBooleanType.INSTANCE,
+					idx, targetLenAccess, ComparisonLt.INSTANCE, location);
 
 			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
@@ -485,11 +496,13 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				new Error(nullPointerExceptionType.getReference(), originating), this);
 	}
 
-	private UnitType getTypeFromStr(String clazzName) {
+	private UnitType getTypeFromStr(
+			String clazzName) {
 
 		clazzName = clazzName.replace('$', '.');
 
-		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+		// NOTE: `Class.forName` cannot access `Class` of primitive types. For
+		// that the class literal is needed
 		Type t = getProgram().getTypes().getType(clazzName);
 
 		if (!(t instanceof UnitType))
@@ -498,11 +511,11 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return (UnitType) t;
 	}
 
-
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			SymbolicExpression expr) throws SemanticException {
+			SymbolicExpression expr)
+			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
@@ -514,10 +527,11 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			f.setAccessible(true);
 
 			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		} catch (Exception e) {
+			return null;
 		}
-		catch (Exception e) { return null; }
 
-		assert(innerDomain != null);
+		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
 		Object executionState = state.getExecutionState();
@@ -532,13 +546,14 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
-			.map(ex -> (ValueExpression) ex)
-			.flatMap(vex -> {
-				try {
-					return vdom.constraints(null, env, vex, this, oracle).stream();
-				}
-				catch (SemanticException e) {return null;}
-			});
+				.map(ex -> (ValueExpression) ex)
+				.flatMap(vex -> {
+					try {
+						return vdom.constraints(null, env, vex, this, oracle).stream();
+					} catch (SemanticException e) {
+						return null;
+					}
+				});
 	}
 
 }

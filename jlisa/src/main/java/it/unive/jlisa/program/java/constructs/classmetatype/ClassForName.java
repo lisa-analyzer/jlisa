@@ -1,14 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Field;
-import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -42,6 +36,9 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Field;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -105,28 +102,32 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 			for (BinaryExpression constraint : constraints.toList()) {
 
-				String clazzName = (String)((Constant)constraint.getLeft()).getValue();
+				String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 				UnitType t = getTypeFromStr(clazzName);
 
 				// TODO AP: static initializer goes here
 				// ClassUnit classUnit = (ClassUnit) t.getUnit();
 				// if (classUnit.getCodeMembersByName(t.toString()).isEmpty()) {
-				// 	Set<CompilationUnit> superClasses = classUnit
-				// 			.getImmediateAncestors().stream()
-				// 			.filter(u -> u instanceof ClassUnit)
-				// 			.collect(Collectors.toSet());
+				// Set<CompilationUnit> superClasses = classUnit
+				// .getImmediateAncestors().stream()
+				// .filter(u -> u instanceof ClassUnit)
+				// .collect(Collectors.toSet());
 				//
-				// 	classUnit = (ClassUnit) superClasses.stream().findFirst().orElse(classUnit);
+				// classUnit = (ClassUnit)
+				// superClasses.stream().findFirst().orElse(classUnit);
 				// }
-				// state = InitializedClassSet.initialize(state, new JavaReferenceType(t), this, interprocedural);
+				// state = InitializedClassSet.initialize(state, new
+				// JavaReferenceType(t), this, interprocedural);
 
 				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);
-				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+						expressions);
 
 				ExpressionSet clazz = callState.getExecutionExpressions();
 
 				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(cfg, location, t);
-				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, callState, new ExpressionSet[] {clazz}, expressions);
+				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, callState,
+						new ExpressionSet[] { clazz }, expressions);
 
 				for (SymbolicExpression c : clazz) {
 					noExceptionState = noExceptionState.lub(analysis.smallStepSemantics(initState, c, this));
@@ -166,11 +167,13 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return 0;
 	}
 
-	private UnitType getTypeFromStr(String clazzName) {
+	private UnitType getTypeFromStr(
+			String clazzName) {
 
 		clazzName = clazzName.replace('$', '.');
 
-		// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+		// NOTE: `Class.forName` cannot access `Class` of primitive types. For
+		// that the class literal is needed
 		Type t = getProgram().getTypes().getType(clazzName);
 
 		if (!(t instanceof UnitType))
@@ -182,7 +185,8 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			SymbolicExpression expr) throws SemanticException {
+			SymbolicExpression expr)
+			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
@@ -194,10 +198,11 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			f.setAccessible(true);
 
 			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		} catch (Exception e) {
+			return null;
 		}
-		catch (Exception e) { return null; }
 
-		assert(innerDomain != null);
+		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
 		Object executionState = state.getExecutionState();
@@ -212,14 +217,14 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
-			.map(ex -> (ValueExpression) ex)
-			.flatMap(vex -> {
-				try {
-					return vdom.constraints(null, env, vex, this, oracle).stream();
-				}
-				catch (SemanticException e) {return null;}
-			});
+				.map(ex -> (ValueExpression) ex)
+				.flatMap(vex -> {
+					try {
+						return vdom.constraints(null, env, vex, this, oracle).stream();
+					} catch (SemanticException e) {
+						return null;
+					}
+				});
 	}
 
 }
-

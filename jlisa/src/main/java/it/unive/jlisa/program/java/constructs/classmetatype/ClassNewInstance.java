@@ -1,9 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -23,6 +19,7 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -38,7 +35,10 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Field;
+import java.util.Set;
 
 public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		implements
@@ -73,9 +73,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		// TODO: missing the $enclosing parameter during the call
-		// to JavaNewObj for nested classes
-
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
@@ -101,10 +98,11 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			f.setAccessible(true);
 
 			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		} catch (Exception e) {
+			return state.topExecution();
 		}
-		catch (Exception e) { return state.topExecution(); }
 
-		assert(innerDomain != null);
+		assert (innerDomain != null);
 
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
@@ -120,7 +118,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
-		for (SymbolicExpression ex: rewritten) {
+		for (SymbolicExpression ex : rewritten) {
 
 			ValueExpression vex = (ValueExpression) ex;
 
@@ -128,7 +126,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 			for (BinaryExpression constraint : constraints) {
 
-				String dynamicTypeStr = (String) ((Constant)constraint.getLeft()).getValue();
+				String dynamicTypeStr = (String) ((Constant) constraint.getLeft()).getValue();
 				dynamicTypeStr = dynamicTypeStr.replace('$', '.');
 
 				// if this fails, throw a `InstantiationException`, meaning that
@@ -143,23 +141,29 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 				if (canInstantiate) {
 
-					// TODO: get the enclosing unit and if needed add the enclosing parameter
+					assert (dynamicType instanceof UnitType);
+					if (dynamicType instanceof UnitType ut) {
+						CompilationUnit cu = ut.getUnit();
+						// TODO: throw a NoSuchMethodException if there's no
+						// constructor without enclosing
+					}
 
 					JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) location,
 							new JavaReferenceType(dynamicType),
 							new Expression[0]);
 					AnalysisState<
-							A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+							A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+									expressions);
 
 					execExpressions = execExpressions.lub(callState.getExecutionExpressions());
 					noExceptionState = noExceptionState.lub(callState);
-				}
-				else {
+				} else {
 					JavaClassType instantiationExceptionType = JavaClassType.getInstantiationException();
 
 					JavaNewObj call = new JavaNewObj(getCFG(), location,
 							instantiationExceptionType.getReference(), new Expression[0]);
-					AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+							expressions);
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), location);
@@ -171,8 +175,9 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
 					callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-					exceptionState = exceptionState.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-							new Error(instantiationExceptionType.getReference(), originating), this));
+					exceptionState = exceptionState
+							.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+									new Error(instantiationExceptionType.getReference(), originating), this));
 
 				}
 			}

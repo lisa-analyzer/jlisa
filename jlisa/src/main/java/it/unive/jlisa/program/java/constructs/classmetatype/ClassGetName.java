@@ -77,4 +77,3 @@ public class ClassGetName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return 0;
 	}
 }
-

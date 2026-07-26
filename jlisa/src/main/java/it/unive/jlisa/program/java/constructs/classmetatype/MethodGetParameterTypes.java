@@ -65,7 +65,8 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 
 		// (*method)->parameterTypes
 		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, expr, getLocation());
-		AccessChild accessThisMethodParamTypes = new AccessChild(reftype, derefThisMethod, paramTypesVar, getLocation());
+		AccessChild accessThisMethodParamTypes = new AccessChild(reftype, derefThisMethod, paramTypesVar,
+				getLocation());
 
 		HeapReference ref = new HeapReference(reftype, accessThisMethodParamTypes, getLocation());
 
@@ -78,5 +79,3 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 		return 0;
 	}
 }
-
-

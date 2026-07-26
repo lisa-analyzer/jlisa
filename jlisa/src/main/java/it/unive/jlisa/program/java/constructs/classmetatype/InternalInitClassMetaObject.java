@@ -1,10 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.stream.Collectors;
-
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.CachedReflectionDataSet;
 import it.unive.jlisa.program.LoadedClassSet;
@@ -42,6 +37,10 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class InternalInitClassMetaObject extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -62,7 +61,6 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		originating = st;
 	}
 
-
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -70,9 +68,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		assert(params.length == 1);
-		assert(params[0].size() == 1);
-		assert(LoadedClassSet.isClassLoaded(state, initializingClassType));
+		assert (params.length == 1);
+		assert (params[0].size() == 1);
+		assert (LoadedClassSet.isClassLoaded(state, initializingClassType));
 
 		SymbolicExpression clazz = params[0].iterator().next();
 
@@ -87,11 +85,14 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 			tmp = CachedReflectionDataSet.cacheReflectionData(tmp, interprocedural, initializingClassType);
 
 			if (initializingClassType instanceof UnitType ut) {
-				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, tmp, expressions, getAllFields(ut.getUnit()), clazz);
+				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, tmp, expressions,
+						getAllFields(ut.getUnit()), clazz);
 
-				AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(ut.getUnit()), clazz);
+				AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions,
+						getAllMethods(ut.getUnit()), clazz);
 
-				AnalysisState<A> superclassesInit = initializeSuperclasses(interprocedural, methodsLoaded, expressions, clazz, ut);
+				AnalysisState<A> superclassesInit = initializeSuperclasses(interprocedural, methodsLoaded, expressions,
+						clazz, ut);
 
 				tmp = superclassesInit;
 			}
@@ -108,18 +109,18 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		return 0;
 	}
 
-	Collection<Global> getAllFields(CompilationUnit unit) {
+	Collection<Global> getAllFields(
+			CompilationUnit unit) {
 		Collection<Global> fields = new ArrayList<>(unit.getGlobalsRecursively());
 		return fields;
 	}
 
-
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadGlobals(
-		InterproceduralAnalysis<A, D> interprocedural,
-		AnalysisState<A> state,
-		StatementStore<A> expressions,
-		Collection<Global> globals,
-		SymbolicExpression clazz)
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions,
+			Collection<Global> globals,
+			SymbolicExpression clazz)
 			throws SemanticException {
 
 		CodeLocation location = getLocation();
@@ -135,7 +136,8 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		AnalysisState<A> tmp = state;
 
 		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, location);
-		AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar, location);
+		AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar,
+				location);
 
 		HeapDereference derefArr = new HeapDereference(fieldArrType, accessFields, location);
 
@@ -169,7 +171,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		return tmp;
 	}
 
-	private ExpressionSet[] genLoadFieldParams(SymbolicExpression clazz, Global global) {
+	private ExpressionSet[] genLoadFieldParams(
+			SymbolicExpression clazz,
+			Global global) {
 
 		CodeLocation location = getLocation();
 		Type stringType = JavaClassType.getStringType();
@@ -202,7 +206,8 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		return params;
 	}
 
-	Collection<CodeMember> getAllMethods(CompilationUnit unit) {
+	Collection<CodeMember> getAllMethods(
+			CompilationUnit unit) {
 
 		String unitSimpleName = unit.getName().contains(".")
 				? unit.getName().substring(unit.getName().lastIndexOf('.') + 1)
@@ -221,11 +226,11 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadMethods(
-		InterproceduralAnalysis<A, D> interprocedural,
-		AnalysisState<A> state,
-		StatementStore<A> expressions,
-		Collection<CodeMember> methods,
-		SymbolicExpression clazz)
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions,
+			Collection<CodeMember> methods,
+			SymbolicExpression clazz)
 			throws SemanticException {
 
 		CodeLocation location = getLocation();
@@ -238,9 +243,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", getLocation());
 
-
 		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, location);
-		AccessChild accessMethods = new AccessChild(new JavaReferenceType(methodArrType), derefClazz, declaredMethodsVar, location);
+		AccessChild accessMethods = new AccessChild(new JavaReferenceType(methodArrType), derefClazz,
+				declaredMethodsVar, location);
 
 		HeapDereference derefArr = new HeapDereference(methodArrType, accessMethods, location);
 
@@ -279,7 +284,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 	}
 
-	private ExpressionSet[] genMethodParams(SymbolicExpression clazz, CodeMemberDescriptor d) {
+	private ExpressionSet[] genMethodParams(
+			SymbolicExpression clazz,
+			CodeMemberDescriptor d) {
 
 		CodeLocation location = getLocation();
 		Type stringType = JavaClassType.getStringType();
@@ -292,7 +299,6 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		// 0 is clazz
 		params[0] = new ExpressionSet(clazz);
-
 
 		// 1 is method name
 		String methodName = d.getName();
@@ -327,13 +333,12 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		return params;
 	}
 
-
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> initializeSuperclasses(
-		InterproceduralAnalysis<A, D> interprocedural,
-		AnalysisState<A> state,
-		StatementStore<A> expressions,
-		SymbolicExpression clazz,
-		UnitType unitType)
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions,
+			SymbolicExpression clazz,
+			UnitType unitType)
 			throws SemanticException {
 
 		CodeLocation location = getLocation();
@@ -347,10 +352,10 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		if (ancestors.isEmpty())
 			return state;
 
-		assert(ancestors.size() == 1);
+		assert (ancestors.size() == 1);
 
 		CompilationUnit superclassUnit = ancestors.iterator().next();
-		assert(superclassUnit instanceof ClassUnit);
+		assert (superclassUnit instanceof ClassUnit);
 
 		JavaClassType superclassType = JavaClassType.lookup(superclassUnit.getName());
 
@@ -368,9 +373,11 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 			SymbolicExpression expr = new HeapReference(refClassMetaType, accessSuperclass, location);
 
-			AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, state, expressions, getAllFields(superclassUnit), expr);
+			AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, state, expressions,
+					getAllFields(superclassUnit), expr);
 
-			AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions, getAllMethods(superclassUnit), expr);
+			AnalysisState<A> methodsLoaded = loadMethods(interprocedural, fieldsLoaded, expressions,
+					getAllMethods(superclassUnit), expr);
 
 			tmp = methodsLoaded;
 
@@ -381,5 +388,3 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 	}
 
 }
-
-

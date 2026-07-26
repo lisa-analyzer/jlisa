@@ -77,4 +77,3 @@ public class MethodGetName extends it.unive.lisa.program.cfg.statement.UnaryExpr
 		return 0;
 	}
 }
-

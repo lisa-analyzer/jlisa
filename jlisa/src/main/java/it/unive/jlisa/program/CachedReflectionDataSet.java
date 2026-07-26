@@ -6,19 +6,20 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.SetLattice;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import it.unive.lisa.type.Type;
 
-/* A set containing the classes that have their reflection data cached.
-* In the concrete world, reflection data (methods and fields) is
-* loaded during getField/getMethod like operations.
-* This is used every time getField/getMethod is invoked, if the reflection data is not loaded,
-* then it must be cached before returning a handle to the meta object.
-*/
+/*
+ * A set containing the classes that have their reflection data cached. In the
+ * concrete world, reflection data (methods and fields) is loaded during
+ * getField/getMethod like operations. This is used every time
+ * getField/getMethod is invoked, if the reflection data is not loaded, then it
+ * must be cached before returning a handle to the meta object.
+ */
 
 public class CachedReflectionDataSet extends SetLattice<CachedReflectionDataSet, Type> {
 
@@ -84,7 +85,8 @@ public class CachedReflectionDataSet extends SetLattice<CachedReflectionDataSet,
 			Type t) {
 
 		AnalysisState<A> result = state;
-		CachedReflectionDataSet loadedClasses = state.getExecutionInfo(CachedReflectionDataSet.INFO_KEY, CachedReflectionDataSet.class);
+		CachedReflectionDataSet loadedClasses = state.getExecutionInfo(CachedReflectionDataSet.INFO_KEY,
+				CachedReflectionDataSet.class);
 		if (loadedClasses == null)
 			loadedClasses = new CachedReflectionDataSet();
 
@@ -96,7 +98,8 @@ public class CachedReflectionDataSet extends SetLattice<CachedReflectionDataSet,
 			AnalysisState<A> state,
 			Type t) {
 
-		CachedReflectionDataSet loadedClasses = state.getExecutionInfo(CachedReflectionDataSet.INFO_KEY, CachedReflectionDataSet.class);
+		CachedReflectionDataSet loadedClasses = state.getExecutionInfo(CachedReflectionDataSet.INFO_KEY,
+				CachedReflectionDataSet.class);
 		if (loadedClasses == null)
 			return false;
 
@@ -104,4 +107,3 @@ public class CachedReflectionDataSet extends SetLattice<CachedReflectionDataSet,
 
 	}
 }
-

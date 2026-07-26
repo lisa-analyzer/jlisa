@@ -14,14 +14,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
-import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.CompilationUnit;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.cfg.CodeMember;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -54,11 +47,7 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
-
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -1501,20 +1490,21 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			v = v.replace('$', '.');
 
-			// NOTE: `Class.forName` cannot access `Class` of primitive types. For that the class literal is needed
+			// NOTE: `Class.forName` cannot access `Class` of primitive types.
+			// For that the class literal is needed
 
 			boolean classLookup = true;
 			boolean interfaceLookup = true;
 
 			try {
 				Type t = JavaClassType.lookup(v);
-				assert(t != null);
+				assert (t != null);
 			} catch (IllegalArgumentException e) {
 				classLookup = false;
 			}
 			try {
 				Type t = JavaInterfaceType.lookup(v);
-				assert(t != null);
+				assert (t != null);
 			} catch (IllegalArgumentException e) {
 				interfaceLookup = false;
 			}
@@ -1529,7 +1519,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof Integer i)
 				if ((i & Modifier.STATIC) != 0)
 					return Satisfiability.SATISFIED;
-				return Satisfiability.NOT_SATISFIED;
+			return Satisfiability.NOT_SATISFIED;
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);

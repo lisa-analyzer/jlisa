@@ -1,12 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -49,6 +42,11 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class FieldSetValue extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -119,11 +117,13 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		AccessChild accessClazzNameValue = new AccessChild(refStringType, derefClazzName, valueVar, loc);
 
 		Stream<BinaryExpression> fieldNameStream = extractConstraints(interprocedural, state, accessFieldNameValue);
-		if (fieldNameStream == null) return state.topExecution();
+		if (fieldNameStream == null)
+			return state.topExecution();
 		List<BinaryExpression> fieldNameConstraints = fieldNameStream.toList();
 
 		Stream<BinaryExpression> clazzNameStream = extractConstraints(interprocedural, state, accessClazzNameValue);
-		if (clazzNameStream == null) return state.topExecution();
+		if (clazzNameStream == null)
+			return state.topExecution();
 		List<BinaryExpression> clazzNameConstraints = clazzNameStream.toList();
 
 		AnalysisState<A> result = state.bottomExecution();
@@ -236,10 +236,12 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		return 0;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression expr) throws SemanticException {
+	private <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr)
+					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
@@ -251,10 +253,11 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 			f.setAccessible(true);
 
 			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
+		} catch (Exception e) {
+			return null;
 		}
-		catch (Exception e) { return null; }
 
-		assert(innerDomain != null);
+		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
 		Object executionState = state.getExecutionState();
@@ -269,12 +272,13 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
-			.map(ex -> (ValueExpression) ex)
-			.flatMap(vex -> {
-				try {
-					return vdom.constraints(null, env, vex, this, oracle).stream();
-				}
-				catch (SemanticException e) {return null;}
-			});
+				.map(ex -> (ValueExpression) ex)
+				.flatMap(vex -> {
+					try {
+						return vdom.constraints(null, env, vex, this, oracle).stream();
+					} catch (SemanticException e) {
+						return null;
+					}
+				});
 	}
 }

@@ -556,7 +556,6 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 						ComparisonEq.INSTANCE,
 						pp.getLocation()));
 
-
 	}
 
 }

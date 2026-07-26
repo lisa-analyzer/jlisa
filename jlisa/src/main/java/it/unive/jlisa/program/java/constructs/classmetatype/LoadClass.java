@@ -1,10 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import it.unive.jlisa.program.LoadedClassSet;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
@@ -14,9 +9,9 @@ import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
-import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
@@ -48,6 +43,10 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class LoadClass extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -56,8 +55,10 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 	private Type loadingType;
 
-	// NOTE: this is technically a duplicate of loadingType.toString(), except in one case:
-	// A$B (nested classes). In that case (only reachable via forName), the type is:
+	// NOTE: this is technically a duplicate of loadingType.toString(), except
+	// in one case:
+	// A$B (nested classes). In that case (only reachable via forName), the type
+	// is:
 	// A.B, but the name is A$B
 	private String loadingClazzName;
 
@@ -130,7 +131,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> tmp = callState;
 
-		// TODO if loadingType instanceof JavaArrayType, then the superclass shall
+		// TODO if loadingType instanceof JavaArrayType, then the superclass
+		// shall
 		// be java.lang.Object
 
 		if (loadingType instanceof UnitType loadingClazz) {
@@ -153,17 +155,17 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 					LoadClass loadClass = new LoadClass(superClass, getCFG(), location);
 					tmp = loadClass.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0], expressions);
 
-					GlobalVariable superClassVar =
-						new GlobalVariable(Untyped.INSTANCE, "superClass", location);
+					GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
-					assert(tmp.getExecutionExpressions().size() == 1);
+					assert (tmp.getExecutionExpressions().size() == 1);
 					SymbolicExpression superClazz = tmp.getExecutionExpressions().iterator().next();
 
-					AccessChild accessSuperClazz = new AccessChild(new JavaReferenceType(JavaClassType.getClassMetaType()), derefClazz, superClassVar, location);
+					AccessChild accessSuperClazz = new AccessChild(
+							new JavaReferenceType(JavaClassType.getClassMetaType()), derefClazz, superClassVar,
+							location);
 
 					tmp = analysis.assign(tmp, accessSuperClazz, superClazz, this);
-				}
-				else if (ancestor instanceof InterfaceUnit) {
+				} else if (ancestor instanceof InterfaceUnit) {
 					// load interface Class
 
 					JavaInterfaceType interf = JavaInterfaceType.lookup(ancestor.getName());
@@ -175,18 +177,19 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 				}
 			}
 
-			// if we loaded interfaces, assign them to the `interfaces` array of the current Class
+			// if we loaded interfaces, assign them to the `interfaces` array of
+			// the current Class
 			if (!loadedInterfaces.isEmpty()) {
 
 				GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
 				GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 
-
 				JavaReferenceType refArrType = JavaArrayType.CLASS_ARRAY;
 				JavaReferenceType refClassType = new JavaReferenceType(JavaClassType.getClassMetaType());
 
 				AccessChild accessInterfaces = new AccessChild(refArrType, derefClazz, interfacesVar, location);
-				HeapDereference derefInterfaces = new HeapDereference(refArrType.getInnerType(), accessInterfaces, location);
+				HeapDereference derefInterfaces = new HeapDereference(refArrType.getInnerType(), accessInterfaces,
+						location);
 
 				AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefInterfaces, lengthVar, location);
 
@@ -196,7 +199,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 				int i = 0;
 				// assign the single values
-				for(ExpressionSet loadedInterfaceAllocs : loadedInterfaces) {
+				for (ExpressionSet loadedInterfaceAllocs : loadedInterfaces) {
 
 					Constant idxConstant = new Constant(JavaIntType.INSTANCE, i, location);
 
@@ -220,7 +223,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			Statement o) {
 		return 0;
 	}
-
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> allocateClass(
 			InterproceduralAnalysis<A, D> interprocedural,
@@ -246,7 +248,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		JavaArrayType fieldArray = JavaArrayType.lookup(refFieldType, 1);
 		JavaReferenceType refFieldArray = new JavaReferenceType(fieldArray);
 
-		JavaReferenceType refMethodArray = new JavaReferenceType(JavaArrayType.lookup(new JavaReferenceType(JavaClassType.getMethodType()), 1));
+		JavaReferenceType refMethodArray = new JavaReferenceType(
+				JavaArrayType.lookup(new JavaReferenceType(JavaClassType.getMethodType()), 1));
 
 		GlobalVariable isArrayVar = new GlobalVariable(Untyped.INSTANCE, "isArray", location);
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
@@ -255,7 +258,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
 		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", location);
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
-
 
 		// allocate the Class object
 		MemoryAllocation created = new MemoryAllocation(refClassMetaType.getInnerType(), synGen.nextLocation(), false);
@@ -273,8 +275,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		JavaNewObj allocString = new JavaNewObj(getCFG(), synGen.nextLocation(), refStringType, new Expression[0]);
 
-		AnalysisState<A> stringAllocated =
-			allocString.forwardSemanticsAux(interprocedural, clazzAllocated, new ExpressionSet[0], expressions);
+		AnalysisState<A> stringAllocated = allocString.forwardSemanticsAux(interprocedural, clazzAllocated,
+				new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression allocatedStringExpr : stringAllocated.getExecutionExpressions()) {
@@ -290,7 +292,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		// assign the isArray field
 		AccessChild accessIsArray = new AccessChild(JavaBooleanType.INSTANCE, derefThisClazz, isArrayVar, location);
-		Constant isArrayConstant = new Constant(JavaBooleanType.INSTANCE, loadingType instanceof JavaArrayType, location);
+		Constant isArrayConstant = new Constant(JavaBooleanType.INSTANCE, loadingType instanceof JavaArrayType,
+				location);
 
 		AnalysisState<A> assigned = analysis.assign(tmp, accessIsArray, isArrayConstant, this);
 		tmp = tmp.lub(assigned);
@@ -308,7 +311,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		tmp = analysis.assign(tmp, accessSuperClass, castAs, this);
 
-
 		// assign the array of interfaces that the class implements.
 		// Default is an empty array
 		AccessChild accessInterfaces = new AccessChild(refClassArray, derefThisClazz, interfacesVar, location);
@@ -316,7 +318,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		IntLiteral len = new IntLiteral(getCFG(), location, 0);
 		Constant c = new Constant(JavaIntType.INSTANCE, 0, location);
 		JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), len, refClassArray);
-
 
 		AnalysisState<A> interfacesAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
 		for (SymbolicExpression expr : interfacesAllocated.getExecutionExpressions()) {
@@ -338,9 +339,9 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		}
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
 
-
 		// allocate an empty array of methods
-		AccessChild accessDeclaredMethods = new AccessChild(refMethodArray, derefThisClazz, declaredMethodsVar, location);
+		AccessChild accessDeclaredMethods = new AccessChild(refMethodArray, derefThisClazz, declaredMethodsVar,
+				location);
 
 		newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refMethodArray);
 
@@ -349,7 +350,6 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			tmp = analysis.assign(methodsAllocated, accessDeclaredMethods, expr, this);
 		}
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
-
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingClazzName;
@@ -368,4 +368,3 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 	}
 
 }
-

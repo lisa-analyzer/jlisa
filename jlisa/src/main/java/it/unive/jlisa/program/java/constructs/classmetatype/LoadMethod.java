@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Modifier;
-
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -34,6 +32,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Modifier;
 
 public class LoadMethod extends NaryExpression implements PluggableStatement {
 	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Method");
@@ -98,7 +97,6 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> resultState = state.bottomExecution();
 
-
 		MemoryAllocation created = new MemoryAllocation(methodMetaType, synGen.nextLocation(), false);
 		HeapReference ref = new HeapReference(refMethodMetaType, created, location);
 
@@ -109,22 +107,21 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, method, location);
 
-
 		// assign method clazz
 		AccessChild accessThisMethodClazz = new AccessChild(refClassMetaType, derefThisMethod, clazzVar, location);
 		AnalysisState<A> sem = analysis.assign(methodAllocated, accessThisMethodClazz, clazz, this);
 
 		// assign method name
-		sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, nameVar, refStringType, expressions));
+		sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, nameVar, refStringType,
+				expressions));
 
 		AccessChild accessThisMethodName = new AccessChild(refStringType, derefThisMethod, nameVar, location);
 
 		HeapDereference derefMethodName = new HeapDereference(stringType, accessThisMethodName, location);
 		AccessChild dst = new AccessChild(stringType, derefMethodName, valueVar, location);
 
-		Constant methodNameConstant = new Constant(stringType, methodData.getName(),location);
+		Constant methodNameConstant = new Constant(stringType, methodData.getName(), location);
 		sem = analysis.assign(sem, dst, methodNameConstant, this);
-
 
 		// assign method type
 		Type returnType = methodData.getReturnType();
@@ -132,10 +129,9 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		AccessChild accessThisMethodType = new AccessChild(refClassMetaType, derefThisMethod, typeVar, location);
 		sem = lazyLoadClass(returnType, interprocedural, sem, expressions);
 
-		assert(sem.getExecutionExpressions().size() == 1);
+		assert (sem.getExecutionExpressions().size() == 1);
 		SymbolicExpression returnTypeClazzVar = sem.getExecutionExpressions().iterator().next();
 		sem = analysis.assign(sem, accessThisMethodType, returnTypeClazzVar, this);
-
 
 		// assign parameter types
 		MemoryAllocation arrCreated = new MemoryAllocation(classArrType, synGen.nextLocation(), false);
@@ -150,7 +146,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		HeapDereference arrayDeref = new HeapDereference(classArrType, array, location);
 
-		// FIXME AP: this should really use newArrayWithInitializer. If not, need to initialize the length variable
+		// FIXME AP: this should really use newArrayWithInitializer. If not,
+		// need to initialize the length variable
 
 		// assign length to array
 		int subtractReceiver = methodData.isInstance() ? 1 : 0;
@@ -164,12 +161,12 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 			Type parameterType = parameter.getStaticType();
 
-			Constant idx = new Constant(JavaIntType.INSTANCE, i-1, location);
+			Constant idx = new Constant(JavaIntType.INSTANCE, i - 1, location);
 			AccessChild accessIdx = new AccessChild(refClassMetaType, arrayDeref, idx, location);
 
 			AnalysisState<A> t = lazyLoadClass(parameterType, interprocedural, sem, expressions);
 
-			assert(t.getExecutionExpressions().size() == 1);
+			assert (t.getExecutionExpressions().size() == 1);
 			SymbolicExpression parameterClazzVar = t.getExecutionExpressions().iterator().next();
 
 			sem = analysis.assign(t, accessIdx, parameterClazzVar, this);
@@ -192,7 +189,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		tmp = tmp.lub(sem);
 
-		// FIX: the forgetIdentifier is causing the symbolicExpression to be rewritten,
+		// FIX: the forgetIdentifier is causing the symbolicExpression to be
+		// rewritten,
 		// resulting in the primitive fields tracked by the value domain
 		// to be removed from the abstract state
 		resultState = tmp.forgetIdentifier(method, this).withExecutionExpression(ref);
@@ -206,15 +204,14 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		return 0;
 	}
 
-
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> allocateSubField(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			HeapDereference fieldDereference,
 			GlobalVariable subField,
 			JavaReferenceType type,
-			StatementStore<A> expressions
-			) throws SemanticException {
+			StatementStore<A> expressions)
+			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
@@ -248,12 +245,14 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 		LoadClass loadClass = new LoadClass(t, getCFG(), getLocation());
 
-		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+				expressions);
 
 		return classLoaded;
 	}
 
-	private Type getNoReferenceType(Type t) {
+	private Type getNoReferenceType(
+			Type t) {
 		Type res = t;
 		if (res instanceof JavaReferenceType jrt) {
 			res = jrt.getInnerType();
@@ -261,5 +260,3 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		return res;
 	}
 }
-
-

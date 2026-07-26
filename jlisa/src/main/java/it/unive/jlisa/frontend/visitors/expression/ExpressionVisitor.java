@@ -726,7 +726,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	@Override
 	public boolean visit(
 			TypeLiteral node) {
-		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), node.getType().toString());
+		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node),
+				node.getType().toString());
 		return false;
 	}
 

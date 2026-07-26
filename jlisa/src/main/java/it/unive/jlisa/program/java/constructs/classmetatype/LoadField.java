@@ -67,7 +67,7 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		if (thisFieldType instanceof JavaReferenceType jrt)
 			thisFieldType = jrt.getInnerType();
 
-		assert(params.length == 4);
+		assert (params.length == 4);
 
 		SymbolicExpression[] exprs = new SymbolicExpression[params.length];
 
@@ -98,7 +98,6 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> resultState = state.bottomExecution();
 
-
 		MemoryAllocation created = new MemoryAllocation(fieldMetaType, synGen.nextLocation(), false);
 		HeapReference ref = new HeapReference(refFieldMetaType, created, getLocation());
 
@@ -108,7 +107,6 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		AnalysisState<A> fieldAllocated = analysis.assign(allocated, field, ref, this);
 
 		HeapDereference derefThisField = new HeapDereference(fieldMetaType, field, getLocation());
-
 
 		AnalysisState<A> tmp = fieldAllocated.bottomExecution();
 
@@ -127,12 +125,11 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		sem = analysis.assign(sem, dst, exprs[1], this);
 
-
 		// assign field type
 		AccessChild accessThisFieldType = new AccessChild(refClassMetaType, derefThisField, typeVar, getLocation());
 		sem = lazyLoadClass(fieldData.getStaticType(), interprocedural, sem, expressions);
 
-		assert(sem.getExecutionExpressions().size() == 1);
+		assert (sem.getExecutionExpressions().size() == 1);
 		SymbolicExpression fieldClazzExpr = sem.getExecutionExpressions().iterator().next();
 		sem = analysis.assign(sem, accessThisFieldType, fieldClazzExpr, this);
 
@@ -159,8 +156,8 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 			HeapDereference fieldDereference,
 			GlobalVariable subField,
 			JavaReferenceType type,
-			StatementStore<A> expressions
-			) throws SemanticException {
+			StatementStore<A> expressions)
+			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
@@ -194,7 +191,8 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		LoadClass loadClass = new LoadClass(t, getCFG(), getLocation());
 
-		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+		AnalysisState<A> classLoaded = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+				expressions);
 
 		return classLoaded;
 	}

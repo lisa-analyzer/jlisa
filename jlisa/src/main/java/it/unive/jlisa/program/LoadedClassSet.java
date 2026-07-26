@@ -11,13 +11,12 @@ import it.unive.lisa.lattices.SetLattice;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import it.unive.lisa.type.Type;
-
 
 public class LoadedClassSet extends SetLattice<LoadedClassSet, Type> {
 
@@ -112,7 +111,9 @@ public class LoadedClassSet extends SetLattice<LoadedClassSet, Type> {
 
 	}
 
-	public static SymbolicExpression getLoadedClassHandle(Type t, CodeLocation loc) {
+	public static SymbolicExpression getLoadedClassHandle(
+			Type t,
+			CodeLocation loc) {
 		String s = "__" + t.toString();
 		JavaReferenceType r = new JavaReferenceType(JavaClassType.getClassMetaType());
 		return new GlobalVariable(r, s, loc);

@@ -22,7 +22,9 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class MethodGetReturnType extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
+public class MethodGetReturnType extends it.unive.lisa.program.cfg.statement.UnaryExpression
+		implements
+		PluggableStatement {
 	protected Statement originating;
 
 	public MethodGetReturnType(
@@ -63,7 +65,8 @@ public class MethodGetReturnType extends it.unive.lisa.program.cfg.statement.Una
 
 		// (*method)->returnType
 		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, expr, getLocation());
-		AccessChild accessThisMethodReturnType = new AccessChild(reftype, derefThisMethod, returnTypeVar, getLocation());
+		AccessChild accessThisMethodReturnType = new AccessChild(reftype, derefThisMethod, returnTypeVar,
+				getLocation());
 
 		HeapReference ref = new HeapReference(reftype, accessThisMethodReturnType, getLocation());
 
@@ -76,4 +79,3 @@ public class MethodGetReturnType extends it.unive.lisa.program.cfg.statement.Una
 		return 0;
 	}
 }
-

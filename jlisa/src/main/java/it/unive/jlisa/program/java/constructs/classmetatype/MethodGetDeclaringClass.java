@@ -78,4 +78,3 @@ public class MethodGetDeclaringClass extends it.unive.lisa.program.cfg.statement
 		return 0;
 	}
 }
-
