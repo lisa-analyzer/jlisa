@@ -20,17 +20,16 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 public class LibrarySpecificationProvider {
 
-	public static final String LIBS_FOLDER = "/libraries/";
+	// Add here other source folders with libraries
+	public static final List<String> LIBS_FOLDER = List.of(
+			"/java-libraries/");
 
 	private static final Map<String, ClassDef> AVAILABLE_LIB_CLASSES = new TreeMap<>();
 
@@ -47,9 +46,11 @@ public class LibrarySpecificationProvider {
 		init = new CFG(new CodeMemberDescriptor(SyntheticLocation.INSTANCE, program, false, "param_init"));
 		Map<String, Runtime> parsedLibs = new TreeMap<>();
 
-		try (ScanResult scanResult = new ClassGraph().acceptPaths(LIBS_FOLDER).scan()) {
-			for (String path : scanResult.getAllResources().getPaths())
-				readLibrary(path, program, parsedLibs);
+		for (String lib : LIBS_FOLDER) {
+			try (ScanResult scanResult = new ClassGraph().acceptPaths(lib).scan()) {
+				for (String path : scanResult.getAllResources().getPaths())
+					readLibrary(path, program, parsedLibs);
+			}
 		}
 	}
 
