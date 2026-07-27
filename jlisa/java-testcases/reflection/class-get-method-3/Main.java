@@ -8,7 +8,8 @@ public class ReflectionTest {
 
 		Method m1 = c.getMethod("canFly", new Class[0]);
 		assert(m1.getDeclaringClass() == c);
-		assert(m1.getReturnType() == boolean.class);
+		Class c2 = boolean.class;
+		assert(m1.getReturnType() == c2);
 		assert(m1.getName().equals("canFly"));
 
 		Method m2 = c.getMethod("jump", new Class[] {int.class});

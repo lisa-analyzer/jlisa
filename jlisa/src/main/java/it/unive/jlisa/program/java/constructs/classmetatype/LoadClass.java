@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.LoadedClassSet;
+import it.unive.jlisa.program.ReflectionDataUtils;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -34,10 +34,7 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.heap.NullConstant;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.InstrumentedReceiver;
+import it.unive.lisa.symbolic.value.*;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
@@ -122,13 +119,12 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-		if (LoadedClassSet.isClassLoaded(state, loadingType)) {
-			SymbolicExpression accessClazz = LoadedClassSet.getLoadedClassHandle(loadingType, location);
+                if (ReflectionDataUtils.isClassLoaded(state, loadingType, location)) {
+			SymbolicExpression accessClazz = ReflectionDataUtils.getLoadedClassHandle(loadingType, location);
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
 
 		AnalysisState<A> callState = allocateClass(interprocedural, state, expressions);
-
 		AnalysisState<A> tmp = callState;
 
 		// TODO if loadingType instanceof JavaArrayType, then the superclass
@@ -326,30 +322,28 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
 
-		// allocate an empty array of fields
+		// set array of fields = null
 		AccessChild accessDeclaredFields = new AccessChild(refFieldArray, derefThisClazz, declaredFieldsVar, location);
 
-		IntLiteral zero = new IntLiteral(getCFG(), location, 0);
-		c = new Constant(JavaIntType.INSTANCE, 0, location);
-		newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refFieldArray);
+                nc = new NullConstant(location);
+                types = new HashSet<>();
+                types.add(refFieldArray);
+                typeToken = new TypeTokenType(types);
+                castTo = new Constant(typeToken, refFieldArray, location);
+                castAs = new BinaryExpression(refFieldArray, nc, castTo, TypeCast.INSTANCE, location);
+                tmp = analysis.assign(tmp, accessDeclaredFields, castAs, this);
 
-		AnalysisState<A> fieldsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
-		for (SymbolicExpression expr : fieldsAllocated.getExecutionExpressions()) {
-			tmp = analysis.assign(fieldsAllocated, accessDeclaredFields, expr, this);
-		}
-		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
-
-		// allocate an empty array of methods
+		// set array of methods = null
 		AccessChild accessDeclaredMethods = new AccessChild(refMethodArray, derefThisClazz, declaredMethodsVar,
 				location);
 
-		newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refMethodArray);
-
-		AnalysisState<A> methodsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
-		for (SymbolicExpression expr : methodsAllocated.getExecutionExpressions()) {
-			tmp = analysis.assign(methodsAllocated, accessDeclaredMethods, expr, this);
-		}
-		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+                nc = new NullConstant(location);
+                types = new HashSet<>();
+                types.add(refMethodArray);
+                typeToken = new TypeTokenType(types);
+                castTo = new Constant(typeToken, refMethodArray, location);
+                castAs = new BinaryExpression(refMethodArray, nc, castTo, TypeCast.INSTANCE, location);
+                tmp = analysis.assign(tmp, accessDeclaredMethods, castAs, this);
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingClazzName;
@@ -359,10 +353,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		tmp = tmp.lub(t);
 
 		tmp = tmp.forgetIdentifier(clazz, this);
-
 		tmp = tmp.withExecutionExpression(clazzVar);
-
-		tmp = LoadedClassSet.addLoadedClass(tmp, interprocedural, loadingType);
 
 		return tmp;
 	}

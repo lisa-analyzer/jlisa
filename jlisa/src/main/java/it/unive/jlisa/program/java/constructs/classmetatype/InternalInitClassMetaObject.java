@@ -1,8 +1,10 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.program.CachedReflectionDataSet;
-import it.unive.jlisa.program.LoadedClassSet;
+import it.unive.jlisa.program.ReflectionDataUtils;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.JavaNewArray;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -43,8 +45,10 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class InternalInitClassMetaObject extends NaryExpression implements PluggableStatement {
-	protected Statement originating;
 
+        private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("CacheReflectionData");
+
+	protected Statement originating;
 	private Type initializingClassType;
 
 	public InternalInitClassMetaObject(
@@ -70,7 +74,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		assert (params.length == 1);
 		assert (params[0].size() == 1);
-		assert (LoadedClassSet.isClassLoaded(state, initializingClassType));
+		assert (ReflectionDataUtils.isClassLoaded(state, initializingClassType, getLocation()));
 
 		SymbolicExpression clazz = params[0].iterator().next();
 
@@ -80,9 +84,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		AnalysisState<A> tmp = state;
 
-		if (!CachedReflectionDataSet.isClassReflectionDataCached(tmp, initializingClassType)) {
-			// set it as initialized to avoid reinitialization
-			tmp = CachedReflectionDataSet.cacheReflectionData(tmp, interprocedural, initializingClassType);
+                if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, tmp, clazz, this)) {
 
 			if (initializingClassType instanceof UnitType ut) {
 				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, tmp, expressions,
@@ -129,6 +131,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
+                JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
 
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
@@ -139,13 +142,18 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar,
 				location);
 
+                // allocate the field array
+		IntLiteral zero = new IntLiteral(getCFG(), location, 0);
+                Constant c = new Constant(JavaIntType.INSTANCE, globals.size(), location);
+		JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refFieldArrType);
+
+		AnalysisState<A> fieldsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
+		for (SymbolicExpression expr : fieldsAllocated.getExecutionExpressions()) {
+			tmp = analysis.assign(fieldsAllocated, accessFields, expr, this);
+		}
+		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+
 		HeapDereference derefArr = new HeapDereference(fieldArrType, accessFields, location);
-
-		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
-
-		// assign length to array
-		Constant c = new Constant(JavaIntType.INSTANCE, globals.size(), location);
-		tmp = analysis.assign(tmp, accessLen, c, this);
 
 		int nextIdx = 0;
 		for (Global global : globals) {
@@ -239,6 +247,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		JavaReferenceType wrappedMethodType = new JavaReferenceType(JavaClassType.getMethodType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType methodArrType = JavaArrayType.lookup(wrappedMethodType, 1);
+                JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
 
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", getLocation());
@@ -247,18 +256,21 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		AccessChild accessMethods = new AccessChild(new JavaReferenceType(methodArrType), derefClazz,
 				declaredMethodsVar, location);
 
+                AnalysisState<A> tmp = state;
+
+                IntLiteral zero = new IntLiteral(getCFG(), location, 0);
+                Constant c = new Constant(JavaIntType.INSTANCE, methods.size(), location);
+                JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refMethodArrType);
+
+                AnalysisState<A> methodsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
+                for (SymbolicExpression expr : methodsAllocated.getExecutionExpressions()) {
+                        tmp = analysis.assign(methodsAllocated, accessMethods, expr, this);
+                }
+                tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+
 		HeapDereference derefArr = new HeapDereference(methodArrType, accessMethods, location);
 
-		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
-
-		AnalysisState<A> tmp = state;
-
-		// assign length to array
-		Constant c = new Constant(JavaIntType.INSTANCE, methods.size(), location);
-		tmp = analysis.assign(tmp, accessLen, c, this);
-
 		int nextIdx = 0;
-
 		for (CodeMember method : methods) {
 
 			Constant idx = new Constant(JavaIntType.INSTANCE, nextIdx, location);
@@ -369,7 +381,7 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		AnalysisState<A> tmp = state;
 
 		// initialize the class if not already initialized
-		if (!CachedReflectionDataSet.isClassReflectionDataCached(tmp, superclassType)) {
+                if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, tmp, accessSuperclass, this)) {
 
 			SymbolicExpression expr = new HeapReference(refClassMetaType, accessSuperclass, location);
 
@@ -380,11 +392,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 					getAllMethods(superclassUnit), expr);
 
 			tmp = methodsLoaded;
-
-			tmp = CachedReflectionDataSet.cacheReflectionData(tmp, interprocedural, superclassType);
 		}
 
-		return tmp.lub(initializeSuperclasses(interprocedural, tmp, expressions, accessSuperclass, superclassType));
+		return initializeSuperclasses(interprocedural, tmp, expressions, accessSuperclass, superclassType);
 	}
 
 }

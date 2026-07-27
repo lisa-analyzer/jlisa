@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.CachedReflectionDataSet;
-import it.unive.jlisa.program.LoadedClassSet;
+import it.unive.jlisa.program.ReflectionDataUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -173,10 +172,10 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				return state.topExecution();
 
 			// cache reflection data if necessary
-			if (!CachedReflectionDataSet.isClassReflectionDataCached(state, t)) {
+			if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, state, left, this)) {
+                                assert(ReflectionDataUtils.isClassLoaded(state, t, location));
 
-				assert (LoadedClassSet.isClassLoaded(state, t));
-				ExpressionSet clazz = new ExpressionSet(LoadedClassSet.getLoadedClassHandle(t, location));
+				ExpressionSet clazz = new ExpressionSet(ReflectionDataUtils.getLoadedClassHandle(t, location));
 
 				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state,
