@@ -2,12 +2,12 @@ package it.unive.jlisa.frontend.visitors.structure;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.Global;
-import it.unive.lisa.program.InterfaceUnit;
+import it.unive.lisa.program.*;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.type.Type;
 import java.util.Set;
@@ -37,6 +37,9 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 		if (type.isInMemoryType())
 			type = new JavaReferenceType(type);
 
+		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers(), getEnvironment(),
+				getScope().getUnitScope());
+
 		for (Object f : node.fragments()) {
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 			String identifier = fragment.getName().getIdentifier();
@@ -51,7 +54,7 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 			boolean isStatic = Modifier.isStatic(modifiers) || (getScope().getLisaClassUnit() instanceof InterfaceUnit);
 			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLisaClassUnit(), identifier,
 					!isStatic, type,
-					new Annotations());
+					annotations);
 			if (isStatic) {
 				getScope().getLisaClassUnit().addGlobal(global);
 			} else {

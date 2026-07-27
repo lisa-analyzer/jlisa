@@ -9,14 +9,24 @@ public final class ParsingEnvironment {
 	private final ParserContext parserContext;
 	private final String source;
 	private final CompilationUnit astUnit;
+	private final CompilationUnit[] allAstUnits;
 
 	public ParsingEnvironment(
 			ParserContext parserContext,
 			String source,
 			CompilationUnit astUnit) {
+		this(parserContext, source, astUnit, null);
+	}
+
+	public ParsingEnvironment(
+			ParserContext parserContext,
+			String source,
+			CompilationUnit astUnit,
+			CompilationUnit[] allAstUnits) {
 		this.parserContext = parserContext;
 		this.source = source;
 		this.astUnit = astUnit;
+		this.allAstUnits = allAstUnits;
 	}
 
 	public ParserContext parserContext() {
@@ -29,6 +39,10 @@ public final class ParsingEnvironment {
 
 	public CompilationUnit astUnit() {
 		return astUnit;
+	}
+
+	public CompilationUnit[] allAstUnits() {
+		return allAstUnits;
 	}
 
 	public SourceCodeLocation getSourceCodeLocation(
