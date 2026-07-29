@@ -1,5 +1,18 @@
 package it.unive.jlisa;
 
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
@@ -7,7 +20,7 @@ import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaInliningAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.Reachability;
@@ -21,17 +34,6 @@ import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
-import java.io.IOException;
-import java.util.Arrays;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
 
 public class Main {
 
@@ -246,20 +248,26 @@ public class Main {
 		try {
 			frontend = runFrontend(sources);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", root);
 			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
 					+ "/frontend.csv file.");
 			if (dumpExceptions)
-				e.printStackTrace(System.out);
+				root.printStackTrace(System.out);
 			System.exit(1);
 		}
 		try {
 			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", root);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
 			if (dumpExceptions)
-				e.printStackTrace(System.out);
+				root.printStackTrace(System.out);
 			System.exit(1);
 		}
 	}
@@ -287,9 +295,7 @@ public class Main {
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(150);
-		// conf.interproceduralAnalysis = new
-		// JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
+		conf.interproceduralAnalysis = new JavaInliningAnalysis<>(150);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		switch (checkerName) {

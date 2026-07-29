@@ -1,10 +1,12 @@
 package it.unive.jlisa.helpers;
 
+import java.util.ArrayList;
+
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
-import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaInliningAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -13,7 +15,6 @@ import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.outputs.JSONResults;
-import java.util.ArrayList;
 
 public class TestHelpers {
 
@@ -41,7 +42,7 @@ public class TestHelpers {
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		conf.forceUpdate = true;
+		// conf.forceUpdate = true;
 		// conf.analysisGraphs = CronConfiguration.GraphType.HTML_WITH_SUBNODES;
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
@@ -54,7 +55,7 @@ public class TestHelpers {
 
 		// for interprocedural analysis
 		conf.callGraph = new JavaRTACallGraph();
-		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(10);
+		conf.interproceduralAnalysis = new JavaInliningAnalysis<>(10);
 		return conf;
 	}
 
