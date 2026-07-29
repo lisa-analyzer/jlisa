@@ -58,8 +58,8 @@ interface A {
 interface Z { }
 
 class B implements A {
-	public void a();
-	public void b();
+	public void a() {}
+	public void b() {}
 }
 
 class C extends B implements Z {

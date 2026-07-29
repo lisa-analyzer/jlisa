@@ -1,13 +1,11 @@
 package it.unive.jlisa.cron;
 
-import java.io.IOException;
-
-import org.junit.jupiter.api.Test;
-
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
 import it.unive.lisa.outputs.HtmlResults;
+import java.io.IOException;
+import org.junit.jupiter.api.Test;
 
 public class ReflectionTest extends JLiSAAnalysisExecutor {
 	@Test
@@ -21,6 +19,22 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	@Test
 	public void testClassForName2() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-for-name-2",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testClassForName3() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-for-name-3",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testClassForName4() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "class-for-name-4",
 				"Main.java");
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
@@ -59,14 +73,6 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
-	public void testFieldGetSet1() throws IOException {
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-set-1",
-				"Main.java");
-		conf.outputs.add(new HtmlResults(true));
-		perform(conf);
-	}
-
-	@Test
 	public void testFieldGet1() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-get-1",
 				"Main.java");
@@ -89,7 +95,6 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
-
 
 	@Test
 	public void testFieldSetStatic1() throws IOException {
@@ -148,9 +153,25 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void testMethodInvoke3() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "method-invoke-3",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
 	public void testClassForNameInterface() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection",
 				"class-for-name-interface", "Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
+	public void testFieldSet1() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "field-set-1",
+				"Main.java");
 		conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
