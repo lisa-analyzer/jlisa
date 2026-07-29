@@ -246,7 +246,10 @@ public class Main {
 		try {
 			frontend = runFrontend(sources);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", root);
 			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
 					+ "/frontend.csv file.");
 			if (dumpExceptions)
@@ -256,7 +259,10 @@ public class Main {
 		try {
 			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", root);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
 			if (dumpExceptions)
 				e.printStackTrace(System.out);
