@@ -10,17 +10,17 @@ public final class ClassScope extends Scope implements EnclosableScope<ClassScop
 	private final JavaClassType enclosingClass; // null if top-level
 	private final UnitScope unitScope;
 	private final ClassScope parentScope;
-	CompilationUnit lisaClassUnit;
+	CompilationUnit lisaUnit;
 
 	public ClassScope(
 			UnitScope unitScope,
 			ClassScope parentScope,
 			JavaClassType enclosingClass,
-			CompilationUnit lisaClassUnit) {
+			CompilationUnit lisaUnit) {
 		this.parentScope = parentScope;
 		this.enclosingClass = enclosingClass;
 		this.unitScope = unitScope;
-		this.lisaClassUnit = lisaClassUnit;
+		this.lisaUnit = lisaUnit;
 	}
 
 	public JavaClassType getEnclosingClass() {
@@ -38,8 +38,8 @@ public final class ClassScope extends Scope implements EnclosableScope<ClassScop
 		return new MethodScope(this, cfg, tracker, flowTracker);
 	}
 
-	public CompilationUnit getLisaClassUnit() {
-		return this.lisaClassUnit;
+	public CompilationUnit getLiSACompilationUnit() {
+		return this.lisaUnit;
 	}
 
 	public UnitScope getUnitScope() {
