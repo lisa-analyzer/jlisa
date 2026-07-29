@@ -27,9 +27,9 @@ import it.unive.lisa.program.cfg.CodeMember;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class InternalInitClassMetaObject extends NaryExpression implements PluggableStatement {
+public class InternalInitClassMetaObject extends UnaryExpression implements PluggableStatement {
 
         private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("CacheReflectionData");
 
@@ -54,8 +54,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 	public InternalInitClassMetaObject(
 			CFG cfg,
 			CodeLocation location,
-			Type t) {
-		super(cfg, location, "internalInitClassMetaObject");
+			Type t,
+			Expression expr) {
+		super(cfg, location, "internalInitClassMetaObject", expr);
 		initializingClassType = t;
 	}
 
@@ -65,18 +66,16 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		originating = st;
 	}
 
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			ExpressionSet[] params,
+			SymbolicExpression param,
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		assert (params.length == 1);
-		assert (params[0].size() == 1);
 		assert (ReflectionDataUtils.isClassLoaded(state, initializingClassType, getLocation()));
 
-		SymbolicExpression clazz = params[0].iterator().next();
+		SymbolicExpression clazz = param;
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
@@ -133,7 +132,6 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
                 JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
 
-		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
 
 		AnalysisState<A> tmp = state;
@@ -162,11 +160,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 			AccessChild accessIdx = new AccessChild(wrappedFieldType, derefArr, idx, getLocation());
 
-			LoadField loadField = new LoadField(global, getCFG(), getLocation(), new Expression[0]);
+			LoadField loadField = new LoadField(global, getCFG(), getLocation(), this);
 
-			ExpressionSet[] params = genLoadFieldParams(clazz, global);
-
-			AnalysisState<A> t = loadField.forwardSemanticsAux(interprocedural, tmp, params, expressions);
+			AnalysisState<A> t = loadField.fwdUnarySemantics(interprocedural, tmp, clazz, expressions);
 
 			// assign initialized field to the next index of the array
 			for (SymbolicExpression initializedField : t.getExecutionExpressions()) {
@@ -177,41 +173,6 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		}
 
 		return tmp;
-	}
-
-	private ExpressionSet[] genLoadFieldParams(
-			SymbolicExpression clazz,
-			Global global) {
-
-		CodeLocation location = getLocation();
-		Type stringType = JavaClassType.getStringType();
-
-		// 4 parameters flow into loadField
-		ExpressionSet[] params = new ExpressionSet[4];
-
-		// 0 is clazz
-		params[0] = new ExpressionSet(clazz);
-
-		String fieldName = global.getName();
-
-		// 1 is field name
-		Constant c1 = new Constant(stringType, fieldName, location);
-		params[1] = new ExpressionSet(c1);
-
-		// 2 is field type
-		Type t = global.getStaticType();
-		if (t instanceof JavaReferenceType jrt)
-			t = jrt.getInnerType();
-		Constant c2 = new Constant(stringType, t.toString(), location);
-		params[2] = new ExpressionSet(c2);
-
-		// 3 is field modifiers
-		boolean isInstance = global.isInstance();
-		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
-		Constant c3 = new Constant(JavaIntType.INSTANCE, modifiers, location);
-		params[3] = new ExpressionSet(c3);
-
-		return params;
 	}
 
 	Collection<CodeMember> getAllMethods(
@@ -277,11 +238,9 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 			AccessChild accessIdx = new AccessChild(wrappedMethodType, derefArr, idx, getLocation());
 
-			LoadMethod loadMethod = new LoadMethod(method.getDescriptor(), getCFG(), getLocation(), new Expression[0]);
+			LoadMethod loadMethod = new LoadMethod(method.getDescriptor(), getCFG(), getLocation(), this);
 
-			ExpressionSet[] params = genMethodParams(clazz, method.getDescriptor());
-
-			AnalysisState<A> t = loadMethod.forwardSemanticsAux(interprocedural, tmp, params, expressions);
+			AnalysisState<A> t = loadMethod.fwdUnarySemantics(interprocedural, tmp, clazz, expressions);
 
 			// assign initialized method to the next index of the array
 			for (SymbolicExpression initializedMethod : t.getExecutionExpressions()) {
@@ -294,55 +253,6 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 
 		return tmp;
 
-	}
-
-	private ExpressionSet[] genMethodParams(
-			SymbolicExpression clazz,
-			CodeMemberDescriptor d) {
-
-		CodeLocation location = getLocation();
-		Type stringType = JavaClassType.getStringType();
-
-		Parameter[] methodParams = d.getFormals();
-		int methodParamsCount = methodParams.length;
-
-		// 4 + number of formals
-		ExpressionSet[] params = new ExpressionSet[4 + methodParamsCount];
-
-		// 0 is clazz
-		params[0] = new ExpressionSet(clazz);
-
-		// 1 is method name
-		String methodName = d.getName();
-		Constant c1 = new Constant(stringType, methodName, location);
-		params[1] = new ExpressionSet(c1);
-
-		// 2 is method return type
-		Type t = d.getReturnType();
-		if (t instanceof JavaReferenceType jrt)
-			t = jrt.getInnerType();
-		Constant c2 = new Constant(stringType, t.toString(), location);
-		params[2] = new ExpressionSet(c2);
-
-		// 3 is method modifiers
-		boolean isInstance = d.isInstance();
-		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
-		Constant c3 = new Constant(JavaIntType.INSTANCE, modifiers, location);
-		params[3] = new ExpressionSet(c3);
-
-		// the rest are the method formal parameters
-		for (int i = 0; i < methodParamsCount; ++i) {
-
-			Type paramType = methodParams[i].getStaticType();
-			if (paramType instanceof JavaReferenceType jrt)
-				paramType = jrt.getInnerType();
-
-			Constant c = new Constant(stringType, paramType.toString(), location);
-			params[4 + i] = new ExpressionSet(c);
-
-		}
-
-		return params;
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> initializeSuperclasses(
@@ -364,9 +274,10 @@ public class InternalInitClassMetaObject extends NaryExpression implements Plugg
 		if (ancestors.isEmpty())
 			return state;
 
+		// we removed the interfaces, we know there is just one superclass
 		assert (ancestors.size() == 1);
-
 		CompilationUnit superclassUnit = ancestors.iterator().next();
+
 		assert (superclassUnit instanceof ClassUnit);
 
 		JavaClassType superclassType = JavaClassType.lookup(superclassUnit.getName());

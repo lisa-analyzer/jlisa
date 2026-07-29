@@ -19,9 +19,9 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -34,7 +34,7 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Modifier;
 
-public class LoadMethod extends NaryExpression implements PluggableStatement {
+public class LoadMethod extends UnaryExpression implements PluggableStatement {
 	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Method");
 
 	private CodeMemberDescriptor methodData;
@@ -45,8 +45,8 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 			CodeMemberDescriptor d,
 			CFG cfg,
 			CodeLocation location,
-			Expression[] subExpressions) {
-		super(cfg, location, "loadMethod", subExpressions);
+			Expression expr) {
+		super(cfg, location, "loadMethod", expr);
 		methodData = d;
 	}
 
@@ -59,15 +59,12 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 
 	// TODO AP: change this into a unary expression
 	@Override
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			ExpressionSet[] p,
+			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
-		// params[0] is clazz, [1] is fieldname, [2] is type, [3] is modifiers
-		// then the other ones are parameter types
 
 		Parameter[] methodParameters = methodData.getFormals();
 		int paramCount = methodParameters.length;
@@ -75,7 +72,7 @@ public class LoadMethod extends NaryExpression implements PluggableStatement {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-		SymbolicExpression clazz = p[0].iterator().next();
+		SymbolicExpression clazz = expr;
 
 		Type intType = JavaIntType.INSTANCE;
 		Type stringType = getProgram().getTypes().getStringType();

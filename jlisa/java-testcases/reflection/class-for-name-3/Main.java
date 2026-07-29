@@ -4,17 +4,12 @@ public class ReflectionTest {
 
 	public static void main(String[] args) throws Exception {
 
-		// int x = 0;
-		//
 		if (args.length == 2) {
-			// Integer y = 0;
-			//
 			Class c1 = Class.forName("A");
 			assert(c1 == A.class);
 			assert(c1.getName().equals("A"));
 		}
-		else {
-		}
+		else { }
 
 		Class c1 = Class.forName("A");
 		assert(c1 == A.class);

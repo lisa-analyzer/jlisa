@@ -188,7 +188,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				ExpressionSet clazz = new ExpressionSet(
 						ReflectionDataUtils.getLoadedClassHandle(t, location));
 
-				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t);
+				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t, getLeft());
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state,
 						new ExpressionSet[] { clazz }, expressions);
 

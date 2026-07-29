@@ -120,9 +120,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				for (CompilationUnit ancestorCu : cu.getImmediateAncestors().stream().toList()) {
 					Type ancestorType = typeSystem.getType(ancestorCu.getName());
 					assert(ancestorType instanceof UnitType);
-					// FIXME: we are skipping static initializer of interfaces for now
-					if (ancestorType instanceof JavaClassType)
-						state = InitializedClassSet.initialize(state, new JavaReferenceType(ancestorType), this, interprocedural);
+					state = InitializedClassSet.initialize(state, new JavaReferenceType(ancestorType), this, interprocedural);
 				}
 
 				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);
@@ -131,7 +129,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 				ExpressionSet clazz = callState.getExecutionExpressions();
 
-				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(cfg, location, t);
+				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(cfg, location, t, this);
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, callState,
 						new ExpressionSet[] { clazz }, expressions);
 

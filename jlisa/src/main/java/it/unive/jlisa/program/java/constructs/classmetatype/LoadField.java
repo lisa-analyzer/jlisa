@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import java.lang.reflect.Modifier;
+
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -20,17 +22,19 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class LoadField extends NaryExpression implements PluggableStatement {
+public class LoadField extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Field");
@@ -41,8 +45,8 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 			Global g,
 			CFG cfg,
 			CodeLocation location,
-			Expression[] subExpressions) {
-		super(cfg, location, "loadField", subExpressions);
+			Expression expr) {
+		super(cfg, location, "loadField", expr);
 		fieldData = g;
 	}
 
@@ -54,33 +58,21 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 	}
 
 	@Override
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			ExpressionSet[] params,
+			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
-		// params[0] is clazz, [1] is fieldname, [2] is type, [3] is modifiers
 
 		Type thisFieldType = fieldData.getStaticType();
 		if (thisFieldType instanceof JavaReferenceType jrt)
 			thisFieldType = jrt.getInnerType();
 
-		assert (params.length == 4);
-
-		SymbolicExpression[] exprs = new SymbolicExpression[params.length];
-
-		for (int i = 0; i < params.length; ++i) {
-			ExpressionSet set = params[i];
-			if (set.size() > 1 || set.size() <= 0)
-				throw new IllegalArgumentException("Number of operands is incorrect!");
-			for (SymbolicExpression expr : set) {
-				exprs[i] = expr;
-			}
-		}
+		SymbolicExpression clazz = expr;
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
 
 		Type intType = JavaIntType.INSTANCE;
 		Type stringType = getProgram().getTypes().getStringType();
@@ -113,7 +105,7 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		// assign field clazz
 		AccessChild accessThisFieldClazz = new AccessChild(refClassMetaType, derefThisField, clazzVar, getLocation());
 
-		AnalysisState<A> sem = analysis.assign(fieldAllocated, accessThisFieldClazz, exprs[0], this);
+		AnalysisState<A> sem = analysis.assign(fieldAllocated, accessThisFieldClazz, clazz, this);
 
 		// assign field name
 		sem = allocateSubField(interprocedural, sem, derefThisField, nameVar, refStringType, expressions);
@@ -123,7 +115,8 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 		HeapDereference derefFieldName = new HeapDereference(stringType, accessThisFieldName, getLocation());
 		AccessChild dst = new AccessChild(stringType, derefFieldName, valueVar, getLocation());
 
-		sem = analysis.assign(sem, dst, exprs[1], this);
+		Constant fieldNameConstant = new Constant(stringType, fieldData.getName(), location);
+		sem = analysis.assign(sem, dst, fieldNameConstant, this);
 
 		// assign field type
 		AccessChild accessThisFieldType = new AccessChild(refClassMetaType, derefThisField, typeVar, getLocation());
@@ -135,7 +128,11 @@ public class LoadField extends NaryExpression implements PluggableStatement {
 
 		// assign field modifiers
 		AccessChild accessThisFieldModifiers = new AccessChild(intType, derefThisField, modifiersVar, getLocation());
-		sem = analysis.assign(sem, accessThisFieldModifiers, exprs[3], this);
+
+		boolean isInstance = fieldData.isInstance();
+		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
+		Constant modifiersConstant = new Constant(JavaIntType.INSTANCE, modifiers, location);
+		sem = analysis.assign(sem, accessThisFieldModifiers, modifiersConstant, this);
 
 		tmp = tmp.lub(sem);
 

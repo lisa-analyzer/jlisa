@@ -133,6 +133,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		if (loadingType instanceof UnitType loadingClazz) {
 
+			// it's always just the GlobalVariable "returned" by allocateClass
+			assert(callState.getExecutionExpressions().size() == 1);
 			SymbolicExpression currentClazz = callState.getExecutionExpressions().iterator().next();
 			HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), currentClazz, location);
 
@@ -153,6 +155,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 					GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
+					// loadClass always returns just one executionExpression: the GlobalVariable referencing the Class allocation
 					assert (tmp.getExecutionExpressions().size() == 1);
 					SymbolicExpression superClazz = tmp.getExecutionExpressions().iterator().next();
 
