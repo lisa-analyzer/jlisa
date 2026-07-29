@@ -288,8 +288,6 @@ public class Main {
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
 		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(150);
-		// conf.interproceduralAnalysis = new
-		// JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		switch (checkerName) {
