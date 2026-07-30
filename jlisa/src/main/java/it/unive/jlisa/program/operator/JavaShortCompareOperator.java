@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.operator;
 
-import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
