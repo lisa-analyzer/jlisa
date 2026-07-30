@@ -1,25 +1,8 @@
 package it.unive.jlisa;
 
-import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
-import it.unive.jlisa.analysis.type.JavaInferredTypes;
-import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
-import it.unive.jlisa.checkers.AssertChecker;
-import it.unive.jlisa.frontend.JavaFrontend;
-import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
-import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
-import it.unive.lisa.LiSA;
-import it.unive.lisa.analysis.Reachability;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
-import it.unive.lisa.analysis.value.ValueDomain;
-import it.unive.lisa.conf.LiSAConfiguration;
-import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.outputs.JSONReportDumper;
-import it.unive.lisa.outputs.JSONResults;
-import it.unive.lisa.program.Program;
 import java.io.IOException;
 import java.util.Arrays;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -29,6 +12,28 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+
+import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.type.JavaInferredTypes;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.callgraph.JavaInliningAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.lisa.LiSA;
+import it.unive.lisa.analysis.Reachability;
+import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.value.ValueDomain;
+import it.unive.lisa.conf.LiSAConfiguration;
+import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.listeners.BottomTopListener;
+import it.unive.lisa.listeners.CallResolutionListener;
+import it.unive.lisa.outputs.HtmlResults;
+import it.unive.lisa.outputs.JSONReportDumper;
+import it.unive.lisa.outputs.JSONResults;
+import it.unive.lisa.program.Program;
 
 public class Main {
 
@@ -97,9 +102,16 @@ public class Main {
 				.desc("Disable HTML output (enabled by default)")
 				.required(false)
 				.build();
+
 		Option dumpExcs = Option.builder("e")
 				.longOpt("dump-exceptions")
 				.desc("When in statistics mode, log exceptions to standard output")
+				.required(false)
+				.build();
+
+		Option debugInfo = Option.builder("d")
+				.longOpt("debug-information")
+				.desc("Produce debug information for the analysis (open calls, bottom states, ...)")
 				.required(false)
 				.build();
 
@@ -115,6 +127,7 @@ public class Main {
 		options.addOption(version);
 		options.addOption(noHtmlOutput);
 		options.addOption(dumpExcs);
+		options.addOption(debugInfo);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -123,6 +136,7 @@ public class Main {
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
 		boolean htmlOutput = true;
 		boolean dumpExceptions = false;
+		boolean debug = false;
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
@@ -166,6 +180,10 @@ public class Main {
 				dumpExceptions = true;
 			}
 
+			if (cmd.hasOption("d")) {
+				debug = true;
+			}
+
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
 
@@ -193,10 +211,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput);
+			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions);
+			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -209,12 +227,13 @@ public class Main {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
-			boolean htmlOutput)
+			boolean htmlOutput,
+			boolean debug)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
+		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 	}
 
 	private static void runStatistics(
@@ -223,25 +242,32 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
-			boolean dumpExceptions) {
+			boolean dumpExceptions,
+			boolean debug) {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", root);
 			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
 					+ "/frontend.csv file.");
 			if (dumpExceptions)
-				e.printStackTrace(System.out);
+				root.printStackTrace(System.out);
 			System.exit(1);
 		}
 		try {
-			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput);
+			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", root);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
 			if (dumpExceptions)
-				e.printStackTrace(System.out);
+				root.printStackTrace(System.out);
 			System.exit(1);
 		}
 	}
@@ -261,16 +287,15 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			JavaFrontend frontend,
-			boolean htmlOutput)
+			boolean htmlOutput,
+			boolean debug)
 			throws ParseException {
 		Program p = frontend.getProgram();
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(150);
-		// conf.interproceduralAnalysis = new
-		// JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
+		conf.interproceduralAnalysis = new JavaInliningAnalysis<>(150);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		switch (checkerName) {
@@ -295,6 +320,14 @@ public class Main {
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
 				new JavaInferredTypes()));
+
+		if (htmlOutput)
+			conf.outputs.add(new HtmlResults<>(true));
+
+		if (debug) {
+			conf.asynchronousListeners.add(new BottomTopListener(false));
+			conf.asynchronousListeners.add(new CallResolutionListener());
+		}
 
 		LiSA lisa = new LiSA(conf);
 		lisa.run(p);

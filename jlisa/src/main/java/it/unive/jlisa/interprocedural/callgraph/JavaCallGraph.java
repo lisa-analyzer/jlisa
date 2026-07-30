@@ -2,6 +2,7 @@ package it.unive.jlisa.interprocedural.callgraph;
 
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.symbols.Aliases;
 import it.unive.lisa.analysis.symbols.NameSymbol;
@@ -95,7 +96,9 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			Collection<NativeCFG> natives,
 			SymbolAliasing aliasing)
 			throws CallResolutionException {
-		CompilationUnit targetUnit = JavaClassType.lookup(call.getQualifier()).getUnit();
+		CompilationUnit targetUnit = JavaClassType.hasType(call.getQualifier())
+				? JavaClassType.lookup(call.getQualifier()).getUnit()
+				: JavaInterfaceType.lookup(call.getQualifier()).getUnit();
 		HierarchyTraversalStrategy strategy = call.getProgram().getFeatures().getTraversalStrategy();
 		Set<CompilationUnit> seen = new HashSet<>();
 		int lowestDistance = Integer.MAX_VALUE;
@@ -399,7 +402,13 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 			return 0;
 		if (paramType instanceof Untyped)
 			return 0;
-		if (paramType instanceof JavaNumericType numericParam)
+		if (JavaClassType.isWrapperOf(formalType, paramType))
+			// boxing
+			return 10;
+		else if (JavaClassType.isWrapperOf(paramType, formalType))
+			// unboxing
+			return 10;
+		else if (paramType instanceof JavaNumericType numericParam) {
 			if (formalType instanceof JavaNumericType numericFormal) {
 				int paramDist = numericParam.distance(numericFormal);
 				if (paramDist < 0)
@@ -407,14 +416,8 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 				return paramDist;
 			} else
 				return -1;
-		else if (paramType.isBooleanType() && formalType.isBooleanType())
+		} else if (paramType.isBooleanType() && formalType.isBooleanType())
 			return 0;
-		else if (JavaClassType.isWrapperOf(formalType, paramType))
-			// boxing
-			return 10;
-		else if (JavaClassType.isWrapperOf(paramType, formalType))
-			// unboxing
-			return 10;
 		else if (paramType instanceof ReferenceType refTypeParam
 				&& formalType instanceof ReferenceType refTypeFormal) {
 			if (refTypeParam.getInnerType().isNullType())

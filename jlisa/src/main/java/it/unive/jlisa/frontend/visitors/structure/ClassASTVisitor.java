@@ -19,9 +19,11 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -42,6 +44,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -60,7 +63,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 	@Override
 	public boolean visit(
 			EnumDeclaration node) {
-		EnumUnit enUnit = (EnumUnit) getScope().getLisaClassUnit();
+		EnumUnit enUnit = (EnumUnit) getScope().getLiSACompilationUnit();
 
 		// build the enum constructor (for initializing fields)
 		createEnumConstructor(enUnit);
@@ -79,7 +82,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			throw new ParsingException("permits", ParsingException.Type.UNSUPPORTED_STATEMENT,
 					"Permits is not supported.", getSourceCodeLocation(node));
 
-		createClassInitializer((ClassUnit) getScope().getLisaClassUnit(), node);
+		createClassInitializer(getScope().getLiSACompilationUnit(), node);
 
 		// for (MethodDeclaration md : node.getMethods()) {
 		// MethodASTVisitor visitor = new MethodASTVisitor(parserContext,
@@ -100,7 +103,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			}
 		}
 		if (createDefaultConstructor) {
-			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLisaClassUnit());
+			CFG defaultConstructor = createDefaultConstructor((ClassUnit) getScope().getLiSACompilationUnit());
 			fixConstructorCFG(defaultConstructor, node.getFields());
 		}
 
@@ -190,15 +193,16 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		enumUnit.addInstanceCodeMember(cfg);
 	}
 
-	private void createClassInitializer(
-			ClassUnit unit,
+	protected void createClassInitializer(
+			it.unive.lisa.program.CompilationUnit unit,
 			TypeDeclaration node) {
 
-		// we add a class initializer only if the class has
-		// static fields
+		// we add a class initializer only if the unit has static fields
+		// (all fields of an interface are implicitly static)
+		boolean isInterface = unit instanceof InterfaceUnit;
 		Set<FieldDeclaration> staticFields = new LinkedHashSet<FieldDeclaration>();
 		for (FieldDeclaration fd : node.getFields()) {
-			if (Modifier.isStatic(fd.getModifiers()))
+			if (isInterface || Modifier.isStatic(fd.getModifiers()))
 				staticFields.add(fd);
 		}
 
@@ -221,30 +225,33 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
-		// first, we add the clinit call to the superclass
-		// TODO this might also retrieve interfaces defined in the txts
-		// we have to fix interfaces and replace SingleHierarchyTraversal
-		Set<it.unive.lisa.program.CompilationUnit> superClasses = unit
+		// first, we add the clinit call to the ancestor of the same kind
+		// (superclass for a ClassUnit, superinterface for an InterfaceUnit),
+		// if any: interfaces currently have none, since extending other
+		// interfaces is not supported yet
+		Set<it.unive.lisa.program.CompilationUnit> ancestorsOfSameKind = unit
 				.getImmediateAncestors().stream()
-				.filter(u -> u instanceof ClassUnit)
+				.filter(u -> u.getClass() == unit.getClass())
 				.collect(Collectors.toSet());
 
-		// we can safely suppose that there exist a single superclass
-		ClassUnit superClass = (ClassUnit) superClasses.stream().findFirst().get();
-		String superSimpleName = superClass.getName().contains(".")
-				? superClass.getName().substring(superClass.getName().lastIndexOf(".") + 1)
-				: superClass.getName();
-		JavaUnresolvedStaticCall superClassInit = new JavaUnresolvedStaticCall(
-				cfg,
-				locationManager.nextLocation(),
-				superClass.toString(),
-				superSimpleName + InitializedClassSet.SUFFIX_CLINIT,
-				new Expression[0]);
+		Statement last = null;
+		if (!ancestorsOfSameKind.isEmpty()) {
+			// we can safely suppose that there exist a single ancestor
+			it.unive.lisa.program.CompilationUnit ancestor = ancestorsOfSameKind.stream().findFirst().get();
+			String ancestorSimpleName = ancestor.getName().contains(".")
+					? ancestor.getName().substring(ancestor.getName().lastIndexOf(".") + 1)
+					: ancestor.getName();
+			JavaUnresolvedStaticCall ancestorInit = new JavaUnresolvedStaticCall(
+					cfg,
+					locationManager.nextLocation(),
+					ancestor.toString(),
+					ancestorSimpleName + InitializedClassSet.SUFFIX_CLINIT,
+					new Expression[0]);
 
-		cfg.addNode(superClassInit);
-		cfg.getEntrypoints().add(superClassInit);
-
-		Statement last = superClassInit;
+			cfg.addNode(ancestorInit);
+			cfg.getEntrypoints().add(ancestorInit);
+			last = ancestorInit;
+		}
 
 		// just static fields are considered to build the class initializer
 		for (FieldDeclaration fd : staticFields) {
@@ -279,7 +286,10 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
 				JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
 				cfg.addNode(asg);
-				cfg.addEdge(new SequentialEdge(last, asg));
+				if (last == null)
+					cfg.getEntrypoints().add(asg);
+				else
+					cfg.addEdge(new SequentialEdge(last, asg));
 				last = asg;
 			}
 		}
@@ -287,7 +297,10 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		// TODO: static block
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
-		cfg.addEdge(new SequentialEdge(last, ret));
+		if (last == null)
+			cfg.getEntrypoints().add(ret);
+		else
+			cfg.addEdge(new SequentialEdge(last, ret));
 		unit.addCodeMember(cfg);
 		return;
 	}
@@ -440,4 +453,124 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			}
 		}
 	}
+
+	public CFG createAnonymousConstructor(
+			JavaClassType type,
+			ClassInstanceCreation node,
+			List<it.unive.lisa.type.Type> argTypes,
+			FieldDeclaration[] fields) {
+
+		ClassUnit classUnit = (ClassUnit) type.getUnit();
+
+		List<Parameter> parameters = new ArrayList<>();
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
+
+		// this param
+		parameters.add(new Parameter(locationManager.nextLocation(), "this",
+				new JavaReferenceType(type), null, new Annotations()));
+
+		// $enclosing param
+		if (getScope().getEnclosingClass() != null) {
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing",
+					getScope().getEnclosingClass().getReference(), null, new Annotations()));
+		}
+
+		// super constructor arguments
+		for (int i = 0; i < argTypes.size(); i++) {
+			it.unive.lisa.type.Type argType = argTypes.get(i);
+			parameters.add(new Parameter(locationManager.nextLocation(), "$arg" + i,
+					argType, null, new Annotations()));
+		}
+
+		// create descriptor and CFG
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		String simpleName = classUnit.getName().contains(".")
+				? classUnit.getName().substring(classUnit.getName().lastIndexOf(".") + 1)
+				: classUnit.getName();
+
+		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(
+				locationManager.nextLocation(), classUnit, true, simpleName,
+				VoidType.INSTANCE, annotations, paramArray);
+
+		CFG cfg = new CFG(codeMemberDescriptor);
+
+		// register local variable types
+		getParserContext().addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+
+		if (getScope().getEnclosingClass() != null) {
+			getParserContext().addVariableType(cfg, new VariableInfo("$enclosing", null),
+					getScope().getEnclosingClass().getReference());
+		}
+
+		for (int i = 0; i < argTypes.size(); i++) {
+			it.unive.lisa.type.Type argType = argTypes.get(i);
+			getParserContext().addVariableType(cfg, new VariableInfo("$arg" + i, null), argType);
+		}
+
+		// super ctor call
+		String superClassName = classUnit.getImmediateAncestors().stream()
+				.filter(s -> s instanceof ClassUnit).findFirst().get().getName();
+		String superClassSimpleName = superClassName.contains(".")
+				? superClassName.substring(superClassName.lastIndexOf(".") + 1)
+				: superClassName;
+
+		it.unive.lisa.program.cfg.statement.Expression[] superArgs = new it.unive.lisa.program.cfg.statement.Expression[argTypes
+				.size() + 1];
+
+		superArgs[0] = new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type));
+		for (int i = 0; i < argTypes.size(); i++) {
+			superArgs[i + 1] = new VariableRef(cfg, locationManager.nextLocation(), "$arg" + i, argTypes.get(i));
+		}
+
+		JavaUnresolvedCall superCall = new JavaUnresolvedCall(cfg, locationManager.nextLocation(),
+				Call.CallType.INSTANCE, superClassName, superClassSimpleName, superArgs);
+
+		cfg.addNode(superCall);
+		cfg.getEntrypoints().add(superCall);
+
+		Statement last = superCall;
+
+		// assign $enclosing (could be null in case of static enclosing class)
+		if (getScope().getEnclosingClass() != null) {
+			JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(),
+					new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
+							new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type)),
+							"$enclosing"),
+
+					new VariableRef(cfg, locationManager.nextLocation(), "$enclosing",
+							getScope().getEnclosingClass().getReference()));
+
+			cfg.addNode(asg);
+			cfg.addEdge(new SequentialEdge(last, asg));
+			last = asg;
+		}
+
+		for (FieldDeclaration field : fields) {
+
+			if (Modifier.isStatic(field.getModifiers()))
+				continue;
+
+			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(getEnvironment(),
+					getScope().toMethodScope(cfg, null, null));
+
+			field.accept(initVisitor);
+
+			if (initVisitor.getBlock() != null) {
+				cfg.getNodeList().mergeWith(initVisitor.getBlock());
+
+				cfg.addEdge(new SequentialEdge(last, initVisitor.getFirst()));
+				last = initVisitor.getLast();
+			}
+		}
+
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
+		cfg.addNode(ret);
+		cfg.addEdge(new SequentialEdge(last, ret));
+
+		classUnit.addInstanceCodeMember(cfg);
+		return cfg;
+	}
+
 }
