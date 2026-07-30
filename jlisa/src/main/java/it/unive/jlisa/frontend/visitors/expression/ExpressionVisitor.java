@@ -731,27 +731,10 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			TypeLiteral node) {
 
-		String value = node.getType().toString();
-		String clazzName = value;
-		if (!node.getType().isPrimitiveType()) {
-			//build the fqn
+		it.unive.lisa.type.Type t = getParserContext().evaluate(node.getType(),
+				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
-			if (!value.contains(".")) {
-
-				TypeSystem typeSystem = getProgram().getTypes();
-
-				Set<Type> allTypes = typeSystem.getTypes();
-				for (Type candidateType : allTypes) {
-					String typeName = candidateType.toString();
-					String simpleName = typeName.contains(".")
-							? typeName.substring(typeName.lastIndexOf(".") + 1)
-							: typeName;
-					if (simpleName.equals(clazzName))
-						clazzName = typeName;
-				}
-			}
-		}
-
+		String clazzName = t.toString();
 		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), clazzName);
 		return false;
 	}
