@@ -21,9 +21,12 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.VoidType;
 import java.util.Map;
+import java.util.Set;
 
 // NOTE: the value of this is the string that's in front of the `.class` (the class' name)
 
@@ -67,7 +70,9 @@ public class JavaClassLiteral extends Literal<String> {
 		CFG cfg = getCFG();
 
 		Type t = getTypeFromStr(getValue());
-		assert (t != null);
+
+		if (t == null)
+			return interprocedural.getAnalysis().smallStepSemantics(entryState, new PushAny(getStaticType(), getLocation()), this);
 
 		LoadClass loadClass = new LoadClass(t, getValue(), cfg, location);
 		AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0],
@@ -81,6 +86,12 @@ public class JavaClassLiteral extends Literal<String> {
 		clazzName = clazzName.replace('$', '.');
 		if (types.containsKey(clazzName))
 			return types.get(clazzName);
-		return getProgram().getTypes().getType(clazzName);
+
+		TypeSystem typeSystem = getProgram().getTypes();
+		Type t = typeSystem.getType(clazzName);
+		if (t != null)
+			return t;
+
+		return null;
 	}
 }

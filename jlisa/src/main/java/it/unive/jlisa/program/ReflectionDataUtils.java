@@ -14,14 +14,6 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-/*
- * A set containing the classes that have their reflection data cached. In the
- * concrete world, reflection data (methods and fields) is loaded during
- * getField/getMethod like operations. This is used every time
- * getField/getMethod is invoked, if the reflection data is not loaded, then it
- * must be cached before returning a handle to the meta object.
- */
-
 public class ReflectionDataUtils {
 
         public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean isClassLoaded(

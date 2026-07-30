@@ -1,8 +1,10 @@
 package it.unive.jlisa.frontend.visitors.expression;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.lisa.type.TypeSystem;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
@@ -71,6 +73,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.function.TriFunction;
 import org.eclipse.jdt.core.dom.*;
 
@@ -726,8 +730,29 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	@Override
 	public boolean visit(
 			TypeLiteral node) {
-		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node),
-				node.getType().toString());
+
+		String value = node.getType().toString();
+		String clazzName = value;
+		if (!node.getType().isPrimitiveType()) {
+			//build the fqn
+
+			if (!value.contains(".")) {
+
+				TypeSystem typeSystem = getProgram().getTypes();
+
+				Set<Type> allTypes = typeSystem.getTypes();
+				for (Type candidateType : allTypes) {
+					String typeName = candidateType.toString();
+					String simpleName = typeName.contains(".")
+							? typeName.substring(typeName.lastIndexOf(".") + 1)
+							: typeName;
+					if (simpleName.equals(clazzName))
+						clazzName = typeName;
+				}
+			}
+		}
+
+		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), clazzName);
 		return false;
 	}
 

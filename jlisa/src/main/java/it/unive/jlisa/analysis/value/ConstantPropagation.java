@@ -1349,15 +1349,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue[] args = new ConstantValue[exprs.length];
 
 			for (int i = 0; i < exprs.length; ++i) {
-				ConstantValue left;
-				try {
-					left = eval(state, (ValueExpression) exprs[i], pp, oracle);
-				} catch (Exception e) {
-					// if evaluation fails (e.g. unexpected nulls), be
-					// conservative
-					// and return UNKNOWN so analysis can continue
-					return Satisfiability.UNKNOWN;
-				}
+				ConstantValue left = eval(state, (ValueExpression) exprs[i], pp, oracle);
 				if (left.isBottom())
 					return Satisfiability.BOTTOM;
 				args[i] = left;

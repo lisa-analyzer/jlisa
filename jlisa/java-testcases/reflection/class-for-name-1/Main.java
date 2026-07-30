@@ -7,6 +7,8 @@ public class ReflectionTest {
 
 		Class c2 = Class.forName("Foo");
 		assert(c == c2);
+
+		assert(c == Foo.class);
 	}
 }
 

@@ -349,7 +349,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
                 tmp = analysis.assign(tmp, accessDeclaredMethods, castAs, this);
 
 		// assign the Class object to a global variable
-		String internalGlobalVarName = "__" + loadingClazzName;
+		String internalGlobalVarName = "__" + loadingType.toString();
 
 		GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
 		AnalysisState<A> t = analysis.assign(tmp, clazzVar, clazz, this);

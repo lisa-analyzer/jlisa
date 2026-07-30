@@ -11,7 +11,7 @@ public class ReflectionTest {
 		assert(f.bar == 42);
 	}
 
-	class Foo {
+	static class Foo {
 		public int bar;
 
 		Foo() {
