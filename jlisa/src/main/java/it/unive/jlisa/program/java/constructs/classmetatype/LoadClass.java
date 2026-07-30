@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionDataUtils;
+import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -48,8 +49,7 @@ import java.util.Set;
 public class LoadClass extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.LoadClass");
-
+	private SyntheticCodeLocationManager synGen;
 	private Type loadingType;
 
 	// NOTE: this is technically a duplicate of loadingType.toString(), except
@@ -76,9 +76,9 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 				loadingType = newArrType;
 			}
 		}
-
 		loadingClazzName = loadingType.toString();
-	}
+                synGen = new SyntheticCodeLocationManager("internal-load-class-" + loadingClazzName);
+        }
 
 	public LoadClass(
 			Type t,
@@ -98,8 +98,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 				loadingType = newArrType;
 			}
 		}
-
 		loadingClazzName = clazzName;
+                synGen = new SyntheticCodeLocationManager("internal-load-class-" + loadingClazzName);
 	}
 
 	@Override

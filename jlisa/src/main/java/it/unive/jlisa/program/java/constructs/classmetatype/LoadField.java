@@ -37,7 +37,7 @@ import it.unive.lisa.type.Untyped;
 public class LoadField extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Field");
+	private static SyntheticCodeLocationManager synGen;
 
 	private Global fieldData;
 
@@ -48,6 +48,8 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 			Expression expr) {
 		super(cfg, location, "loadField", expr);
 		fieldData = g;
+                synGen = new SyntheticCodeLocationManager("internal-load-field-" +
+                        fieldData.getContainer().getName() + "." + fieldData.getName());
 	}
 
 	@Override

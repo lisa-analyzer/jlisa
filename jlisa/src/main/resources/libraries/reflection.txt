@@ -5,10 +5,6 @@ class java.lang.reflect.Field extends java.lang.Object:
 	instance field fieldType libtype java.lang.Class*
 	instance field modifiers type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	instance method Field: it.unive.jlisa.program.java.constructs.classmetatype.FieldEmptyConstructor
-		type it.unive.lisa.type.VoidType::INSTANCE
-		param self libtype java.lang.reflect.Field*
-
 	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.FieldGetName
 		libtype java.lang.String*
 		param this libtype java.lang.reflect.Field*
@@ -43,10 +39,6 @@ class java.lang.reflect.Method extends java.lang.Object:
 	instance field returnType libtype java.lang.Class*
 	instance field modifiers type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 	instance field parameterTypes type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
-
-	instance method Method: it.unive.jlisa.program.java.constructs.classmetatype.MethodEmptyConstructor
-		type it.unive.lisa.type.VoidType::INSTANCE
-		param this libtype java.lang.reflect.Method*
 
 	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.MethodGetName
 		libtype java.lang.String*

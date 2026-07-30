@@ -35,7 +35,7 @@ import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Modifier;
 
 public class LoadMethod extends UnaryExpression implements PluggableStatement {
-	private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("java.lang.reflect.Method");
+	private static SyntheticCodeLocationManager synGen;
 
 	private CodeMemberDescriptor methodData;
 
@@ -48,6 +48,8 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 			Expression expr) {
 		super(cfg, location, "loadMethod", expr);
 		methodData = d;
+                synGen = new SyntheticCodeLocationManager("internal-load-method-" +
+                        methodData.getUnit().getName() + "." + methodData.getName());
 	}
 
 	@Override

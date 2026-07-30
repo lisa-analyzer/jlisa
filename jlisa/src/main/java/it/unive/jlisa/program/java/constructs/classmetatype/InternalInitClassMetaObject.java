@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 
 public class InternalInitClassMetaObject extends UnaryExpression implements PluggableStatement {
 
-        private static SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("CacheReflectionData");
+        private static SyntheticCodeLocationManager synGen;
 
 	protected Statement originating;
 	private Type initializingClassType;
@@ -58,6 +58,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 			Expression expr) {
 		super(cfg, location, "internalInitClassMetaObject", expr);
 		initializingClassType = t;
+                synGen = new SyntheticCodeLocationManager("internal-cache-reflectiondata-" + initializingClassType.toString());
 	}
 
 	@Override
