@@ -1,0 +1,30 @@
+class java.lang.Short extends java.lang.Number:
+	field MIN_VALUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+	field MAX_VALUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+	
+    instance field value type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+	
+	method Short_clinit: it.unive.jlisa.program.java.constructs.shortw.ShortClassInitializer
+    	type it.unive.lisa.type.VoidType::INSTANCE
+	
+	instance method Short: it.unive.jlisa.program.java.constructs.shortw.ShortConstructor
+		libtype java.lang.Short*
+		param this libtype java.lang.Short*
+		param c type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+	
+	method valueOf: it.unive.jlisa.program.java.constructs.shortw.ShortValueOf
+		libtype java.lang.Short* 
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE 
+		
+	method toString: it.unive.jlisa.program.java.constructs.shortw.ShortStaticToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+		
+	method parseShort: it.unive.jlisa.program.java.constructs.shortw.ShortParseShort
+		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+		param v libtype java.lang.String* 
+		
+	method compare: it.unive.jlisa.program.java.constructs.shortw.ShortCompare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Short*
+		param other libtype java.lang.Short*
