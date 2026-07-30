@@ -1,8 +1,5 @@
 package it.unive.jlisa.interprocedural.callgraph;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -11,6 +8,8 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.inlining.InliningAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.statement.call.CFGCall;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An extension of {@link InliningAnalysis} that returns top when the maximum

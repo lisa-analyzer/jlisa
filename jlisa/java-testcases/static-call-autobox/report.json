@@ -1,19 +1,19 @@
 {
   "warnings" : [ ],
   "notices" : [ ],
-  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_MyInterface.MyInterface_clinit()_1707440138.graph.json" ],
+  "files" : [ "int_A.foo(java.lang.Integer__x)_1707429567.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "3",
-    "duration" : "107ms",
-    "end" : "2026-07-29T18:51:32.454+02:00",
-    "expressions" : "9",
+    "cfgs" : "4",
+    "duration" : "102ms",
+    "end" : "2026-07-21T14:56:12.017+02:00",
+    "expressions" : "6",
     "files" : "2",
-    "globals" : "35",
-    "members" : "233",
+    "globals" : "30",
+    "members" : "234",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-07-29T18:51:32.347+02:00",
-    "statements" : "8",
+    "start" : "2026-07-21T14:56:11.915+02:00",
+    "statements" : "7",
     "units" : "49",
     "version" : "1.0",
     "warnings" : "0"
@@ -37,6 +37,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/interface-init/interface-init01"
+    "workdir" : "java-outputs/static-call-autobox"
   }
 }
