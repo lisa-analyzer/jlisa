@@ -3,7 +3,6 @@ package it.unive.jlisa.frontend.visitors.scope;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.lisa.program.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +36,7 @@ public final class UnitScope extends Scope {
 
 	public ClassScope toClassScope(
 			JavaClassType enclosingClass,
-			ClassUnit lisaUnit) {
+			it.unive.lisa.program.CompilationUnit lisaUnit) {
 		return new ClassScope(this, null, enclosingClass, lisaUnit);
 	}
 

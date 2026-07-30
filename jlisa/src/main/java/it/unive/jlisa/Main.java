@@ -7,7 +7,7 @@ import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaInliningAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.Reachability;
@@ -246,20 +246,26 @@ public class Main {
 		try {
 			frontend = runFrontend(sources);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", root);
 			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
 					+ "/frontend.csv file.");
 			if (dumpExceptions)
-				e.printStackTrace(System.out);
+				root.printStackTrace(System.out);
 			System.exit(1);
 		}
 		try {
 			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
 		} catch (Throwable e) {
-			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", e.getCause() != null ? e.getCause() : e);
+			Throwable root = e;
+			while (root.getCause() != null)
+				root = root.getCause();
+			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", root);
 			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
 			if (dumpExceptions)
-				e.printStackTrace(System.out);
+				root.printStackTrace(System.out);
 			System.exit(1);
 		}
 	}
@@ -287,9 +293,7 @@ public class Main {
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(150);
-		// conf.interproceduralAnalysis = new
-		// JavaContextBasedAnalysis<>(JavaKDepthToken.getSingleton(150));
+		conf.interproceduralAnalysis = new JavaInliningAnalysis<>(150);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		switch (checkerName) {

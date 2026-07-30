@@ -4,7 +4,7 @@ import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
-import it.unive.jlisa.interprocedural.callgraph.JavaContextBasedAnalysis;
+import it.unive.jlisa.interprocedural.callgraph.JavaInliningAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -54,7 +54,7 @@ public class TestHelpers {
 
 		// for interprocedural analysis
 		conf.callGraph = new JavaRTACallGraph();
-		conf.interproceduralAnalysis = new JavaContextBasedAnalysis<>(10);
+		conf.interproceduralAnalysis = new JavaInliningAnalysis<>(10);
 		return conf;
 	}
 

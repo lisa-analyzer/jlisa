@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors.structure;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.AnnotationBuilder;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
@@ -11,6 +12,8 @@ import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.ArrayType;
 import it.unive.lisa.type.Type;
+import java.util.List;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> implements ResultHolder<Parameter> {
@@ -39,10 +42,18 @@ public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> impl
 		}
 
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
-
 		String identifier = node.getName().getIdentifier();
-		// TODO annotations
-		Annotations annotations = new Annotations();
+
+		Annotations annotations = AnnotationBuilder.fromDeclarationModifiers(node.modifiers(), getEnvironment(),
+				getScope());
+
+		List<Annotation> varargsAnns = node.varargsAnnotations();
+		if (!varargsAnns.isEmpty()) {
+			for (Annotation varargAnn : varargsAnns) {
+				annotations.addAnnotation(AnnotationBuilder.fromJdt(varargAnn, getEnvironment(), getScope()));
+			}
+		}
+
 		this.parameter = new Parameter(getSourceCodeLocation(node), identifier, type, null, annotations);
 		return false;
 	}

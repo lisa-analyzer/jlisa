@@ -100,7 +100,7 @@ public class SetGlobalsASTVisitor extends ScopedVisitor<UnitScope> {
 			Set<String> visitedFieldNames = new HashSet<>();
 			if (decl instanceof FieldDeclaration fdecl) {
 				FieldDeclarationVisitor visitor = new FieldDeclarationVisitor(getEnvironment(),
-						getScope().toClassScope(enclosingType, (ClassUnit) unit),
+						getScope().toClassScope(enclosingType, unit),
 						visitedFieldNames);
 				fdecl.accept(visitor);
 			}

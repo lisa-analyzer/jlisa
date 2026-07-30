@@ -1,0 +1,3 @@
+
+@ClassLevelMarkerTypeAnnotation
+public class A {}

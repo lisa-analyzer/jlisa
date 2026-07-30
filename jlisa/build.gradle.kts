@@ -91,6 +91,41 @@ tasks.named<org.gradle.api.plugins.antlr.AntlrTask>("generateGrammarSource") {
 // TEST CONFIGURATION
 tasks.test {
     useJUnitPlatform()
+
+    testLogging {
+        showStandardStreams = false
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+
+    val outputs = mutableMapOf<String, StringBuilder>() // test key -> output buffer
+
+    fun key(d: org.gradle.api.tasks.testing.TestDescriptor) = "${d.className}.${d.name}"
+
+    addTestOutputListener { descriptor, event ->
+        outputs.computeIfAbsent(key(descriptor)) { StringBuilder() }.append(event.message)
+    }
+
+    addTestListener(object : org.gradle.api.tasks.testing.TestListener {
+        override fun beforeSuite(suite: org.gradle.api.tasks.testing.TestDescriptor) {}
+        override fun afterSuite(
+            suite: org.gradle.api.tasks.testing.TestDescriptor,
+            result: org.gradle.api.tasks.testing.TestResult
+        ) {}
+        override fun beforeTest(testDescriptor: org.gradle.api.tasks.testing.TestDescriptor) {}
+        override fun afterTest(
+            desc: org.gradle.api.tasks.testing.TestDescriptor,
+            result: org.gradle.api.tasks.testing.TestResult
+        ) {
+            val buf = outputs.remove(key(desc))
+            if (result.resultType == org.gradle.api.tasks.testing.TestResult.ResultType.FAILURE
+                && buf != null) {
+                println("=== Captured output for ${desc.className}.${desc.name} ===")
+                print(buf.toString())
+                println("=============================================================")
+            }
+        }
+    })
 }
 
 // JAR (FAT JAR)
