@@ -28,31 +28,18 @@ import it.unive.lisa.type.VoidType;
 import java.util.Map;
 import java.util.Set;
 
-// NOTE: the value of this is the string that's in front of the `.class` (the class' name)
-
-public class JavaClassLiteral extends Literal<String> {
-
-	private static final Map<String, Type> types = Map.ofEntries(
-			Map.entry("void", VoidType.INSTANCE),
-			Map.entry("boolean", JavaBooleanType.INSTANCE),
-			Map.entry("byte", JavaByteType.INSTANCE),
-			Map.entry("char", JavaCharType.INSTANCE),
-			Map.entry("double", JavaDoubleType.INSTANCE),
-			Map.entry("float", JavaFloatType.INSTANCE),
-			Map.entry("int", JavaIntType.INSTANCE),
-			Map.entry("long", JavaLongType.INSTANCE),
-			Map.entry("short", JavaShortType.INSTANCE));
+public class JavaClassLiteral extends Literal<Type> {
 
 	public JavaClassLiteral(
 			CFG cfg,
 			CodeLocation location,
-			String value) {
+			Type value) {
 		super(cfg, location, value, new JavaReferenceType(JavaClassType.getClassMetaType()));
 	}
 
 	@Override
 	public String toString() {
-		return "\"" + getValue() + "\"";
+		return "\"" + getValue().toString() + "\"";
 	}
 
 	public <A extends AbstractLattice<A>,
@@ -62,36 +49,21 @@ public class JavaClassLiteral extends Literal<String> {
 					StatementStore<A> expressions)
 					throws SemanticException {
 
-		// TODO: simple names, for example: String.class should be valid
-
 		// TODO: array types, for example int[].class should be valid
 
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
-		Type t = getTypeFromStr(getValue());
+		Type t = getValue();
 
 		if (t == null)
 			return interprocedural.getAnalysis().smallStepSemantics(entryState, new PushAny(getStaticType(), getLocation()), this);
 
-		LoadClass loadClass = new LoadClass(t, getValue(), cfg, location);
+		LoadClass loadClass = new LoadClass(t, getValue().toString(), cfg, location);
 		AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0],
 				expressions);
 
 		return callState;
 	}
 
-	private Type getTypeFromStr(
-			String clazzName) {
-		clazzName = clazzName.replace('$', '.');
-		if (types.containsKey(clazzName))
-			return types.get(clazzName);
-
-		TypeSystem typeSystem = getProgram().getTypes();
-		Type t = typeSystem.getType(clazzName);
-		if (t != null)
-			return t;
-
-		return null;
-	}
 }

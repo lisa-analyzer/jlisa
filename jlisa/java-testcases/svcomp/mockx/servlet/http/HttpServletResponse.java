@@ -17,18 +17,17 @@ public class HttpServletResponse {
   }
 
   public PrintWriter getWriter() throws IOException {
-    return new InnerWriter(System.out);
-    // return new PrintWriter(System.out) {
-    //   @Override
-    //   public void println(String x) {
-    //     checkNoSymbolic(x);
-    //   }
-    //
-    //   @Override
-    //   public void println(Object x) {
-    //     checkNoSymbolic(String.valueOf(x));
-    //   }
-    // };
+    return new PrintWriter(System.out) {
+      @Override
+      public void println(String x) {
+        checkNoSymbolic(x);
+      }
+
+      @Override
+      public void println(Object x) {
+        checkNoSymbolic(String.valueOf(x));
+      }
+    };
   }
 
   public void setContentType(String s) {
@@ -41,19 +40,4 @@ public class HttpServletResponse {
     }
   }
 
-  public class InnerWriter extends PrintWriter {
-      public InnerWriter(OutputStream out) {
-        super(out);
-      }
-
-      @Override
-      public void println(String x) {
-        checkNoSymbolic(x);
-      }
-
-      @Override
-      public void println(Object x) {
-        checkNoSymbolic(String.valueOf(x));
-      }
-  }
 }

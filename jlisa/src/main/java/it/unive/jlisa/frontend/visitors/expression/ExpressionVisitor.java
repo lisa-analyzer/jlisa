@@ -831,8 +831,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		it.unive.lisa.type.Type t = getParserContext().evaluate(node.getType(),
 				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
-		String clazzName = t.toString();
-		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), clazzName);
+		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), t);
 		return false;
 	}
 
