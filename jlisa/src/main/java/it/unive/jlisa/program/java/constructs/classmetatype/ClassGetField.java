@@ -89,11 +89,11 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		for (Type t : clazzTypes) {
 			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-				result = result.lub(throwNullPointerException(interprocedural, state, expressions));
+				result = throwNullPointerException(interprocedural, result, expressions);
 			}
 			// search the field
 			else {
-				AnalysisState<A> fieldSearched = searchField(interprocedural, state, left, right, expressions);
+				AnalysisState<A> fieldSearched = searchField(interprocedural, result, left, right, expressions);
 
 				if (fieldSearched.isTop() || fieldSearched.isBottom())
 					return fieldSearched;
@@ -102,7 +102,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				if (fieldSearched.getExecutionExpressions().isEmpty()) {
 					fieldSearched = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
 				}
-				result = result.lub(fieldSearched);
+				result = fieldSearched;
 			}
 		}
 

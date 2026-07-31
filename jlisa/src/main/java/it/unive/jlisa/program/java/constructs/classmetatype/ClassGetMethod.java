@@ -92,12 +92,12 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 		for (Type t : clazzTypes) {
 			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-				result = result.lub(throwNullPointerException(interprocedural, state, expressions));
+				result = throwNullPointerException(interprocedural, result, expressions);
 			}
 			// search for the method
 			else {
 				AnalysisState<
-						A> methodSearched = searchMethod(interprocedural, state, left, middle, right, expressions);
+						A> methodSearched = searchMethod(interprocedural, result, left, middle, right, expressions);
 
 				if (methodSearched.isTop() || methodSearched.isBottom()) {
 					return methodSearched;
@@ -108,7 +108,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 					methodSearched = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
 				}
 
-				result = result.lub(methodSearched);
+				result = methodSearched;
 			}
 		}
 
