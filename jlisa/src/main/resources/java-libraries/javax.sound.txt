@@ -1,0 +1,1 @@
+class javax.sound.sampled.SourceDataLine extends java.lang.Object:

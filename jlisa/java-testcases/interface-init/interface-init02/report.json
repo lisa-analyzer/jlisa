@@ -1,0 +1,42 @@
+{
+  "warnings" : [ ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Helper.Helper_clinit()_1707432512.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_MyInterface.MyInterface_clinit()_1707437255.graph.json" ],
+  "info" : {
+    "cfgs" : "5",
+    "duration" : "17ms",
+    "end" : "2026-07-30T17:06:21.832+02:00",
+    "expressions" : "18",
+    "files" : "3",
+    "globals" : "39",
+    "members" : "241",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-07-30T17:06:21.815+02:00",
+    "statements" : "14",
+    "units" : "51",
+    "version" : "1.0",
+    "warnings" : "0"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/interface-init/interface-init02"
+  }
+}

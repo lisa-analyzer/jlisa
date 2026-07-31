@@ -1,55 +1,46 @@
 {
-  "warnings": [
-    {
-      "message": "['Main.java':23:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-    },
-    {
-      "message": "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-    }
-  ],
-  "notices": [],
-  "files": [
-    "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707438712.graph.json",
-    "report.json",
-    "void_A.A(A__this)_318571782.graph.json",
-    "void_B.B(B__this)_1707429350.graph.json",
-    "void_Main.main(java.lang.String_[]__args).graph.json"
-  ],
-  "info": {
-    "cfgs": "18",
-    "duration": "16ms",
-    "end": "2025-11-13T17:55:06.957+01:00",
-    "expressions": "52",
-    "files": "4",
-    "globals": "30",
-    "members": "255",
-    "programs": "1",
-    "start": "2025-11-13T17:55:06.941+01:00",
-    "statements": "35",
-    "units": "54",
-    "version": "0.1",
-    "warnings": "2",
-    "notices": "0"
+  "warnings" : [ {
+    "message" : "['Main.java':23:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707438712.graph.json", "report.json", "void_A.A(A__this)_318571782.graph.json", "void_B.B(B__this)_1707429350.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "18",
+    "duration" : "14ms",
+    "end" : "2026-07-30T17:10:43.883+02:00",
+    "expressions" : "52",
+    "files" : "4",
+    "globals" : "36",
+    "members" : "261",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-07-30T17:10:43.869+02:00",
+    "statements" : "35",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "2"
   },
-  "configuration": {
-    "dumpForcesUnwinding": "false",
-    "fixpointWorkingSet": "OrderBasedWorkingSet",
-    "glbThreshold": "5",
-    "hotspots": "unset",
-    "openCallPolicy": "ReturnTopPolicy",
-    "recursionWideningThreshold": "5",
-    "semanticChecks": "AssertChecker",
-    "shouldSmashError": "unset",
-    "syntacticChecks": "",
-    "useWideningPoints": "true",
-    "wideningThreshold": "5",
-    "workdir": "java-outputs/svcomp/exceptions16",
-    "backwardDescendingFixpoint": "unset",
-    "backwardFixpoint": "BackwardAscendingFixpoint",
-    "forwardDescendingFixpoint": "unset",
-    "forwardFixpoint": "ForwardAscendingFixpoint",
-    "outputs": "JSONReportDumper, JSONResults",
-    "asynchronousListeners": "",
-    "synchronousListeners": ""
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/exceptions16"
   }
 }
