@@ -4,11 +4,14 @@ import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
+import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -52,6 +55,24 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 			if (isInstance)
 				parameters.add(new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this",
 						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
+			else {
+				// search in enclosing class too
+				isInstance = searchInEnclosing(methodName);
+
+				if (isInstance) {
+					JavaClassType thisType = JavaClassType.lookup(classUnit.getName());
+
+					SyntheticCodeLocationManager synth = getParserContext()
+							.getCurrentSyntheticCodeLocationManager(getSource());
+
+					Expression thisExpr = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", thisType);
+
+					Expression expr = new JavaAccessInstanceGlobal(getScope().getCFG(), getSourceCodeLocation(node),
+							thisExpr, "$enclosing");
+					parameters.add(expr);
+				}
+			}
+
 		} else {
 			name = getScope().getParentScope().getUnitScope().getExplicitImports().get(node.getExpression().toString());
 			if (name == null) {
@@ -161,5 +182,18 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 	@Override
 	public Expression getResult() {
 		return expression;
+	}
+
+	private boolean searchInEnclosing(
+			String methodName) {
+
+		// method scope -> anon class scope -> enclosing scope
+		ClassScope enclosing = getScope().getParentScope().getParentScope();
+		if (enclosing == null)
+			return false;
+		CompilationUnit enclosingCU = enclosing.getLiSACompilationUnit();
+
+		return !(enclosingCU.getInstanceCodeMembersByName(methodName, true).isEmpty());
+
 	}
 }

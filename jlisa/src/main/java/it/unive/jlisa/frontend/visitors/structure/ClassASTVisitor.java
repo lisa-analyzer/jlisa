@@ -19,6 +19,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
@@ -43,6 +44,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -451,4 +453,124 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			}
 		}
 	}
+
+	public CFG createAnonymousConstructor(
+			JavaClassType type,
+			ClassInstanceCreation node,
+			List<it.unive.lisa.type.Type> argTypes,
+			FieldDeclaration[] fields) {
+
+		ClassUnit classUnit = (ClassUnit) type.getUnit();
+
+		List<Parameter> parameters = new ArrayList<>();
+		SyntheticCodeLocationManager locationManager = getParserContext()
+				.getCurrentSyntheticCodeLocationManager(getSource());
+
+		// this param
+		parameters.add(new Parameter(locationManager.nextLocation(), "this",
+				new JavaReferenceType(type), null, new Annotations()));
+
+		// $enclosing param
+		if (getScope().getEnclosingClass() != null) {
+			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing",
+					getScope().getEnclosingClass().getReference(), null, new Annotations()));
+		}
+
+		// super constructor arguments
+		for (int i = 0; i < argTypes.size(); i++) {
+			it.unive.lisa.type.Type argType = argTypes.get(i);
+			parameters.add(new Parameter(locationManager.nextLocation(), "$arg" + i,
+					argType, null, new Annotations()));
+		}
+
+		// create descriptor and CFG
+		Annotations annotations = new Annotations();
+		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
+		String simpleName = classUnit.getName().contains(".")
+				? classUnit.getName().substring(classUnit.getName().lastIndexOf(".") + 1)
+				: classUnit.getName();
+
+		CodeMemberDescriptor codeMemberDescriptor = new CodeMemberDescriptor(
+				locationManager.nextLocation(), classUnit, true, simpleName,
+				VoidType.INSTANCE, annotations, paramArray);
+
+		CFG cfg = new CFG(codeMemberDescriptor);
+
+		// register local variable types
+		getParserContext().addVariableType(cfg, new VariableInfo("this", null), new JavaReferenceType(type));
+
+		if (getScope().getEnclosingClass() != null) {
+			getParserContext().addVariableType(cfg, new VariableInfo("$enclosing", null),
+					getScope().getEnclosingClass().getReference());
+		}
+
+		for (int i = 0; i < argTypes.size(); i++) {
+			it.unive.lisa.type.Type argType = argTypes.get(i);
+			getParserContext().addVariableType(cfg, new VariableInfo("$arg" + i, null), argType);
+		}
+
+		// super ctor call
+		String superClassName = classUnit.getImmediateAncestors().stream()
+				.filter(s -> s instanceof ClassUnit).findFirst().get().getName();
+		String superClassSimpleName = superClassName.contains(".")
+				? superClassName.substring(superClassName.lastIndexOf(".") + 1)
+				: superClassName;
+
+		it.unive.lisa.program.cfg.statement.Expression[] superArgs = new it.unive.lisa.program.cfg.statement.Expression[argTypes
+				.size() + 1];
+
+		superArgs[0] = new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type));
+		for (int i = 0; i < argTypes.size(); i++) {
+			superArgs[i + 1] = new VariableRef(cfg, locationManager.nextLocation(), "$arg" + i, argTypes.get(i));
+		}
+
+		JavaUnresolvedCall superCall = new JavaUnresolvedCall(cfg, locationManager.nextLocation(),
+				Call.CallType.INSTANCE, superClassName, superClassSimpleName, superArgs);
+
+		cfg.addNode(superCall);
+		cfg.getEntrypoints().add(superCall);
+
+		Statement last = superCall;
+
+		// assign $enclosing (could be null in case of static enclosing class)
+		if (getScope().getEnclosingClass() != null) {
+			JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(),
+					new JavaAccessInstanceGlobal(cfg, locationManager.nextLocation(),
+							new VariableRef(cfg, locationManager.nextLocation(), "this", new JavaReferenceType(type)),
+							"$enclosing"),
+
+					new VariableRef(cfg, locationManager.nextLocation(), "$enclosing",
+							getScope().getEnclosingClass().getReference()));
+
+			cfg.addNode(asg);
+			cfg.addEdge(new SequentialEdge(last, asg));
+			last = asg;
+		}
+
+		for (FieldDeclaration field : fields) {
+
+			if (Modifier.isStatic(field.getModifiers()))
+				continue;
+
+			FieldInitializationVisitor initVisitor = new FieldInitializationVisitor(getEnvironment(),
+					getScope().toMethodScope(cfg, null, null));
+
+			field.accept(initVisitor);
+
+			if (initVisitor.getBlock() != null) {
+				cfg.getNodeList().mergeWith(initVisitor.getBlock());
+
+				cfg.addEdge(new SequentialEdge(last, initVisitor.getFirst()));
+				last = initVisitor.getLast();
+			}
+		}
+
+		Ret ret = new Ret(cfg, locationManager.nextLocation());
+		cfg.addNode(ret);
+		cfg.addEdge(new SequentialEdge(last, ret));
+
+		classUnit.addInstanceCodeMember(cfg);
+		return cfg;
+	}
+
 }

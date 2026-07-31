@@ -42,7 +42,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
+public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
 	private CFG cfg;
 
 	public MethodASTVisitor(
