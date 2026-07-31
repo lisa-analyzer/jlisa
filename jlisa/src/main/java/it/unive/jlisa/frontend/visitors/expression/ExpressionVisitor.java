@@ -394,7 +394,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 			// parse method bodies and fields
 			MethodASTVisitor methodVisitor = new MethodASTVisitor(getEnvironment(), anonScope);
-			Set<FieldDeclaration> fieldDeclarationSet = new HashSet<>();
+			List<FieldDeclaration> fieldDeclarationSet = new LinkedList<>();
 			FieldDeclarationVisitor fieldVisitor = new FieldDeclarationVisitor(getEnvironment(), anonScope, new HashSet<>());
 
 			for (Object bodyDecl : anonClassNode.bodyDeclarations()) {
