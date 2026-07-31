@@ -62,7 +62,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 
 		boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
 		JavaClassType enclosing = outer == null || isStatic ? null
-				: JavaClassType.lookup(getScope().getPackage() + outer);
+				: JavaClassType.lookup(FQNUtils.buildFQN(getScope().getPackage(), null, outer));
 
 		for (MethodDeclaration methodsDecl : typeDecl.getMethods()) {
 			CodeMemberDescriptor codeMemberDescriptor;
