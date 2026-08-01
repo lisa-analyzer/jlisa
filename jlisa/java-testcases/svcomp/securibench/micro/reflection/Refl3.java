@@ -16,12 +16,14 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import mockx.servlet.http.HttpServletRequest;
 import mockx.servlet.http.HttpServletResponse;
+import securibench.micro.BasicTestCase;
+import securibench.micro.MicroTestCase;
 
 /**
  * @servlet description = "reflectively create a class and access its field"
  * @servlet vuln_count = "1"
  */
-public class Refl3 {
+public class Refl3 extends BasicTestCase implements MicroTestCase {
   private static final String FIELD_NAME = "name";
   private String name;
 
@@ -61,3 +63,4 @@ public class Refl3 {
     return 1;
   }
 }
+
