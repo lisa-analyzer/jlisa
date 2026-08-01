@@ -1516,6 +1516,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				if ((i & Modifier.STATIC) != 0)
 					return Satisfiability.SATISFIED;
 			return Satisfiability.NOT_SATISFIED;
+		}
 
 		if (operator instanceof JavaIsShortParsableOperator) {
 			if (arg.getValue() instanceof String v)
