@@ -461,6 +461,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			else if (arg.getValue() instanceof Long v)
 				return new ConstantValue(Double.longBitsToDouble(v));
 
+		if (operator instanceof JavaShortStaticToStringOperator)
+			if (arg.getValue() instanceof Short d)
+				return new ConstantValue(d.toString());
 		if (operator instanceof JavaDoubleStaticToStringOperator)
 			if (arg.getValue() instanceof Double d)
 				return new ConstantValue(d.toString());
@@ -535,6 +538,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof JavaDoubleStaticToStringOperator)
 			if (arg.getValue() instanceof Number d)
 				return new ConstantValue(Double.toString(d.doubleValue()));
+
+		if (operator instanceof JavaShortParseShortOperator)
+			if (arg.getValue() instanceof String s)
+				return new ConstantValue(Short.parseShort(s));
 
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
@@ -1068,13 +1075,6 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Long rv = ((Long) right.getValue());
 			return new ConstantValue(Long.compare(lv, rv));
 		}
-
-		if (operator instanceof JavaFloatCompareOperator) {
-			Float lv = ((Float) left.getValue());
-			Float rv = ((Float) right.getValue());
-			return new ConstantValue(Float.compare(lv, rv));
-		}
-
 		if (operator instanceof JavaDoubleCompareOperator) {
 			Double lv = ((Double) left.getValue());
 			Double rv = ((Double) right.getValue());
@@ -1090,11 +1090,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Byte rv = ((Byte) right.getValue());
 			return new ConstantValue(Byte.compare(lv, rv));
 		}
-
 		if (operator instanceof JavaIntegerCompareOperator) {
 			Integer lv = ((Integer) left.getValue());
 			Integer rv = ((Integer) right.getValue());
 			return new ConstantValue(Integer.compare(lv, rv));
+		}
+		if (operator instanceof JavaShortCompareOperator) {
+			Short lv = ((Short) left.getValue());
+			Short rv = ((Short) right.getValue());
+			return new ConstantValue(Short.compare(lv, rv));
 		}
 
 		return top();
@@ -1512,6 +1516,15 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				if ((i & Modifier.STATIC) != 0)
 					return Satisfiability.SATISFIED;
 			return Satisfiability.NOT_SATISFIED;
+
+		if (operator instanceof JavaIsShortParsableOperator) {
+			if (arg.getValue() instanceof String v)
+				try {
+					Short.parseShort(v);
+				} catch (NumberFormatException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+			return Satisfiability.SATISFIED;
 		}
 
 		return BaseNonRelationalValueDomain.super.satisfiesUnaryExpression(expression, arg, pp, oracle);

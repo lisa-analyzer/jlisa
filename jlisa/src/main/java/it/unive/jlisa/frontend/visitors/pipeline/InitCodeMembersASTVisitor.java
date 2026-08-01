@@ -61,12 +61,8 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			lisaCU = JavaClassType.lookup(name).getUnit();
 
 		boolean isStatic = Modifier.isStatic(typeDecl.getModifiers());
-
-		String packagePrefix = getScope().getPackage();
-		String prefix = (packagePrefix) != "" ? packagePrefix + "." : "";
-
 		JavaClassType enclosing = outer == null || isStatic ? null
-				: JavaClassType.lookup(prefix + outer);
+				: JavaClassType.lookup(FQNUtils.buildFQN(getScope().getPackage(), null, outer));
 
 		for (MethodDeclaration methodsDecl : typeDecl.getMethods()) {
 			CodeMemberDescriptor codeMemberDescriptor;

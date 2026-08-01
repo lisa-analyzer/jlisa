@@ -177,7 +177,7 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 				Set<CompilationUnit> seen = new HashSet<>();
 				HierarchyTraversalStrategy strategy = getProgram().getFeatures().getTraversalStrategy();
 				for (CompilationUnit cu : strategy.traverse(this, unit))
-					if (seen.add(unit)) {
+					if (seen.add(cu)) {
 						Global global = cu.getInstanceGlobal(target, false);
 						if (global != null) {
 							GlobalVariable var = global.toSymbolicVariable(loc);

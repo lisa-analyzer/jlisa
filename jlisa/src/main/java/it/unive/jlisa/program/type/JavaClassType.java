@@ -1,5 +1,12 @@
 package it.unive.jlisa.program.type;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
@@ -12,14 +19,10 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
 import it.unive.lisa.util.collections.workset.WorkingSet;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
-public class JavaClassType implements UnitType {
+public class JavaClassType
+		implements
+		UnitType {
 
 	protected static final Map<String, JavaClassType> types = new HashMap<>();
 
@@ -337,10 +340,9 @@ public class JavaClassType implements UnitType {
 		return lookup("java.lang.Boolean");
 	}
 
-	// TODO add when we will have Short
-	// public static JavaClassType getShortWrapperType() {
-	// return lookup("java.lang.Short");
-	// }
+	public static JavaClassType getShortWrapperType() {
+		return lookup("java.lang.Short");
+	}
 
 	/**
 	 * Checks whether {@code objectType} type is the wrapper class of
@@ -375,10 +377,8 @@ public class JavaClassType implements UnitType {
 			return true;
 		if (wrapper.equals(JavaClassType.getBooleanWrapperType()) && baseType instanceof JavaBooleanType)
 			return true;
-		// TODO add when we will have Short
-		// if (wrapper.equals(JavaClassType.getShortWrapperType()) && baseType
-		// instanceof JavaShortType)
-		// return true;
+		if (wrapper.equals(JavaClassType.getShortWrapperType()) && baseType instanceof JavaShortType)
+			return true;
 
 		return false;
 	}
@@ -406,9 +406,8 @@ public class JavaClassType implements UnitType {
 			return JavaCharType.INSTANCE;
 		else if (type.equals(getByteWrapperType()))
 			return JavaByteType.INSTANCE;
-		// TODO add when we will have Short
-		// else if (type.equals(getShortWrapperType()))
-		// return JavaShortType.INSTANCE;
+		else if (type.equals(getShortWrapperType()))
+			return JavaShortType.INSTANCE;
 		else
 			return null;
 	}

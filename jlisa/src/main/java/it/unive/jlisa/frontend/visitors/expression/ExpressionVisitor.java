@@ -186,6 +186,10 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		}
 		// bi-dimension arrays
 		else if (node.dimensions().size() == 2) {
+			if (!(node.dimensions().get(0) instanceof NumberLiteral))
+				throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+						"Bi-dimensional arrays with variable first dimension are not supported are not supported.",
+						getSourceCodeLocation(node));
 			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
 			Expression sndDimExpr = getParserContext().evaluate((ASTNode) node.dimensions().get(1),
 					() -> new ExpressionVisitor(getEnvironment(), getScope()));
