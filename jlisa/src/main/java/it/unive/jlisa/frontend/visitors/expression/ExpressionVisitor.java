@@ -48,7 +48,10 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.*;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
@@ -67,6 +70,7 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -343,10 +347,50 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 		List<Expression> parameters = new LinkedList<>();
 
+		boolean isAnon = false;
+
 		if (node.getExpression() != null) {
 			// nested class creation, just pass the expression as first param
 			parameters.add(getParserContext().evaluate(node.getExpression(),
 					() -> new ExpressionVisitor(getEnvironment(), getScope())));
+		}
+		else if (!isAnon){
+			JavaClassType t = (JavaClassType) type;
+			CompilationUnit cu = t.getUnit();
+
+			String className = t.toString();
+			String simpleName = className.contains(".")
+					? className.substring(className.lastIndexOf(".") + 1)
+					: className;
+
+			Collection<CodeMember> ctors = cu.getInstanceCodeMembersByName(simpleName, false);
+
+			if (!ctors.isEmpty()) {
+				for (CodeMember ctor : ctors) {
+
+					Parameter[] formals = ctor.getDescriptor().getFormals();
+					// `new` on a non-static nested class
+					if (formals.length >= 2 && formals[1].getName().equals("$enclosing")) {
+
+						// the enclosing type is always of reference type
+						JavaReferenceType enclosingType = (JavaReferenceType) formals[1].getStaticType();
+
+						Type thisType = getProgram().getTypes().getType(getScope().getParentScope().getLiSACompilationUnit().getName());
+						if (enclosingType.getInnerType().equals(thisType)) {
+							it.unive.lisa.program.cfg.statement.VariableRef implicitThis =
+								new it.unive.lisa.program.cfg.statement.VariableRef(
+								getScope().getCFG(),
+								getSourceCodeLocationManager(node).nextColumn(),
+								"this",
+								new JavaReferenceType(thisType)
+							);
+							parameters.add(implicitThis);
+							break;
+						}
+					}
+				}
+			}
+
 		}
 
 		if (!node.arguments().isEmpty()) {
