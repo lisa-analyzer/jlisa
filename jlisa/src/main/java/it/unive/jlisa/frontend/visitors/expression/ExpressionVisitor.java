@@ -347,14 +347,15 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 		List<Expression> parameters = new LinkedList<>();
 
-		boolean isAnon = false;
-
 		if (node.getExpression() != null) {
 			// nested class creation, just pass the expression as first param
 			parameters.add(getParserContext().evaluate(node.getExpression(),
 					() -> new ExpressionVisitor(getEnvironment(), getScope())));
 		}
-		else if (!isAnon){
+		// if we are not instantianting an anonymous class,
+		// there could be the need to add an implicit `this` to qualify
+		// the `new` call (for nested classes)
+		else if (node.getAnonymousClassDeclaration() == null){
 			JavaClassType t = (JavaClassType) type;
 			CompilationUnit cu = t.getUnit();
 
