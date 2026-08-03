@@ -24,7 +24,6 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
@@ -108,15 +107,11 @@ public class JavaArrayAccess extends BinaryExpression {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
 			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
-			if (accessType.isReferenceType())
-				access = new HeapReference(accessType, access, getLocation());
 			return analysis.smallStepSemantics(state, access, this);
 		} else {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
 			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
-			if (accessType.isReferenceType())
-				access = new HeapReference(accessType, access, getLocation());
 			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, access, this);
 
 			// builds the exception
