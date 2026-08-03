@@ -1,54 +1,9 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
-import it.unive.jlisa.frontend.ParsingEnvironment;
-import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.frontend.util.VariableInfo;
-import it.unive.jlisa.frontend.visitors.ResultHolder;
-import it.unive.jlisa.frontend.visitors.ScopedVisitor;
-import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
-import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
-import it.unive.jlisa.frontend.visitors.scope.MethodScope;
-import it.unive.jlisa.program.SourceCodeLocationManager;
-import it.unive.jlisa.program.SyntheticCodeLocationManager;
-import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
-import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
-import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
-import it.unive.jlisa.program.cfg.statement.JavaAssignment;
-import it.unive.jlisa.program.cfg.statement.JavaThrow;
-import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
-import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
-import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
-import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
-import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
-import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Unit;
-import it.unive.lisa.program.cfg.CFG;
-import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
-import it.unive.lisa.program.cfg.edge.Edge;
-import it.unive.lisa.program.cfg.edge.FalseEdge;
-import it.unive.lisa.program.cfg.edge.SequentialEdge;
-import it.unive.lisa.program.cfg.edge.TrueEdge;
-import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.NoOp;
-import it.unive.lisa.program.cfg.statement.Ret;
-import it.unive.lisa.program.cfg.statement.Return;
-import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.Throw;
-import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
-import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.util.datastructures.graph.code.NodeList;
-import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AssertStatement;
@@ -73,6 +28,53 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
+
+import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.VariableInfo;
+import it.unive.jlisa.frontend.visitors.ResultHolder;
+import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
+import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
+import it.unive.jlisa.frontend.visitors.scope.MethodScope;
+import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
+import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.JavaReturn;
+import it.unive.jlisa.program.cfg.statement.JavaThrow;
+import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
+import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
+import it.unive.jlisa.program.cfg.statement.controlflow.JavaBreak;
+import it.unive.jlisa.program.cfg.statement.controlflow.JavaContinue;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.controlFlow.IfThenElse;
+import it.unive.lisa.program.cfg.edge.Edge;
+import it.unive.lisa.program.cfg.edge.FalseEdge;
+import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.edge.TrueEdge;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.NoOp;
+import it.unive.lisa.program.cfg.statement.Ret;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.Throw;
+import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
+import it.unive.lisa.program.cfg.statement.literal.NullLiteral;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.util.datastructures.graph.code.NodeList;
+import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
 
@@ -373,7 +375,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (e == null) {
 			ret = new Ret(getScope().getCFG(), getSourceCodeLocation(node));
 		} else {
-			ret = new Return(getScope().getCFG(), getSourceCodeLocation(node), e);
+			ret = new JavaReturn(getScope().getCFG(), getSourceCodeLocation(node), e);
 		}
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
