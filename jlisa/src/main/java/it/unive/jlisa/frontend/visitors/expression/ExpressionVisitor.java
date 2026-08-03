@@ -394,7 +394,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 			// parse method bodies and fields
 			MethodASTVisitor methodVisitor = new MethodASTVisitor(getEnvironment(), anonScope);
-			List<FieldDeclaration> fieldDeclarationSet = new LinkedList<>();
+			List<FieldDeclaration> fieldDeclarations = new LinkedList<>();
 			FieldDeclarationVisitor fieldVisitor = new FieldDeclarationVisitor(getEnvironment(), anonScope, new HashSet<>());
 
 			for (Object bodyDecl : anonClassNode.bodyDeclarations()) {
@@ -403,11 +403,11 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 				}
 				if (bodyDecl instanceof FieldDeclaration fdecl) {
 					fdecl.accept(fieldVisitor);
-					fieldDeclarationSet.add(fdecl);
+					fieldDeclarations.add(fdecl);
 				}
 			}
 
-			FieldDeclaration[] fieldArr = fieldDeclarationSet.toArray(new FieldDeclaration[0]);
+			FieldDeclaration[] fieldArr = fieldDeclarations.toArray(new FieldDeclaration[0]);
 
 			// create the synthetic constructor. Anonymous classes can't have explicit ctors, hence we need to create one that is identical to the superclass one
 			ClassASTVisitor classVisitor = new ClassASTVisitor(getEnvironment(), anonScope);
