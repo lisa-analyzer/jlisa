@@ -87,7 +87,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 			Expression rec = null;
 			try {
 				rec = getParserContext().evaluate(node.getExpression(),
-						() -> new ExpressionVisitor(getEnvironment(), getScope()));
+						new ExpressionVisitor(getEnvironment(), getScope()));
 			} catch (ParsingException e) {
 				if (!e.getName().equals("missing-variable"))
 					throw e;
@@ -133,7 +133,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				parameters.add(getParserContext().evaluate(e,
-						() -> new ExpressionVisitor(getEnvironment(), getScope())));
+						new ExpressionVisitor(getEnvironment(), getScope())));
 			}
 		}
 
@@ -169,7 +169,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		for (Object args : node.arguments()) {
 			ASTNode e = (ASTNode) args;
 			parameters.add(getParserContext().evaluate(e,
-					() -> new ExpressionVisitor(getEnvironment(), getScope())));
+					new ExpressionVisitor(getEnvironment(), getScope())));
 		}
 
 		expression = new JavaUnresolvedSuperCall(getScope().getCFG(),

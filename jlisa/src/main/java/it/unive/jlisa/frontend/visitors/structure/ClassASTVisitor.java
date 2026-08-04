@@ -95,7 +95,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		for (MethodDeclaration md : node.getMethods()) {
 			CFG cfg = getParserContext().evaluate(
 					md,
-					() -> new MethodASTVisitor(getEnvironment(), getScope()));
+					new MethodASTVisitor(getEnvironment(), getScope()));
 
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;

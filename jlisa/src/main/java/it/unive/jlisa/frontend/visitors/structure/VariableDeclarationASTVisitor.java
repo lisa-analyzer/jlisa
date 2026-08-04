@@ -29,7 +29,7 @@ public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> impl
 			SingleVariableDeclaration node) {
 		Type type = getParserContext().evaluate(
 				node.getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope()));
+				new TypeASTVisitor(getEnvironment(), getScope()));
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 		if (node.getExtraDimensions() != 0) {
 			if (type instanceof ArrayType) {

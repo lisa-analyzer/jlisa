@@ -61,8 +61,6 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 			codeMemberDescriptor = buildJavaCodeMemberDescriptor(node);
 		}
 
-		boolean isMain = isMain(node);
-
 		int modifiers = node.getModifiers();
 
 		CodeMember codeMember;
@@ -112,7 +110,7 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 
 		ParsedBlock block = getParserContext().evaluate(
 				node.getBody(),
-				() -> new BlockStatementASTVisitor(getEnvironment(),
+				new BlockStatementASTVisitor(getEnvironment(),
 						getScope().toMethodScope(cfg, tracker, new ControlFlowTracker())));
 
 		cfg.getNodeList().mergeWith(block.getBody());
@@ -213,7 +211,7 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 			if (returnType == null) {
 				returnType = getParserContext().evaluate(
 						node.getReturnType2(),
-						() -> new TypeASTVisitor(getEnvironment(), getScope().getUnitScope()));
+						new TypeASTVisitor(getEnvironment(), getScope().getUnitScope()));
 			}
 		}
 
@@ -229,10 +227,10 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			parameters.add(getParserContext().evaluate(
 					sd,
-					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
+					new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
 		}
 
-		// TODO annotations
+		// TODO: annotations
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLiSACompilationUnit(), instance,
@@ -269,10 +267,10 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			parameters.add(getParserContext().evaluate(
 					sd,
-					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
+					new VariableDeclarationASTVisitor(getEnvironment(), getScope().getUnitScope())));
 		}
 
-		// TODO annotations
+		// TODO: annotations
 		Annotations annotations = new Annotations();
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
 		codeMemberDescriptor = new JavaCodeMemberDescriptor(loc, getScope().getLiSACompilationUnit(), instance,

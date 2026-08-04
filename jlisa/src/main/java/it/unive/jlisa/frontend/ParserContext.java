@@ -255,14 +255,13 @@ public class ParserContext {
 	 * @param <V>             the visitor type (must extend ASTVisitor and
 	 *                            implement ResultHolder)
 	 * @param node            the AST node to visit
-	 * @param visitorSupplier supplier for creating a fresh visitor
+	 * @param visitor			the fresh visitor (should not be the same one that invokes this method)
 	 * 
 	 * @return the result of visiting the node
 	 */
 	public <R, V extends org.eclipse.jdt.core.dom.ASTVisitor & ResultHolder<R>> R evaluate(
 			ASTNode node,
-			Supplier<V> visitorSupplier) {
-		V visitor = visitorSupplier.get();
+			V visitor) {
 		node.accept(visitor);
 		return visitor.getResult();
 	}

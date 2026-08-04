@@ -42,10 +42,10 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		getScope().getTracker().enterScope();
 
 		Expression item = getParserContext().evaluate(node.getParameter(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		Expression collection = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node);
 		Expression condition = new Equal(getScope().getCFG(), locationManager.nextColumn(),
@@ -60,7 +60,7 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 
 		ParsedBlock loopBody = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		block.mergeWith(loopBody.getBody());
 

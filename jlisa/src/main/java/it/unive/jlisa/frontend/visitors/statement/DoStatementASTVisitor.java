@@ -44,7 +44,7 @@ class DoStatementASTVisitor extends ScopedVisitor<MethodScope> implements Result
 
 		ParsedBlock loopBody = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		Statement entry;
 
@@ -52,7 +52,7 @@ class DoStatementASTVisitor extends ScopedVisitor<MethodScope> implements Result
 		entry = loopBody.getBegin();
 
 		Expression expression = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Statement noop = new NoOp(getScope().getCFG(), expression.getLocation());
 
 		boolean isConditionDeadcode = !loopBody.canBeContinued();

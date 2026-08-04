@@ -62,7 +62,7 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 
 		Expression condition = node.getExpression() != null
 				? getParserContext().evaluate(node.getExpression(),
-						() -> new ExpressionVisitor(getEnvironment(), getScope()))
+						new ExpressionVisitor(getEnvironment(), getScope()))
 				: null;
 		Statement alwaysTrue = new Equal(getScope().getCFG(), syntheticLocationManager.nextLocation(),
 				new TrueLiteral(getScope().getCFG(), syntheticLocationManager.nextLocation()),
@@ -80,7 +80,7 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 
 		ParsedBlock loopBody = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		block.mergeWith(loopBody.getBody());
 
@@ -131,7 +131,7 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		Statement first = null;
 		for (int i = 0; i < stmts.length; i++) {
 			Expression expr = getParserContext().evaluate(stmts[i],
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			nodeList.addNode(expr);
 			if (i != 0)
 				nodeList.addEdge(new SequentialEdge(prev, expr));

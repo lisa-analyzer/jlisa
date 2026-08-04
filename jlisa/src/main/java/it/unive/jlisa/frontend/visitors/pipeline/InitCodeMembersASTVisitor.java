@@ -205,7 +205,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			if (returnType == null) {
 				returnType = getParserContext().evaluate(
 						node.getReturnType2(),
-						() -> new TypeASTVisitor(getEnvironment(), getScope()));
+						new TypeASTVisitor(getEnvironment(), getScope()));
 			}
 		}
 
@@ -219,7 +219,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			parameters.add(getParserContext().evaluate(
 					sd,
-					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
+					new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
@@ -262,7 +262,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			parameters.add(getParserContext().evaluate(
 					sd,
-					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
+					new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);

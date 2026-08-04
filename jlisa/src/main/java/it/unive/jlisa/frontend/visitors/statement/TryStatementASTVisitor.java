@@ -53,7 +53,7 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		// body of the try
 		ParsedBlock body = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 		trycatch.mergeWith(body.getBody());
 		ProtectedBlock tryBlock = new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes());
 
@@ -96,7 +96,7 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		if (node.getFinally() != null) {
 			finallyBlock = getParserContext().evaluate(
 					node.getFinally(),
-					() -> new StatementASTVisitor(getEnvironment(), getScope()));
+					new StatementASTVisitor(getEnvironment(), getScope()));
 			trycatch.mergeWith(finallyBlock.getBody());
 		}
 
@@ -146,7 +146,7 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		// type of the exception
 		Type type = getParserContext().evaluate(
 				node.getException().getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 		type = type.isInMemoryType() ? new JavaReferenceType(type) : type;
 
 		// exception variable
@@ -163,7 +163,7 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		// exception body / body of the catch clause
 		ParsedBlock body = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		CatchBlock catchBlock = new CatchBlock(
 				v,
