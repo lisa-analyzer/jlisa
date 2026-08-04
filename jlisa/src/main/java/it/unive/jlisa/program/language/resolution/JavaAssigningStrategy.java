@@ -1,5 +1,11 @@
 package it.unive.jlisa.program.language.resolution;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -17,6 +23,7 @@ import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStra
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
@@ -25,10 +32,6 @@ import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A strategy that passes the parameters in the same order as they are
@@ -57,6 +60,8 @@ public class JavaAssigningStrategy
 			Parameter[] formals,
 			ExpressionSet[] parameters)
 			throws SemanticException {
+		if (call.toString().contains("Cookie"))
+			System.out.println();
 		// prepare the state for the call: assign the value to each parameter
 		AnalysisState<A> prepared = callState;
 		ExpressionSet[] pars = new ExpressionSet[parameters.length];
@@ -123,13 +128,17 @@ public class JavaAssigningStrategy
 					set.add(rightExpr);
 					pars[i] = new ExpressionSet(set);
 					boxingUnboxingNeeded = true;
-				} else
+				} else {
+					if (actualType.isReferenceType() && !(exp instanceof HeapReference))
+						exp = new HeapReference(call.getProgram().getTypes().getReference(actualType), exp,
+								exp.getCodeLocation());
 					temp = temp.lub(
 							interprocedural.getAnalysis().assign(
 									prepared,
 									formalVar,
 									exp,
 									call));
+				}
 			}
 			prepared = temp;
 		}
