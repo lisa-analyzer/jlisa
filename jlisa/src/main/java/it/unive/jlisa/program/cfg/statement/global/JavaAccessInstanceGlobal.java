@@ -33,7 +33,9 @@ import it.unive.lisa.type.Untyped;
 import java.util.HashSet;
 import java.util.Set;
 
-public class JavaAccessInstanceGlobal extends UnaryExpression {
+public class JavaAccessInstanceGlobal
+		extends
+		UnaryExpression {
 
 	private final String target;
 
@@ -135,6 +137,8 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
+		if (this.toString().contains("next::x"))
+			System.out.println("here");
 		CodeLocation loc = getLocation();
 
 		AnalysisState<A> result = state.bottomExecution();
@@ -179,7 +183,13 @@ public class JavaAccessInstanceGlobal extends UnaryExpression {
 						Global global = cu.getInstanceGlobal(target, false);
 						if (global != null) {
 							GlobalVariable var = global.toSymbolicVariable(loc);
-							AccessChild access = new AccessChild(global.getStaticType(), container, var, loc);
+							AccessChild access;
+							if (expr instanceof AccessChild)
+								// if we are already in the memory we do not need to
+								// dereference again, we already have an allocation site
+								access = new AccessChild(global.getStaticType(), expr, var, loc);
+							else
+								access = new AccessChild(global.getStaticType(), container, var, loc);
 							result = result.lub(analysis.smallStepSemantics(state, access, this));
 							atLeastOne = true;
 						}
