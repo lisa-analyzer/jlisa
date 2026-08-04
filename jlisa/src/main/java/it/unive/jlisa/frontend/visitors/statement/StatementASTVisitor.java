@@ -556,10 +556,11 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			}
 
 			adj.addNode(assignment);
-			if (getFirst() == null) {
-				first = assignment;
+			if (first == null) {
+				first = last = assignment;
 			} else {
 				adj.addEdge(new SequentialEdge(last, assignment));
+				last = assignment;
 			}
 
 			if (getScope().getTracker().hasVariable(variableName))

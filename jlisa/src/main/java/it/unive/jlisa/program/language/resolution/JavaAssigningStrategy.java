@@ -60,8 +60,6 @@ public class JavaAssigningStrategy
 			Parameter[] formals,
 			ExpressionSet[] parameters)
 			throws SemanticException {
-		if (call.toString().contains("Cookie"))
-			System.out.println();
 		// prepare the state for the call: assign the value to each parameter
 		AnalysisState<A> prepared = callState;
 		ExpressionSet[] pars = new ExpressionSet[parameters.length];
