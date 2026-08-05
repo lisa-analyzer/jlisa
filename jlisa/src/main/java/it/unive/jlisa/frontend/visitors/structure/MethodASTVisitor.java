@@ -1,5 +1,20 @@
 package it.unive.jlisa.frontend.visitors.structure;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.JavaSyntaxException;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -31,16 +46,6 @@ import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
 	private CFG cfg;
@@ -179,6 +184,20 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		JavaCFGTweaker.addReturns(cfg, JavaSyntaxException::new,
 				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()));
 		cfg.simplify();
+
+		// sanity check: there might be eg empty if statements, so the
+		// condition will be connected to the exit by both a true and a false
+		// edge. we simplify this by substituting both with a sequential edge.
+		Map<Pair<Statement, Statement>, List<Edge>> edges = new HashMap<>();
+		for (Edge e : cfg.getEdges()) 
+			if (!e.isUnconditional() && !e.isErrorHandling())
+				edges.computeIfAbsent(Pair.of(e.getSource(), e.getDestination()), k -> new LinkedList<>()).add(e);
+		for (Map.Entry<Pair<Statement, Statement>, List<Edge>> e : edges.entrySet())
+			if (e.getValue().size() > 1) {
+				for (Edge edge : e.getValue())
+					cfg.getNodeList().removeEdge(edge);
+				cfg.addEdge(new SequentialEdge(e.getKey().getLeft(), e.getKey().getRight()));
+			}
 
 		tracker.exitScope(block.getEnd());
 
