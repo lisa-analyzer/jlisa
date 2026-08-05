@@ -69,7 +69,6 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 				new TrueLiteral(getScope().getCFG(), syntheticLocationManager.nextLocation()));
 
 		boolean hasCondition = condition != null;
-
 		if (hasCondition) {
 			block.addNode(condition);
 			block.addEdge(new SequentialEdge(hasInitalizers ? initializers.getEnd() : noInit, condition));
@@ -83,13 +82,10 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		block.mergeWith(loopBody.getBody());
-
 		block.addEdge(new TrueEdge(hasCondition ? condition : alwaysTrue, loopBody.getBegin()));
 
 		ParsedBlock updaters = visitSequentialExpressions(node.updaters());
-
 		boolean hasUpdaters = updaters.getBegin() != null && updaters.getEnd() != null;
-
 		boolean areUpdatersDeadcode = !loopBody.canBeContinued();
 
 		if (!areUpdatersDeadcode)
@@ -116,9 +112,10 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		ForLoop forloop = new ForLoop(block, hasInitalizers ? initializers.getBody().getNodes() : null,
 				hasCondition ? condition : alwaysTrue, hasUpdaters ? updaters.getBody().getNodes() : null, noop,
 				loopBody.getBody().getNodes());
+		Statement continueTarget = hasUpdaters ? updaters.getBegin() : hasCondition ? condition : alwaysTrue;
 		getScope().getCFG().getDescriptor().addControlFlowStructure(forloop);
 		getScope().getControlFlowTracker().endControlFlowOf(block, hasCondition ? condition : alwaysTrue, noop,
-				hasCondition ? condition : alwaysTrue, null);
+				continueTarget, null);
 		this.block = new ParsedBlock(entry, block, noop);
 		return false;
 	}
