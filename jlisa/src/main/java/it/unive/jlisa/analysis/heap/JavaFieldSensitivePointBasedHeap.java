@@ -1,11 +1,9 @@
 package it.unive.jlisa.analysis.heap;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
@@ -81,85 +79,30 @@ public class JavaFieldSensitivePointBasedHeap
 		return new ExpressionSet(result);
 	}
 
-	/* FIXME: this is cloned to change the behavior of process() */
 	@Override
-	public Pair<HeapEnvWithFields, List<HeapReplacement>> assign(
-			HeapEnvWithFields state,
-			Identifier id,
-			SymbolicExpression expression,
-			ProgramPoint pp,
-			SemanticOracle oracle)
-			throws SemanticException {
-		if (state.isBottom())
-			return Pair.of(state, List.of());
-		Pair<HeapEnvWithFields, List<HeapReplacement>> sss = smallStepSemantics(state, expression, pp, oracle);
-		HeapEnvWithFields result = state.bottom();
-		List<HeapReplacement> replacements = new LinkedList<>();
-		sss.getRight().forEach(replacements::add);
-		ExpressionSet rhsExps;
-		boolean rhsIsReceiver = false;
-
-		expression = expression.removeTypingExpressions();
-
-		if (expression instanceof Identifier) {
-			rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) expression, pp));
-			rhsIsReceiver = ((Identifier) expression).isInstrumentedReceiver();
-		} else if (expression.mightNeedRewriting())
-			rhsExps = rewrite(state, expression, pp, oracle);
-		else
-			rhsExps = new ExpressionSet(expression);
-
-		for (SymbolicExpression rhs : rhsExps)
-			result = result.lub(process(id, pp, oracle, sss.getLeft(), replacements, rhs, rhsIsReceiver));
-
-		if (!id.isWeak() && state.knowsIdentifier(id)) {
-			// we might make some location unreachable,
-			// so we have to perform garbage collection
-			HeapReplacement r = new HeapReplacement();
-			r.addSource(id);
-			replacements.addAll(state.expand(r));
-		}
-
-		return Pair.of(result, replacements);
+	protected void addField(
+			AllocationSite site,
+			SymbolicExpression field,
+			Map<AllocationSite, ExpressionSet> mapping) {
+		if (site.getField() != null)
+			// we do not track fields of fields
+			return;
+		Set<SymbolicExpression> tmp = new HashSet<>(mapping.getOrDefault(site, new ExpressionSet()).elements());
+		tmp.add(field);
+		mapping.put(site, new ExpressionSet(tmp));
 	}
 
-	private HeapEnvWithFields process(
+	@Override
+	protected HeapEnvWithFields process(
+			HeapEnvWithFields sss,
 			Identifier id,
+			SymbolicExpression rhs,
 			ProgramPoint pp,
 			SemanticOracle oracle,
-			HeapEnvWithFields sss,
 			List<HeapReplacement> replacements,
-			SymbolicExpression rhs,
 			boolean rhsIsReceiver)
 			throws SemanticException {
-		if (rhs instanceof MemoryPointer) {
-			if (!(((MemoryPointer) rhs).getReferencedLocation() instanceof AllocationSite))
-				throw new SemanticException("Cannot assign a non-allocation site location");
-			// we have x = y, where y is a pointer to an allocation site
-			AllocationSite rhs_ref = (AllocationSite) ((MemoryPointer) rhs).getReferencedLocation();
-			if (id instanceof MemoryPointer) {
-				// we have x = y, where both are pointers
-				// we perform *x = *y so that x and y become aliases
-				Identifier lhs_ref = ((MemoryPointer) id).getReferencedLocation();
-				return store(sss, lhs_ref, rhs_ref);
-			} else if (rhs_ref instanceof StackAllocationSite
-					// if we are allocating, we just perform normal aliasing
-					// as there is nothing to copy
-					&& !((StackAllocationSite) rhs_ref).isAllocation()
-					// if rhs is an instrumented receiver, it corresponds to
-					// something that is still on the stack while being
-					// initialized (eg with a constructor call) so we
-					// perform normal aliasing as there is nothing to copy
-					&& !rhsIsReceiver
-					&& !getAllocatedAt(sss, ((StackAllocationSite) rhs_ref).getLocationName()).isEmpty())
-				// for stack elements, assignment works as a shallow copy
-				// since there are no pointers to alias
-				return shallowCopy(sss, id, (StackAllocationSite) rhs_ref, replacements);
-			else {
-				// aliasing: id and star_y points to the same object
-				return store(sss, id, rhs_ref);
-			}
-		} else if (rhs instanceof AllocationSite) {
+		if (rhs instanceof AllocationSite) {
 			// this whole branch is custom just for java
 			// we have x = y, where y is a pointer to an allocation site
 			AllocationSite rhs_ref = (AllocationSite) rhs;
@@ -186,6 +129,6 @@ public class JavaFieldSensitivePointBasedHeap
 				return store(sss, id, rhs_ref);
 			}
 		} else
-			return sss;
+			return super.process(sss, id, rhs, pp, oracle, replacements, rhsIsReceiver);
 	}
 }
