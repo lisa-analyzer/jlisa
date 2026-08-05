@@ -44,7 +44,6 @@ import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
-import it.unive.jlisa.program.cfg.statement.JavaReturn;
 import it.unive.jlisa.program.cfg.statement.JavaThrow;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
@@ -65,6 +64,7 @@ import it.unive.lisa.program.cfg.edge.TrueEdge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Ret;
+import it.unive.lisa.program.cfg.statement.Return;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.program.cfg.statement.VariableRef;
@@ -373,7 +373,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (e == null) {
 			ret = new Ret(getScope().getCFG(), getSourceCodeLocation(node));
 		} else {
-			ret = new JavaReturn(getScope().getCFG(), getSourceCodeLocation(node), e);
+			ret = new Return(getScope().getCFG(), getSourceCodeLocation(node), e);
 		}
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());

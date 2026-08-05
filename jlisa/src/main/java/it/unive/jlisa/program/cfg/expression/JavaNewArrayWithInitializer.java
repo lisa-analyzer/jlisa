@@ -98,8 +98,6 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 			for (SymbolicExpression expr : params[i]) {
 				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
-				if (expr.getStaticType().isReferenceType() && !(expr instanceof HeapReference))
-					expr = new HeapReference(getProgram().getTypes().getReference(expr.getStaticType()), expr, expr.getCodeLocation());
 				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());
 				tmp = init;
 			}

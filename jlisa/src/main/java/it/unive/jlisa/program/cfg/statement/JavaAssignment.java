@@ -78,8 +78,6 @@ public class JavaAssignment extends Assignment {
 			lhs = ((HeapReference) left).getExpression();
 		for (Type rType : rightTypes) {
 			SymbolicExpression rhs = right;
-			if (rType.isReferenceType() && !(right instanceof HeapReference))
-				rhs = new HeapReference(getProgram().getTypes().getReference(rType), right, right.getCodeLocation());
 			if (rType.equals(targetType) || targetType.isUntyped()) {
 				result = result.lub(super.fwdBinarySemantics(interprocedural, state, lhs, rhs, expressions));
 			} else if (rType.canBeAssignedTo(targetType)) {

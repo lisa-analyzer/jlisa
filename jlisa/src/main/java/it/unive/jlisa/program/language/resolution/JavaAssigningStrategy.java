@@ -23,7 +23,6 @@ import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStra
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
@@ -127,9 +126,6 @@ public class JavaAssigningStrategy
 					pars[i] = new ExpressionSet(set);
 					boxingUnboxingNeeded = true;
 				} else {
-					if (actualType.isReferenceType() && !(exp instanceof HeapReference))
-						exp = new HeapReference(call.getProgram().getTypes().getReference(actualType), exp,
-								exp.getCodeLocation());
 					temp = temp.lub(
 							interprocedural.getAnalysis().assign(
 									prepared,
