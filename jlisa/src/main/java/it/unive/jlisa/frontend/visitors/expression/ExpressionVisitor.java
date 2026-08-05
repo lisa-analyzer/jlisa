@@ -121,7 +121,11 @@ import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<Expression> {
+public class ExpressionVisitor
+		extends
+		ScopedVisitor<MethodScope>
+		implements
+		ResultHolder<Expression> {
 	@FunctionalInterface
 	private interface BinaryFactory {
 		Expression build(
@@ -167,7 +171,12 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 				new ExpressionVisitor(getEnvironment(), getScope()));
 		Expression right = getParserContext().evaluate(node.getIndex(),
 				new ExpressionVisitor(getEnvironment(), getScope()));
+		Type staticType = left.getStaticType().isReferenceType()
+				&& left.getStaticType().asReferenceType().getInnerType().isArrayType()
+						? left.getStaticType().asReferenceType().getInnerType().asArrayType().getInnerType()
+						: Untyped.INSTANCE;
 		expression = new JavaArrayAccess(getScope().getCFG(),
+				staticType,
 				getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(),
 				left, right);
 		return false;
@@ -392,7 +401,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			String uniqueSimpleName = methodName + "$" + node.getStartPosition();
 
 			// register the class
-			String name = FQNUtils.buildFQN(getScope().getParentScope().getUnitScope().getPackage(), null, uniqueSimpleName);
+			String name = FQNUtils.buildFQN(getScope().getParentScope().getUnitScope().getPackage(), null,
+					uniqueSimpleName);
 
 			AnonymousClassDeclaration anonClassNode = node.getAnonymousClassDeclaration();
 			SyntheticCodeLocationManager synth = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
@@ -404,9 +414,11 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			JavaClassType newAnonymousType = JavaClassType.lookup(name);
 			getProgram().getTypes().registerType(newAnonymousType);
 
-			JavaClassType enclosing = JavaClassType.lookup(getScope().getParentScope().getLiSACompilationUnit().getName());
+			JavaClassType enclosing = JavaClassType
+					.lookup(getScope().getParentScope().getLiSACompilationUnit().getName());
 
-			ClassScope anonScope = new ClassScope(getScope().getParentScope().getUnitScope(), getScope().getParentScope(), enclosing, cUnit);
+			ClassScope anonScope = new ClassScope(getScope().getParentScope().getUnitScope(),
+					getScope().getParentScope(), enclosing, cUnit);
 
 			// add the enclosing class field
 			Global g = new Global(synth.nextLocation(), cUnit, "$enclosing", true, enclosing.getReference());
@@ -425,14 +437,16 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			}
 
 			// initialize the code member descriptors
-			InitCodeMembersASTVisitor initMethodsVisitor = new InitCodeMembersASTVisitor(getEnvironment(), anonScope.getUnitScope());
+			InitCodeMembersASTVisitor initMethodsVisitor = new InitCodeMembersASTVisitor(getEnvironment(),
+					anonScope.getUnitScope());
 
 			initMethodsVisitor.initCodeMembersInAnonymousClass(cUnit, anonClassNode, uniqueSimpleName, name, "");
 
 			// parse method bodies and fields
 			MethodASTVisitor methodVisitor = new MethodASTVisitor(getEnvironment(), anonScope);
 			List<FieldDeclaration> fieldDeclarations = new LinkedList<>();
-			FieldDeclarationVisitor fieldVisitor = new FieldDeclarationVisitor(getEnvironment(), anonScope, new HashSet<>());
+			FieldDeclarationVisitor fieldVisitor = new FieldDeclarationVisitor(getEnvironment(), anonScope,
+					new HashSet<>());
 
 			for (Object bodyDecl : anonClassNode.bodyDeclarations()) {
 				if (bodyDecl instanceof MethodDeclaration mdecl) {
@@ -446,20 +460,23 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 			FieldDeclaration[] fieldArr = fieldDeclarations.toArray(new FieldDeclaration[0]);
 
-			// create the synthetic constructor. Anonymous classes can't have explicit ctors, hence we need to create one that is identical to the superclass one
+			// create the synthetic constructor. Anonymous classes can't have
+			// explicit ctors, hence we need to create one that is identical to
+			// the superclass one
 			ClassASTVisitor classVisitor = new ClassASTVisitor(getEnvironment(), anonScope);
 
 			List<Type> types = new ArrayList<Type>();
 
-			// get the types of the expressions passed to the anonymous class "ctor" call
+			// get the types of the expressions passed to the anonymous class
+			// "ctor" call
 			if (!node.arguments().isEmpty()) {
 				for (Object arg : node.arguments()) {
 
 					org.eclipse.jdt.core.dom.Expression argAST = (org.eclipse.jdt.core.dom.Expression) arg;
 
 					it.unive.lisa.program.cfg.statement.Expression lisaExpr = getParserContext().evaluate(
-						    argAST,
-						    new ExpressionVisitor(getEnvironment(), getScope()));
+							argAST,
+							new ExpressionVisitor(getEnvironment(), getScope()));
 
 					it.unive.lisa.type.Type argType = lisaExpr.getStaticType();
 					types.add(argType);
@@ -468,12 +485,15 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 			classVisitor.createAnonymousConstructor(newAnonymousType, node, types, fieldArr);
 
-			// add the `$enclosing` argument to the ctor call. The `$enclosing` will be the current `this`.
+			// add the `$enclosing` argument to the ctor call. The `$enclosing`
+			// will be the current `this`.
 			// TODO: anonymous classes can have allocation qualifiers, like
 			// `a.new AnonClass(...) {}`.
-			// In that case the `$enclosing` shall be the one node.getExpression() one.
+			// In that case the `$enclosing` shall be the one
+			// node.getExpression() one.
 			// TODO: anonymous classes created inside a static methods.
-			Expression enclosingRef = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", enclosing.getReference());
+			Expression enclosingRef = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this",
+					enclosing.getReference());
 			parameters.add(enclosingRef);
 
 			// the anonymous type will be the type of the JavaNewObj call
@@ -959,19 +979,20 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		return expression;
 	}
 
-	private String getEnclosingMethodName(ASTNode current) {
+	private String getEnclosingMethodName(
+			ASTNode current) {
 
 		MethodDeclaration enclosingMethod = null;
 
 		while (current != null) {
-		    if (enclosingMethod == null && current instanceof MethodDeclaration) {
-			enclosingMethod = (MethodDeclaration) current;
-			break;
-		    }
-		    current = current.getParent();
+			if (enclosingMethod == null && current instanceof MethodDeclaration) {
+				enclosingMethod = (MethodDeclaration) current;
+				break;
+			}
+			current = current.getParent();
 		}
 
-		assert(enclosingMethod != null);
+		assert (enclosingMethod != null);
 
 		String methodName = enclosingMethod.getName().getIdentifier();
 		return methodName;

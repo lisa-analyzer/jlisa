@@ -36,10 +36,11 @@ public class JavaArrayAccess extends BinaryExpression {
 
 	public JavaArrayAccess(
 			CFG cfg,
+			Type staticType,
 			CodeLocation location,
 			Expression left,
 			Expression right) {
-		super(cfg, location, "[]", left, right);
+		super(cfg, location, "[]", staticType, left, right);
 	}
 
 	@Override
