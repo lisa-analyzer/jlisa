@@ -105,10 +105,17 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 				// didn't find any matching method
 				if (methodSearched.getExecutionExpressions().isEmpty()) {
-					methodSearched = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
+					result = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
 				}
-
-				result = methodSearched;
+				else {
+					// found at least one method, copy them
+					AnalysisState<A> tmp = state.bottomExecution();
+					for (SymbolicExpression expr: methodSearched.getExecutionExpressions()) {
+						ClassCopyMethod copyMethod = new ClassCopyMethod(getCFG(), getLocation(), getMiddle());
+						tmp = tmp.lub(copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
+					}
+					result = tmp;
+				}
 			}
 		}
 
