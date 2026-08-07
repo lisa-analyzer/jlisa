@@ -100,9 +100,17 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 				// didn't find any matching field
 				if (fieldSearched.getExecutionExpressions().isEmpty()) {
-					fieldSearched = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
+					result = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
+				} else {
+					// found at least one field, copy them
+					AnalysisState<A> tmp = state.bottomExecution();
+					for (SymbolicExpression expr : fieldSearched.getExecutionExpressions()) {
+						ClassCopyField copyField = new ClassCopyField(getCFG(), getLocation(), getRight());
+						tmp = tmp.lub(copyField.fwdUnarySemantics(interprocedural, fieldSearched, expr,
+								expressions));
+					}
+					result = tmp;
 				}
-				result = fieldSearched;
 			}
 		}
 
