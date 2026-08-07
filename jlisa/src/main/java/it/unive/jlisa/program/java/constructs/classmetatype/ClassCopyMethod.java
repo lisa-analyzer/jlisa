@@ -87,6 +87,7 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
+		Type intType = JavaIntType.INSTANCE;
 		JavaReferenceType refStringType = new JavaReferenceType(JavaClassType.getStringType());
 		Type classMetaType = JavaClassType.getClassMetaType();
 		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
@@ -116,23 +117,24 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 		HeapDereference derefOther = new HeapDereference(methodMetaType, expr, location);
 
 		// shallow copy clazz
-		result = copyRef(analysis, methodAllocated, derefOther, derefThisMethod, clazzVar, refClassMetaType, expressions);
+		result = copyField(analysis, methodAllocated, derefOther, derefThisMethod, clazzVar, refClassMetaType, expressions);
 
 		// shallow copy name
-		result = result.lub(copyRef(analysis, methodAllocated, derefOther, derefThisMethod, nameVar, refStringType, expressions));
+		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, nameVar, refStringType, expressions));
 
 		// shallow copy return type
-		result = result.lub(copyRef(analysis, methodAllocated, derefOther, derefThisMethod, typeVar, refClassMetaType, expressions));
+		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, typeVar, refClassMetaType, expressions));
 
 		// shallow copy parameter types
-		result = result.lub(copyRef(analysis, methodAllocated, derefOther, derefThisMethod, paramTypesVar, refClassArrType, expressions));
+		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, paramTypesVar, refClassArrType, expressions));
 
-		// TODO: modifiers
+		// copy modifiers
+		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, modifiersVar, intType, expressions));
 
 		return result.forgetIdentifier(method, this).withExecutionExpression(ref);
 	}
 
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> copyRef(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> copyField(
 			Analysis<A, D> analysis,
 			AnalysisState<A> state,
 			HeapDereference source,
@@ -142,8 +144,10 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		AccessChild accessSource = new AccessChild(t, source, var, getLocation());
-		HeapReference ref = new HeapReference(t, accessSource, getLocation());
+		SymbolicExpression ref = new AccessChild(t, source, var, getLocation());
+		if (t instanceof JavaReferenceType)
+			ref = new HeapReference(t, ref, getLocation());
+
 		AccessChild accessDst = new AccessChild(t, dst, var, getLocation());
 
 		AnalysisState<A> tmp = analysis.assign(state, accessDst, ref, this);
