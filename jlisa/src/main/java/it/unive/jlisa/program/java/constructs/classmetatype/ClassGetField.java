@@ -260,12 +260,72 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		// try to look in superclasses first
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
+		state = searchField(interprocedural, state, superClass, right, expressions);
 
-		// TODO: look in interfaces too.
-		// we aren't doing that since static fields in interfaces are not
-		// allowed as of now
+		if (state.getExecutionExpressions().isEmpty()) {
+			state = searchInterfaces(interprocedural, state, derefClazz, right, expressions);
+		}
 
-		return searchField(interprocedural, state, superClass, right, expressions);
+		return state;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> searchInterfaces(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			HeapDereference derefClazz,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+
+		Type classMetaType = JavaClassType.getClassMetaType();
+		Type refClassMetaType = new JavaReferenceType(classMetaType);
+		JavaReferenceType refClassArr = JavaArrayType.CLASS_ARRAY;
+
+		GlobalVariable interfacesVar = new GlobalVariable(Untyped.INSTANCE, "interfaces", location);
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
+
+		AccessChild accessInterfaces = new AccessChild(refClassArr, derefClazz, interfacesVar, location);
+		HeapDereference derefInterfaces = new HeapDereference(refClassArr.getInnerType(), accessInterfaces, location);
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefInterfaces, lenVar, location);
+
+		boolean outOfBoundsArr = false;
+		int i = 0;
+
+		AnalysisState<A> tmp = state;
+
+		// stop when we are out of bounds
+		while (outOfBoundsArr == false) {
+
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
+
+			it.unive.lisa.symbolic.value.BinaryExpression withinBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaBooleanType.INSTANCE,
+					idx, accessLen, ComparisonLt.INSTANCE, location);
+
+			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			if (sat == Satisfiability.NOT_SATISFIED) {
+				outOfBoundsArr = true;
+				break;
+			}
+
+			// access the interface and call searchField on it
+			AccessChild accessInterface = new AccessChild(refClassMetaType, derefInterfaces, idx, location);
+			tmp = searchField(interprocedural, tmp, accessInterface, right, expressions);
+
+			// NOTE: this stops as soon as any matching field is found.
+			// This however, should only happen when we are sure that the
+			// field we found is the correct one
+			if (!tmp.getExecutionExpressions().isEmpty()) {
+				return tmp;
+			}
+
+			++i;
+		}
+
+		return tmp.withExecutionExpressions(new ExpressionSet());
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(

@@ -250,9 +250,6 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		state = searchMethod(interprocedural, state, superClass, middle, right, expressions);
 
 		// we didn't find anything in the superclasses.
-		// NOTE: this is not handling the "unknown" case: we should search the
-		// interfaces
-		// even when we are not sure the method we found is the correct one
 		if (state.getExecutionExpressions().isEmpty()) {
 			state = searchInterfaces(interprocedural, state, derefClazz, middle, right, expressions);
 		}
