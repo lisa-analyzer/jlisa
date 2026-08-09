@@ -6,9 +6,11 @@ public class Main {
 
 		Field f = c.getField("name");
 		f.set(null, "newName");
+
+		assert(Cat.name.equals("newName"));
 	}
 }
 
 class Cat {
-	public String name = "fluffy";
+	public static String name = "fluffy";
 }
