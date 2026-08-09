@@ -91,6 +91,28 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		CodeLocation loc = getLocation();
 		CFG cfg = getCFG();
 
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+
+		AnalysisState<A> result = state.bottomExecution();
+		for (SymbolicExpression clazz : classes) {
+			result = result.lub(setValue(interprocedural, state, clazz, middle, right, expressions));
+		}
+		return result;
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> setValue(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation loc = getLocation();
+		CFG cfg = getCFG();
+
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
@@ -101,7 +123,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", loc);
 		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", loc);
 
-		HeapDereference derefField = new HeapDereference(fieldMetaType, left, loc);
+		SymbolicExpression derefField = left;
 		AccessChild accessName = new AccessChild(refStringType, derefField, nameVar, loc);
 
 		// access field name
@@ -126,7 +148,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 			return state.topExecution();
 		List<BinaryExpression> clazzNameConstraints = clazzNameStream.toList();
 
-		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> result = state;
 
 		for (BinaryExpression clazzNameConstraint : clazzNameConstraints) {
 
@@ -161,7 +183,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 					// remove null, if present
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
-					AnalysisState<A> setState = state.bottomExecution();
+					// AnalysisState<A> setState = state.bottomExecution();
 
 					if (mightBeNull) {
 						// create NullPointerException for the null case
@@ -169,7 +191,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 						JavaNewObj npeCall = new JavaNewObj(cfg, loc,
 								npeType.getReference(), new Expression[0]);
-						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, state,
+						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, result,
 								new ExpressionSet[0], expressions);
 
 						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), loc);
@@ -183,7 +205,8 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 						AnalysisState<A> npeState = analysis.moveExecutionToError(
 								nullAnalysisState.withExecutionExpression(throwVar),
 								new Error(npeType.getReference(), originating), this);
-						setState = setState.lub(npeState);
+
+						result = npeState;
 					}
 
 					// if there are non-null targets, proceed normally
@@ -200,13 +223,12 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 						// anything. It should be a fieldAccess expression
 						JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
 
-						AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, state, access, right,
+						AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, result, access, right,
 								expressions);
-						setState = setState.lub(t);
+						result = t;
 					}
-
-					result = result.lub(setState);
-				} else {
+				}
+				else {
 					GlobalVariable reflectedAccess = new GlobalVariable(
 							reflectedGlobal.getStaticType(),
 							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
@@ -218,11 +240,11 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 					AnalysisState<A> t = assign.fwdBinarySemantics(
 							interprocedural,
-							state,
+							result,
 							reflectedAccess,
 							right,
 							expressions);
-					result = result.lub(t);
+					result = t;
 				}
 			}
 		}
