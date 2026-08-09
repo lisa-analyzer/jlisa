@@ -84,35 +84,42 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
-		AnalysisState<A> result = state;
+		AnalysisState<A> result = state.bottomExecution();
 
-		for (Type t : clazzTypes) {
-			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-				result = throwNullPointerException(interprocedural, result, expressions);
-			}
-			// search the field
-			else {
-				AnalysisState<A> fieldSearched = searchField(interprocedural, result, left, right, expressions);
+                ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+                for (SymbolicExpression clazz : classes) {
 
-				if (fieldSearched.isTop() || fieldSearched.isBottom())
-					return fieldSearched;
+                        AnalysisState<A> searchResult = state;
+                        Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
 
-				// didn't find any matching field
-				if (fieldSearched.getExecutionExpressions().isEmpty()) {
-					result = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
-				} else {
-					// found at least one field, copy them
-					AnalysisState<A> tmp = state.bottomExecution();
-					for (SymbolicExpression expr : fieldSearched.getExecutionExpressions()) {
-						ClassCopyField copyField = new ClassCopyField(getCFG(), getLocation(), getRight());
-						tmp = tmp.lub(copyField.fwdUnarySemantics(interprocedural, fieldSearched, expr,
-								expressions));
-					}
-					result = tmp;
-				}
-			}
-		}
+                        for (Type t : clazzTypes) {
+                                if (t.isNullType()) {
+                                        searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
+                                }
+                                // search the field
+                                else {
+                                        AnalysisState<A> fieldSearched = searchField(interprocedural, searchResult, clazz, right, expressions);
+
+                                        if (fieldSearched.isTop() || fieldSearched.isBottom())
+                                                return fieldSearched;
+
+                                        // didn't find any matching field
+                                        if (fieldSearched.getExecutionExpressions().isEmpty()) {
+                                                searchResult = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
+                                        } else {
+                                                // found at least one field, copy them
+                                                AnalysisState<A> tmp = state.bottomExecution();
+                                                for (SymbolicExpression expr : fieldSearched.getExecutionExpressions()) {
+                                                        ClassCopyField copyField = new ClassCopyField(getCFG(), getLocation(), getRight());
+                                                        tmp = tmp.lub(copyField.fwdUnarySemantics(interprocedural, fieldSearched, expr,
+                                                                expressions));
+                                                }
+                                                searchResult = tmp;
+                                        }
+                                }
+                        }
+                        result = result.lub(searchResult);
+                }
 
 		return result;
 	}
@@ -134,18 +141,6 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-		// get the type of the left expression
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
-		// NOTE: this is always either Class or null (in case we reached the top
-		// of the class hierarchy)
-
-		assert (clazzTypes.size() == 1);
-		Type clazzType = clazzTypes.iterator().next();
-		// if we have a null, don't proceed with the field search
-		if (clazzType instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-			return state.withExecutionExpressions(new ExpressionSet());
-		}
-
 		Type stringType = getProgram().getTypes().getStringType();
 		Type refStringType = new JavaReferenceType(stringType);
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
@@ -154,11 +149,29 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		Type classMetaType = JavaClassType.getClassMetaType();
 		Type refClassMetaType = new JavaReferenceType(classMetaType);
 
+		SymbolicExpression derefClazz = left;
+
+		// get the type of the left expression
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+		// NOTE: this is always either Class or null (in case we reached the top
+		// of the class hierarchy)
+
+		assert (clazzTypes.size() == 1);
+		Type clazzType = clazzTypes.iterator().next();
+
+		if (clazzType instanceof JavaReferenceType) {
+			derefClazz = new HeapDereference(classMetaType, left, location);
+		}
+
+		// if we have a null, don't proceed with the field search
+		if ((clazzType instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType())
+				|| clazzType.isNullType()) {
+			return state.withExecutionExpressions(new ExpressionSet());
+		}
+
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
-
-		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 
 		AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, location);
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
@@ -169,7 +182,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		if (constraints == null)
 			return state.topExecution();
 
-		// make sure that all classes we are searching have thei reflection data
+		// make sure that all classes we are searching have their reflection data
 		// loaded
 		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
 
@@ -211,6 +224,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		boolean outOfBoundsFieldArr = false;
 		int i = 0;
 
+		ExpressionSet unknownFields = new ExpressionSet();
+
 		// look for a field with the same name
 		while (outOfBoundsFieldArr == false) {
 
@@ -249,18 +264,20 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			} else if (match == Satisfiability.UNKNOWN) {
 				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, this);
+				unknownFields = unknownFields.lub(noExceptionState.getExecutionExpressions());
 
 				AnalysisState<A> exceptionState = throwNoSuchFieldException(interprocedural, state, expressions);
 
 				state = noExceptionState.lub(exceptionState);
 			}
-
 			++i;
 		}
 
 		// try to look in superclasses first
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
 		state = searchField(interprocedural, state, superClass, right, expressions);
+
+		state = state.withExecutionExpressions(state.getExecutionExpressions().lub(unknownFields));
 
 		if (state.getExecutionExpressions().isEmpty()) {
 			state = searchInterfaces(interprocedural, state, derefClazz, right, expressions);
@@ -272,7 +289,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> searchInterfaces(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			HeapDereference derefClazz,
+			SymbolicExpression derefClazz,
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {

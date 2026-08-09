@@ -33,17 +33,17 @@ public class ReflectionDataUtils {
                 SymbolicExpression clazz,
                 ProgramPoint pp) throws SemanticException {
 
-                assert(!(clazz instanceof HeapDereference));
-
                 JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
                 JavaClassType classMetaType = JavaClassType.getClassMetaType();
                 JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
                 JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
 
+                if (clazz instanceof GlobalVariable)
+                        clazz = new HeapDereference(classMetaType, clazz, pp.getLocation());
+
                 GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", pp.getLocation());
 
-                HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, pp.getLocation());
-                AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar,
+                AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), clazz, declaredFieldsVar,
                         pp.getLocation());
 
                 Analysis<A, D> analysis = interprocedural.getAnalysis();

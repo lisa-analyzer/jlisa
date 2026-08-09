@@ -108,23 +108,30 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			if (constraints == null)
 				return state.topExecution();
 
+			AnalysisState<A> tmp = state;
+			ExpressionSet execExpressions = new ExpressionSet();
+
 			for (BinaryExpression constraint : constraints.toList()) {
 
 				String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 				UnitType t = getTypeFromStr(clazzName);
 
+				// we are in a unknown case and the class doesn't exist
+				if (t == null)
+					continue;
+
 				// static initializer
 				CompilationUnit cu = t.getUnit();
-				state = InitializedClassSet.initialize(state, new JavaReferenceType(t), this, interprocedural);
+				tmp = InitializedClassSet.initialize(tmp, new JavaReferenceType(t), this, interprocedural);
 
 				for (CompilationUnit ancestorCu : cu.getImmediateAncestors().stream().toList()) {
 					Type ancestorType = typeSystem.getType(ancestorCu.getName());
 					assert(ancestorType instanceof UnitType);
-					state = InitializedClassSet.initialize(state, new JavaReferenceType(ancestorType), this, interprocedural);
+					tmp = InitializedClassSet.initialize(tmp, new JavaReferenceType(ancestorType), this, interprocedural);
 				}
 
 				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);
-				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+				AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, tmp, new ExpressionSet[0],
 						expressions);
 
 				ExpressionSet clazz = callState.getExecutionExpressions();
@@ -133,10 +140,16 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, callState,
 						new ExpressionSet[] { clazz }, expressions);
 
-				for (SymbolicExpression c : clazz) {
-					noExceptionState = noExceptionState.lub(analysis.smallStepSemantics(initState, c, this));
-				}
+				tmp = initState;
+
+				execExpressions = execExpressions.lub(clazz);
+				// for (SymbolicExpression c : clazz) {
+					// tmp = analysis.smallStepSemantics(initState, c, this);
+				// }
 			}
+
+			if (tmp != state)
+				noExceptionState = tmp.withExecutionExpressions(execExpressions);
 		}
 
 		// `ClassNotFoundException to be thrown

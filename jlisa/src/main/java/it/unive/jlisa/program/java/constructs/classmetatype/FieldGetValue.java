@@ -101,6 +101,27 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+
+		AnalysisState<A> result = state.bottomExecution();
+		for (SymbolicExpression clazz : classes) {
+			result = result.lub(getValue(interprocedural, state, clazz, right, expressions));
+		}
+		return result;
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> getValue(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+		CFG cfg = getCFG();
+
 		Type fieldMetaType = JavaClassType.getFieldMetaType();
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
@@ -111,7 +132,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable clazzVar = new GlobalVariable(Untyped.INSTANCE, "clazz", location);
 
-		HeapDereference derefField = new HeapDereference(fieldMetaType, left, location);
+		SymbolicExpression derefField = left;
 		AccessChild accessName = new AccessChild(refStringType, derefField, nameVar, location);
 
 		// access field name

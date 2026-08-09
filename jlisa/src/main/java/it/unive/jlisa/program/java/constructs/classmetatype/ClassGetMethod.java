@@ -87,36 +87,43 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
-		AnalysisState<A> result = state;
+		AnalysisState<A> result = state.bottomExecution();
 
-		for (Type t : clazzTypes) {
-			if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-				result = throwNullPointerException(interprocedural, result, expressions);
-			}
-			// search for the method
-			else {
-				AnalysisState<
-						A> methodSearched = searchMethod(interprocedural, result, left, middle, right, expressions);
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+		for (SymbolicExpression clazz : classes) {
 
-				if (methodSearched.isTop() || methodSearched.isBottom()) {
-					return methodSearched;
+			AnalysisState<A> searchResult = state;
+			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
+
+			for (Type t : clazzTypes) {
+				if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
+					searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
 				}
-
-				// didn't find any matching method
-				if (methodSearched.getExecutionExpressions().isEmpty()) {
-					result = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
-				}
+				// search for the method
 				else {
-					// found at least one method, copy them
-					AnalysisState<A> tmp = state.bottomExecution();
-					for (SymbolicExpression expr: methodSearched.getExecutionExpressions()) {
-						ClassCopyMethod copyMethod = new ClassCopyMethod(getCFG(), getLocation(), getMiddle());
-						tmp = tmp.lub(copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
+					AnalysisState<
+							A> methodSearched = searchMethod(interprocedural, searchResult, clazz, middle, right, expressions);
+
+					if (methodSearched.isTop() || methodSearched.isBottom()) {
+						return methodSearched;
 					}
-					result = tmp;
+
+					// didn't find any matching method
+					if (methodSearched.getExecutionExpressions().isEmpty()) {
+						searchResult = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
+					}
+					else {
+						// found at least one method, copy them
+						AnalysisState<A> tmp = state.bottomExecution();
+						for (SymbolicExpression expr: methodSearched.getExecutionExpressions()) {
+							ClassCopyMethod copyMethod = new ClassCopyMethod(getCFG(), getLocation(), getMiddle());
+							tmp = tmp.lub(copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
+						}
+						searchResult = tmp;
+					}
 				}
 			}
+			result = result.lub(searchResult);
 		}
 
 		return result;
@@ -140,19 +147,6 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-		// get the type of the left expression
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
-
-		// NOTE: this is always either Class or null (in case we reached the top
-		// of the class hierarchy)
-		assert (clazzTypes.size() <= 2);
-
-		// we only have the null type. Stop the search
-		if (clazzTypes.removeIf((
-				t) -> ((JavaReferenceType) t).getInnerType().isNullType()) && clazzTypes.isEmpty()) {
-			return state.withExecutionExpressions(new ExpressionSet());
-		}
-
 		Type stringType = getProgram().getTypes().getStringType();
 		Type refStringType = new JavaReferenceType(stringType);
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -162,13 +156,31 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		JavaArrayType methodArrType = JavaArrayType.lookup(refMethodType, 1);
 		JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
 
+		SymbolicExpression derefClazz = left;
+
+		// get the type of the left expression
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+
+		// NOTE: this is always either Class or null (in case we reached the top
+		// of the class hierarchy)
+		assert (clazzTypes.size() == 1);
+		Type clazzType = clazzTypes.iterator().next();
+
+		if (clazzType instanceof JavaReferenceType) {
+			derefClazz = new HeapDereference(classMetaType, left, location);
+		}
+
+		// we only have the null type. Stop the search
+		if ((clazzType instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType())
+				|| clazzType.isNullType()) {
+			return state.withExecutionExpressions(new ExpressionSet());
+		}
+
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
 		GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
-
-		HeapDereference derefClazz = new HeapDereference(classMetaType, left, location);
 
 		AccessChild accessClazzName = new AccessChild(refStringType, derefClazz, nameVar, location);
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessClazzName, location);
@@ -215,6 +227,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		boolean outOfBoundsMethodArr = false;
 		int i = 0;
 
+		ExpressionSet unknownMethods = new ExpressionSet();
+
 		// stop when we are out of bounds
 		while (outOfBoundsMethodArr == false) {
 
@@ -235,19 +249,31 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			// TODO: this should be a satisfiability value. If unknown, keep
 			// searching
-			boolean methodFound = matchesTarget(interprocedural, state, accessMethod, middle, right);
+			Satisfiability methodFound = matchesTarget(interprocedural, state, accessMethod, middle, right);
 
-			if (methodFound) {
+			if (methodFound == Satisfiability.SATISFIED) {
 				HeapReference refMethod = new HeapReference(refMethodType, accessMethod, location);
 				return analysis.smallStepSemantics(state, refMethod, this);
 			}
+			else if (methodFound == Satisfiability.UNKNOWN) {
+				HeapReference refMethod = new HeapReference(refMethodType, accessMethod, location);
+				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refMethod, this);
+				unknownMethods = unknownMethods.lub(noExceptionState.getExecutionExpressions());
+
+				AnalysisState<A> exceptionState = throwNoSuchMethodException(interprocedural, state, expressions);
+
+				state = noExceptionState.lub(exceptionState);
+			}
+
 			++i;
 		}
 
-		// haven't found the method. Look in the superclasses
+		// haven't found the method. Look in the superclass
 
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
 		state = searchMethod(interprocedural, state, superClass, middle, right, expressions);
+
+		state = state.withExecutionExpressions(state.getExecutionExpressions().lub(unknownMethods));
 
 		// we didn't find anything in the superclasses.
 		if (state.getExecutionExpressions().isEmpty()) {
@@ -319,7 +345,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 	}
 
 	// check whether a target method matches the signature of the candidate one
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean matchesTarget(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Satisfiability matchesTarget(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression candidateMethod,
@@ -345,6 +371,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 		// candidateMethod is of type Method*
 
+		Satisfiability res = Satisfiability.NOT_SATISFIED;
+
 		// stringequals on the names
 		HeapDereference derefMethod = new HeapDereference(methodMetaType, candidateMethod, location);
 		AccessChild accessMethodName = new AccessChild(refStringType, derefMethod, nameVar, location);
@@ -366,11 +394,12 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Satisfiability nameMatches = analysis.satisfies(state, equalsExpr, this);
 
 		if (nameMatches == Satisfiability.NOT_SATISFIED) {
-			return false;
+			return nameMatches;
 		}
+		res = res.lub(nameMatches);
 
 		// strequals on the name of every Class object
-		// NOTE AP: ideally I think one would do just `==` on the Class objects
+		// NOTE: ideally I think one would do just `==` on the Class objects
 
 		AccessChild accessCandidateParameterTypes = new AccessChild(refClassArrType, derefMethod, parameterTypesVar,
 				location);
@@ -387,8 +416,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		Satisfiability sameLen = analysis.satisfies(state, eq, this);
 
 		if (sameLen == Satisfiability.NOT_SATISFIED) {
-			return false;
+			return sameLen;
 		}
+		res = res.lub(sameLen);
 
 		boolean outOfBoundsParamsArr = false;
 		boolean allParametersMatch = true;
@@ -433,12 +463,13 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			nameMatches = analysis.satisfies(state, equalsExpr, this);
 
 			if (nameMatches == Satisfiability.NOT_SATISFIED) {
-				allParametersMatch = false;
-				break;
+				return nameMatches;
 			}
+
+			res = res.lub(nameMatches);
 		}
 
-		return allParametersMatch;
+		return res;
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
