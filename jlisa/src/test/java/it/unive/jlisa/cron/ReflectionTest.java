@@ -186,6 +186,14 @@ public class ReflectionTest extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void testMethodInvoke4() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection", "method-invoke-4",
+				"Main.java");
+		conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
 	public void testClassForNameInterface() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("reflection",
 				"class-for-name-interface", "Main.java");

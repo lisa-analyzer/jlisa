@@ -247,7 +247,6 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			// check if the two methods' signatures are the same
 			AccessChild accessMethod = new AccessChild(refMethodType, derefArr, idx, location);
 
-			// TODO: this should be a satisfiability value. If unknown, keep
 			// searching
 			Satisfiability methodFound = matchesTarget(interprocedural, state, accessMethod, middle, right);
 
@@ -269,7 +268,6 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		}
 
 		// haven't found the method. Look in the superclass
-
 		AccessChild superClass = new AccessChild(refClassMetaType, derefClazz, superClassVar, location);
 		state = searchMethod(interprocedural, state, superClass, middle, right, expressions);
 
