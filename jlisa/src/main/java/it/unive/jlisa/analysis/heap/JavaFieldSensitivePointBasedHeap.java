@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
+import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
 import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
@@ -126,7 +127,14 @@ public class JavaFieldSensitivePointBasedHeap
 				return shallowCopy(sss, id, (StackAllocationSite) rhs_ref, replacements);
 			else {
 				// aliasing: id and star_y points to the same object
-				return store(sss, id, rhs_ref);
+				if (!sss.knowsIdentifier(rhs_ref))
+					return store(sss, id, rhs_ref);
+				// if rhs_ref is a pointer, we dereference it so that id points to the same destination
+				AllocationSites state = sss.getState(rhs_ref);
+				HeapEnvWithFields result = sss.bottom();
+				for (AllocationSite site : state)
+					result = result.lub(store(sss, id, site));
+				return result;
 			}
 		} else
 			return super.process(sss, id, rhs, pp, oracle, replacements, rhsIsReceiver);
