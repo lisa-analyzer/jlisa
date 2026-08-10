@@ -1,4 +1,4 @@
-class java.util.List extends java.lang.Object:
+class java.util.List extends java.util.Collection:
     instance method toArray: it.unive.jlisa.program.java.constructs.lists.ListToArray
         type it.unive.jlisa.program.type.JavaArrayType::OBJECT_ARRAY
         param this libtype java.util.List*

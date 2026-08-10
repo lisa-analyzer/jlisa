@@ -67,6 +67,8 @@ public class CSVExceptionWriter {
 
 	protected static String clean(
 			String message) {
+		if (message == null)
+			return "";
 		if (message.indexOf(", location:") != -1)
 			return message.substring(0, message.indexOf(", location:"));
 		else
