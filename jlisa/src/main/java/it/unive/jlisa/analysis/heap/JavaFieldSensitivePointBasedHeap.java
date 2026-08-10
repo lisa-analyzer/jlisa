@@ -195,40 +195,16 @@ public class JavaFieldSensitivePointBasedHeap
 				ExpressionSet lhsExps;
 				if (leftExpr instanceof Identifier)
 					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr, pp));
-				else if (expression.mightNeedRewriting()) {
-					ExpressionSet tmp = rewrite(state, leftExpr, pp, oracle);
-					Set<SymbolicExpression> rew = new HashSet<>();
-					for (SymbolicExpression l : tmp) {
-						if (l instanceof MemoryPointer)
-							rew.add(((MemoryPointer) l).getReferencedLocation());
-						else if (l instanceof HeapLocation && state.knowsIdentifier((HeapLocation) l))
-							// indirection without an explicit dereference
-							// following the new semantics
-							rew.addAll(state.getState((HeapLocation) l).elements());
-						else
-							continue;
-					}
-					lhsExps = new ExpressionSet(rew);
-				} else
+				else if (expression.mightNeedRewriting())
+					lhsExps = rewrite(state, leftExpr, pp, oracle);
+				else
 					lhsExps = new ExpressionSet(leftExpr);
 
 				if (rightExpr instanceof Identifier)
 					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr, pp));
-				else if (expression.mightNeedRewriting()) {
-					ExpressionSet tmp = rewrite(state, rightExpr, pp, oracle);
-					Set<SymbolicExpression> rew = new HashSet<>();
-					for (SymbolicExpression r : tmp) {
-						if (r instanceof MemoryPointer)
-							rew.add(((MemoryPointer) r).getReferencedLocation());
-						else if (r instanceof HeapLocation && state.knowsIdentifier((HeapLocation) r))
-							// indirection without an explicit dereference
-							// following the new semantics
-							rew.addAll(state.getState((HeapLocation) r).elements());
-						else
-							continue;
-					}
-					rhsExps = new ExpressionSet(rew);
-				} else
+				else if (expression.mightNeedRewriting())
+					rhsExps = rewrite(state, rightExpr, pp, oracle);
+				else
 					rhsExps = new ExpressionSet(rightExpr);
 
 				Set<HeapLocation> lhsFiltered = new HashSet<>(), rhsFiltered = new HashSet<>();
@@ -239,6 +215,8 @@ public class JavaFieldSensitivePointBasedHeap
 						// indirection without an explicit dereference
 						// following the new semantics
 						lhsFiltered.addAll(state.getState((HeapLocation) l).elements());
+					else if (l instanceof NullAllocationSite)
+						lhsFiltered.add((NullAllocationSite) l);
 					else
 						continue;
 				}
@@ -249,6 +227,8 @@ public class JavaFieldSensitivePointBasedHeap
 						// indirection without an explicit dereference
 						// following the new semantics
 						rhsFiltered.addAll(state.getState((HeapLocation) r).elements());
+					else if (r instanceof NullAllocationSite)
+						rhsFiltered.add((NullAllocationSite) r);
 					else
 						continue;
 				}
