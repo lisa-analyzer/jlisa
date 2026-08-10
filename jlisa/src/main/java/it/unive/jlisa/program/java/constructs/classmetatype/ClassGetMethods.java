@@ -54,20 +54,22 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		CodeLocation location = getLocation();
+		return state;
 
-		Type classMetaType = JavaClassType.getClassMetaType();
+		// Analysis<A, D> analysis = interprocedural.getAnalysis();
+		// CodeLocation location = getLocation();
+		//
+		// Type classMetaType = JavaClassType.getClassMetaType();
+		//
+		// JavaReferenceType refMethodArrType = JavaArrayType.METHOD_ARRAY;
+		//
+		// GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
+		// HeapDereference derefExpr = new HeapDereference(classMetaType, expr, location);
+		// AccessChild accessExpr = new AccessChild(refMethodArrType, derefExpr, var, location);
+		//
+		// HeapReference ref = new HeapReference(refMethodArrType, accessExpr, location);
 
-		JavaReferenceType refMethodArrType = JavaArrayType.METHOD_ARRAY;
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", location);
-		HeapDereference derefExpr = new HeapDereference(classMetaType, expr, location);
-		AccessChild accessExpr = new AccessChild(refMethodArrType, derefExpr, var, location);
-
-		HeapReference ref = new HeapReference(refMethodArrType, accessExpr, location);
-
-		return analysis.smallStepSemantics(state, ref, this);
+		// return analysis.smallStepSemantics(state, ref, this);
 	}
 
 	@Override

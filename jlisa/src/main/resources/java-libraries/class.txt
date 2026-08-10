@@ -27,10 +27,6 @@ class java.lang.Class extends java.lang.Object:
 		param name libtype java.lang.String*
 		param parameterTypes type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
 
-	instance method getMethods: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetMethods
-		type it.unive.jlisa.program.type.JavaArrayType::METHOD_ARRAY
-		param this libtype java.lang.Class*
-
 	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetName
 		libtype java.lang.String*
 		param this libtype java.lang.Class*
