@@ -11,18 +11,28 @@ import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.heap.allocations.AllocationSite;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.heap.allocations.HeapAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.HeapEnvWithFields;
+import it.unive.lisa.lattices.heap.allocations.NullAllocationSite;
 import it.unive.lisa.lattices.heap.allocations.StackAllocationSite;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.HeapLocation;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.MemoryPointer;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 
 /**
@@ -129,7 +139,8 @@ public class JavaFieldSensitivePointBasedHeap
 				// aliasing: id and star_y points to the same object
 				if (!sss.knowsIdentifier(rhs_ref))
 					return store(sss, id, rhs_ref);
-				// if rhs_ref is a pointer, we dereference it so that id points to the same destination
+				// if rhs_ref is a pointer, we dereference it so that id points
+				// to the same destination
 				AllocationSites state = sss.getState(rhs_ref);
 				HeapEnvWithFields result = sss.bottom();
 				for (AllocationSite site : state)
@@ -138,5 +149,115 @@ public class JavaFieldSensitivePointBasedHeap
 			}
 		} else
 			return super.process(sss, id, rhs, pp, oracle, replacements, rhsIsReceiver);
+	}
+
+	@Override
+	public Satisfiability satisfies(
+			HeapEnvWithFields state,
+			SymbolicExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (state.isTop())
+			return Satisfiability.UNKNOWN;
+
+		if (expression instanceof BinaryExpression) {
+			BinaryExpression bin = (BinaryExpression) expression;
+			if (bin.getOperator() == ComparisonEq.INSTANCE) {
+				SymbolicExpression leftExpr = bin.getLeft();
+				SymbolicExpression rightExpr = bin.getRight();
+
+				ExpressionSet rhsExps;
+				ExpressionSet lhsExps;
+				if (leftExpr instanceof Identifier)
+					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr, pp));
+				else if (expression.mightNeedRewriting())
+					lhsExps = rewrite(state, leftExpr, pp, oracle);
+				else
+					lhsExps = new ExpressionSet(leftExpr);
+
+				if (rightExpr instanceof Identifier)
+					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr, pp));
+				else if (expression.mightNeedRewriting())
+					rhsExps = rewrite(state, rightExpr, pp, oracle);
+				else
+					rhsExps = new ExpressionSet(rightExpr);
+
+				Satisfiability sat = Satisfiability.BOTTOM;
+				for (SymbolicExpression l : lhsExps) {
+					HeapLocation lp = null;
+					if (l instanceof MemoryPointer)
+						lp = ((MemoryPointer) l).getReferencedLocation();
+					else if (l instanceof HeapLocation)
+						lp = (HeapLocation) l;
+					else
+						continue;
+
+					for (SymbolicExpression r : rhsExps) {
+						HeapLocation rp = null;
+						if (r instanceof MemoryPointer)
+							rp = ((MemoryPointer) r).getReferencedLocation();
+						else if (r instanceof HeapLocation)
+							rp = (HeapLocation) r;
+						else
+							continue;
+
+						sat = sat.lub(equality(state, lp, rp));
+					}
+				}
+
+				return sat != Satisfiability.BOTTOM ? sat : Satisfiability.UNKNOWN;
+			}
+		}
+
+		return super.satisfies(state, expression, pp, oracle);
+	}
+
+	private Satisfiability equality(
+			HeapEnvWithFields state,
+			HeapLocation lp,
+			HeapLocation rp)
+			throws SemanticException {
+		// left is null
+		if (lp.equals(NullAllocationSite.INSTANCE))
+			if (rp.equals(NullAllocationSite.INSTANCE))
+				return Satisfiability.SATISFIED;
+			else if (state.knowsIdentifier(rp)) {
+				AllocationSites as = state.getState(rp);
+				if (as.contains(NullAllocationSite.INSTANCE))
+					return as.size() == 1 ? Satisfiability.SATISFIED : Satisfiability.UNKNOWN;
+				else
+					return Satisfiability.NOT_SATISFIED;
+			} else
+				return Satisfiability.NOT_SATISFIED;
+		// right is null
+		else if (rp.equals(NullAllocationSite.INSTANCE))
+			if (state.knowsIdentifier(lp)) {
+				AllocationSites as = state.getState(lp);
+				if (as.contains(NullAllocationSite.INSTANCE))
+					return as.size() == 1 ? Satisfiability.SATISFIED : Satisfiability.UNKNOWN;
+				else
+					return Satisfiability.NOT_SATISFIED;
+			} else
+				return Satisfiability.NOT_SATISFIED;
+
+		// right is strong
+		else if (!rp.isWeak())
+			if (rp.equals(lp))
+				return Satisfiability.SATISFIED;
+			else if (!lp.isWeak())
+				return Satisfiability.NOT_SATISFIED;
+			else
+				return Satisfiability.UNKNOWN;
+		// left is strong
+		else if (!lp.isWeak())
+			if (rp.equals(lp))
+				return Satisfiability.SATISFIED;
+			else if (!rp.isWeak())
+				return Satisfiability.NOT_SATISFIED;
+			else
+				return Satisfiability.UNKNOWN;
+
+		return Satisfiability.BOTTOM;
 	}
 }
