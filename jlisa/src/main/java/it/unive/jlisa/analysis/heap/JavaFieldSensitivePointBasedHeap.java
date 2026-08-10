@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
@@ -151,6 +152,10 @@ public class JavaFieldSensitivePointBasedHeap
 			return super.process(sss, id, rhs, pp, oracle, replacements, rhsIsReceiver);
 	}
 
+	/*
+	 * FIXME: this is cloned from AllocationSiteBasedAnalysis to add indirection
+	 * on equality checks.
+	 */
 	@Override
 	public Satisfiability satisfies(
 			HeapEnvWithFields state,
@@ -161,9 +166,28 @@ public class JavaFieldSensitivePointBasedHeap
 		if (state.isTop())
 			return Satisfiability.UNKNOWN;
 
+		// negation
+		if (expression instanceof UnaryExpression) {
+			UnaryExpression un = (UnaryExpression) expression;
+			if (un.getOperator() == LogicalNegation.INSTANCE)
+				return satisfies(state, un.getExpression(), pp, oracle).negate();
+		}
+
 		if (expression instanceof BinaryExpression) {
 			BinaryExpression bin = (BinaryExpression) expression;
-			if (bin.getOperator() == ComparisonEq.INSTANCE) {
+			if (bin.getOperator() == LogicalAnd.INSTANCE)
+				return satisfies(state, bin.getLeft(), pp, oracle).and(satisfies(state, bin.getRight(), pp, oracle));
+			else if (bin.getOperator() == LogicalOr.INSTANCE)
+				return satisfies(state, bin.getLeft(), pp, oracle).or(satisfies(state, bin.getRight(), pp, oracle));
+			else if (bin.getOperator() == ComparisonNe.INSTANCE) {
+				BinaryExpression negatedBin = new BinaryExpression(
+						bin.getStaticType(),
+						bin.getLeft(),
+						bin.getRight(),
+						ComparisonEq.INSTANCE,
+						expression.getCodeLocation());
+				return satisfies(state, negatedBin, pp, oracle).negate();
+			} else if (bin.getOperator() == ComparisonEq.INSTANCE) {
 				SymbolicExpression leftExpr = bin.getLeft();
 				SymbolicExpression rightExpr = bin.getRight();
 
@@ -171,93 +195,100 @@ public class JavaFieldSensitivePointBasedHeap
 				ExpressionSet lhsExps;
 				if (leftExpr instanceof Identifier)
 					lhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) leftExpr, pp));
-				else if (expression.mightNeedRewriting())
-					lhsExps = rewrite(state, leftExpr, pp, oracle);
-				else
+				else if (expression.mightNeedRewriting()) {
+					ExpressionSet tmp = rewrite(state, leftExpr, pp, oracle);
+					Set<SymbolicExpression> rew = new HashSet<>();
+					for (SymbolicExpression l : tmp) {
+						if (l instanceof MemoryPointer)
+							rew.add(((MemoryPointer) l).getReferencedLocation());
+						else if (l instanceof HeapLocation && state.knowsIdentifier((HeapLocation) l))
+							// indirection without an explicit dereference
+							// following the new semantics
+							rew.addAll(state.getState((HeapLocation) l).elements());
+						else
+							continue;
+					}
+					lhsExps = new ExpressionSet(rew);
+				} else
 					lhsExps = new ExpressionSet(leftExpr);
 
 				if (rightExpr instanceof Identifier)
 					rhsExps = new ExpressionSet(resolveIdentifier(state, (Identifier) rightExpr, pp));
-				else if (expression.mightNeedRewriting())
-					rhsExps = rewrite(state, rightExpr, pp, oracle);
-				else
-					rhsExps = new ExpressionSet(rightExpr);
-
-				Satisfiability sat = Satisfiability.BOTTOM;
-				for (SymbolicExpression l : lhsExps) {
-					HeapLocation lp = null;
-					if (l instanceof MemoryPointer)
-						lp = ((MemoryPointer) l).getReferencedLocation();
-					else if (l instanceof HeapLocation)
-						lp = (HeapLocation) l;
-					else
-						continue;
-
-					for (SymbolicExpression r : rhsExps) {
-						HeapLocation rp = null;
+				else if (expression.mightNeedRewriting()) {
+					ExpressionSet tmp = rewrite(state, rightExpr, pp, oracle);
+					Set<SymbolicExpression> rew = new HashSet<>();
+					for (SymbolicExpression r : tmp) {
 						if (r instanceof MemoryPointer)
-							rp = ((MemoryPointer) r).getReferencedLocation();
-						else if (r instanceof HeapLocation)
-							rp = (HeapLocation) r;
+							rew.add(((MemoryPointer) r).getReferencedLocation());
+						else if (r instanceof HeapLocation && state.knowsIdentifier((HeapLocation) r))
+							// indirection without an explicit dereference
+							// following the new semantics
+							rew.addAll(state.getState((HeapLocation) r).elements());
 						else
 							continue;
-
-						sat = sat.lub(equality(state, lp, rp));
 					}
+					rhsExps = new ExpressionSet(rew);
+				} else
+					rhsExps = new ExpressionSet(rightExpr);
+
+				Set<HeapLocation> lhsFiltered = new HashSet<>(), rhsFiltered = new HashSet<>();
+				for (SymbolicExpression l : lhsExps) {
+					if (l instanceof MemoryPointer)
+						lhsFiltered.add(((MemoryPointer) l).getReferencedLocation());
+					else if (l instanceof HeapLocation && state.knowsIdentifier((HeapLocation) l))
+						// indirection without an explicit dereference
+						// following the new semantics
+						lhsFiltered.addAll(state.getState((HeapLocation) l).elements());
+					else
+						continue;
+				}
+				for (SymbolicExpression r : rhsExps) {
+					if (r instanceof MemoryPointer)
+						rhsFiltered.add(((MemoryPointer) r).getReferencedLocation());
+					else if (r instanceof HeapLocation && state.knowsIdentifier((HeapLocation) r))
+						// indirection without an explicit dereference
+						// following the new semantics
+						rhsFiltered.addAll(state.getState((HeapLocation) r).elements());
+					else
+						continue;
 				}
 
+				Satisfiability sat = Satisfiability.BOTTOM;
+				for (HeapLocation lp : lhsFiltered)
+					for (HeapLocation rp : rhsFiltered) {
+						// left is null
+						if (lp.equals(NullAllocationSite.INSTANCE))
+							if (rp.equals(NullAllocationSite.INSTANCE))
+								sat = sat.lub(Satisfiability.SATISFIED);
+							else
+								sat = sat.lub(Satisfiability.NOT_SATISFIED);
+						// right is null
+						else if (rp.equals(NullAllocationSite.INSTANCE))
+							sat = sat.lub(Satisfiability.NOT_SATISFIED);
+
+						// right is strong
+						else if (!rp.isWeak())
+							if (rp.equals(lp))
+								sat = sat.lub(Satisfiability.SATISFIED);
+							else if (!lp.isWeak())
+								sat = sat.lub(Satisfiability.NOT_SATISFIED);
+							else
+								sat = sat.lub(Satisfiability.UNKNOWN);
+						// left is strong
+						else if (!lp.isWeak())
+							if (rp.equals(lp))
+								sat = sat.lub(Satisfiability.SATISFIED);
+							else if (!rp.isWeak())
+								sat = sat.lub(Satisfiability.NOT_SATISFIED);
+							else
+								sat = sat.lub(Satisfiability.UNKNOWN);
+					}
+
+				// FIXME: we may improve this check
 				return sat != Satisfiability.BOTTOM ? sat : Satisfiability.UNKNOWN;
 			}
 		}
 
-		return super.satisfies(state, expression, pp, oracle);
-	}
-
-	private Satisfiability equality(
-			HeapEnvWithFields state,
-			HeapLocation lp,
-			HeapLocation rp)
-			throws SemanticException {
-		// left is null
-		if (lp.equals(NullAllocationSite.INSTANCE))
-			if (rp.equals(NullAllocationSite.INSTANCE))
-				return Satisfiability.SATISFIED;
-			else if (state.knowsIdentifier(rp)) {
-				AllocationSites as = state.getState(rp);
-				if (as.contains(NullAllocationSite.INSTANCE))
-					return as.size() == 1 ? Satisfiability.SATISFIED : Satisfiability.UNKNOWN;
-				else
-					return Satisfiability.NOT_SATISFIED;
-			} else
-				return Satisfiability.NOT_SATISFIED;
-		// right is null
-		else if (rp.equals(NullAllocationSite.INSTANCE))
-			if (state.knowsIdentifier(lp)) {
-				AllocationSites as = state.getState(lp);
-				if (as.contains(NullAllocationSite.INSTANCE))
-					return as.size() == 1 ? Satisfiability.SATISFIED : Satisfiability.UNKNOWN;
-				else
-					return Satisfiability.NOT_SATISFIED;
-			} else
-				return Satisfiability.NOT_SATISFIED;
-
-		// right is strong
-		else if (!rp.isWeak())
-			if (rp.equals(lp))
-				return Satisfiability.SATISFIED;
-			else if (!lp.isWeak())
-				return Satisfiability.NOT_SATISFIED;
-			else
-				return Satisfiability.UNKNOWN;
-		// left is strong
-		else if (!lp.isWeak())
-			if (rp.equals(lp))
-				return Satisfiability.SATISFIED;
-			else if (!rp.isWeak())
-				return Satisfiability.NOT_SATISFIED;
-			else
-				return Satisfiability.UNKNOWN;
-
-		return Satisfiability.BOTTOM;
+		return Satisfiability.UNKNOWN;
 	}
 }
