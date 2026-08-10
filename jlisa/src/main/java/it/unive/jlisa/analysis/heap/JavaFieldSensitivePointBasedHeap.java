@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.lisa.analysis.SemanticException;
