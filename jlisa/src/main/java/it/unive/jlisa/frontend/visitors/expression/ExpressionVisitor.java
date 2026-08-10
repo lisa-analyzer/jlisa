@@ -1,5 +1,52 @@
 package it.unive.jlisa.frontend.visitors.expression;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.function.TriFunction;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CaseDefaultExpression;
+import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.CreationReference;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodReference;
+import org.eclipse.jdt.core.dom.SwitchExpression;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.TypeLiteral;
+import org.eclipse.jdt.core.dom.TypeMethodReference;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -8,13 +55,12 @@ import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
-import it.unive.jlisa.frontend.visitors.structure.*;
 import it.unive.jlisa.frontend.visitors.pipeline.InitCodeMembersASTVisitor;
-import it.unive.jlisa.frontend.visitors.pipeline.PopulateUnitsASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.frontend.visitors.structure.ClassASTVisitor;
 import it.unive.jlisa.frontend.visitors.structure.FieldDeclarationVisitor;
+import it.unive.jlisa.frontend.visitors.structure.MethodASTVisitor;
 import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
@@ -55,8 +101,9 @@ import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.lisa.program.*;
-import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.Global;
+import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
@@ -75,18 +122,12 @@ import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.lang3.function.TriFunction;
-import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-
-public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<Expression> {
+public class ExpressionVisitor
+		extends
+		ScopedVisitor<MethodScope>
+		implements
+		ResultHolder<Expression> {
 	@FunctionalInterface
 	private interface BinaryFactory {
 		Expression build(
@@ -129,10 +170,15 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			ArrayAccess node) {
 		Expression left = getParserContext().evaluate(node.getArray(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Expression right = getParserContext().evaluate(node.getIndex(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
+		Type staticType = left.getStaticType().isReferenceType()
+				&& left.getStaticType().asReferenceType().getInnerType().isArrayType()
+						? left.getStaticType().asReferenceType().getInnerType().asArrayType().getInnerType()
+						: Untyped.INSTANCE;
 		expression = new JavaArrayAccess(getScope().getCFG(),
+				staticType,
 				getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(),
 				left, right);
 		return false;
@@ -147,7 +193,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		for (Object args : node.expressions()) {
 			ASTNode e = (ASTNode) args;
 			Expression expr = getParserContext().evaluate(e,
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			parameters.add(expr);
 			contentType = getArrayInitializerType(node);
 			if (contentType == null) {
@@ -169,7 +215,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			ArrayCreation node) {
 		Type type = getParserContext().evaluate(node.getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
 		// currently we handle just single-dim and bi-dim arrays
 		if (node.dimensions().size() > 2)
@@ -180,7 +226,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		// single-dimension arrays
 		if (node.dimensions().size() == 1) {
 			Expression length = getParserContext().evaluate((ASTNode) node.dimensions().get(0),
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			expression = new JavaNewArray(getScope().getCFG(), getSourceCodeLocation(node), length,
 					new JavaReferenceType(type));
 		}
@@ -192,7 +238,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 						getSourceCodeLocation(node));
 			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
 			Expression sndDimExpr = getParserContext().evaluate((ASTNode) node.dimensions().get(1),
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			List<Expression> parameters = new ArrayList<>();
 			for (int i = 0; i < fstDim; i++) {
 				Expression expr = new JavaNewArray(getScope().getCFG(),
@@ -211,7 +257,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			for (Object args : initializer.expressions()) {
 				ASTNode e = (ASTNode) args;
 				parameters.add(getParserContext().evaluate(e,
-						() -> new ExpressionVisitor(getEnvironment(), getScope())));
+						new ExpressionVisitor(getEnvironment(), getScope())));
 			}
 
 			expression = new JavaNewArrayWithInitializer(getScope().getCFG(), getSourceCodeLocation(node),
@@ -231,7 +277,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			return null;
 		}
 		return getParserContext().evaluate(((FieldDeclaration) decl.getParent()).getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 	}
 
 	@Override
@@ -239,9 +285,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			Assignment node) {
 		Assignment.Operator operator = node.getOperator();
 		Expression left = getParserContext().evaluate(node.getLeftHandSide(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Expression right = getParserContext().evaluate(node.getRightHandSide(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
 
 		switch (operator.toString()) {
@@ -322,9 +368,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			CastExpression node) {
 		Type right = getParserContext().evaluate(node.getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 		Expression left = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		expression = new JavaCastExpression(getScope().getCFG(), getSourceCodeLocation(node), left, right);
 		return false;
 	}
@@ -341,7 +387,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			ClassInstanceCreation node) {
 
 		Type type = getParserContext().evaluate(node.getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
 		if (!(type instanceof JavaClassType))
 			throw new ParsingException("arguments-constructor",
@@ -357,7 +403,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			String uniqueSimpleName = methodName + "$" + node.getStartPosition();
 
 			// register the class
-			String name = FQNUtils.buildFQN(getScope().getParentScope().getUnitScope().getPackage(), null, uniqueSimpleName);
+			String name = FQNUtils.buildFQN(getScope().getParentScope().getUnitScope().getPackage(), null,
+					uniqueSimpleName);
 
 			AnonymousClassDeclaration anonClassNode = node.getAnonymousClassDeclaration();
 			SyntheticCodeLocationManager synth = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
@@ -369,9 +416,11 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			JavaClassType newAnonymousType = JavaClassType.lookup(name);
 			getProgram().getTypes().registerType(newAnonymousType);
 
-			JavaClassType enclosing = JavaClassType.lookup(getScope().getParentScope().getLiSACompilationUnit().getName());
+			JavaClassType enclosing = JavaClassType
+					.lookup(getScope().getParentScope().getLiSACompilationUnit().getName());
 
-			ClassScope anonScope = new ClassScope(getScope().getParentScope().getUnitScope(), getScope().getParentScope(), enclosing, cUnit);
+			ClassScope anonScope = new ClassScope(getScope().getParentScope().getUnitScope(),
+					getScope().getParentScope(), enclosing, cUnit);
 
 			// add the enclosing class field
 			Global g = new Global(synth.nextLocation(), cUnit, "$enclosing", true, enclosing.getReference());
@@ -390,14 +439,16 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			}
 
 			// initialize the code member descriptors
-			InitCodeMembersASTVisitor initMethodsVisitor = new InitCodeMembersASTVisitor(getEnvironment(), anonScope.getUnitScope());
+			InitCodeMembersASTVisitor initMethodsVisitor = new InitCodeMembersASTVisitor(getEnvironment(),
+					anonScope.getUnitScope());
 
 			initMethodsVisitor.initCodeMembersInAnonymousClass(cUnit, anonClassNode, uniqueSimpleName, name, "");
 
 			// parse method bodies and fields
 			MethodASTVisitor methodVisitor = new MethodASTVisitor(getEnvironment(), anonScope);
-			Set<FieldDeclaration> fieldDeclarationSet = new HashSet<>();
-			FieldDeclarationVisitor fieldVisitor = new FieldDeclarationVisitor(getEnvironment(), anonScope, new HashSet<>());
+			List<FieldDeclaration> fieldDeclarations = new LinkedList<>();
+			FieldDeclarationVisitor fieldVisitor = new FieldDeclarationVisitor(getEnvironment(), anonScope,
+					new HashSet<>());
 
 			for (Object bodyDecl : anonClassNode.bodyDeclarations()) {
 				if (bodyDecl instanceof MethodDeclaration mdecl) {
@@ -405,26 +456,29 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 				}
 				if (bodyDecl instanceof FieldDeclaration fdecl) {
 					fdecl.accept(fieldVisitor);
-					fieldDeclarationSet.add(fdecl);
+					fieldDeclarations.add(fdecl);
 				}
 			}
 
-			FieldDeclaration[] fieldArr = fieldDeclarationSet.toArray(new FieldDeclaration[0]);
+			FieldDeclaration[] fieldArr = fieldDeclarations.toArray(new FieldDeclaration[0]);
 
-			// create the synthetic constructor. Anonymous classes can't have explicit ctors, hence we need to create one that is identical to the superclass one
+			// create the synthetic constructor. Anonymous classes can't have
+			// explicit ctors, hence we need to create one that is identical to
+			// the superclass one
 			ClassASTVisitor classVisitor = new ClassASTVisitor(getEnvironment(), anonScope);
 
 			List<Type> types = new ArrayList<Type>();
 
-			// get the types of the expressions passed to the anonymous class "ctor" call
+			// get the types of the expressions passed to the anonymous class
+			// "ctor" call
 			if (!node.arguments().isEmpty()) {
 				for (Object arg : node.arguments()) {
 
 					org.eclipse.jdt.core.dom.Expression argAST = (org.eclipse.jdt.core.dom.Expression) arg;
 
 					it.unive.lisa.program.cfg.statement.Expression lisaExpr = getParserContext().evaluate(
-						    argAST,
-						    () -> new ExpressionVisitor(getEnvironment(), getScope()));
+							argAST,
+							new ExpressionVisitor(getEnvironment(), getScope()));
 
 					it.unive.lisa.type.Type argType = lisaExpr.getStaticType();
 					types.add(argType);
@@ -433,12 +487,15 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 			classVisitor.createAnonymousConstructor(newAnonymousType, node, types, fieldArr);
 
-			// add the `$enclosing` argument to the ctor call. The `$enclosing` will be the current `this`.
+			// add the `$enclosing` argument to the ctor call. The `$enclosing`
+			// will be the current `this`.
 			// TODO: anonymous classes can have allocation qualifiers, like
 			// `a.new AnonClass(...) {}`.
-			// In that case the `$enclosing` shall be the one node.getExpression() one.
+			// In that case the `$enclosing` shall be the one
+			// node.getExpression() one.
 			// TODO: anonymous classes created inside a static methods.
-			Expression enclosingRef = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", enclosing.getReference());
+			Expression enclosingRef = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this",
+					enclosing.getReference());
 			parameters.add(enclosingRef);
 
 			// the anonymous type will be the type of the JavaNewObj call
@@ -448,14 +505,14 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		if (node.getExpression() != null) {
 			// nested class creation, just pass the expression as first param
 			parameters.add(getParserContext().evaluate(node.getExpression(),
-					() -> new ExpressionVisitor(getEnvironment(), getScope())));
+					new ExpressionVisitor(getEnvironment(), getScope())));
 		}
 
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				parameters.add(getParserContext().evaluate(e,
-						() -> new ExpressionVisitor(getEnvironment(), getScope())));
+						new ExpressionVisitor(getEnvironment(), getScope())));
 			}
 		}
 
@@ -473,7 +530,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			ConditionalExpression node) {
 
 		Expression conditionExpr = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		if (conditionExpr == null) {
 			throw new ParsingException("conditional-expression",
 					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
@@ -482,7 +539,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		}
 
 		Expression thenExpr = getParserContext().evaluate(node.getThenExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		if (thenExpr == null)
 			throw new ParsingException("conditional-expression",
 					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
@@ -490,7 +547,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 					getSourceCodeLocation(node));
 
 		Expression elseExpr = getParserContext().evaluate(node.getElseExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		if (elseExpr == null)
 			throw new ParsingException("conditional-expression",
 					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
@@ -527,7 +584,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			FieldAccess node) {
 
 		Expression expr = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		expression = new JavaAccessInstanceGlobal(getScope().getCFG(),
 				getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr,
 				node.getName().getIdentifier());
@@ -539,9 +596,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 			InfixExpression node) {
 		InfixExpression.Operator operator = node.getOperator();
 		Expression left = getParserContext().evaluate(node.getLeftOperand(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Expression right = getParserContext().evaluate(node.getRightOperand(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		List<Expression> operands = new ArrayList<>();
 		List<ASTNode> jdtOperands = new ArrayList<>();
@@ -551,7 +608,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		jdtOperands.add(node.getRightOperand());
 		for (Object n : node.extendedOperands()) {
 			Expression ext = getParserContext().evaluate((ASTNode) n,
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			if (ext != null) {
 				operands.add(ext);
 				jdtOperands.add((ASTNode) n);
@@ -589,9 +646,9 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			InstanceofExpression node) {
 		Expression left = getParserContext().evaluate(node.getLeftOperand(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Type right = getParserContext().evaluate(node.getRightOperand(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
 		expression = new InstanceOf(getScope().getCFG(), getSourceCodeLocationManager(node, true).nextColumn(), left,
 				right);
@@ -612,7 +669,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			MethodInvocation node) {
 		expression = getParserContext().evaluate(node,
-				() -> new MethodInvocationASTVisitor(getEnvironment(), getScope()));
+				new MethodInvocationASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -620,7 +677,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			QualifiedName node) {
 		expression = getParserContext().evaluate(node,
-				() -> new NameResolverASTVisitor(getEnvironment(), getScope()));
+				new NameResolverASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -628,7 +685,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			SimpleName node) {
 		expression = getParserContext().evaluate(node,
-				() -> new NameResolverASTVisitor(getEnvironment(), getScope()));
+				new NameResolverASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -686,7 +743,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			ParenthesizedExpression node) {
 		expression = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -694,7 +751,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			PostfixExpression node) {
 		Expression expr = getParserContext().evaluate(node.getOperand(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		if (expr == null) {
 			return false;
 		}
@@ -715,7 +772,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			PrefixExpression node) {
 		Expression expr = getParserContext().evaluate(node.getOperand(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		if (expr == null) {
 			return false;
 		}
@@ -763,7 +820,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			SuperMethodInvocation node) {
 		expression = getParserContext().evaluate(node,
-				() -> new MethodInvocationASTVisitor(getEnvironment(), getScope()));
+				new MethodInvocationASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -796,7 +853,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 						getSourceCodeLocation(node));
 
 			it.unive.lisa.type.Type enclosing = getParserContext().evaluate(node.getQualifier(),
-					() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().unitScope()));
+					new TypeASTVisitor(getEnvironment(), getScope().getParentScope().unitScope()));
 			getScope().getParentScope().getEnclosingClass();
 			ClassScope cursor = getScope().getParentScope();
 			SyntheticCodeLocationManager synth = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
@@ -831,9 +888,8 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	@Override
 	public boolean visit(
 			TypeLiteral node) {
-
 		it.unive.lisa.type.Type t = getParserContext().evaluate(node.getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
 		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), t);
 		return false;
@@ -852,7 +908,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 	public boolean visit(
 			SingleVariableDeclaration node) {
 		it.unive.lisa.type.Type varType = getParserContext().evaluate(node.getType(),
-				() -> new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 		varType = varType.isInMemoryType() ? new JavaReferenceType(varType) : varType;
 
 		String variableName = node.getName().getIdentifier();
@@ -907,7 +963,7 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			Expression initializer = getParserContext().evaluate(expr,
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			expression = new JavaAssignment(getScope().getCFG(),
 					getSourceCodeLocationManager(fragment.getName(), true).getCurrentLocation(), ref, initializer);
 		}
@@ -923,19 +979,20 @@ public class ExpressionVisitor extends ScopedVisitor<MethodScope> implements Res
 		return expression;
 	}
 
-	private String getEnclosingMethodName(ASTNode current) {
+	private String getEnclosingMethodName(
+			ASTNode current) {
 
 		MethodDeclaration enclosingMethod = null;
 
 		while (current != null) {
-		    if (enclosingMethod == null && current instanceof MethodDeclaration) {
-			enclosingMethod = (MethodDeclaration) current;
-			break;
-		    }
-		    current = current.getParent();
+			if (enclosingMethod == null && current instanceof MethodDeclaration) {
+				enclosingMethod = (MethodDeclaration) current;
+				break;
+			}
+			current = current.getParent();
 		}
 
-		assert(enclosingMethod != null);
+		assert (enclosingMethod != null);
 
 		String methodName = enclosingMethod.getName().getIdentifier();
 		return methodName;

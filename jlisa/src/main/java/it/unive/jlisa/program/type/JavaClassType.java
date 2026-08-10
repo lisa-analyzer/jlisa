@@ -228,6 +228,10 @@ public class JavaClassType
 		return new JavaNullLiteral(cfg, location);
 	}
 
+    public static JavaClassType getExceptionType() {
+		return lookup("java.lang.Exception");
+    }
+
 	public static JavaClassType getClassCastExceptionType() {
 		return lookup("java.lang.ClassCastException");
 	}

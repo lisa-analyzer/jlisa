@@ -1,5 +1,20 @@
 package it.unive.jlisa.frontend.visitors.structure;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.Initializer;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParsingEnvironment;
@@ -11,6 +26,7 @@ import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
+import it.unive.jlisa.frontend.visitors.statement.BlockStatementASTVisitor;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
@@ -39,18 +55,7 @@ import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import it.unive.lisa.util.frontend.ParsedBlock;
 
 public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
@@ -95,7 +100,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		for (MethodDeclaration md : node.getMethods()) {
 			CFG cfg = getParserContext().evaluate(
 					md,
-					() -> new MethodASTVisitor(getEnvironment(), getScope()));
+					new MethodASTVisitor(getEnvironment(), getScope()));
 
 			if (md.isConstructor()) {
 				createDefaultConstructor = false;
@@ -200,13 +205,21 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		// we add a class initializer only if the unit has static fields
 		// (all fields of an interface are implicitly static)
 		boolean isInterface = unit instanceof InterfaceUnit;
-		Set<FieldDeclaration> staticFields = new LinkedHashSet<FieldDeclaration>();
-		for (FieldDeclaration fd : node.getFields()) {
-			if (isInterface || Modifier.isStatic(fd.getModifiers()))
-				staticFields.add(fd);
+
+		boolean shouldCreateClinit = false;
+		for (Object decl : node.bodyDeclarations()) {
+
+			boolean staticField = (decl instanceof FieldDeclaration fd && (isInterface || Modifier.isStatic(fd.getModifiers())));
+
+			boolean staticBlock = (decl instanceof Initializer);
+
+			if (staticField || staticBlock) {
+				shouldCreateClinit = true;
+				break;
+			}
 		}
 
-		if (staticFields.isEmpty())
+		if (!shouldCreateClinit)
 			return;
 
 		// create the CFG corresponding to the class initializer
@@ -224,6 +237,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				new Annotations(),
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
+
+		MethodScope clinitScope = new MethodScope(getScope(), cfg, new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
 
 		// first, we add the clinit call to the ancestor of the same kind
 		// (superclass for a ClassUnit, superinterface for an InterfaceUnit),
@@ -253,54 +268,82 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 			last = ancestorInit;
 		}
 
-		// just static fields are considered to build the class initializer
-		for (FieldDeclaration fd : staticFields) {
-			TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
-			fd.getType().accept(typeVisitor);
-			Type type = typeVisitor.getType();
-			if (type.isInMemoryType())
-				type = new JavaReferenceType(type);
+		for (Object decl : node.bodyDeclarations()) {
 
-			for (Object f : fd.fragments()) {
-				VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
-				type = typeVisitor.liftToArray(type, fragment);
+			if (decl instanceof FieldDeclaration fd && (isInterface || Modifier.isStatic(fd.getModifiers()))) {
 
-				it.unive.lisa.program.cfg.statement.Expression init;
-				if (fragment.getInitializer() != null) {
-					MethodScope scope = new MethodScope(getScope(), cfg,
-							new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
-					ExpressionVisitor exprVisitor = new ExpressionVisitor(
-							getEnvironment(), scope);
-					fragment.getInitializer().accept(exprVisitor);
-					init = exprVisitor.getExpression();
-				} else
-					init = type.defaultValue(cfg, locationManager.nextLocation());
+				TypeASTVisitor typeVisitor = new TypeASTVisitor(getEnvironment(), getScope().getUnitScope());
+				fd.getType().accept(typeVisitor);
+				Type type = typeVisitor.getType();
+				if (type.isInMemoryType())
+					type = new JavaReferenceType(type);
 
-				Global global = new Global(
-						locationManager.nextLocation(),
-						unit,
-						fragment.getName().getIdentifier(),
-						false,
-						type,
-						new Annotations());
-				JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
-				JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
-				cfg.addNode(asg);
-				if (last == null)
-					cfg.getEntrypoints().add(asg);
-				else
-					cfg.addEdge(new SequentialEdge(last, asg));
-				last = asg;
+				for (Object f : fd.fragments()) {
+					VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
+					type = typeVisitor.liftToArray(type, fragment);
+
+					it.unive.lisa.program.cfg.statement.Expression init;
+					if (fragment.getInitializer() != null) {
+
+						ExpressionVisitor exprVisitor = new ExpressionVisitor(
+								getEnvironment(), clinitScope);
+						fragment.getInitializer().accept(exprVisitor);
+						init = exprVisitor.getExpression();
+					} else
+						init = type.defaultValue(cfg, locationManager.nextLocation());
+
+					Global global = new Global(
+							locationManager.nextLocation(),
+							unit,
+							fragment.getName().getIdentifier(),
+							false,
+							type,
+							new Annotations());
+					JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
+					JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
+					cfg.addNode(asg);
+					if (last == null)
+						cfg.getEntrypoints().add(asg);
+					else
+						cfg.addEdge(new SequentialEdge(last, asg));
+					last = asg;
+				}
 			}
+			// static block
+			else if (decl instanceof Initializer initializer) {
+
+				if (!Modifier.isStatic(initializer.getModifiers()))
+					continue;
+
+				Block body = initializer.getBody();
+
+				ParsedBlock block = getParserContext().evaluate(
+						body,
+						new BlockStatementASTVisitor(getEnvironment(), clinitScope));
+
+				if (block != null) {
+					cfg.getNodeList().mergeWith(block.getBody());
+
+					if (last == null) {
+						cfg.getEntrypoints().add(block.getBegin());
+					}
+					else {
+						cfg.addEdge(new SequentialEdge(last, block.getBegin()));
+					}
+					last = block.getEnd();
+				}
+			}
+
 		}
 
-		// TODO: static block
 		Ret ret = new Ret(cfg, locationManager.nextLocation());
 		cfg.addNode(ret);
 		if (last == null)
 			cfg.getEntrypoints().add(ret);
 		else
 			cfg.addEdge(new SequentialEdge(last, ret));
+
+		cfg.simplify();
 		unit.addCodeMember(cfg);
 		return;
 	}

@@ -1,5 +1,13 @@
 package it.unive.jlisa.program.type;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -25,12 +33,6 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A type representing an array defined in an Java program. ArrayTypes are
@@ -70,12 +72,6 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	 */
 	public static JavaReferenceType CLASS_ARRAY = new JavaReferenceType(JavaArrayType.lookup(
 			new JavaReferenceType(JavaClassType.getClassMetaType()), 1));
-
-	/**
-	 * Method*[]*
-	 */
-	public static JavaReferenceType METHOD_ARRAY = new JavaReferenceType(JavaArrayType.lookup(
-			new JavaReferenceType(JavaClassType.getMethodType()), 1));
 
 	/**
 	 * Clears the cache of {@link JavaArrayType}s created up to now.

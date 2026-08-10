@@ -105,6 +105,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		Type stringType = JavaClassType.getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
 		Type methodType = JavaClassType.getMethodType();
+		Type refMethodType = new JavaReferenceType(methodType);
 		JavaReferenceType refObjectArrType = JavaArrayType.OBJECT_ARRAY;
 
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
@@ -199,7 +200,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			Expression arrExpression = getRight();
 			Expression accessIdx = new IntLiteral(cfg, location, i);
 
-			JavaArrayAccess expr = new JavaArrayAccess(cfg, location, arrExpression, accessIdx);
+			JavaArrayAccess expr = new JavaArrayAccess(cfg, refMethodType, location, arrExpression, accessIdx);
 			args.add(expr);
 
 			// TODO: check the types of the arguments. If one does not match

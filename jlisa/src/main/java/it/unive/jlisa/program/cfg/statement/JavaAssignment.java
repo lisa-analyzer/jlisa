@@ -72,40 +72,41 @@ public class JavaAssignment extends Assignment {
 				return state.bottomExecution();
 		}
 
+		SymbolicExpression lhs = left;
+		if (left instanceof HeapReference)
+			// assignments dereference the lhs
+			lhs = ((HeapReference) left).getExpression();
 		for (Type rType : rightTypes) {
-			if (rType.equals(left.getStaticType()) || left.getStaticType().isUntyped()) {
-				SymbolicExpression lhs = left;
-				if (left instanceof HeapReference)
-					// assignments dereference the lhs
-					lhs = ((HeapReference) left).getExpression();
-				result = result.lub(super.fwdBinarySemantics(interprocedural, state, lhs, right, expressions));
-			} else if (rType.canBeAssignedTo(left.getStaticType())) {
-				if (left.getStaticType().isReferenceType()) { // type-cast
-					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
-							left.getStaticType(), loc);
-					BinaryExpression castExpression = new BinaryExpression(left.getStaticType(), right, typeConv,
+			SymbolicExpression rhs = right;
+			if (rType.equals(targetType) || targetType.isUntyped()) {
+				result = result.lub(super.fwdBinarySemantics(interprocedural, state, lhs, rhs, expressions));
+			} else if (rType.canBeAssignedTo(targetType)) {
+				if (targetType.isReferenceType()) { // type-cast
+					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(targetType)),
+							targetType, loc);
+					BinaryExpression castExpression = new BinaryExpression(targetType, rhs, typeConv,
 							TypeCast.INSTANCE, loc);
 					result = result
-							.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+							.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
 				} else { // type-conv
-					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
-							left.getStaticType(), loc);
-					BinaryExpression castExpression = new BinaryExpression(left.getStaticType(), right, typeConv,
+					Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(targetType)),
+							targetType, loc);
+					BinaryExpression castExpression = new BinaryExpression(targetType, rhs, typeConv,
 							TypeConv.INSTANCE, loc);
 					result = result
-							.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
+							.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
 				}
-			} else if (left.getStaticType().canBeAssignedTo(rType)) {
+			} else if (targetType.canBeAssignedTo(rType)) {
 				// left is smaller that right. we do a narrowing.
-				Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(left.getStaticType())),
-						left.getStaticType(), loc);
-				BinaryExpression castExpression = new BinaryExpression(left.getStaticType(), right, typeConv,
+				Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(targetType)),
+						targetType, loc);
+				BinaryExpression castExpression = new BinaryExpression(targetType, rhs, typeConv,
 						TypeConv.INSTANCE, loc);
 				result = result
-						.lub(super.fwdBinarySemantics(interprocedural, state, left, castExpression, expressions));
-			} else if (JavaClassType.isWrapperOf(left.getStaticType(), rType)) {
+						.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
+			} else if (JavaClassType.isWrapperOf(targetType, rType)) {
 				// boxing
-				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) left.getStaticType(),
+				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) targetType,
 						new Expression[] { getRight() });
 				AnalysisState<A> wrapState = wrap.forwardSemantics(state, interprocedural, expressions);
 				for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
@@ -113,17 +114,17 @@ public class JavaAssignment extends Assignment {
 							super.fwdBinarySemantics(
 									interprocedural,
 									wrapState,
-									left,
+									lhs,
 									wrapExp,
 									expressions)
 											.forgetIdentifiers(wrap.getMetaVariables(), this));
-			} else if (JavaClassType.isWrapperOf(rType, left.getStaticType())) {
+			} else if (JavaClassType.isWrapperOf(rType, targetType)) {
 				// unboxing
 				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-				HeapDereference derefRight = new HeapDereference(rType.asReferenceType().getInnerType(), right,
+				HeapDereference derefRight = new HeapDereference(rType.asReferenceType().getInnerType(), rhs,
 						getLocation());
-				AccessChild rightExpr = new AccessChild(left.getStaticType(), derefRight, var, getLocation());
-				result = result.lub(analysis.assign(state, left, rightExpr, this));
+				AccessChild rightExpr = new AccessChild(targetType, derefRight, var, getLocation());
+				result = result.lub(analysis.assign(state, lhs, rightExpr, this));
 			}
 		}
 		return result;

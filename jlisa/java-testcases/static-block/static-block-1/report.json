@@ -1,0 +1,46 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':4:1] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':5:1] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_SimpleStatic.SimpleStatic_clinit()_1707447826.graph.json", "void_SimpleStatic2.SimpleStatic2(SimpleStatic2__this)_1707437379.graph.json", "void_SimpleStatic2.SimpleStatic2_clinit()_1707437379.graph.json" ],
+  "info" : {
+    "cfgs" : "6",
+    "duration" : "3s 860ms",
+    "end" : "2026-08-05T13:26:07.739+02:00",
+    "expressions" : "21",
+    "files" : "4",
+    "globals" : "38",
+    "members" : "242",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-05T13:26:03.879+02:00",
+    "statements" : "19",
+    "units" : "51",
+    "version" : "1.0",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/static-block/static-block-1"
+  }
+}

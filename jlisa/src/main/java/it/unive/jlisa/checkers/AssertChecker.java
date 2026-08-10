@@ -201,7 +201,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			V values = state.getExecutionState().second.valueState;
 			ReachabilityStatus reach = state.getExecutionState().first.lattice;
 
-			if (reach == ReachabilityStatus.UNREACHABLE) {
+			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().second.isBottom()) {
 				// if the assertion is not reachable, it won't fail
 				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
 				continue;

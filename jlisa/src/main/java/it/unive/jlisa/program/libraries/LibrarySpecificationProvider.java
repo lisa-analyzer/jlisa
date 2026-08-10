@@ -1,5 +1,25 @@
 package it.unive.jlisa.program.libraries;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.commons.lang3.tuple.Pair;
+
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import it.unive.jlisa.antlr.LibraryDefinitionLexer;
@@ -15,15 +35,6 @@ import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SyntheticLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 
 public class LibrarySpecificationProvider {
 
@@ -33,13 +44,15 @@ public class LibrarySpecificationProvider {
 
 	private static final Map<String, ClassDef> AVAILABLE_LIB_CLASSES = new TreeMap<>();
 
+	private static final Map<String, Collection<String>> EXCEPTION_HIERARCHY = new TreeMap<>();
+
 	public static CompilationUnit hierarchyRoot;
 
 	private static CFG init;
 
-	private static final Collection<String> LOADED_LIB_CLASSES = new TreeSet<>();
+	private static boolean loadingJavaLang = false;
 
-	private static final Queue<Runnable> PENDING_POPULATIONS = new LinkedList<>();
+	private static final Collection<String> LOADED_LIB_CLASSES = new TreeSet<>();
 
 	public static void load(
 			Program program)
@@ -54,14 +67,27 @@ public class LibrarySpecificationProvider {
 					readLibrary(path, program, parsedLibs);
 			}
 		}
+
+		Collection<String> frontier = new TreeSet<>();
+		frontier.add("java.lang.Throwable");
+		Collection<String> nextFrontier;
+		do {
+			nextFrontier = new TreeSet<>();
+			for (ClassDef def : AVAILABLE_LIB_CLASSES.values())
+				if (def.getBase() != null && frontier.contains(def.getBase())) {
+					EXCEPTION_HIERARCHY.computeIfAbsent(def.getBase(), k -> new TreeSet<>()).add(def.getName());
+					nextFrontier.add(def.getName());
+				}
+			frontier = nextFrontier;
+		} while (!nextFrontier.isEmpty());
 	}
 
 	private static void reset() {
 		init = null;
 		hierarchyRoot = null;
 		AVAILABLE_LIB_CLASSES.clear();
+		EXCEPTION_HIERARCHY.clear();
 		LOADED_LIB_CLASSES.clear();
-		PENDING_POPULATIONS.clear();
 	}
 
 	private static void readLibrary(
@@ -95,15 +121,14 @@ public class LibrarySpecificationProvider {
 
 	public static void importJavaLang(
 			Program program) {
-		forceImportClass(program, "java.lang.Object");
-		forceImportClass(program, "java.lang.reflect.Method");
-		forceImportClass(program, "java.lang.Class");
-		forceImportClass(program, "java.lang.String");
+		loadingJavaLang = true;
+		importClass(program, "java.lang.Object");
+		importClass(program, "java.lang.Class");
+		importClass(program, "java.lang.String");
 		for (String lib : AVAILABLE_LIB_CLASSES.keySet())
 			if (getPackage(lib).equals("java.lang"))
 				importClass(program, lib);
-
-		executePendingPopulations();
+		loadingJavaLang = false;
 	}
 
 	private static String getPackage(
@@ -125,94 +150,73 @@ public class LibrarySpecificationProvider {
 		if (LOADED_LIB_CLASSES.contains(name))
 			return;
 
-		ClassDef library = AVAILABLE_LIB_CLASSES.get(name);
-		if (library == null)
+		ClassDef requestedLibrary = AVAILABLE_LIB_CLASSES.get(name);
+		if (requestedLibrary == null)
 			throw new IllegalArgumentException("Class " + name + " is not available in the loaded libraries");
 
 		AtomicReference<CompilationUnit> root = new AtomicReference<>(hierarchyRoot);
-		ClassUnit lib = library.toLiSAUnit(program, root);
+		ClassUnit requestedLib = requestedLibrary.toLiSAUnit(program, root);
 		if (hierarchyRoot == null)
 			hierarchyRoot = root.get();
 
-		program.addUnit(lib);
-		// create the corresponding type
-		if (library.getTypeName() == null)
-			JavaClassType.register(lib.getName(), lib);
-		else
-			try {
-				Class<?> type = Class.forName(library.getTypeName());
-				Constructor<?> constructor = type.getConstructor(CompilationUnit.class);
-				constructor.newInstance(lib);
-			} catch (ClassNotFoundException
-					| SecurityException
-					| IllegalArgumentException
-					| IllegalAccessException
-					| NoSuchMethodException
-					| InstantiationException
-					| InvocationTargetException e) {
-				throw new LibraryCreationException(e);
-			}
+		// list to preserve discovery order
+		List<String> toLoad = new LinkedList<>();
+		if (!loadingJavaLang && EXCEPTION_HIERARCHY.containsKey(requestedLibrary.getName())) {
+			// if the library is an exception, we also load its known
+			// subtypes as they might be thrown by native constructs
+			// without being explicitly imported (eg `throws IOException`
+			// in the method declaration, but a construct throws
+			// `FileNotFoundException` which is a subtype of `IOException`)
+			Collection<String> frontier = EXCEPTION_HIERARCHY.get(requestedLibrary.getName());
+			Collection<String> nextFrontier;
+			do {
+				toLoad.addAll(frontier);
+				nextFrontier = new TreeSet<>();
+				for (String n : frontier) 
+					nextFrontier.addAll(EXCEPTION_HIERARCHY.getOrDefault(n, List.of()));
+				frontier = nextFrontier;
+			} while (!nextFrontier.isEmpty());
+		}
 
-		LOADED_LIB_CLASSES.add(name);
-		library.populateUnit(program, init, hierarchyRoot);
-		// nested classes should be loaded as well
-		for (String n : getNestedUnits(name))
-			importClass(program, n);
-	}
+		List<Pair<ClassDef, ClassUnit>> toAdd = new LinkedList<>();
+		toAdd.add(Pair.of(requestedLibrary, requestedLib));
+		for (String n : toLoad) {
+			ClassDef classDef = AVAILABLE_LIB_CLASSES.get(n);
+			toAdd.add(Pair.of(classDef, classDef.toLiSAUnit(program, root)));
+		}
+		for (Pair<ClassDef, ClassUnit> pair : toAdd) {
+			ClassDef def = pair.getLeft();
+			ClassUnit lib = pair.getRight();
+			String libname = lib.getName();
+			String typeName = def.getTypeName();
 
-	private static void forceImportClass(
-			Program program,
-			String name) {
+			if (LOADED_LIB_CLASSES.contains(libname))
+				continue;
 
-		if (LOADED_LIB_CLASSES.contains(name))
-			return;
+			program.addUnit(lib);
+			// create the corresponding type
+			if (typeName == null) {
+				JavaClassType.register(libname, lib);
+			} else
+				try {
+					Class<?> type = Class.forName(typeName);
+					Constructor<?> constructor = type.getConstructor(CompilationUnit.class);
+					constructor.newInstance(lib);
+				} catch (ClassNotFoundException
+						| SecurityException
+						| IllegalArgumentException
+						| IllegalAccessException
+						| NoSuchMethodException
+						| InstantiationException
+						| InvocationTargetException e) {
+					throw new LibraryCreationException(e);
+				}
 
-		ClassDef library = AVAILABLE_LIB_CLASSES.get(name);
-		if (library == null)
-			throw new IllegalArgumentException("Class " + name + " is not available in the loaded libraries");
-
-		AtomicReference<CompilationUnit> root = new AtomicReference<>(hierarchyRoot);
-		ClassUnit lib = library.toLiSAUnit(program, root);
-		if (hierarchyRoot == null)
-			hierarchyRoot = root.get();
-
-		program.addUnit(lib);
-		// create the corresponding type
-		if (library.getTypeName() == null)
-			JavaClassType.register(lib.getName(), lib);
-		else
-			try {
-				Class<?> type = Class.forName(library.getTypeName());
-				Constructor<?> constructor = type.getConstructor(CompilationUnit.class);
-				constructor.newInstance(lib);
-			} catch (ClassNotFoundException
-					| SecurityException
-					| IllegalArgumentException
-					| IllegalAccessException
-					| NoSuchMethodException
-					| InstantiationException
-					| InvocationTargetException e) {
-				throw new LibraryCreationException(e);
-			}
-
-		LOADED_LIB_CLASSES.add(name);
-
-		final CompilationUnit capturedRoot = hierarchyRoot;
-		PENDING_POPULATIONS.add(() -> {
-			library.populateUnit(program, init, capturedRoot);
-		});
-
-		// library.populateUnit(program, init, hierarchyRoot);
-		// nested classes should be loaded as well
-
-		for (String n : getNestedUnits(name))
-			importClass(program, n);
-	}
-
-	private static void executePendingPopulations() {
-		while (!PENDING_POPULATIONS.isEmpty()) {
-			Runnable task = PENDING_POPULATIONS.poll();
-			task.run();
+			LOADED_LIB_CLASSES.add(libname);
+			def.populateUnit(program, init, hierarchyRoot);
+			// nested classes should be loaded as well
+			for (String n : getNestedUnits(libname))
+				importClass(program, n);
 		}
 	}
 

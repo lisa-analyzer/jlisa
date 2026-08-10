@@ -44,7 +44,7 @@ public class BlockStatementASTVisitor extends ScopedVisitor<MethodScope> impleme
 			for (Object o : node.statements()) {
 				ParsedBlock stmtBlock = getParserContext().evaluate(
 						(org.eclipse.jdt.core.dom.Statement) o,
-						() -> new StatementASTVisitor(getEnvironment(), getScope()));
+						new StatementASTVisitor(getEnvironment(), getScope()));
 
 				nodeList.mergeWith(stmtBlock.getBody());
 

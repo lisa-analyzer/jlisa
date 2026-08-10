@@ -1,0 +1,48 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':10:1] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':6:1] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':7:1] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_BaseConfig.BaseConfig_clinit()_319055661.graph.json", "void_DerivedConfig.DerivedConfig_clinit()_1707444943.graph.json", "void_DerivedConfig.InnerConfig.InnerConfig_clinit()_1707449934.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "8",
+    "duration" : "200ms",
+    "end" : "2026-07-31T17:41:57.938+02:00",
+    "expressions" : "53",
+    "files" : "4",
+    "globals" : "42",
+    "members" : "244",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-07-31T17:41:57.738+02:00",
+    "statements" : "32",
+    "units" : "52",
+    "version" : "1.0",
+    "warnings" : "3"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/static-block/static-block-3"
+  }
+}
