@@ -1,5 +1,11 @@
 package it.unive.jlisa.analysis.value;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.lattices.ConstantValueIntInterval;
 import it.unive.jlisa.program.operator.NaryExpression;
@@ -19,11 +25,8 @@ import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.util.numeric.IntInterval;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class ConstantPropagationWithIntervals implements BaseNonRelationalValueDomain<ConstantValueIntInterval> {
 
@@ -53,7 +56,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalConstant(constant, pp, oracle),
 				interval.evalConstant(constant, pp, oracle));
@@ -65,7 +68,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval arg,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalUnaryExpression(expression, arg.getConstantValue(), pp, oracle),
 				interval.evalUnaryExpression(expression, arg.getIntInterval(), pp, oracle));
@@ -78,7 +81,14 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
+		if (expression.getOperator() instanceof AdditionOperator) {			
+			// Check for potential overflow
+			if (left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite()) {
+				return ConstantValueIntInterval.TOP; // Overflow, return TOP
+			}
+		}
+		
 		return new ConstantValueIntInterval(
 				constantPropagation.evalBinaryExpression(expression, left.getConstantValue(), right.getConstantValue(),
 						pp, oracle),
@@ -93,7 +103,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalTernaryExpression(expression, left.getConstantValue(),
 						middle.getConstantValue(), right.getConstantValue(), pp, oracle),
@@ -107,7 +117,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval[] subExpressions,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		ConstantValue[] constantValues = Arrays.stream(subExpressions)
 				.map(ConstantValueIntInterval::getConstantValue)
 				.toArray(ConstantValue[]::new);
@@ -126,7 +136,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			PushAny pushAny,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalPushAny(pushAny, pp, oracle),
 				interval.evalPushAny(pushAny, pp, oracle));
@@ -137,7 +147,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			PushInv pushInv,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalPushInv(pushInv, pp, oracle),
 				interval.evalPushInv(pushInv, pp, oracle));
@@ -148,7 +158,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			Skip skip,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalSkip(skip, pp, oracle),
 				interval.evalSkip(skip, pp, oracle));
@@ -161,7 +171,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalTypeCast(cast, left.getConstantValue(), right.getConstantValue(), pp, oracle),
 				interval.evalTypeCast(cast, left.getIntInterval(), right.getIntInterval(), pp, oracle));
@@ -174,7 +184,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return new ConstantValueIntInterval(
 				constantPropagation.evalTypeConv(conv, left.getConstantValue(), right.getConstantValue(), pp, oracle),
 				interval.evalTypeConv(conv, left.getIntInterval(), right.getIntInterval(), pp, oracle));
@@ -185,7 +195,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval value,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Satisfiability sat = constantPropagation.satisfiesAbstractValue(value.getConstantValue(), pp, oracle);
 		switch (sat) {
 		case NOT_SATISFIED:
@@ -209,7 +219,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval arg,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Satisfiability sat = constantPropagation.satisfiesUnaryExpression(expression, arg.getConstantValue(), pp,
 				oracle);
 		switch (sat) {
@@ -239,7 +249,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Satisfiability sat = constantPropagation.satisfiesBinaryExpression(expression, left.getConstantValue(),
 				right.getConstantValue(), pp, oracle);
 		switch (sat) {
@@ -271,7 +281,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ConstantValueIntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Satisfiability sat = constantPropagation.satisfiesTernaryExpression(expression,
 				left.getConstantValue(), middle.getConstantValue(), right.getConstantValue(), pp, oracle);
 		switch (sat) {
@@ -303,7 +313,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Satisfiability sat = satisfies(environment, expression, src, oracle);
 		if (sat == Satisfiability.NOT_SATISFIED)
 			return environment.bottom();
@@ -331,9 +341,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeConstant(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeConstant(environments.getRight(),
@@ -348,9 +358,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeIdentifier(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeIdentifier(environments.getRight(),
@@ -365,9 +375,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeUnaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeUnaryExpression(environments.getRight(),
@@ -382,9 +392,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeBinaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeBinaryExpression(environments.getRight(),
@@ -399,9 +409,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeTernaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeTernaryExpression(environments.getRight(),
@@ -416,9 +426,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		Pair<ValueEnvironment<ConstantValue>,
-				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+		ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeValueExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeValueExpression(environments.getRight(),
@@ -428,8 +438,8 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 
 	public static Pair<ValueEnvironment<ConstantValue>, ValueEnvironment<IntInterval>>
 
-			splitEnvironment(
-					ValueEnvironment<ConstantValueIntInterval> environment)
+	splitEnvironment(
+			ValueEnvironment<ConstantValueIntInterval> environment)
 					throws SemanticException {
 
 		ValueEnvironment<ConstantValue> constantValueEnvironment = new ValueEnvironment<>(ConstantValue.BOTTOM);
@@ -454,7 +464,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ValueEnvironment<ConstantValueIntInterval> oldEnvironment,
 			ValueEnvironment<ConstantValue> constantEnv,
 			ValueEnvironment<IntInterval> intervalEnv)
-			throws SemanticException {
+					throws SemanticException {
 
 		ValueEnvironment<ConstantValueIntInterval> merged = new ValueEnvironment<>(ConstantValueIntInterval.BOTTOM);
 
@@ -489,7 +499,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			Constant constant,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		return constantPropagation.satisfiesConstant(constant, pp, oracle);
 	}
 
@@ -499,7 +509,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ValueExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle)
-			throws SemanticException {
+					throws SemanticException {
 		// Note: Since ConstantPropagation overrides `satisfies` to handle the
 		// satisfiability of n-ary expressions, we need to include the
 		// corresponding
@@ -508,7 +518,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		// `satisfiesNaryExpression`.
 		if (expression instanceof NaryExpression) {
 			Pair<ValueEnvironment<ConstantValue>,
-					ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
+			ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 			SymbolicExpression[] exprs = ((NaryExpression) expression).getAllOperand(0);
 			ConstantValue[] args = new ConstantValue[exprs.length];
 			for (int i = 0; i < exprs.length; ++i) {

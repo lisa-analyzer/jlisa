@@ -897,4 +897,13 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"impl", "prop2", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void SpdyStream_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"SpdyStream",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
 }
