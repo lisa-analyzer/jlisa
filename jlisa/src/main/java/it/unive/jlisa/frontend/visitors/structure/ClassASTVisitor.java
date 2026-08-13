@@ -1,20 +1,5 @@
 package it.unive.jlisa.frontend.visitors.structure;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.Initializer;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
 import it.unive.jlisa.frontend.EnumUnit;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.frontend.ParsingEnvironment;
@@ -56,6 +41,19 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.VoidType;
 import it.unive.lisa.util.frontend.ControlFlowTracker;
 import it.unive.lisa.util.frontend.ParsedBlock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.Initializer;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
@@ -209,7 +207,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		boolean shouldCreateClinit = false;
 		for (Object decl : node.bodyDeclarations()) {
 
-			boolean staticField = (decl instanceof FieldDeclaration fd && (isInterface || Modifier.isStatic(fd.getModifiers())));
+			boolean staticField = (decl instanceof FieldDeclaration fd
+					&& (isInterface || Modifier.isStatic(fd.getModifiers())));
 
 			boolean staticBlock = (decl instanceof Initializer);
 
@@ -238,7 +237,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				new Parameter[0]);
 		CFG cfg = new CFG(cmDesc);
 
-		MethodScope clinitScope = new MethodScope(getScope(), cfg, new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
+		MethodScope clinitScope = new MethodScope(getScope(), cfg,
+				new JavaLocalVariableTracker(cfg, cfg.getDescriptor()), new ControlFlowTracker());
 
 		// first, we add the clinit call to the ancestor of the same kind
 		// (superclass for a ClassUnit, superinterface for an InterfaceUnit),
@@ -299,7 +299,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 							false,
 							type,
 							new Annotations());
-					JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit, global);
+					JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit,
+							global);
 					JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
 					cfg.addNode(asg);
 					if (last == null)
@@ -326,8 +327,7 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 					if (last == null) {
 						cfg.getEntrypoints().add(block.getBegin());
-					}
-					else {
+					} else {
 						cfg.addEdge(new SequentialEdge(last, block.getBegin()));
 					}
 					last = block.getEnd();
