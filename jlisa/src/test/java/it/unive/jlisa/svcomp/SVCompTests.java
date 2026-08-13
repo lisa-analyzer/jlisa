@@ -350,6 +350,19 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 	}
 
 	@Test
+	public void Refl1_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl1",
+				"Main.java",
+				"../../common/",
+				"../micro/reflection/Refl1.java",
+				"../../mockx/",
+				"../micro/BasicTestCase.java",
+				"../micro/MicroTestCase.java");
+		// conf.outputs.add(new HtmlResults(true));
+		perform(conf);
+	}
+
+	@Test
 	public void Refl2_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl2",
 				"Main.java",
@@ -358,7 +371,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		conf.outputs.add(new HtmlResults(true));
+		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
@@ -371,7 +384,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		conf.outputs.add(new HtmlResults(true));
+		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
@@ -384,7 +397,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		conf.outputs.add(new HtmlResults(true));
+		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 

@@ -74,6 +74,12 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 			new JavaReferenceType(JavaClassType.getClassMetaType()), 1));
 
 	/**
+	 * Method*[]*
+	 */
+	public static JavaReferenceType METHOD_ARRAY = new JavaReferenceType(JavaArrayType.lookup(
+			new JavaReferenceType(JavaClassType.getMethodType()), 1));
+
+	/**
 	 * Clears the cache of {@link JavaArrayType}s created up to now.
 	 */
 	public static void clearAll() {

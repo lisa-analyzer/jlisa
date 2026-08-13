@@ -5,15 +5,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.antlr.v4.runtime.CharStreams;
@@ -54,6 +46,8 @@ public class LibrarySpecificationProvider {
 
 	private static final Collection<String> LOADED_LIB_CLASSES = new TreeSet<>();
 
+	private static final Queue<Runnable> PENDING_POPULATIONS = new LinkedList<>();
+
 	public static void load(
 			Program program)
 			throws AnalysisSetupException {
@@ -88,6 +82,7 @@ public class LibrarySpecificationProvider {
 		AVAILABLE_LIB_CLASSES.clear();
 		EXCEPTION_HIERARCHY.clear();
 		LOADED_LIB_CLASSES.clear();
+		PENDING_POPULATIONS.clear();
 	}
 
 	private static void readLibrary(
@@ -122,13 +117,16 @@ public class LibrarySpecificationProvider {
 	public static void importJavaLang(
 			Program program) {
 		loadingJavaLang = true;
-		importClass(program, "java.lang.Object");
-		importClass(program, "java.lang.Class");
-		importClass(program, "java.lang.String");
+		importClass(program, "java.lang.Object", true);
+		importClass(program, "java.lang.reflect.Method", true);
+		importClass(program, "java.lang.Class", true);
+		importClass(program, "java.lang.String", true);
 		for (String lib : AVAILABLE_LIB_CLASSES.keySet())
 			if (getPackage(lib).equals("java.lang"))
 				importClass(program, lib);
 		loadingJavaLang = false;
+
+		executePendingPopulations();
 	}
 
 	private static String getPackage(
@@ -147,6 +145,13 @@ public class LibrarySpecificationProvider {
 	public static void importClass(
 			Program program,
 			String name) {
+		importClass(program, name, false);
+	}
+
+	private static void importClass(
+			Program program,
+			String name,
+			boolean forceImport) {
 		if (LOADED_LIB_CLASSES.contains(name))
 			return;
 
@@ -213,10 +218,26 @@ public class LibrarySpecificationProvider {
 				}
 
 			LOADED_LIB_CLASSES.add(libname);
-			def.populateUnit(program, init, hierarchyRoot);
+
+			if (!forceImport)
+				def.populateUnit(program, init, hierarchyRoot);
+			else {
+				final CompilationUnit capturedRoot = hierarchyRoot;
+				PENDING_POPULATIONS.add(() -> {
+					requestedLibrary.populateUnit(program, init, capturedRoot);
+				});
+			}
+
 			// nested classes should be loaded as well
 			for (String n : getNestedUnits(libname))
 				importClass(program, n);
+		}
+	}
+
+	private static void executePendingPopulations() {
+		while (!PENDING_POPULATIONS.isEmpty()) {
+			Runnable task = PENDING_POPULATIONS.poll();
+			task.run();
 		}
 	}
 
