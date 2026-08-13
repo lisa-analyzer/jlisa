@@ -143,9 +143,6 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				tmp = initState;
 
 				execExpressions = execExpressions.lub(clazz);
-				// for (SymbolicExpression c : clazz) {
-					// tmp = analysis.smallStepSemantics(initState, c, this);
-				// }
 			}
 
 			if (tmp != state)
