@@ -1,26 +1,24 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':38] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
-  }, {
     "message" : "['Main.java':104:6] on 'void Main::bad(Main* this)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_-659521609.graph.json", "java.lang.String__testcasesupport.BufferedReader.readLine(testcasesupport.BufferedReader__this)_-1196779848.graph.json", "report.json", "void_Main.Main(Main__this)_1707435798.graph.json", "void_Main.bad(Main__this)_1707430063.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_testcasesupport.BufferedReader.BufferedReader(testcasesupport.BufferedReader__this,_java.io.InputStreamReader__reader)_-1196800122.graph.json", "void_testcasesupport.BufferedReader.close(testcasesupport.BufferedReader__this)_-1196796681.graph.json", "void_testcasesupport.IO.IO_clinit()_-1196808492.graph.json", "void_testcasesupport.IO.IO_clinit()_-1196814940.graph.json", "void_testcasesupport.IO.writeLine(int_intNumber)_-1196814940.graph.json", "void_testcasesupport.IO.writeLine(java.lang.String__line)_-1196808492.graph.json" ],
   "info" : {
     "cfgs" : "37",
-    "duration" : "16ms",
-    "end" : "2026-08-14T16:48:56.900+02:00",
+    "duration" : "14ms",
+    "end" : "2026-08-14T17:43:11.279+02:00",
     "expressions" : "252",
     "files" : "11",
-    "globals" : "45",
+    "globals" : "47",
     "members" : "283",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-14T16:48:56.884+02:00",
+    "start" : "2026-08-14T17:43:11.265+02:00",
     "statements" : "133",
     "units" : "62",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",
