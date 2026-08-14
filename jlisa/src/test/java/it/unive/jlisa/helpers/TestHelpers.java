@@ -1,5 +1,7 @@
 package it.unive.jlisa.helpers;
 
+import java.util.ArrayList;
+
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
@@ -12,8 +14,8 @@ import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONResults;
-import java.util.ArrayList;
 
 public class TestHelpers {
 

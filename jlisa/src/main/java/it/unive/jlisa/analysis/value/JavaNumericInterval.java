@@ -41,6 +41,7 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
@@ -358,6 +359,88 @@ public class JavaNumericInterval extends Interval {
 				return new IntInterval(MathNumber.ZERO, arg.getLow().multiply(MathNumber.MINUS_ONE));
 
 		return super.evalUnaryExpression(expression, arg, pp, oracle);
+	}
+	
+	@Override
+	public IntInterval evalTypeConv(
+			BinaryExpression conv,
+			IntInterval left,
+			IntInterval right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (left.isBottom())
+			return left;
+
+		Type targetType = conv.getStaticType();
+		if (!(targetType instanceof JavaNumericType numType) || !numType.isIntegral())
+			// no refinement for non-integral targets (e.g., float, double):
+			// fall back to the default behavior
+			return super.evalTypeConv(conv, left, right, pp, oracle);
+
+		IntInterval bounds = typeBounds(numType);
+		if (left.getLow().compareTo(bounds.getLow()) >= 0 && left.getHigh().compareTo(bounds.getHigh()) <= 0)
+			// the value already fits in the target type: the conversion is
+			// exact, no truncation/wrap-around can occur
+			return left;
+
+		if (left.isSingleton()
+				&& left.getLow().compareTo(new MathNumber(Long.MIN_VALUE)) >= 0
+				&& left.getLow().compareTo(new MathNumber(Long.MAX_VALUE)) <= 0) {
+			// the value is exactly known: we can precisely replicate Java's
+			// narrowing conversion (JLS 5.1.3) instead of conservatively
+			// falling back to the whole range of the target type
+			try {
+				long truncated = truncate(left.getLow().toLong(), numType.getNBits(), numType.isUnsigned());
+				return new IntInterval(new MathNumber(truncated), new MathNumber(truncated));
+			} catch (MathNumberConversionException e) {
+				// should not happen given the bound checks above, but fall
+				// back to a sound over-approximation just in case
+			}
+		}
+
+		// the conversion may truncate/wrap-around bits and we cannot pin down
+		// the exact result, so we soundly fall back to the full range
+		// representable by the target type
+		return bounds;
+	}
+
+	/**
+	 * Replicates the effect of a Java narrowing primitive conversion (JLS
+	 * 5.1.3) of {@code value} to a {@code bits}-wide integral type: the value
+	 * is reduced modulo 2^bits and, if the target is signed, reinterpreted in
+	 * two's complement.
+	 */
+	private static long truncate(
+			long value,
+			int bits,
+			boolean unsigned) {
+		if (bits >= 64)
+			return value;
+		long mask = (1L << bits) - 1;
+		long result = value & mask;
+		if (!unsigned) {
+			long signBit = 1L << (bits - 1);
+			if ((result & signBit) != 0)
+				result -= (1L << bits);
+		}
+		return result;
+	}
+
+	/**
+	 * Yields the interval of all the values representable by the given
+	 * integral numeric type (e.g., [-128, 127] for {@code byte}).
+	 */
+	private static IntInterval typeBounds(
+			JavaNumericType type) {
+		int bits = type.getNBits();
+		boolean unsigned = type.isUnsigned();
+		if (bits == 64 && !unsigned)
+			// avoids overflow issues when shifting by 63 bits
+			return new IntInterval(new MathNumber(Long.MIN_VALUE), new MathNumber(Long.MAX_VALUE));
+		long max = unsigned ? (1L << bits) - 1 : (1L << (bits - 1)) - 1;
+		long min = unsigned ? 0L : -(1L << (bits - 1));
+		return new IntInterval(new MathNumber(min), new MathNumber(max));
 	}
 
 	@Override
