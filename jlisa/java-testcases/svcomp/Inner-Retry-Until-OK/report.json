@@ -1,0 +1,44 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':36:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_1707438030.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "15",
+    "duration" : "136ms",
+    "end" : "2026-08-14T14:15:12.670+02:00",
+    "expressions" : "70",
+    "files" : "2",
+    "globals" : "36",
+    "members" : "259",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-14T14:15:12.534+02:00",
+    "statements" : "32",
+    "units" : "52",
+    "version" : "1.0",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/Inner-Retry-Until-OK"
+  }
+}
