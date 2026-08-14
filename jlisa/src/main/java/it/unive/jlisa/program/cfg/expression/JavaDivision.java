@@ -125,12 +125,11 @@ public class JavaDivision extends Division {
 	}
 
 	/**
-	 * Computes the result of a floating-point division by zero, mimicking
-	 * IEEE 754 semantics: a positive numerator yields
-	 * {@code POSITIVE_INFINITY}, a negative numerator yields
-	 * {@code NEGATIVE_INFINITY}, and a numerator that is (or could be) zero
-	 * yields {@code NaN}. When the sign of the numerator is not statically
-	 * known, the possible outcomes are joined together.
+	 * Computes the result of a floating-point division by zero, mimicking IEEE
+	 * 754 semantics: a positive numerator yields {@code POSITIVE_INFINITY}, a
+	 * negative numerator yields {@code NEGATIVE_INFINITY}, and a numerator that
+	 * is (or could be) zero yields {@code NaN}. When the sign of the numerator
+	 * is not statically known, the possible outcomes are joined together.
 	 */
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> floatingDivisionByZeroResult(
 			InterproceduralAnalysis<A, D> interprocedural,
