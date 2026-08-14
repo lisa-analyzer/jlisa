@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
+import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
@@ -67,16 +68,11 @@ public class JavaNumericInterval extends Interval {
 		if (Double.isNaN(value)) {
 			return IntInterval.BOTTOM; // not a number
 		}
-		if (value == Double.POSITIVE_INFINITY) {
-			// return new IntInterval(MathNumber.PLUS_INFINITY,
-			// MathNumber.PLUS_INFINITY);
-			return IntInterval.BOTTOM;
+		
+		if (value == Double.POSITIVE_INFINITY || value == Double.NEGATIVE_INFINITY) {
+			return IntInterval.TOP;
 		}
-		if (value == Double.NEGATIVE_INFINITY) {
-			// return new IntInterval(MathNumber.MINUS_INFINITY,
-			// MathNumber.MINUS_INFINITY);
-			return IntInterval.BOTTOM;
-		}
+		
 		return new IntInterval(new MathNumber(value), new MathNumber(value));
 	}
 
