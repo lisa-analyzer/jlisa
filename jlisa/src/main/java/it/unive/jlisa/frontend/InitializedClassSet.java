@@ -104,6 +104,11 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 			Statement init,
 			InterproceduralAnalysis<A, D> interprocedural)
 			throws SemanticException {
+
+		// FIXME: we are skipping static initializer of interfaces for now
+		if (!(reftype.getInnerType() instanceof JavaClassType))
+			return state;
+
 		AnalysisState<A> result = state;
 		InitializedClassSet info = state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class);
 		if (info == null)

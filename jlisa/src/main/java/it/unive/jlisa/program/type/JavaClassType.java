@@ -244,6 +244,14 @@ public class JavaClassType
 		return lookup("java.lang.NegativeArraySizeException");
 	}
 
+	public static JavaClassType getClassMetaType() {
+		return lookup("java.lang.Class");
+	}
+
+	public static JavaClassType getFieldMetaType() {
+		return lookup("java.lang.reflect.Field");
+	}
+
 	public static JavaClassType getObjectType() {
 		return lookup("java.lang.Object");
 	}
@@ -256,6 +264,10 @@ public class JavaClassType
 		return lookup("java.lang.ArrayIndexOutOfBoundsException");
 	}
 
+	public static JavaClassType getIllegalArgumentExceptionType() {
+		return lookup("java.lang.IllegalArgumentException");
+	}
+
 	public static JavaClassType getArithmeticExceptionType() {
 		return lookup("java.lang.ArithmeticException");
 	}
@@ -266,6 +278,26 @@ public class JavaClassType
 
 	public static JavaClassType getNumberFormatException() {
 		return lookup("java.lang.NumberFormatException");
+	}
+
+	public static JavaClassType getClassNotFoundException() {
+		return lookup("java.lang.ClassNotFoundException");
+	}
+
+	public static JavaClassType getInstantiationException() {
+		return lookup("java.lang.InstantiationException");
+	}
+
+	public static JavaClassType getNoSuchFieldException() {
+		return lookup("java.lang.NoSuchFieldException");
+	}
+
+	public static JavaClassType getNoSuchMethodException() {
+		return lookup("java.lang.NoSuchMethodException");
+	}
+
+	public static JavaClassType getMethodType() {
+		return lookup("java.lang.reflect.Method");
 	}
 
 	public static JavaClassType getPrintStreamType() {
@@ -384,4 +416,26 @@ public class JavaClassType
 			return null;
 	}
 
+	public static Type getWrappedType(
+			Type type) {
+
+		if (type == JavaIntType.INSTANCE)
+			return getIntegerWrapperType();
+		if (type == JavaByteType.INSTANCE)
+			return getByteWrapperType();
+		if (type == JavaCharType.INSTANCE)
+			return getCharacterWrapperType();
+		if (type == JavaFloatType.INSTANCE)
+			return getFloatWrapperType();
+		if (type == JavaDoubleType.INSTANCE)
+			return getDoubleWrapperType();
+		if (type == JavaLongType.INSTANCE)
+			return getLongWrapperType();
+		if (type == JavaBooleanType.INSTANCE)
+			return getBooleanWrapperType();
+		// TODO add short
+
+		else
+			return null;
+	}
 }

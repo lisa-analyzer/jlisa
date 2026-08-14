@@ -4,8 +4,10 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
@@ -45,6 +47,7 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.lang.reflect.Modifier;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -598,6 +601,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		// boolean
 		if (operator instanceof LogicalNegation && arg.getValue() instanceof Boolean b)
 			return new ConstantValue(!b);
+
+		// reflection
+		if (operator instanceof JavaClassForNameOperator && arg.getValue() instanceof String s) {
+			return new ConstantValue(s);
+		}
 
 		return top();
 	}
@@ -1293,6 +1301,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return top();
 
 		NaryOperator operator = ((NaryExpression) expression).getOperator();
+
 		if (subExpressions.length == 4) {
 
 			if (operator instanceof JavaStringAppendCharSubArrayOperator) {
@@ -1470,6 +1479,43 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 					return Satisfiability.NOT_SATISFIED;
 				}
 			return Satisfiability.SATISFIED;
+		}
+
+		// used by `Class.forName`
+		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+
+			v = v.replace('$', '.');
+
+			// NOTE: `Class.forName` cannot access `Class` of primitive types.
+			// For that the class literal is needed
+
+			boolean classLookup = true;
+			boolean interfaceLookup = true;
+
+			try {
+				Type t = JavaClassType.lookup(v);
+				assert (t != null);
+			} catch (IllegalArgumentException e) {
+				classLookup = false;
+			}
+			try {
+				Type t = JavaInterfaceType.lookup(v);
+				assert (t != null);
+			} catch (IllegalArgumentException e) {
+				interfaceLookup = false;
+			}
+
+			if (classLookup || interfaceLookup) {
+				return Satisfiability.SATISFIED;
+			}
+			return Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof IsMemberStaticOperator) {
+			if (arg.getValue() instanceof Integer i)
+				if ((i & Modifier.STATIC) != 0)
+					return Satisfiability.SATISFIED;
+			return Satisfiability.NOT_SATISFIED;
 		}
 
 		if (operator instanceof JavaIsShortParsableOperator) {
