@@ -897,7 +897,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"impl", "prop2", "../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void ExSymExe15_true_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -906,7 +906,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void ExSymExeD2L_true_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -915,7 +915,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-		
+
 	@Test
 	public void ExSymExeD2I_true_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -924,9 +924,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-	
 
-	
 	@Test
 	public void ExSymExeF2I_true_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -935,7 +933,6 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-	
 
 	@Test
 	public void ExSymExeF2L_true_test() throws IOException {
@@ -954,7 +951,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void Inner_Retry_Until_OK_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -963,9 +960,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-	
-	
-			
+
 	@Test
 	public void SpdyStream_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",

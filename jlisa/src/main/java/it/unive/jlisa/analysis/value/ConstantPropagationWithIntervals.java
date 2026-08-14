@@ -92,7 +92,8 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 						constantPropagation.evalBinaryExpression(expression, left.getConstantValue(),
 								right.getConstantValue(),
 								pp, oracle),
-						interval.top()); // potential overflow, return the top interval
+						interval.top()); // potential overflow, return the top
+											// interval
 			}
 		}
 
