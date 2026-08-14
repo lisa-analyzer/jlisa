@@ -1,6 +1,5 @@
 package it.unive.jlisa.analysis.value;
 
-import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
@@ -23,6 +22,7 @@ import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaMathTanOperator;
 import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
@@ -69,11 +69,11 @@ public class JavaNumericInterval extends Interval {
 		if (Double.isNaN(value)) {
 			return IntInterval.BOTTOM; // not a number
 		}
-		
+
 		if (value == Double.POSITIVE_INFINITY || value == Double.NEGATIVE_INFINITY) {
 			return IntInterval.TOP;
 		}
-		
+
 		return new IntInterval(new MathNumber(value), new MathNumber(value));
 	}
 
@@ -360,7 +360,7 @@ public class JavaNumericInterval extends Interval {
 
 		return super.evalUnaryExpression(expression, arg, pp, oracle);
 	}
-	
+
 	@Override
 	public IntInterval evalTypeConv(
 			BinaryExpression conv,
@@ -428,8 +428,8 @@ public class JavaNumericInterval extends Interval {
 	}
 
 	/**
-	 * Yields the interval of all the values representable by the given
-	 * integral numeric type (e.g., [-128, 127] for {@code byte}).
+	 * Yields the interval of all the values representable by the given integral
+	 * numeric type (e.g., [-128, 127] for {@code byte}).
 	 */
 	private static IntInterval typeBounds(
 			JavaNumericType type) {
