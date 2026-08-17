@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.java.constructs.CharArrayConstantSupport;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -15,11 +17,9 @@ import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class StringBuilderAppendCharSubArray extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -71,15 +71,41 @@ public class StringBuilderAppendCharSubArray extends NaryExpression implements P
 			}
 		}
 
+		SymbolicExpression left = exprs[0];
+		SymbolicExpression arrayRef = exprs[1];
+		SymbolicExpression arrayOffset = exprs[2];
+		SymbolicExpression arrayLen = exprs[3];
+
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		String constantValue;
+		try {
+			Object offsetVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, arrayOffset,
+					this);
+			Object lenVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, arrayLen, this);
+			constantValue = offsetVal instanceof Integer && lenVal instanceof Integer
+					? CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, arrayRef,
+							(Integer) offsetVal, (Integer) lenVal, getLocation(), this)
+					: null;
+		} catch (SemanticException e) {
+			throw e;
+		} catch (RuntimeException e) {
+			// best-effort constant reconstruction: any failure here must not
+			// turn the whole statement's outcome into bottom, we just fall
+			// back to the imprecise (top) result
+			constantValue = null;
+		}
 
-		AccessChild leftAccess = new AccessChild(stringType, exprs[0], var, getLocation());
-		PushAny top = new PushAny(stringType, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, top, originating);
+		SymbolicExpression appendedValue = constantValue != null
+				? new Constant(stringType, constantValue, getLocation())
+				: new PushAny(stringType, getLocation());
 
-		return analysis.smallStepSemantics(result, exprs[0], originating);
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+				getLocation(), this,
+				oldValue -> new it.unive.lisa.symbolic.value.BinaryExpression(
+						stringType, oldValue, appendedValue, JavaStringAppendStringOperator.INSTANCE, getLocation()));
+
+		return analysis.smallStepSemantics(result, left, originating);
 	}
 }
