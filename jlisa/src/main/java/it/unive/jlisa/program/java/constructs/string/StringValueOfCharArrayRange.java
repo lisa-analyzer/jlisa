@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.java.constructs.CharArrayConstantSupport;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -70,10 +71,10 @@ public class StringValueOfCharArrayRange extends TernaryExpression implements Pl
 
 		String constantValue;
 		try {
-			Object offsetVal = StringValueOfSupport.extractConstantValue(interprocedural, state, middle, this);
-			Object countVal = StringValueOfSupport.extractConstantValue(interprocedural, state, right, this);
+			Object offsetVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, middle, this);
+			Object countVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, right, this);
 			constantValue = offsetVal instanceof Integer && countVal instanceof Integer
-					? StringValueOfSupport.computeConstantSubstring(interprocedural, state, left,
+					? CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, left,
 							(Integer) offsetVal, (Integer) countVal, getLocation(), this)
 					: null;
 		} catch (SemanticException e) {

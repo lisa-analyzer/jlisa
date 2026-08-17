@@ -1,4 +1,4 @@
-package it.unive.jlisa.program.java.constructs.string;
+package it.unive.jlisa.program.java.constructs;
 
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -34,21 +34,23 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Shared best-effort constant reconstruction helpers used by the
- * {@code String.valueOf(char[], ...)} constructs to recover the concrete
- * content of a char array from the underlying value domain, so that the
- * resulting String can be tracked precisely instead of collapsing to top.
+ * Shared best-effort constant reconstruction helpers, used by constructs
+ * that consume {@code char[]} arguments (e.g. {@code String.valueOf(char[],
+ * ...)}, {@code StringBuilder.insert(int, char[], ...)}) to recover the
+ * concrete content of a char array from the underlying value domain, so
+ * that the resulting String content can be tracked precisely instead of
+ * collapsing to top.
  */
-final class StringValueOfSupport {
+public final class CharArrayConstantSupport {
 
-	private StringValueOfSupport() {
+	private CharArrayConstantSupport() {
 	}
 
 	// reads count characters starting at offset from the array referenced by
 	// arrayRef, or returns null as soon as either arrayRef is not an array
 	// reference or one of the cells in range cannot be resolved to a single
 	// constant value
-	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> String computeConstantSubstring(
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> String computeConstantSubstring(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression arrayRef,
@@ -80,7 +82,7 @@ final class StringValueOfSupport {
 	// resolves the (constant) length of the array referenced by arrayRef, or
 	// null if it is not an array reference or its length is not known
 	// precisely
-	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Integer extractArrayLength(
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Integer extractArrayLength(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression arrayRef,
@@ -102,7 +104,7 @@ final class StringValueOfSupport {
 
 	// resolves expr to a single constant value tracked by the underlying
 	// value domain, or null if it cannot be resolved to exactly one constant
-	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Object extractConstantValue(
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Object extractConstantValue(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression expr,

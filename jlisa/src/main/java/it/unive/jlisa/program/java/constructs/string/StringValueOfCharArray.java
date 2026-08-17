@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.java.constructs.CharArrayConstantSupport;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -66,11 +67,11 @@ public class StringValueOfCharArray extends UnaryExpression implements Pluggable
 
 		String constantValue;
 		try {
-			Integer length = StringValueOfSupport.extractArrayLength(interprocedural, state, expr, getLocation(),
+			Integer length = CharArrayConstantSupport.extractArrayLength(interprocedural, state, expr, getLocation(),
 					this);
 			constantValue = length == null
 					? null
-					: StringValueOfSupport.computeConstantSubstring(interprocedural, state, expr, 0, length,
+					: CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, expr, 0, length,
 							getLocation(), this);
 		} catch (SemanticException e) {
 			throw e;
