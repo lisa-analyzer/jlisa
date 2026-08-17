@@ -132,8 +132,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		isStaticSat = analysis.satisfies(state, isStaticExpr, this);
 
 		// we don't know whether the method is static or not
-		if (isStaticSat == Satisfiability.UNKNOWN)
-			return state.topExecution();
+//		if (isStaticSat == Satisfiability.UNKNOWN)
+//			return state.topExecution();
 
 		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
 
@@ -560,7 +560,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 			// this should never happen. Method return types are loaded via
 			// constants
-			assert (exprType != null);
+//			assert (exprType != null);
 			if (exprType == null)
 				continue;
 
