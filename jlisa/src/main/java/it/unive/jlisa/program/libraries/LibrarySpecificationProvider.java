@@ -5,7 +5,13 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.antlr.v4.runtime.CharStreams;
@@ -177,7 +183,7 @@ public class LibrarySpecificationProvider {
 			do {
 				toLoad.addAll(frontier);
 				nextFrontier = new TreeSet<>();
-				for (String n : frontier) 
+				for (String n : frontier)
 					nextFrontier.addAll(EXCEPTION_HIERARCHY.getOrDefault(n, List.of()));
 				frontier = nextFrontier;
 			} while (!nextFrontier.isEmpty());

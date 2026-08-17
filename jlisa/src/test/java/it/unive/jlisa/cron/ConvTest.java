@@ -1,0 +1,16 @@
+package it.unive.jlisa.cron;
+
+import it.unive.jlisa.helpers.CronConfiguration;
+import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
+import it.unive.jlisa.helpers.TestHelpers;
+import java.io.IOException;
+import org.junit.jupiter.api.Test;
+
+public class ConvTest extends JLiSAAnalysisExecutor {
+
+	@Test
+	public void convTest() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("conv", "", "Main.java");
+		perform(conf);
+	}
+}

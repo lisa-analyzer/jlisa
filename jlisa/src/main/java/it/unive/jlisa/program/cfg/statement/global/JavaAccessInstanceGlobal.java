@@ -185,8 +185,10 @@ public class JavaAccessInstanceGlobal
 							GlobalVariable var = global.toSymbolicVariable(loc);
 							AccessChild access;
 							if (expr instanceof AccessChild)
-								// if we are already in the memory we do not need to
-								// dereference again, we already have an allocation site
+								// if we are already in the memory we do not
+								// need to
+								// dereference again, we already have an
+								// allocation site
 								access = new AccessChild(global.getStaticType(), expr, var, loc);
 							else
 								access = new AccessChild(global.getStaticType(), container, var, loc);

@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
-import java.util.Set;
-
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -28,6 +26,7 @@ import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
+import java.util.Set;
 
 public class ListToArray
 		extends

@@ -1,12 +1,5 @@
 package it.unive.jlisa.program.type;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
@@ -19,6 +12,12 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
 import it.unive.lisa.util.collections.workset.WorkingSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class JavaClassType
 		implements
@@ -228,9 +227,9 @@ public class JavaClassType
 		return new JavaNullLiteral(cfg, location);
 	}
 
-    public static JavaClassType getExceptionType() {
+	public static JavaClassType getExceptionType() {
 		return lookup("java.lang.Exception");
-    }
+	}
 
 	public static JavaClassType getClassCastExceptionType() {
 		return lookup("java.lang.ClassCastException");

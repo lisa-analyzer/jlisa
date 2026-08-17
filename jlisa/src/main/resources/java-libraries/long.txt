@@ -4,6 +4,9 @@ class java.lang.Long extends java.lang.Number:
 
 	instance field value type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 
+	method Long_clinit: it.unive.jlisa.program.java.constructs.longw.LongClassInitializer
+		type it.unive.lisa.type.VoidType::INSTANCE
+
 	instance method Long: it.unive.jlisa.program.java.constructs.longw.LongEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.Long*
