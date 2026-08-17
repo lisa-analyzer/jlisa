@@ -1,0 +1,44 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':55:6] on 'void Main::test(Main* this, int x, int z, int r)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "short_org.sosy_lab.sv_benchmarks.Verifier.nondetShort()_1707439301.graph.json", "void_Main.Main(Main__this)_1707433504.graph.json", "void_Main.Main_clinit()_1707433504.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.test(Main__this,_int_x,_int_z,_int_r)_1707427831.graph.json" ],
+  "info" : {
+    "cfgs" : "17",
+    "duration" : "4ms",
+    "end" : "2026-08-14T17:43:13.219+02:00",
+    "expressions" : "84",
+    "files" : "5",
+    "globals" : "40",
+    "members" : "261",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-14T17:43:13.215+02:00",
+    "statements" : "45",
+    "units" : "52",
+    "version" : "1.0",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/ExSymExe15_true"
+  }
+}

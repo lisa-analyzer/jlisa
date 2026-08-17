@@ -19,6 +19,9 @@ import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
+import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.util.numeric.IntInterval;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -79,6 +82,21 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+
+		// this covers potential overflows for +, -, *, ++, --
+		if (expression.getOperator() instanceof AdditionOperator
+				|| expression.getOperator() instanceof SubtractionOperator
+				|| expression.getOperator() instanceof MultiplicationOperator) {
+			if (left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite()) {
+				return new ConstantValueIntInterval(
+						constantPropagation.evalBinaryExpression(expression, left.getConstantValue(),
+								right.getConstantValue(),
+								pp, oracle),
+						interval.top()); // potential overflow, return the top
+											// interval
+			}
+		}
+
 		return new ConstantValueIntInterval(
 				constantPropagation.evalBinaryExpression(expression, left.getConstantValue(), right.getConstantValue(),
 						pp, oracle),
@@ -524,5 +542,4 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 
 		return BaseNonRelationalValueDomain.super.satisfies(environment, expression, pp, oracle);
 	}
-
 }
