@@ -1,8 +1,6 @@
 public class ReflectionTest {
 	public static void main(String[] args) throws Exception {
 
-		int zz = A.foo1;
-
 		String s = new String("Foo");
 		Class c = Class.forName(s);
 
