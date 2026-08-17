@@ -16,7 +16,7 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.UnaryExpression;
+import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.Constant;
@@ -25,21 +25,23 @@ import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
-public class StringValueOfCharArray extends UnaryExpression implements PluggableStatement {
+public class StringValueOfCharArrayRange extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	public StringValueOfCharArray(
+	public StringValueOfCharArrayRange(
 			CFG cfg,
 			CodeLocation location,
-			Expression exp) {
-		super(cfg, location, "valueOf", exp);
+			Expression left,
+			Expression middle,
+			Expression right) {
+		super(cfg, location, "valueOf", left, middle, right);
 	}
 
-	public static StringValueOfCharArray build(
+	public static StringValueOfCharArrayRange build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new StringValueOfCharArray(cfg, location, params[0]);
+		return new StringValueOfCharArrayRange(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -55,10 +57,12 @@ public class StringValueOfCharArray extends UnaryExpression implements Pluggable
 	}
 
 	@Override
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			SymbolicExpression expr,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
@@ -66,12 +70,12 @@ public class StringValueOfCharArray extends UnaryExpression implements Pluggable
 
 		String constantValue;
 		try {
-			Integer length = StringValueOfSupport.extractArrayLength(interprocedural, state, expr, getLocation(),
-					this);
-			constantValue = length == null
-					? null
-					: StringValueOfSupport.computeConstantSubstring(interprocedural, state, expr, 0, length,
-							getLocation(), this);
+			Object offsetVal = StringValueOfSupport.extractConstantValue(interprocedural, state, middle, this);
+			Object countVal = StringValueOfSupport.extractConstantValue(interprocedural, state, right, this);
+			constantValue = offsetVal instanceof Integer && countVal instanceof Integer
+					? StringValueOfSupport.computeConstantSubstring(interprocedural, state, left,
+							(Integer) offsetVal, (Integer) countVal, getLocation(), this)
+					: null;
 		} catch (SemanticException e) {
 			throw e;
 		} catch (RuntimeException e) {
@@ -88,8 +92,8 @@ public class StringValueOfCharArray extends UnaryExpression implements Pluggable
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		// String.valueOf(char[]) allocates and returns a NEW String object:
-		// the char array passed in must not be touched
+		// String.valueOf(char[], int, int) allocates and returns a NEW String
+		// object: the char array passed in must not be touched
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 				new JavaReferenceType(stringType), new Expression[0]);
 		AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
