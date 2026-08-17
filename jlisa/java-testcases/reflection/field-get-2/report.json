@@ -4,33 +4,33 @@
   }, {
     "message" : "['Main.java':11:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
+    "message" : "['Main.java':14:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
     "message" : "['Main.java':15:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':16:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':18:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':21:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':19:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':22:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':23:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':24:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':9:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "3",
-    "duration" : "253ms",
-    "end" : "2026-08-17T13:21:13.511+02:00",
-    "expressions" : "52",
+    "cfgs" : "6",
+    "duration" : "32ms",
+    "end" : "2026-08-17T13:22:51.047+02:00",
+    "expressions" : "68",
     "files" : "1",
-    "globals" : "53",
-    "members" : "267",
+    "globals" : "54",
+    "members" : "270",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T13:21:13.258+02:00",
-    "statements" : "21",
-    "units" : "53",
+    "start" : "2026-08-17T13:22:51.015+02:00",
+    "statements" : "26",
+    "units" : "55",
     "version" : "1.0",
     "warnings" : "8"
   },
@@ -53,6 +53,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/reflection/class-for-name-2"
+    "workdir" : "java-outputs/reflection/field-get-2"
   }
 }

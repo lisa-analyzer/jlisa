@@ -4,35 +4,37 @@
   }, {
     "message" : "['Main.java':11:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':15:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':17:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':16:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':18:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':19:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':21:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':23:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':22:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':24:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':9:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':25:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
   "notices" : [ ],
-  "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "report.json", "void_Cat.Cat(Cat__this)_1707434682.graph.json", "void_Felid.Felid(Felid__this)_1707434713.graph.json", "void_Felid.Felid(Felid__this)_318737694.graph.json", "void_Mammal.Mammal(Mammal__this)_1707434744.graph.json", "void_Mammal.Mammal(Mammal__this)_218803778.graph.json", "void_Mammal.Mammal(Mammal__this)_318738407.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "3",
-    "duration" : "253ms",
-    "end" : "2026-08-17T13:21:13.511+02:00",
-    "expressions" : "52",
-    "files" : "1",
+    "cfgs" : "5",
+    "duration" : "361ms",
+    "end" : "2026-08-17T13:22:26.582+02:00",
+    "expressions" : "57",
+    "files" : "7",
     "globals" : "53",
-    "members" : "267",
+    "members" : "269",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T13:21:13.258+02:00",
-    "statements" : "21",
-    "units" : "53",
+    "start" : "2026-08-17T13:22:26.221+02:00",
+    "statements" : "28",
+    "units" : "56",
     "version" : "1.0",
-    "warnings" : "8"
+    "warnings" : "9"
   },
   "configuration" : {
     "asynchronousListeners" : "",
@@ -53,6 +55,6 @@
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
     "wideningThreshold" : "5",
-    "workdir" : "java-outputs/reflection/class-for-name-2"
+    "workdir" : "java-outputs/reflection/class-new-instance-1"
   }
 }
