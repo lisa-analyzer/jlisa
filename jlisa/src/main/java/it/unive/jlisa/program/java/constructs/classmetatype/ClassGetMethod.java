@@ -368,8 +368,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		GlobalVariable parameterTypesVar = new GlobalVariable(Untyped.INSTANCE, "parameterTypes", location);
 
 		// candidateMethod is of type Method*
-
-		Satisfiability res = Satisfiability.NOT_SATISFIED;
+		Satisfiability res = Satisfiability.BOTTOM;
 
 		// stringequals on the names
 		HeapDereference derefMethod = new HeapDereference(methodMetaType, candidateMethod, location);

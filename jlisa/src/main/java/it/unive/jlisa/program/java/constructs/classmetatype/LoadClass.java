@@ -45,6 +45,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.Comparator;
 
 public class LoadClass extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -138,7 +140,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			SymbolicExpression currentClazz = callState.getExecutionExpressions().iterator().next();
 			HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), currentClazz, location);
 
-			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors();
+			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors().stream().sorted(Comparator.comparing(CompilationUnit::getName)).collect(Collectors.toList());
 
 			ArrayList<ExpressionSet> loadedInterfaces = new ArrayList<>();
 

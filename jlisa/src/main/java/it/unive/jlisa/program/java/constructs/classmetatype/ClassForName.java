@@ -41,6 +41,7 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
+import it.unive.lisa.program.InterfaceUnit;
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -125,6 +126,12 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				tmp = InitializedClassSet.initialize(tmp, new JavaReferenceType(t), this, interprocedural);
 
 				for (CompilationUnit ancestorCu : cu.getImmediateAncestors().stream().toList()) {
+
+					if (ancestorCu instanceof InterfaceUnit) {
+						// TODO: only call the static initializer iff the interface contains a default method
+						continue;
+					}
+
 					Type ancestorType = typeSystem.getType(ancestorCu.getName());
 					assert(ancestorType instanceof UnitType);
 					tmp = InitializedClassSet.initialize(tmp, new JavaReferenceType(ancestorType), this, interprocedural);
