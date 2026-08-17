@@ -1,7 +1,10 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -14,7 +17,9 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -60,6 +65,20 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, rightAccess, originating);
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		AnalysisState<A> tmp = analysis.assign(state, leftAccess, rightAccess, originating);
+
+		// capacity of a StringBuilder(String) is initialValue.length() + 16,
+		// as per the Java spec
+		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
+		AccessChild capAccess = new AccessChild(JavaIntType.INSTANCE, left, capVar, getLocation());
+		it.unive.lisa.symbolic.value.UnaryExpression rightLength = new it.unive.lisa.symbolic.value.UnaryExpression(
+				JavaIntType.INSTANCE, rightAccess, JavaStringLengthOperator.INSTANCE, getLocation());
+		it.unive.lisa.symbolic.value.BinaryExpression capacityValue = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaIntType.INSTANCE, rightLength, new Constant(JavaIntType.INSTANCE, 16, getLocation()),
+				NumericNonOverflowingAdd.INSTANCE, getLocation());
+
+		return analysis.assign(tmp, capAccess, capacityValue, originating);
 	}
 }
