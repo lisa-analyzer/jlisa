@@ -4,6 +4,7 @@ import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -31,6 +32,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
@@ -41,6 +43,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -155,6 +158,13 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 			String clazzName = (String) ((Constant) clazzNameConstraint.getLeft()).getValue();
 			clazzName = clazzName.replace('$', '.');
 			Unit clazzUnit = getProgram().getUnit(clazzName);
+
+			assert (clazzUnit != null);
+			assert (clazzUnit instanceof CompilationUnit);
+
+			UnitType ut = getTypeFromStr(clazzName);
+			CompilationUnit compUnit = (CompilationUnit) clazzUnit;
+			state = InitializedClassSet.initialize(state, new JavaReferenceType(ut), this, interprocedural);
 
 			for (BinaryExpression fieldNameConstraint : fieldNameConstraints) {
 
@@ -302,5 +312,17 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 						return null;
 					}
 				});
+	}
+
+	private UnitType getTypeFromStr(
+			String clazzName) {
+
+		clazzName = clazzName.replace('$', '.');
+		Type t = getProgram().getTypes().getType(clazzName);
+
+		if (!(t instanceof UnitType))
+			return null;
+
+		return (UnitType) t;
 	}
 }
