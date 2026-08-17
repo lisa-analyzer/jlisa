@@ -360,7 +360,6 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
