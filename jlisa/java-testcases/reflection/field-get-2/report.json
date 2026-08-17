@@ -10,29 +10,41 @@
   }, {
     "message" : "['Main.java':18:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':19:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':19:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
     "message" : "['Main.java':22:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
     "message" : "['Main.java':23:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':26:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':27:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':30:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':31:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':34:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+  }, {
+    "message" : "['Main.java':35:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   } ],
   "notices" : [ ],
-  "files" : [ "report.json", "void_A.A_clinit()_1707435457.graph.json", "void_B.B_clinit()_1707435457.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "java.lang.Object__ReflectionTest.getFieldValue(java.lang.Object__o,_java.lang.reflect.Field__f)_1707431923.graph.json", "java.lang.Object__ReflectionTest.getFieldValue(java.lang.Object__o,_java.lang.reflect.Field__f)_1707432171.graph.json", "java.lang.Object__ReflectionTest.getFieldValue(java.lang.Object__o,_java.lang.reflect.Field__f)_1707432419.graph.json", "report.json", "void_A.A_clinit()_1707435457.graph.json", "void_B.B_clinit()_1707435457.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "39ms",
-    "end" : "2026-08-17T15:30:09.300+02:00",
-    "expressions" : "68",
-    "files" : "3",
+    "duration" : "60ms",
+    "end" : "2026-08-17T17:09:38.877+02:00",
+    "expressions" : "94",
+    "files" : "6",
     "globals" : "54",
     "members" : "270",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T15:30:09.261+02:00",
-    "statements" : "26",
+    "start" : "2026-08-17T17:09:38.817+02:00",
+    "statements" : "35",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "8"
+    "warnings" : "14"
   },
   "configuration" : {
     "asynchronousListeners" : "",
