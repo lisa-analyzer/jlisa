@@ -31,6 +31,8 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JavaArrayAccess extends BinaryExpression {
 
@@ -107,13 +109,12 @@ public class JavaArrayAccess extends BinaryExpression {
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
-			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
-			return analysis.smallStepSemantics(state, access, this);
+			return readArrayElement(analysis, state, container, right, lenAccess, accessType);
 		} else {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
-			SymbolicExpression access = new AccessChild(accessType, container, right, getLocation());
-			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, access, this);
+			AnalysisState<A> noExceptionState = readArrayElement(analysis, state, container, right, lenAccess,
+					accessType);
 
 			// builds the exception
 			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
@@ -140,6 +141,45 @@ public class JavaArrayAccess extends BinaryExpression {
 
 			return noExceptionState.lub(exceptionState);
 		}
+	}
+
+	// array elements are written with constant indices (e.g. by reflection
+	// metadata like Class::getMethods), so a heap identifier built from a
+	// non-constant right (e.g. a loop variable abstracted to top) would be
+	// disconnected from every written cell; fall back to joining over all
+	// cells within the known bounds when right isn't resolvable to constants
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> readArrayElement(
+			Analysis<A, D> analysis,
+			AnalysisState<A> state,
+			SymbolicExpression container,
+			SymbolicExpression right,
+			AccessChild lenAccess,
+			Type accessType)
+			throws SemanticException {
+		List<SymbolicExpression> concreteIndexes = new ArrayList<>();
+		for (SymbolicExpression rewritten : analysis.rewrite(state, right, this))
+			if (rewritten instanceof Constant)
+				concreteIndexes.add(rewritten);
+
+		if (!concreteIndexes.isEmpty()) {
+			AnalysisState<A> result = state.bottomExecution();
+			for (SymbolicExpression idx : concreteIndexes)
+				result = result.lub(analysis.smallStepSemantics(state,
+						new AccessChild(accessType, container, idx, getLocation()), this));
+			return result;
+		}
+
+		AnalysisState<A> result = state.bottomExecution();
+		for (int i = 0;; i++) {
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, getLocation());
+			it.unive.lisa.symbolic.value.BinaryExpression inBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaBooleanType.INSTANCE, idx, lenAccess, ComparisonLt.INSTANCE, getLocation());
+			if (analysis.satisfies(state, inBounds, this) == Satisfiability.NOT_SATISFIED)
+				break;
+			result = result.lub(analysis.smallStepSemantics(state,
+					new AccessChild(accessType, container, idx, getLocation()), this));
+		}
+		return result;
 	}
 
 	@Override
