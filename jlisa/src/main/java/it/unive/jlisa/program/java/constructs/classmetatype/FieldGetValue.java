@@ -37,6 +37,8 @@ import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.CompilationUnit;
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
@@ -51,6 +53,7 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
@@ -168,6 +171,11 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			Unit clazzUnit = getProgram().getUnit(clazzName);
 
 			assert (clazzUnit != null);
+			assert (clazzUnit instanceof CompilationUnit);
+
+			UnitType t = getTypeFromStr(clazzName);
+			CompilationUnit compUnit = (CompilationUnit) clazzUnit;
+			state = InitializedClassSet.initialize(state, new JavaReferenceType(t), this, interprocedural);
 
 			for (it.unive.lisa.symbolic.value.BinaryExpression fieldNameConstraint : fieldNameConstraints) {
 
@@ -381,5 +389,17 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						return null;
 					}
 				});
+	}
+
+	private UnitType getTypeFromStr(
+			String clazzName) {
+
+		clazzName = clazzName.replace('$', '.');
+		Type t = getProgram().getTypes().getType(clazzName);
+
+		if (!(t instanceof UnitType))
+			return null;
+
+		return (UnitType) t;
 	}
 }
