@@ -43,6 +43,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 public class InternalInitClassMetaObject extends UnaryExpression implements PluggableStatement {
 
@@ -113,8 +114,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 	Collection<Global> getAllFields(
 			CompilationUnit unit) {
-		Collection<Global> fields = new ArrayList<>(unit.getGlobalsRecursively());
-		return fields;
+		return unit.getGlobalsRecursively().stream().sorted(Comparator.comparing(Global::getName)).collect(Collectors.toList());
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadGlobals(
@@ -183,16 +183,15 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 				? unit.getName().substring(unit.getName().lastIndexOf('.') + 1)
 				: unit.getName();
 
-		Collection<CodeMember> methods = unit.getCodeMembersRecursively().stream()
-				.filter(cm -> {
-					String name = cm.getDescriptor().getName();
-					boolean isCtor = name.equals(unitSimpleName);
-					boolean isSyntheticClinit = name.endsWith(InitializedClassSet.SUFFIX_CLINIT);
-					return !isCtor && !isSyntheticClinit;
-				})
-				.collect(Collectors.toCollection(ArrayList::new));
-
-		return methods;
+		return unit.getCodeMembersRecursively().stream()
+			    .filter(cm -> {
+				String name = cm.getDescriptor().getName();
+				boolean isCtor = name.equals(unitSimpleName);
+				boolean isSyntheticClinit = name.endsWith(InitializedClassSet.SUFFIX_CLINIT);
+				return !isCtor && !isSyntheticClinit;
+			    })
+			    .sorted(Comparator.comparing((CodeMember cm) -> cm.getDescriptor().getSignature()))
+			    .collect(Collectors.toList());
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadMethods(

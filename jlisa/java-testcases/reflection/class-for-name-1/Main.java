@@ -1,5 +1,8 @@
 public class ReflectionTest {
 	public static void main(String[] args) throws Exception {
+
+		int zz = A.foo1;
+
 		String s = new String("Foo");
 		Class c = Class.forName(s);
 
@@ -27,5 +30,10 @@ class Foo extends Baz {
 	public int[] ages;
 
 	public String[] nicknames;
+}
+
+
+interface A {
+	static int foo1 = 42;
 }
 
