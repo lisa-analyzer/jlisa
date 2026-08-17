@@ -50,6 +50,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
@@ -102,6 +103,27 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
+		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+
+		AnalysisState<A> result = state.bottomExecution();
+		for (SymbolicExpression method : methods) {
+			result = result.lub(invoke(interprocedural, state, method, middle, right, expressions));
+		}
+		return result;
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> invoke(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		CodeLocation location = getLocation();
+		CFG cfg = getCFG();
+
 		Type stringType = JavaClassType.getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
 		Type methodType = JavaClassType.getMethodType();
@@ -112,17 +134,22 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
 
-		HeapDereference derefMethod = new HeapDereference(methodType, left, location);
+		SymbolicExpression derefMethod = left;
 		AccessChild accessName = new AccessChild(refStringType, derefMethod, nameVar, location);
 
 		// method->name->value
 		HeapDereference derefName = new HeapDereference(stringType, accessName, location);
 		AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
+		// if this is just null, throw a null pointer exception
+		Set<Type> receiverMethodTypes = analysis.getRuntimeTypesOf(state, left, this);
+		if (receiverMethodTypes.size() == 1 && receiverMethodTypes.contains(NullType.INSTANCE)) {
+			return throwNullPointerException(interprocedural, state, expressions);
+		}
+
 		// check if method is static via modifiers
 		GlobalVariable modifiersVar = new GlobalVariable(Untyped.INSTANCE, "modifiers", location);
-		HeapDereference derefMethodModifiers = new HeapDereference(methodType, left, location);
-		AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefMethodModifiers, modifiersVar,
+		AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefMethod, modifiersVar,
 				location);
 
 		it.unive.lisa.symbolic.value.UnaryExpression isStaticExpr = new it.unive.lisa.symbolic.value.UnaryExpression(
@@ -132,14 +159,13 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		isStaticSat = analysis.satisfies(state, isStaticExpr, this);
 
 		// we don't know whether the method is static or not
-//		if (isStaticSat == Satisfiability.UNKNOWN)
-//			return state.topExecution();
-
-		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
+		if (isStaticSat == Satisfiability.UNKNOWN)
+			return state.topExecution();
 
 		AnalysisState<A> exceptionState = state.bottomExecution();
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 
+		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
 		// throw a NullPointerException if the method is not static and the
 		// runtime type
 		// of the receiver could be null
@@ -179,6 +205,11 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		HeapDereference derefArr = new HeapDereference(refObjectArrType.getInnerType(), right, location);
 		AccessChild lenAccess = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
 
+		Satisfiability nArgsMatch = isNArgsEq(interprocedural, state, derefMethod, lenAccess);
+		if (nArgsMatch != Satisfiability.SATISFIED) {
+			return throwIllegalArgumentException(interprocedural, state, expressions);
+		}
+
 		boolean outOfBoundsMethodArr = false;
 
 		// extract all the symbolic expressions from the third argument
@@ -200,7 +231,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			Expression arrExpression = getRight();
 			Expression accessIdx = new IntLiteral(cfg, location, i);
 
-			JavaArrayAccess expr = new JavaArrayAccess(cfg, refMethodType, location, arrExpression, accessIdx);
+			JavaArrayAccess expr = new JavaArrayAccess(cfg, Untyped.INSTANCE, location, arrExpression, accessIdx);
 			args.add(expr);
 
 			// TODO: check the types of the arguments. If one does not match
@@ -265,6 +296,12 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 				assert (!sem.getExecutionExpressions().isEmpty());
 
+				// if open call, it's a stray call. Throw an illegal argument exception
+				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
+					exceptionState = exceptionState.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+					continue;
+				}
+
 				// TODO: if the method call threw an exception, wrap it into a
 				// InvocationException
 
@@ -295,7 +332,6 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			}
 		}
 
-		assert (!noExceptionState.isBottom());
 		return noExceptionState.lub(exceptionState);
 	}
 
@@ -375,6 +411,37 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				});
 	}
 
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Satisfiability isNArgsEq(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			AccessChild right)
+			throws SemanticException {
+
+		CodeLocation location = getLocation();
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+
+		Type classMetaType = JavaClassType.getClassMetaType();
+		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
+		JavaArrayType classArrType = JavaArrayType.lookup(refClassMetaType, 1);
+		JavaReferenceType refClassArrType = new JavaReferenceType(classArrType);
+
+		// left is of type Method
+		GlobalVariable paramTypesVar = new GlobalVariable(Untyped.INSTANCE, "parameterTypes", location);
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
+
+		AccessChild accessParamTypes = new AccessChild(refClassArrType, left, paramTypesVar, location);
+		HeapDereference derefParamTypes = new HeapDereference(classArrType, accessParamTypes, location);
+		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, derefParamTypes, lengthVar, location);
+
+		it.unive.lisa.symbolic.value.BinaryExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				accessLen, right, ComparisonEq.INSTANCE, location);
+
+		Satisfiability sat = analysis.satisfies(state, eq, this);
+		return sat;
+	}
+
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -409,7 +476,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> List<BinaryExpression> getClassNameConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			HeapDereference derefMethod)
+			SymbolicExpression derefMethod)
 			throws SemanticException {
 
 		CodeLocation loc = getLocation();
@@ -442,7 +509,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			AnalysisState<A> state,
 			Set<Type> receiverTypes,
 			List<BinaryExpression> clazzNameConstraints,
-			HeapDereference derefMethod)
+			SymbolicExpression derefMethod)
 			throws SemanticException {
 
 		CodeLocation loc = getLocation();
@@ -516,7 +583,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> getBoxedState(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
-			HeapDereference derefMethod,
+			SymbolicExpression derefMethod,
 			StatementStore<A> expressions)
 			throws SemanticException {
 
