@@ -93,10 +93,21 @@ public class FloatClassInitializer extends NativeCFG implements PluggableStateme
 					getLocation());
 			Constant posInfConst = new Constant(JavaFloatType.INSTANCE, Float.POSITIVE_INFINITY, getLocation());
 
+			GlobalVariable negInfId = new GlobalVariable(JavaFloatType.INSTANCE,
+					"java.lang.Float::NEGATIVE_INFINITY",
+					getLocation());
+			Constant negInfConst = new Constant(JavaFloatType.INSTANCE, Float.NEGATIVE_INFINITY, getLocation());
+
+			GlobalVariable nanId = new GlobalVariable(JavaFloatType.INSTANCE, "java.lang.Float::NaN",
+					getLocation());
+			Constant nanConst = new Constant(JavaFloatType.INSTANCE, Float.NaN, getLocation());
+
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			state = analysis.assign(state, maxId, maxConst, this);
 			state = analysis.assign(state, minId, minConst, this);
 			state = analysis.assign(state, posInfId, posInfConst, this);
+			state = analysis.assign(state, negInfId, negInfConst, this);
+			state = analysis.assign(state, nanId, nanConst, this);
 			return state;
 		}
 	}

@@ -978,4 +978,76 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"impl", "prop2", "../common");
 		perform(conf);
 	}
+
+	@Test
+	public void ExSymExe15_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExe15_true",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeD2L_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeD2L_true",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeD2I_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeD2I_true",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeF2I_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeF2I_true",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeF2L_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeF2L_true",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void ExSymExeSwitch_true_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"ExSymExeSwitch_true",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void Inner_Retry_Until_OK_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"Inner-Retry-Until-OK",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void SpdyStream_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"SpdyStream",
+				"Main.java",
+				"../common");
+		perform(conf);
+	}
 }

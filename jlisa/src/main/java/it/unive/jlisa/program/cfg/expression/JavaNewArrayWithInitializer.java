@@ -94,7 +94,7 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		Constant length = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
 		tmp = analysis.assign(tmp, lenAccess, length, this);
 
-		for (int i = 0; i < params.length; i++) 
+		for (int i = 0; i < params.length; i++)
 			for (SymbolicExpression expr : params[i]) {
 				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
