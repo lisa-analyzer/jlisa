@@ -431,7 +431,7 @@ public class JavaNumericInterval extends Interval {
 	 * Yields the interval of all the values representable by the given integral
 	 * numeric type (e.g., [-128, 127] for {@code byte}).
 	 */
-	private static IntInterval typeBounds(
+	static IntInterval typeBounds(
 			JavaNumericType type) {
 		int bits = type.getNBits();
 		boolean unsigned = type.isUnsigned();
