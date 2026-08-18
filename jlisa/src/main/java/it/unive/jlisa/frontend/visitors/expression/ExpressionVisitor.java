@@ -1,7 +1,6 @@
 package it.unive.jlisa.frontend.visitors.expression;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
-import it.unive.lisa.type.TypeSystem;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.util.FQNUtils;

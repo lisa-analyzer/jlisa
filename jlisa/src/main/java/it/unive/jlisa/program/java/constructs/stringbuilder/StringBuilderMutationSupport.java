@@ -28,14 +28,14 @@ final class StringBuilderMutationSupport {
 	}
 
 	/**
-	 * Mutates {@code receiver.value} in place, computing the new value from
-	 * a snapshot of the old one rather than referencing {@code
+	 * Mutates {@code receiver.value} in place, computing the new value from a
+	 * snapshot of the old one rather than referencing {@code
 	 * receiver.value} directly within its own assignment's RHS:
 	 * self-referencing a heap field in its own assignment is unsound in this
-	 * framework, since the heap domain applies the assignment's structural
-	 * side effects on the target BEFORE rewriting the RHS, so an embedded
-	 * reference to the same field would resolve against the already-updated
-	 * heap state and evaluate to top.
+	 * framework, since the heap domain applies the assignment's structural side
+	 * effects on the target BEFORE rewriting the RHS, so an embedded reference
+	 * to the same field would resolve against the already-updated heap state
+	 * and evaluate to top.
 	 */
 	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> mutateValue(
 			Analysis<A, D> analysis,

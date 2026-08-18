@@ -89,7 +89,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 		AnalysisState<A> result = state.bottomExecution();
 
-		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
+				this);
 		for (SymbolicExpression clazz : classes) {
 
 			AnalysisState<A> searchResult = state;
@@ -102,7 +103,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				// search for the method
 				else {
 					AnalysisState<
-							A> methodSearched = searchMethod(interprocedural, searchResult, clazz, middle, right, expressions);
+							A> methodSearched = searchMethod(interprocedural, searchResult, clazz, middle, right,
+									expressions);
 
 					if (methodSearched.isTop() || methodSearched.isBottom()) {
 						return methodSearched;
@@ -111,13 +113,13 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 					// didn't find any matching method
 					if (methodSearched.getExecutionExpressions().isEmpty()) {
 						searchResult = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
-					}
-					else {
+					} else {
 						// found at least one method, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
-						for (SymbolicExpression expr: methodSearched.getExecutionExpressions()) {
+						for (SymbolicExpression expr : methodSearched.getExecutionExpressions()) {
 							ClassCopyMethod copyMethod = new ClassCopyMethod(getCFG(), getLocation(), getMiddle());
-							tmp = tmp.lub(copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
+							tmp = tmp.lub(
+									copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
 						}
 						searchResult = tmp;
 					}
@@ -201,13 +203,14 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			if (t == null)
 				return state.topExecution();
 
-                        if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, state, left, this)) {
+			if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, state, left, this)) {
 
 				assert (ReflectionDataUtils.isClassLoaded(state, t, location));
 				ExpressionSet clazz = new ExpressionSet(
 						ReflectionDataUtils.getLoadedClassHandle(t, location));
 
-				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t, getLeft());
+				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t,
+						getLeft());
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state,
 						new ExpressionSet[] { clazz }, expressions);
 
@@ -253,8 +256,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			if (methodFound == Satisfiability.SATISFIED) {
 				HeapReference refMethod = new HeapReference(refMethodType, accessMethod, location);
 				return analysis.smallStepSemantics(state, refMethod, this);
-			}
-			else if (methodFound == Satisfiability.UNKNOWN) {
+			} else if (methodFound == Satisfiability.UNKNOWN) {
 				HeapReference refMethod = new HeapReference(refMethodType, accessMethod, location);
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refMethod, this);
 				unknownMethods = unknownMethods.lub(noExceptionState.getExecutionExpressions());

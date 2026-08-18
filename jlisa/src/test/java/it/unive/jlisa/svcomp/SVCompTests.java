@@ -1,14 +1,12 @@
 package it.unive.jlisa.svcomp;
 
-import java.io.IOException;
-
-import org.junit.Ignore;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
 import it.unive.jlisa.helpers.CronConfiguration;
 import it.unive.jlisa.helpers.JLiSAAnalysisExecutor;
 import it.unive.jlisa.helpers.TestHelpers;
+import java.io.IOException;
+import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 public class SVCompTests extends JLiSAAnalysisExecutor {
 

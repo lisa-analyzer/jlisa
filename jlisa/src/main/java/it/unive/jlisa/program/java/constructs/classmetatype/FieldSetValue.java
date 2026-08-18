@@ -1,10 +1,10 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -22,6 +22,7 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
@@ -32,7 +33,6 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
@@ -94,7 +94,8 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		CodeLocation loc = getLocation();
 		CFG cfg = getCFG();
 
-		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
+				this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {
@@ -237,8 +238,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 								expressions);
 						result = t;
 					}
-				}
-				else {
+				} else {
 					GlobalVariable reflectedAccess = new GlobalVariable(
 							reflectedGlobal.getStaticType(),
 							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),

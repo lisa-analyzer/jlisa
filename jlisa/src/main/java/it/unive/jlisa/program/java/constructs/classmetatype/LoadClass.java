@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionDataUtils;
-import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -43,10 +42,10 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Comparator;
 
 public class LoadClass extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -79,8 +78,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			}
 		}
 		loadingClazzName = loadingType.toString();
-                synGen = new SyntheticCodeLocationManager("internal-load-class-" + loadingClazzName);
-        }
+		synGen = new SyntheticCodeLocationManager("internal-load-class-" + loadingClazzName);
+	}
 
 	public LoadClass(
 			Type t,
@@ -101,7 +100,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			}
 		}
 		loadingClazzName = clazzName;
-                synGen = new SyntheticCodeLocationManager("internal-load-class-" + loadingClazzName);
+		synGen = new SyntheticCodeLocationManager("internal-load-class-" + loadingClazzName);
 	}
 
 	@Override
@@ -121,7 +120,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CodeLocation location = getLocation();
 
-                if (ReflectionDataUtils.isClassLoaded(state, loadingType, location)) {
+		if (ReflectionDataUtils.isClassLoaded(state, loadingType, location)) {
 			SymbolicExpression accessClazz = ReflectionDataUtils.getLoadedClassHandle(loadingType, location);
 			return analysis.smallStepSemantics(state, accessClazz, this);
 		}
@@ -136,11 +135,12 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		if (loadingType instanceof UnitType loadingClazz) {
 
 			// it's always just the GlobalVariable "returned" by allocateClass
-			assert(callState.getExecutionExpressions().size() == 1);
+			assert (callState.getExecutionExpressions().size() == 1);
 			SymbolicExpression currentClazz = callState.getExecutionExpressions().iterator().next();
 			HeapDereference derefClazz = new HeapDereference(JavaClassType.getClassMetaType(), currentClazz, location);
 
-			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors().stream().sorted(Comparator.comparing(CompilationUnit::getName)).collect(Collectors.toList());
+			Collection<CompilationUnit> ancestors = loadingClazz.getUnit().getImmediateAncestors().stream()
+					.sorted(Comparator.comparing(CompilationUnit::getName)).collect(Collectors.toList());
 
 			ArrayList<ExpressionSet> loadedInterfaces = new ArrayList<>();
 
@@ -157,7 +157,8 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 					GlobalVariable superClassVar = new GlobalVariable(Untyped.INSTANCE, "superClass", location);
 
-					// loadClass always returns just one executionExpression: the GlobalVariable referencing the Class allocation
+					// loadClass always returns just one executionExpression:
+					// the GlobalVariable referencing the Class allocation
 					assert (tmp.getExecutionExpressions().size() == 1);
 					SymbolicExpression superClazz = tmp.getExecutionExpressions().iterator().next();
 
@@ -330,25 +331,25 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		// set array of fields = null
 		AccessChild accessDeclaredFields = new AccessChild(refFieldArray, derefThisClazz, declaredFieldsVar, location);
 
-                nc = new NullConstant(location);
-                types = new HashSet<>();
-                types.add(refFieldArray);
-                typeToken = new TypeTokenType(types);
-                castTo = new Constant(typeToken, refFieldArray, location);
-                castAs = new BinaryExpression(refFieldArray, nc, castTo, TypeCast.INSTANCE, location);
-                tmp = analysis.assign(tmp, accessDeclaredFields, castAs, this);
+		nc = new NullConstant(location);
+		types = new HashSet<>();
+		types.add(refFieldArray);
+		typeToken = new TypeTokenType(types);
+		castTo = new Constant(typeToken, refFieldArray, location);
+		castAs = new BinaryExpression(refFieldArray, nc, castTo, TypeCast.INSTANCE, location);
+		tmp = analysis.assign(tmp, accessDeclaredFields, castAs, this);
 
 		// set array of methods = null
 		AccessChild accessDeclaredMethods = new AccessChild(refMethodArray, derefThisClazz, declaredMethodsVar,
 				location);
 
-                nc = new NullConstant(location);
-                types = new HashSet<>();
-                types.add(refMethodArray);
-                typeToken = new TypeTokenType(types);
-                castTo = new Constant(typeToken, refMethodArray, location);
-                castAs = new BinaryExpression(refMethodArray, nc, castTo, TypeCast.INSTANCE, location);
-                tmp = analysis.assign(tmp, accessDeclaredMethods, castAs, this);
+		nc = new NullConstant(location);
+		types = new HashSet<>();
+		types.add(refMethodArray);
+		typeToken = new TypeTokenType(types);
+		castTo = new Constant(typeToken, refMethodArray, location);
+		castAs = new BinaryExpression(refMethodArray, nc, castTo, TypeCast.INSTANCE, location);
+		tmp = analysis.assign(tmp, accessDeclaredMethods, castAs, this);
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingType.toString();

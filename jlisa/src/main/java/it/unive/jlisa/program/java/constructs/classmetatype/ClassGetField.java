@@ -86,40 +86,42 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		AnalysisState<A> result = state.bottomExecution();
 
-                ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
-                for (SymbolicExpression clazz : classes) {
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
+				this);
+		for (SymbolicExpression clazz : classes) {
 
-                        AnalysisState<A> searchResult = state;
-                        Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
+			AnalysisState<A> searchResult = state;
+			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
 
-                        for (Type t : clazzTypes) {
-                                if (t.isNullType()) {
-                                        searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
-                                }
-                                // search the field
-                                else {
-                                        AnalysisState<A> fieldSearched = searchField(interprocedural, searchResult, clazz, right, expressions);
+			for (Type t : clazzTypes) {
+				if (t.isNullType()) {
+					searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
+				}
+				// search the field
+				else {
+					AnalysisState<
+							A> fieldSearched = searchField(interprocedural, searchResult, clazz, right, expressions);
 
-                                        if (fieldSearched.isTop() || fieldSearched.isBottom())
-                                                return fieldSearched;
+					if (fieldSearched.isTop() || fieldSearched.isBottom())
+						return fieldSearched;
 
-                                        // didn't find any matching field
-                                        if (fieldSearched.getExecutionExpressions().isEmpty()) {
-                                                searchResult = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
-                                        } else {
-                                                // found at least one field, copy them
-                                                AnalysisState<A> tmp = state.bottomExecution();
-                                                for (SymbolicExpression expr : fieldSearched.getExecutionExpressions()) {
-                                                        ClassCopyField copyField = new ClassCopyField(getCFG(), getLocation(), getRight());
-                                                        tmp = tmp.lub(copyField.fwdUnarySemantics(interprocedural, fieldSearched, expr,
-                                                                expressions));
-                                                }
-                                                searchResult = tmp;
-                                        }
-                                }
-                        }
-                        result = result.lub(searchResult);
-                }
+					// didn't find any matching field
+					if (fieldSearched.getExecutionExpressions().isEmpty()) {
+						searchResult = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
+					} else {
+						// found at least one field, copy them
+						AnalysisState<A> tmp = state.bottomExecution();
+						for (SymbolicExpression expr : fieldSearched.getExecutionExpressions()) {
+							ClassCopyField copyField = new ClassCopyField(getCFG(), getLocation(), getRight());
+							tmp = tmp.lub(copyField.fwdUnarySemantics(interprocedural, fieldSearched, expr,
+									expressions));
+						}
+						searchResult = tmp;
+					}
+				}
+			}
+			result = result.lub(searchResult);
+		}
 
 		return result;
 	}
@@ -182,7 +184,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		if (constraints == null)
 			return state.topExecution();
 
-		// make sure that all classes we are searching have their reflection data
+		// make sure that all classes we are searching have their reflection
+		// data
 		// loaded
 		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
 
@@ -194,11 +197,12 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 			// cache reflection data if necessary
 			if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, state, left, this)) {
-                                assert(ReflectionDataUtils.isClassLoaded(state, t, location));
+				assert (ReflectionDataUtils.isClassLoaded(state, t, location));
 
 				ExpressionSet clazz = new ExpressionSet(ReflectionDataUtils.getLoadedClassHandle(t, location));
 
-				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t, getLeft());
+				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t,
+						getLeft());
 				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, state,
 						new ExpressionSet[] { clazz }, expressions);
 

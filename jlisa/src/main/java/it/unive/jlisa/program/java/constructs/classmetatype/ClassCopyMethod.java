@@ -1,11 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
-import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
-import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -13,7 +8,6 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -24,30 +18,25 @@ import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
-import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.TernaryExpression;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
-import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -117,19 +106,24 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 		HeapDereference derefOther = new HeapDereference(methodMetaType, expr, location);
 
 		// shallow copy clazz
-		result = copyField(analysis, methodAllocated, derefOther, derefThisMethod, clazzVar, refClassMetaType, expressions);
+		result = copyField(analysis, methodAllocated, derefOther, derefThisMethod, clazzVar, refClassMetaType,
+				expressions);
 
 		// shallow copy name
-		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, nameVar, refStringType, expressions));
+		result = result.lub(
+				copyField(analysis, methodAllocated, derefOther, derefThisMethod, nameVar, refStringType, expressions));
 
 		// shallow copy return type
-		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, typeVar, refClassMetaType, expressions));
+		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, typeVar, refClassMetaType,
+				expressions));
 
 		// shallow copy parameter types
-		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, paramTypesVar, refClassArrType, expressions));
+		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, paramTypesVar,
+				refClassArrType, expressions));
 
 		// copy modifiers
-		result = result.lub(copyField(analysis, methodAllocated, derefOther, derefThisMethod, modifiersVar, intType, expressions));
+		result = result.lub(
+				copyField(analysis, methodAllocated, derefOther, derefThisMethod, modifiersVar, intType, expressions));
 
 		return result.forgetIdentifier(method, this).withExecutionExpression(ref);
 	}
@@ -221,4 +215,3 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 	}
 
 }
-

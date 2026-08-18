@@ -23,8 +23,8 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
@@ -34,12 +34,12 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Shared best-effort constant reconstruction helpers, used by constructs
- * that consume {@code char[]} arguments (e.g. {@code String.valueOf(char[],
+ * Shared best-effort constant reconstruction helpers, used by constructs that
+ * consume {@code char[]} arguments (e.g. {@code String.valueOf(char[],
  * ...)}, {@code StringBuilder.insert(int, char[], ...)}) to recover the
- * concrete content of a char array from the underlying value domain, so
- * that the resulting String content can be tracked precisely instead of
- * collapsing to top.
+ * concrete content of a char array from the underlying value domain, so that
+ * the resulting String content can be tracked precisely instead of collapsing
+ * to top.
  */
 public final class CharArrayConstantSupport {
 
@@ -132,12 +132,13 @@ public final class CharArrayConstantSupport {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression expr,
-			ProgramPoint pp)
-			throws SemanticException {
+	private static <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					ProgramPoint pp)
+					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		SimpleAbstractDomain<?, ?, ?> innerDomain;

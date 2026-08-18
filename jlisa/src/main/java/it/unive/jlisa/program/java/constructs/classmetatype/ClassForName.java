@@ -1,8 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaIsClassDefinedOperator;
-import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -22,8 +22,8 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
-import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -41,12 +41,9 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import it.unive.lisa.program.InterfaceUnit;
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import java.util.stream.Collectors;
-import java.util.Set;
 
 public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -128,13 +125,15 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				for (CompilationUnit ancestorCu : cu.getImmediateAncestors().stream().toList()) {
 
 					if (ancestorCu instanceof InterfaceUnit) {
-						// TODO: only call the static initializer iff the interface contains a default method
+						// TODO: only call the static initializer iff the
+						// interface contains a default method
 						continue;
 					}
 
 					Type ancestorType = typeSystem.getType(ancestorCu.getName());
-					assert(ancestorType instanceof UnitType);
-					tmp = InitializedClassSet.initialize(tmp, new JavaReferenceType(ancestorType), this, interprocedural);
+					assert (ancestorType instanceof UnitType);
+					tmp = InitializedClassSet.initialize(tmp, new JavaReferenceType(ancestorType), this,
+							interprocedural);
 				}
 
 				LoadClass loadClass = new LoadClass(t, clazzName, cfg, location);

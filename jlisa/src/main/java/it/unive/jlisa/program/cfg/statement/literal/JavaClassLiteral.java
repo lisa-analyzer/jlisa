@@ -1,16 +1,8 @@
 package it.unive.jlisa.program.cfg.statement.literal;
 
 import it.unive.jlisa.program.java.constructs.classmetatype.LoadClass;
-import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaDoubleType;
-import it.unive.jlisa.program.type.JavaFloatType;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -23,10 +15,6 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.TypeSystem;
-import it.unive.lisa.type.VoidType;
-import java.util.Map;
-import java.util.Set;
 
 public class JavaClassLiteral extends Literal<Type> {
 
@@ -57,7 +45,8 @@ public class JavaClassLiteral extends Literal<Type> {
 		Type t = getValue();
 
 		if (t == null)
-			return interprocedural.getAnalysis().smallStepSemantics(entryState, new PushAny(getStaticType(), getLocation()), this);
+			return interprocedural.getAnalysis().smallStepSemantics(entryState,
+					new PushAny(getStaticType(), getLocation()), this);
 
 		LoadClass loadClass = new LoadClass(t, getValue().toString(), cfg, location);
 		AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0],

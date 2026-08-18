@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -36,9 +37,8 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
-import it.unive.lisa.program.Global;
 import it.unive.lisa.program.CompilationUnit;
-import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.cfg.CFG;
@@ -53,13 +53,13 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.type.UnitType;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -104,7 +104,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
-		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
+				this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {

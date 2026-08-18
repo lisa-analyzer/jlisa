@@ -40,7 +40,6 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -79,10 +78,11 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-                ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()), this);
+		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()),
+				this);
 
 		AnalysisState<A> result = state.bottomExecution();
-                for (SymbolicExpression clazz : classes) {
+		for (SymbolicExpression clazz : classes) {
 			result = result.lub(innerNewInstance(interprocedural, state, expr, expressions));
 		}
 		return result;
@@ -166,7 +166,8 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					CompilationUnit cu = ut.getUnit();
 
 					if (!hasDefaultCtor(cu)) {
-						exceptionState = exceptionState.lub(throwNoSuchMethodException(interprocedural, state, expressions));
+						exceptionState = exceptionState
+								.lub(throwNoSuchMethodException(interprocedural, state, expressions));
 						continue;
 					}
 				}
@@ -292,16 +293,17 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		return 0;
 	}
 
-	private boolean hasDefaultCtor(CompilationUnit cu) {
+	private boolean hasDefaultCtor(
+			CompilationUnit cu) {
 		String simpleName = cu.getName().contains(".")
 				? cu.getName().substring(cu.getName().lastIndexOf(".") + 1)
 				: cu.getName();
 
-                Collection<CodeMember> ctors = cu.getInstanceCodeMembersByName(simpleName, false);
-                for (CodeMember ctor : ctors) {
-                        if (ctor.getDescriptor().getFormals().length == 1)
-                                return true;
-                }
-                return false;
+		Collection<CodeMember> ctors = cu.getInstanceCodeMembersByName(simpleName, false);
+		for (CodeMember ctor : ctors) {
+			if (ctor.getDescriptor().getFormals().length == 1)
+				return true;
+		}
+		return false;
 	}
 }

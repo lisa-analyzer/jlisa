@@ -48,8 +48,8 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 			Expression expr) {
 		super(cfg, location, "loadMethod", expr);
 		methodData = d;
-                synGen = new SyntheticCodeLocationManager("internal-load-method-" +
-                        methodData.getUnit().getName() + "." + methodData.getName());
+		synGen = new SyntheticCodeLocationManager("internal-load-method-" +
+				methodData.getUnit().getName() + "." + methodData.getName());
 	}
 
 	@Override
@@ -72,16 +72,16 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 
 	/**
 	 * Loads this method's metaobject and, if {@code destAccessIdx} is
-	 * non-{@code null}, stores the resulting reference into it BEFORE
-	 * writing any of the metaobject's fields. This matters because storing a
-	 * freshly allocated object's reference into a heap-resident array cell
-	 * causes the heap domain to re-derive that object's allocation site as
-	 * weak (summarized), under a different identifier than the one used at
-	 * allocation time; any field written before that point, under the
-	 * strong identifier, becomes unreachable (and thus imprecise/top) once
-	 * later code reads the method back out of the array. Writing fields
-	 * after the array store instead keys them under the identifier that
-	 * every later reader (e.g. {@code Method.invoke}) will actually use.
+	 * non-{@code null}, stores the resulting reference into it BEFORE writing
+	 * any of the metaobject's fields. This matters because storing a freshly
+	 * allocated object's reference into a heap-resident array cell causes the
+	 * heap domain to re-derive that object's allocation site as weak
+	 * (summarized), under a different identifier than the one used at
+	 * allocation time; any field written before that point, under the strong
+	 * identifier, becomes unreachable (and thus imprecise/top) once later code
+	 * reads the method back out of the array. Writing fields after the array
+	 * store instead keys them under the identifier that every later reader
+	 * (e.g. {@code Method.invoke}) will actually use.
 	 */
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadAndStore(
 			InterproceduralAnalysis<A, D> interprocedural,

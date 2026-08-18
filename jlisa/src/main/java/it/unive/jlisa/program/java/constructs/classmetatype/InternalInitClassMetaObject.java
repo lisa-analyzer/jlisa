@@ -16,7 +16,6 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -24,8 +23,6 @@ import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMember;
-import it.unive.lisa.program.cfg.CodeMemberDescriptor;
-import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -39,15 +36,13 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class InternalInitClassMetaObject extends UnaryExpression implements PluggableStatement {
 
-        private SyntheticCodeLocationManager synGen;
+	private SyntheticCodeLocationManager synGen;
 
 	protected Statement originating;
 	private Type initializingClassType;
@@ -59,7 +54,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 			Expression expr) {
 		super(cfg, location, "internalInitClassMetaObject", expr);
 		initializingClassType = t;
-                synGen = new SyntheticCodeLocationManager("internal-cache-reflectiondata-" + initializingClassType.toString());
+		synGen = new SyntheticCodeLocationManager("internal-cache-reflectiondata-" + initializingClassType.toString());
 	}
 
 	@Override
@@ -85,7 +80,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 		AnalysisState<A> tmp = state;
 
-                if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, tmp, clazz, this)) {
+		if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, tmp, clazz, this)) {
 
 			if (initializingClassType instanceof UnitType ut) {
 				AnalysisState<A> fieldsLoaded = loadGlobals(interprocedural, tmp, expressions,
@@ -114,7 +109,8 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 	Collection<Global> getAllFields(
 			CompilationUnit unit) {
-		return unit.getGlobalsRecursively().stream().sorted(Comparator.comparing(Global::getName)).collect(Collectors.toList());
+		return unit.getGlobalsRecursively().stream().sorted(Comparator.comparing(Global::getName))
+				.collect(Collectors.toList());
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadGlobals(
@@ -131,7 +127,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
-                JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
+		JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
 
 		GlobalVariable declaredFieldsVar = new GlobalVariable(Untyped.INSTANCE, "declaredFields", getLocation());
 
@@ -141,9 +137,9 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		AccessChild accessFields = new AccessChild(new JavaReferenceType(fieldArrType), derefClazz, declaredFieldsVar,
 				location);
 
-                // allocate the field array
+		// allocate the field array
 		IntLiteral zero = new IntLiteral(getCFG(), location, 0);
-                Constant c = new Constant(JavaIntType.INSTANCE, globals.size(), location);
+		Constant c = new Constant(JavaIntType.INSTANCE, globals.size(), location);
 		JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refFieldArrType);
 
 		AnalysisState<A> fieldsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
@@ -184,14 +180,15 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 				: unit.getName();
 
 		return unit.getCodeMembersRecursively().stream()
-			    .filter(cm -> {
-				String name = cm.getDescriptor().getName();
-				boolean isCtor = name.equals(unitSimpleName);
-				boolean isSyntheticClinit = name.endsWith(InitializedClassSet.SUFFIX_CLINIT);
-				return !isCtor && !isSyntheticClinit;
-			    })
-			    .sorted(Comparator.comparing((CodeMember cm) -> cm.getDescriptor().getSignature()))
-			    .collect(Collectors.toList());
+				.filter(cm -> {
+					String name = cm.getDescriptor().getName();
+					boolean isCtor = name.equals(unitSimpleName);
+					boolean isSyntheticClinit = name.endsWith(InitializedClassSet.SUFFIX_CLINIT);
+					return !isCtor && !isSyntheticClinit;
+				})
+				.sorted(Comparator.comparing((
+						CodeMember cm) -> cm.getDescriptor().getSignature()))
+				.collect(Collectors.toList());
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadMethods(
@@ -208,7 +205,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		JavaReferenceType wrappedMethodType = new JavaReferenceType(JavaClassType.getMethodType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType methodArrType = JavaArrayType.lookup(wrappedMethodType, 1);
-                JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
+		JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
 
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", getLocation());
@@ -217,17 +214,17 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		AccessChild accessMethods = new AccessChild(new JavaReferenceType(methodArrType), derefClazz,
 				declaredMethodsVar, location);
 
-                AnalysisState<A> tmp = state;
+		AnalysisState<A> tmp = state;
 
-                IntLiteral zero = new IntLiteral(getCFG(), location, 0);
-                Constant c = new Constant(JavaIntType.INSTANCE, methods.size(), location);
-                JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refMethodArrType);
+		IntLiteral zero = new IntLiteral(getCFG(), location, 0);
+		Constant c = new Constant(JavaIntType.INSTANCE, methods.size(), location);
+		JavaNewArray newArr = new JavaNewArray(getCFG(), synGen.nextLocation(), zero, refMethodArrType);
 
-                AnalysisState<A> methodsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
-                for (SymbolicExpression expr : methodsAllocated.getExecutionExpressions()) {
-                        tmp = analysis.assign(methodsAllocated, accessMethods, expr, this);
-                }
-                tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
+		AnalysisState<A> methodsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
+		for (SymbolicExpression expr : methodsAllocated.getExecutionExpressions()) {
+			tmp = analysis.assign(methodsAllocated, accessMethods, expr, this);
+		}
+		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
 
 		HeapDereference derefArr = new HeapDereference(methodArrType, accessMethods, location);
 
@@ -291,7 +288,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		AnalysisState<A> tmp = state;
 
 		// initialize the class if not already initialized
-                if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, tmp, accessSuperclass, this)) {
+		if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, tmp, accessSuperclass, this)) {
 
 			SymbolicExpression expr = new HeapReference(refClassMetaType, accessSuperclass, location);
 

@@ -49,8 +49,8 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
@@ -103,7 +103,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
-		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()), this);
+		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
+				this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression method : methods) {
@@ -296,9 +297,11 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 				assert (!sem.getExecutionExpressions().isEmpty());
 
-				// if open call, it's a stray call. Throw an illegal argument exception
+				// if open call, it's a stray call. Throw an illegal argument
+				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
-					exceptionState = exceptionState.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+					exceptionState = exceptionState
+							.lub(throwIllegalArgumentException(interprocedural, state, expressions));
 					continue;
 				}
 

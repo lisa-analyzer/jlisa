@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import java.lang.reflect.Modifier;
-
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -19,7 +17,6 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
@@ -33,6 +30,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.lang.reflect.Modifier;
 
 public class LoadField extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -48,8 +46,8 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 			Expression expr) {
 		super(cfg, location, "loadField", expr);
 		fieldData = g;
-                synGen = new SyntheticCodeLocationManager("internal-load-field-" +
-                        fieldData.getContainer().getName() + "." + fieldData.getName());
+		synGen = new SyntheticCodeLocationManager("internal-load-field-" +
+				fieldData.getContainer().getName() + "." + fieldData.getName());
 	}
 
 	@Override
