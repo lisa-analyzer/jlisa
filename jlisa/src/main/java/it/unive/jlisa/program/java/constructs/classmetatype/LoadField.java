@@ -37,7 +37,7 @@ import it.unive.lisa.type.Untyped;
 public class LoadField extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
-	private static SyntheticCodeLocationManager synGen;
+	private SyntheticCodeLocationManager synGen;
 
 	private Global fieldData;
 

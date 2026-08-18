@@ -47,7 +47,7 @@ import java.util.Comparator;
 
 public class InternalInitClassMetaObject extends UnaryExpression implements PluggableStatement {
 
-        private static SyntheticCodeLocationManager synGen;
+        private SyntheticCodeLocationManager synGen;
 
 	protected Statement originating;
 	private Type initializingClassType;
@@ -240,12 +240,11 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 			LoadMethod loadMethod = new LoadMethod(method.getDescriptor(), getCFG(), getLocation(), this);
 
-			AnalysisState<A> t = loadMethod.fwdUnarySemantics(interprocedural, tmp, clazz, expressions);
-
-			// assign initialized method to the next index of the array
-			for (SymbolicExpression initializedMethod : t.getExecutionExpressions()) {
-				tmp = analysis.assign(t, accessIdx, initializedMethod, this);
-			}
+			// loadAndStore stores the loaded method into accessIdx itself
+			// (before writing its fields), so the fields end up keyed under
+			// the same allocation site identity that later reads through
+			// the array will use
+			tmp = loadMethod.loadAndStore(interprocedural, tmp, clazz, accessIdx, expressions);
 
 			++nextIdx;
 

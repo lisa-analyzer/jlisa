@@ -35,7 +35,7 @@ import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Modifier;
 
 public class LoadMethod extends UnaryExpression implements PluggableStatement {
-	private static SyntheticCodeLocationManager synGen;
+	private SyntheticCodeLocationManager synGen;
 
 	private CodeMemberDescriptor methodData;
 
@@ -65,6 +65,29 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression expr,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return loadAndStore(interprocedural, state, expr, null, expressions);
+	}
+
+	/**
+	 * Loads this method's metaobject and, if {@code destAccessIdx} is
+	 * non-{@code null}, stores the resulting reference into it BEFORE
+	 * writing any of the metaobject's fields. This matters because storing a
+	 * freshly allocated object's reference into a heap-resident array cell
+	 * causes the heap domain to re-derive that object's allocation site as
+	 * weak (summarized), under a different identifier than the one used at
+	 * allocation time; any field written before that point, under the
+	 * strong identifier, becomes unreachable (and thus imprecise/top) once
+	 * later code reads the method back out of the array. Writing fields
+	 * after the array store instead keys them under the identifier that
+	 * every later reader (e.g. {@code Method.invoke}) will actually use.
+	 */
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadAndStore(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			AccessChild destAccessIdx,
 			StatementStore<A> expressions)
 			throws SemanticException {
 
@@ -104,7 +127,14 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		InstrumentedReceiver method = new InstrumentedReceiver(refMethodMetaType, false, synGen.nextLocation());
 		AnalysisState<A> methodAllocated = analysis.assign(allocated, method, ref, this);
 
-		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, method, location);
+		// store into the destination array cell BEFORE writing any fields:
+		// see this method's Javadoc for why the order matters
+		if (destAccessIdx != null)
+			methodAllocated = analysis.assign(methodAllocated, destAccessIdx, ref, this);
+
+		HeapDereference derefThisMethod = destAccessIdx != null
+				? new HeapDereference(methodMetaType, destAccessIdx, location)
+				: new HeapDereference(methodMetaType, method, location);
 
 		// assign method clazz
 		AccessChild accessThisMethodClazz = new AccessChild(refClassMetaType, derefThisMethod, clazzVar, location);
@@ -188,11 +218,14 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 
 		tmp = tmp.lub(sem);
 
-		// FIX: the forgetIdentifier is causing the symbolicExpression to be
-		// rewritten,
-		// resulting in the primitive fields tracked by the value domain
-		// to be removed from the abstract state
-		resultState = tmp.forgetIdentifier(method, this).withExecutionExpression(ref);
+		// forgetting `method` rewrites the state, which would drop the
+		// primitive fields tracked by the value domain if they were keyed
+		// off of it; this is only safe once fields no longer depend on
+		// `method` (i.e. once they were written through destAccessIdx
+		// instead)
+		resultState = destAccessIdx != null
+				? tmp.forgetIdentifier(method, this).withExecutionExpression(ref)
+				: tmp.withExecutionExpression(ref);
 
 		return resultState;
 	}
