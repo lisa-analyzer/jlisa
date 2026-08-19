@@ -2,6 +2,7 @@ package it.unive.jlisa.analysis.value;
 
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.lattices.ConstantValueIntInterval;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.NaryExpression;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
@@ -74,9 +75,16 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		return new ConstantValueIntInterval(
-				constantPropagation.evalUnaryExpression(expression, arg.getConstantValue(), pp, oracle),
-				interval.evalUnaryExpression(expression, arg.getIntInterval(), pp, oracle));
+		ConstantValue constantResult = constantPropagation.evalUnaryExpression(expression, arg.getConstantValue(), pp,
+				oracle);
+		IntInterval intervalResult = interval.evalUnaryExpression(expression, arg.getIntInterval(), pp, oracle);
+		if (expression.getOperator() instanceof JavaStringLengthOperator && !constantResult.isTop()
+				&& !constantResult.isBottom() && constantResult.getValue() instanceof Number number)
+			// reduction: String.length() on a known constant string is
+			// exact, even though the interval component alone has no way
+			// to derive it (it cannot represent strings at all)
+			intervalResult = new IntInterval(number.intValue(), number.intValue());
+		return new ConstantValueIntInterval(constantResult, intervalResult);
 	}
 
 	@Override
@@ -438,9 +446,51 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				ValueEnvironment<IntInterval>> environments = splitEnvironment(environment);
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeBinaryExpression(environments.getLeft(), expression, src, dest, oracle);
+
+		BinaryExpression reduced = substituteKnownStringLengths(expression, environments.getLeft(), src, oracle);
+
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeBinaryExpression(environments.getRight(),
-				expression, src, dest, oracle);
+				reduced, src, dest, oracle);
 		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
+	}
+
+	/**
+	 * Rebuilds {@code expression}'s operands, replacing any
+	 * {@code String.length()} sub-expression whose argument is a known constant
+	 * string with a {@link Constant} node carrying its exact length. Everything
+	 * else is left untouched.
+	 */
+	private BinaryExpression substituteKnownStringLengths(
+			BinaryExpression expression,
+			ValueEnvironment<ConstantValue> constantEnv,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		ValueExpression left = substituteKnownStringLength((ValueExpression) expression.getLeft(), constantEnv, pp,
+				oracle);
+		ValueExpression right = substituteKnownStringLength((ValueExpression) expression.getRight(), constantEnv, pp,
+				oracle);
+		// nothing changed, no need to rebuild the expression
+		if (left == expression.getLeft() && right == expression.getRight())
+			return expression;
+		return new BinaryExpression(expression.getStaticType(), left, right, expression.getOperator(),
+				expression.getCodeLocation());
+	}
+
+	private ValueExpression substituteKnownStringLength(
+			ValueExpression expression,
+			ValueEnvironment<ConstantValue> constantEnv,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!(expression instanceof UnaryExpression unary)
+				|| !(unary.getOperator() instanceof JavaStringLengthOperator))
+			return expression;
+
+		ConstantValue length = constantPropagation.eval(constantEnv, unary, pp, oracle);
+		if (length.isTop() || length.isBottom() || !(length.getValue() instanceof Number number))
+			return expression;
+		return new Constant(unary.getStaticType(), number.intValue(), unary.getCodeLocation());
 	}
 
 	@Override
