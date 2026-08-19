@@ -1071,4 +1071,16 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"Main.java", "../common", "../classes");
 		perform(conf);
 	}
+
+	@Test
+	public void Sanitizers6_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Sanitizers6",
+				"Main.java",
+				"../../common/",
+				"../micro/sanitizers/Sanitizers6.java",
+				"../../mockx/",
+				"../micro/BasicTestCase.java",
+				"../micro/MicroTestCase.java");
+		perform(conf);
+	}
 }
