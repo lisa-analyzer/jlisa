@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import it.unive.jlisa.analysis.JavaReachability;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
+import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
@@ -12,8 +13,8 @@ import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
-import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONResults;
 
 public class TestHelpers {
@@ -42,13 +43,13 @@ public class TestHelpers {
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		// conf.forceUpdate = true;
+//		 conf.forceUpdate = true;
 //		 conf.outputs.add(new HtmlResults<>(true));
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new InferredTypes();
+		JavaInferredTypes type = new JavaInferredTypes();
 		Interval domain = new Interval();
 
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
@@ -67,7 +68,7 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new InferredTypes();
+		JavaInferredTypes type = new JavaInferredTypes();
 		ConstantPropagation domain = new ConstantPropagation();
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
@@ -82,7 +83,7 @@ public class TestHelpers {
 
 		// the abstract domain
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
-		InferredTypes type = new InferredTypes();
+		JavaInferredTypes type = new JavaInferredTypes();
 		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();
 		conf.analysis = new JavaReachability<>(new SimpleAbstractDomain<>(heap, domain, type));
 

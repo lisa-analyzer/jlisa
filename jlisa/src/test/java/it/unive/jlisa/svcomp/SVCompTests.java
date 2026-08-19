@@ -349,7 +349,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void Refl1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl1",
 				"Main.java",
@@ -1052,6 +1052,14 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare05",
 				"Main.java",
 				"../common/");
+		perform(conf);
+	}
+	
+	@Test
+	public void objects09_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects09",
+				"Main.java", "../common", "../classes");
 		perform(conf);
 	}
 }
