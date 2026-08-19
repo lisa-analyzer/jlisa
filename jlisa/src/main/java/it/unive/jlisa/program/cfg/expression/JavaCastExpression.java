@@ -58,7 +58,7 @@ public class JavaCastExpression extends UnaryExpression {
 			// checking for ClassCastException
 			TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
 			BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
-					new Constant(typeToken, 0, getLocation()), TypeCast.INSTANCE, getLocation());
+					new Constant(typeToken, 0, getLocation()), TypeCheck.INSTANCE, getLocation());
 			Satisfiability sat = analysis.satisfies(state, tc, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
 				// builds the exception
