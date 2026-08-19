@@ -470,7 +470,8 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			throws SemanticException {
 		ValueExpression left = substituteKnownStringExpression((ValueExpression) expression.getLeft(), constantEnv, pp,
 				oracle);
-		ValueExpression right = substituteKnownStringExpression((ValueExpression) expression.getRight(), constantEnv, pp,
+		ValueExpression right = substituteKnownStringExpression((ValueExpression) expression.getRight(), constantEnv,
+				pp,
 				oracle);
 		// nothing changed, no need to rebuild the expression
 		if (left == expression.getLeft() && right == expression.getRight())
