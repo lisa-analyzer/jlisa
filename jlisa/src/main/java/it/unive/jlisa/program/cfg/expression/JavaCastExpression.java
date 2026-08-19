@@ -19,8 +19,11 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
@@ -59,7 +62,14 @@ public class JavaCastExpression extends UnaryExpression {
 			TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
 			BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
 					new Constant(typeToken, 0, getLocation()), TypeCheck.INSTANCE, getLocation());
-			Satisfiability sat = analysis.satisfies(state, tc, this);
+			// unlike instanceof, casting null never throws
+			// ClassCastException, so the cast is also safe when expr is null
+			BinaryExpression isNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), expr,
+					new NullConstant(getLocation()), ComparisonEq.INSTANCE, getLocation());
+			BinaryExpression safeToCast = new BinaryExpression(getProgram().getTypes().getBooleanType(), tc, isNull,
+					LogicalOr.INSTANCE, getLocation());
+			Satisfiability sat = analysis.satisfies(state, safeToCast, this);
+			
 			if (sat == Satisfiability.NOT_SATISFIED) {
 				// builds the exception
 				JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
