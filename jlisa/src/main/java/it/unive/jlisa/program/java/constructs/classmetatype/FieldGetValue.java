@@ -25,7 +25,7 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
+import it.unive.jlisa.analysis.JavaReachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -357,7 +357,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
 
 		try {
-			Class<?> c = Reachability.class;
+			Class<?> c = JavaReachability.class;
 			Field f = c.getDeclaredField("domain");
 
 			f.setAccessible(true);

@@ -1,5 +1,19 @@
 package it.unive.jlisa;
 
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+
+import it.unive.jlisa.analysis.JavaReachability;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
@@ -10,7 +24,6 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaInliningAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.LiSA;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
@@ -21,17 +34,6 @@ import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
-import java.io.IOException;
-import java.util.Arrays;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
 
 public class Main {
 
@@ -314,7 +316,7 @@ public class Main {
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
 
-		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(
+		conf.analysis = new JavaReachability<>(new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
 				new JavaInferredTypes()));

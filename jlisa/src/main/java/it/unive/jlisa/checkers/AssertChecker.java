@@ -1,5 +1,14 @@
 package it.unive.jlisa.checkers;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import it.unive.jlisa.analysis.JavaReachability;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
@@ -29,12 +38,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Assert Checker It checks whether an assertion's condition holds.
@@ -49,7 +52,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 								HeapEnvironment<AllocationSites>,
 								V,
 								TypeEnvironment<TypeSet>>>,
-				Reachability<
+				JavaReachability<
 						SimpleAbstractDomain<
 								HeapEnvironment<AllocationSites>,
 								V,
@@ -79,7 +82,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
+					JavaReachability<
 							SimpleAbstractDomain<
 									HeapEnvironment<AllocationSites>,
 									V,
@@ -130,7 +133,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					JavaReachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node)
@@ -174,7 +177,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					JavaReachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			AssertStatement node)
@@ -203,7 +206,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().second.isBottom()) {
 				// if the assertion is not reachable, it won't fail
-				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+//				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
 				continue;
 			}
 
@@ -379,7 +382,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					JavaReachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool) {
 		this.workDir = tool.getConfiguration().workdir;
 		SemanticCheck.super.beforeExecution(tool);

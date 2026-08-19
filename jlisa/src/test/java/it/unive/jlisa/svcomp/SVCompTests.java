@@ -1046,4 +1046,12 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
+	
+	@Test
+	public void StringCompare05_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare05",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
 }
