@@ -1,9 +1,5 @@
 package it.unive.jlisa.analysis;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.SemanticException;
@@ -15,12 +11,14 @@ import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.controlFlow.ControlFlowStructure;
-import it.unive.lisa.program.cfg.controlFlow.Loop;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Identifier;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * An abstract domain that tracks the reachability of program points, exploiting

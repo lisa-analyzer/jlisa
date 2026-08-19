@@ -120,8 +120,8 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 	}
 
 	/**
-	 * Yields whether {@code result}, the exact (arbitrary precision) result
-	 * of an arithmetic operation, falls outside the range representable by
+	 * Yields whether {@code result}, the exact (arbitrary precision) result of
+	 * an arithmetic operation, falls outside the range representable by
 	 * {@code type}, meaning that the actual Java computation would silently
 	 * wrap around instead of yielding {@code result}.
 	 */
