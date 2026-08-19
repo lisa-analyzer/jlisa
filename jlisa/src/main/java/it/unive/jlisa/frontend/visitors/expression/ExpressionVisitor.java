@@ -45,6 +45,7 @@ import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.DoubleLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.FloatLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.cfg.statement.literal.JavaClassLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
@@ -578,6 +579,7 @@ public class ExpressionVisitor
 	@Override
 	public boolean visit(
 			FieldAccess node) {
+
 		Expression expr = getParserContext().evaluate(node.getExpression(),
 				new ExpressionVisitor(getEnvironment(), getScope()));
 		expression = new JavaAccessInstanceGlobal(getScope().getCFG(),
@@ -883,13 +885,10 @@ public class ExpressionVisitor
 	@Override
 	public boolean visit(
 			TypeLiteral node) {
-		// FIXME: we erase the type parameter
-		JavaClassType classType = JavaClassType.lookup("java.lang.Class");
-		expression = new JavaNewObj(
-				getScope().getCFG(),
-				getSourceCodeLocation(node),
-				new JavaReferenceType(classType),
-				new Expression[0]);
+		it.unive.lisa.type.Type t = getParserContext().evaluate(node.getType(),
+				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
+
+		expression = new JavaClassLiteral(this.getScope().getCFG(), getSourceCodeLocation(node), t);
 		return false;
 	}
 

@@ -3,10 +3,12 @@ package it.unive.jlisa.analysis.value;
 import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.lattices.ConstantValueIntInterval;
 import it.unive.jlisa.program.operator.NaryExpression;
+import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -22,8 +24,11 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.util.numeric.IntInterval;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
@@ -83,24 +88,52 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			SemanticOracle oracle)
 			throws SemanticException {
 
+		ConstantValue constantResult = constantPropagation.evalBinaryExpression(expression, left.getConstantValue(),
+				right.getConstantValue(), pp, oracle);
+
 		// this covers potential overflows for +, -, *, ++, --
 		if (expression.getOperator() instanceof AdditionOperator
 				|| expression.getOperator() instanceof SubtractionOperator
 				|| expression.getOperator() instanceof MultiplicationOperator) {
-			if (left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite()) {
-				return new ConstantValueIntInterval(
-						constantPropagation.evalBinaryExpression(expression, left.getConstantValue(),
-								right.getConstantValue(),
-								pp, oracle),
-						interval.top()); // potential overflow, return the top
-											// interval
-			}
+			if (left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite())
+				// one of the operands is already unbounded: the result is
+				// unbounded too
+				return new ConstantValueIntInterval(constantResult, interval.top());
+
+			IntInterval result = interval.evalBinaryExpression(expression, left.getIntInterval(),
+					right.getIntInterval(), pp, oracle);
+			if (mayWrapAround(result, oracle.getDynamicTypeOf(expression, pp)))
+				// both operands are bounded, but their exact (arbitrary
+				// precision) sum/difference/product falls outside the range
+				// representable by the expression's type: Java would wrap
+				// this around via two's-complement truncation, which we
+				// cannot pin down without knowing the concrete values, so we
+				// soundly fall back to the top interval instead of the
+				// (unsound) exact mathematical result
+				return new ConstantValueIntInterval(constantResult, interval.top());
+			return new ConstantValueIntInterval(constantResult, result);
 		}
 
 		return new ConstantValueIntInterval(
-				constantPropagation.evalBinaryExpression(expression, left.getConstantValue(), right.getConstantValue(),
-						pp, oracle),
+				constantResult,
 				interval.evalBinaryExpression(expression, left.getIntInterval(), right.getIntInterval(), pp, oracle));
+	}
+
+	/**
+	 * Yields whether {@code result}, the exact (arbitrary precision) result
+	 * of an arithmetic operation, falls outside the range representable by
+	 * {@code type}, meaning that the actual Java computation would silently
+	 * wrap around instead of yielding {@code result}.
+	 */
+	private static boolean mayWrapAround(
+			IntInterval result,
+			Type type) {
+		if (result.isTop() || result.isBottom())
+			return false;
+		if (!(type instanceof JavaNumericType numType) || !numType.isIntegral())
+			return false;
+		IntInterval bounds = JavaNumericInterval.typeBounds(numType);
+		return result.getLow().compareTo(bounds.getLow()) < 0 || result.getHigh().compareTo(bounds.getHigh()) > 0;
 	}
 
 	@Override
@@ -542,4 +575,35 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 
 		return BaseNonRelationalValueDomain.super.satisfies(environment, expression, pp, oracle);
 	}
+
+	@Override
+	public Set<BinaryExpression> constraints(
+			ValueDomain<?> requesting,
+			ValueEnvironment<ConstantValueIntInterval> state,
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+
+		if (state.isTop())
+			return Collections.emptySet();
+		if (state.isBottom())
+			return null;
+
+		ConstantValue value = eval(state, e, pp, oracle).getConstantValue();
+		if (value.isTop())
+			return Collections.emptySet();
+		if (value.isBottom())
+			return null;
+		return Collections.singleton(
+				new BinaryExpression(
+						pp.getProgram().getTypes().getBooleanType(),
+						new Constant(pp.getProgram().getTypes().getIntegerType(), value.getValue(),
+								e.getCodeLocation()),
+						e,
+						ComparisonEq.INSTANCE,
+						pp.getLocation()));
+
+	}
+
 }

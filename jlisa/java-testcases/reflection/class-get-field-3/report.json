@@ -1,0 +1,44 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':4] on 'void ReflectionTest::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Baz.Baz(Baz__this)_318560653.graph.json", "void_Foo.Foo(Foo__this)_1707428978.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "4",
+    "duration" : "20ms",
+    "end" : "2026-08-18T12:42:12.779+02:00",
+    "expressions" : "34",
+    "files" : "3",
+    "globals" : "53",
+    "members" : "269",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-18T12:42:12.759+02:00",
+    "statements" : "18",
+    "units" : "54",
+    "version" : "1.0",
+    "warnings" : "1"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/reflection/class-get-field-3"
+  }
+}

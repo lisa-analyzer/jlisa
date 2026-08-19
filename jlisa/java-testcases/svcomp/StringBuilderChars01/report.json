@@ -8,25 +8,25 @@
   }, {
     "message" : "['Main.java':22:6] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
-    "message" : "['Main.java':28:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':28:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':31:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':31:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "9ms",
-    "end" : "2026-08-14T17:43:15.549+02:00",
+    "duration" : "205ms",
+    "end" : "2026-08-17T23:50:54.069+02:00",
     "expressions" : "95",
     "files" : "1",
-    "globals" : "38",
-    "members" : "259",
+    "globals" : "50",
+    "members" : "287",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-14T17:43:15.540+02:00",
+    "start" : "2026-08-17T23:50:53.864+02:00",
     "statements" : "39",
-    "units" : "52",
+    "units" : "55",
     "version" : "1.0",
     "warnings" : "6"
   },

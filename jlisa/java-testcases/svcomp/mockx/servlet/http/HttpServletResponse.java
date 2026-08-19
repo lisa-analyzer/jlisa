@@ -8,6 +8,7 @@ package mockx.servlet.http;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.OutputStream;
 
 public class HttpServletResponse {
 
@@ -38,4 +39,5 @@ public class HttpServletResponse {
       assert false;
     }
   }
+
 }

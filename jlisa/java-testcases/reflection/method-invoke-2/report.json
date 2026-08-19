@@ -1,0 +1,86 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':10:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':11:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':12:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':15:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':16:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':22:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':24:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':25:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':33:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':36:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':37:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':38:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':42:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':43:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':47:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':48:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':49:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':50:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':54:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':55:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':59:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':61:2] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_A.A(A__this)_-1196972234.graph.json", "void_B.B(B__this)_1707424917.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "9",
+    "duration" : "28ms",
+    "end" : "2026-08-18T12:42:13.198+02:00",
+    "expressions" : "186",
+    "files" : "3",
+    "globals" : "53",
+    "members" : "274",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-18T12:42:13.170+02:00",
+    "statements" : "59",
+    "units" : "54",
+    "version" : "1.0",
+    "warnings" : "22"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/reflection/method-invoke-2"
+  }
+}

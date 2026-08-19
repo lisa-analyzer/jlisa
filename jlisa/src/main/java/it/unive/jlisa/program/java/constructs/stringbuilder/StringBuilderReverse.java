@@ -15,11 +15,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class StringBuilderReverse extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -60,14 +56,10 @@ public class StringBuilderReverse extends UnaryExpression implements PluggableSt
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, arg, getLocation());
-		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-
-		it.unive.lisa.symbolic.value.UnaryExpression reverse = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType, accessLeft, JavaStringReverseOperator.INSTANCE, getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, arg, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, reverse, originating);
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, arg, stringType,
+				getLocation(), this,
+				oldValue -> new it.unive.lisa.symbolic.value.UnaryExpression(
+						stringType, oldValue, JavaStringReverseOperator.INSTANCE, getLocation()));
 
 		return analysis.smallStepSemantics(result, arg, originating);
 	}
