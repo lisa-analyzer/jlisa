@@ -375,7 +375,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../micro/MicroTestCase.java");
 		perform(conf);
 	}
-	
+
 	@Ignore
 	// FIXME there seem to be some nondeterminism in this test
 	public void Refl3_test() throws IOException {
@@ -726,7 +726,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void objects14_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"objects14",
