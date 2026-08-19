@@ -16,6 +16,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Identifier;
+import it.unive.lisa.symbolic.value.Operator;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.PushInv;
 import it.unive.lisa.symbolic.value.Skip;
@@ -24,6 +25,7 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
+import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
@@ -447,7 +449,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		ValueEnvironment<ConstantValue> constantValueEnvironment = constantPropagation
 				.assumeBinaryExpression(environments.getLeft(), expression, src, dest, oracle);
 
-		BinaryExpression reduced = substituteKnownStringLengths(expression, environments.getLeft(), src, oracle);
+		BinaryExpression reduced = substituteKnownStringExpressions(expression, environments.getLeft(), src, oracle);
 
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeBinaryExpression(environments.getRight(),
 				reduced, src, dest, oracle);
@@ -455,20 +457,20 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 	}
 
 	/**
-	 * Rebuilds {@code expression}'s operands, replacing any
-	 * {@code String.length()} sub-expression whose argument is a known constant
-	 * string with a {@link Constant} node carrying its exact length. Everything
-	 * else is left untouched.
+	 * Rebuilds {@code expression}'s operands, replacing any sub-expression
+	 * headed by a {@link StringOperator} whose value the constant-propagation
+	 * component can pin down exactly with a {@link Constant} node carrying that
+	 * value. Everything else is left untouched.
 	 */
-	private BinaryExpression substituteKnownStringLengths(
+	private BinaryExpression substituteKnownStringExpressions(
 			BinaryExpression expression,
 			ValueEnvironment<ConstantValue> constantEnv,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		ValueExpression left = substituteKnownStringLength((ValueExpression) expression.getLeft(), constantEnv, pp,
+		ValueExpression left = substituteKnownStringExpression((ValueExpression) expression.getLeft(), constantEnv, pp,
 				oracle);
-		ValueExpression right = substituteKnownStringLength((ValueExpression) expression.getRight(), constantEnv, pp,
+		ValueExpression right = substituteKnownStringExpression((ValueExpression) expression.getRight(), constantEnv, pp,
 				oracle);
 		// nothing changed, no need to rebuild the expression
 		if (left == expression.getLeft() && right == expression.getRight())
@@ -477,20 +479,26 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				expression.getCodeLocation());
 	}
 
-	private ValueExpression substituteKnownStringLength(
+	private ValueExpression substituteKnownStringExpression(
 			ValueExpression expression,
 			ValueEnvironment<ConstantValue> constantEnv,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		if (!(expression instanceof UnaryExpression unary)
-				|| !(unary.getOperator() instanceof JavaStringLengthOperator))
+		Operator operator = expression instanceof UnaryExpression unary ? unary.getOperator()
+				: expression instanceof BinaryExpression binary ? binary.getOperator() : null;
+		if (!(operator instanceof StringOperator))
 			return expression;
 
-		ConstantValue length = constantPropagation.eval(constantEnv, unary, pp, oracle);
-		if (length.isTop() || length.isBottom() || !(length.getValue() instanceof Number number))
+		ConstantValue value = constantPropagation.eval(constantEnv, expression, pp, oracle);
+		if (value.isTop() || value.isBottom())
 			return expression;
-		return new Constant(unary.getStaticType(), number.intValue(), unary.getCodeLocation());
+		Object raw = value.getValue();
+		Integer exact = raw instanceof Number number ? number.intValue()
+				: raw instanceof Character character ? (int) character.charValue() : null;
+		if (exact == null)
+			return expression;
+		return new Constant(expression.getStaticType(), exact, expression.getCodeLocation());
 	}
 
 	@Override
