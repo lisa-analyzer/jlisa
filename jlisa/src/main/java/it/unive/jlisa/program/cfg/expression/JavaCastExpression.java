@@ -11,7 +11,6 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -19,18 +18,14 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
-import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
-import it.unive.lisa.type.Untyped;
 import java.util.Collections;
+import java.util.Set;
 
 public class JavaCastExpression extends UnaryExpression {
 
@@ -54,68 +49,43 @@ public class JavaCastExpression extends UnaryExpression {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(type)), type, getLocation());
-
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		if (type.isReferenceType()) {
-			// checking for ClassCastException
-			TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
-			BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
-					new Constant(typeToken, 0, getLocation()), TypeCheck.INSTANCE, getLocation());
-			// unlike instanceof, casting null never throws
-			// ClassCastException, so the cast is also safe when expr is null
-			BinaryExpression isNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), expr,
-					new NullConstant(getLocation()), ComparisonEq.INSTANCE, getLocation());
-			BinaryExpression safeToCast = new BinaryExpression(getProgram().getTypes().getBooleanType(), tc, isNull,
-					LogicalOr.INSTANCE, getLocation());
-			Satisfiability sat = analysis.satisfies(state, safeToCast, this);
-			
-			if (sat == Satisfiability.NOT_SATISFIED) {
-				// builds the exception
-				JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
-				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
-						new Expression[0]);
-				state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+			AnalysisState<A> result = state.bottomExecution();
 
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), ccExc.getReference(), getLocation());
-				state = analysis.assign(state, throwVar,
-						state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			for (Type t : types) {
+				boolean safe = t.isReferenceType() && t.asReferenceType().getInnerType().isNullType()
+						|| t.canBeAssignedTo(type);
 
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				state = state.forgetIdentifiers(call.getMetaVariables(), this);
-				state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-				return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-						new Error(ccExc.getReference(), this), this);
-			} else if (sat == Satisfiability.SATISFIED) {
-				BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE,
-						getLocation());
-				return analysis.smallStepSemantics(state, castExpression, this);
-			} else if (sat == Satisfiability.UNKNOWN) {
-				BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE,
-						getLocation());
-				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, castExpression, this);
+				if (safe) {
+					BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE,
+							getLocation());
+					result = result.lub(analysis.smallStepSemantics(state, castExpression, this));
+				} else {
+					// builds the exception
+					JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
+					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
+							new Expression[0]);
+					AnalysisState<A> excState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+							expressions);
 
-				// builds the exception
-				JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
-				JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
-						new Expression[0]);
-				state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					// assign exception to variable thrower
+					CFGThrow throwVar = new CFGThrow(getCFG(), ccExc.getReference(), getLocation());
+					excState = analysis.assign(excState, throwVar,
+							excState.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), ccExc.getReference(), getLocation());
-				state = analysis.assign(state, throwVar,
-						state.getExecutionExpressions().elements.stream().findFirst().get(), this);
-
-				// deletes the receiver of the constructor
-				state = state.forgetIdentifiers(call.getMetaVariables(), this);
-				AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-						new Error(ccExc.getReference(), this), this);
-				return exceptionState.lub(noExceptionState);
-			} else {
-				return state.bottomExecution();
+					// deletes the receiver of the constructor
+					// and all the metavariables from subexpressions
+					excState = excState.forgetIdentifiers(call.getMetaVariables(), this);
+					excState = excState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+					result = result.lub(analysis.moveExecutionToError(excState.withExecutionExpression(throwVar),
+							new Error(ccExc.getReference(), this), this));
+				}
 			}
+
+			return result;
 		} else {
 			BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeConv.INSTANCE,
 					getLocation());

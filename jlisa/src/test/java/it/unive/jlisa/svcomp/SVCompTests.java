@@ -333,22 +333,6 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
-	public void Basic1_test() throws IOException {
-		// this test had troublesome parsing errors,
-		// but it is too complex to thoroughly check its results
-		// at this stage. we just check that it runs to completion
-		// without inspecting the results (ie no json files are present)
-		// FIXME there seem to be some nondeterminism in this test
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
-				"Main.java",
-				"../common/",
-				"../mock/",
-				"../mockx/",
-				"../securibench/");
-		perform(conf);
-	}
-
 	@Ignore
 	public void Refl1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl1",
@@ -374,6 +358,23 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Disabled
+	public void Basic1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Basic1",
+				"Main.java",
+				"../../common/",
+				"../micro/basic/Basic1.java",
+				"../../mockx/",
+				"../micro/BasicTestCase.java",
+				"../micro/MicroTestCase.java");
+		perform(conf);
+	}
+	
 	@Test
 	public void Refl3_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl3",
@@ -1046,7 +1047,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void StringCompare05_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare05",
@@ -1054,7 +1055,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../common/");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void objects07_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -1062,7 +1063,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"Main.java", "../common", "../classes");
 		perform(conf);
 	}
-	
+
 	@Test
 	public void objects08_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
