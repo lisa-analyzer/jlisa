@@ -22,6 +22,9 @@ import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaMathTanOperator;
 import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -206,12 +209,46 @@ public class JavaNumericInterval extends Interval {
 	}
 
 	@Override
+	public IntInterval visit(
+			UnaryExpression expression,
+			IntInterval arg,
+			Object... params)
+			throws SemanticException {
+		if (expression.getOperator() instanceof JavaStringLengthOperator) {
+			ProgramPoint pp = (ProgramPoint) params[1];
+			SemanticOracle oracle = (SemanticOracle) params[2];
+			return evalUnaryExpression(expression, arg, pp, oracle);
+		}
+		return super.visit(expression, arg, params);
+	}
+
+	@Override
+	public IntInterval visit(
+			BinaryExpression expression,
+			IntInterval left,
+			IntInterval right,
+			Object... params)
+			throws SemanticException {
+		if (expression.getOperator() instanceof JavaStringCharAtOperator) {
+			ProgramPoint pp = (ProgramPoint) params[1];
+			SemanticOracle oracle = (SemanticOracle) params[2];
+			return evalBinaryExpression(expression, left, right, pp, oracle);
+		}
+		return super.visit(expression, left, right, params);
+	}
+
+	@Override
 	public IntInterval evalUnaryExpression(
 			UnaryExpression expression,
 			IntInterval arg,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		UnaryOperator operator = expression.getOperator();
+
+		if (operator instanceof JavaStringLengthOperator)
+			return new IntInterval(MathNumber.ZERO, MathNumber.PLUS_INFINITY);
+
 		if (arg.isTop() || arg.isBottom())
 			return arg;
 
@@ -227,7 +264,6 @@ public class JavaNumericInterval extends Interval {
 			h = null;
 		}
 
-		UnaryOperator operator = expression.getOperator();
 		// char
 		// if (operator instanceof JavaCharacterIsLetterOperator)
 		// if (operator instanceof JavaCharacterIsDigitOperator)
@@ -451,13 +487,16 @@ public class JavaNumericInterval extends Interval {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		BinaryOperator operator = expression.getOperator();
+
+		if (operator instanceof JavaStringCharAtOperator)
+			return typeBounds(JavaCharType.INSTANCE);
+
 		// if left or right is top, top is returned
 		if (left.isTop() || right.isTop())
 			return top();
 		if (left.isBottom() || right.isBottom())
 			return bottom();
-
-		BinaryOperator operator = expression.getOperator();
 
 		if (operator instanceof JavaMathMax)
 			return new IntInterval(left.getLow().max(right.getLow()), left.getHigh().max(right.getHigh()));

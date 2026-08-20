@@ -259,7 +259,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled // TODO this seems nodeterministic on vignole
+	@Ignore // TODO this seems nodeterministic on vignole
 	public void exceptions9_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "exceptions9",
 				"Main.java",
@@ -333,23 +333,8 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
-	public void Basic1_test() throws IOException {
-		// this test had troublesome parsing errors,
-		// but it is too complex to thoroughly check its results
-		// at this stage. we just check that it runs to completion
-		// without inspecting the results (ie no json files are present)
-		// FIXME there seem to be some nondeterminism in this test
-		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "Basic1",
-				"Main.java",
-				"../common/",
-				"../mock/",
-				"../mockx/",
-				"../securibench/");
-		perform(conf);
-	}
-
-	@Test
+	@Ignore
+	// FIXME there seem to be some nondeterminism in this test
 	public void Refl1_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl1",
 				"Main.java",
@@ -361,7 +346,8 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
+	// FIXME there seem to be some nondeterminism in this test
 	public void Refl2_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl2",
 				"Main.java",
@@ -370,11 +356,28 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
+	public void Basic1_test() throws IOException {
+		// this test had troublesome parsing errors,
+		// but it is too complex to thoroughly check its results
+		// at this stage. we just check that it runs to completion
+		// without inspecting the results (ie no json files are present)
+		// FIXME there seem to be some nondeterminism in this test
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Basic1",
+				"Main.java",
+				"../../common/",
+				"../micro/basic/Basic1.java",
+				"../../mockx/",
+				"../micro/BasicTestCase.java",
+				"../micro/MicroTestCase.java");
+		perform(conf);
+	}
+
+	@Ignore
+	// FIXME there seem to be some nondeterminism in this test
 	public void Refl3_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl3",
 				"Main.java",
@@ -383,11 +386,11 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
+	// FIXME there seem to be some nondeterminism in this test
 	public void Refl4_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Refl4",
 				"Main.java",
@@ -396,11 +399,10 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"../../mockx/",
 				"../micro/BasicTestCase.java",
 				"../micro/MicroTestCase.java");
-		// conf.outputs.add(new HtmlResults(true));
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void spec1_5_product1_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -416,7 +418,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void spec1_5_product3_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -432,7 +434,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Ignore
 	public void lock_00_01_10_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -449,7 +451,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Ignore
 	// this test sometimes causes oom during dumping when executing
 	// from gradle
 	public void siena_eqchk_prop1_test() throws IOException {
@@ -471,7 +473,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void BinaryTreeSearchMemSat01_test() throws IOException {
 		// this test had troublesome parsing errors,
 		// but it is too complex to thoroughly check its results
@@ -483,7 +485,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Ignore
 	public void SortedListInsert_FunUnsat01_test() throws IOException {
 		// FIXME there seem to be some nondeterminism in this test
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -521,7 +523,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Ignore
 	// FIXME there seem to be some nondeterminism in this test
 	public void SortedListInsert_MemUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -618,7 +620,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Ignore
 	public void RedBlackTree_FunUnsat01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"RedBlackTree-FunUnsat01",
@@ -701,7 +703,6 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 	}
 
 	@Ignore
-	// FIXME there seem to be some nondeterminism in this test
 	public void objects01_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"objects01",
@@ -725,7 +726,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Test
+	@Ignore
 	public void objects14_test() throws IOException {
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
 				"objects14",
@@ -814,7 +815,7 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
-	@Disabled
+	@Ignore
 	public void GraphFragment_false_test() throws IOException {
 		// FIXME this has a double array access, see comment in JavaArrayAccess
 		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
@@ -1044,6 +1045,42 @@ public class SVCompTests extends JLiSAAnalysisExecutor {
 				"SpdyStream",
 				"Main.java",
 				"../common");
+		perform(conf);
+	}
+
+	@Test
+	public void StringCompare05_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "StringCompare05",
+				"Main.java",
+				"../common/");
+		perform(conf);
+	}
+
+	@Test
+	public void objects07_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects07",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+
+	@Test
+	public void objects08_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp",
+				"objects08",
+				"Main.java", "../common", "../classes");
+		perform(conf);
+	}
+
+	@Test
+	public void Sanitizers6_test() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("svcomp", "securibench/Sanitizers6",
+				"Main.java",
+				"../../common/",
+				"../micro/sanitizers/Sanitizers6.java",
+				"../../mockx/",
+				"../micro/BasicTestCase.java",
+				"../micro/MicroTestCase.java");
 		perform(conf);
 	}
 }

@@ -1,5 +1,6 @@
 package it.unive.jlisa.checkers;
 
+import it.unive.jlisa.analysis.JavaReachability;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
@@ -7,7 +8,6 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.witness.WitnessWriter;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
@@ -49,7 +49,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 								HeapEnvironment<AllocationSites>,
 								V,
 								TypeEnvironment<TypeSet>>>,
-				Reachability<
+				JavaReachability<
 						SimpleAbstractDomain<
 								HeapEnvironment<AllocationSites>,
 								V,
@@ -79,7 +79,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
+					JavaReachability<
 							SimpleAbstractDomain<
 									HeapEnvironment<AllocationSites>,
 									V,
@@ -130,7 +130,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					JavaReachability<
+							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node)
@@ -174,7 +175,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					JavaReachability<
+							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			AssertStatement node)
@@ -379,7 +381,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					JavaReachability<
+							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool) {
 		this.workDir = tool.getConfiguration().workdir;
 		SemanticCheck.super.beforeExecution(tool);
