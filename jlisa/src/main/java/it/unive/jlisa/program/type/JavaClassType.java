@@ -1,12 +1,5 @@
 package it.unive.jlisa.program.type;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Unit;
@@ -19,6 +12,12 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import it.unive.lisa.util.collections.workset.FIFOWorkingSet;
 import it.unive.lisa.util.collections.workset.WorkingSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class JavaClassType
 		implements
@@ -228,6 +227,10 @@ public class JavaClassType
 		return new JavaNullLiteral(cfg, location);
 	}
 
+	public static JavaClassType getExceptionType() {
+		return lookup("java.lang.Exception");
+	}
+
 	public static JavaClassType getClassCastExceptionType() {
 		return lookup("java.lang.ClassCastException");
 	}
@@ -238,6 +241,14 @@ public class JavaClassType
 
 	public static JavaClassType getNegativeArraySizeExceptionType() {
 		return lookup("java.lang.NegativeArraySizeException");
+	}
+
+	public static JavaClassType getClassMetaType() {
+		return lookup("java.lang.Class");
+	}
+
+	public static JavaClassType getFieldMetaType() {
+		return lookup("java.lang.reflect.Field");
 	}
 
 	public static JavaClassType getObjectType() {
@@ -252,6 +263,10 @@ public class JavaClassType
 		return lookup("java.lang.ArrayIndexOutOfBoundsException");
 	}
 
+	public static JavaClassType getIllegalArgumentExceptionType() {
+		return lookup("java.lang.IllegalArgumentException");
+	}
+
 	public static JavaClassType getArithmeticExceptionType() {
 		return lookup("java.lang.ArithmeticException");
 	}
@@ -262,6 +277,26 @@ public class JavaClassType
 
 	public static JavaClassType getNumberFormatException() {
 		return lookup("java.lang.NumberFormatException");
+	}
+
+	public static JavaClassType getClassNotFoundException() {
+		return lookup("java.lang.ClassNotFoundException");
+	}
+
+	public static JavaClassType getInstantiationException() {
+		return lookup("java.lang.InstantiationException");
+	}
+
+	public static JavaClassType getNoSuchFieldException() {
+		return lookup("java.lang.NoSuchFieldException");
+	}
+
+	public static JavaClassType getNoSuchMethodException() {
+		return lookup("java.lang.NoSuchMethodException");
+	}
+
+	public static JavaClassType getMethodType() {
+		return lookup("java.lang.reflect.Method");
 	}
 
 	public static JavaClassType getPrintStreamType() {
@@ -376,6 +411,29 @@ public class JavaClassType
 			return JavaByteType.INSTANCE;
 		else if (type.equals(getShortWrapperType()))
 			return JavaShortType.INSTANCE;
+		else
+			return null;
+	}
+
+	public static Type getWrappedType(
+			Type type) {
+
+		if (type == JavaIntType.INSTANCE)
+			return getIntegerWrapperType();
+		if (type == JavaByteType.INSTANCE)
+			return getByteWrapperType();
+		if (type == JavaCharType.INSTANCE)
+			return getCharacterWrapperType();
+		if (type == JavaFloatType.INSTANCE)
+			return getFloatWrapperType();
+		if (type == JavaDoubleType.INSTANCE)
+			return getDoubleWrapperType();
+		if (type == JavaLongType.INSTANCE)
+			return getLongWrapperType();
+		if (type == JavaBooleanType.INSTANCE)
+			return getBooleanWrapperType();
+		// TODO add short
+
 		else
 			return null;
 	}

@@ -1,0 +1,48 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':2] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['A.java':21:4] on 'void svcomp.objects.A::A(svcomp.objects.A* this, int x)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Sub2.java':18:4] on 'void svcomp.objects.Sub2::Sub2(svcomp.objects.Sub2* this, int z)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-331594903.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-331600762.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-331603087.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-534096290.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-535640710.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-535643035.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1322847331.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1398987020.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1398989655.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1398990058.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1398990120.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1398990182.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1399011262.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1399011324.graph.json", "java.lang.Object__org.sosy_lab.sv_benchmarks.Verifier.nondetObject(java.lang.Class__type,_org.sosy_lab.sv_benchmarks.ObjectFactory__factory)_1707441223.graph.json", "report.json", "svcomp.objects.A__svcomp.objects.Factories.AFactory.createObject(svcomp.objects.Factories.AFactory__this)_1322850307.graph.json", "svcomp.objects.Any__svcomp.objects.Factories.AnyFactory.createObject(svcomp.objects.Factories.AnyFactory__this)_1320394152.graph.json", "svcomp.objects.B__svcomp.objects.Factories.BFactory.createObject(svcomp.objects.Factories.BFactory__this)_1398990244.graph.json", "svcomp.objects.C__svcomp.objects.Factories.CFactory.createObject(svcomp.objects.Factories.CFactory__this)_1398990306.graph.json", "svcomp.objects.D__svcomp.objects.Factories.DFactory.createObject(svcomp.objects.Factories.DFactory__this)_1322850369.graph.json", "svcomp.objects.Sub1__svcomp.objects.Factories.Sub1Factory.createObject(svcomp.objects.Factories.Sub1Factory__this)_-534090431.graph.json", "svcomp.objects.Sub2__svcomp.objects.Factories.Sub2Factory.createObject(svcomp.objects.Factories.Sub2Factory__this)_-534090369.graph.json", "svcomp.objects.Sub__svcomp.objects.Factories.SubFactory.createObject(svcomp.objects.Factories.SubFactory__this)_1399040154.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_100206651.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_128907939.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_1398974620.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x)_1398974682.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y)_1398974744.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y,_svcomp.objects.Sub__sub)_1398974806.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-1691534314.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-801794386.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-84425685.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-84428103.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-84430521.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_-84432939.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_1536199.graph.json", "void_svcomp.objects.B.B(svcomp.objects.B__this)_-535655435.graph.json", "void_svcomp.objects.C.C(svcomp.objects.C__this)_-535653110.graph.json", "void_svcomp.objects.D.D(svcomp.objects.D__this)_1398977255.graph.json", "void_svcomp.objects.Factories.AFactory.AFactory(svcomp.objects.Factories.AFactory__this)_1322834931.graph.json", "void_svcomp.objects.Factories.AnyFactory.AnyFactory(svcomp.objects.Factories.AnyFactory__this)_1707463326.graph.json", "void_svcomp.objects.Factories.BFactory.BFactory(svcomp.objects.Factories.BFactory__this)_1398974868.graph.json", "void_svcomp.objects.Factories.CFactory.CFactory(svcomp.objects.Factories.CFactory__this)_1398974930.graph.json", "void_svcomp.objects.Factories.DFactory.DFactory(svcomp.objects.Factories.DFactory__this)_1322834993.graph.json", "void_svcomp.objects.Factories.Sub1Factory.Sub1Factory(svcomp.objects.Factories.Sub1Factory__this)_-534108690.graph.json", "void_svcomp.objects.Factories.Sub2Factory.Sub2Factory(svcomp.objects.Factories.Sub2Factory__this)_-534108628.graph.json", "void_svcomp.objects.Factories.SubFactory.SubFactory(svcomp.objects.Factories.SubFactory__this)_1399022856.graph.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_405397973.graph.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_434099106.graph.json", "void_svcomp.objects.Sub1.Sub1(svcomp.objects.Sub1__this)_-331615487.graph.json", "void_svcomp.objects.Sub2.Sub2(svcomp.objects.Sub2__this,_int_z)_-331613162.graph.json" ],
+  "info" : {
+    "cfgs" : "55",
+    "duration" : "275ms",
+    "end" : "2026-08-19T21:42:32.375+02:00",
+    "expressions" : "237",
+    "files" : "52",
+    "globals" : "62",
+    "members" : "327",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-19T21:42:32.100+02:00",
+    "statements" : "159",
+    "units" : "72",
+    "version" : "1.0",
+    "warnings" : "3"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/objects02"
+  }
+}

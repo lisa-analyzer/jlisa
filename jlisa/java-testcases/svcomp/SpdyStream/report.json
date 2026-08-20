@@ -1,0 +1,46 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':34:8] on 'int Main::read(byte[]* b, int count)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':56:8] on 'int Main::read(byte[]* b, int count)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int_Main.read(byte[]__b,_int_count)_1707442277.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-1196406205.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-1196408096.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-1196411599.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-1196414296.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-1196421426.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_-1196421519.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707440169.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_1707446028.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "16",
+    "duration" : "38ms",
+    "end" : "2026-08-20T00:58:56.497+02:00",
+    "expressions" : "123",
+    "files" : "10",
+    "globals" : "50",
+    "members" : "288",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-20T00:58:56.459+02:00",
+    "statements" : "57",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/svcomp/SpdyStream"
+  }
+}

@@ -56,3 +56,4 @@ public class Refl2 extends BasicTestCase implements MicroTestCase {
     return 1;
   }
 }
+

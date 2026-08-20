@@ -102,6 +102,39 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 				initCodeMembersInEnum(unit, (EnumDeclaration) decl, newOuter, processed);
 	}
 
+	public void initCodeMembersInAnonymousClass(
+			it.unive.lisa.program.CompilationUnit lisaCU,
+			AnonymousClassDeclaration typeDecl,
+			String className,
+			String fqnName,
+			String outer) {
+
+		for (Object bodyDecl : typeDecl.bodyDeclarations()) {
+			if (bodyDecl instanceof MethodDeclaration mdecl) {
+
+				CodeMemberDescriptor codeMemberDescriptor;
+
+				// TODO: constructors shouldn't be allowed
+				if (mdecl.isConstructor())
+					continue;
+
+				codeMemberDescriptor = buildJavaCodeMemberDescriptor(mdecl, lisaCU);
+				int modifiers = mdecl.getModifiers();
+				CFG cfg = new CFG(codeMemberDescriptor);
+				boolean added;
+				assert (!Modifier.isStatic(modifiers));
+
+				added = lisaCU.addInstanceCodeMember(cfg);
+
+				if (!added)
+					throw new ParsingException("duplicated_method_descriptor",
+							ParsingException.Type.MALFORMED_SOURCE,
+							"Duplicate descriptor " + cfg.getDescriptor() + " in unit " + lisaCU.getName(),
+							getSourceCodeLocation(mdecl));
+			}
+		}
+	}
+
 	private void initCodeMembersInEnum(
 			CompilationUnit unit,
 			EnumDeclaration node,
@@ -172,7 +205,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			if (returnType == null) {
 				returnType = getParserContext().evaluate(
 						node.getReturnType2(),
-						() -> new TypeASTVisitor(getEnvironment(), getScope()));
+						new TypeASTVisitor(getEnvironment(), getScope()));
 			}
 		}
 
@@ -186,7 +219,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			parameters.add(getParserContext().evaluate(
 					sd,
-					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
+					new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);
@@ -229,7 +262,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			SingleVariableDeclaration sd = (SingleVariableDeclaration) o;
 			parameters.add(getParserContext().evaluate(
 					sd,
-					() -> new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
+					new VariableDeclarationASTVisitor(getEnvironment(), getScope())));
 		}
 
 		Parameter[] paramArray = parameters.toArray(new Parameter[0]);

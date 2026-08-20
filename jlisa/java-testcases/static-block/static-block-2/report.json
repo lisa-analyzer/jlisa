@@ -1,0 +1,46 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':15:8] on 'int LoggerConfig::validateAndScaleBuffer(int size, int factor)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':4:8] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int_LoggerConfig.validateAndScaleBuffer(int_size,_int_factor)_-1196069917.graph.json", "report.json", "void_LoggerConfig.LoggerConfig_clinit()_1707453592.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "5",
+    "duration" : "11ms",
+    "end" : "2026-08-17T23:35:50.174+02:00",
+    "expressions" : "31",
+    "files" : "3",
+    "globals" : "52",
+    "members" : "270",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-17T23:35:50.163+02:00",
+    "statements" : "19",
+    "units" : "53",
+    "version" : "1.0",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/static-block/static-block-2"
+  }
+}

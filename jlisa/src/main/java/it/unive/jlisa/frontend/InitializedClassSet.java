@@ -104,6 +104,7 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 			Statement init,
 			InterproceduralAnalysis<A, D> interprocedural)
 			throws SemanticException {
+
 		AnalysisState<A> result = state;
 		InitializedClassSet info = state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class);
 		if (info == null)

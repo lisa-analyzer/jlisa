@@ -1,0 +1,48 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':10:8] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':11:8] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':9:1] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_AppManager.AppManager_clinit()_1707455514.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_ServerConfig.ServerConfig(ServerConfig__this,_java.lang.String__host,_int_port)_-1195997501.graph.json", "void_ServerConfig.ServerConfig(ServerConfig__this,_java.lang.String__host,_int_port)_-1196006956.graph.json", "void_ServerConfig.activate(ServerConfig__this)_-1196020348.graph.json" ],
+  "info" : {
+    "cfgs" : "6",
+    "duration" : "17ms",
+    "end" : "2026-08-17T23:35:50.441+02:00",
+    "expressions" : "57",
+    "files" : "5",
+    "globals" : "55",
+    "members" : "271",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-08-17T23:35:50.424+02:00",
+    "statements" : "29",
+    "units" : "54",
+    "version" : "1.0",
+    "warnings" : "3"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "5",
+    "workdir" : "java-outputs/static-block/static-block-4"
+  }
+}

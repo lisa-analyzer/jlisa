@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.expression;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.jlisa.program.java.constructs.Assume;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -64,6 +65,13 @@ public class JavaUnresolvedStaticCall extends UnresolvedCall {
 				? JavaClassType.lookup(definingUnit.getName()).getReference()
 				: JavaInterfaceType.lookup(definingUnit.getName()).getReference();
 		state = InitializedClassSet.initialize(state, definingUnitType, this, interprocedural);
+
+		if (definingUnit.getName().equals("org.sosy_lab.sv_benchmarks.Verifier")
+				&& getTargetName().equals("assume")) {
+			Assume asm = new Assume(getCFG(), getLocation(), getParameters()[0]);
+			asm.setOriginatingStatement(this);
+			return asm.forwardSemantics(state, interprocedural, expressions);
+		}
 
 		UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), Call.CallType.STATIC,
 				definingUnit.toString(),

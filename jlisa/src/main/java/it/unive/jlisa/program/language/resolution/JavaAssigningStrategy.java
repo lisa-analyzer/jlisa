@@ -123,13 +123,14 @@ public class JavaAssigningStrategy
 					set.add(rightExpr);
 					pars[i] = new ExpressionSet(set);
 					boxingUnboxingNeeded = true;
-				} else
+				} else {
 					temp = temp.lub(
 							interprocedural.getAnalysis().assign(
 									prepared,
 									formalVar,
 									exp,
 									call));
+				}
 			}
 			prepared = temp;
 		}

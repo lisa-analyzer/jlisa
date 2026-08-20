@@ -143,7 +143,7 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 			try {
 				receiver = getParserContext().evaluate(
 						(SimpleName) qualifier,
-						() -> new ExpressionVisitor(getEnvironment(), getScope()));
+						new ExpressionVisitor(getEnvironment(), getScope()));
 			} catch (ParsingException e) {
 				if (!e.getName().equals("missing-variable"))
 					throw e;
