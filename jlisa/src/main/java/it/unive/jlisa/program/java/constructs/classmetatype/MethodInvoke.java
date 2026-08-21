@@ -1,6 +1,13 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.analysis.JavaReachability;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
@@ -11,13 +18,25 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.LongLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.ShortLiteral;
 import it.unive.jlisa.program.operator.IsMemberStaticOperator;
-import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -57,13 +76,6 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class MethodInvoke extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -100,8 +112,6 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		CodeLocation location = getLocation();
-		CFG cfg = getCFG();
 
 		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
 				this);
@@ -127,8 +137,6 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		Type stringType = JavaClassType.getStringType();
 		JavaReferenceType refStringType = new JavaReferenceType(stringType);
-		Type methodType = JavaClassType.getMethodType();
-		Type refMethodType = new JavaReferenceType(methodType);
 		JavaReferenceType refObjectArrType = JavaArrayType.OBJECT_ARRAY;
 
 		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", location);
@@ -368,6 +376,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return null;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -379,7 +388,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
 
 		try {
-			Class<?> c = JavaReachability.class;
+			Class<?> c = Reachability.class;
 			Field f = c.getDeclaredField("domain");
 
 			f.setAccessible(true);
@@ -514,11 +523,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			List<BinaryExpression> clazzNameConstraints,
 			SymbolicExpression derefMethod)
 			throws SemanticException {
-
-		CodeLocation loc = getLocation();
-
 		for (BinaryExpression constraint : clazzNameConstraints) {
-
 			String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 			UnitType clazzUt = getTypeFromStr(clazzName);
 
@@ -589,8 +594,6 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			SymbolicExpression derefMethod,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		CFG cfg = getCFG();
 		CodeLocation location = getLocation();
 

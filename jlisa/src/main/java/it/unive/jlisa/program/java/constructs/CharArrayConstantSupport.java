@@ -1,12 +1,18 @@
 package it.unive.jlisa.program.java.constructs;
 
-import it.unive.jlisa.analysis.JavaReachability;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -27,11 +33,6 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Shared best-effort constant reconstruction helpers, used by constructs that
@@ -144,7 +145,7 @@ public final class CharArrayConstantSupport {
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
 
 		try {
-			Class<?> c = JavaReachability.class;
+			Class<?> c = Reachability.class;
 			Field f = c.getDeclaredField("domain");
 
 			f.setAccessible(true);

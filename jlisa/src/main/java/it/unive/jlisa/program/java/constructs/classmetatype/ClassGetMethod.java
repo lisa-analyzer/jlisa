@@ -1,6 +1,10 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.analysis.JavaReachability;
+import java.lang.reflect.Field;
+import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import it.unive.jlisa.program.ReflectionDataUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
@@ -14,6 +18,7 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
+import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -45,10 +50,6 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
-import java.util.Set;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class ClassGetMethod extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -420,7 +421,6 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		res = res.lub(sameLen);
 
 		boolean outOfBoundsParamsArr = false;
-		boolean allParametersMatch = true;
 
 		// stop when we are out of bounds
 		for (int i = 0; outOfBoundsParamsArr == false; ++i) {
@@ -544,6 +544,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return (UnitType) t;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -554,7 +555,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		SimpleAbstractDomain<?, ?, ?> innerDomain;
 
 		try {
-			Class<?> c = JavaReachability.class;
+			Class<?> c = Reachability.class;
 			Field f = c.getDeclaredField("domain");
 
 			f.setAccessible(true);
