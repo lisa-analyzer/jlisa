@@ -20,4 +20,10 @@ public class NestedInnerClassTest extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void testInner3() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("inner-classes", "inner3", "Main.java");
+		perform(conf);
+	}
+
 }
