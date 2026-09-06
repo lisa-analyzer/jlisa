@@ -1,11 +1,7 @@
 package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaCharType;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
-import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.jlisa.program.type.*;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -57,6 +53,12 @@ public class JavaAssignment extends Assignment {
 		AnalysisState<A> result = state.bottomExecution();
 		Type targetType = left.getStaticType();
 		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
+
+                if (targetType instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaArrayType arrType) {
+                        if (arrType.getDimensions() > 1) {
+                                throw new SemanticException("Assignment to matrices elements are not supported yet");
+                        }
+                }
 
 		// int constants, if they fit the target type, can be assigned
 		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType
