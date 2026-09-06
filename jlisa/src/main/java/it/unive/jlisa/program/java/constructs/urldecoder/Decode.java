@@ -3,6 +3,7 @@ package it.unive.jlisa.program.java.constructs.urldecoder;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.operator.JavaIsValidEncoding;
+import it.unive.jlisa.program.operator.JavaURLDecoderIsIllegalArg;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -24,7 +25,6 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -91,10 +91,18 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 				JavaIsValidEncoding.INSTANCE,
 				location);
 
-		Satisfiability sat = analysis.satisfies(state, isValidEncoding, originating);
-		if (sat == Satisfiability.BOTTOM) {
+		Satisfiability satIsValidEncoding = analysis.satisfies(state, isValidEncoding, originating);
+		if (satIsValidEncoding == Satisfiability.BOTTOM) {
 			return state.bottomExecution();
 		}
+
+		it.unive.lisa.symbolic.value.UnaryExpression isIllegalArgument = new it.unive.lisa.symbolic.value.UnaryExpression(
+				booleanType,
+				accessLeft,
+				JavaURLDecoderIsIllegalArg.INSTANCE,
+				location);
+
+		Satisfiability satIsIllegalArg = analysis.satisfies(state, isIllegalArgument, originating);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
@@ -115,18 +123,18 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		noExceptionState = tmp;
 
-		if (sat != Satisfiability.SATISFIED) {
+		if (satIsValidEncoding != Satisfiability.SATISFIED) {
 
-			// builds the exception
-			JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
+			// builds the UnsupportedEncoding exception
+			JavaClassType ueExc = JavaClassType.getUnsupportedEncodingExceptionType();
 			call = new JavaNewObj(getCFG(), getLocation(),
-					oobExc.getReference(), new Expression[0]);
+					ueExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					new StatementStore<A>(state));
 
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
+				CFGThrow throwVar = new CFGThrow(getCFG(), ueExc.getReference(), getLocation());
 				tmp = analysis.assign(state, throwVar, th, originating);
 
 				// deletes the receiver of the constructor
@@ -135,7 +143,31 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oobExc.getReference(), originating), this));
+						new Error(ueExc.getReference(), originating), this));
+			}
+		}
+
+		if (satIsIllegalArg != Satisfiability.SATISFIED) {
+
+			// builds the IllegalArgument exception
+			JavaClassType iaExc = JavaClassType.getIllegalArgumentExceptionType();
+			call = new JavaNewObj(getCFG(), getLocation(),
+					iaExc.getReference(), new Expression[0]);
+			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+					new StatementStore<A>(state));
+
+			for (SymbolicExpression th : state.getExecutionExpressions()) {
+				// assign exception to variable thrower
+				CFGThrow throwVar = new CFGThrow(getCFG(), iaExc.getReference(), getLocation());
+				tmp = analysis.assign(state, throwVar, th, originating);
+
+				// deletes the receiver of the constructor
+				// and all the metavariables from subexpressions
+				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
+						.forgetIdentifiers(getLeft().getMetaVariables(), this)
+						.forgetIdentifiers(getRight().getMetaVariables(), this);
+				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
+						new Error(iaExc.getReference(), originating), this));
 			}
 		}
 
