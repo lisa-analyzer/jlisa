@@ -64,6 +64,14 @@ SEALED
    : 'sealed'
    ;
 
+THROWS
+   : 'throws'
+   ;
+
+COMMA
+   : ','
+   ;
+
 COLON
    : ':'
    ;

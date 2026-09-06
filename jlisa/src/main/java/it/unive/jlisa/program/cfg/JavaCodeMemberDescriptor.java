@@ -8,6 +8,9 @@ import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.Type;
 
 public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
+
+	private Type[] exceptions;
+
 	public JavaCodeMemberDescriptor(
 			CodeLocation location,
 			Unit unit,
@@ -15,6 +18,7 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 			String name,
 			Parameter... formals) {
 		super(location, unit, instance, name, formals);
+		this.exceptions = new Type[0];
 	}
 
 	public JavaCodeMemberDescriptor(
@@ -25,6 +29,19 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 			Type returnType,
 			Parameter... formals) {
 		super(location, unit, instance, name, returnType, formals);
+		this.exceptions = new Type[0];
+	}
+
+	public JavaCodeMemberDescriptor(
+			CodeLocation location,
+			Unit unit,
+			boolean instance,
+			String name,
+			Type returnType,
+			Type[] exceptions,
+			Parameter... formals) {
+		super(location, unit, instance, name, returnType, formals);
+		this.exceptions = exceptions;
 	}
 
 	public JavaCodeMemberDescriptor(
@@ -36,6 +53,7 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 			Annotations annotations,
 			Parameter... formals) {
 		super(location, unit, instance, name, returnType, annotations, formals);
+		this.exceptions = new Type[0];
 	}
 
 	public boolean matchesSignature(
@@ -50,5 +68,9 @@ public class JavaCodeMemberDescriptor extends CodeMemberDescriptor {
 			}
 		}
 		return true;
+	}
+
+	public Type[] getExceptions() {
+		return exceptions;
 	}
 }

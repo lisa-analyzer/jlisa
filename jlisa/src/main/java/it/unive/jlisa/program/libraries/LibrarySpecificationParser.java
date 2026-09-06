@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.libraries;
 
+import org.antlr.v4.runtime.Token;
+
 import it.unive.jlisa.antlr.LibraryDefinitionParser;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
@@ -118,6 +120,13 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 				visitType(ctx.type()));
 		for (int i = 0; i < ctx.param().size(); i++)
 			mtd.getParams().add(visitParam(ctx.param(i)));
+
+		if (ctx.throwsList() != null) {
+			for (LibtypeContext lt : ctx.throwsList().libtype()) {
+				mtd.getExceptions().add((LibType)visitLibtype(lt));
+			}
+		}
+
 		return mtd;
 	}
 

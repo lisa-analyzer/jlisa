@@ -34,8 +34,12 @@ field
    : INSTANCE? FIELD name = IDENTIFIER type (DEFAULT val = value)?
    ;
 
+throwsList
+   : THROWS libtype (COMMA libtype)*
+   ;
+
 method
-   : INSTANCE? SEALED? METHOD name = IDENTIFIER COLON implementation = IDENTIFIER type param*
+   : INSTANCE? SEALED? METHOD name = IDENTIFIER COLON implementation = IDENTIFIER type param* throwsList?
    ;
 
 classDef

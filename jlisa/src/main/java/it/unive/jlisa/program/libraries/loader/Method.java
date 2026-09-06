@@ -8,6 +8,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class Method {
 	private final String implementation;
 	private final Type type;
 	private final List<Parameter> params = new LinkedList<>();
+	private final List<LibType> throwsList = new LinkedList<>();
 
 	public Method(
 			boolean instance,
@@ -59,6 +61,10 @@ public class Method {
 		return params;
 	}
 
+	public Collection<LibType> getExceptions() {
+		return throwsList;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(implementation, instance, name, params, sealed, type);
@@ -75,14 +81,14 @@ public class Method {
 			return false;
 		Method other = (Method) obj;
 		return Objects.equals(implementation, other.implementation) && instance == other.instance
-				&& Objects.equals(name, other.name) && Objects.equals(params, other.params) && sealed == other.sealed
+				&& Objects.equals(name, other.name) && Objects.equals(params, other.params) && Objects.equals(throwsList, other.throwsList) && sealed == other.sealed
 				&& Objects.equals(type, other.type);
 	}
 
 	@Override
 	public String toString() {
 		return "Method [instance=" + instance + ", sealed=" + sealed + ", name=" + name + ", implementation="
-				+ implementation + ", type=" + type + ", params=" + params + "]";
+				+ implementation + ", type=" + type + ", params=" + params + ", throwsList=" + throwsList + "]" ;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -95,12 +101,18 @@ public class Method {
 		for (int i = 0; i < pars.length; i++)
 			pars[i] = this.params.get(i).toLiSAParameter(program, location, init);
 
+		it.unive.lisa.type.Type[] throwListArr = new it.unive.lisa.type.Type[throwsList.size()];
+		for (int i = 0; i < throwListArr.length; i++) {
+			throwListArr[i] = this.throwsList.get(i).toLiSAType(program);
+		}
+
 		JavaCodeMemberDescriptor desc = new JavaCodeMemberDescriptor(
 				location,
 				container,
 				this.instance,
 				this.name,
 				this.type.toLiSAType(program),
+				throwListArr,
 				pars);
 
 		desc.setOverridable(!this.sealed);
