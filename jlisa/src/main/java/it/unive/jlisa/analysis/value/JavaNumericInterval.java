@@ -51,6 +51,7 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
@@ -68,6 +69,10 @@ public class JavaNumericInterval extends Interval {
 		if (constant.getValue() instanceof Number) {
 			return fromConstant(constant);
 		}
+                if (constant.getStaticType() instanceof TypeTokenType) {
+                        return IntInterval.TOP;
+                }
+
 		// If the constant is not a number, return BOTTOM.
 		// TOP represents any possible number, but since the constant is not
 		// numeric, BOTTOM is more appropriate.
