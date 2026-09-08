@@ -112,8 +112,7 @@ public class JavaArrayAccess extends BinaryExpression {
 			return readArrayElement(analysis, state, container, right, lenAccess, accessType);
 		} else if (sat == Satisfiability.BOTTOM) {
 			return state.bottomExecution();
-		}
-		else {
+		} else {
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
 			AnalysisState<A> noExceptionState = readArrayElement(analysis, state, container, right, lenAccess,
