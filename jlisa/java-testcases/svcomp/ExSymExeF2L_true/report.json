@@ -6,15 +6,15 @@
   "files" : [ "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_1707441037.graph.json", "report.json", "void_Main.Main(Main__this)_1707435333.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.test(Main__this,_float_x)_1707429598.graph.json" ],
   "info" : {
     "cfgs" : "16",
-    "duration" : "6ms",
-    "end" : "2026-08-20T00:59:01.376+02:00",
+    "duration" : "5ms",
+    "end" : "2026-08-27T13:15:28.668+02:00",
     "expressions" : "66",
     "files" : "4",
     "globals" : "50",
-    "members" : "288",
+    "members" : "289",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-20T00:59:01.370+02:00",
+    "start" : "2026-08-27T13:15:28.663+02:00",
     "statements" : "33",
     "units" : "55",
     "version" : "1.0",
@@ -38,7 +38,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/svcomp/ExSymExeF2L_true"
   }
 }

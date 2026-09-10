@@ -7,14 +7,14 @@
   "info" : {
     "cfgs" : "20",
     "duration" : "4ms",
-    "end" : "2026-08-17T23:38:37.187+02:00",
+    "end" : "2026-08-27T13:15:33.785+02:00",
     "expressions" : "51",
     "files" : "4",
     "globals" : "50",
-    "members" : "292",
+    "members" : "293",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:38:37.183+02:00",
+    "start" : "2026-08-27T13:15:33.781+02:00",
     "statements" : "33",
     "units" : "58",
     "version" : "1.0",
@@ -38,7 +38,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/svcomp/interface1"
   }
 }

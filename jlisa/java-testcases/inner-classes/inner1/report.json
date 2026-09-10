@@ -4,15 +4,15 @@
   "files" : [ "report.json", "void_Basic.Basic(Basic__this)_823992675.graph.json", "void_Basic.Inner.Inner(Basic.Inner__this,_Basic__$enclosing)_823999433.graph.json", "void_Basic.Inner.display1(Basic.Inner__this)_823986010.graph.json", "void_Basic.Inner.display2(Basic.Inner__this)_823986041.graph.json", "void_Basic.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "5ms",
-    "end" : "2026-08-17T23:36:02.567+02:00",
+    "duration" : "7ms",
+    "end" : "2026-08-27T13:15:00.585+02:00",
     "expressions" : "39",
     "files" : "5",
     "globals" : "52",
-    "members" : "270",
+    "members" : "271",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:36:02.562+02:00",
+    "start" : "2026-08-27T13:15:00.578+02:00",
     "statements" : "19",
     "units" : "53",
     "version" : "1.0",
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/inner-classes/inner1"
   }
 }

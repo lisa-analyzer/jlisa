@@ -411,8 +411,17 @@ public class JavaClassType
 			return JavaByteType.INSTANCE;
 		else if (type.equals(getShortWrapperType()))
 			return JavaShortType.INSTANCE;
+		else if (type.equals(getBooleanWrapperType()))
+			return JavaBooleanType.INSTANCE;
 		else
 			return null;
+	}
+
+	public static boolean isWrapperType(
+			Type t) {
+		if (getUnwrappedType(t) != null)
+			return true;
+		return false;
 	}
 
 	public static Type getWrappedType(

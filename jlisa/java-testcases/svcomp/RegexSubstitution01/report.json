@@ -18,15 +18,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "12ms",
-    "end" : "2026-08-17T23:38:36.601+02:00",
+    "duration" : "15ms",
+    "end" : "2026-08-27T13:15:33.086+02:00",
     "expressions" : "116",
     "files" : "1",
     "globals" : "50",
-    "members" : "289",
+    "members" : "290",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:38:36.589+02:00",
+    "start" : "2026-08-27T13:15:33.071+02:00",
     "statements" : "45",
     "units" : "58",
     "version" : "1.0",
@@ -50,7 +50,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/svcomp/RegexSubstitution01"
   }
 }
