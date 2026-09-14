@@ -4,16 +4,16 @@
   "files" : [ "report.json", "void_LongTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "2",
-    "duration" : "3ms",
-    "end" : "2026-08-17T23:35:54.303+02:00",
-    "expressions" : "9",
+    "duration" : "5ms",
+    "end" : "2026-08-27T13:14:58.264+02:00",
+    "expressions" : "12",
     "files" : "1",
     "globals" : "50",
-    "members" : "267",
+    "members" : "268",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:35:54.300+02:00",
-    "statements" : "6",
+    "start" : "2026-08-27T13:14:58.259+02:00",
+    "statements" : "7",
     "units" : "52",
     "version" : "1.0",
     "warnings" : "0"
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/long"
   }
 }

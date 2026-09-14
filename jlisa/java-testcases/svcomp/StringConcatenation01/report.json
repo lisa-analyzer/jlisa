@@ -13,14 +13,14 @@
   "info" : {
     "cfgs" : "15",
     "duration" : "6ms",
-    "end" : "2026-08-17T23:38:34.581+02:00",
+    "end" : "2026-08-27T13:15:30.859+02:00",
     "expressions" : "90",
     "files" : "3",
     "globals" : "50",
-    "members" : "287",
+    "members" : "288",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:38:34.575+02:00",
+    "start" : "2026-08-27T13:15:30.853+02:00",
     "statements" : "34",
     "units" : "55",
     "version" : "1.0",
@@ -44,7 +44,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/svcomp/StringConcatenation01"
   }
 }

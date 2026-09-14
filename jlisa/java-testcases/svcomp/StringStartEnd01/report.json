@@ -10,15 +10,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "17ms",
-    "end" : "2026-08-19T21:28:13.230+02:00",
+    "duration" : "32ms",
+    "end" : "2026-08-27T13:15:28.456+02:00",
     "expressions" : "90",
     "files" : "1",
     "globals" : "50",
-    "members" : "287",
+    "members" : "288",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-19T21:28:13.213+02:00",
+    "start" : "2026-08-27T13:15:28.424+02:00",
     "statements" : "42",
     "units" : "55",
     "version" : "1.0",
@@ -42,7 +42,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/svcomp/StringStartEnd01"
   }
 }

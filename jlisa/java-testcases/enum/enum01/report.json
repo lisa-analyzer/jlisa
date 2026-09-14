@@ -4,15 +4,15 @@
   "files" : [ "report.json", "void_EnumExample.EnumExample(EnumExample__this,_java.lang.String__name)_-581731502.graph.json", "void_EnumExample.EnumExample(EnumExample__this,_java.lang.String__name)_-581731626.graph.json", "void_EnumExample.EnumExample(EnumExample__this,_java.lang.String__name)_-581731750.graph.json", "void_EnumExample.EnumExample_clinit()_1707446183.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "8ms",
-    "end" : "2026-08-17T23:35:50.572+02:00",
+    "duration" : "9ms",
+    "end" : "2026-08-27T13:14:57.196+02:00",
     "expressions" : "15",
     "files" : "5",
     "globals" : "54",
-    "members" : "269",
+    "members" : "270",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:35:50.564+02:00",
+    "start" : "2026-08-27T13:14:57.187+02:00",
     "statements" : "10",
     "units" : "53",
     "version" : "1.0",
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/enum/enum01"
   }
 }

@@ -42,6 +42,8 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
@@ -641,6 +643,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
+		if (operator instanceof LogicalAnd) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return new ConstantValue(lv && rv);
+		}
+
+		if (operator instanceof LogicalOr) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return new ConstantValue(lv || rv);
+		}
+
 		if (operator instanceof BitwiseOr) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
@@ -824,6 +838,26 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() < ((Number) rVal).intValue());
 			}
+		}
+
+		if (operator instanceof ComparisonEq) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Number && rVal instanceof Number)
+				if (lVal instanceof Double || rVal instanceof Double) {
+					return new ConstantValue(((Number) lVal).doubleValue() == ((Number) rVal).doubleValue());
+				} else if (lVal instanceof Float || rVal instanceof Float) {
+					return new ConstantValue(((Number) lVal).floatValue() == ((Number) rVal).floatValue());
+				} else if (lVal instanceof Long || rVal instanceof Long) {
+					return new ConstantValue(((Number) lVal).longValue() == ((Number) rVal).longValue());
+				} else {
+					return new ConstantValue(((Number) lVal).intValue() == ((Number) rVal).intValue());
+				}
+			else if (lVal instanceof Boolean && rVal instanceof Boolean)
+				return new ConstantValue(((Boolean) lVal).booleanValue() == ((Boolean) rVal).booleanValue());
+			else if (lVal instanceof Character && rVal instanceof Character)
+				return new ConstantValue(((Character) lVal).charValue() == ((Character) rVal).charValue());
 		}
 
 		if (operator instanceof JavaMathPowOperator) {
@@ -1542,6 +1576,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		BinaryOperator operator = expression.getOperator();
 		if (left.isTop() || right.isTop())
 			return Satisfiability.UNKNOWN;
+
+		if (operator instanceof LogicalAnd) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return (lv && rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof LogicalOr) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return (lv || rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		}
 
 		// character
 		if (operator instanceof JavaCharacterEqualsOperator) {

@@ -11,14 +11,14 @@
   "info" : {
     "cfgs" : "5",
     "duration" : "46ms",
-    "end" : "2026-08-18T12:42:10.392+02:00",
+    "end" : "2026-08-27T13:15:01.939+02:00",
     "expressions" : "32",
     "files" : "3",
     "globals" : "52",
-    "members" : "270",
+    "members" : "271",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-18T12:42:10.346+02:00",
+    "start" : "2026-08-27T13:15:01.893+02:00",
     "statements" : "20",
     "units" : "55",
     "version" : "1.0",
@@ -42,7 +42,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/reflection/class-new-instance-3"
   }
 }

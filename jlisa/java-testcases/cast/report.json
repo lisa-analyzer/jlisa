@@ -4,15 +4,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "2",
-    "duration" : "4ms",
-    "end" : "2026-08-17T23:35:53.859+02:00",
+    "duration" : "6ms",
+    "end" : "2026-08-27T13:14:54.508+02:00",
     "expressions" : "15",
     "files" : "1",
     "globals" : "50",
-    "members" : "274",
+    "members" : "275",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:35:53.855+02:00",
+    "start" : "2026-08-27T13:14:54.502+02:00",
     "statements" : "8",
     "units" : "53",
     "version" : "1.0",
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/cast"
   }
 }
