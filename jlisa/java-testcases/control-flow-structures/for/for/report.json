@@ -4,15 +4,15 @@
   "files" : [ "report.json", "void_ForLoopsExample1.ForLoopsExample1(ForLoopsExample1__this)_cfg.graph.json", "void_ForLoopsExample1.emptyStructures()_cfg.graph.json", "void_ForLoopsExample1.main(java.lang.String_[]__args)_cfg.graph.json" ],
   "info" : {
     "cfgs" : "3",
-    "duration" : "2ms",
-    "end" : "2026-08-17T23:35:52.066+02:00",
+    "duration" : "4ms",
+    "end" : "2026-08-27T13:14:56.130+02:00",
     "expressions" : "18",
     "files" : "3",
     "globals" : "50",
-    "members" : "268",
+    "members" : "269",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:35:52.064+02:00",
+    "start" : "2026-08-27T13:14:56.126+02:00",
     "statements" : "12",
     "units" : "52",
     "version" : "1.0",
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/control-flow-structures/for/for"
   }
 }

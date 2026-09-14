@@ -28,15 +28,15 @@
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "7",
-    "duration" : "35ms",
-    "end" : "2026-08-18T12:42:12.532+02:00",
+    "duration" : "50ms",
+    "end" : "2026-08-27T13:15:04.351+02:00",
     "expressions" : "112",
     "files" : "1",
     "globals" : "55",
-    "members" : "272",
+    "members" : "273",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-18T12:42:12.497+02:00",
+    "start" : "2026-08-27T13:15:04.301+02:00",
     "statements" : "46",
     "units" : "56",
     "version" : "1.0",
@@ -60,7 +60,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/reflection/class-get-field-2"
   }
 }

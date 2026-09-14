@@ -55,7 +55,9 @@ public class JavaDivision extends Division {
 				ComparisonEq.INSTANCE,
 				getLocation());
 
-		if (analysis.satisfies(state, expr, this) == Satisfiability.SATISFIED) {
+		Satisfiability sat = analysis.satisfies(state, expr, this);
+
+		if (sat == Satisfiability.SATISFIED) {
 			// no division by zero exception for floating point numbers
 			if (analysis.getDynamicTypeOf(state, left, this) == JavaDoubleType.INSTANCE
 					|| analysis.getDynamicTypeOf(state, right, this) == JavaDoubleType.INSTANCE
@@ -84,9 +86,11 @@ public class JavaDivision extends Division {
 				return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
 						new Error(arithExc.getReference(), this), this);
 			}
-		} else if (analysis.satisfies(state, expr, this) == Satisfiability.NOT_SATISFIED)
+		} else if (sat == Satisfiability.NOT_SATISFIED)
 			return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
-		else {
+		else if (sat == Satisfiability.BOTTOM) {
+			return state.bottomExecution();
+		} else {
 			AnalysisState<
 					A> noExceptionState = super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 

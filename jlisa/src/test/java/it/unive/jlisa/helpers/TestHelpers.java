@@ -41,8 +41,8 @@ public class TestHelpers {
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-//		 conf.forceUpdate = true;
-//		 conf.outputs.add(new HtmlResults<>(true));
+		// conf.forceUpdate = true;
+		// conf.outputs.add(new HtmlResults<>(true));
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
 		// the abstract domain
@@ -55,6 +55,7 @@ public class TestHelpers {
 		// for interprocedural analysis
 		conf.callGraph = new JavaRTACallGraph();
 		conf.interproceduralAnalysis = new InliningAnalysis<>(10, false);
+		conf.wideningThreshold = 20;
 		return conf;
 	}
 

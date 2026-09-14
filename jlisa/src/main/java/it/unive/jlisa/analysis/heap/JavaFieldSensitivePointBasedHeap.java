@@ -29,9 +29,9 @@ import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -90,16 +90,16 @@ public class JavaFieldSensitivePointBasedHeap
 	}
 
 	@Override
-	protected void addField(
+	protected PatriciaTrieMap<AllocationSite, ExpressionSet> addField(
 			AllocationSite site,
 			SymbolicExpression field,
-			Map<AllocationSite, ExpressionSet> mapping) {
+			PatriciaTrieMap<AllocationSite, ExpressionSet> mapping) {
 		if (site.getField() != null)
 			// we do not track fields of fields
-			return;
+			return mapping;
 		Set<SymbolicExpression> tmp = new HashSet<>(mapping.getOrDefault(site, new ExpressionSet()).elements());
 		tmp.add(field);
-		mapping.put(site, new ExpressionSet(tmp));
+		return mapping.put(site, new ExpressionSet(tmp));
 	}
 
 	@Override
