@@ -4,3 +4,9 @@ class java.util.Vector extends java.util.Collection:
 
 class java.util.Stack extends java.util.Vector:
 
+class java.util.Enumeration extends java.lang.Object:
+
+class java.util.Collections extends java.lang.Object:
+    method enumeration: it.unive.jlisa.program.java.constructs.collections.CollectionsEnumeration
+        libtype java.util.Enumeration*
+        param c libtype java.util.Collection*

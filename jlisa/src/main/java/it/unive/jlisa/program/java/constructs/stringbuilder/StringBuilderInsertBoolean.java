@@ -15,11 +15,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class StringBuilderInsertBoolean extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -64,14 +60,10 @@ public class StringBuilderInsertBoolean extends TernaryExpression implements Plu
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
-		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-
-		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, right, JavaStringInsertBooleanOperator.INSTANCE, getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+				getLocation(), this,
+				oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
+						stringType, oldValue, middle, right, JavaStringInsertBooleanOperator.INSTANCE, getLocation()));
 
 		return analysis.smallStepSemantics(result, left, originating);
 	}

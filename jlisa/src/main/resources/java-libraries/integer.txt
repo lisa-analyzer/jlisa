@@ -1,9 +1,9 @@
 class java.lang.Integer extends java.lang.Number:
 	field MAX_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-    field MIN_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	field MIN_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	method Integer_clinit: it.unive.jlisa.program.java.constructs.integer.IntegerClassInitializer
-    	type it.unive.lisa.type.VoidType::INSTANCE
+		type it.unive.lisa.type.VoidType::INSTANCE
 
 	instance field value type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 

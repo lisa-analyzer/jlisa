@@ -1,1 +1,8 @@
 class javax.sound.sampled.SourceDataLine extends java.lang.Object:
+    
+	instance method write: it.unive.jlisa.program.java.constructs.sound.SourceDataLineWrite
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype javax.sound.sampled.SourceDataLine*
+		param b type it.unive.jlisa.program.type.JavaArrayType::BYTE_ARRAY
+        param off type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param len type it.unive.jlisa.program.type.JavaIntType::INSTANCE

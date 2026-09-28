@@ -1,7 +1,9 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
@@ -60,6 +62,14 @@ public class StringBuilderEmptyConstructor extends UnaryExpression implements Pl
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(stringType, expr, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, emptyString, originating);
+
+		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
+		AccessChild capAccess = new AccessChild(JavaIntType.INSTANCE, expr, capVar, getLocation());
+		// default capacity of a no-arg StringBuilder, as per the Java spec
+		Constant defaultCapacity = new Constant(JavaIntType.INSTANCE, 16, getLocation());
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		AnalysisState<A> tmp = analysis.assign(state, access, emptyString, originating);
+		return analysis.assign(tmp, capAccess, defaultCapacity, originating);
 	}
 }

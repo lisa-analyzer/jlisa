@@ -54,7 +54,7 @@ public class FieldInitializationVisitor extends ScopedVisitor<MethodScope>
 			if (fragment.getInitializer() != null) {
 				it.unive.lisa.program.cfg.statement.Expression candidate = getParserContext().evaluate(
 						fragment.getInitializer(),
-						() -> new ExpressionVisitor(getEnvironment(), getScope()));
+						new ExpressionVisitor(getEnvironment(), getScope()));
 				if (candidate != null) {
 					initializer = candidate;
 				}

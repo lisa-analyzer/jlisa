@@ -93,10 +93,21 @@ public class DoubleClassInitializer extends NativeCFG implements PluggableStatem
 					getLocation());
 			Constant posInfConst = new Constant(JavaDoubleType.INSTANCE, Double.POSITIVE_INFINITY, getLocation());
 
+			GlobalVariable negInfId = new GlobalVariable(JavaDoubleType.INSTANCE,
+					"java.lang.Double::NEGATIVE_INFINITY",
+					getLocation());
+			Constant negInfConst = new Constant(JavaDoubleType.INSTANCE, Double.NEGATIVE_INFINITY, getLocation());
+
+			GlobalVariable nanId = new GlobalVariable(JavaDoubleType.INSTANCE, "java.lang.Double::NaN",
+					getLocation());
+			Constant nanConst = new Constant(JavaDoubleType.INSTANCE, Double.NaN, getLocation());
+
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			state = analysis.assign(state, maxId, maxConst, this);
 			state = analysis.assign(state, minId, minConst, this);
 			state = analysis.assign(state, posInfId, posInfConst, this);
+			state = analysis.assign(state, negInfId, negInfConst, this);
+			state = analysis.assign(state, nanId, nanConst, this);
 			return state;
 		}
 	}

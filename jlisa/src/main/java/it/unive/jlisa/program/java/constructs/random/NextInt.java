@@ -14,7 +14,11 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.PushFromConstraints;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 
 public class NextInt extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -47,8 +51,14 @@ public class NextInt extends UnaryExpression implements PluggableStatement {
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()),
-				originating);
+		Constant max = new Constant(JavaIntType.INSTANCE, Integer.MAX_VALUE, getLocation());
+		Constant min = new Constant(JavaIntType.INSTANCE, Integer.MIN_VALUE, getLocation());
+		BinaryExpression upperBound = new BinaryExpression(JavaIntType.INSTANCE, max, max, ComparisonGe.INSTANCE,
+				getLocation());
+		BinaryExpression lowerBound = new BinaryExpression(JavaIntType.INSTANCE, min, min, ComparisonLe.INSTANCE,
+				getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), upperBound, lowerBound), originating);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.java.constructs.CharArrayConstantSupport;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -14,6 +15,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -57,11 +59,30 @@ public class StringCharArrayConstructor extends BinaryExpression implements Plug
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		// in this case, we always return the top string
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		PushAny topString = new PushAny(stringType, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+
+		String constantValue;
+		try {
+			Integer length = CharArrayConstantSupport.extractArrayLength(interprocedural, state, right, getLocation(),
+					this);
+			constantValue = length == null
+					? null
+					: CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, right, 0, length,
+							getLocation(), this);
+		} catch (SemanticException e) {
+			throw e;
+		} catch (RuntimeException e) {
+			// best-effort constant reconstruction: any failure here must not
+			// turn the whole statement's outcome into bottom, we just fall
+			// back to the imprecise (top) result
+			constantValue = null;
+		}
+
+		SymbolicExpression value = constantValue != null
+				? new Constant(stringType, constantValue, getLocation())
+				: new PushAny(stringType, getLocation());
+		return interprocedural.getAnalysis().assign(state, leftAccess, value, originating);
 	}
 }

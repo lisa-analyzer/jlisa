@@ -74,10 +74,11 @@ public class StringBuilderInsertObject extends TernaryExpression implements Plug
 		AccessChild accessRight = new AccessChild(analysis.getDynamicTypeOf(state, accessLeft, originating), derefRight,
 				var, getLocation());
 
-		it.unive.lisa.symbolic.value.TernaryExpression insert = new it.unive.lisa.symbolic.value.TernaryExpression(
-				stringType, accessLeft, middle, accessRight, JavaStringInsertObjectOperator.INSTANCE, getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, insert, originating);
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+				getLocation(), this,
+				oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
+						stringType, oldValue, middle, accessRight, JavaStringInsertObjectOperator.INSTANCE,
+						getLocation()));
 
 		return analysis.smallStepSemantics(result, left, originating);
 	}

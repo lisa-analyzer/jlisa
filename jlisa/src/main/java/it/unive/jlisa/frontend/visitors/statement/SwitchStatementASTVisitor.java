@@ -52,7 +52,7 @@ class SwitchStatementASTVisitor extends ScopedVisitor<MethodScope> implements Re
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 
 		switchExpression = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Statement noop = new NoOp(getScope().getCFG(),
 				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
 
@@ -78,7 +78,7 @@ class SwitchStatementASTVisitor extends ScopedVisitor<MethodScope> implements Re
 			} else {
 				caseBlock = getParserContext().evaluate(
 						(org.eclipse.jdt.core.dom.Statement) o,
-						() -> new StatementASTVisitor(getEnvironment(), getScope()));
+						new StatementASTVisitor(getEnvironment(), getScope()));
 			}
 			boolean isEmptyBlock = caseBlock == null || caseBlock.getBody().getNodes().isEmpty();
 			NoOp emptyBlock = null;
@@ -265,7 +265,7 @@ class SwitchStatementASTVisitor extends ScopedVisitor<MethodScope> implements Re
 						getSourceCodeLocation(node));
 			expr = new JavaAccessGlobal(getScope().getCFG(), getSourceCodeLocation(node), switchType, global);
 		} else {
-			expr = getParserContext().evaluate(node, () -> new ExpressionVisitor(getEnvironment(), getScope()));
+			expr = getParserContext().evaluate(node, new ExpressionVisitor(getEnvironment(), getScope()));
 		}
 
 		SourceCodeLocationManager mgr = getSourceCodeLocationManager(node);

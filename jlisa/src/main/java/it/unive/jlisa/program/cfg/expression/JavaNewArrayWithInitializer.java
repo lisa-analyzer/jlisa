@@ -82,42 +82,27 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
-
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
-
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
 		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
-
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
-
 		Constant length = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
-
 		tmp = analysis.assign(tmp, lenAccess, length, this);
 
-		int i = 0;
-
-		for (ExpressionSet exprs : params) {
-
-			for (SymbolicExpression expr : exprs) {
-
+		for (int i = 0; i < params.length; i++)
+			for (SymbolicExpression expr : params[i]) {
 				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
-
 				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());
 				tmp = init;
-
 			}
 
-			i += 1;
-		}
-
 		getMetaVariables().add(array);
-
 		return analysis.smallStepSemantics(tmp, array, this);
 	}
 

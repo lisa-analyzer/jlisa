@@ -35,13 +35,13 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		getScope().getTracker().enterScope();
 
 		Expression expression = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		adj.addNode(expression);
 
 		ParsedBlock loopBody = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		adj.mergeWith(loopBody.getBody());
 

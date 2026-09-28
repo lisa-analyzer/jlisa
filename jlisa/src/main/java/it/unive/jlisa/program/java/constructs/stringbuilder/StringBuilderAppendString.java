@@ -63,16 +63,13 @@ public class StringBuilderAppendString extends BinaryExpression implements Plugg
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
-		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
 
-		it.unive.lisa.symbolic.value.BinaryExpression append = new it.unive.lisa.symbolic.value.BinaryExpression(
-				stringType, accessLeft, accessRight, JavaStringAppendStringOperator.INSTANCE, getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, originating);
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+				getLocation(), this,
+				oldValue -> new it.unive.lisa.symbolic.value.BinaryExpression(
+						stringType, oldValue, accessRight, JavaStringAppendStringOperator.INSTANCE, getLocation()));
 
 		return analysis.smallStepSemantics(result, left, originating);
 	}

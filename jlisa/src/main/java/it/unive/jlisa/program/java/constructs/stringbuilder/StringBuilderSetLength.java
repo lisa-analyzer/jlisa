@@ -108,29 +108,11 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 
 			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
-			it.unive.lisa.symbolic.value.TernaryExpression substring = new it.unive.lisa.symbolic.value.TernaryExpression(
-					getProgram().getTypes().getStringType(),
-					accessLeft,
-					new Constant(JavaIntType.INSTANCE, 0, getLocation()),
-					right,
-					JavaStringSubstringFromToOperator.INSTANCE,
-					getLocation());
-
-			AccessChild access = new AccessChild(stringType, left, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(state, access, substring, this);
+			AnalysisState<A> sem = truncate(analysis, state, left, accessLeft, right, stringType);
 
 			return sem.withExecutionExpression(new Skip(getLocation()));
 		} else {
-			it.unive.lisa.symbolic.value.TernaryExpression substring = new it.unive.lisa.symbolic.value.TernaryExpression(
-					getProgram().getTypes().getStringType(),
-					accessLeft,
-					new Constant(JavaIntType.INSTANCE, 0, getLocation()),
-					right,
-					JavaStringSubstringFromToOperator.INSTANCE,
-					getLocation());
-
-			AccessChild access = new AccessChild(stringType, left, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(state, access, substring, this);
+			AnalysisState<A> sem = truncate(analysis, state, left, accessLeft, right, stringType);
 
 			AnalysisState<A> noExceptionState = sem.withExecutionExpression(new Skip(getLocation()));
 
@@ -157,5 +139,41 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 
 			return exceptionState.lub(noExceptionState);
 		}
+	}
+
+	// assigns accessLeft := substring(accessLeft, 0, right). Self-referencing
+	// a heap field in its own assignment's RHS is unsound in this framework
+	// (the heap domain applies the assignment's structural side effects on
+	// the target before the RHS gets a chance to be rewritten, so an
+	// embedded accessLeft resolves against the already-updated heap state
+	// and evaluates to top), so the current value is first snapshotted into
+	// a fresh plain variable that the substring expression references
+	// instead
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> truncate(
+			Analysis<A, D> analysis,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			AccessChild accessLeft,
+			SymbolicExpression right,
+			Type stringType)
+			throws SemanticException {
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		AccessChild writeTarget = new AccessChild(stringType, left, var, getLocation());
+
+		it.unive.lisa.symbolic.value.Variable oldValue = new it.unive.lisa.symbolic.value.Variable(
+				stringType, "old_value@" + getLocation(), getLocation());
+		AnalysisState<A> snapshot = analysis.assign(state, oldValue, accessLeft, this);
+
+		it.unive.lisa.symbolic.value.TernaryExpression substring = new it.unive.lisa.symbolic.value.TernaryExpression(
+				stringType,
+				oldValue,
+				new Constant(JavaIntType.INSTANCE, 0, getLocation()),
+				right,
+				JavaStringSubstringFromToOperator.INSTANCE,
+				getLocation());
+		AnalysisState<A> result = analysis.assign(snapshot, writeTarget, substring, this);
+
+		getMetaVariables().add(oldValue);
+		return result.forgetIdentifier(oldValue, this);
 	}
 }

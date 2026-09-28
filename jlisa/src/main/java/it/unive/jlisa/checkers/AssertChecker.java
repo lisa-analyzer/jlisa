@@ -130,7 +130,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					Reachability<
+							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			Statement node)
@@ -174,7 +175,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					Reachability<
+							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
 			CFG graph,
 			AssertStatement node)
@@ -201,7 +203,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			V values = state.getExecutionState().second.valueState;
 			ReachabilityStatus reach = state.getExecutionState().first.lattice;
 
-			if (reach == ReachabilityStatus.UNREACHABLE) {
+			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().second.isBottom()) {
 				// if the assertion is not reachable, it won't fail
 				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
 				continue;
@@ -379,7 +381,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			SemanticTool<
 					ReachabilityProduct<
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					Reachability<
+							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
 							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool) {
 		this.workDir = tool.getConfiguration().workdir;
 		SemanticCheck.super.beforeExecution(tool);

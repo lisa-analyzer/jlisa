@@ -40,23 +40,14 @@ public class JavaAnd extends And {
 		expressions.put(getLeft(), leftState);
 
 		for (SymbolicExpression left : leftState.getExecutionExpressions()) {
-			Satisfiability sat = analysis.satisfies(state, left, this);
+			Satisfiability sat = analysis.satisfies(leftState, left, this);
 			if (sat == Satisfiability.NOT_SATISFIED)
-				result = result.lub(analysis.smallStepSemantics(state, left, this));
-			else if (sat == Satisfiability.SATISFIED) {
-				AnalysisState<A> rightState = getRight().forwardSemantics(leftState, interprocedural, expressions);
-				for (SymbolicExpression right : rightState.getExecutionExpressions())
-					result = result.lub(fwdBinarySemantics(interprocedural, state, left, right, expressions));
-			} else {
+				result = result.lub(leftState);
+			else {
 				AnalysisState<A> rightState = getRight().forwardSemantics(leftState, interprocedural, expressions);
 				expressions.put(getRight(), rightState);
-
 				for (SymbolicExpression right : rightState.getExecutionExpressions())
-					result = result.lub(fwdBinarySemantics(interprocedural, state, left, right, expressions));
-
-				result = result.lub(leftState);
-				if (rightState.getExecutionExpressions().isEmpty())
-					result = result.lub(rightState);
+					result = result.lub(fwdBinarySemantics(interprocedural, rightState, left, right, expressions));
 			}
 		}
 

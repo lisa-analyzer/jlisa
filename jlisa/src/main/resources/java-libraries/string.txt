@@ -145,7 +145,13 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfCharArray
 		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
-			
+
+	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfCharArrayRange
+		libtype java.lang.String*
+		param other type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param offset type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param count type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOfObject
 		libtype java.lang.String*
 		param other libtype java.lang.Object*

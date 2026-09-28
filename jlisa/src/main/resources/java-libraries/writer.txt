@@ -13,6 +13,17 @@ class java.io.PrintWriter extends java.io.Writer:
 		param out libtype java.io.Writer*
 		param autoflush type it.unive.lisa.program.type.BoolType::INSTANCE
 		
+	instance method PrintWriter: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype java.io.PrintWriter*
+		param out libtype java.io.OutputStream*
+		
+	instance method PrintWriter: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterConstructorWithAutoFlush
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param self libtype java.io.PrintWriter*
+		param out libtype java.io.OutputStream*
+		param autoflush type it.unive.lisa.program.type.BoolType::INSTANCE
+		
 	instance method print: it.unive.jlisa.program.java.constructs.printwriter.PrintWriterPrint
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param self libtype java.io.PrintWriter*

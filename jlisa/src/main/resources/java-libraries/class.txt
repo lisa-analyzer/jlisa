@@ -1,5 +1,37 @@
 class java.lang.Class extends java.lang.Object:
 
+	instance field name libtype java.lang.String*
+	instance field superClass libtype java.lang.Class*
+	instance field isArray type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
 	instance method Class: it.unive.jlisa.program.java.constructs.ClassEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.Class*
+
+	method forName: it.unive.jlisa.program.java.constructs.classmetatype.ClassForName
+		libtype java.lang.Class*
+		param v libtype java.lang.String*
+
+	instance method newInstance: it.unive.jlisa.program.java.constructs.classmetatype.ClassNewInstance
+		libtype java.lang.Object*
+		param v libtype java.lang.Class*
+
+	instance method getField: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetField
+		libtype java.lang.reflect.Field*
+		param this libtype java.lang.Class*
+		param v libtype java.lang.String*
+
+	instance method getMethod: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetMethod
+		libtype java.lang.reflect.Method*
+		param v libtype java.lang.Class*
+		param name libtype java.lang.String*
+		param parameterTypes type it.unive.jlisa.program.type.JavaArrayType::CLASS_ARRAY
+
+	instance method getMethods: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetMethods
+		type it.unive.jlisa.program.type.JavaArrayType::METHOD_ARRAY
+		param this libtype java.lang.Class*
+
+	instance method getName: it.unive.jlisa.program.java.constructs.classmetatype.ClassGetName
+		libtype java.lang.String*
+		param this libtype java.lang.Class*
+

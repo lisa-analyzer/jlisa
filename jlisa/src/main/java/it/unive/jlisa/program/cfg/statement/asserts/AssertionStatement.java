@@ -67,6 +67,11 @@ public class AssertionStatement extends BinaryExpression implements AssertStatem
 							Set<Type> argument) {
 						return Set.of(VoidType.INSTANCE);
 					}
+
+					@Override
+					public String toString() {
+						return "assert-condition";
+					}
 				}, getLocation()), this);
 
 		result = result.lub(analysis.smallStepSemantics(
@@ -78,29 +83,18 @@ public class AssertionStatement extends BinaryExpression implements AssertStatem
 							Set<Type> argument) {
 						return Set.of(VoidType.INSTANCE);
 					}
+
+					@Override
+					public String toString() {
+						return "assert-message";
+					}
 				}, getLocation()), this));
 
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "assert " + getLeft() + " : " + getRight();
-	}
-
-	@Override
-	public int hashCode() {
-		return super.hashCode();
-	}
-
-	@Override
-	public boolean equals(
-			Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		return true;
 	}
 }

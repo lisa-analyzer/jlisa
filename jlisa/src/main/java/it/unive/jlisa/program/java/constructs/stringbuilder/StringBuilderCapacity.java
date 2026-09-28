@@ -14,7 +14,11 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
 public class StringBuilderCapacity extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -52,7 +56,10 @@ public class StringBuilderCapacity extends UnaryExpression implements PluggableS
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()),
-				originating);
+		Type stringType = getProgram().getTypes().getStringType();
+		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
+		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
+		AccessChild access = new AccessChild(JavaIntType.INSTANCE, deref, capVar, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
 	}
 }

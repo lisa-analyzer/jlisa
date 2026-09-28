@@ -49,7 +49,6 @@ import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
@@ -76,7 +75,6 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
 
-	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(StatementASTVisitor.class);
 	private ParsedBlock block;
 
 	public StatementASTVisitor(
@@ -110,12 +108,12 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		org.eclipse.jdt.core.dom.Expression msg = node.getMessage();
 
 		Expression expression1 = getParserContext().evaluate(expr,
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		Statement assrt = null;
 		if (msg != null) {
 			Expression expression2 = getParserContext().evaluate(msg,
-					() -> new ExpressionVisitor(getEnvironment(), getScope()));
+					new ExpressionVisitor(getEnvironment(), getScope()));
 			assrt = new AssertionStatement(getScope().getCFG(), getSourceCodeLocation(node), expression1, expression2);
 
 		} else {
@@ -146,7 +144,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			for (Object o : node.statements()) {
 				ParsedBlock stmtBlock = getParserContext().evaluate(
 						(org.eclipse.jdt.core.dom.Statement) o,
-						() -> new StatementASTVisitor(getEnvironment(), getScope()));
+						new StatementASTVisitor(getEnvironment(), getScope()));
 
 				nodeList.mergeWith(stmtBlock.getBody());
 
@@ -204,7 +202,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				Expression expr = getParserContext().evaluate(e,
-						() -> new ExpressionVisitor(getEnvironment(), getScope()));
+						new ExpressionVisitor(getEnvironment(), getScope()));
 				parameters.add(expr);
 			}
 		}
@@ -238,7 +236,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			DoStatement node) {
 		this.block = getParserContext().evaluate(node,
-				() -> new DoStatementASTVisitor(getEnvironment(), getScope()));
+				new DoStatementASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -258,7 +256,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			EnhancedForStatement node) {
 		this.block = getParserContext().evaluate(node,
-				() -> new EnhancedForStatementASTVisitor(getEnvironment(), getScope()));
+				new EnhancedForStatementASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -266,7 +264,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			ExpressionStatement node) {
 		Expression expr = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(expr);
@@ -278,7 +276,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			ForStatement node) {
 		this.block = getParserContext().evaluate(node,
-				() -> new ForStatementASTVisitor(getEnvironment(), getScope()));
+				new ForStatementASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -289,12 +287,12 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 
 		getScope().getTracker().enterScope();
 		Expression condition = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		nodeList.addNode(condition);
 
 		ParsedBlock trueBlock = getParserContext().evaluate(
 				node.getThenStatement(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		nodeList.mergeWith(trueBlock.getBody());
 
@@ -316,7 +314,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (node.getElseStatement() != null) {
 			falseBlock = getParserContext().evaluate(
 					node.getElseStatement(),
-					() -> new StatementASTVisitor(getEnvironment(), getScope()));
+					new StatementASTVisitor(getEnvironment(), getScope()));
 			if (node.getElseStatement() != null) {
 
 				nodeList.mergeWith(falseBlock.getBody());
@@ -367,7 +365,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			ReturnStatement node) {
 		Expression e = node.getExpression() != null
 				? getParserContext().evaluate(node.getExpression(),
-						() -> new ExpressionVisitor(getEnvironment(), getScope()))
+						new ExpressionVisitor(getEnvironment(), getScope()))
 				: null;
 		Statement ret;
 		if (e == null) {
@@ -391,7 +389,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			throw new RuntimeException("The unit must be a ClassUnit when dealing with SuperConstructorInvocation");
 		}
 
-		// TODO there are cases where we should pass an enclosing instance
+		// TODO: there are cases where we should pass an enclosing instance
 		// to the super constructor, but they are really rare and hard to handle
 		// for now, we just live with it and we will get an open call
 
@@ -410,7 +408,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			for (Object args : node.arguments()) {
 				ASTNode e = (ASTNode) args;
 				Expression expr = getParserContext().evaluate(e,
-						() -> new ExpressionVisitor(getEnvironment(), getScope()));
+						new ExpressionVisitor(getEnvironment(), getScope()));
 				parameters.add(expr);
 			}
 		}
@@ -429,7 +427,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			SwitchStatement node) {
 		this.block = getParserContext().evaluate(node,
-				() -> new SwitchStatementASTVisitor(getEnvironment(), getScope()));
+				new SwitchStatementASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -439,7 +437,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 
 		Expression syncTarget = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 
 		SyntheticCodeLocationManager syntheticLocMan = getParserContext()
 				.getCurrentSyntheticCodeLocationManager(getSource());
@@ -450,7 +448,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 
 		ParsedBlock synchronizedBody = getParserContext().evaluate(
 				node.getBody(),
-				() -> new StatementASTVisitor(getEnvironment(), getScope()));
+				new StatementASTVisitor(getEnvironment(), getScope()));
 
 		adj.mergeWith(synchronizedBody.getBody());
 
@@ -505,7 +503,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		Statement first = null, last = null;
 		TypeASTVisitor visitor = new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope());
-		Type type = getParserContext().evaluate(node.getType(), () -> visitor);
+		Type type = getParserContext().evaluate(node.getType(), visitor);
 		if (type.isInMemoryType()) {
 			type = new JavaReferenceType(type);
 		}
@@ -531,7 +529,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);
 				org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 				initializer = getParserContext().evaluate(expr,
-						() -> new ExpressionVisitor(getEnvironment(), getScope()));
+						new ExpressionVisitor(getEnvironment(), getScope()));
 				if (initializer == null) {
 					initializer = new NullLiteral(getScope().getCFG(),
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation());
@@ -554,10 +552,11 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			}
 
 			adj.addNode(assignment);
-			if (getFirst() == null) {
-				first = assignment;
+			if (first == null) {
+				first = last = assignment;
 			} else {
 				adj.addEdge(new SequentialEdge(last, assignment));
+				last = assignment;
 			}
 
 			if (getScope().getTracker().hasVariable(variableName))
@@ -579,7 +578,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			WhileStatement node) {
 		this.block = getParserContext().evaluate(node,
-				() -> new WhileStatementASTVisitor(getEnvironment(), getScope()));
+				new WhileStatementASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 
@@ -587,7 +586,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			ThrowStatement node) {
 		Expression expr = getParserContext().evaluate(node.getExpression(),
-				() -> new ExpressionVisitor(getEnvironment(), getScope()));
+				new ExpressionVisitor(getEnvironment(), getScope()));
 		Throw th = new JavaThrow(getScope().getCFG(), getSourceCodeLocation(node), expr);
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
@@ -600,7 +599,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 	public boolean visit(
 			TryStatement node) {
 		this.block = getParserContext().evaluate(node,
-				() -> new TryStatementASTVisitor(getEnvironment(), getScope()));
+				new TryStatementASTVisitor(getEnvironment(), getScope()));
 		return false;
 	}
 

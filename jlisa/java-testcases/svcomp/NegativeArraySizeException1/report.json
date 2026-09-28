@@ -6,17 +6,17 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "36ms",
-    "end" : "2026-07-30T17:10:57.158+02:00",
+    "duration" : "3ms",
+    "end" : "2026-08-27T13:15:35.301+02:00",
     "expressions" : "46",
     "files" : "1",
-    "globals" : "36",
-    "members" : "258",
+    "globals" : "50",
+    "members" : "288",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-07-30T17:10:57.122+02:00",
+    "start" : "2026-08-27T13:15:35.298+02:00",
     "statements" : "25",
-    "units" : "52",
+    "units" : "55",
     "version" : "1.0",
     "warnings" : "1"
   },
@@ -38,7 +38,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/svcomp/NegativeArraySizeException1"
   }
 }

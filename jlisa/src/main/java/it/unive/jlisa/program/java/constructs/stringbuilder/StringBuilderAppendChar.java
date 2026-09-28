@@ -15,11 +15,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class StringBuilderAppendChar extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -62,14 +58,10 @@ public class StringBuilderAppendChar extends BinaryExpression implements Pluggab
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
-		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
-
-		it.unive.lisa.symbolic.value.BinaryExpression append = new it.unive.lisa.symbolic.value.BinaryExpression(
-				stringType, accessLeft, right, JavaStringAppendCharOperator.INSTANCE, getLocation());
-		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, originating);
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+				getLocation(), this,
+				oldValue -> new it.unive.lisa.symbolic.value.BinaryExpression(
+						stringType, oldValue, right, JavaStringAppendCharOperator.INSTANCE, getLocation()));
 
 		return analysis.smallStepSemantics(result, left, originating);
 	}

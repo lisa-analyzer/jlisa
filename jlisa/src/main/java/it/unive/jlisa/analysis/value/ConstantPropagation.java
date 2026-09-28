@@ -4,8 +4,10 @@ import it.unive.jlisa.lattices.ConstantValue;
 import it.unive.jlisa.program.operator.*;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
@@ -40,11 +42,14 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.lang.reflect.Modifier;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -599,6 +604,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		if (operator instanceof LogicalNegation && arg.getValue() instanceof Boolean b)
 			return new ConstantValue(!b);
 
+		// reflection
+		if (operator instanceof JavaClassForNameOperator && arg.getValue() instanceof String s) {
+			return new ConstantValue(s);
+		}
+
 		return top();
 	}
 
@@ -631,6 +641,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			} else if (lVal instanceof Integer || rVal instanceof Integer) {
 				return new ConstantValue(((Number) lVal).intValue() + ((Number) rVal).intValue());
 			}
+		}
+
+		if (operator instanceof LogicalAnd) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return new ConstantValue(lv && rv);
+		}
+
+		if (operator instanceof LogicalOr) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return new ConstantValue(lv || rv);
 		}
 
 		if (operator instanceof BitwiseOr) {
@@ -816,6 +838,26 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			} else {
 				return new ConstantValue(((Number) lVal).intValue() < ((Number) rVal).intValue());
 			}
+		}
+
+		if (operator instanceof ComparisonEq) {
+			Object lVal = left.getValue();
+			Object rVal = right.getValue();
+
+			if (lVal instanceof Number && rVal instanceof Number)
+				if (lVal instanceof Double || rVal instanceof Double) {
+					return new ConstantValue(((Number) lVal).doubleValue() == ((Number) rVal).doubleValue());
+				} else if (lVal instanceof Float || rVal instanceof Float) {
+					return new ConstantValue(((Number) lVal).floatValue() == ((Number) rVal).floatValue());
+				} else if (lVal instanceof Long || rVal instanceof Long) {
+					return new ConstantValue(((Number) lVal).longValue() == ((Number) rVal).longValue());
+				} else {
+					return new ConstantValue(((Number) lVal).intValue() == ((Number) rVal).intValue());
+				}
+			else if (lVal instanceof Boolean && rVal instanceof Boolean)
+				return new ConstantValue(((Boolean) lVal).booleanValue() == ((Boolean) rVal).booleanValue());
+			else if (lVal instanceof Character && rVal instanceof Character)
+				return new ConstantValue(((Character) lVal).charValue() == ((Character) rVal).charValue());
 		}
 
 		if (operator instanceof JavaMathPowOperator) {
@@ -1293,6 +1335,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return top();
 
 		NaryOperator operator = ((NaryExpression) expression).getOperator();
+
 		if (subExpressions.length == 4) {
 
 			if (operator instanceof JavaStringAppendCharSubArrayOperator) {
@@ -1472,6 +1515,43 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.SATISFIED;
 		}
 
+		// used by `Class.forName`
+		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
+
+			v = v.replace('$', '.');
+
+			// NOTE: `Class.forName` cannot access `Class` of primitive types.
+			// For that the class literal is needed
+
+			boolean classLookup = true;
+			boolean interfaceLookup = true;
+
+			try {
+				Type t = JavaClassType.lookup(v);
+				assert (t != null);
+			} catch (IllegalArgumentException e) {
+				classLookup = false;
+			}
+			try {
+				Type t = JavaInterfaceType.lookup(v);
+				assert (t != null);
+			} catch (IllegalArgumentException e) {
+				interfaceLookup = false;
+			}
+
+			if (classLookup || interfaceLookup) {
+				return Satisfiability.SATISFIED;
+			}
+			return Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof IsMemberStaticOperator) {
+			if (arg.getValue() instanceof Integer i)
+				if ((i & Modifier.STATIC) != 0)
+					return Satisfiability.SATISFIED;
+			return Satisfiability.NOT_SATISFIED;
+		}
+
 		if (operator instanceof JavaIsShortParsableOperator) {
 			if (arg.getValue() instanceof String v)
 				try {
@@ -1496,6 +1576,18 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		BinaryOperator operator = expression.getOperator();
 		if (left.isTop() || right.isTop())
 			return Satisfiability.UNKNOWN;
+
+		if (operator instanceof LogicalAnd) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return (lv && rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		}
+
+		if (operator instanceof LogicalOr) {
+			Boolean lv = ((Boolean) left.getValue());
+			Boolean rv = ((Boolean) right.getValue());
+			return (lv || rv) ? Satisfiability.SATISFIED : Satisfiability.NOT_SATISFIED;
+		}
 
 		// character
 		if (operator instanceof JavaCharacterEqualsOperator) {

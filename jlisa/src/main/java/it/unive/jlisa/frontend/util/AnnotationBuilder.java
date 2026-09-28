@@ -105,7 +105,7 @@ public final class AnnotationBuilder {
 		if (unit instanceof EnumUnit enumUnit)
 			return new EnumAnnotationValue(enumUnit.getName(), qn.getName().getIdentifier());
 
-		Expression init = env.parserContext().evaluate(qn, () -> new QualifiedNameVisitor(env, scope));
+		Expression init = env.parserContext().evaluate(qn, new QualifiedNameVisitor(env, scope));
 
 		if (init != null)
 			return parseAnnotationValue(init);

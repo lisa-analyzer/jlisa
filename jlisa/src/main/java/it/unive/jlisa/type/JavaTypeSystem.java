@@ -3,11 +3,23 @@ package it.unive.jlisa.type;
 import it.unive.jlisa.program.type.*;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.type.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class JavaTypeSystem extends TypeSystem {
+
+	public static final ArrayList<Type> PRIMITIVE_TYPES = new ArrayList<>(Arrays.asList(
+			JavaBooleanType.INSTANCE,
+			JavaByteType.INSTANCE,
+			JavaCharType.INSTANCE,
+			JavaDoubleType.INSTANCE,
+			JavaFloatType.INSTANCE,
+			JavaIntType.INSTANCE,
+			JavaLongType.INSTANCE,
+			JavaShortType.INSTANCE));
 
 	@Override
 	public BooleanType getBooleanType() {

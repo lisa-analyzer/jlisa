@@ -1,5 +1,12 @@
 class java.net.Socket extends java.lang.Object:
 
+class java.net.URLEncoder extends java.lang.Object:
+
+	method encode: it.unive.jlisa.program.java.constructs.urlencoder.Encode
+		libtype java.lang.String* 
+		param s libtype java.lang.String* 
+		param enc libtype java.lang.String* 
+
 class java.net.URLDecoder extends java.lang.Object:
 
 	method decode: it.unive.jlisa.program.java.constructs.urldecoder.Decode

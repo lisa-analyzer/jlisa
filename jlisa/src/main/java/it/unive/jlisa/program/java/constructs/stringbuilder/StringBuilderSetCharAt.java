@@ -123,14 +123,16 @@ public class StringBuilderSetCharAt extends TernaryExpression implements Pluggab
 
 			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
-			it.unive.lisa.symbolic.value.TernaryExpression setCharAt = new it.unive.lisa.symbolic.value.TernaryExpression(
-					stringType, accessLeft, middle, right, JavaStringSetCharAtOperator.INSTANCE, getLocation());
-			AnalysisState<A> result = analysis.assign(state, accessLeft, setCharAt, originating);
+			AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+					getLocation(), this,
+					oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
+							stringType, oldValue, middle, right, JavaStringSetCharAtOperator.INSTANCE, getLocation()));
 			return analysis.smallStepSemantics(result, left, originating);
 		} else {
-			it.unive.lisa.symbolic.value.TernaryExpression setCharAt = new it.unive.lisa.symbolic.value.TernaryExpression(
-					stringType, accessLeft, middle, right, JavaStringSetCharAtOperator.INSTANCE, getLocation());
-			AnalysisState<A> result = analysis.assign(state, accessLeft, setCharAt, originating);
+			AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+					getLocation(), this,
+					oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
+							stringType, oldValue, middle, right, JavaStringSetCharAtOperator.INSTANCE, getLocation()));
 			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(result, left, originating);
 
 			// builds the exception
