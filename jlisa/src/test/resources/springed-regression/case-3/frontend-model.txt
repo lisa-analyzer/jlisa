@@ -1,0 +1,39 @@
+# SpringFrontend model: case-3
+
+## units returned by SpringFrontend.parse
+it.unive.jlisa.jlisa.testcases.case_3.Case3Application
+it.unive.jlisa.jlisa.testcases.case_3.controllers.ClientLayer
+it.unive.jlisa.jlisa.testcases.case_3.controllers.PublicLayer
+
+## program units under it.unive.jlisa.jlisa.testcases.
+ClassUnit it.unive.jlisa.jlisa.testcases.case_3.Case3Application
+  annotations: @SpringBootApplication
+  ancestors: -
+  globals: -
+  code members:
+    static it.unive.jlisa.jlisa.testcases.case_3.Case3Application::main(args)
+      annotations: -
+
+ClassUnit it.unive.jlisa.jlisa.testcases.case_3.controllers.ClientLayer
+  annotations: @Controller
+  ancestors: -
+  globals: -
+  code members:
+    instance it.unive.jlisa.jlisa.testcases.case_3.controllers.ClientLayer::patchProfile(this)
+      annotations: @PatchMapping(value = "/client/profile")
+    instance it.unive.jlisa.jlisa.testcases.case_3.controllers.ClientLayer::status(this)
+      annotations: @GetMapping(value = "/client/status")
+
+ClassUnit it.unive.jlisa.jlisa.testcases.case_3.controllers.PublicLayer
+  annotations: @RestController
+  ancestors: -
+  globals: -
+  code members:
+    instance it.unive.jlisa.jlisa.testcases.case_3.controllers.PublicLayer::info(this)
+      annotations: @GetMapping(value = "/public/info")
+    instance it.unive.jlisa.jlisa.testcases.case_3.controllers.PublicLayer::submitFeedback(this)
+      annotations: @PostMapping(value = "/public/feedback")
+
+
+## spring-libraries stubs in the program
+-

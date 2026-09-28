@@ -1,0 +1,34 @@
+# P1 outputs: case-1
+
+## NewP1Impl.getControllers
+it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller
+
+## NewP1Impl.getMappingForMethod
+instance it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller::endpoint1(this)
+  methods=[GET] paths=[/hello-world] params=[] headers=[] consumes=[] produces=[] version=[]
+
+## NewP1Impl.p1
+1 mapping(s)
+methods=[GET] paths=[/hello-world] params=[] headers=[] consumes=[] produces=[] version=[]
+
+## P1Impl.getControllerClasses
+it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller
+
+## P1Impl.extractAnnotation
+instance it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller::endpoint1(this)
+  GET /hello-world params=null headers=null
+
+## P1Impl.produceRegistry as JSON (Main's ObjectMapper, mappings sorted)
+{
+  "case-1" : {
+    "Controller_endpoint1" : {
+      "annotation" : {
+        "httpMethod" : "GET",
+        "addressPath" : "/hello-world",
+        "params" : null,
+        "headers" : null
+      },
+      "method" : "it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller::endpoint1"
+    }
+  }
+}

@@ -1,0 +1,84 @@
+# SpringFrontend model: case-4
+
+## units returned by SpringFrontend.parse
+it.unive.jlisa.jlisa.testcases.case_4.Case4Application
+it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller
+
+## program units under it.unive.jlisa.jlisa.testcases.
+ClassUnit it.unive.jlisa.jlisa.testcases.case_4.Case4Application
+  annotations: @SpringBootApplication
+  ancestors: -
+  globals: -
+  code members:
+    static it.unive.jlisa.jlisa.testcases.case_4.Case4Application::main(args)
+      annotations: -
+
+ClassUnit it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller
+  annotations: @RequestMapping(path = {"/api", "/api/legacy"}, produces = "text/plain", consumes = {"application/json", "text/*"}, params = "!disabled", headers = "!X-Blocked", version = "1.0+") @RestController
+  ancestors: -
+  globals: -
+  code members:
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint1(this)
+      annotations: @GetMapping(value = "/hello-world")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint10(this)
+      annotations: @PostMapping(path = "/secure", headers = {"X-Api-Key", "X-Client=web"})
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint11(this)
+      annotations: @RequestMapping(path = {"/filter", "/filter/all"}, method = "GET", params = "type", headers = "Accept-Language=it")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint12(this)
+      annotations: @RequestMapping(value = "/everything")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint13(this, @PathVariable id)
+      annotations: @GetMapping(value = "/items/{id}")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint14(this)
+      annotations: @GetMapping(value = {"/users/{name:[a-z]+}", "/files/**"})
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint15(this)
+      annotations: @PostMapping(path = "/upload", consumes = {"!text/plain", "text/*"}, headers = "!X-Debug")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint16(this)
+      annotations: @GetMapping
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint17(this)
+      annotations: @RequestMapping(path = "/options", method = "OPTIONS")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint18(this)
+      annotations: @RequestMapping(path = "/head", method = "HEAD")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint19(this)
+      annotations: @RequestMapping(path = "/trace", method = "TRACE")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint2(this)
+      annotations: @PostMapping(path = "/greet", consumes = "application/json")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint20(this)
+      annotations: -
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint21(this)
+      annotations: @RequestMapping
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint22(this)
+      annotations: -
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint3(this)
+      annotations: @PutMapping(value = "/update")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint4(this)
+      annotations: @DeleteMapping(value = {"/delete", "/remove"})
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint5(this)
+      annotations: @PatchMapping(value = "/patch", consumes = "application/json", produces = "application/json")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint6(this)
+      annotations: @RequestMapping(value = {"/any", "/all"}, method = {"GET", "POST"})
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint7(this)
+      annotations: @GetMapping(path = "/versioned", version = "1.0")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint8(this)
+      annotations: @GetMapping(path = "/versioned", version = "2.0+")
+    instance it.unive.jlisa.jlisa.testcases.case_4.controllers.Controller::endpoint9(this)
+      annotations: @GetMapping(path = "/search", params = {"q", "lang=en", "!debug"})
+
+
+## spring-libraries stubs in the program
+ClassUnit org.springframework.http.MediaType
+  ancestors: org.springframework.util.MimeType
+  static APPLICATION_JSON_VALUE = "application/json"
+  static TEXT_HTML_VALUE = "text/html"
+  static TEXT_PLAIN_VALUE = "text/plain"
+ClassUnit org.springframework.util.MimeType
+  ancestors: java.lang.Object
+ClassUnit org.springframework.web.bind.annotation.RequestMethod
+  ancestors: java.lang.Object
+  static DELETE = "DELETE"
+  static GET = "GET"
+  static HEAD = "HEAD"
+  static OPTIONS = "OPTIONS"
+  static PATCH = "PATCH"
+  static POST = "POST"
+  static PUT = "PUT"
+  static TRACE = "TRACE"

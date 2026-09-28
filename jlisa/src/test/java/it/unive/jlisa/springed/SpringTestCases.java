@@ -20,11 +20,24 @@ public final class SpringTestCases {
 	public static Path extract(
 			String name)
 			throws IOException {
+		return extract(name, ROOT);
+	}
+
+	/**
+	 * Extracts the {@code name} archive from {@link #ROOT} into
+	 * {@code destinationRoot}, e.g. a temporary directory, leaving the working
+	 * tree untouched.
+	 */
+	public static Path extract(
+			String name,
+			Path destinationRoot)
+			throws IOException {
 		Path zip = ROOT.resolve(name + ".zip");
 		if (!Files.isRegularFile(zip))
 			throw new IOException("missing test case archive: " + zip.toAbsolutePath());
 
-		Path target = ROOT.resolve(name);
+		Path root = destinationRoot.normalize();
+		Path target = root.resolve(name);
 		delete(target);
 
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zip))) {
@@ -33,9 +46,9 @@ public final class SpringTestCases {
 				if (entry.getName().startsWith("__MACOSX/"))
 					continue;
 
-				Path out = ROOT.resolve(entry.getName()).normalize();
-				if (!out.startsWith(ROOT))
-					throw new IOException("unsafe zip entry outside spring-testcases: " + entry.getName());
+				Path out = root.resolve(entry.getName()).normalize();
+				if (!out.startsWith(root))
+					throw new IOException("unsafe zip entry outside " + root + ": " + entry.getName());
 
 				if (entry.isDirectory())
 					Files.createDirectories(out);

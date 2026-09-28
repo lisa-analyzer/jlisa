@@ -1,0 +1,32 @@
+# SpringFrontend model: case-2
+
+## units returned by SpringFrontend.parse
+it.unive.jlisa.jlisa.testcases.case_2.Case2Application
+it.unive.jlisa.jlisa.testcases.case_2.controllers.UserController
+
+## program units under it.unive.jlisa.jlisa.testcases.
+ClassUnit it.unive.jlisa.jlisa.testcases.case_2.Case2Application
+  annotations: @SpringBootApplication
+  ancestors: -
+  globals: -
+  code members:
+    static it.unive.jlisa.jlisa.testcases.case_2.Case2Application::main(args)
+      annotations: -
+
+ClassUnit it.unive.jlisa.jlisa.testcases.case_2.controllers.UserController
+  annotations: @RestController
+  ancestors: -
+  globals: -
+  code members:
+    instance it.unive.jlisa.jlisa.testcases.case_2.controllers.UserController::createUser(this)
+      annotations: @PostMapping(value = "/users")
+    instance it.unive.jlisa.jlisa.testcases.case_2.controllers.UserController::deleteUser(this)
+      annotations: @DeleteMapping(value = "/users/{id}")
+    instance it.unive.jlisa.jlisa.testcases.case_2.controllers.UserController::listUsers(this)
+      annotations: @GetMapping(value = "/users")
+    instance it.unive.jlisa.jlisa.testcases.case_2.controllers.UserController::updateUser(this)
+      annotations: @PutMapping(path = "/users/{id}")
+
+
+## spring-libraries stubs in the program
+-
