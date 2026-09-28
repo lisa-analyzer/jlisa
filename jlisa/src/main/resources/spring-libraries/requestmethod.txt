@@ -1,0 +1,10 @@
+class org.springframework.web.bind.annotation.RequestMethod extends java.lang.Object:
+
+field GET libtype java.lang.String* default "GET"
+field HEAD libtype java.lang.String* default "HEAD"
+field POST libtype java.lang.String* default "POST"
+field PUT libtype java.lang.String* default "PUT"
+field PATCH libtype java.lang.String* default "PATCH"
+field DELETE libtype java.lang.String* default "DELETE"
+field OPTIONS libtype java.lang.String* default "OPTIONS"
+field TRACE libtype java.lang.String* default "TRACE"

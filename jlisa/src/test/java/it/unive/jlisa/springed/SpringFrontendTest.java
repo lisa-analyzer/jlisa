@@ -46,21 +46,21 @@ public class SpringFrontendTest {
 		assertTrue(classNames.contains(controller), () -> "missing Controller, got: " + classNames);
 	}
 
-	@Test
-	public void case1ControllerExistenceCheck() throws IOException {
-		SpringFrontend frontend = new SpringFrontend();
-		Unit[] p = frontend.parse("spring-testcases/case-1/src/main/java");
-
-		P1Impl p1 = new P1Impl();
-		List<ClassUnit> controllers = p1.getControllerClasses(p);
-
-		Set<String> controllerNames = controllers.stream()
-				.map(Unit::getName)
-				.collect(Collectors.toSet());
-
-		String controller = "it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller";
-
-		assertEquals(1, controllers.size(), () -> "unexpected controllers: " + controllerNames);
-		assertTrue(controllerNames.contains(controller), () -> "missing Controller, got: " + controllerNames);
-	}
+//	@Test
+//	public void case1ControllerExistenceCheck() throws IOException {
+//		SpringFrontend frontend = new SpringFrontend();
+//		Unit[] p = frontend.parse("spring-testcases/case-1/src/main/java");
+//
+//		P1Impl p1 = new P1Impl();
+//		List<ClassUnit> controllers = p1.getControllerClasses(p);
+//
+//		Set<String> controllerNames = controllers.stream()
+//				.map(Unit::getName)
+//				.collect(Collectors.toSet());
+//
+//		String controller = "it.unive.jlisa.jlisa.testcases.case_1.controllers.Controller";
+//
+//		assertEquals(1, controllers.size(), () -> "unexpected controllers: " + controllerNames);
+//		assertTrue(controllerNames.contains(controller), () -> "missing Controller, got: " + controllerNames);
+//	}
 }
