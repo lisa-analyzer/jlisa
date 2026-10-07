@@ -1,6 +1,6 @@
 package it.unive.jlisa.springed.p1.util;
 
-import it.unive.jlisa.springed.p1.constructs.RequestMapping;
+import it.unive.jlisa.springed.p1.RequestMapping;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.annotations.AnnotationMember;
 import it.unive.lisa.program.annotations.values.ArrayAnnotationValue;
@@ -22,7 +22,7 @@ public class RequestMappingBuilder {
                 getHeaders(annotationBody),
                 getConsumes(annotationBody),
                 getProduces(annotationBody),
-                getVersions(annotationBody));
+                getVersion(annotationBody));
     }
 
     private static Set<String> getMethods(String annotationName, List<AnnotationMember> annotationBody) {
@@ -60,8 +60,8 @@ public class RequestMappingBuilder {
         return getValues(annotationBody, "produces");
     }
 
-    private static Set<String> getVersions(List<AnnotationMember> annotationBody) {
-        return getValues(annotationBody, "version");
+    private static String getVersion(List<AnnotationMember> annotationBody) {
+        return getValues(annotationBody, "version").stream().findFirst().orElse("");
     }
 
     private static Set<String> getValues(List<AnnotationMember> annotationBody, String... ids) {

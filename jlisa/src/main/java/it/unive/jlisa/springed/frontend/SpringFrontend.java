@@ -60,19 +60,19 @@ public class SpringFrontend extends JavaFrontend {
 			CompilationUnit[] cus,
 			UnitScope[] scopes) {
 
-		Unit[] units = new Unit[cus.length];
+		List<Unit> units = new ArrayList<>();
 
 		for (int i = 0; i < cus.length; i++) {
 			String pkg = scopes[i].getPackage();
 			for (Object type : cus[i].types()) {
 				if (type instanceof TypeDeclaration td) {
 					String name = FQNUtils.buildFQN(pkg, null, td.getName().toString());
-					units[i] = getProgram().getUnit(name);
+					units.add(getProgram().getUnit(name));
 				}
 			}
 		}
 
-		return units;
+		return units.toArray(new Unit[0]);
 	}
 
 	public List<Throwable> getParseExceptions() {

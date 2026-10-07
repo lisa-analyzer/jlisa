@@ -1,7 +1,7 @@
 package it.unive.jlisa.springed.p1.output;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import it.unive.jlisa.springed.p1.constructs.Registry;
+import it.unive.jlisa.springed.p1.Registry;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

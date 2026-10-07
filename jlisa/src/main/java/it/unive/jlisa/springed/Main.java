@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import it.unive.jlisa.springed.exceptions.SpringCSVExceptionWriter;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
 import it.unive.jlisa.springed.frontend.SpringProjectVisitor;
-import it.unive.jlisa.springed.p1.NewP1Impl;
 import it.unive.jlisa.springed.p1.P1Impl;
-import it.unive.jlisa.springed.p1.constructs.Registry;
+import it.unive.jlisa.springed.p1.Registry;
 import it.unive.jlisa.springed.p1.output.P1Output;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
@@ -41,10 +40,10 @@ public class Main {
 			Path sourceRoot = project.resolve("src/main/java");
 			Unit[] projectUnits = springFrontend.parse(sourceRoot.toString());
 
-			new NewP1Impl().p1(projectUnits);
+			Registry registry = new P1Impl(springFrontend.getParserContext()).p1(projectUnits);
 
-//			p1Output.addRegistry(projectName, registry);
-//			dumpCollectedErrors(springFrontend, projectName);
+			p1Output.addRegistry(projectName, registry);
+			dumpCollectedErrors(springFrontend, projectName);
 		}
 
 		writeOutput(p1Output);

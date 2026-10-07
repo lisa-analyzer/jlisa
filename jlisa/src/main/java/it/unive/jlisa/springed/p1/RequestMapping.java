@@ -1,4 +1,4 @@
-package it.unive.jlisa.springed.p1.constructs;
+package it.unive.jlisa.springed.p1;
 import java.util.Set;
 
 public class RequestMapping {
@@ -9,9 +9,9 @@ public class RequestMapping {
     private final Set<String> headers;
     private final Set<String> consumes;
     private final Set<String> produces;
-    private final Set<String> version;
+    private final String version;
 
-    public RequestMapping(Set<String> methods, Set<String> paths, Set<String> params, Set<String> headers, Set<String> consumes, Set<String> produces, Set<String> version) {
+    public RequestMapping(Set<String> methods, Set<String> paths, Set<String> params, Set<String> headers, Set<String> consumes, Set<String> produces, String version) {
         this.methods = methods;
         this.paths = paths;
         this.params = params;
@@ -45,9 +45,5 @@ public class RequestMapping {
         return produces;
     }
 
-    public Set<String> getVersion() {
-        return version;
-    }
-
-
+    public String getVersion() { return version; }
 }

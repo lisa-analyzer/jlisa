@@ -10,22 +10,37 @@ import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.TreeMap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class MainTest {
 
-	private static final Path OUTPUT = Path.of("spring-outputs", "case-1-registry.json");
+	private static final Path OUTPUT = Path.of("spring-outputs", "registry.json");
+
+	private static final Map<String, Integer> MAPPINGS = new TreeMap<>(Map.of(
+			"case-1", 1,
+			"case-2", 4,
+			"case-3", 4,
+			"case-4", 20,
+			"case-5", 3));
+
+	@TempDir
+	static Path cases;
 
 	@BeforeAll
-	public static void unpackCase() throws IOException {
-		SpringTestCases.extract("case-1");
+	public static void runMain() throws IOException {
+		for (String name : MAPPINGS.keySet())
+			SpringTestHelper.extract(name, cases);
+
+		Main.main(new String[] { cases.toString() });
 	}
 
 	@AfterAll
 	public static void cleanUp() throws IOException {
-		SpringTestCases.delete(SpringTestCases.ROOT.resolve("case-1"));
 		Files.deleteIfExists(OUTPUT);
 
 		try {
@@ -36,21 +51,17 @@ public class MainTest {
 	}
 
 	@Test
-	public void case1Test() throws IOException {
-		Main.main(new String[] { "spring-testcases/case-1" });
+	public void writesOneRegistryPerProject() throws IOException {
+		Map<String, Integer> mappings = new TreeMap<>();
+		readOutput().fields().forEachRemaining(project -> mappings.put(project.getKey(), project.getValue().size()));
+
+		assertEquals(MAPPINGS, mappings);
 	}
 
 	@Test
 	public void case1JsonOutput() throws IOException {
-		Main.main(new String[] { "spring-testcases/case-1" });
-		assertTrue(Files.isRegularFile(OUTPUT), () -> "expected output file at " + OUTPUT.toAbsolutePath());
-
-		String json = Files.readString(OUTPUT);
-		JsonNode root = new ObjectMapper().readTree(json);
-
-		assertEquals(1, root.size(), () -> "unexpected projects: " + root);
-		JsonNode registry = root.get("case-1");
-		assertNotNull(registry, () -> "missing project 'case-1' in " + root);
+		JsonNode registry = readOutput().get("case-1");
+		assertNotNull(registry, "missing project 'case-1'");
 
 		assertEquals(1, registry.size(), () -> "unexpected mappings: " + registry);
 		JsonNode mapping = registry.get("Controller_endpoint1");
@@ -62,7 +73,20 @@ public class MainTest {
 
 		JsonNode annotation = mapping.get("annotation");
 		assertNotNull(annotation, () -> "missing annotation in " + mapping);
-		assertEquals("GET", annotation.get("httpMethod").asText());
-		assertEquals("/hello-world", annotation.get("addressPath").asText());
+		assertEquals(new ObjectMapper().readTree("""
+				{
+				  "methods" : [ "GET" ],
+				  "paths" : [ "/hello-world" ],
+				  "params" : [ ],
+				  "headers" : [ ],
+				  "consumes" : [ ],
+				  "produces" : [ ],
+				  "version" : ""
+				}"""), annotation);
+	}
+
+	private static JsonNode readOutput() throws IOException {
+		assertTrue(Files.isRegularFile(OUTPUT), () -> "expected output file at " + OUTPUT.toAbsolutePath());
+		return new ObjectMapper().readTree(Files.readString(OUTPUT));
 	}
 }

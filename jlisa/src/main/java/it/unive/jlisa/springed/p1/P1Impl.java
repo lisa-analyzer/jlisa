@@ -1,19 +1,15 @@
 package it.unive.jlisa.springed.p1;
 
-import static it.unive.jlisa.springed.p1.util.P1Util.getHttpMethod;
-
-import it.unive.jlisa.springed.p1.constructs.Mapping;
-import it.unive.jlisa.springed.p1.constructs.Registry;
-import it.unive.jlisa.springed.p1.constructs.WebAnnotation;
-import it.unive.jlisa.springed.p1.util.P1Util;
+import it.unive.jlisa.frontend.ParserContext;
+import it.unive.jlisa.springed.exceptions.PathMergeException;
+import it.unive.jlisa.springed.p1.util.RequestMappingBuilder;
+import it.unive.jlisa.springed.p1.util.RequestMappingMerger;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.cfg.CodeMember;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 public final class P1Impl implements P1 {
 
@@ -29,18 +25,30 @@ public final class P1Impl implements P1 {
 			"DeleteMapping",
 			"PatchMapping");
 
-	@Override
-	public Registry produceRegistry(
+	private final ParserContext parserContext;
+
+	public P1Impl(ParserContext parserContext) {
+		this.parserContext = parserContext;
+	}
+
+	public Registry p1(
 			Unit[] p) {
 		Registry registry = new Registry();
+		List<ClassUnit> controllers = this.getControllers(p);
 
-		for (ClassUnit classUnit : this.getControllerClasses(p)) {
-			for (CodeMember method : classUnit.getInstanceCodeMembers(false)) {
-				WebAnnotation webAnnotation = this.extractAnnotation(method);
+		for (ClassUnit controller : controllers) {
+			Collection<CodeMember> methods = controller.getInstanceCodeMembers(false);
 
-				if (webAnnotation != null) {
-					Mapping mapping = new Mapping(method, webAnnotation);
-					registry.insert(mapping);
+			for (CodeMember method : methods) {
+				try {
+					RequestMapping requestMapping = this.getMappingForMethod(controller, method);
+
+					if (requestMapping != null) {
+						RegistryRecord registryRecord = new RegistryRecord(method, requestMapping);
+						registry.insert(registryRecord);
+					}
+				} catch (PathMergeException e) {
+					this.parserContext.addException(e);
 				}
 			}
 		}
@@ -48,8 +56,54 @@ public final class P1Impl implements P1 {
 		return registry;
 	}
 
-	@Override
-	public List<ClassUnit> getControllerClasses(
+	public RequestMapping getMappingForMethod(ClassUnit controller, CodeMember method) {
+
+		Collection<Annotation> methodAnnotations = method.getDescriptor().getAnnotationList();
+		RequestMapping methodMapping = doMetaResolution(methodAnnotations);
+
+		if (methodMapping != null) {
+			Collection<Annotation> controllerAnnotations = controller.getAnnotationList();
+			RequestMapping controllerMapping = doMetaResolution(controllerAnnotations);
+
+			if (controllerMapping != null) {
+				methodMapping = mergeMappings(controllerMapping, methodMapping);
+			}
+
+			methodMapping = resolveEmptyMapping(methodMapping);
+		}
+
+		return methodMapping;
+	}
+
+	public RequestMapping mergeMappings(RequestMapping controllerMapping, RequestMapping methodMapping) {
+		return new RequestMappingMerger().merge(controllerMapping, methodMapping);
+	}
+
+	public RequestMapping resolveEmptyMapping(RequestMapping mapping) {
+		Set<String> paths = mapping.getPaths();
+		boolean mappingHasNoPaths = paths.isEmpty() || paths.equals(Set.of(""));
+
+		if (!mappingHasNoPaths) {
+			return mapping;
+		}
+
+		return new RequestMapping(mapping.getMethods(), new LinkedHashSet<>(List.of("", "/")), mapping.getParams(),
+				mapping.getHeaders(), mapping.getConsumes(), mapping.getProduces(), mapping.getVersion());
+	}
+
+
+	public RequestMapping doMetaResolution(Collection<Annotation> annotations) {
+		for (Annotation annotation : annotations) {
+			String annotationName = annotation.getAnnotationName();
+			if (this.restAnnotationNames.contains(annotationName)) {
+                return RequestMappingBuilder.build(annotation);
+			}
+		}
+
+		return null;
+	}
+
+	public List<ClassUnit> getControllers(
 			Unit[] units) {
 		List<ClassUnit> classes = new ArrayList<>();
 
@@ -72,33 +126,4 @@ public final class P1Impl implements P1 {
 
 		return controllers;
 	}
-
-	@Override
-	public WebAnnotation extractAnnotation(
-			CodeMember method) {
-		WebAnnotation webAnnotation = null;
-
-		Collection<Annotation> anns = method.getDescriptor().getAnnotationList();
-		for (Annotation ann : anns) {
-			String annName = ann.getAnnotationName();
-
-			if (this.restAnnotationNames.contains(annName)) {
-				webAnnotation = createNewAnnotation(ann);
-			}
-		}
-
-		return webAnnotation;
-	}
-
-	@Override
-	public WebAnnotation createNewAnnotation(
-			Annotation annotation) {
-		String httpMethod = getHttpMethod(annotation);
-		String path = P1Util.getPath(annotation);
-		Map<String, Object> params = null;
-		Map<String, Object> headers = null;
-
-		return new WebAnnotation(httpMethod, path, params, headers);
-	}
-
 }

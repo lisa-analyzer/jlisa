@@ -1,17 +1,20 @@
-package it.unive.jlisa.springed.p1.constructs;
+package it.unive.jlisa.springed.p1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.unive.lisa.program.cfg.CodeMember;
+import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.Parameter;
+import java.util.StringJoiner;
 
-public class Mapping {
+public class RegistryRecord {
 
 	private final CodeMember method;
-	private final WebAnnotation annotation;
+	private final RequestMapping annotation;
 
-	public Mapping(
+	public RegistryRecord(
 			CodeMember method,
-			WebAnnotation annotation) {
+			RequestMapping annotation) {
 		this.method = method;
 		this.annotation = annotation;
 	}
@@ -21,7 +24,7 @@ public class Mapping {
 		return method;
 	}
 
-	public WebAnnotation getAnnotation() {
+	public RequestMapping getAnnotation() {
 		return annotation;
 	}
 
@@ -40,5 +43,19 @@ public class Mapping {
 		String className = qualifiedClass.substring(qualifiedClass.lastIndexOf('.') + 1);
 
 		return className + "_" + methodName;
+	}
+
+	@JsonIgnore
+	public String getJsonFieldNameWithParameters() {
+		CodeMemberDescriptor descriptor = method.getDescriptor();
+		Parameter[] formals = descriptor.getFormals();
+		StringJoiner types = new StringJoiner(", ", "(", ")");
+
+		for (int i = descriptor.isInstance() ? 1 : 0; i < formals.length; i++) {
+			String type = formals[i].getStaticType().toString().replace("*", "");
+			types.add(type.substring(type.lastIndexOf('.') + 1));
+		}
+
+		return getJsonFieldName() + types;
 	}
 }

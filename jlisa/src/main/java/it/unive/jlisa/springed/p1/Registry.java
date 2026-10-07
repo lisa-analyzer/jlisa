@@ -1,4 +1,4 @@
-package it.unive.jlisa.springed.p1.constructs;
+package it.unive.jlisa.springed.p1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import it.unive.jlisa.springed.p1.output.RegistryJsonSerializer;
@@ -9,22 +9,22 @@ import java.util.List;
 @JsonSerialize(using = RegistryJsonSerializer.class)
 public class Registry {
 
-	private final List<Mapping> mappings = new ArrayList<>();
+	private final List<RegistryRecord> mappings = new ArrayList<>();
 
 	public Registry() {
 	}
 
-	public List<Mapping> getMappings() {
+	public List<RegistryRecord> getMappings() {
 		return mappings;
 	}
 
 	public void insert(
-			Mapping mapping) {
+			RegistryRecord mapping) {
 		mappings.add(mapping);
 	}
 
 	public CodeMember getMethod(
-			Mapping mapping) {
+			RegistryRecord mapping) {
 		return mapping.getMethod();
 	}
 }

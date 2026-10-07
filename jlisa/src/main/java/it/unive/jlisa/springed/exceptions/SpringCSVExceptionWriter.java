@@ -55,6 +55,12 @@ public class SpringCSVExceptionWriter extends CSVExceptionWriter {
 		case UnsupportedStatementException ignored:
 			category = "Unsupported Statement";
 			break;
+			case PathMergeException pme:
+			category = "URL address path merge exception";
+			cause = "Encountered unmergeable paths: " +
+					"controller: " + pme.getControllerPath() +
+					", method: " + pme.getMethodPath();
+			break;
 		case UnresolvedTypeException ut:
 			category = "Unresolvable Type";
 			cause = ut.getUnresolvedName();
