@@ -103,7 +103,7 @@ public final class ViolationValidator {
         VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
 
         // Run the event loop
-        EventLoop loop = new EventLoop(vm, plan);
+        EventLoop loop = new EventLoop(vm, plan, properties);
         ValidationResult result = loop.run();
 
         // Map result to BenchExec verdict

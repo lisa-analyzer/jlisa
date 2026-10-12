@@ -1,7 +1,7 @@
-import os
 import csv
-import subprocess
+import os
 import pandas as pd
+import subprocess
 from pathlib import Path
 
 benchmark_path = 'data/svcomp-26/benchmark.csv'
@@ -104,7 +104,9 @@ def process_bench(index, bench):
 
 #print(df['category'].unique())
 
-open(output_path, 'w').close()
+with open(output_path, 'w', newline="", encoding="utf-8") as o:
+    spamwriter = csv.writer(o)
+    spamwriter.writerow(["tool", "name", "group", "path", "property", "expected", "status", "category",	"result", "log"])
 
 tools = df['tool'].unique()
 

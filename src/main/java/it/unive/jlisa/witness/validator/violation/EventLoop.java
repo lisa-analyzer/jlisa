@@ -44,6 +44,7 @@ public final class EventLoop {
 
     private final VirtualMachine vm;
     private final ViolationPlan plan;
+    private final BenchmarkProperties properties;
 
     // Runtime state for interceptions: map from "className.methodName" → Interception
     private final Map<String, Queue<Interception>> interceptMap = new HashMap<>();
@@ -61,9 +62,10 @@ public final class EventLoop {
         TARGET, AVOID, BRANCH
     }
 
-    public EventLoop(VirtualMachine vm, ViolationPlan plan) {
+    public EventLoop(VirtualMachine vm, ViolationPlan plan, BenchmarkProperties properties) {
         this.vm = vm;
         this.plan = plan;
+        this.properties = properties;
     }
 
     /**
@@ -353,18 +355,25 @@ public final class EventLoop {
 
         // An uncaught exception after all planned interceptions is the property violation
         // we were looking for → witness confirmed
-        if (exceptionClass.contains("AssertionError")) {
-            ValidatorLogger.event("Uncaught exception confirms violation - CORRECT");
-            return Optional.of(ValidationResult.CORRECT);
+
+        if (properties.validAssert()) {
+            if (exceptionClass.contains("AssertionError")) {
+                ValidatorLogger.event("Uncaught exception confirms violation - CORRECT");
+                return Optional.of(ValidationResult.CORRECT);
+            }
         }
 
         boolean isError = isRefInstance(reference, (ClassType) vm.classesByName("java.lang.Error").getFirst());
         boolean isException = isRefInstance(reference, (ClassType) vm.classesByName("java.lang.Exception").getFirst());
+        boolean isRuntimeException = isRefInstance(reference, (ClassType) vm.classesByName("java.lang.RuntimeException").getFirst());
 
         if (isError) {
             ValidatorLogger.event("Uncaught JVM ERROR - " + reference);
             return Optional.of(ValidationResult.ERROR);
         } else if (isException) {
+            if (properties.noRuntimeException() && isRuntimeException) {
+                return Optional.of(ValidationResult.CORRECT);
+            }
             ValidatorLogger.event("Uncaught Exception - " + reference);
             return Optional.of(ValidationResult.SPURIOUS);
         }
