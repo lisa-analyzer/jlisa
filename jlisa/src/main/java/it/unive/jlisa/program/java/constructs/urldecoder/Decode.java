@@ -1,9 +1,9 @@
 package it.unive.jlisa.program.java.constructs.urldecoder;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.operator.JavaIsValidEncoding;
 import it.unive.jlisa.program.operator.JavaURLDecoderIsIllegalArg;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -83,7 +83,6 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		HeapDereference derefRight = new HeapDereference(stringType, right, location);
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, location);
-
 
 		it.unive.lisa.symbolic.value.UnaryExpression isValidEncoding = new it.unive.lisa.symbolic.value.UnaryExpression(
 				booleanType,

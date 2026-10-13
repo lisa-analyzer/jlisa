@@ -1,8 +1,8 @@
 package it.unive.jlisa.program.java.constructs.urlencoder;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.operator.JavaIsValidEncoding;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -24,7 +24,6 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -83,7 +82,6 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		HeapDereference derefRight = new HeapDereference(stringType, right, location);
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, location);
-
 
 		it.unive.lisa.symbolic.value.UnaryExpression isValidEncoding = new it.unive.lisa.symbolic.value.UnaryExpression(
 				booleanType,

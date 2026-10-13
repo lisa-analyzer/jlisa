@@ -28,5 +28,3 @@ public class JavaURLDecoderIsIllegalArg implements UnaryOperator {
 	}
 
 }
-
-

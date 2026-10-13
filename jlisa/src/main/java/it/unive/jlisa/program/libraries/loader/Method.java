@@ -8,7 +8,6 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,14 +80,15 @@ public class Method {
 			return false;
 		Method other = (Method) obj;
 		return Objects.equals(implementation, other.implementation) && instance == other.instance
-				&& Objects.equals(name, other.name) && Objects.equals(params, other.params) && Objects.equals(throwsList, other.throwsList) && sealed == other.sealed
+				&& Objects.equals(name, other.name) && Objects.equals(params, other.params)
+				&& Objects.equals(throwsList, other.throwsList) && sealed == other.sealed
 				&& Objects.equals(type, other.type);
 	}
 
 	@Override
 	public String toString() {
 		return "Method [instance=" + instance + ", sealed=" + sealed + ", name=" + name + ", implementation="
-				+ implementation + ", type=" + type + ", params=" + params + ", throwsList=" + throwsList + "]" ;
+				+ implementation + ", type=" + type + ", params=" + params + ", throwsList=" + throwsList + "]";
 	}
 
 	@SuppressWarnings("unchecked")
