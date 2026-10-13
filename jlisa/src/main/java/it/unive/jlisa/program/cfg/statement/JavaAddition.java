@@ -137,19 +137,30 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									op,
 									getLocation()),
 							this);
-				} else if ((JavaClassType.isWrapperType(lType) || lType.isNumericType()) && ((JavaClassType.isWrapperType(rType) || rType.isNumericType()))) {
+				} else if ((lType.isReferenceType() || lType.isNumericType()) && (rType.isReferenceType() || rType.isNumericType())) {
 
 					GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 
-					if (JavaClassType.isWrapperType(lType)) {
+					// left is a wrapper type
+					if (lType.isReferenceType() && JavaClassType.isWrapperType(lType.asReferenceType().getInnerType())) {
 						lType = lType.asReferenceType().getInnerType();
 						HeapDereference derefLeft = new HeapDereference(lType, actualLeft, getLocation());
 						actualLeft = new AccessChild(JavaClassType.getUnwrappedType(lType), derefLeft, valueVar, getLocation());
 					}
-					if (JavaClassType.isWrapperType(rType)) {
+					// left is a reference type but not a wrapper type, do nothing
+					else if (lType.isReferenceType()) {
+						continue;
+					}
+
+					// right is a wrapper type
+					if (rType.isReferenceType() && JavaClassType.isWrapperType(rType.asReferenceType().getInnerType())) {
 						rType = rType.asReferenceType().getInnerType();
 						HeapDereference derefRight = new HeapDereference(rType, actualRight, getLocation());
 						actualRight = new AccessChild(JavaClassType.getUnwrappedType(rType), derefRight, valueVar, getLocation());
+					}
+					// right is a reference type but not a wrapper type, do nothing
+					else if (rType.isReferenceType()) {
+						continue;
 					}
 
 					op = NumericNonOverflowingAdd.INSTANCE;

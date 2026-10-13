@@ -444,8 +444,8 @@ public class JavaClassType
 			return getLongWrapperType();
 		if (type == JavaBooleanType.INSTANCE)
 			return getBooleanWrapperType();
-		// TODO add short
-
+		if (type == JavaShortType.INSTANCE)
+			return getShortWrapperType();
 		else
 			return null;
 	}
