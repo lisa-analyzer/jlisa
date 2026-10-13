@@ -419,7 +419,10 @@ public class JavaClassType
 
 	public static boolean isWrapperType(
 			Type t) {
-		if (getUnwrappedType(t) != null)
+		Type tmp = t;
+		if (t instanceof JavaReferenceType jr)
+			tmp = jr.getInnerType();
+		if (getUnwrappedType(tmp) != null)
 			return true;
 		return false;
 	}

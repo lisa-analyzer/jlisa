@@ -4,6 +4,7 @@ import it.unive.jlisa.program.type.*;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -11,8 +12,11 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
@@ -133,7 +137,21 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									op,
 									getLocation()),
 							this);
-				} else if (lType.isNumericType() && rType.isNumericType()) {
+				} else if ((JavaClassType.isWrapperType(lType) || lType.isNumericType()) && ((JavaClassType.isWrapperType(rType) || rType.isNumericType()))) {
+
+					GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+
+					if (JavaClassType.isWrapperType(lType)) {
+						lType = lType.asReferenceType().getInnerType();
+						HeapDereference derefLeft = new HeapDereference(lType, actualLeft, getLocation());
+						actualLeft = new AccessChild(JavaClassType.getUnwrappedType(lType), derefLeft, valueVar, getLocation());
+					}
+					if (JavaClassType.isWrapperType(rType)) {
+						rType = rType.asReferenceType().getInnerType();
+						HeapDereference derefRight = new HeapDereference(rType, actualRight, getLocation());
+						actualRight = new AccessChild(JavaClassType.getUnwrappedType(rType), derefRight, valueVar, getLocation());
+					}
+
 					op = NumericNonOverflowingAdd.INSTANCE;
 					type = lType.commonSupertype(rType);
 					partialResult = analysis.smallStepSemantics(
