@@ -259,6 +259,10 @@ public class JavaClassType
 		return lookup("java.lang.String");
 	}
 
+	public static JavaClassType getPropertiesType() {
+		return lookup("java.util.Properties");
+	}
+
 	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
 		return lookup("java.lang.ArrayIndexOutOfBoundsException");
 	}
