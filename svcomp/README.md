@@ -25,4 +25,5 @@ Project: https://github.com/lisa-analyzer/jlisa-witness-validator
 
 The last line on stdout is `Witness Correct` (witness confirmed),
 `Witness Spurious` (witness rejected) or `Could not validate`.
-Only the `valid-assert` property is supported.
+Supported properties: `valid-assert` and `no-runtime-exception`;
+any other property file is an error (exit code 1).

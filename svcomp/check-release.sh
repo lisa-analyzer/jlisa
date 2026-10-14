@@ -25,8 +25,8 @@ DIR="${TOP[0]}"
 [ "$(basename "$DIR")" = "jlisa-wit" ] || fail "top-level directory is $(basename "$DIR"), expected jlisa-wit"
 
 for file in jlisa-wit smoketest.sh LICENSE README.md \
-            test/valid-assert.prp test/witness-correct.graphml test/witness-spurious.graphml \
-            test/nondet-assert/Main.java \
+            test/valid-assert.prp test/witness-correct.graphml test/witness-spurious.graphml test/witness-novalue.graphml \
+            test/no-runtime-exception.prp test/nondet-assert/Main.java test/nondet-rte/Main.java \
             test/common/org/sosy_lab/sv_benchmarks/Verifier.java; do
   [ -f "$DIR/$file" ] || fail "missing $file"
 done

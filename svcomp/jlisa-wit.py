@@ -14,13 +14,16 @@
 #   Witness Spurious       -> witness rejected   (BenchExec: true)
 #   Could not validate     -> no verdict         (BenchExec: unknown)
 #
-# A missing witness or an unsupported property is an error: message on stderr, exit code 1.
+# The property file is parsed here and passed to the validator by name (as JLiSA's
+# SV-COMP wrapper does): valid-assert -> "assert", no-runtime-exception -> "runtime".
+#
+# A missing witness or property file, or an unsupported property, is an error:
+# message on stderr, exit code 1.
 # Only the Python 3 standard library is used.
-# Only valid-assert is supported: the validator does not yet distinguish
-# no-runtime-exception violations from assertion failures.
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -32,6 +35,12 @@ VERDICTS = ("Witness Correct", "Witness Spurious", "Could not validate")
 BASE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.realpath(__file__)))
 LIB_DIR = os.path.join(BASE_DIR, "lib")
 
+# LTL formula (whitespace removed) -> property name understood by the validator
+PROPERTIES = {
+    "Gassert": "assert",
+    "G!uncaught(java.lang.RuntimeException)": "runtime",
+}
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(prog="jlisa-wit", description="jLISA Witness Validator")
@@ -41,6 +50,14 @@ def parse_arguments():
     parser.add_argument("inputs", nargs="+")
     return parser.parse_args()
 
+
+def parse_property(path):
+    with open(path) as f:
+        content = re.sub(r"\s+", "", f.read())
+    match = re.match(r"^CHECK\(init\((\S+)\(\)\),LTL\((\S+)\)\)$", content)
+    return PROPERTIES.get(match.group(2)) if match else None
+
+
 def main():
     args = parse_arguments()
 
@@ -48,11 +65,15 @@ def main():
         print("witness file not found: " + args.witness, file=sys.stderr)
         sys.exit(1)
     
-    with open(args.property) as f:
-        if "G assert" not in f.read():
-            print("unsupported property: " + args.property, file=sys.stderr)
-            sys.exit(1)
-    
+    if not os.path.isfile(args.property):
+        print("property file not found: " + args.property, file=sys.stderr)
+        sys.exit(1)
+
+    prop = parse_property(args.property)
+    if prop is None:
+        print("unsupported property: " + args.property, file=sys.stderr)
+        sys.exit(1)
+
     java = os.path.join(os.environ["JAVA_HOME"], "bin", "java") if "JAVA_HOME" in os.environ else "java"
 
     with tempfile.TemporaryDirectory(prefix="jlisa-wit-") as workdir:
@@ -66,7 +87,8 @@ def main():
             f.write("input_files:\n" + "".join("  - '%s/'\n" % c for c in copies))
 
         cmd = [java, "--add-modules", "jdk.jdi", "-cp", os.path.join(LIB_DIR, "*"), MAIN_CLASS,
-               "--witness", os.path.abspath(args.witness), "--benchmark", task_file]
+               "--witness", os.path.abspath(args.witness), "--benchmark", task_file,
+               "--property", prop]
         out = subprocess.run(cmd, stdout=subprocess.PIPE, universal_newlines=True).stdout
 
     verdicts = [line.strip() for line in out.splitlines() if line.strip() in VERDICTS]

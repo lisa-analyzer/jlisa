@@ -1,6 +1,7 @@
 package it.unive.jlisa.witness.validator;
 
 import it.unive.jlisa.witness.validator.correctness.CorrectnessValidator;
+import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV1;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV2;
@@ -18,8 +19,11 @@ import java.io.File;
  *
  * <h3>Usage</h3>
  * <pre>{@code
- * jlisa-witness-validator --witness <file> --benchmark-dir <dir> [--java <path>] [--verbose]
+ * jlisa-witness-validator --witness <file> --benchmark <task.yml> --property assert|runtime
+ *                         [--java <path>] [--verbose]
  * }</pre>
+ *
+ * <p>The property is given explicitly; it is never derived from the task file.
  *
  * <h3>Output (stdout)</h3>
  * <ul>
@@ -65,11 +69,12 @@ public final class Main {
 
         String witnessPath = cmd.getOptionValue("witness");
         String benchmarkPath = cmd.getOptionValue("benchmark");
+        String propertyName = cmd.getOptionValue("property");
         String java8Exec = cmd.getOptionValue("java");
         String extraSourcesPath = cmd.getOptionValue("extra-sources");
 
-        if (witnessPath == null || benchmarkPath == null) {
-            System.err.println("Error: --witness and --benchmark are required.");
+        if (witnessPath == null || benchmarkPath == null || propertyName == null) {
+            System.err.println("Error: --witness, --benchmark and --property are required.");
             new HelpFormatter().printHelp("jlisa-witness-validator", options);
             System.out.println("Could not validate");
             System.exit(0);
@@ -94,6 +99,7 @@ public final class Main {
         }
 
         try {
+            Property property = Property.fromName(propertyName);
             WitnessModel model = parseWitness(witnessFile);
             LOG.info("Parsed witness: {}", model);
 
@@ -102,7 +108,7 @@ public final class Main {
                     : null;
 
             switch (model.type()) {
-                case VIOLATION -> ViolationValidator.validate(model, benchmarkFile, java8Exec, extraSourcesDir);
+                case VIOLATION -> ViolationValidator.validate(model, property, benchmarkFile, java8Exec, extraSourcesDir);
                 case CORRECTNESS -> CorrectnessValidator.validate(model, benchmarkFile);
             }
 
@@ -180,6 +186,15 @@ public final class Main {
                 .hasArg()
                 .argName("BENCHMARK")
                 .desc("The Java benchmark yml")
+                .required(false)
+                .build());
+
+        opts.addOption(Option.builder("p")
+                .longOpt("property")
+                .hasArg()
+                .argName("NAME")
+                .desc("Property to validate against: assert (valid-assert) or runtime "
+                        + "(no-runtime-exception). The SV-COMP wrapper derives it from the .prp file.")
                 .required(false)
                 .build());
 

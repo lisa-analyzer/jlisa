@@ -22,10 +22,13 @@ and **correctness** witnesses.
 
 ## SV-COMP Java properties
 
-| Property | Meaning |
-|---|---|
-| `valid_assert` | No `assert` statement must fail (requires `-ea` flag) |
-| `no_rte` | No uncaught runtime exception |
+| Property file | `--property` | Meaning |
+|---|---|---|
+| `valid-assert.prp` | `assert` | No `assert` statement must fail (requires `-ea` flag) |
+| `no-runtime-exception.prp` | `runtime` | No uncaught `java.lang.RuntimeException` |
+
+The SV-COMP wrapper parses the `.prp` file and passes the name to the validator.
+The property is never read from the task file (its `expected_verdict` is the ground truth).
 
 ---
 
@@ -83,14 +86,16 @@ Exit code is always `0` (BenchExec interprets non-zero as a validator crash).
 # Using the generated launcher script (recommended — includes JVM flags)
 ./build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
     --witness path/to/witness.graphml \
-    --benchmark-dir path/to/benchmark/ \
+    --benchmark /abs/path/to/Task.yml \
+    --property assert \
     [--java /usr/lib/jvm/java-8/bin/java] \
     [--verbose]
 
-# Or via the Python wrapper (also handles the --add-modules jdk.jdi flag)
-python3 validator.py \
+# Or via the SV-COMP wrapper, exactly as BenchExec calls it (see svcomp/README.md)
+python3 svcomp/jlisa-wit.py \
     --witness path/to/witness.graphml \
-    path/to/benchmark-directory/
+    --property path/to/valid-assert.prp \
+    path/to/common/ path/to/Task/
 ```
 
 ### With BenchExec

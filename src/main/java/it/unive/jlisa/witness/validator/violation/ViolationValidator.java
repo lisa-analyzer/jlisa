@@ -3,6 +3,7 @@ package it.unive.jlisa.witness.validator.violation;
 import com.sun.jdi.VirtualMachine;
 import it.unive.jlisa.witness.validator.ValidationException;
 import it.unive.jlisa.witness.validator.model.BenchmarkProperties;
+import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.ViolationPlan;
 import it.unive.jlisa.witness.validator.parser.BenchmarkPropertiesParser;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
@@ -35,6 +36,7 @@ public final class ViolationValidator {
     private static final String VERDICT_CORRECT = "Witness Correct";
     private static final String VERDICT_SPURIOUS = "Witness Spurious";
     private static final String VERDICT_ERROR = "Tool Error";
+    private static final String VERDICT_UNKNOWN = "Could not validate";
 
     private ViolationValidator() {
     }
@@ -43,6 +45,7 @@ public final class ViolationValidator {
      * Validates the violation witness and prints the verdict to {@code stdout}.
      *
      * @param model           the parsed witness model
+     * @param property        the property the witness is validated against
      * @param benchmarkFile   directory containing the benchmark Java sources / classes
      * @param java8Exec       path to the Java 8 executable, or {@code null} to use {@code PATH}
      * @param extraSourcesDir optional root directory of additional sources to compile alongside
@@ -51,8 +54,8 @@ public final class ViolationValidator {
      * @throws ValidationException propagated to {@code Main}, which maps it to
      *                             {@code Tool Error}
      */
-    public static void validate(WitnessModel model, File benchmarkFile, String java8Exec,
-                                File extraSourcesDir)
+    public static void validate(WitnessModel model, Property property, File benchmarkFile,
+                                String java8Exec, File extraSourcesDir)
             throws ValidationException {
 
         ViolationPlan plan = model.violationPlan();
@@ -103,13 +106,14 @@ public final class ViolationValidator {
         VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
 
         // Run the event loop
-        EventLoop loop = new EventLoop(vm, plan, properties);
+        EventLoop loop = new EventLoop(vm, plan, property);
         ValidationResult result = loop.run();
 
         // Map result to BenchExec verdict
         String verdict = switch (result) {
             case CORRECT -> VERDICT_CORRECT;
             case SPURIOUS -> VERDICT_SPURIOUS;
+            case UNKNOWN -> VERDICT_UNKNOWN;
             case ERROR -> VERDICT_ERROR;
         };
 
