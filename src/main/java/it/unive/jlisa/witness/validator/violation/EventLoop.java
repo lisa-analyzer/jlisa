@@ -23,9 +23,13 @@ import java.util.*;
  * <ul>
  *   <li>{@link ValidationResult#CORRECT} — target breakpoint reached, or an uncaught
  *       exception fires after all planned interceptions are consumed</li>
- *   <li>{@link ValidationResult#SPURIOUS} — avoid-point reached, or the VM exits normally
- *       without hitting the target</li>
- *   <li>{@link ValidationResult#ERROR} — timeout</li>
+ *   <li>{@link ValidationResult#SPURIOUS} — avoid-point reached, the VM exits, or an unrelated
+ *       exception is thrown, without hitting the target, <em>and</em> every {@code Verifier.nondet*}
+ *       call returned a value fixed by the witness</li>
+ *   <li>{@link ValidationResult#UNKNOWN} — the same endings after a {@code nondet*} call the witness
+ *       did not fix (the run used a value of its own, so it says nothing about the witness),
+ *       or a timeout / VM disconnect</li>
+ *   <li>{@link ValidationResult#ERROR} — the JVM threw an {@link Error}</li>
  * </ul>
  */
 public final class EventLoop {
@@ -34,8 +38,15 @@ public final class EventLoop {
      * Validation outcome returned by {@link #run()}.
      */
     public enum ValidationResult {
-        CORRECT, SPURIOUS, ERROR
+        CORRECT, SPURIOUS, UNKNOWN, ERROR
     }
+
+    /** Class-name filter for the SV-COMP {@code Verifier} class (any package). */
+    private static final String VERIFIER_CLASS_FILTER = "*Verifier";
+
+    /** Returned by {@code nondet*()} methods of type String that the witness does not fix. */
+    // TODO: find a less naive way for setting default values.
+    private static final String DEFAULT_STRING = "a";
 
     /**
      * Default timeout: 80 seconds (BenchExec limit is 90 s for violations).
@@ -44,12 +55,12 @@ public final class EventLoop {
 
     private final VirtualMachine vm;
     private final ViolationPlan plan;
-    private final BenchmarkProperties properties;
+    private final Property property;
 
     // Runtime state for interceptions: map from "className.methodName" → Interception
     private final Map<String, Queue<Interception>> interceptMap = new HashMap<>();
-    // Runtime state: which MethodEntryRequest corresponds to which interception key
-    private final Map<MethodEntryRequest, String> methodRequests = new HashMap<>();
+    // Verifier.nondet* calls that returned a value not fixed by the witness
+    private int freeNondetCalls = 0;
 
     // Deferred breakpoints: class name → list of (line, plan-item-type)
     private final Map<String, List<PendingBreakpoint>> pendingBreakpoints = new HashMap<>();
@@ -62,10 +73,10 @@ public final class EventLoop {
         TARGET, AVOID, BRANCH
     }
 
-    public EventLoop(VirtualMachine vm, ViolationPlan plan, BenchmarkProperties properties) {
+    public EventLoop(VirtualMachine vm, ViolationPlan plan, Property property) {
         this.vm = vm;
         this.plan = plan;
-        this.properties = properties;
+        this.property = property;
     }
 
     /**
@@ -113,7 +124,7 @@ public final class EventLoop {
                     try {
                         vm.dispose();
                     } catch (Exception ignored) {
-                        break;
+                        // VM already gone (e.g. after VMDeathEvent): the result still stands
                     }
                     return result.get();
                 }
@@ -145,17 +156,14 @@ public final class EventLoop {
             interceptMap.computeIfAbsent(key, s -> new ArrayDeque<>()).offer(ix);
         }
 
-        for (String key : interceptMap.keySet()) {
-            Interception ixRef = interceptMap.get(key).peek();
-            assert ixRef != null;
-            MethodEntryRequest req = erm.createMethodEntryRequest();
-            req.addClassFilter(ixRef.className());
-            req.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-            req.enable();
-            methodRequests.put(req, key);
-            ValidatorLogger.jdi("MethodEntryRequest: {}.{}{}",
-                    ixRef.className(), ixRef.methodName(), ixRef.descriptor());
-        }
+        // One request for every Verifier method: each nondet* call either gets the witness value
+        // or is counted as free (one request per interception key would report each call twice).
+        MethodEntryRequest req = erm.createMethodEntryRequest();
+        req.addClassFilter(VERIFIER_CLASS_FILTER);
+        req.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+        req.enable();
+        ValidatorLogger.jdi("MethodEntryRequest: {} (interceptions for {})",
+                VERIFIER_CLASS_FILTER, interceptMap.keySet());
 
         // 2. ClassPrepareRequests for classes with breakpoints
         for (TargetPoint tp : plan.targetPoints()) {
@@ -219,7 +227,7 @@ public final class EventLoop {
 
         if (event instanceof VMDeathEvent) {
             ValidatorLogger.event("VMDeathEvent — program exited without hitting target");
-            return Optional.of(ValidationResult.SPURIOUS);
+            return Optional.of(noViolation());
         }
 
         return Optional.empty();
@@ -266,19 +274,36 @@ public final class EventLoop {
         String className = event.method().declaringType().name();
         String methodName = event.method().name();
         String key = className + "." + methodName;
+        // TODO: remote this hardcoded check.
+        if (!methodName.startsWith("nondet")) {
+            return Optional.empty(); // e.g. Verifier.assume
+        }
 
         Queue<Interception> interceptions = interceptMap.get(key);
-        if (interceptions == null) {
-            // method not handled
-            return Optional.empty();
-        }
-        Interception ix = interceptMap.get(key).peek();
+        Interception ix = interceptions == null ? null : interceptions.peek();
 
         if (ix != null && ix.count() == 1) {
-            interceptMap.get(key).remove();
+            interceptions.remove();
         }
         if (ix == null || !ix.hasRemaining()) {
-            return Optional.empty(); // not an interception target, or already exhausted
+            // Not fixed by the witness: any value is consistent with it, but the run can no
+            // longer reject it. Strings get a short default: Verifier.nondetString() picks a
+            // random size, which halts in assume() when negative and allocates up to 2 GB otherwise.
+            freeNondetCalls++;
+            if (event.method().returnTypeName().equals("java.lang.String")) {
+                try {
+                    ForceReturnSteerer.steer(event.thread(), DEFAULT_STRING, event.method().signature());
+                    ValidatorLogger.event("MethodEntry: {}.{}() — no witness value, returning default \"{}\"",
+                            className, methodName, DEFAULT_STRING);
+                    return Optional.empty();
+                } catch (Exception e) {
+                    ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
+                            e.getMessage());
+                }
+            }
+            ValidatorLogger.event("MethodEntry: {}.{}() — no witness value, runs freely",
+                    className, methodName);
+            return Optional.empty();
         }
 
         ValidatorLogger.event("MethodEntry: {}.{}() — forcing return value: {}",
@@ -289,13 +314,13 @@ public final class EventLoop {
         } catch (Exception e) {
             ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
                     e.getMessage());
+            freeNondetCalls++;
             return Optional.empty();
         }
 
         int remaining = ix.decrementAndGet();
         if (remaining <= 0) {
             // All expected occurrences consumed — disable the request
-            // fixme: disableMethodEntryRequest(key);
             ValidatorLogger.event("MethodEntry: {}.{}() — all interceptions consumed, request disabled",
                     className, methodName);
         }
@@ -321,8 +346,8 @@ public final class EventLoop {
                     return Optional.of(ValidationResult.CORRECT);
                 }
                 case AVOID -> {
-                    ValidatorLogger.event("Breakpoint: {}:{} — AVOID POINT REACHED — spurious", sourceName, line);
-                    return Optional.of(ValidationResult.SPURIOUS);
+                    ValidatorLogger.event("Breakpoint: {}:{} — AVOID POINT REACHED", sourceName, line);
+                    return Optional.of(noViolation());
                 }
                 case BRANCH -> {
                     BranchDecision bd = (BranchDecision) planItem;
@@ -356,7 +381,7 @@ public final class EventLoop {
         // An uncaught exception after all planned interceptions is the property violation
         // we were looking for → witness confirmed
 
-        if (properties.validAssert()) {
+        if (property == Property.ASSERT) {
             if (exceptionClass.contains("AssertionError")) {
                 ValidatorLogger.event("Uncaught exception confirms violation - CORRECT");
                 return Optional.of(ValidationResult.CORRECT);
@@ -371,11 +396,11 @@ public final class EventLoop {
             ValidatorLogger.event("Uncaught JVM ERROR - " + reference);
             return Optional.of(ValidationResult.ERROR);
         } else if (isException) {
-            if (properties.noRuntimeException() && isRuntimeException) {
+            if (property == Property.RUNTIME && isRuntimeException) {
                 return Optional.of(ValidationResult.CORRECT);
             }
             ValidatorLogger.event("Uncaught Exception - " + reference);
-            return Optional.of(ValidationResult.SPURIOUS);
+            return Optional.of(noViolation());
         }
 
         return Optional.empty();
@@ -384,14 +409,6 @@ public final class EventLoop {
     // ------------------------------------------------------------------
     // private utilities
     // ------------------------------------------------------------------
-
-    private void disableMethodEntryRequest(String key) {
-        methodRequests.entrySet().stream()
-                .filter(e -> e.getValue().equals(key))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .ifPresent(req -> req.setEnabled(false));
-    }
 
     private boolean isRefInstance(ObjectReference ref, ClassType errorType) {
         ReferenceType type = ref.referenceType();
@@ -407,11 +424,23 @@ public final class EventLoop {
         return false;
     }
 
-    private ValidationResult handleErrorStatus() {
-        if (this.plan.interceptions().isEmpty()) {
-            return ValidationResult.SPURIOUS;
+    /**
+     * The run ended without the violation. That rejects the witness only if the witness fixed
+     * every nondet value the run used; otherwise the run took values of its own and says nothing
+     * about the witness.
+     */
+    private ValidationResult noViolation() {
+        if (freeNondetCalls > 0) {
+            ValidatorLogger.event("No violation, but {} nondet call(s) not fixed by the witness — unknown",
+                    freeNondetCalls);
+            return ValidationResult.UNKNOWN;
         }
-        return ValidationResult.ERROR;
+        return ValidationResult.SPURIOUS;
+    }
+
+    /** Timeout or VM disconnect: never evidence against the witness. */
+    private ValidationResult handleErrorStatus() {
+        return ValidationResult.UNKNOWN;
     }
 
     /**

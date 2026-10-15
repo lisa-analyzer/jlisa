@@ -21,6 +21,11 @@ top_level = {
     "NO_RUNTIME": "SV-COMP26_no-runtime-exception",
 }
 
+validator_property = {
+    "valid-assert": "assert",
+    "no-runtime-exception": "runtime",
+}
+
 def get_tool_dir(tool):
     return list(Path('data/svcomp-26/results-verified/').glob(f'{tool}.*'))[0].name
 
@@ -86,7 +91,9 @@ class Cmd:
             "--witness", 
             self._build_witness(),
             "--benchmark",
-            self._build_benchmark()
+            self._build_benchmark(),
+            "--property",
+            validator_property[self.benchmark.properties]
         ]
 
         if self.verbose:

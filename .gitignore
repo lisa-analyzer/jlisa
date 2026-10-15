@@ -22,3 +22,6 @@ results/
 
 data/
 output/
+
+# Python bytecode
+__pycache__/
