@@ -3,6 +3,7 @@ package it.unive.jlisa.witness.validator.violation;
 import com.sun.jdi.*;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
+import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.model.*;
 
 import java.util.*;
@@ -96,7 +97,7 @@ public final class EventLoop {
             if (remaining <= 0) {
                 ValidatorLogger.result("Timeout after {}ms — could not validate", TIMEOUT_MS);
                 vm.dispose();
-                return handleErrorStatus();
+                return handleErrorStatus("timeout", "no verdict after " + TIMEOUT_MS + " ms");
             }
 
             EventSet eventSet;
@@ -105,11 +106,11 @@ public final class EventLoop {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 vm.dispose();
-                return handleErrorStatus();
+                return handleErrorStatus("interrupted", "validator thread interrupted");
             } catch (VMDisconnectedException e) {
                 // VM terminated — it ran to completion without reaching the target
                 ValidatorLogger.event("VM disconnected");
-                return handleErrorStatus();
+                return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
             }
 
             if (eventSet == null) {
@@ -133,7 +134,7 @@ public final class EventLoop {
             try {
                 eventSet.resume();
             } catch (VMDisconnectedException e) {
-                return handleErrorStatus();
+                return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
             }
         }
     }
@@ -149,8 +150,10 @@ public final class EventLoop {
         for (Interception ix : plan.interceptions()) {
             if (ix.descriptor().isBlank()) {
                 // v2 variable-assignment path — handled via breakpoints, not method entry
+                RunSummary.count("witness.assignments");
                 continue;
             }
+            RunSummary.add("witness.values", ix.count());
             String key = ix.className() + "." + ix.methodName();
             ValidatorLogger.jdi("SETTING KEY: " + key);
             interceptMap.computeIfAbsent(key, s -> new ArrayDeque<>()).offer(ix);
@@ -175,6 +178,9 @@ public final class EventLoop {
         for (BranchDecision bd : plan.branchDecisions()) {
             queueBreakpoint(bd.fileName(), bd.line(), PointType.BRANCH, bd);
         }
+        RunSummary.add("plan.targets", plan.targetPoints().size());
+        RunSummary.add("plan.avoid-points", plan.avoidPoints().size());
+        RunSummary.add("plan.branches", plan.branchDecisions().size());
 
         // Register ClassPrepareRequests for every class that needs breakpoints.
         // We use the file name as a class-name filter (approximate — works for simple programs).
@@ -227,7 +233,7 @@ public final class EventLoop {
 
         if (event instanceof VMDeathEvent) {
             ValidatorLogger.event("VMDeathEvent — program exited without hitting target");
-            return Optional.of(noViolation());
+            return Optional.of(noViolation("program-exited", "program ended without the violation"));
         }
 
         return Optional.empty();
@@ -255,6 +261,7 @@ public final class EventLoop {
         try {
             List<Location> locations = refType.locationsOfLine(pb.line());
             if (locations.isEmpty()) {
+                RunSummary.count("breakpoints.skipped");
                 ValidatorLogger.warn("[JDI]    No location at {}:{} — breakpoint skipped",
                         fileName, pb.line());
                 return;
@@ -264,8 +271,10 @@ public final class EventLoop {
             bpReq.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
             bpReq.putProperty("planItem", pb);
             bpReq.enable();
+            RunSummary.count("breakpoints.installed");
             ValidatorLogger.jdi("BreakpointRequest: {}:{} ({})", fileName, pb.line(), pb.type());
         } catch (AbsentInformationException e) {
+            RunSummary.count("breakpoints.skipped");
             ValidatorLogger.warn("[JDI]    No line number info for {} — compile with -g", refType.name());
         }
     }
@@ -290,6 +299,7 @@ public final class EventLoop {
             // longer reject it. Strings get a short default: Verifier.nondetString() picks a
             // random size, which halts in assume() when negative and allocates up to 2 GB otherwise.
             freeNondetCalls++;
+            RunSummary.count("nondet.free");
             if (event.method().returnTypeName().equals("java.lang.String")) {
                 try {
                     ForceReturnSteerer.steer(event.thread(), DEFAULT_STRING, event.method().signature());
@@ -315,8 +325,10 @@ public final class EventLoop {
             ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
                     e.getMessage());
             freeNondetCalls++;
+            RunSummary.count("nondet.value-not-applied");
             return Optional.empty();
         }
+        RunSummary.count("nondet.fixed");
 
         int remaining = ix.decrementAndGet();
         if (remaining <= 0) {
@@ -343,11 +355,12 @@ public final class EventLoop {
             switch (pb.type()) {
                 case TARGET -> {
                     ValidatorLogger.event("Breakpoint: {}:{} — TARGET REACHED", sourceName, line);
-                    return Optional.of(ValidationResult.CORRECT);
+                    return Optional.of(correct("target-reached", "violation location " + sourceName + ":" + line + " reached"));
                 }
                 case AVOID -> {
                     ValidatorLogger.event("Breakpoint: {}:{} — AVOID POINT REACHED", sourceName, line);
-                    return Optional.of(noViolation());
+                    return Optional.of(noViolation("avoid-point", "location " + sourceName + ":" + line
+                            + " that the witness excludes reached"));
                 }
                 case BRANCH -> {
                     BranchDecision bd = (BranchDecision) planItem;
@@ -384,7 +397,7 @@ public final class EventLoop {
         if (property == Property.ASSERT) {
             if (exceptionClass.contains("AssertionError")) {
                 ValidatorLogger.event("Uncaught exception confirms violation - CORRECT");
-                return Optional.of(ValidationResult.CORRECT);
+                return Optional.of(correct("assertion-error", exceptionClass + " at " + where(loc)));
             }
         }
 
@@ -394,13 +407,16 @@ public final class EventLoop {
 
         if (isError) {
             ValidatorLogger.event("Uncaught JVM ERROR - " + reference);
+            recordUnusedValues();
+            RunSummary.reason("jvm-error", exceptionClass + " at " + where(loc));
             return Optional.of(ValidationResult.ERROR);
         } else if (isException) {
             if (property == Property.RUNTIME && isRuntimeException) {
-                return Optional.of(ValidationResult.CORRECT);
+                return Optional.of(correct("runtime-exception", exceptionClass + " at " + where(loc)));
             }
             ValidatorLogger.event("Uncaught Exception - " + reference);
-            return Optional.of(noViolation());
+            return Optional.of(noViolation("other-exception", exceptionClass + " at " + where(loc)
+                    + ", not a violation of " + property));
         }
 
         return Optional.empty();
@@ -429,18 +445,42 @@ public final class EventLoop {
      * every nondet value the run used; otherwise the run took values of its own and says nothing
      * about the witness.
      */
-    private ValidationResult noViolation() {
+    private ValidationResult noViolation(String code, String detail) {
+        recordUnusedValues();
         if (freeNondetCalls > 0) {
             ValidatorLogger.event("No violation, but {} nondet call(s) not fixed by the witness — unknown",
                     freeNondetCalls);
+            RunSummary.reason(code, detail + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness");
             return ValidationResult.UNKNOWN;
         }
+        RunSummary.reason(code, detail + "; every nondet call was fixed by the witness");
         return ValidationResult.SPURIOUS;
     }
 
+    private ValidationResult correct(String code, String detail) {
+        recordUnusedValues();
+        RunSummary.reason(code, detail);
+        return ValidationResult.CORRECT;
+    }
+
     /** Timeout or VM disconnect: never evidence against the witness. */
-    private ValidationResult handleErrorStatus() {
+    private ValidationResult handleErrorStatus(String code, String detail) {
+        recordUnusedValues();
+        RunSummary.reason(code, detail);
         return ValidationResult.UNKNOWN;
+    }
+
+    /** Witness values that the run never asked for: a sign that it left the witness path. */
+    private void recordUnusedValues() {
+        int unused = interceptMap.values().stream()
+                .flatMap(Collection::stream)
+                .mapToInt(Interception::count)
+                .sum();
+        RunSummary.set("witness.values-unused", unused);
+    }
+
+    private static String where(Location loc) {
+        return safeSourceName(loc) + ":" + loc.lineNumber();
     }
 
     /**

@@ -51,7 +51,7 @@ public final class Main {
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage());
             new HelpFormatter().printHelp("jlisa-witness-validator", options);
-            System.out.println("Could not validate");
+            RunSummary.couldNotValidate("usage", e.getMessage());
             System.exit(0);
             return;
         }
@@ -76,7 +76,7 @@ public final class Main {
         if (witnessPath == null || benchmarkPath == null || propertyName == null) {
             System.err.println("Error: --witness, --benchmark and --property are required.");
             new HelpFormatter().printHelp("jlisa-witness-validator", options);
-            System.out.println("Could not validate");
+            RunSummary.couldNotValidate("usage", "--witness, --benchmark and --property are required");
             System.exit(0);
             return;
         }
@@ -86,14 +86,14 @@ public final class Main {
 
         if (!witnessFile.exists()) {
             System.err.println("Error: witness file not found: " + witnessPath);
-            System.out.println("Could not validate");
+            RunSummary.couldNotValidate("witness-not-found", witnessPath);
             System.exit(0);
             return;
         }
 
         if (!benchmarkFile.exists()) {
             System.err.println("Error: benchmark file not found: " + benchmarkPath);
-            System.out.println("Could not validate");
+            RunSummary.couldNotValidate("benchmark-not-found", benchmarkPath);
             System.exit(0);
             return;
         }
@@ -114,10 +114,10 @@ public final class Main {
 
         } catch (ValidationException e) {
             LOG.error("Validation error: {}", e.getMessage(), e);
-            System.out.println("Could not validate");
+            RunSummary.couldNotValidate("validation-error", e.getMessage());
         } catch (Exception e) {
             LOG.error("Unexpected error: {}", e.getMessage(), e);
-            System.out.println("Could not validate");
+            RunSummary.couldNotValidate("internal-error", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
 
         System.exit(0);

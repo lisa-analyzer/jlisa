@@ -1,5 +1,6 @@
 package it.unive.jlisa.witness.validator.parser;
 
+import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
 import it.unive.jlisa.witness.validator.filter.JvmScopeParser;
 import it.unive.jlisa.witness.validator.filter.JvmScopeParser.ParsedScope;
@@ -109,6 +110,7 @@ public final class WitnessParserV1 {
 
             if (!WitnessFilter.isInteresting(scope)) {
                 droppedEdges++;
+                RunSummary.count("edges.noise");
                 LOG.debug("[FILTER] Noise edge dropped: scope={}", scope);
                 continue;
             }
@@ -116,6 +118,7 @@ public final class WitnessParserV1 {
             Optional<ParsedScope> parsedScope = JvmScopeParser.parse(scope);
             if (parsedScope.isEmpty()) {
                 droppedEdges++;
+                RunSummary.count("edges.unparseable-scope");
                 LOG.warn("[FILTER] Unparseable scope '{}' — edge skipped", scope);
                 continue;
             }
@@ -123,6 +126,7 @@ public final class WitnessParserV1 {
             Optional<ValueExtractor.Extracted> extracted = ValueExtractor.extract(assumption);
             if (extracted.isEmpty()) {
                 droppedEdges++;
+                RunSummary.count("edges.no-value");
                 LOG.warn("[FILTER] No value extracted from assumption '{}' — edge skipped", assumption);
                 continue;
             }
@@ -143,6 +147,7 @@ public final class WitnessParserV1 {
             } else {
                 // Application-code scope: downstream variable assignments are consequences of
                 // Verifier.nondet* interceptions and happen automatically inside the JVM.
+                RunSummary.count("edges.app-assumption");
                 LOG.debug("[PLAN] Application-code assumption (not steered): {}.{}  → {}",
                         ps.className(), ps.methodName(), extracted.get().varName() + "=" + value);
             }

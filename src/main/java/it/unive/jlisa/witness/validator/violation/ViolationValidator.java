@@ -1,6 +1,7 @@
 package it.unive.jlisa.witness.validator.violation;
 
 import com.sun.jdi.VirtualMachine;
+import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
 import it.unive.jlisa.witness.validator.model.BenchmarkProperties;
 import it.unive.jlisa.witness.validator.model.Property;
@@ -82,6 +83,7 @@ public final class ViolationValidator {
         }
 
         if (plan.isEmpty()) {
+            RunSummary.count("plan.empty");
             ValidatorLogger.warn("[VALIDATE] Violation plan is empty — cannot steer execution");
             //printVerdict(VERDICT_UNKNOWN);
             //return;
@@ -118,6 +120,7 @@ public final class ViolationValidator {
         };
 
         ValidatorLogger.result(verdict);
+        RunSummary.print(result.name().toLowerCase());
         printVerdict(verdict);
     }
 
