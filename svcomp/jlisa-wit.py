@@ -5,8 +5,10 @@
 #
 #   jlisa-wit --witness <witness.graphml|.yml> --property <file.prp> INPUT...
 #
-# where INPUT... are the task's input files as BenchExec passes them (for Java tasks,
-# the shared common/ directory and the benchmark directory).
+# where INPUT... are the task's input files as BenchExec passes them, in the order of the
+# task's input_files (for Java tasks: the shared common/ directory, the benchmark directory,
+# and sometimes more, e.g. a category's own common/ or a subdirectory of the benchmark).
+# The benchmark is the input that contains Main.java (the sv-benchmarks convention).
 #
 # The last line printed on stdout is always one of
 #
@@ -58,6 +60,19 @@ def parse_property(path):
     return PROPERTIES.get(match.group(2)) if match else None
 
 
+def benchmark_inputs(paths):
+    """The inputs to copy, and the benchmark among them (the input with Main.java).
+
+    An input inside another input is left out: it is compiled with its parent, and a
+    second copy would define its classes twice."""
+    paths = [os.path.normpath(p) for p in paths]
+    real = [os.path.realpath(p) for p in paths]
+    inputs = [p for p, rp in zip(paths, real)
+              if not any(rp != other and rp.startswith(other + os.sep) for other in real)]
+    benchmark = next((p for p in inputs if os.path.isfile(os.path.join(p, "Main.java"))), inputs[-1])
+    return inputs, benchmark
+
+
 def main():
     args = parse_arguments()
 
@@ -76,13 +91,16 @@ def main():
 
     java = os.path.join(os.environ["JAVA_HOME"], "bin", "java") if "JAVA_HOME" in os.environ else "java"
 
+    inputs, benchmark = benchmark_inputs(args.inputs)
+
     with tempfile.TemporaryDirectory(prefix="jlisa-wit-") as workdir:
         copies = []
-        for i, path in enumerate(args.inputs):
-            dest = os.path.join(workdir, str(i), os.path.basename(os.path.normpath(path)))
+        for i, path in enumerate(inputs):
+            dest = os.path.join(workdir, str(i), os.path.basename(path))
             shutil.copytree(path, dest)
             copies.append(os.path.relpath(dest, workdir))
-        task_file = os.path.join(workdir, os.path.basename(copies[-1]) + ".yml")
+        # the validator finds the benchmark directory by the name of the task file
+        task_file = os.path.join(workdir, os.path.basename(benchmark) + ".yml")
         with open(task_file, "w") as f:
             f.write("input_files:\n" + "".join("  - '%s/'\n" % c for c in copies))
 
