@@ -4,16 +4,16 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "2",
-    "duration" : "2ms",
-    "end" : "2026-08-17T23:35:56.238+02:00",
-    "expressions" : "6",
+    "duration" : "4ms",
+    "end" : "2026-08-27T13:14:54.383+02:00",
+    "expressions" : "9",
     "files" : "1",
     "globals" : "50",
-    "members" : "267",
+    "members" : "268",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:35:56.236+02:00",
-    "statements" : "5",
+    "start" : "2026-08-27T13:14:54.379+02:00",
+    "statements" : "6",
     "units" : "52",
     "version" : "1.0",
     "warnings" : "0"
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/byte"
   }
 }

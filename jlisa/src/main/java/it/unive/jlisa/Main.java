@@ -296,6 +296,7 @@ public class Main {
 		conf.interproceduralAnalysis = new InliningAnalysis<>(150, false);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
+		conf.wideningThreshold = 20;
 		switch (checkerName) {
 		case "Assert":
 			conf.semanticChecks.add(new AssertChecker<>());

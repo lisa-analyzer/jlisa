@@ -25,14 +25,14 @@
   "info" : {
     "cfgs" : "4",
     "duration" : "37ms",
-    "end" : "2026-09-19T10:41:36.476+02:00",
+    "end" : "2026-10-16T21:36:31.939+02:00",
     "expressions" : "74",
     "files" : "2",
     "globals" : "53",
-    "members" : "269",
+    "members" : "270",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-09-19T10:41:36.439+02:00",
+    "start" : "2026-10-16T21:36:31.902+02:00",
     "statements" : "30",
     "units" : "53",
     "version" : "1.0",
@@ -56,7 +56,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/reflection/field-set-1"
   }
 }

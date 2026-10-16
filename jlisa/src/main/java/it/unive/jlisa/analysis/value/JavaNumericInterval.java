@@ -25,6 +25,9 @@ import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -32,10 +35,9 @@ import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.UnaryExpression;
-import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.*;
+import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftLeft;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftRight;
@@ -48,12 +50,15 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
 import java.util.function.Function;
 
 public class JavaNumericInterval extends Interval {
+
+	private static final Function<Double, Double> SIN = Math::sin;
 
 	@Override
 	public IntInterval evalConstant(
@@ -63,6 +68,10 @@ public class JavaNumericInterval extends Interval {
 		if (constant.getValue() instanceof Number) {
 			return fromConstant(constant);
 		}
+		if (constant.getStaticType() instanceof TypeTokenType) {
+			return IntInterval.TOP;
+		}
+
 		// If the constant is not a number, return BOTTOM.
 		// TOP represents any possible number, but since the constant is not
 		// numeric, BOTTOM is more appropriate.
@@ -71,16 +80,20 @@ public class JavaNumericInterval extends Interval {
 
 	public IntInterval fromConstant(
 			Constant constant) {
-		double value = ((Number) constant.getValue()).doubleValue();
-		if (Double.isNaN(value)) {
-			return IntInterval.BOTTOM; // not a number
-		}
 
-		if (value == Double.POSITIVE_INFINITY || value == Double.NEGATIVE_INFINITY) {
-			return IntInterval.TOP;
-		}
+		if (constant.getStaticType() == JavaFloatType.INSTANCE || constant.getStaticType() == JavaDoubleType.INSTANCE) {
+			double valueD = ((Number) constant.getValue()).doubleValue();
+			if (Double.isNaN(valueD))
+				return IntInterval.BOTTOM; // not a number
+			if (Double.isInfinite(valueD))
+				return IntInterval.TOP;
 
-		return new IntInterval(new MathNumber(value), new MathNumber(value));
+			return new IntInterval(new MathNumber(valueD), new MathNumber(valueD));
+		} else {
+			// integer type
+			long valueL = ((Number) constant.getValue()).longValue();
+			return new IntInterval(new MathNumber(valueL), new MathNumber(valueL));
+		}
 	}
 
 	@Override
@@ -208,6 +221,19 @@ public class JavaNumericInterval extends Interval {
 			max = Math.max(max, x);
 		}
 
+		int lb = (int) Math.floor(min);
+		int ub = (int) Math.ceil(max);
+
+		if (function == SIN) {
+			// if [a;b] is within (0;PI), we know that the lower bound is never
+			// going to be exactly 0.
+			if (a > 0.0 && b < Math.PI && lb == 0 && lb != ub) {
+				// we can safely move the lower bound to exclude 0
+				double lbTmp = Math.nextUp(0.0);
+				return new IntInterval(new MathNumber(lbTmp), new MathNumber(ub));
+			}
+		}
+
 		return new IntInterval((int) Math.floor(min), (int) Math.ceil(max));
 	}
 
@@ -281,7 +307,7 @@ public class JavaNumericInterval extends Interval {
 
 		// numeric
 		if (operator instanceof JavaMathSinOperator)
-			return trigonometric(arg, Math::sin, 4 * Math.PI);
+			return trigonometric(arg, SIN, 4 * Math.PI);
 		if (operator instanceof JavaMathCosOperator)
 			return trigonometric(arg, Math::cos, 4 * Math.PI);
 		if (operator instanceof JavaMathTanOperator)
@@ -501,6 +527,19 @@ public class JavaNumericInterval extends Interval {
 		if (left.isBottom() || right.isBottom())
 			return bottom();
 
+		if (operator instanceof AdditionOperator) {
+			if (!left.isBottom() && !right.isBottom()) {
+				return new IntInterval(left.getLow().add(right.getLow()), left.getHigh().add(right.getHigh()));
+			}
+		}
+
+		if (operator instanceof SubtractionOperator) {
+			if (!left.isBottom() && !right.isBottom()) {
+				return new IntInterval(left.getLow().subtract(right.getHigh()),
+						left.getHigh().subtract(right.getLow()));
+			}
+		}
+
 		if (operator instanceof JavaMathMax)
 			return new IntInterval(left.getLow().max(right.getLow()), left.getHigh().max(right.getHigh()));
 
@@ -510,17 +549,17 @@ public class JavaNumericInterval extends Interval {
 		if (operator instanceof JavaLongRotateRightOperator)
 			return new IntInterval(-1, 1);
 		if (operator instanceof JavaLongCompareOperator)
-			return new IntInterval(-1, 1);
+			return typeBounds(JavaIntType.INSTANCE);
 		if (operator instanceof JavaFloatCompareOperator)
-			return new IntInterval(-1, 1);
+			return typeBounds(JavaIntType.INSTANCE);
 		if (operator instanceof JavaDoubleCompareOperator)
-			return new IntInterval(-1, 1);
+			return typeBounds(JavaIntType.INSTANCE);
 		if (operator instanceof JavaFloatCompareOperator)
-			return new IntInterval(-1, 1);
+			return typeBounds(JavaIntType.INSTANCE);
 		if (operator instanceof JavaByteCompareOperator)
-			return new IntInterval(-1, 1);
+			return typeBounds(JavaIntType.INSTANCE);
 		if (operator instanceof JavaIntegerCompareOperator)
-			return new IntInterval(-1, 1);
+			return typeBounds(JavaIntType.INSTANCE);
 		if (operator instanceof BitwiseShiftLeft)
 			return evalShiftLeft(expression, left, right, pp, oracle);
 		if (operator instanceof BitwiseShiftRight)
@@ -643,6 +682,88 @@ public class JavaNumericInterval extends Interval {
 		if (sat == Satisfiability.SATISFIED)
 			return environment;
 		return super.assume(environment, expression, src, dest, oracle);
+	}
+
+	@Override
+	public ValueEnvironment<IntInterval> assumeBinaryExpression(
+			ValueEnvironment<IntInterval> environment,
+			BinaryExpression expression,
+			ProgramPoint src,
+			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+
+		Satisfiability sat = satisfies(environment, expression, src, oracle);
+		if (sat == Satisfiability.NOT_SATISFIED)
+			return environment.bottom();
+		if (sat == Satisfiability.SATISFIED)
+			return environment;
+
+		if (expression.getOperator() != ComparisonNe.INSTANCE) {
+			return super.assumeBinaryExpression(environment, expression, src, dest, oracle);
+		}
+
+		Identifier id;
+		IntInterval eval;
+		IntInterval evalId;
+		boolean rightIsExpr;
+		ValueExpression left = (ValueExpression) expression.getLeft();
+		ValueExpression right = (ValueExpression) expression.getRight();
+		if (left instanceof Identifier) {
+			if (!canProcess(right, src, oracle))
+				// the expression does not have a numerical value, we do not
+				// assume anything on it
+				return environment;
+			eval = eval(environment, right, src, oracle);
+			evalId = eval(environment, left, src, oracle);
+			id = (Identifier) left;
+			rightIsExpr = true;
+		} else if (right instanceof Identifier) {
+			if (!canProcess(left, src, oracle))
+				// the expression does not have a numerical value, we do not
+				// assume anything on it
+				return environment;
+			eval = eval(environment, left, src, oracle);
+			evalId = eval(environment, right, src, oracle);
+			id = (Identifier) right;
+			rightIsExpr = false;
+		} else
+			return environment;
+
+		ValueEnvironment<IntInterval> updatedEnv = environment;
+		if (eval.isSingleton()) {
+			if (evalId.getLow().equals(eval.getLow())) {
+				MathNumber newLow = nextValueUp(id, evalId.getLow());
+				IntInterval newInterval = new IntInterval(newLow, evalId.getHigh());
+				updatedEnv = environment.putState(id, newInterval);
+			}
+			if (evalId.getHigh().equals(eval.getLow())) {
+				MathNumber newHigh = nextValueDown(id, evalId.getHigh());
+				IntInterval newInterval = new IntInterval(evalId.getLow(), newHigh);
+				updatedEnv = environment.putState(id, newInterval);
+			}
+		}
+		return updatedEnv;
+	}
+
+	private MathNumber nextValueUp(
+			Identifier id,
+			MathNumber x) {
+		if (id.getStaticType() == JavaFloatType.INSTANCE || id.getStaticType() == JavaDoubleType.INSTANCE) {
+			// TODO
+			return x;
+		}
+		return x.add(new MathNumber(1));
+	}
+
+	private MathNumber nextValueDown(
+			Identifier id,
+			MathNumber x) {
+		if (id.getStaticType() == JavaFloatType.INSTANCE || id.getStaticType() == JavaDoubleType.INSTANCE) {
+			// TODO
+			return x;
+		}
+		return x.subtract(new MathNumber(1));
 	}
 
 }

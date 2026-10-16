@@ -5,14 +5,14 @@
   "info" : {
     "cfgs" : "3",
     "duration" : "3ms",
-    "end" : "2026-08-17T23:35:51.946+02:00",
+    "end" : "2026-08-27T13:14:56.004+02:00",
     "expressions" : "14",
     "files" : "3",
     "globals" : "50",
-    "members" : "268",
+    "members" : "269",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-17T23:35:51.943+02:00",
+    "start" : "2026-08-27T13:14:56.001+02:00",
     "statements" : "10",
     "units" : "52",
     "version" : "1.0",
@@ -36,7 +36,7 @@
     "synchronousListeners" : "",
     "syntacticChecks" : "",
     "useWideningPoints" : "true",
-    "wideningThreshold" : "5",
+    "wideningThreshold" : "20",
     "workdir" : "java-outputs/control-flow-structures/try-catch/try-catch2"
   }
 }
