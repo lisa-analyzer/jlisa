@@ -26,10 +26,10 @@ import java.util.*;
  *       exception fires after all planned interceptions are consumed</li>
  *   <li>{@link ValidationResult#SPURIOUS} — avoid-point reached, the VM exits, or an unrelated
  *       exception is thrown, without hitting the target, <em>and</em> every {@code Verifier.nondet*}
- *       call returned a value fixed by the witness</li>
+ *       call returned a value fixed by the witness, <em>and</em> every witness step could be read</li>
  *   <li>{@link ValidationResult#UNKNOWN} — the same endings after a {@code nondet*} call the witness
- *       did not fix (the run used a value of its own, so it says nothing about the witness),
- *       or a timeout / VM disconnect</li>
+ *       did not fix (the run used a value of its own, so it says nothing about the witness), or when
+ *       witness steps could not be read (the run did not follow the witness), or a timeout / VM disconnect</li>
  *   <li>{@link ValidationResult#ERROR} — the JVM threw an {@link Error}</li>
  * </ul>
  */
@@ -447,6 +447,14 @@ public final class EventLoop {
      */
     private ValidationResult noViolation(String code, String detail) {
         recordUnusedValues();
+        if (plan.skippedSteps() > 0) {
+            // The run did not follow the witness: it says nothing about it.
+            ValidatorLogger.event("No violation, but {} witness step(s) could not be read — unknown",
+                    plan.skippedSteps());
+            RunSummary.reason(code, detail + "; " + plan.skippedSteps()
+                    + " witness step(s) could not be read");
+            return ValidationResult.UNKNOWN;
+        }
         if (freeNondetCalls > 0) {
             ValidatorLogger.event("No violation, but {} nondet call(s) not fixed by the witness — unknown",
                     freeNondetCalls);

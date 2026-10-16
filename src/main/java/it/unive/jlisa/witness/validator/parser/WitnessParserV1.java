@@ -74,6 +74,8 @@ public final class WitnessParserV1 {
         //Map<String, String[]> interceptParts = new LinkedHashMap<>(); // key → [className, methodName, desc, value]
         List<TargetPoint> targets = new ArrayList<>();
         int droppedEdges = 0;
+        // steps with a value that cannot be used (noise edges are dropped on purpose and not counted)
+        int skippedSteps = 0;
 
         NodeList edges = graph.getElementsByTagName("edge");
         for (int i = 0; i < edges.getLength(); i++) {
@@ -118,6 +120,7 @@ public final class WitnessParserV1 {
             Optional<ParsedScope> parsedScope = JvmScopeParser.parse(scope);
             if (parsedScope.isEmpty()) {
                 droppedEdges++;
+                skippedSteps++;
                 RunSummary.count("edges.unparseable-scope");
                 LOG.warn("[FILTER] Unparseable scope '{}' — edge skipped", scope);
                 continue;
@@ -126,6 +129,7 @@ public final class WitnessParserV1 {
             Optional<ValueExtractor.Extracted> extracted = ValueExtractor.extract(assumption);
             if (extracted.isEmpty()) {
                 droppedEdges++;
+                skippedSteps++;
                 RunSummary.count("edges.no-value");
                 LOG.warn("[FILTER] No value extracted from assumption '{}' — edge skipped", assumption);
                 continue;
@@ -181,7 +185,8 @@ public final class WitnessParserV1 {
                 interceptions,
                 List.of(), // branch decisions — not in v1 format
                 List.of(), // avoid points — not in v1 format
-                targets);
+                targets,
+                skippedSteps);
 
         return WitnessModel.violation(WitnessModel.WitnessFormat.V1_GRAPHML, plan, producer, programFile);
     }

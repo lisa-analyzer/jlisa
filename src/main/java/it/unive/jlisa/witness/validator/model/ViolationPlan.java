@@ -22,16 +22,31 @@ public final class ViolationPlan {
     private final List<BranchDecision> branchDecisions;
     private final List<AvoidPoint> avoidPoints;
     private final List<TargetPoint> targetPoints;
+    private final int skippedSteps;
 
     public ViolationPlan(
             List<Interception> interceptions,
             List<BranchDecision> branchDecisions,
             List<AvoidPoint> avoidPoints,
             List<TargetPoint> targetPoints) {
+        this(interceptions, branchDecisions, avoidPoints, targetPoints, 0);
+    }
+
+    /**
+     * @param skippedSteps witness steps carrying a value that the parser could not use (unreadable
+     *                     scope, no value extracted): a run without them does not follow the witness
+     */
+    public ViolationPlan(
+            List<Interception> interceptions,
+            List<BranchDecision> branchDecisions,
+            List<AvoidPoint> avoidPoints,
+            List<TargetPoint> targetPoints,
+            int skippedSteps) {
         this.interceptions = Collections.unmodifiableList(interceptions);
         this.branchDecisions = Collections.unmodifiableList(branchDecisions);
         this.avoidPoints = Collections.unmodifiableList(avoidPoints);
         this.targetPoints = Collections.unmodifiableList(targetPoints);
+        this.skippedSteps = skippedSteps;
     }
 
     public List<Interception> interceptions() {
@@ -50,6 +65,11 @@ public final class ViolationPlan {
         return targetPoints;
     }
 
+    /** Witness steps with a value that could not be used; see the constructor. */
+    public int skippedSteps() {
+        return skippedSteps;
+    }
+
     public boolean isEmpty() {
         return interceptions.isEmpty() && branchDecisions.isEmpty()
                 && avoidPoints.isEmpty() && targetPoints.isEmpty();
@@ -60,6 +80,7 @@ public final class ViolationPlan {
         return "ViolationPlan{interceptions=" + interceptions.size()
                 + ", branches=" + branchDecisions.size()
                 + ", avoids=" + avoidPoints.size()
-                + ", targets=" + targetPoints.size() + "}";
+                + ", targets=" + targetPoints.size()
+                + ", skippedSteps=" + skippedSteps + "}";
     }
 }
