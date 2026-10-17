@@ -10,6 +10,7 @@ import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.frontend.visitors.structure.VariableDeclarationASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -250,11 +251,11 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+		parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
 		if (enclosing != null)
-			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+			parameters.add(new JavaParameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
 					enclosing.getReference(),
 					null, new Annotations()));
 
