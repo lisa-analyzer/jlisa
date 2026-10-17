@@ -45,7 +45,7 @@ public class JavaParameter extends Parameter {
 		super(location, name, staticType, defaultValue, annotations);
 	}
 
-	public boolean getIsVarargs() {
+	public boolean isVarargs() {
 		return isVarargs;
 	}
 

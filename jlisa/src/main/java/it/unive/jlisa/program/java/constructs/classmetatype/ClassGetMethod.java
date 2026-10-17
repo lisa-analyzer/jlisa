@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionDataUtils;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -64,6 +65,10 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
+		if (params.length == 2) {
+			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0], JavaArrayType.CLASS_ARRAY);
+			return new ClassGetMethod(cfg, location, params[0], params[1], dummy);
+		}
 		return new ClassGetMethod(cfg, location, params[0], params[1], params[2]);
 	}
 

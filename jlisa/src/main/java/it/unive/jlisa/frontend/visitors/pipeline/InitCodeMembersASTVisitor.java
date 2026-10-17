@@ -213,7 +213,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		List<Parameter> parameters = new ArrayList<>();
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
-			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type)));
+			parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type)));
 		}
 
 		for (Object o : node.parameters()) {
