@@ -64,9 +64,12 @@ public class JavaAssigningStrategy
 			throws SemanticException {
 		// prepare the state for the call: assign the value to each parameter
 		AnalysisState<A> prepared = callState;
-		ArrayList<ExpressionSet> pars = new ArrayList<>(parameters.length);
-		for (ExpressionSet s : parameters) {
-			pars.add(s);
+		ArrayList<ExpressionSet> pars = new ArrayList<>(formals.length);
+		for (int i = 0; i < formals.length; ++i) {
+			if (i < parameters.length)
+				pars.add(parameters[i]);
+			else
+				pars.add(new ExpressionSet());
 		}
 		boolean boxingUnboxingNeeded = false;
 
@@ -132,7 +135,7 @@ public class JavaAssigningStrategy
 					}
 
 					boxingUnboxingNeeded = true;
-					pars.add(new ExpressionSet(formalVar));
+					pars.set(formals.length - 1, (new ExpressionSet(formalVar)));
 				}
 			}
 

@@ -106,18 +106,6 @@ public class CustomJavaLikeMatchingStrategy
 				&& actual.getStaticType().canBeAssignedTo(formal.getStaticType()))
 			return true;
 
-		// assert (formal instanceof JavaParameter);
-		// JavaParameter parameter = (JavaParameter) formal;
-		//
-		// if (parameter.isVarargs()) {
-		// 	// TODO: important, convert formal to base only if the actual is not directly
-		// 	// an array. Also in that case, type conversions are not applicable
-		// 	assert (parameter.getStaticType() instanceof JavaReferenceType);
-		// 	JavaArrayType arrType = (JavaArrayType) ((JavaReferenceType) parameter.getStaticType()).getInnerType();
-		// 	Type base = arrType.getBaseType();
-		// 	return base.equals(actual.getStaticType());
-		// }
-
 		for (Type rType : types)
 			if (rType.canBeAssignedTo(formal.getStaticType()))
 				// equal or widening
@@ -150,9 +138,18 @@ public class CustomJavaLikeMatchingStrategy
 		// array as last argument is okay in the case of varargs.
 		// but need to check whether it's last or not to prevent cases like the following:
 		// f(String... s) matched with f(new String[], new String[])
-		if (!actual.getStaticType().equals(Untyped.INSTANCE)
-				&& isLastArg && actual.getStaticType().canBeAssignedTo(formal.getStaticType()))
-			return true;
+		if (isLastArg) {
+
+			Type arrayType = formal.getStaticType();
+			if (!actual.getStaticType().equals(Untyped.INSTANCE)
+				&& actual.getStaticType().canBeAssignedTo(arrayType))
+				return true;
+
+			for (Type rType : types) {
+				if (rType.canBeAssignedTo(arrayType))
+					return true;
+			}
+		}
 
 		assert (formal instanceof JavaParameter);
 		JavaParameter parameter = (JavaParameter) formal;
@@ -172,14 +169,6 @@ public class CustomJavaLikeMatchingStrategy
 			else if (JavaClassType.isWrapperOf(rType, base))
 				// unboxing
 				return true;
-
-		// TODO the next case should be allowed only when we handle it in the
-		// assigning strategy and in the call graph's parameter distance
-		// Type unwrapped;
-		// else if ((unwrapped = JavaClassType.getUnwrappedType(rType)) != null)
-		// unboxing + widening
-		// if (unwrapped.canBeAssignedTo(formal.getStaticType()))
-		// return true;
 
 		return false;
 	}
