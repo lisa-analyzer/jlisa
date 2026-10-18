@@ -64,6 +64,16 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		return loadAndStore(interprocedural, state, expr, null, expressions);
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadAndStore(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			AccessChild destAccessIdx,
+			StatementStore<A> expressions)
+			throws SemanticException {
 
 		Type thisFieldType = fieldData.getStaticType();
 		if (thisFieldType instanceof JavaReferenceType jrt)
@@ -98,7 +108,13 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		InstrumentedReceiver field = new InstrumentedReceiver(refFieldMetaType, false, synGen.nextLocation());
 		AnalysisState<A> fieldAllocated = analysis.assign(allocated, field, ref, this);
 
-		HeapDereference derefThisField = new HeapDereference(fieldMetaType, field, getLocation());
+		if (destAccessIdx != null)
+			fieldAllocated = analysis.assign(fieldAllocated, destAccessIdx, ref, this);
+
+
+		HeapDereference derefThisField = destAccessIdx != null
+				? new HeapDereference(fieldMetaType, destAccessIdx, location)
+				: new HeapDereference(fieldMetaType, field, location);
 
 		AnalysisState<A> tmp = fieldAllocated.bottomExecution();
 
@@ -136,7 +152,9 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 
 		tmp = tmp.lub(sem);
 
-		resultState = tmp.forgetIdentifier(field, this).withExecutionExpression(ref);
+		resultState = destAccessIdx != null
+				? tmp.forgetIdentifier(field, this).withExecutionExpression(ref)
+				: tmp.withExecutionExpression(field);
 
 		return resultState;
 	}

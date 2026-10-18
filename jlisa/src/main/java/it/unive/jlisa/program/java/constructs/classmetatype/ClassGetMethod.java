@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ReflectionDataUtils;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -36,16 +37,14 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.*;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -66,6 +65,10 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
+		if (params.length == 2) {
+			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0], JavaArrayType.CLASS_ARRAY);
+			return new ClassGetMethod(cfg, location, params[0], params[1], dummy);
+		}
 		return new ClassGetMethod(cfg, location, params[0], params[1], params[2]);
 	}
 
@@ -193,9 +196,14 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		if (constraints == null)
 			return state.topExecution();
 
+                List<BinaryExpression> constraintList = constraints.toList();
+                if (constraintList.isEmpty())
+                        return interprocedural.getAnalysis().smallStepSemantics(state,
+                                new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+
 		// make sure that all classes we are searching have thei reflection data
 		// loaded
-		for (BinaryExpression constraint : constraints.toList()) {
+		for (BinaryExpression constraint : constraintList) {
 			String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 			UnitType t = getTypeFromStr(clazzName);
 

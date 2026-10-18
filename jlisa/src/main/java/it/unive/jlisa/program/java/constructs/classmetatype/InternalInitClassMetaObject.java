@@ -159,12 +159,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 			LoadField loadField = new LoadField(global, getCFG(), getLocation(), this);
 
-			AnalysisState<A> t = loadField.fwdUnarySemantics(interprocedural, tmp, clazz, expressions);
-
-			// assign initialized field to the next index of the array
-			for (SymbolicExpression initializedField : t.getExecutionExpressions()) {
-				tmp = analysis.assign(t, accessIdx, initializedField, this);
-			}
+			tmp = loadField.loadAndStore(interprocedural, tmp, clazz, accessIdx, expressions);
 
 			++nextIdx;
 		}

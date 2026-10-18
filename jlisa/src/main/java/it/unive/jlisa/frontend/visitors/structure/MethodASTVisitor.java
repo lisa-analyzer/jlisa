@@ -12,6 +12,7 @@ import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.statement.BlockStatementASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -236,7 +237,7 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes()
 					.getType(getScope().getLiSACompilationUnit().getName());
-			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+			parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 					new Annotations()));
 		}
 
@@ -271,12 +272,12 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLiSACompilationUnit().getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+		parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
 		if (getScope().getEnclosingClass() != null)
 			parameters
-					.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+					.add(new JavaParameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
 							getScope().getEnclosingClass().getReference(),
 							null, new Annotations()));
 

@@ -160,6 +160,9 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			return state.topExecution();
 		List<it.unive.lisa.symbolic.value.BinaryExpression> clazzNameConstraints = clazzNameStream.toList();
 
+                if (clazzNameConstraints.isEmpty())
+                        return state;
+
 		AnalysisState<A> result = state.bottomExecution();
 
 		for (it.unive.lisa.symbolic.value.BinaryExpression clazzNameConstraint : clazzNameConstraints) {

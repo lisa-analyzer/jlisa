@@ -27,7 +27,7 @@ value
    ;
 
 param
-   : PARAM (STAR? | POWER? | AMP?) name = IDENTIFIER type (DEFAULT val = value)?
+   : PARAM (STAR? | POWER? | AMP?) name = IDENTIFIER type (ELLIPSIS | DEFAULT val = value)?
    ;
 
 field

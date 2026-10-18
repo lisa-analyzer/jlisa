@@ -80,6 +80,10 @@ DOUBLE_COLON
    : '::'
    ;
 
+ELLIPSIS
+   : '...'
+   ;
+
 DOT
    : '.'
    ;

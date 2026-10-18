@@ -60,6 +60,6 @@ class java.lang.reflect.Method extends java.lang.Object:
 		libtype java.lang.Object*
 		param this libtype java.lang.reflect.Method*
 		param obj libtype java.lang.Object*
-		param arguments type it.unive.jlisa.program.type.JavaArrayType::OBJECT_ARRAY
+		param arguments type it.unive.jlisa.program.type.JavaArrayType::OBJECT_ARRAY...
 
 

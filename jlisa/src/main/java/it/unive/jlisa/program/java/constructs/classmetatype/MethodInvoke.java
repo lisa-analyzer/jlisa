@@ -69,10 +69,8 @@ import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -115,8 +113,13 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
 				this);
 
-		AnalysisState<A> result = state.bottomExecution();
-		for (SymbolicExpression method : methods) {
+                Collection<SymbolicExpression> innerMethods = methods.elements().stream()
+                        .sorted(Comparator.comparing((
+                                SymbolicExpression::getCodeLocation)))
+                        .toList();
+
+                AnalysisState<A> result = state.bottomExecution();
+		for (SymbolicExpression method : innerMethods) {
 			result = result.lub(invoke(interprocedural, state, method, middle, right, expressions));
 		}
 		return result;
@@ -160,15 +163,18 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefMethod, modifiersVar,
 				location);
 
+		// FIXME: this shouldn't be needed but as of now the modifiers field is tracked by the heap domain (despite being of primitive type)
+		HeapDereference derefModifiers = new HeapDereference(JavaIntType.INSTANCE, accessModifiers, location);
+
 		it.unive.lisa.symbolic.value.UnaryExpression isStaticExpr = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaBooleanType.INSTANCE, accessModifiers, IsMemberStaticOperator.INSTANCE, location);
+				JavaBooleanType.INSTANCE, derefModifiers, IsMemberStaticOperator.INSTANCE, location);
 
 		Satisfiability isStaticSat = Satisfiability.NOT_SATISFIED;
 		isStaticSat = analysis.satisfies(state, isStaticExpr, this);
 
 		// we don't know whether the method is static or not
 		if (isStaticSat == Satisfiability.UNKNOWN)
-			return state.topExecution();
+			return state;
 
 		AnalysisState<A> exceptionState = state.bottomExecution();
 		AnalysisState<A> noExceptionState = state.bottomExecution();
@@ -187,6 +193,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			return exceptionState;
 
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
+
+                if (clazzNameConstraints.isEmpty()) {
+                        return state;
+                }
 
 		// check the types of the receiver against the type of the declaring
 		// class.

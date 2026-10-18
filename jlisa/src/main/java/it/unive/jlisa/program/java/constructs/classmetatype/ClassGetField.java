@@ -38,12 +38,14 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -184,10 +186,15 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		if (constraints == null)
 			return state.topExecution();
 
+                List<it.unive.lisa.symbolic.value.BinaryExpression> constraintList = constraints.toList();
+                if (constraintList.isEmpty())
+                        return interprocedural.getAnalysis().smallStepSemantics(state,
+                                new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+
 		// make sure that all classes we are searching have their reflection
 		// data
 		// loaded
-		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
+		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraintList) {
 
 			String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 			UnitType t = getTypeFromStr(clazzName);
