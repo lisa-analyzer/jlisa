@@ -59,7 +59,6 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 
 	}
 
-	// TODO AP: change this into a unary expression
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdUnarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
@@ -225,7 +224,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		// instead)
 		resultState = destAccessIdx != null
 				? tmp.forgetIdentifier(method, this).withExecutionExpression(ref)
-				: tmp.withExecutionExpression(ref);
+				: tmp.withExecutionExpression(method);
 
 		return resultState;
 	}

@@ -76,14 +76,15 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 			ParamContext ctx) {
 		Type type = visitType(ctx.type());
 		String name = ctx.name.getText();
+		boolean isVararg = ctx.ELLIPSIS() != null;
 		if (ctx.DEFAULT() == null)
-			return new Parameter(name, type);
+			return new Parameter(name, type, isVararg);
 
 		Value def = getDefaultValue(ctx.val);
 		if (def == null)
 			throw new LibraryParsingException(file, "Unsupported default parameter type: " + type);
 
-		return new Parameter(name, type, def);
+		return new Parameter(name, type, def, isVararg);
 	}
 
 	@Override
