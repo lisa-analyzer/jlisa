@@ -263,6 +263,10 @@ public class JavaClassType
 		return lookup("java.util.Properties");
 	}
 
+	public static JavaClassType getAbstractMapType() {
+		return lookup("java.util.AbstractMap");
+	}
+
 	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
 		return lookup("java.lang.ArrayIndexOutOfBoundsException");
 	}
@@ -285,6 +289,10 @@ public class JavaClassType
 
 	public static JavaClassType getClassNotFoundException() {
 		return lookup("java.lang.ClassNotFoundException");
+	}
+
+	public static JavaClassType getUnsupportedOperationExceptionType() {
+		return lookup("java.lang.UnsupportedOperationException");
 	}
 
 	public static JavaClassType getInstantiationException() {
