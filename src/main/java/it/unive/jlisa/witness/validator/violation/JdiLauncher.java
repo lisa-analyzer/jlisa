@@ -192,7 +192,7 @@ public final class JdiLauncher {
                     fm.getJavaFileObjects(allSources.toArray(new File[0]));
 
             java.util.List<String> options = new java.util.ArrayList<>(
-                    java.util.List.of("--release", "8", "-g"));
+                    java.util.List.of("-source", "8", "-target", "8", "-g"));
             if (extraClasspath != null && !extraClasspath.isBlank()) {
                 options.add("-cp");
                 options.add(extraClasspath);
