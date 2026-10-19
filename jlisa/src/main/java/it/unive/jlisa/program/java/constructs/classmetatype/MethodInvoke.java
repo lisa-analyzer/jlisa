@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -90,6 +91,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
+		if (params.length == 2) {
+			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0], JavaArrayType.OBJECT_ARRAY);
+			return new MethodInvoke(cfg, location, params[0], params[1], dummy);
+		}
 		return new MethodInvoke(cfg, location, params[0], params[1], params[2]);
 	}
 

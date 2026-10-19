@@ -167,7 +167,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 
 		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, this);
 
-		InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, location);
+		InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, synGen.nextLocation());
 		arrAllocated = analysis.assign(arrAllocated, array, arrRef, this);
 
 		AnalysisState<A> tmp = arrAllocated.bottomExecution();
