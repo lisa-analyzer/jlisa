@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.java.constructs.string.StringValueOf;
 import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
@@ -99,11 +100,22 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 				} else if (lType.isStringType()
 						|| (lType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType())) {
 
-					StringValueOf strValueOf = new StringValueOf(getCFG(), getRight().getLocation(), getRight());
-					ExpressionSet param = new ExpressionSet(actualRight);
-					AnalysisState<A> tmp =
-						strValueOf.forwardSemanticsAux(interprocedural, state,
-							new ExpressionSet[] {param}, expressions);
+					AnalysisState<A> tmp = state.bottomExecution();
+					// if primitive, call String::valueOf, else call toString
+					if (JavaTypeSystem.isPrimitive(rType)) {
+						StringValueOf strValueOf = new StringValueOf(getCFG(), getRight().getLocation(), getRight());
+						ExpressionSet param = new ExpressionSet(actualRight);
+						tmp = strValueOf.forwardSemanticsAux(interprocedural, state,
+								new ExpressionSet[] {param}, expressions);
+					}
+					else {
+						UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null, "toString",
+								rType, getRight());
+						ExpressionSet[] args = new ExpressionSet[1];
+						args[0] = new ExpressionSet(actualRight);
+						tmp = call.forwardSemanticsAux(interprocedural, state, args, expressions);
+						getMetaVariables().addAll(call.getMetaVariables());
+					}
 
 					for (SymbolicExpression rightStr : tmp.getExecutionExpressions()) {
 						partialResult = partialResult.lub(concatStrings(interprocedural, tmp, actualLeft, rightStr, expressions));
