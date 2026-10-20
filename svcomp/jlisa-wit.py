@@ -31,7 +31,7 @@ import subprocess
 import sys
 import tempfile
 
-VERSION = "1.0"
+VERSION = "1.0.1"
 MAIN_CLASS = "it.unive.jlisa.witness.validator.Main"
 VERDICTS = ("Witness Correct", "Witness Spurious", "Could not validate")
 BASE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.realpath(__file__)))
