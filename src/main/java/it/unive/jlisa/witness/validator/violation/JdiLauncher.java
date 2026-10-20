@@ -7,6 +7,9 @@ import com.sun.jdi.connect.LaunchingConnector;
 import it.unive.jlisa.witness.validator.ValidationException;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +19,16 @@ import java.util.Map;
  * {@link LaunchingConnector} API — no {@link ProcessBuilder}, no shell invocations.
  *
  * <h3>Cross-version operation</h3>
- * <p>The validator runs on Java 23 but can debug a Java 8 JVM by setting the
+ * <p>The validator runs on Java 21 or newer but can debug a Java 8 JVM by setting the
  * {@code vmexec} connector argument to a Java 8 executable.  JDWP (Java Debug Wire
- * Protocol) is backwards-compatible, so Java 23 JDI can control a Java 8 target
+ * Protocol) is backwards-compatible, so a newer JDI can control a Java 8 target
  * transparently.
  *
  * <h3>Assertions</h3>
- * <p>The target JVM is always launched with {@code -ea} so that {@code assert}
- * statements throw {@link AssertionError} (required for the {@code valid_assert}
- * property).
+ * <p>The target JVM is launched with {@code -ea} by default, so that {@code assert}
+ * statements throw {@link AssertionError} (required for the {@code valid-assert}
+ * property). For {@code no-runtime-exception}, a run can also be launched without
+ * {@code -ea}, to check that an exception does not depend on assertions.
  */
 public final class JdiLauncher {
 
@@ -32,7 +36,8 @@ public final class JdiLauncher {
     }
 
     /**
-     * Launches the target program and returns a connected, suspended {@link VirtualMachine}.
+     * Launches the target program, with assertions enabled ({@code -ea}), and returns a
+     * connected, suspended {@link VirtualMachine}.
      *
      * <p>The VM starts suspended: no user code runs until the caller calls
      * {@link VirtualMachine#resume()}.  This window is used to register event requests
@@ -49,6 +54,15 @@ public final class JdiLauncher {
             String mainClass,
             String classpath,
             String java8Executable) throws ValidationException {
+        return launch(mainClass, classpath, java8Executable, true);
+    }
+
+    /** As {@link #launch(String, String, String)}, with Java assertions enabled ({@code -ea}) or not. */
+    public static VirtualMachine launch(
+            String mainClass,
+            String classpath,
+            String java8Executable,
+            boolean assertions) throws ValidationException {
 
         LaunchingConnector connector = findLaunchingConnector();
         Map<String, Connector.Argument> args = connector.defaultArguments();
@@ -56,7 +70,7 @@ public final class JdiLauncher {
         args.get("main").setValue(mainClass);
         // Enable assertions (-ea) and set classpath; the connector appends these to
         // the JVM command line before starting the process.
-        args.get("options").setValue("-ea -cp " + quoteIfNeeded(classpath));
+        args.get("options").setValue((assertions ? "-ea " : "") + "-cp " + quoteIfNeeded(classpath));
         // Start suspended so we can register event requests before any code runs.
         args.get("suspend").setValue("true");
 
@@ -74,6 +88,7 @@ public final class JdiLauncher {
             VirtualMachine vm = connector.launch(args);
             ValidatorLogger.jdi("Connected to target VM ({})",
                     vm.version());
+            discardOutput(vm.process());
             return vm;
         } catch (Exception e) {
             throw new ValidationException("Failed to launch target JVM: " + e.getMessage(), e);
@@ -105,6 +120,33 @@ public final class JdiLauncher {
             return ".";
         }
         return cp.contains(" ") ? "\"" + cp + "\"" : cp;
+    }
+
+    /**
+     * Discards what the target program prints to stdout and stderr.
+     *
+     * <p>As required by {@link LaunchingConnector#launch}, both streams are read while the program
+     * runs: they are pipes to the validator, and a program that fills one would block on its next
+     * write. The output itself is not needed, since the validator observes the program through JDI
+     * events. This is the equivalent of {@link ProcessBuilder.Redirect#DISCARD} for a process
+     * started by the JDI connector.
+     */
+    private static void discardOutput(Process process) {
+        discard(process.getInputStream(), "target-stdout");
+        discard(process.getErrorStream(), "target-stderr");
+    }
+
+    /** Reads and drops a stream in a daemon thread, until the stream ends. */
+    private static void discard(InputStream in, String threadName) {
+        Thread thread = new Thread(() -> {
+            try {
+                in.transferTo(OutputStream.nullOutputStream());
+            } catch (IOException ignored) {
+                // the target VM is gone
+            }
+        }, threadName);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     // ------------------------------------------------------------------

@@ -5,6 +5,7 @@ import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV1;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV2;
+import it.unive.jlisa.witness.validator.violation.BugFinder;
 import it.unive.jlisa.witness.validator.violation.ViolationValidator;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
@@ -20,7 +21,9 @@ import java.io.File;
  * <h3>Usage</h3>
  * <pre>{@code
  * jlisa-witness-validator --witness <file> --benchmark <task.yml> --property assert|runtime
- *                         [--java <path>] [--verbose]
+ *                         [--input-search] [--java <path>] [--verbose]
+ * jlisa-witness-validator --find-bug --benchmark <task.yml> --property assert|runtime
+ *                         [--time-limit <seconds>] [--java <path>] [--verbose]
  * }</pre>
  *
  * <p>The property is given explicitly; it is never derived from the task file.
@@ -30,6 +33,7 @@ import java.io.File;
  *   <li>{@code Witness Correct}  — the witness is valid (violation reproduced / invariants verified)</li>
  *   <li>{@code Witness Spurious} — the witness path does not lead to the property violation</li>
  *   <li>{@code Could not validate} — parse error, timeout, or unsupported witness type</li>
+ *   <li>{@code Violation found}  — ({@code --find-bug}) a run violates the property</li>
  * </ul>
  *
  * <p>The exit code is always 0 so that BenchExec does not misinterpret a non-zero exit as
@@ -79,6 +83,12 @@ public final class Main {
         String java8Exec = cmd.getOptionValue("java");
         String extraSourcesPath = cmd.getOptionValue("extra-sources");
 
+        if (cmd.hasOption("find-bug")) {
+            findBug(benchmarkPath, propertyName, java8Exec, extraSourcesPath, cmd.getOptionValue("time-limit", "60"));
+            System.exit(0);
+            return;
+        }
+
         if (witnessPath == null || benchmarkPath == null || propertyName == null) {
             System.err.println("Error: --witness, --benchmark and --property are required.");
             new HelpFormatter().printHelp("jlisa-witness-validator", options);
@@ -114,7 +124,8 @@ public final class Main {
                     : null;
 
             switch (model.type()) {
-                case VIOLATION -> ViolationValidator.validate(model, property, benchmarkFile, java8Exec, extraSourcesDir);
+                case VIOLATION -> ViolationValidator.validate(model, property, benchmarkFile, java8Exec, extraSourcesDir,
+                        cmd.hasOption("input-search"));
                 case CORRECTNESS -> CorrectnessValidator.validate(model, benchmarkFile);
             }
 
@@ -127,6 +138,36 @@ public final class Main {
         }
 
         System.exit(0);
+    }
+
+    /** Bug-finding mode: no witness; looks for a run that violates the property (see {@link BugFinder}). */
+    private static void findBug(String benchmarkPath, String propertyName, String java8Exec,
+                                String extraSourcesPath, String timeLimitSeconds) {
+        if (benchmarkPath == null || propertyName == null) {
+            System.err.println("Error: --find-bug needs --benchmark and --property.");
+            RunSummary.couldNotValidate("usage", "--find-bug needs --benchmark and --property");
+            return;
+        }
+        File benchmarkFile = new File(benchmarkPath);
+        if (!benchmarkFile.exists()) {
+            RunSummary.couldNotValidate("benchmark-not-found", benchmarkPath);
+            return;
+        }
+        try {
+            long millis = (long) (Double.parseDouble(timeLimitSeconds) * 1000);
+            File extraSourcesDir = (extraSourcesPath != null && !extraSourcesPath.isBlank())
+                    ? new File(extraSourcesPath)
+                    : null;
+            BugFinder.find(Property.fromName(propertyName), benchmarkFile, java8Exec, extraSourcesDir, millis);
+        } catch (NumberFormatException e) {
+            RunSummary.couldNotValidate("usage", "--time-limit is not a number: " + timeLimitSeconds);
+        } catch (ValidationException e) {
+            LOG.error("Validation error: {}", e.getMessage(), e);
+            RunSummary.couldNotValidate("validation-error", e.getMessage());
+        } catch (Exception e) {
+            LOG.error("Unexpected error: {}", e.getMessage(), e);
+            RunSummary.couldNotValidate("internal-error", e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     // ------------------------------------------------------------------
@@ -221,6 +262,25 @@ public final class Main {
                         + "(e.g. the SV-COMP common/ directory containing Verifier.java). "
                         + "Sources are collected recursively and compiled into the benchmark output dir.")
                 .required(false)
+                .build());
+
+        opts.addOption(Option.builder()
+                .longOpt("input-search")
+                .desc("When the witness does not fix every nondet call and its values do not lead to the "
+                        + "violation, search for values of the other calls that do (default: off)")
+                .build());
+
+        opts.addOption(Option.builder("f")
+                .longOpt("find-bug")
+                .desc("Bug-finding mode: no witness; look for inputs that violate the property and print "
+                        + "\"" + BugFinder.VERDICT_FOUND + "\" or \"Could not validate\"")
+                .build());
+
+        opts.addOption(Option.builder("t")
+                .longOpt("time-limit")
+                .hasArg()
+                .argName("SECONDS")
+                .desc("Time for the bug-finding search (default 60)")
                 .build());
 
         opts.addOption(Option.builder("v")

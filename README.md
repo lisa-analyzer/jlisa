@@ -1,114 +1,216 @@
-# jLISA Witness Validator
+# JLiSA-Wit — Witness Validator for Java
 
-A Java witness validator for the **SV-COMP Java track**, supporting both
-format v1.0 (GraphML) and format v2.0 (YAML) witnesses, for both **violation**
-and **correctness** witnesses.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Built on JLiSA](https://img.shields.io/badge/Built%20on-JLiSA-informational)](https://github.com/lisa-analyzer/jlisa)
 
----
+**JLiSA-Wit** validates verification witnesses for Java programs. Given a program, a property and a
+violation witness produced by a verifier, it executes the program under the Java Debug Interface
+(JDI), drives every nondeterministic input with the value recorded in the witness, and reports
+whether the described execution really violates the property. JLiSA-Wit takes part in the Java
+witness-validation track of [SV-COMP](https://sv-comp.sosy-lab.org/).
 
-## Key design features
-
-| Feature | Description |
-|---|---|
-| **JDI runtime steering** | Runs the benchmark under the Java Debugger Interface (JDI). Injects return values into `Verifier.nondet*()` calls via `ThreadReference.forceEarlyReturn()` — no source modification, no recompilation, all JVM semantics intact. |
-| **No producer-specific logic** | All witness parsing is content/structure-based. No `if (producer == "GDart")` branches anywhere. |
-| **Cross-version JVM** | Validator runs on Java 23; benchmarks run on Java 8. The `--java` flag selects the Java 8 executable; JDWP is backwards-compatible. |
-| **No shell invocations** | Compilation via `javax.tools.JavaCompiler`; JVM launch via `JDI LaunchingConnector`. |
-| **Both v1 and v2** | Retrocompatibility with existing GraphML witnesses; ready for YAML v2.0 tools. |
-| **Spurious detection** | Unconsumed-assumption counting and `avoid`-waypoint tracking detect spurious witnesses that older validators would accept as correct. |
-| **Correctness witnesses** | Induction check (initiation / inductiveness / safety) via jLISA abstract interpretation. |
+JLiSA-Wit is developed by the **[Software and Systems Verification (SSV) Research Group](https://unive-ssv.github.io/)**
+at [Ca' Foscari University of Venice](https://www.unive.it).
 
 ---
 
-## SV-COMP Java properties
+## Table of Contents
 
-| Property file | `--property` | Meaning |
-|---|---|---|
-| `valid-assert.prp` | `assert` | No `assert` statement must fail (requires `-ea` flag) |
-| `no-runtime-exception.prp` | `runtime` | No uncaught `java.lang.RuntimeException` |
-
-The SV-COMP wrapper parses the `.prp` file and passes the name to the validator.
-The property is never read from the task file (its `expected_verdict` is the ground truth).
-
----
-
-## BenchExec output contract
-
-| stdout | BenchExec result | Meaning |
-|---|---|---|
-| `Witness Correct` | confirmed | Violation reproduced / invariants verified |
-| `Witness Spurious` | unknown | Path forced but no error; or invariants fail |
-| `Could not validate` | unknown | Parse error, timeout, unsupported feature |
-
-Exit code is always `0` (BenchExec interprets non-zero as a validator crash).
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Command-Line Options](#command-line-options)
+- [Output](#output)
+- [How It Works](#how-it-works)
+- [Architecture](#architecture)
+- [Limitations](#limitations)
+- [License](#license)
+- [References](#references)
 
 ---
 
-## Prerequisites
+## Overview
 
-- **Java 23** JDK (required to run the validator)
-- **Java 8** JDK (optional; recommended for SV-COMP benchmark execution)
-- **Gradle** is handled by the included Gradle wrapper (`./gradlew`)
-- **GitHub Packages credentials** for the LiSA SDK (used by jLISA):
-  ```properties
-  # ~/.gradle/gradle.properties
-  gpr.user=<your-github-username>
-  gpr.key=<your-github-token>   # needs read:packages scope
-  ```
-- **jLISA** source checkout — needed as a Gradle composite build. By default the
-  build looks for it at `../jlisa` (sibling of this directory). Override with:
-  ```bash
-  # either a Gradle property...
-  ./gradlew installDist -PjlisaPath=/absolute/path/to/jlisa
-  # ...or an environment variable
-  export JLISA_HOME=/absolute/path/to/jlisa
-  ```
+- **Execution-based validation.** The program is compiled and run on a real JVM. Witness values are
+  injected into `Verifier.nondet*()` calls through JDI, without modifying or instrumenting the
+  program.
+- **Spurious-witness detection.** A witness is rejected when its execution ends without the
+  violation, or when it reaches a waypoint the witness marks as `avoid`.
+- **Producer-independent.** Witnesses are interpreted by their structure only, with no special
+  handling for the verifier that produced them.
+- **Input search** *(optional, `--input-search`)*. When a witness leaves some nondeterministic
+  calls unspecified, a lightweight, feedback-guided search looks for values of those calls that
+  reproduce the violation described by the witness.
+- **Bug finding** *(`--find-bug`)*. Without a witness, the same search looks for any execution that
+  violates the property. The SV-COMP wrapper of [JLiSA](https://github.com/lisa-analyzer/jlisa) uses
+  this mode when the static analysis cannot reach a verdict.
+- **Correctness witnesses** *(experimental)*. Loop invariants are checked with JLiSA's abstract
+  interpretation.
+
+Supported properties:
+
+| Property file | `--property` | Violated when |
+| --- | --- | --- |
+| `valid-assert.prp` | `assert` | an `assert` statement fails (the program runs with `-ea`) |
+| `no-runtime-exception.prp` | `runtime` | a `java.lang.RuntimeException` is not caught |
 
 ---
 
-## Building
+## Installation
+
+**Prerequisites:** Java 21+, Gradle (wrapper included), GitHub credentials for the LiSA dependency,
+and a local checkout of JLiSA.
+
+### LiSA dependency
+
+LiSA snapshots are published on GitHub Packages, which requires authentication. Add a personal
+access token with the `read:packages` scope to `~/.gradle/gradle.properties`:
+
+```properties
+gpr.user=<github-username>
+gpr.key=<github-token>
+```
+
+The environment variables `USERNAME` and `TOKEN` can be used instead.
+
+### JLiSA checkout
+
+JLiSA is built together with the validator as a Gradle composite build. By default it is expected
+next to this repository:
+
+```
+workspace/
+├── jlisa/                     # git clone -b svcomp-2027 https://github.com/lisa-analyzer/jlisa.git
+└── jlisa-witness-validator/   # this repository
+```
+
+A different location can be given with `-PjlisaPath=<path>/jlisa/jlisa` or with the `JLISA_HOME`
+environment variable.
+
+### Build
 
 ```bash
-# Build and create the distribution layout under build/install/
 ./gradlew installDist
+```
 
-# The launcher script is generated at:
-#   build/install/jlisa-witness-validator/bin/jlisa-witness-validator
+The launcher is generated in `build/install/jlisa-witness-validator/bin/`.
+
+### SV-COMP archive
+
+```bash
+svcomp/make-release.sh      # builds build/svcomp/jlisa-wit.zip
+svcomp/check-release.sh     # checks the archive and runs its smoke test
+```
+
+The archive contains a single executable, `jlisa-wit`, that bundles the validator and its
+dependencies. See [`svcomp/README.md`](svcomp/README.md).
+
+---
+
+## Usage
+
+Validate a violation witness:
+
+```bash
+build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
+    --witness witness.graphml \
+    --benchmark /path/to/task.yml \
+    --property assert
+```
+
+Search for a violation without a witness:
+
+```bash
+build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
+    --find-bug --time-limit 60 \
+    --benchmark /path/to/task.yml \
+    --property assert
+```
+
+Through the SV-COMP wrapper, which takes the property file and the task's input files as BenchExec
+passes them:
+
+```bash
+python3 svcomp/jlisa-wit.py --witness witness.graphml --property valid-assert.prp common/ task/
+python3 svcomp/jlisa-wit.py --find-bug --property valid-assert.prp common/ task/
 ```
 
 ---
 
-## Running
+## Command-Line Options
 
-### Standalone
+| Option | Description |
+| --- | --- |
+| `--witness <file>` | Witness to validate: `.graphml` (format 1.0) or `.yml` (format 2.x). |
+| `--benchmark <task.yml>` | Verification task. |
+| `--property <assert\|runtime>` | Property to check. |
+| `--input-search` | Search for values of the nondeterministic calls the witness does not specify. Off by default. |
+| `--find-bug` | Bug-finding mode: no witness, search for a violating execution. |
+| `--time-limit <seconds>` | Time budget for `--find-bug` (default: 60). |
+| `--extra-sources <dir>` | Additional sources compiled with the benchmark, e.g. SV-COMP's `common/`. |
+| `--java <path>` | Java executable used to run the benchmark (default: `java` on the `PATH`). |
+| `--verbose` | Detailed logging on standard error. |
+| `--help` | Print the usage. |
 
-```bash
-# Using the generated launcher script (recommended — includes JVM flags)
-./build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
-    --witness path/to/witness.graphml \
-    --benchmark /abs/path/to/Task.yml \
-    --property assert \
-    [--java /usr/lib/jvm/java-8/bin/java] \
-    [--verbose]
+---
 
-# Or via the SV-COMP wrapper, exactly as BenchExec calls it (see svcomp/README.md)
-python3 svcomp/jlisa-wit.py \
-    --witness path/to/witness.graphml \
-    --property path/to/valid-assert.prp \
-    path/to/common/ path/to/Task/
+## Output
+
+The verdict is printed as the only line on standard output:
+
+| Verdict | Meaning | BenchExec result |
+| --- | --- | --- |
+| `Witness Correct` | The violation is reproduced (or the invariants hold). | `false` — witness confirmed |
+| `Witness Spurious` | The execution described by the witness does not violate the property. | `true` — witness rejected |
+| `Could not validate` | No verdict: unsupported input, parse error or timeout. | `unknown` |
+| `Violation found` | `--find-bug` only: an execution violates the property. | — |
+
+The exit code is always `0`. Diagnostic output goes to standard error; by default only warnings are
+printed, including a one-line summary of each run:
+
+```
+WARN  [STATS]  witness.values=1 plan.targets=0 plan.avoid-points=0 plan.branches=0 nondet.fixed=1 witness.values-unused=0
+WARN  [REASON] correct/assertion-error: java.lang.AssertionError at Main.java:7
 ```
 
-### With BenchExec
+---
 
-```bash
-# First build the distribution
-./gradlew installDist
+## How It Works
 
-# Then run BenchExec with the provided benchmark definitions
-benchexec benchexec/validator-violation-witnesses.xml \
-    --tool-directory . \
-    -o results/
-```
+### Violation witnesses
+
+1. The benchmark is compiled with `javax.tools.JavaCompiler` (`-source 8 -target 8 -g`).
+2. It is launched under JDI, with assertions enabled for `assert`.
+3. Each `Verifier.nondet*()` call is intercepted with a `MethodEntryRequest`, and the value given by
+   the witness is returned with `ThreadReference.forceEarlyReturn()`.
+4. Breakpoints are placed on the witness's target, `avoid` and branching waypoints.
+5. The witness is **correct** if the execution reaches the violation at the target. It is
+   **spurious** if it reaches an `avoid` waypoint, or ends without the violation once all witness
+   values have been used.
+
+For `no-runtime-exception`, the exception must also occur with assertions disabled, so that an
+assertion error is never mistaken for a runtime exception.
+
+### Input search
+
+When the first execution does not reach the violation and some calls were left unspecified, the
+validator searches for values of those calls. The search adapts *colorization* and
+*input-to-state correspondence* from REDQUEEN [1] to the nondeterministic inputs of Java programs:
+
+1. A first execution assigns a distinct, recognizable value to every call site, so that values
+   observed later in comparisons can be traced back to the input they come from.
+2. Values compared against those inputs, constants from the source code and type boundaries become
+   candidate inputs, tried individually and in combination.
+3. The search is bounded: at most 40 executions of at most 10 seconds each, and 75 seconds in total
+   during validation.
+
+The search can only confirm a witness, never reject one: if no violating execution is found, the
+verdict of the first execution is kept.
+
+### Correctness witnesses
+
+The program is analyzed with JLiSA, and each loop invariant is checked for initiation,
+inductiveness and safety. Only the initiation check is currently implemented.
 
 ---
 
@@ -116,123 +218,45 @@ benchexec benchexec/validator-violation-witnesses.xml \
 
 ```
 src/main/java/it/unive/jlisa/witness/validator/
-├── Main.java                          # CLI entry point (Apache Commons CLI)
-├── ValidationException.java
-│
-├── parser/
-│   ├── WitnessModel.java              # Unified internal representation
-│   ├── WitnessParserV1.java           # GraphML (v1) → WitnessModel
-│   └── WitnessParserV2.java           # YAML (v2) → WitnessModel
-│
-├── model/
-│   ├── ViolationPlan.java             # Ordered execution plan
-│   ├── Interception.java              # (class, method, returnValue, count)
-│   ├── BranchDecision.java            # (file, line, direction)
-│   ├── AvoidPoint.java                # → Witness Spurious if reached
-│   ├── TargetPoint.java               # → Witness Correct if reached
-│   └── CorrectnessInvariant.java      # Loop invariant for correctness check
-│
-├── filter/
-│   ├── JvmScopeParser.java            # assumption.scope → (className, methodName, descriptor)
-│   ├── ValueExtractor.java            # assumption string → concrete value
-│   └── WitnessFilter.java             # Drop java.lang.*, cprover, etc.
-│
-├── violation/
-│   ├── ViolationValidator.java        # Orchestrates the JDI session
-│   ├── JdiLauncher.java               # LaunchingConnector + JavaCompiler (no shell)
-│   ├── EventLoop.java                 # MethodEntry / Breakpoint / Exception / VMDeath
-│   ├── ForceReturnSteerer.java        # ThreadReference.forceEarlyReturn
-│   ├── VariableSteerer.java           # StackFrame.setValue
-│   └── ValidatorLogger.java           # Structured stderr logging
-│
-└── correctness/
-    ├── CorrectnessValidator.java      # Orchestrates jLISA induction checks
-    ├── LoopLocator.java               # Find CFG node at (file, line)
-    ├── InvariantParser.java           # java_expression → ParsedInvariant
-    └── InductionChecker.java          # Initiation / inductiveness / safety
+├── Main.java          command-line interface
+├── Logging.java       logging configuration
+├── RunSummary.java    per-run summary ([STATS], [REASON])
+├── parser/            witness formats 1.0 (GraphML) and 2.x (YAML), task definitions
+├── model/             internal witness model: execution plan, interceptions, waypoints, invariants
+├── filter/            scopes and values of witness assumptions
+├── violation/         JDI launch, event loop, value injection, bug finding
+├── search/            input search
+└── correctness/       correctness witnesses (JLiSA)
+svcomp/                SV-COMP wrapper, archive scripts, smoke test
+tools/                 scripts for local benchmark runs
 ```
 
 ---
 
-## How violation validation works
+## Limitations
 
-The witness specifies which `Verifier.nondet*()` calls should return which values.
-The validator:
-
-1. Compiles the benchmark (if only `.java` sources are present) using `javax.tools.JavaCompiler` with `--release 8 -g`.
-2. Launches the benchmark under JDI (`LaunchingConnector`) with `-ea` and the target classpath.
-3. Registers `MethodEntryRequest`s for each intercepted method.
-4. When the method is entered: `ThreadReference.forceEarlyReturn(vm.mirrorOf(value))` injects the witness-specified return value.
-5. Registers `BreakpointRequest`s for target, avoid, and branching waypoints.
-6. A target breakpoint or an uncaught exception after all interceptions → **Witness Correct**.
-7. An avoid-point breakpoint, or the program exits without hitting the target → **Witness Spurious**.
-
-### Partial witnesses (e.g. GDart)
-
-GDart witnesses record only the calls that return `true`, omitting `false` returns.
-Once the explicit interceptions are consumed, their `MethodEntryRequest` is disabled
-and remaining calls run nondeterministically through the real JVM.
+- **Format 2.x:** the reader expects a mapping at the top level, while the official format is a
+  list of entries. Witnesses in the official 2.x layout are not supported yet.
+- **String values** in witnesses are not supported yet.
+- **Correctness witnesses:** initiation check only, linear arithmetic only, no format 1.0.
+- **Multi-threaded programs** are not supported.
 
 ---
 
-## How correctness validation works
+## License
 
-1. Parse the benchmark sources with jLISA (`JavaFrontend`).
-2. Run the LiSA analysis with the interval domain (`JavaNumericInterval`).
-3. For each loop invariant in the witness, check three conditions:
-   - **Initiation**: the abstract state at the loop head implies the invariant.
-   - **Inductiveness**: executing the loop body preserves the invariant.
-   - **Safety**: the invariant at loop exit implies the property.
-
-**Current status**: initiation check is partially implemented; inductiveness and
-safety require jLISA's per-variable interval extraction API (planned).  Until then,
-these return `Could not validate`.
-
----
-
-## Supported witness formats
-
-| Format | Violation | Correctness |
-|---|---|---|
-| v1.0 (GraphML) | Yes | No (planned) |
-| v2.0 (YAML) | Yes | Yes (partial) |
-
----
-
-## Logging
-
-All log output goes to **stderr**; only the verdict goes to **stdout** (required by BenchExec).
-
-```
-[PARSE]   Loaded v1 witness: 12 interception types
-[FILTER]  Dropped 8 noise edges (java.lang.*, cprover)
-[PLAN]    Interception #1: org.sosy_lab.sv_benchmarks.Verifier.nondetInt()I → return 0 (1 remaining)
-[JDI]     Launching JVM: vmexec=java main=Main -ea
-[JDI]     Connected to target VM (1.8.0_392)
-[EVENT]   MethodEntry: Verifier.nondetInt() — forcing return value: 0
-[EVENT]   Breakpoint: Main.java:17 — TARGET REACHED
-[RESULT]  Witness Correct
-```
-
-Enable verbose logging with `--verbose`; default level is WARN for BenchExec runs.
-
----
-
-## Known limitations
-
-- String counterexamples: `Could not validate` (JDI can set String values; expression parsing needed)
-- v1 correctness witnesses (GraphML automata): deferred to future work
-- Object field invariants in correctness witnesses: deferred (linear arithmetic only)
-- Multi-threaded programs: deferred
-- Full inductiveness / safety checks: require jLISA per-variable interval API (in progress)
+JLiSA-Wit is released under the [MIT License](LICENSE).
 
 ---
 
 ## References
 
-- Ayaziová et al., *Software Verification Witnesses 2.0*, SPIN 2024
-- SV-COMP: https://sv-comp.sosy-lab.org/
-- BenchExec: https://github.com/sosy-lab/benchexec
-- jLISA: https://github.com/lisa-analyzer/jlisa
-- LiSA: https://github.com/lisa-analyzer/lisa
-- Wit4Java (related work): https://github.com/wit4java/wit4java
+1. C. Aschermann, S. Schumilo, T. Blazytko, R. Gawlik, T. Holz. *REDQUEEN: Fuzzing with
+   Input-to-State Correspondence.* NDSS 2019. [doi:10.14722/ndss.2019.23371](https://doi.org/10.14722/ndss.2019.23371)
+2. P. Ayaziová, D. Beyer, M. Lingsch-Rosenfeld, M. Spiessl, J. Strejček. *Software Verification
+   Witnesses 2.0.* SPIN 2024.
+3. [SV-COMP](https://sv-comp.sosy-lab.org/) ·
+   [BenchExec](https://github.com/sosy-lab/benchexec) ·
+   [SV-Witnesses](https://gitlab.com/sosy-lab/benchmarking/sv-witnesses) ·
+   [JLiSA](https://github.com/lisa-analyzer/jlisa) ·
+   [LiSA](https://github.com/lisa-analyzer/lisa)

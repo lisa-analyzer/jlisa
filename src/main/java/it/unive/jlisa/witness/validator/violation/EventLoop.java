@@ -62,6 +62,8 @@ public final class EventLoop {
     private final Map<String, Queue<Interception>> interceptMap = new HashMap<>();
     // Verifier.nondet* calls that returned a value not fixed by the witness
     private int freeNondetCalls = 0;
+    // a witness value that could not be returned (the run left the witness)
+    private boolean witnessValueNotApplied = false;
 
     // Deferred breakpoints: class name → list of (line, plan-item-type)
     private final Map<String, List<PendingBreakpoint>> pendingBreakpoints = new HashMap<>();
@@ -325,6 +327,7 @@ public final class EventLoop {
             ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
                     e.getMessage());
             freeNondetCalls++;
+            witnessValueNotApplied = true;
             RunSummary.count("nondet.value-not-applied");
             return Optional.empty();
         }
@@ -445,6 +448,16 @@ public final class EventLoop {
      * every nondet value the run used; otherwise the run took values of its own and says nothing
      * about the witness.
      */
+    /** Verifier.nondet* calls of the run that returned a value the witness did not fix. */
+    public int freeNondetCalls() {
+        return freeNondetCalls;
+    }
+
+    /** True if a witness value could not be returned in the run. */
+    public boolean witnessValueNotApplied() {
+        return witnessValueNotApplied;
+    }
+
     private ValidationResult noViolation(String code, String detail) {
         recordUnusedValues();
         if (plan.skippedSteps() > 0) {

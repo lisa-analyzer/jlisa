@@ -3,7 +3,12 @@
 #
 # Bridges the BenchExec calling convention to the Java validator:
 #
-#   jlisa-wit --witness <witness.graphml|.yml> --property <file.prp> INPUT...
+#   jlisa-wit --witness <witness.graphml|.yml> [--input-search] --property <file.prp> INPUT...
+#   jlisa-wit --find-bug [--time-limit SECONDS] --property <file.prp> INPUT...
+#
+# The second form (bug-finding mode) has no witness: it looks for inputs that violate the
+# property and prints "Violation found" or "Could not validate". jlisa's SV-COMP wrapper uses
+# it when jlisa's analysis cannot decide.
 #
 # where INPUT... are the task's input files as BenchExec passes them, in the order of the
 # task's input_files (for Java tasks: the shared common/ directory, the benchmark directory,
@@ -15,6 +20,7 @@
 #   Witness Correct        -> witness confirmed  (BenchExec: false)
 #   Witness Spurious       -> witness rejected   (BenchExec: true)
 #   Could not validate     -> no verdict         (BenchExec: unknown)
+#   Violation found        -> (--find-bug) a run violates the property
 #
 # The property file is parsed here and passed to the validator by name (as JLiSA's
 # SV-COMP wrapper does): valid-assert -> "assert", no-runtime-exception -> "runtime".
@@ -33,7 +39,7 @@ import tempfile
 
 VERSION = "1.0.1"
 MAIN_CLASS = "it.unive.jlisa.witness.validator.Main"
-VERDICTS = ("Witness Correct", "Witness Spurious", "Could not validate")
+VERDICTS = ("Witness Correct", "Witness Spurious", "Could not validate", "Violation found")
 BASE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.realpath(__file__)))
 LIB_DIR = os.path.join(BASE_DIR, "lib")
 
@@ -47,7 +53,12 @@ PROPERTIES = {
 def parse_arguments():
     parser = argparse.ArgumentParser(prog="jlisa-wit", description="jLISA Witness Validator")
     parser.add_argument("--version", action="version", version=VERSION)
-    parser.add_argument("--witness", required=True)
+    parser.add_argument("--witness")
+    parser.add_argument("--input-search", action="store_true",
+                        help="search for values of the nondet calls the witness does not fix")
+    parser.add_argument("--find-bug", action="store_true",
+                        help="no witness: look for inputs that violate the property")
+    parser.add_argument("--time-limit", default="60", help="seconds for --find-bug (default 60)")
     parser.add_argument("--property", required=True)
     parser.add_argument("inputs", nargs="+")
     return parser.parse_args()
@@ -76,7 +87,11 @@ def benchmark_inputs(paths):
 def main():
     args = parse_arguments()
 
-    if not os.path.isfile(args.witness):
+    if not args.find_bug and not args.witness:
+        print("--witness is required (or --find-bug)", file=sys.stderr)
+        sys.exit(1)
+
+    if not args.find_bug and not os.path.isfile(args.witness):
         print("witness file not found: " + args.witness, file=sys.stderr)
         sys.exit(1)
     
@@ -105,8 +120,13 @@ def main():
             f.write("input_files:\n" + "".join("  - '%s/'\n" % c for c in copies))
 
         cmd = [java, "--add-modules", "jdk.jdi", "-cp", os.path.join(LIB_DIR, "*"), MAIN_CLASS,
-               "--witness", os.path.abspath(args.witness), "--benchmark", task_file,
-               "--property", prop]
+               "--benchmark", task_file, "--property", prop]
+        if args.find_bug:
+            cmd += ["--find-bug", "--time-limit", args.time_limit]
+        else:
+            cmd += ["--witness", os.path.abspath(args.witness)]
+            if args.input_search:
+                cmd.append("--input-search")
         out = subprocess.run(cmd, stdout=subprocess.PIPE, universal_newlines=True).stdout
 
     verdicts = [line.strip() for line in out.splitlines() if line.strip() in VERDICTS]
