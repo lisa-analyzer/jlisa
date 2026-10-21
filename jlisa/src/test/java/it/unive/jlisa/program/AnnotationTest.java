@@ -1,8 +1,10 @@
 package it.unive.jlisa.program;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unive.jlisa.frontend.JavaFrontend;
+import it.unive.jlisa.frontend.exceptions.UnsupportedAnnotationException;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
@@ -67,6 +69,9 @@ public class AnnotationTest {
 				// Load definitions first
 				"java-testcases/annotation/special-case/Constants.java",
 				"java-testcases/annotation/special-case/Enumeration.java",
+				"java-testcases/annotation/special-case/BaseClass.java",
+				"java-testcases/annotation/special-case/BaseInterface.java",
+				"java-testcases/annotation/special-case/DerivedBaseClass.java",
 
 //				// Class-level
 				"java-testcases/annotation/A.java",
@@ -101,6 +106,7 @@ public class AnnotationTest {
 				"java-testcases/annotation/S3.java",
 				"java-testcases/annotation/S4.java",
 				"java-testcases/annotation/S5.java",
+				"java-testcases/annotation/S6.java",
 
 				"java-testcases/annotation/Main.java"));
 	}
@@ -221,7 +227,7 @@ public class AnnotationTest {
 	public void testNormalAnnotation() {
 		Annotation isAnnotatedWith = new Annotation("ClassLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new IntAnnotationValue(1)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"a\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("a")),
 				new AnnotationMember("value3", new BoolAnnotationValue(true))));
 
 		assertAnnotationOfClass("C", isAnnotatedWith);
@@ -235,8 +241,8 @@ public class AnnotationTest {
 				new AnnotationMember("value3", new LongAnnotationValue(99L)),
 				new AnnotationMember("value4", new IntAnnotationValue(7)),
 				new AnnotationMember("value5", new ArrayAnnotationValue(new BasicAnnotationValue[] {
-						new StringAnnotationValue("\"x\""),
-						new StringAnnotationValue("\"y\"") }))));
+						new StringAnnotationValue("x"),
+						new StringAnnotationValue("y") }))));
 
 		assertAnnotationOfClass("D", isAnnotatedWith);
 	}
@@ -251,7 +257,7 @@ public class AnnotationTest {
 	@Test
 	public void testMethodLevelSingleMemberAnnotation() {
 		Annotation isAnnotatedWith = new Annotation("MethodLevelSingleMemberAnnotation",
-				List.of(new AnnotationMember("value", new StringAnnotationValue("\"a\""))));
+				List.of(new AnnotationMember("value", new StringAnnotationValue("a"))));
 
 		assertAnnotationOfMethod("F", "F_2", isAnnotatedWith);
 	}
@@ -276,7 +282,7 @@ public class AnnotationTest {
 	@Test
 	public void testConstructorLevelNormalAnnotation() {
 		Annotation isAnnotatedWith = new Annotation("ConstructorLevelNormalAnnotation", List.of(
-				new AnnotationMember("value", new StringAnnotationValue("\"a\"")),
+				new AnnotationMember("value", new StringAnnotationValue("a")),
 				new AnnotationMember("value2", new LongAnnotationValue(99L))));
 
 		assertAnnotationOfMethod("I", "I", isAnnotatedWith);
@@ -285,7 +291,7 @@ public class AnnotationTest {
 	@Test
 	public void testParameterLevelSingleMemberAnnotation() {
 		Annotation isAnnotatedWith = new Annotation("ParameterLevelSingleMemberAnnotation",
-				List.of(new AnnotationMember("value", new StringAnnotationValue("\"paramVal\""))));
+				List.of(new AnnotationMember("value", new StringAnnotationValue("paramVal"))));
 
 		assertAnnotationOfParameter("J", "J_1", "param1", isAnnotatedWith);
 	}
@@ -304,12 +310,12 @@ public class AnnotationTest {
 	public void testParameterLevelNormalAnnotation() {
 		Annotation isAnnotatedWith1 = new Annotation("ParameterLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new IntAnnotationValue(1)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"paramVal\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("paramVal")),
 				new AnnotationMember("value3", new BoolAnnotationValue(false)),
 				new AnnotationMember("value4", new CharAnnotationValue('p'))));
 		Annotation isAnnotatedWith2 = new Annotation("ParameterLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new IntAnnotationValue(2)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"paramVal2\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("paramVal2")),
 				new AnnotationMember("value3", new BoolAnnotationValue(true)),
 				new AnnotationMember("value4", new CharAnnotationValue('a'))));
 
@@ -322,7 +328,7 @@ public class AnnotationTest {
 	@Test
 	public void testParameterLevelVarargsAnnotation() {
 		Annotation single = new Annotation("ParameterLevelSingleMemberAnnotation",
-				List.of(new AnnotationMember("value", new StringAnnotationValue("\"paramVal\""))));
+				List.of(new AnnotationMember("value", new StringAnnotationValue("paramVal"))));
 		Annotation varargs = new Annotation("ParameterLevelVarargsTypeAnnotation");
 
 		assertAnnotationOfParameter("M", "M_1", "param1", single);
@@ -332,10 +338,10 @@ public class AnnotationTest {
 	@Test
 	public void testConstructorParameterLevelAnnotations() {
 		Annotation single = new Annotation("ParameterLevelSingleMemberAnnotation",
-				List.of(new AnnotationMember("value", new StringAnnotationValue("\"paramVal\""))));
+				List.of(new AnnotationMember("value", new StringAnnotationValue("paramVal"))));
 		Annotation normal = new Annotation("ParameterLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new IntAnnotationValue(10)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"b\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("b")),
 				new AnnotationMember("value3", new BoolAnnotationValue(false)),
 				new AnnotationMember("value4", new CharAnnotationValue('s'))));
 
@@ -374,15 +380,15 @@ public class AnnotationTest {
 	public void testFieldLevelNormalAnnotation() {
 		Annotation isAnnotatedWith1 = new Annotation("FieldLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new LongAnnotationValue(1000L)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"abc\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("abc")),
 				new AnnotationMember("value3", new CharAnnotationValue('x'))));
 		Annotation isAnnotatedWith2 = new Annotation("FieldLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new LongAnnotationValue(2000L)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"dfg\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("dfg")),
 				new AnnotationMember("value3", new CharAnnotationValue('y'))));
 		Annotation isAnnotatedWith3 = new Annotation("FieldLevelNormalAnnotation", List.of(
 				new AnnotationMember("value", new LongAnnotationValue(3000L)),
-				new AnnotationMember("value2", new StringAnnotationValue("\"hji\"")),
+				new AnnotationMember("value2", new StringAnnotationValue("hji")),
 				new AnnotationMember("value3", new CharAnnotationValue('z'))));
 
 		assertAnnotationOfField("Q", "field1", isAnnotatedWith1);
@@ -401,7 +407,7 @@ public class AnnotationTest {
 	@Test
 	public void testQualifiedNameMemberAnnotation() {
 		Annotation isAnnotatedWith = new Annotation("AnnotationWithQualifiedNameMember", List.of(
-				new AnnotationMember("value", new StringAnnotationValue("\"string-constant-value\"")),
+				new AnnotationMember("value", new StringAnnotationValue("string-constant-value")),
 				new AnnotationMember("value2", new IntAnnotationValue(100)),
 				new AnnotationMember("value3", new BoolAnnotationValue(true))));
 
@@ -431,11 +437,138 @@ public class AnnotationTest {
 	@Test
 	public void testLibraryConstantAsQualifiedNameMemberAnnotation() {
 		Annotation isAnnotatedWith = new Annotation("AnnotationWithQualifiedNameMember", List.of(
-				new AnnotationMember("value", new StringAnnotationValue("\"x\"")),
+				new AnnotationMember("value", new StringAnnotationValue("x")),
 				new AnnotationMember("value2", new IntAnnotationValue(5)),
 				new AnnotationMember("value3", new BoolAnnotationValue(true))));
 
 		assertAnnotationOfMethod("S5", "s5", isAnnotatedWith);
+	}
+
+	@Test
+	public void testClassLevelInfixExpressionNormalAnnotation() {
+		Annotation isAnnotatedWith = new Annotation("ClassLevelInfixExpressionNormalAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("ABC123")),
+				new AnnotationMember("value2", new StringAnnotationValue("DEFstring-constant-value"))));
+
+		assertAnnotationOfClass("S6", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionOfStringLiterals() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("ABCDEF"))));
+
+		assertAnnotationOfMethod("S6", "s6_1", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithLocalConstant() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("ABCdef"))));
+
+		assertAnnotationOfMethod("S6", "s6_2", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithNestedLocalConstant() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("def123ABC"))));
+
+		assertAnnotationOfMethod("S6", "s6_3", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithQualifiedConstant() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("ABCstring-constant-value"))));
+
+		assertAnnotationOfMethod("S6", "s6_4", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithNestedQualifiedConstant() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue(
+						"string-constant-value another-string-constant-value123"))));
+
+		assertAnnotationOfMethod("S6", "s6_5", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithExtendedOperands() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue(
+						"def123ABCstring-constant-valuestring-constant-value another-string-constant-value"))));
+
+		assertAnnotationOfMethod("S6", "s6_6", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithLibraryConstant() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("global123"))));
+
+		assertAnnotationOfMethod("S6", "s6_7", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionInArrayMember() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotationWithArray", List.of(
+				new AnnotationMember("value", new ArrayAnnotationValue(new BasicAnnotationValue[] {
+						new StringAnnotationValue("ABCDEF"),
+						new StringAnnotationValue("string-constant-valuedef") }))));
+
+		assertAnnotationOfMethod("S6", "s6_8", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithInheritedConstants() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("baseclass-constantinterface-constant"))));
+
+		assertAnnotationOfMethod("S6", "s6_9", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithUnresolvableOperand() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("ABCJarFile.MANIFEST_NAME"))));
+
+		assertAnnotationOfMethod("S6", "s6_10", isAnnotatedWith);
+		assertTrue(
+				capturedLoggerWarnings.stream().anyMatch(m -> m.contains("JarFile.MANIFEST_NAME")),
+				"expected a WARN about the unresolved operand, captured: " + capturedLoggerWarnings);
+	}
+
+	@Test
+	public void testNonStringInfixExpressionIsUnsupported() {
+		JavaFrontend frontend = new JavaFrontend();
+		assertThrows(UnsupportedAnnotationException.class,
+				() -> frontend.parseFromListOfFile(List.of("java-testcases/annotation/S7.java")));
+	}
+
+	@Test
+	public void testInfixExpressionWithNonStringOperand() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("DEF4"))));
+
+		assertAnnotationOfMethod("S6", "s6_12", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithLocalConstantAliasingQualifiedConstant() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("string-constant-value-alias"))));
+
+		assertAnnotationOfMethod("S6", "s6_11", isAnnotatedWith);
+	}
+
+	@Test
+	public void testInfixExpressionWithInheritedConstantInNestedClass() {
+		Annotation isAnnotatedWith = new Annotation("MethodLevelInfixExpressionSingleAnnotation", List.of(
+				new AnnotationMember("value", new StringAnnotationValue("string-constant-value-nested"))));
+
+		assertAnnotationOfMethod("S6.Nested", "nested", isAnnotatedWith);
 	}
 
 	@AfterAll

@@ -79,15 +79,107 @@ public final class AnnotationBuilder {
 	private static AnnotationValue parseAnnotationValue(
 			Expression expr) {
 		return switch (expr) {
-		case StringLiteral sl -> new StringAnnotationValue(sl.getEscapedValue());
+		case StringLiteral sl -> new StringAnnotationValue(sl.getLiteralValue());
 		case CharacterLiteral cl -> new CharAnnotationValue(cl.charValue());
 		case BooleanLiteral bl -> new BoolAnnotationValue(bl.booleanValue());
 		case NumberLiteral nl -> getNumericAnnotationValue(nl);
 		case TypeLiteral tl -> new CompilationUnitAnnotationValue(tl.getType().toString());
 		case ArrayInitializer ai -> getArrayAnnotationValue(ai);
 		case QualifiedName qn -> getQualifiedNameValue(qn);
+		case ParenthesizedExpression pe -> parseAnnotationValue(pe.getExpression());
+		case SimpleName sn -> resolveSimpleNameValue(sn);
+		case InfixExpression ie -> resolveInfixExpression(ie);
 		default -> throw new UnsupportedAnnotationException("Unsupported annotation value type: " + expr.getClass());
 		};
+	}
+
+	private static AnnotationValue resolveInfixExpression(
+			InfixExpression ie) {
+		if (ie.getOperator() != InfixExpression.Operator.PLUS)
+			throw new UnsupportedAnnotationException(
+					"Only String concatenation is supported in annotation values: " + ie);
+
+		List<Expression> operands = new ArrayList<>();
+		operands.add(ie.getLeftOperand());
+		operands.add(ie.getRightOperand());
+		for (Object extended : ie.extendedOperands())
+			operands.add((Expression) extended);
+
+		AnnotationValue folded = null;
+		for (Expression operand : operands) {
+			AnnotationValue value = parseAnnotationValue(operand);
+			if (folded == null)
+				folded = value;
+			else if (folded instanceof StringAnnotationValue || value instanceof StringAnnotationValue)
+				folded = new StringAnnotationValue(folded.toString() + value);
+			else
+				throw new UnsupportedAnnotationException(
+						"Only String concatenation is supported in annotation values: " + ie);
+		}
+		return folded;
+	}
+
+	private static AnnotationValue resolveSimpleNameValue(
+			SimpleName sn) {
+		String identifier = sn.getIdentifier();
+		ASTNode node = sn.getParent();
+
+		while (node != null) {
+			// Fields declared in this class (then in each enclosing class)
+			if (node instanceof TypeDeclaration type) {
+				for (FieldDeclaration field : type.getFields()) {
+					for (Object rawFragment : field.fragments()) {
+						VariableDeclarationFragment fragment = (VariableDeclarationFragment) rawFragment;
+						if (fragment.getName().getIdentifier().equals(identifier))
+							return parseAnnotationValue(fragment.getInitializer());
+					}
+				}
+
+				// Fields inherited from superclasses and interfaces
+				Unit unit = env.parserContext().getProgram().getUnit(buildUnitName(type));
+				if (unit instanceof it.unive.lisa.program.CompilationUnit lisaUnit) {
+					Expression inherited = findInheritedFieldInitializer(lisaUnit, sn);
+					if (inherited != null)
+						return parseAnnotationValue(inherited);
+				}
+			}
+
+			node = node.getParent();
+		}
+
+		return new StringAnnotationValue(sn.getIdentifier());
+	}
+
+	private static Expression findInheritedFieldInitializer(
+			it.unive.lisa.program.CompilationUnit unit,
+			SimpleName sn) {
+		AST ast = sn.getAST();
+		for (it.unive.lisa.program.CompilationUnit ancestor : unit.getImmediateAncestors()) {
+			QualifiedName inheritedName = ast.newQualifiedName(ast.newName(ancestor.getName()),
+					ast.newSimpleName(sn.getIdentifier()));
+			Expression initializer = env.parserContext().evaluate(inheritedName, new QualifiedNameVisitor(env, scope));
+			if (initializer == null)
+				initializer = findInheritedFieldInitializer(ancestor, sn);
+			if (initializer != null)
+				return initializer;
+		}
+		return null;
+	}
+
+	private static String buildUnitName(
+			AbstractTypeDeclaration type) {
+		String outer = null;
+		ASTNode parent = type.getParent();
+
+		while (parent instanceof AbstractTypeDeclaration enclosing) {
+			outer = outer == null ? enclosing.getName().getIdentifier()
+					: enclosing.getName().getIdentifier() + "." + outer;
+			parent = parent.getParent();
+		}
+
+		CompilationUnit cu = (CompilationUnit) type.getRoot();
+		String pkg = cu.getPackage() == null ? "" : cu.getPackage().getName().getFullyQualifiedName();
+		return FQNUtils.buildFQN(pkg, outer, type.getName().getIdentifier());
 	}
 
 	/*

@@ -1,0 +1,3 @@
+class java.util.logging.Logger extends java.lang.Object:
+
+field GLOBAL_LOGGER_NAME libtype java.lang.String* default "global"
