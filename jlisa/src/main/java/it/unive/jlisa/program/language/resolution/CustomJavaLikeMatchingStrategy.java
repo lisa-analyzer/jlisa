@@ -18,7 +18,8 @@ import java.util.Set;
  * type is untyped, we will fallback to the runtime type.
  */
 public class CustomJavaLikeMatchingStrategy
-	implements ParameterMatchingStrategy {
+		implements
+		ParameterMatchingStrategy {
 
 	/**
 	 * The singleton instance of this class.
@@ -136,13 +137,14 @@ public class CustomJavaLikeMatchingStrategy
 			boolean isLastArg) {
 
 		// array as last argument is okay in the case of varargs.
-		// but need to check whether it's last or not to prevent cases like the following:
+		// but need to check whether it's last or not to prevent cases like the
+		// following:
 		// f(String... s) matched with f(new String[], new String[])
 		if (isLastArg) {
 
 			Type arrayType = formal.getStaticType();
 			if (!actual.getStaticType().equals(Untyped.INSTANCE)
-				&& actual.getStaticType().canBeAssignedTo(arrayType))
+					&& actual.getStaticType().canBeAssignedTo(arrayType))
 				return true;
 
 			for (Type rType : types) {

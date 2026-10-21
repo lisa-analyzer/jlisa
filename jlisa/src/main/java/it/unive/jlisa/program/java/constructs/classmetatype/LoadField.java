@@ -111,7 +111,6 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		if (destAccessIdx != null)
 			fieldAllocated = analysis.assign(fieldAllocated, destAccessIdx, ref, this);
 
-
 		HeapDereference derefThisField = destAccessIdx != null
 				? new HeapDereference(fieldMetaType, destAccessIdx, location)
 				: new HeapDereference(fieldMetaType, field, location);

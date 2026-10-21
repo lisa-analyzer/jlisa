@@ -50,7 +50,8 @@ public class PropertiesSetProperty extends TernaryExpression implements Pluggabl
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaClassType.getObjectType(), getLocation()),
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushAny(JavaClassType.getObjectType(), getLocation()),
 				originating);
 	}
 
@@ -61,4 +62,3 @@ public class PropertiesSetProperty extends TernaryExpression implements Pluggabl
 	}
 
 }
-

@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.properties;
 
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -53,8 +52,8 @@ public class PropertiesEmptyConstructor extends UnaryExpression implements Plugg
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaClassType.getPropertiesType(), getLocation()),
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushAny(JavaClassType.getPropertiesType(), getLocation()),
 				originating);
 	}
 }
-

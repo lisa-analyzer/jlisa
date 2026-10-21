@@ -66,7 +66,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			CodeLocation location,
 			Expression... params) {
 		if (params.length == 2) {
-			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0], JavaArrayType.CLASS_ARRAY);
+			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0],
+					JavaArrayType.CLASS_ARRAY);
 			return new ClassGetMethod(cfg, location, params[0], params[1], dummy);
 		}
 		return new ClassGetMethod(cfg, location, params[0], params[1], params[2]);
@@ -196,10 +197,10 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		if (constraints == null)
 			return state.topExecution();
 
-                List<BinaryExpression> constraintList = constraints.toList();
-                if (constraintList.isEmpty())
-                        return interprocedural.getAnalysis().smallStepSemantics(state,
-                                new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+		List<BinaryExpression> constraintList = constraints.toList();
+		if (constraintList.isEmpty())
+			return interprocedural.getAnalysis().smallStepSemantics(state,
+					new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
 
 		// make sure that all classes we are searching have thei reflection data
 		// loaded
@@ -214,8 +215,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			if (!ReflectionDataUtils.isClassReflectionDataCached(interprocedural, state, left, this)) {
 
 				assert (ReflectionDataUtils.isClassLoaded(state, t, location));
-				SymbolicExpression clazz =
-						ReflectionDataUtils.getLoadedClassHandle(t, location);
+				SymbolicExpression clazz = ReflectionDataUtils.getLoadedClassHandle(t, location);
 
 				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(getCFG(), location, t,
 						getLeft());

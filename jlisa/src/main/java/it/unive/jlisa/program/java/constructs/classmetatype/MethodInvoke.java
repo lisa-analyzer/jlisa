@@ -71,7 +71,6 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -92,7 +91,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			CodeLocation location,
 			Expression... params) {
 		if (params.length == 2) {
-			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0], JavaArrayType.OBJECT_ARRAY);
+			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0],
+					JavaArrayType.OBJECT_ARRAY);
 			return new MethodInvoke(cfg, location, params[0], params[1], dummy);
 		}
 		return new MethodInvoke(cfg, location, params[0], params[1], params[2]);
@@ -118,12 +118,11 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
 				this);
 
-                Collection<SymbolicExpression> innerMethods = methods.elements().stream()
-                        .sorted(Comparator.comparing((
-                                SymbolicExpression::getCodeLocation)))
-                        .toList();
+		Collection<SymbolicExpression> innerMethods = methods.elements().stream()
+				.sorted(Comparator.comparing((SymbolicExpression::getCodeLocation)))
+				.toList();
 
-                AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression method : innerMethods) {
 			result = result.lub(invoke(interprocedural, state, method, middle, right, expressions));
 		}
@@ -168,7 +167,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefMethod, modifiersVar,
 				location);
 
-		// FIXME: this shouldn't be needed but as of now the modifiers field is tracked by the heap domain (despite being of primitive type)
+		// FIXME: this shouldn't be needed but as of now the modifiers field is
+		// tracked by the heap domain (despite being of primitive type)
 		HeapDereference derefModifiers = new HeapDereference(JavaIntType.INSTANCE, accessModifiers, location);
 
 		it.unive.lisa.symbolic.value.UnaryExpression isStaticExpr = new it.unive.lisa.symbolic.value.UnaryExpression(
@@ -199,9 +199,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
 
-                if (clazzNameConstraints.isEmpty()) {
-                        return state;
-                }
+		if (clazzNameConstraints.isEmpty()) {
+			return state;
+		}
 
 		// check the types of the receiver against the type of the declaring
 		// class.

@@ -66,7 +66,7 @@ public class ObjectGetClass extends it.unive.lisa.program.cfg.statement.UnaryExp
 		AnalysisState<A> tmp = state;
 		ExpressionSet execExpressions = new ExpressionSet();
 
-		for (Type t: types) {
+		for (Type t : types) {
 
 			if (t instanceof JavaReferenceType jrt) {
 				t = jrt.getInnerType();
@@ -130,4 +130,3 @@ public class ObjectGetClass extends it.unive.lisa.program.cfg.statement.UnaryExp
 	}
 
 }
-

@@ -425,7 +425,7 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 		if (isFormalVarargs) {
 
 			if ((paramType.isReferenceType() && !paramType.asReferenceType().getInnerType().isArrayType())
-				|| !paramType.isReferenceType()) {
+					|| !paramType.isReferenceType()) {
 
 				assert (formalType instanceof JavaReferenceType);
 				JavaArrayType arrType = (JavaArrayType) ((JavaReferenceType) formalType).getInnerType();

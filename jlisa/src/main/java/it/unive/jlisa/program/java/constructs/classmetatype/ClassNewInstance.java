@@ -80,7 +80,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-                Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
 
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()),
 				this);
@@ -123,9 +123,9 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		if (constraints == null)
 			return state.topExecution();
 
-                List<BinaryExpression> constraintList = constraints.toList();
-                if (constraintList.isEmpty())
-                        return state;
+		List<BinaryExpression> constraintList = constraints.toList();
+		if (constraintList.isEmpty())
+			return state;
 
 		for (BinaryExpression constraint : constraintList) {
 

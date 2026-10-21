@@ -103,8 +103,8 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			List<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessExpr).toList();
 
 			if (constraints.isEmpty())
-                                return interprocedural.getAnalysis().smallStepSemantics(state,
-                                        new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+				return interprocedural.getAnalysis().smallStepSemantics(state,
+						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
 
 			AnalysisState<A> tmp = state;
 			ExpressionSet execExpressions = new ExpressionSet();

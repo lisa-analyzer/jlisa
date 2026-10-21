@@ -14,12 +14,10 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
-import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.type.Type;
@@ -108,4 +106,3 @@ public class JavaComparisonGE extends GreaterOrEqual {
 		return a;
 	}
 }
-

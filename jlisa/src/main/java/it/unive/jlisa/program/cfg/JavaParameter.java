@@ -28,7 +28,6 @@ public class JavaParameter extends Parameter {
 		this(location, name, Untyped.INSTANCE, null, new Annotations());
 	}
 
-
 	public JavaParameter(
 			CodeLocation location,
 			String name,

@@ -6,7 +6,6 @@ import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -106,10 +105,10 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 						StringValueOf strValueOf = new StringValueOf(getCFG(), getRight().getLocation(), getRight());
 						ExpressionSet param = new ExpressionSet(actualRight);
 						tmp = strValueOf.forwardSemanticsAux(interprocedural, state,
-								new ExpressionSet[] {param}, expressions);
-					}
-					else {
-						UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null, "toString",
+								new ExpressionSet[] { param }, expressions);
+					} else {
+						UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null,
+								"toString",
 								rType, getRight());
 						ExpressionSet[] args = new ExpressionSet[1];
 						args[0] = new ExpressionSet(actualRight);
@@ -118,7 +117,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					}
 
 					for (SymbolicExpression rightStr : tmp.getExecutionExpressions()) {
-						partialResult = partialResult.lub(concatStrings(interprocedural, tmp, actualLeft, rightStr, expressions));
+						partialResult = partialResult
+								.lub(concatStrings(interprocedural, tmp, actualLeft, rightStr, expressions));
 						partialResult = partialResult.forgetIdentifier((Identifier) rightStr, this);
 					}
 
@@ -140,28 +140,35 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									op,
 									getLocation()),
 							this);
-				} else if ((lType.isReferenceType() || lType.isNumericType()) && (rType.isReferenceType() || rType.isNumericType())) {
+				} else if ((lType.isReferenceType() || lType.isNumericType())
+						&& (rType.isReferenceType() || rType.isNumericType())) {
 
 					GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 
 					// left is a wrapper type
-					if (lType.isReferenceType() && JavaClassType.isWrapperType(lType.asReferenceType().getInnerType())) {
+					if (lType.isReferenceType()
+							&& JavaClassType.isWrapperType(lType.asReferenceType().getInnerType())) {
 						lType = lType.asReferenceType().getInnerType();
 						HeapDereference derefLeft = new HeapDereference(lType, actualLeft, getLocation());
-						actualLeft = new AccessChild(JavaClassType.getUnwrappedType(lType), derefLeft, valueVar, getLocation());
+						actualLeft = new AccessChild(JavaClassType.getUnwrappedType(lType), derefLeft, valueVar,
+								getLocation());
 					}
-					// left is a reference type but not a wrapper type, do nothing
+					// left is a reference type but not a wrapper type, do
+					// nothing
 					else if (lType.isReferenceType()) {
 						continue;
 					}
 
 					// right is a wrapper type
-					if (rType.isReferenceType() && JavaClassType.isWrapperType(rType.asReferenceType().getInnerType())) {
+					if (rType.isReferenceType()
+							&& JavaClassType.isWrapperType(rType.asReferenceType().getInnerType())) {
 						rType = rType.asReferenceType().getInnerType();
 						HeapDereference derefRight = new HeapDereference(rType, actualRight, getLocation());
-						actualRight = new AccessChild(JavaClassType.getUnwrappedType(rType), derefRight, valueVar, getLocation());
+						actualRight = new AccessChild(JavaClassType.getUnwrappedType(rType), derefRight, valueVar,
+								getLocation());
 					}
-					// right is a reference type but not a wrapper type, do nothing
+					// right is a reference type but not a wrapper type, do
+					// nothing
 					else if (rType.isReferenceType()) {
 						continue;
 					}
@@ -194,7 +201,6 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		return 0;
 	}
 
-
 	public <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> AnalysisState<A> concatStrings(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -207,12 +213,12 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 
 		AnalysisState<A> result = state.bottomExecution();
 
-		it.unive.jlisa.program.java.constructs.string.StringConcat strConcat = new it.unive.jlisa.program.java.constructs.string.StringConcat(getCFG(), getLocation(), getLeft(), getRight());
+		it.unive.jlisa.program.java.constructs.string.StringConcat strConcat = new it.unive.jlisa.program.java.constructs.string.StringConcat(
+				getCFG(), getLocation(), getLeft(), getRight());
 
 		result = strConcat.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 
 		return result;
 	}
-
 
 }

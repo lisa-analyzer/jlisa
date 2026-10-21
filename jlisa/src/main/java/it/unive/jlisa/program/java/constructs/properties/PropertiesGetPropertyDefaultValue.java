@@ -50,7 +50,8 @@ public class PropertiesGetPropertyDefaultValue extends TernaryExpression impleme
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaClassType.getStringType(), getLocation()),
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushAny(JavaClassType.getStringType(), getLocation()),
 				originating);
 	}
 
@@ -61,6 +62,3 @@ public class PropertiesGetPropertyDefaultValue extends TernaryExpression impleme
 	}
 
 }
-
-
-

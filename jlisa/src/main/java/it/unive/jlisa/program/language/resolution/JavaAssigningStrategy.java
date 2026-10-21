@@ -16,12 +16,10 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.Call;
-import it.unive.lisa.program.cfg.statement.call.NativeCall;
 import it.unive.lisa.program.language.parameterassignment.ParameterAssigningStrategy;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
@@ -30,7 +28,6 @@ import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -80,15 +77,16 @@ public class JavaAssigningStrategy
 		return doPrepare(call, callState, interprocedural, expressions, formals, actuals, false);
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Pair<AnalysisState<A>, ExpressionSet[]> doPrepare(
-			Call call,
-			AnalysisState<A> callState,
-			InterproceduralAnalysis<A, D> interprocedural,
-			StatementStore<A> expressions,
-			Parameter[] formals,
-			ExpressionSet[] parameters,
-			boolean assignFormals)
-			throws SemanticException {
+	private <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> Pair<AnalysisState<A>, ExpressionSet[]> doPrepare(
+					Call call,
+					AnalysisState<A> callState,
+					InterproceduralAnalysis<A, D> interprocedural,
+					StatementStore<A> expressions,
+					Parameter[] formals,
+					ExpressionSet[] parameters,
+					boolean assignFormals)
+					throws SemanticException {
 
 		// prepare the state for the call: assign the value to each parameter
 		AnalysisState<A> prepared = callState;
@@ -133,12 +131,10 @@ public class JavaAssigningStrategy
 											expr,
 											call));
 						}
-					}
-					else {
+					} else {
 						temp = temp.lub(prepared);
 					}
-				}
-				else {
+				} else {
 					int remainingCount = parameters.length - formals.length + 1;
 					Expression[] callArgs = call.getParameters();
 
@@ -150,10 +146,11 @@ public class JavaAssigningStrategy
 						symbolicParams[j] = parameters[i + j];
 					}
 
-					JavaNewArrayWithInitializer newArr =
-						new JavaNewArrayWithInitializer(call.getCFG(), call.getLocation(), gatheredParameters, formal.getStaticType());
+					JavaNewArrayWithInitializer newArr = new JavaNewArrayWithInitializer(call.getCFG(),
+							call.getLocation(), gatheredParameters, formal.getStaticType());
 
-					AnalysisState<A> arrInitialized = newArr.forwardSemanticsAux(interprocedural, prepared, symbolicParams, expressions);
+					AnalysisState<A> arrInitialized = newArr.forwardSemanticsAux(interprocedural, prepared,
+							symbolicParams, expressions);
 					ExpressionSet arrayRefs = arrInitialized.getExecutionExpressions();
 
 					Variable formalVar = formals[i].toSymbolicVariable();
@@ -161,15 +158,15 @@ public class JavaAssigningStrategy
 					if (assignFormals) {
 						for (SymbolicExpression s : temp.getExecutionExpressions()) {
 							temp = temp.lub(
-								interprocedural.getAnalysis().assign(
-										arrInitialized,
-										formalVar,
-										s,
-										call)).forgetIdentifiers(newArr.getMetaVariables(), call);
+									interprocedural.getAnalysis().assign(
+											arrInitialized,
+											formalVar,
+											s,
+											call))
+									.forgetIdentifiers(newArr.getMetaVariables(), call);
 						}
 						pars.set(formals.length - 1, new ExpressionSet(formalVar));
-					}
-					else {
+					} else {
 						temp = temp.lub(arrInitialized);
 						// call.getMetaVariables().addAll(newArr.getMetaVariables());
 						pars.set(formals.length - 1, arrayRefs);
@@ -177,13 +174,13 @@ public class JavaAssigningStrategy
 
 					boxingUnboxingNeeded = true;
 				}
-			}
-			else {
+			} else {
 				for (SymbolicExpression exp : parameters[i]) {
 					Type formalType = formals[i].getStaticType();
 					Variable formalVar = formals[i].toSymbolicVariable();
 					Type actualType = exp.getStaticType();
-					if (!formalType.isUntyped() && actualType.canBeAssignedTo(formalType) && !formalType.isReferenceType()
+					if (!formalType.isUntyped() && actualType.canBeAssignedTo(formalType)
+							&& !formalType.isReferenceType()
 							&& !actualType.equals(formalType)) {
 						// type-conv
 						Constant typeConv = new Constant(
@@ -198,7 +195,8 @@ public class JavaAssigningStrategy
 								call.getLocation());
 
 						if (assignFormals)
-							temp = temp.lub(interprocedural.getAnalysis().assign(prepared, formalVar, castExpression, call));
+							temp = temp.lub(
+									interprocedural.getAnalysis().assign(prepared, formalVar, castExpression, call));
 						else
 							temp = temp.lub(prepared);
 
@@ -224,8 +222,7 @@ public class JavaAssigningStrategy
 												wrapExp,
 												call)
 												.forgetIdentifiers(wrap.getMetaVariables(), call));
-						}
-						else {
+						} else {
 							temp = temp.lub(wrapState);
 							// call.getMetaVariables().addAll(wrap.getMetaVariables());
 						}
@@ -273,7 +270,7 @@ public class JavaAssigningStrategy
 		// we remove expressions from the stack
 		prepared = prepared.withExecutionExpressions(new ExpressionSet());
 		return Pair.of(prepared,
-			boxingUnboxingNeeded ? pars.toArray(new ExpressionSet[0]) : parameters);
+				boxingUnboxingNeeded ? pars.toArray(new ExpressionSet[0]) : parameters);
 	}
 
 }

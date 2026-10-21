@@ -109,8 +109,8 @@ public class JavaAssignment extends Assignment {
 						.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
 			} else if (JavaClassType.isWrapperOf(targetType, rType)
 					|| (targetType.isReferenceType()
-						&& targetType.asReferenceType().getInnerType().equals(JavaClassType.getObjectType())
-						&& JavaTypeSystem.isPrimitive(rType))) {
+							&& targetType.asReferenceType().getInnerType().equals(JavaClassType.getObjectType())
+							&& JavaTypeSystem.isPrimitive(rType))) {
 
 				Type boxedType = new JavaReferenceType(JavaClassType.getWrappedType(rType));
 				if (JavaClassType.isWrapperType(targetType)) {

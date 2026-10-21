@@ -3,7 +3,6 @@ package it.unive.jlisa.program.java.constructs.collections;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.*;
 import it.unive.lisa.analysis.*;
-import it.unive.lisa.type.Type;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
@@ -12,8 +11,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.PushAny;
 
 public class CollectionsEmptyMap extends NaryExpression implements PluggableStatement {
@@ -61,4 +58,3 @@ public class CollectionsEmptyMap extends NaryExpression implements PluggableStat
 				originating);
 	}
 }
-

@@ -56,7 +56,8 @@ public class PropertiesGetProperty extends BinaryExpression implements Pluggable
 
 		AnalysisState<A> nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), originating);
 
-		AnalysisState<A> topState = interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(new JavaReferenceType(JavaClassType.getStringType()), getLocation()),
+		AnalysisState<A> topState = interprocedural.getAnalysis().smallStepSemantics(state,
+				new PushAny(new JavaReferenceType(JavaClassType.getStringType()), getLocation()),
 				originating);
 
 		return nullState.lub(topState);
@@ -69,5 +70,3 @@ public class PropertiesGetProperty extends BinaryExpression implements Pluggable
 	}
 
 }
-
-

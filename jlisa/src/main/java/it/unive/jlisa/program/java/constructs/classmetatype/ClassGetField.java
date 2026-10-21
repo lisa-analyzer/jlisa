@@ -186,10 +186,10 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		if (constraints == null)
 			return state.topExecution();
 
-                List<it.unive.lisa.symbolic.value.BinaryExpression> constraintList = constraints.toList();
-                if (constraintList.isEmpty())
-                        return interprocedural.getAnalysis().smallStepSemantics(state,
-                                new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+		List<it.unive.lisa.symbolic.value.BinaryExpression> constraintList = constraints.toList();
+		if (constraintList.isEmpty())
+			return interprocedural.getAnalysis().smallStepSemantics(state,
+					new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
 
 		// make sure that all classes we are searching have their reflection
 		// data
