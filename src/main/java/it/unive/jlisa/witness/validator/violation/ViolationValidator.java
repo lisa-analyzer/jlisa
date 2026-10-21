@@ -4,10 +4,12 @@ import com.sun.jdi.VirtualMachine;
 import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
 import it.unive.jlisa.witness.validator.model.BenchmarkProperties;
+import it.unive.jlisa.witness.validator.model.Interception;
 import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.ViolationPlan;
 import it.unive.jlisa.witness.validator.parser.BenchmarkPropertiesParser;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
+import it.unive.jlisa.witness.validator.search.InputSearch;
 import it.unive.jlisa.witness.validator.violation.EventLoop.ValidationResult;
 
 import java.io.File;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Orchestrates violation witness validation using the JDI runtime-steering approach.
@@ -39,6 +42,12 @@ public final class ViolationValidator {
     private static final String VERDICT_ERROR = "Tool Error";
     private static final String VERDICT_UNKNOWN = "Could not validate";
 
+    /**
+     * Time for the first run and the input search together, out of BenchExec's 90 s; the rest is
+     * left for compiling, starting and stopping.
+     */
+    private static final long TIME_BUDGET_MILLIS = 75_000;
+
     private ViolationValidator() {
     }
 
@@ -52,13 +61,16 @@ public final class ViolationValidator {
      * @param extraSourcesDir optional root directory of additional sources to compile alongside
      *                        the benchmark (e.g. the SV-COMP {@code common/} directory containing
      *                        {@code Verifier.java}); may be {@code null}
+     * @param inputSearch     whether to search for values of the nondet calls the witness does not
+     *                        fix, when the first run does not reach the violation
      * @throws ValidationException propagated to {@code Main}, which maps it to
      *                             {@code Tool Error}
      */
     public static void validate(WitnessModel model, Property property, File benchmarkFile,
-                                String java8Exec, File extraSourcesDir)
+                                String java8Exec, File extraSourcesDir, boolean inputSearch)
             throws ValidationException {
 
+        long start = System.currentTimeMillis();
         ViolationPlan plan = model.violationPlan();
         BenchmarkProperties properties;
         try {
@@ -107,9 +119,22 @@ public final class ViolationValidator {
         // Launch the target JVM
         VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
 
+        // The witness values, as they are before the first run consumes them (for the search)
+        List<Interception> witnessValues = plan.interceptions().stream()
+                .map(ix -> new Interception(ix.className(), ix.methodName(), ix.descriptor(), ix.returnValue(), ix.count()))
+                .toList();
+
         // Run the event loop
         EventLoop loop = new EventLoop(vm, plan, property);
         ValidationResult result = loop.run();
+
+        // No violation, but the run chose values of its own for calls the witness says nothing
+        // about: look for values of those calls that do violate the property where the witness says.
+        if (inputSearch && (result == ValidationResult.UNKNOWN || result == ValidationResult.ERROR)
+                && loop.freeNondetCalls() > 0 && !loop.witnessValueNotApplied() && plan.skippedSteps() == 0) {
+            result = searchInputs(mainClass, classpath, java8Exec, extraSources, property, plan, witnessValues,
+                    start + TIME_BUDGET_MILLIS, result);
+        }
 
         // Map result to BenchExec verdict
         String verdict = switch (result) {
@@ -128,11 +153,34 @@ public final class ViolationValidator {
     // private helpers
     // ------------------------------------------------------------------
 
+    /** Runs the input search; returns CORRECT if it finds a violation, else the result it was given. */
+    private static ValidationResult searchInputs(String mainClass, String classpath, String java8Exec,
+                                                 List<File> sourceDirs, Property property, ViolationPlan plan,
+                                                 List<Interception> witnessValues, long deadline,
+                                                 ValidationResult otherwise) throws ValidationException {
+        Optional<InputSearch.Found> found;
+        try {
+            found = new InputSearch(mainClass, classpath, java8Exec, sourceDirs, property,
+                    plan.targetPoints(), witnessValues).search(deadline);
+        } catch (IOException e) {
+            ValidatorLogger.warn("[SEARCH] cannot read the sources: {}", e.getMessage());
+            return otherwise;
+        }
+        if (found.isEmpty()) {
+            return otherwise;
+        }
+        InputSearch.Found f = found.get();
+        ValidatorLogger.result("Input search: {} in run {}, values {}", f.detail(), f.runs(), f.values());
+        RunSummary.reason("search-violation", f.detail() + " with values of the calls the witness does not fix "
+                + f.values() + " (search run " + f.runs() + ")");
+        return ValidationResult.CORRECT;
+    }
+
     /**
      * Builds the classpath string for the target JVM by collecting all directories
      * that contain {@code .class} files under {@code benchmarkDir}.
      */
-    private static String buildClasspath(File benchmarkDir) {
+    static String buildClasspath(File benchmarkDir) {
         // Include the benchmark directory and any immediate subdirectories with classes
         StringBuilder cp = new StringBuilder(benchmarkDir.getAbsolutePath());
         File[] subdirs = benchmarkDir.listFiles(File::isDirectory);
@@ -157,7 +205,7 @@ public final class ViolationValidator {
      *   <li>Scan all {@code .java} files for a {@code public static void main} method</li>
      * </ol>
      */
-    private static String findMainClass(File benchmarkDir) throws ValidationException {
+    static String findMainClass(File benchmarkDir) throws ValidationException {
         try {
             // Prefer Main.java
             File mainFile = new File(benchmarkDir, "Main.java");

@@ -26,10 +26,11 @@ import java.util.*;
  *       exception fires after all planned interceptions are consumed</li>
  *   <li>{@link ValidationResult#SPURIOUS} — avoid-point reached, the VM exits, or an unrelated
  *       exception is thrown, without hitting the target, <em>and</em> every {@code Verifier.nondet*}
- *       call returned a value fixed by the witness, <em>and</em> every witness step could be read</li>
+ *       call returned a value fixed by the witness (witness steps that could not be read do not
+ *       matter then: the run is determined)</li>
  *   <li>{@link ValidationResult#UNKNOWN} — the same endings after a {@code nondet*} call the witness
- *       did not fix (the run used a value of its own, so it says nothing about the witness), or when
- *       witness steps could not be read (the run did not follow the witness), or a timeout / VM disconnect</li>
+ *       did not fix (the run used a value of its own, so it says nothing about the witness), or a
+ *       timeout / VM disconnect</li>
  *   <li>{@link ValidationResult#ERROR} — the JVM threw an {@link Error}</li>
  * </ul>
  */
@@ -62,6 +63,8 @@ public final class EventLoop {
     private final Map<String, Queue<Interception>> interceptMap = new HashMap<>();
     // Verifier.nondet* calls that returned a value not fixed by the witness
     private int freeNondetCalls = 0;
+    // a witness value that could not be returned (the run left the witness)
+    private boolean witnessValueNotApplied = false;
 
     // Deferred breakpoints: class name → list of (line, plan-item-type)
     private final Map<String, List<PendingBreakpoint>> pendingBreakpoints = new HashMap<>();
@@ -325,6 +328,7 @@ public final class EventLoop {
             ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
                     e.getMessage());
             freeNondetCalls++;
+            witnessValueNotApplied = true;
             RunSummary.count("nondet.value-not-applied");
             return Optional.empty();
         }
@@ -445,9 +449,21 @@ public final class EventLoop {
      * every nondet value the run used; otherwise the run took values of its own and says nothing
      * about the witness.
      */
+    /** Verifier.nondet* calls of the run that returned a value the witness did not fix. */
+    public int freeNondetCalls() {
+        return freeNondetCalls;
+    }
+
+    /** True if a witness value could not be returned in the run. */
+    public boolean witnessValueNotApplied() {
+        return witnessValueNotApplied;
+    }
+
     private ValidationResult noViolation(String code, String detail) {
         recordUnusedValues();
-        if (plan.skippedSteps() > 0) {
+        // Unread steps matter only if a nondet call was free: when the witness fixed every
+        // nondet value, the run is determined and an unread step cannot change it.
+        if (plan.skippedSteps() > 0 && freeNondetCalls > 0) {
             // The run did not follow the witness: it says nothing about it.
             ValidatorLogger.event("No violation, but {} witness step(s) could not be read — unknown",
                     plan.skippedSteps());
