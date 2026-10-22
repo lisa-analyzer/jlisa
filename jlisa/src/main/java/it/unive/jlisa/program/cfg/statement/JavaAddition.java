@@ -1,6 +1,8 @@
 package it.unive.jlisa.program.cfg.statement;
 
+import it.unive.jlisa.program.java.constructs.string.StringValueOf;
 import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
@@ -11,8 +13,12 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.call.Call.CallType;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
@@ -89,32 +95,33 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 				if (lType.isReferenceType() && rType.isReferenceType()
 						&& lType.asReferenceType().getInnerType().equals(JavaClassType.getStringType())
 						&& lType.asReferenceType().getInnerType().equals(rType.asReferenceType().getInnerType())) {
-					UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null, "concat",
-							lType, getSubExpressions());
-					ExpressionSet[] expressionSet = new ExpressionSet[2];
-					expressionSet[0] = new ExpressionSet(actualLeft);
-					expressionSet[1] = new ExpressionSet(actualRight);
-					partialResult = call.forwardSemanticsAux(interprocedural, state, expressionSet, expressions);
-					getMetaVariables().addAll(call.getMetaVariables());
+					partialResult = concatStrings(interprocedural, state, actualLeft, actualRight, expressions);
 				} else if (lType.isStringType()
 						|| (lType instanceof JavaReferenceType lRef && lRef.getInnerType().isStringType())) {
-					// TODO: call to String.valueOf
-					op = StringConcat.INSTANCE;
-					Constant typeCast = new Constant(
-							new TypeTokenType(Collections.singleton(JavaClassType.getStringType())),
-							JavaClassType.getStringType(), this.getLocation());
-					actualRight = new BinaryExpression(getStaticType(), right, typeCast, TypeConv.INSTANCE,
-							this.getLocation());
-					type = JavaClassType.getStringType();
-					partialResult = analysis.smallStepSemantics(
-							state,
-							new BinaryExpression(
-									type,
-									actualLeft,
-									actualRight,
-									op,
-									getLocation()),
-							this);
+
+					AnalysisState<A> tmp = state.bottomExecution();
+					// if primitive, call String::valueOf, else call toString
+					if (JavaTypeSystem.isPrimitive(rType)) {
+						StringValueOf strValueOf = new StringValueOf(getCFG(), getRight().getLocation(), getRight());
+						ExpressionSet param = new ExpressionSet(actualRight);
+						tmp = strValueOf.forwardSemanticsAux(interprocedural, state,
+								new ExpressionSet[] { param }, expressions);
+					} else {
+						UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null,
+								"toString",
+								rType, getRight());
+						ExpressionSet[] args = new ExpressionSet[1];
+						args[0] = new ExpressionSet(actualRight);
+						tmp = call.forwardSemanticsAux(interprocedural, state, args, expressions);
+						getMetaVariables().addAll(call.getMetaVariables());
+					}
+
+					for (SymbolicExpression rightStr : tmp.getExecutionExpressions()) {
+						partialResult = partialResult
+								.lub(concatStrings(interprocedural, tmp, actualLeft, rightStr, expressions));
+						partialResult = partialResult.forgetIdentifier((Identifier) rightStr, this);
+					}
+
 				} else if (rType.isStringType()) {
 					// TODO: call to String.valueOf
 					op = StringConcat.INSTANCE;
@@ -133,7 +140,39 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									op,
 									getLocation()),
 							this);
-				} else if (lType.isNumericType() && rType.isNumericType()) {
+				} else if ((lType.isReferenceType() || lType.isNumericType())
+						&& (rType.isReferenceType() || rType.isNumericType())) {
+
+					GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+
+					// left is a wrapper type
+					if (lType.isReferenceType()
+							&& JavaClassType.isWrapperType(lType.asReferenceType().getInnerType())) {
+						lType = lType.asReferenceType().getInnerType();
+						HeapDereference derefLeft = new HeapDereference(lType, actualLeft, getLocation());
+						actualLeft = new AccessChild(JavaClassType.getUnwrappedType(lType), derefLeft, valueVar,
+								getLocation());
+					}
+					// left is a reference type but not a wrapper type, do
+					// nothing
+					else if (lType.isReferenceType()) {
+						continue;
+					}
+
+					// right is a wrapper type
+					if (rType.isReferenceType()
+							&& JavaClassType.isWrapperType(rType.asReferenceType().getInnerType())) {
+						rType = rType.asReferenceType().getInnerType();
+						HeapDereference derefRight = new HeapDereference(rType, actualRight, getLocation());
+						actualRight = new AccessChild(JavaClassType.getUnwrappedType(rType), derefRight, valueVar,
+								getLocation());
+					}
+					// right is a reference type but not a wrapper type, do
+					// nothing
+					else if (rType.isReferenceType()) {
+						continue;
+					}
+
 					op = NumericNonOverflowingAdd.INSTANCE;
 					type = lType.commonSupertype(rType);
 					partialResult = analysis.smallStepSemantics(
@@ -161,4 +200,25 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 			Statement o) {
 		return 0;
 	}
+
+	public <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> AnalysisState<A> concatStrings(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression left,
+					SymbolicExpression right,
+					// Type leftType,
+					StatementStore<A> expressions)
+					throws SemanticException {
+
+		AnalysisState<A> result = state.bottomExecution();
+
+		it.unive.jlisa.program.java.constructs.string.StringConcat strConcat = new it.unive.jlisa.program.java.constructs.string.StringConcat(
+				getCFG(), getLocation(), getLeft(), getRight());
+
+		result = strConcat.fwdBinarySemantics(interprocedural, state, left, right, expressions);
+
+		return result;
+	}
+
 }

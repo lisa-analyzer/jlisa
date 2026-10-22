@@ -64,12 +64,24 @@ SEALED
    : 'sealed'
    ;
 
+THROWS
+   : 'throws'
+   ;
+
+COMMA
+   : ','
+   ;
+
 COLON
    : ':'
    ;
 
 DOUBLE_COLON
    : '::'
+   ;
+
+ELLIPSIS
+   : '...'
    ;
 
 DOT

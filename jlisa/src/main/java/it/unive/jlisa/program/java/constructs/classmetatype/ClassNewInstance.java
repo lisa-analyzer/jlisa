@@ -40,6 +40,8 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -78,12 +80,14 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()),
 				this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {
-			result = result.lub(innerNewInstance(interprocedural, state, expr, expressions));
+			result = result.lub(innerNewInstance(interprocedural, state, clazz, expressions));
 		}
 		return result;
 	}
@@ -103,28 +107,13 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
-		HeapDereference derefClazz = new HeapDereference(classMetaType, expr, location);
-		AccessChild accessName = new AccessChild(stringType, derefClazz, nameVar, location);
+
+		AccessChild accessName = new AccessChild(stringType, expr, nameVar, location);
 
 		HeapDereference derefName = new HeapDereference(stringType, accessName, location);
 		AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
 		ExpressionSet execExpressions = new ExpressionSet();
-
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
-			return state.topExecution();
-		}
-
-		assert (innerDomain != null);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
@@ -134,7 +123,11 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		if (constraints == null)
 			return state.topExecution();
 
-		for (BinaryExpression constraint : constraints.toList()) {
+		List<BinaryExpression> constraintList = constraints.toList();
+		if (constraintList.isEmpty())
+			return state;
+
+		for (BinaryExpression constraint : constraintList) {
 
 			String dynamicTypeStr = (String) ((Constant) constraint.getLeft()).getValue();
 			dynamicTypeStr = dynamicTypeStr.replace('$', '.');

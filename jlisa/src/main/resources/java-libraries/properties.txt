@@ -1,1 +1,24 @@
 class java.util.Properties extends java.lang.Object:
+
+	instance method Properties: it.unive.jlisa.program.java.constructs.properties.PropertiesEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Properties*
+
+	instance method setProperty: it.unive.jlisa.program.java.constructs.properties.PropertiesSetProperty
+		libtype java.lang.Object*
+		param this libtype java.util.Properties*
+		param key libtype java.lang.String*
+		param value libtype java.lang.String*
+
+	instance method getProperty: it.unive.jlisa.program.java.constructs.properties.PropertiesGetProperty
+		libtype java.lang.String*
+		param this libtype java.util.Properties*
+		param key libtype java.lang.String*
+
+	instance method getProperty: it.unive.jlisa.program.java.constructs.properties.PropertiesGetPropertyDefaultValue
+		libtype java.lang.String*
+		param this libtype java.util.Properties*
+		param key libtype java.lang.String*
+		param value libtype java.lang.String*
+
+

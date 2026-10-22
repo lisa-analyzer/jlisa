@@ -49,7 +49,10 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -1513,6 +1516,28 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 					return Satisfiability.NOT_SATISFIED;
 				}
 			return Satisfiability.SATISFIED;
+		}
+
+		if (operator instanceof JavaIsValidEncoding) {
+			if (arg.getValue() instanceof String v) {
+				try {
+					URLEncoder.encode("", v);
+				} catch (UnsupportedEncodingException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+				return Satisfiability.SATISFIED;
+			}
+		}
+
+		if (operator instanceof JavaURLDecoderIsIllegalArg) {
+			if (arg.getValue() instanceof String v) {
+				try {
+					URLDecoder.decode(v, "UTF-8");
+				} catch (Exception e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+				return Satisfiability.SATISFIED;
+			}
 		}
 
 		// used by `Class.forName`

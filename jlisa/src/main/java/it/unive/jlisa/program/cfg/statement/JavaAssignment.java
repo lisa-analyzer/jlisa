@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -106,9 +107,18 @@ public class JavaAssignment extends Assignment {
 						TypeConv.INSTANCE, loc);
 				result = result
 						.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
-			} else if (JavaClassType.isWrapperOf(targetType, rType)) {
+			} else if (JavaClassType.isWrapperOf(targetType, rType)
+					|| (targetType.isReferenceType()
+							&& targetType.asReferenceType().getInnerType().equals(JavaClassType.getObjectType())
+							&& JavaTypeSystem.isPrimitive(rType))) {
+
+				Type boxedType = new JavaReferenceType(JavaClassType.getWrappedType(rType));
+				if (JavaClassType.isWrapperType(targetType)) {
+					boxedType = targetType;
+				}
+
 				// boxing
-				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) targetType,
+				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) boxedType,
 						new Expression[] { getRight() });
 				AnalysisState<A> wrapState = wrap.forwardSemantics(state, interprocedural, expressions);
 				for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
@@ -120,6 +130,7 @@ public class JavaAssignment extends Assignment {
 									wrapExp,
 									expressions)
 											.forgetIdentifiers(wrap.getMetaVariables(), this));
+
 			} else if (JavaClassType.isWrapperOf(rType, targetType)) {
 				// unboxing
 				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());

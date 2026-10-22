@@ -1,10 +1,18 @@
 class java.util.Map extends java.lang.Object:
 
+class java.util.AbstractMap extends java.util.Map:
+
+	instance method put: it.unive.jlisa.program.java.constructs.map.AbstractMapPut
+		type it.unive.lisa.type.Untyped::INSTANCE
+		param this libtype java.util.AbstractMap*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param value type it.unive.lisa.type.Untyped::INSTANCE
+
 class java.util.HashMap extends java.util.Map:
 
 class java.util.TreeMap extends java.util.Map:
-		
+
 class java.util.Map.Entry extends java.lang.Object:
 
 class java.util.Hashtable extends java.lang.Object:
-	
+

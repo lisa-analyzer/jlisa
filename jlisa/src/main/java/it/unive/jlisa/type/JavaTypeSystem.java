@@ -159,4 +159,9 @@ public class JavaTypeSystem extends TypeSystem {
 
 		return result;
 	}
+
+	public static boolean isPrimitive(
+			Type t) {
+		return PRIMITIVE_TYPES.contains(t);
+	}
 }

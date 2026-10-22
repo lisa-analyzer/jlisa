@@ -24,6 +24,7 @@ import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonEqual;
+import it.unive.jlisa.program.cfg.expression.JavaComparisonGE;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonNotEqual;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaDivision;
@@ -61,7 +62,6 @@ import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
 import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.LessThan;
@@ -146,7 +146,7 @@ public class ExpressionVisitor
 			Map.entry(InfixExpression.Operator.LESS, LessThan::new),
 			Map.entry(InfixExpression.Operator.GREATER, GreaterThan::new),
 			Map.entry(InfixExpression.Operator.LESS_EQUALS, LessOrEqual::new),
-			Map.entry(InfixExpression.Operator.GREATER_EQUALS, GreaterOrEqual::new),
+			Map.entry(InfixExpression.Operator.GREATER_EQUALS, JavaComparisonGE::new),
 			Map.entry(InfixExpression.Operator.EQUALS, JavaComparisonEqual::new),
 			Map.entry(InfixExpression.Operator.NOT_EQUALS, JavaComparisonNotEqual::new),
 			Map.entry(InfixExpression.Operator.AND, JavaBitwiseAnd::new),

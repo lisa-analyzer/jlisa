@@ -46,10 +46,19 @@ public class JavaAnd extends And {
 			else {
 				AnalysisState<A> rightState = getRight().forwardSemantics(leftState, interprocedural, expressions);
 				expressions.put(getRight(), rightState);
+
 				for (SymbolicExpression right : rightState.getExecutionExpressions())
 					result = result.lub(fwdBinarySemantics(interprocedural, rightState, left, right, expressions));
+
+				// no normal execution state
+				if (rightState.getExecutionExpressions().isEmpty()) {
+					result = result.lub(rightState);
+				}
 			}
 		}
+
+		if (leftState.getExecutionExpressions().isEmpty())
+			result = result.lub(leftState);
 
 		return result;
 	}

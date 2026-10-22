@@ -99,6 +99,10 @@ class java.lang.NegativeArraySizeException extends java.lang.RuntimeException:
 
 class java.lang.UnsupportedOperationException extends java.lang.RuntimeException:
 
+	instance method UnsupportedOperationException: it.unive.jlisa.program.java.constructs.exceptions.UnsupportedOperationExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.UnsupportedOperationException*
+
 class java.io.UnsupportedEncodingException extends java.io.IOException:
 	
 	instance method UnsupportedEncodingException: it.unive.jlisa.program.java.constructs.exceptions.UnsupportedEncodingExceptionConstructor
