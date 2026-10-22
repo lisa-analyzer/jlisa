@@ -1,0 +1,1 @@
+class java.awt.Window extends java.lang.Object:

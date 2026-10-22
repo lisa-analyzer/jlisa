@@ -8,9 +8,11 @@ import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreati
 import it.unive.jlisa.program.libraries.loader.ClassDef;
 import it.unive.jlisa.program.libraries.loader.Runtime;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.AnalysisSetupException;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.SyntheticLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -164,13 +166,15 @@ public class LibrarySpecificationProvider {
 			throw new IllegalArgumentException("Class " + name + " is not available in the loaded libraries");
 
 		AtomicReference<CompilationUnit> root = new AtomicReference<>(hierarchyRoot);
-		ClassUnit requestedLib = requestedLibrary.toLiSAUnit(program, root);
+		CompilationUnit requestedLib = requestedLibrary.toLiSAUnit(program, root);
 		if (hierarchyRoot == null)
 			hierarchyRoot = root.get();
 
 		// list to preserve discovery order
 		List<String> toLoad = new LinkedList<>();
-		if (!loadingJavaLang && EXCEPTION_HIERARCHY.containsKey(requestedLibrary.getName())) {
+		if (!loadingJavaLang
+				&& !(requestedLib instanceof InterfaceUnit)
+				&& EXCEPTION_HIERARCHY.containsKey(requestedLibrary.getName())) {
 			// if the library is an exception, we also load its known
 			// subtypes as they might be thrown by native constructs
 			// without being explicitly imported (eg `throws IOException`
@@ -187,15 +191,15 @@ public class LibrarySpecificationProvider {
 			} while (!nextFrontier.isEmpty());
 		}
 
-		List<Pair<ClassDef, ClassUnit>> toAdd = new LinkedList<>();
+		List<Pair<ClassDef, CompilationUnit>> toAdd = new LinkedList<>();
 		toAdd.add(Pair.of(requestedLibrary, requestedLib));
 		for (String n : toLoad) {
 			ClassDef classDef = AVAILABLE_LIB_CLASSES.get(n);
 			toAdd.add(Pair.of(classDef, classDef.toLiSAUnit(program, root)));
 		}
-		for (Pair<ClassDef, ClassUnit> pair : toAdd) {
+		for (Pair<ClassDef, CompilationUnit> pair : toAdd) {
 			ClassDef def = pair.getLeft();
-			ClassUnit lib = pair.getRight();
+			CompilationUnit lib = pair.getRight();
 			String libname = lib.getName();
 			String typeName = def.getTypeName();
 
@@ -205,7 +209,12 @@ public class LibrarySpecificationProvider {
 			program.addUnit(lib);
 			// create the corresponding type
 			if (typeName == null) {
-				JavaClassType.register(libname, lib);
+
+				if (def.isInterface() && lib instanceof InterfaceUnit libIu) {
+					JavaInterfaceType.register(libname, libIu);
+				} else {
+					JavaClassType.register(libname, lib);
+				}
 			} else
 				try {
 					Class<?> type = Class.forName(typeName);

@@ -1,0 +1,4 @@
+interface javax.swing.RootPaneContainer:
+
+class javax.swing.JFrame extends java.awt.Window implements javax.swing.RootPaneContainer:
+
