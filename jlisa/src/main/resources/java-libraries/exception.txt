@@ -4,6 +4,10 @@ class java.lang.Exception extends java.lang.Throwable:
 
 class java.io.IOException extends java.lang.Exception:
 
+	instance method IOException: it.unive.jlisa.program.java.constructs.exceptions.IOExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.io.IOException*
+
 class java.text.ParseException extends java.lang.Exception:
 
 class java.io.FileNotFoundException extends java.io.IOException:
