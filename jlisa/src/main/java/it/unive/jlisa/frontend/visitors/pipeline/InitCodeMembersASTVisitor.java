@@ -255,7 +255,8 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 				new Annotations()));
 
 		if (enclosing != null)
-			parameters.add(new JavaParameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+			parameters.add(new JavaParameter(
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "$enclosing",
 					enclosing.getReference(),
 					null, new Annotations()));
 

@@ -53,7 +53,8 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (node.getExpression() == null) {
 			isInstance = !classUnit.getInstanceCodeMembersByName(methodName, true).isEmpty();
 			if (isInstance)
-				parameters.add(new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this",
+				parameters.add(new VariableRef(getScope().getCFG(),
+						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "this",
 						new JavaReferenceType(JavaClassType.lookup(classUnit.getName()))));
 			else {
 				// search in enclosing class too
@@ -67,7 +68,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 
 					Expression thisExpr = new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", thisType);
 
-					Expression expr = new JavaAccessInstanceGlobal(getScope().getCFG(), getSourceCodeLocation(node),
+					Expression expr = new JavaAccessInstanceGlobal(getScope().getCFG(), synth.nextLocation(),
 							thisExpr, "$enclosing");
 					parameters.add(expr);
 				}
@@ -140,7 +141,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (isInstance)
 			expression = new JavaUnresolvedCall(
 					getScope().getCFG(),
-					getSourceCodeLocationManager(node.getName()).nextColumn(),
+					getSourceCodeLocation(node),
 					Call.CallType.INSTANCE,
 					null,
 					node.getName().toString(),
@@ -148,7 +149,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		else
 			expression = new JavaUnresolvedStaticCall(
 					getScope().getCFG(),
-					getSourceCodeLocationManager(node.getName()).nextColumn(),
+					getSourceCodeLocation(node),
 					name == null ? classUnit.getName() : name,
 					node.getName().toString(),
 					parameters.toArray(new Expression[0]));
@@ -163,7 +164,8 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		JavaClassType superType = JavaClassType.lookup(superClass.getName());
 
 		List<Expression> parameters = new ArrayList<>();
-		parameters.add(new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this",
+		parameters.add(new VariableRef(getScope().getCFG(),
+				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "this",
 				new JavaReferenceType(superType)));
 
 		for (Object args : node.arguments()) {
@@ -173,7 +175,7 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		}
 
 		expression = new JavaUnresolvedSuperCall(getScope().getCFG(),
-				getSourceCodeLocationManager(node.getName()).nextColumn(),
+				getSourceCodeLocation(node),
 				Call.CallType.INSTANCE, superClass.getName(), node.getName().toString(),
 				parameters.toArray(new Expression[0]));
 		return false;

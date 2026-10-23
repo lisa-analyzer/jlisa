@@ -1,20 +1,20 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':48:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':48:4-48:57] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
   "notices" : [ ],
-  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_1707438092.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_161235454.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "23ms",
-    "end" : "2026-10-21T18:07:50.004+02:00",
+    "duration" : "28ms",
+    "end" : "2026-10-23T10:44:31.575+02:00",
     "expressions" : "104",
     "files" : "2",
     "globals" : "50",
     "members" : "290",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-21T18:07:49.981+02:00",
+    "start" : "2026-10-23T10:44:31.547+02:00",
     "statements" : "43",
     "units" : "55",
     "version" : "1.0",
