@@ -8,6 +8,7 @@ import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -113,6 +114,13 @@ public class Main {
 				.required(false)
 				.build();
 
+		Option svcompProperty = Option.builder()
+				.longOpt("svcomp-property")
+				.hasArg()
+				.desc("SV-COMP property file of the task: when given, a violation witness is written for a definite violation of the property")
+				.required(false)
+				.build();
+
 		options.addOption(noHtmlOutput);
 
 		options.addOption(helpOption);
@@ -126,6 +134,7 @@ public class Main {
 		options.addOption(noHtmlOutput);
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
+		options.addOption(svcompProperty);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -135,6 +144,7 @@ public class Main {
 		boolean htmlOutput = true;
 		boolean dumpExceptions = false;
 		boolean debug = false;
+		String propertyFile = null;
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
@@ -201,6 +211,8 @@ public class Main {
 			if (cmd.hasOption("m"))
 				executionMode = cmd.getOptionValue("m");
 
+			propertyFile = cmd.getOptionValue("svcomp-property");
+
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
 			formatter.printHelp("jlisa", options, true);
@@ -209,10 +221,11 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug);
+			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug, propertyFile);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug);
+			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug,
+					propertyFile);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -226,12 +239,13 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
-			boolean debug)
+			boolean debug,
+			String propertyFile)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
+		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFile);
 	}
 
 	private static void runStatistics(
@@ -241,7 +255,8 @@ public class Main {
 			String numericalDomain,
 			boolean htmlOutput,
 			boolean dumpExceptions,
-			boolean debug) {
+			boolean debug,
+			String propertyFile) {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
@@ -257,7 +272,7 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(outdir, checkerName, numericalDomain, frontend, htmlOutput, debug);
+			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFile);
 		} catch (Throwable e) {
 			Throwable root = e;
 			while (root.getCause() != null)
@@ -281,14 +296,18 @@ public class Main {
 	}
 
 	private static void runAnalysis(
+			String[] sources,
 			String outdir,
 			String checkerName,
 			String numericalDomain,
 			JavaFrontend frontend,
 			boolean htmlOutput,
-			boolean debug)
+			boolean debug,
+			String propertyFile)
 			throws ParseException {
 		Program p = frontend.getProgram();
+		ViolationWitnessProducer witness = propertyFile == null ? null
+				: ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
@@ -299,7 +318,7 @@ public class Main {
 		conf.wideningThreshold = 20;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(new AssertChecker<>());
+			conf.semanticChecks.add(witness == null ? new AssertChecker<>() : new AssertChecker<>(witness));
 			break;
 		case "":
 			break;
@@ -330,5 +349,9 @@ public class Main {
 
 		LiSA lisa = new LiSA(conf);
 		lisa.run(p);
+
+		// write the witness
+		if (witness != null)
+			witness.write(outdir);
 	}
 }
