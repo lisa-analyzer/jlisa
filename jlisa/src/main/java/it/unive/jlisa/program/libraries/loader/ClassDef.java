@@ -147,6 +147,16 @@ public class ClassDef {
 		} else if (root != null && unit != root)
 			unit.addAncestor(root);
 
+		for (String interf : this.interfaces) {
+			LibrarySpecificationProvider.importClass(program, interf);
+			JavaInterfaceType interfType = JavaInterfaceType.lookup(interf);
+			assert(interfType != null);
+			CompilationUnit interfUnit = interfType.getUnit();
+			if (!unit.getImmediateAncestors().contains(interfUnit)) {
+				unit.addAncestor(interfUnit);
+			}
+		}
+
 		for (Method mtd : this.methods) {
 			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextRow(), init, unit);
 			if (construct.getDescriptor().isInstance())
