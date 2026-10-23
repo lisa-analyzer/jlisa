@@ -68,8 +68,6 @@ dependencies {
     implementation("io.github.lisa-analyzer:lisa-sdk:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-analyses:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-program:1.1-svcomp-2027-SNAPSHOT")
-    // TODO: change the version
-    implementation("io.github.lisa-analyzer:lisa-witness:1.1-witness-v2-SNAPSHOT")
     implementation("io.github.classgraph:classgraph:4.8.175")
 }
 
