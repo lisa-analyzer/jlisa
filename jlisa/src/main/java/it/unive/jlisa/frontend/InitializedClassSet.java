@@ -105,6 +105,11 @@ public class InitializedClassSet extends InverseSetLattice<InitializedClassSet, 
 			InterproceduralAnalysis<A, D> interprocedural)
 			throws SemanticException {
 
+		// an unreachable state carries no fixpoint information, and no class
+		// initializer must be executed from it
+		if (state.getExecutionInformation().isBottom())
+			return state;
+
 		AnalysisState<A> result = state;
 		InitializedClassSet info = state.getExecutionInfo(InitializedClassSet.INFO_KEY, InitializedClassSet.class);
 		if (info == null)
