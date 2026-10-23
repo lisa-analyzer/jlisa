@@ -277,7 +277,9 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 
 		if (getScope().getEnclosingClass() != null)
 			parameters
-					.add(new JavaParameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+					.add(new JavaParameter(
+							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
+							"$enclosing",
 							getScope().getEnclosingClass().getReference(),
 							null, new Annotations()));
 

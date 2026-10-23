@@ -1,20 +1,20 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':16:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':16:4-16:16] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
   "notices" : [ ],
-  "files" : [ "report.json", "void_A.A(A__this)_318508480.graph.json", "void_B.B(B__this)_1707427304.graph.json", "void_B.f(B__this)_1707424452.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "report.json", "void_A.A(A__this)_-403909927.graph.json", "void_B.B(B__this)_160102831.graph.json", "void_B.f(B__this)_154591249.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "19",
-    "duration" : "4ms",
-    "end" : "2026-10-21T18:07:53.980+02:00",
+    "duration" : "7ms",
+    "end" : "2026-10-23T10:44:34.594+02:00",
     "expressions" : "48",
     "files" : "4",
     "globals" : "50",
     "members" : "294",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-21T18:07:53.976+02:00",
+    "start" : "2026-10-23T10:44:34.587+02:00",
     "statements" : "32",
     "units" : "57",
     "version" : "1.0",

@@ -1,36 +1,36 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':13:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':13:3-13:30] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':15:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':15:3-15:30] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':18:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':18:3-18:15] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':24:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':24:3-24:30] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
-    "message" : "['Main.java':26:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "message" : "['Main.java':26:3-26:32] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
   }, {
-    "message" : "['Main.java':29:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':29:3-29:15] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   }, {
-    "message" : "['Main.java':45:2] on 'java.lang.Object* B::getSomeField(java.lang.Object* o, java.lang.String* fieldName)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':45:2-45:24] on 'java.lang.Object* B::getSomeField(java.lang.Object* o, java.lang.String* fieldName)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':8:2] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':8:2-8:32] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':9:2] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':9:2-9:19] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
   } ],
   "notices" : [ ],
-  "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_1707433690.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_1707434031.graph.json", "report.json", "void_A.A(A__this)_318432871.graph.json", "void_B.B(B__this)_1707424855.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_163469885.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_163797504.graph.json", "report.json", "void_A.A(A__this)_-476870225.graph.json", "void_B.B(B__this)_157749263.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "249ms",
-    "end" : "2026-10-22T09:11:03.013+02:00",
+    "duration" : "41ms",
+    "end" : "2026-10-23T10:44:19.802+02:00",
     "expressions" : "64",
     "files" : "5",
     "globals" : "54",
     "members" : "273",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-22T09:11:02.764+02:00",
+    "start" : "2026-10-23T10:44:19.761+02:00",
     "statements" : "28",
     "units" : "54",
     "version" : "1.0",
