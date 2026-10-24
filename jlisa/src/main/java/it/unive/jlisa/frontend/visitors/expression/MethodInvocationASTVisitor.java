@@ -13,14 +13,17 @@ import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
+import it.unive.jlisa.program.libraries.loader.Method;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.*;
+import it.unive.lisa.program.cfg.CodeMember;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.type.UnitType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -97,7 +100,15 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 				if (rec instanceof VariableRef) {
 					if (rec.getStaticType() instanceof JavaReferenceType refType) {
 						if (refType.getInnerType() instanceof UnitType unitType) {
-							if (!unitType.getUnit().getInstanceCodeMembersByName(methodName, true).isEmpty()) {
+
+							CompilationUnit u = unitType.getUnit();
+
+							// if receiver is interface, surely it's an instance call
+							boolean instanceCall = u instanceof InterfaceUnit
+								|| !u.getInstanceCodeMembersByName(methodName, true).isEmpty()
+								|| !hasStaticMember(u, methodName);
+
+							if (instanceCall) {
 								parameters.add(rec);
 								isInstance = true;
 							} else {
@@ -196,4 +207,14 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 		return !(enclosingCU.getInstanceCodeMembersByName(methodName, true).isEmpty());
 
 	}
+
+	private boolean hasStaticMember(Unit u, String methodName) {
+		Collection<CodeMember> methods = u.getCodeMembersByName(methodName);
+		for (CodeMember m : methods) {
+			if (!m.getDescriptor().isInstance())
+				return true;
+		}
+		return false;
+	}
+
 }
