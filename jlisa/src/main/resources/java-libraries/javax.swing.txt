@@ -4,3 +4,10 @@ class javax.swing.JFrame extends java.awt.Window implements javax.swing.RootPane
 
 class javax.swing.plaf.ColorUIResource extends java.lang.Object:
 
+    instance method ColorUIResource: it.unive.jlisa.program.java.constructs.swing.ColorUIResourceConstructor
+        type it.unive.lisa.type.VoidType::INSTANCE
+        param this libtype javax.swing.plaf.ColorUIResource*
+        param red type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param green type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param blue type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
