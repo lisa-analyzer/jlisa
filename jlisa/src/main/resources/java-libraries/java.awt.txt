@@ -1,1 +1,4 @@
 class java.awt.Window extends java.lang.Object:
+
+class java.awt.Rectangle extends java.lang.Object:
+
