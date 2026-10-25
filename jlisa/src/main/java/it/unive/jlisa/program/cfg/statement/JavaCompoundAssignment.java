@@ -64,10 +64,15 @@ public class JavaCompoundAssignment
 				operation.getRight());
 		this.operation = operation;
 		this.assignment = assignment;
+		// the operation and the assignment are not nodes of the CFG, hence this
+		// expression must be their root statement. This permits to move to the
+		// callers the errors they raise.
+		operation.setParentStatement(this);
+		assignment.setParentStatement(this);
 	}
 
 	/**
-	 * Yields the operation combining the two operands.
+	 * Returns the operation combining the two operands.
 	 *
 	 * @return the operation
 	 */

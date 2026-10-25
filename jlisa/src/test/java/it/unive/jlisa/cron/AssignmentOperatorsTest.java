@@ -14,4 +14,11 @@ public class AssignmentOperatorsTest extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void testAssignmentOperatorsExceptions() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("asg-operators-exceptions", "",
+				"Main.java");
+		perform(conf);
+	}
+
 }
