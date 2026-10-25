@@ -302,7 +302,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 							new Annotations());
 					JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit,
 							global);
-					JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
+					JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init,
+							fragment.getInitializer() != null);
 					cfg.addNode(asg);
 					if (last == null)
 						cfg.getEntrypoints().add(asg);
