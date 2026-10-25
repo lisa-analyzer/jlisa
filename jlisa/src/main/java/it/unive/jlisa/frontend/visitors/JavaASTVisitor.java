@@ -2,9 +2,8 @@ package it.unive.jlisa.frontend.visitors;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.frontend.ParsingEnvironment;
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.JavaLocation;
 import it.unive.lisa.program.Program;
-import it.unive.lisa.program.SourceCodeLocation;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -17,35 +16,9 @@ public abstract class JavaASTVisitor extends ASTVisitor {
 		this.environment = environment;
 	}
 
-	public SourceCodeLocation getSourceCodeLocation(
+	public JavaLocation getSourceCodeLocation(
 			ASTNode node) {
-		int startPos = node.getStartPosition();
-		return environment.parserContext()
-				.getLocationManager(environment.source(), environment.astUnit().getLineNumber(startPos),
-						environment.astUnit().getColumnNumber(startPos))
-				.getCurrentLocation();
-	}
-
-	public SourceCodeLocationManager getSourceCodeLocationManager(
-			ASTNode node) {
-		int startPos = node.getStartPosition();
-		return environment.parserContext().getLocationManager(environment.source(),
-				environment.astUnit().getLineNumber(startPos),
-				environment.astUnit().getColumnNumber(startPos));
-	}
-
-	public SourceCodeLocationManager getSourceCodeLocationManager(
-			ASTNode node,
-			boolean end) {
-		int startPos = node.getStartPosition();
-		if (end) {
-			return environment.parserContext().getLocationManager(environment.source(),
-					environment.astUnit().getLineNumber(startPos),
-					environment.astUnit().getColumnNumber(startPos) + node.getLength());
-		}
-		return environment.parserContext().getLocationManager(environment.source(),
-				environment.astUnit().getLineNumber(startPos),
-				environment.astUnit().getColumnNumber(startPos));
+		return environment.getSourceCodeLocation(node);
 	}
 
 	public Program getProgram() {

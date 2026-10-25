@@ -1,6 +1,6 @@
 package it.unive.jlisa.frontend;
 
-import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.jlisa.program.JavaLocation;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -45,10 +45,20 @@ public final class ParsingEnvironment {
 		return allAstUnits;
 	}
 
-	public SourceCodeLocation getSourceCodeLocation(
+	/**
+	 * Returns the location of the given node, from its first to its last
+	 * character.
+	 *
+	 * @param node the node
+	 *
+	 * @return the location
+	 */
+	public JavaLocation getSourceCodeLocation(
 			ASTNode node) {
-		int startPos = node.getStartPosition();
-		return parserContext().getLocationManager(source(), astUnit().getLineNumber(startPos),
-				astUnit().getColumnNumber(startPos)).getCurrentLocation();
+		int start = node.getStartPosition();
+		int end = node.getLength() > 0 ? start + node.getLength() - 1 : start;
+		return new JavaLocation(source,
+				astUnit.getLineNumber(start), astUnit.getColumnNumber(start),
+				astUnit.getLineNumber(end), astUnit.getColumnNumber(end));
 	}
 }
