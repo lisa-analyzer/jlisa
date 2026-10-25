@@ -462,7 +462,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		}
 
 		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
-		Statement nullPointerTrigger = new JavaThrow(getScope().getCFG(), syntheticLocMan.nextLocation(),
+		// the exception is raised by the synchronized statement itself
+		Statement nullPointerTrigger = new JavaThrow(getScope().getCFG(), getSourceCodeLocation(node),
 				new JavaNewObj(getScope().getCFG(), syntheticLocMan.nextLocation(),
 						new JavaReferenceType(npeType),
 						new JavaStringLiteral(getScope().getCFG(),
