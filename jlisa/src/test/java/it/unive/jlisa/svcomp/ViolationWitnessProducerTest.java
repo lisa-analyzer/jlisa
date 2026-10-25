@@ -124,6 +124,45 @@ public class ViolationWitnessProducerTest {
 	}
 
 	/**
+	 * Checks that an uncaught exception in a program of the tests gives a
+	 * witness whose target is at the given position of its main file.
+	 *
+	 * @param program the folder of the program
+	 * @param line    the line of the target
+	 * @param column  the column of the target
+	 * @param outdir  the output directory
+	 *
+	 * @throws Exception if the analysis fails
+	 */
+	private static void assertRuntimeExceptionTarget(
+			String program,
+			int line,
+			int column,
+			Path outdir)
+			throws Exception {
+		Path file = witness(program, SVCOMPProperty.RUNTIME_EXCEPTION, outdir);
+		assertEquals(new Location(main(program), line, column), target(file));
+	}
+
+	/**
+	 * Checks that an uncaught exception in a program of the tests is a definite
+	 * violation, but gives no witness.
+	 *
+	 * @param program the folder of the program
+	 * @param outdir  the output directory
+	 *
+	 * @throws Exception if the analysis fails
+	 */
+	private static void assertDefiniteExceptionWithoutWitness(
+			String program,
+			Path outdir)
+			throws Exception {
+		assertFalse(Files.exists(witness(program, SVCOMPProperty.RUNTIME_EXCEPTION, outdir)));
+		assertTrue(Files.readString(outdir.resolve("report.json"))
+				.contains("DEFINITE: uncaught runtime exception in main method"));
+	}
+
+	/**
 	 * Checks that a failing assertion gives a witness whose target is the
 	 * assertion, with the input files, their hashes and the specification of
 	 * the task.
@@ -144,14 +183,139 @@ public class ViolationWitnessProducerTest {
 	}
 
 	/**
-	 * Checks that an uncaught exception gives no witness, since its violations
-	 * are not reported yet.
+	 * Checks that an uncaught exception gives a witness whose target is the
+	 * statement that throws it, inside the method called by the main one.
 	 */
 	@Test
-	public void anUncaughtExceptionGivesNoWitness(
+	public void anUncaughtExceptionGivesAWitnessOnTheThrow(
 			@TempDir Path dir)
 			throws Exception {
-		assertFalse(Files.exists(witness("exception-thrown", SVCOMPProperty.RUNTIME_EXCEPTION, dir)));
+		Path file = witness("exception-thrown", SVCOMPProperty.RUNTIME_EXCEPTION, dir);
+		assertEquals(new Location(main("exception-thrown"), 3, 5), target(file));
+		assertEquals(SVCOMPProperty.RUNTIME_EXCEPTION.getSpecification(),
+				WitnessReader.read(file).getEntries().get(0).getMetadata().getTask().getSpecification());
+	}
+
+	/**
+	 * Checks that an exception raised in the initializer of a local variable
+	 * gives a witness whose target is the initializer, a full expression on its
+	 * own.
+	 */
+	@Test
+	public void anExceptionInAnInitializerGivesAWitnessOnTheInitializer(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-in-initializer", 5, 17, dir);
+	}
+
+	/**
+	 * Checks that an exception that can be raised at two statements gives no
+	 * witness, since the statement of the violation is not known.
+	 */
+	@Test
+	public void anExceptionRaisedAtTwoStatementsGivesNoWitness(
+			@TempDir Path dir)
+			throws Exception {
+		assertDefiniteExceptionWithoutWitness("exception-two-origins", dir);
+	}
+
+	/**
+	 * Checks that an exception raised in a returned expression gives a witness
+	 * whose target is the expression, a full expression on its own.
+	 */
+	@Test
+	public void anExceptionInAReturnedExpressionGivesAWitnessOnTheExpression(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-in-return", 5, 12, dir);
+	}
+
+	/**
+	 * Checks that an exception raised in the argument of a throw gives a
+	 * witness whose target is the thrown expression.
+	 */
+	@Test
+	public void anExceptionInAThrownExpressionGivesAWitnessOnTheExpression(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-in-throw-argument", 5, 11, dir);
+	}
+
+	/**
+	 * Checks that an exception raised in the condition of an assertion gives a
+	 * witness whose target is the condition.
+	 */
+	@Test
+	public void anExceptionInAnAssertionGivesAWitnessOnTheCondition(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-in-assert", 5, 12, dir);
+	}
+
+	/**
+	 * Checks that an exception raised in an initializer converted to the type
+	 * of its variable gives a witness whose target is the initializer.
+	 */
+	@Test
+	public void anExceptionInAConvertedInitializerGivesAWitnessOnTheInitializer(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-in-implicit-cast", 5, 14, dir);
+	}
+
+	/**
+	 * Checks that an exception raised in the initializer of a field gives a
+	 * witness whose target is the initializer.
+	 */
+	@Test
+	public void anExceptionInAFieldInitializerGivesAWitnessOnTheInitializer(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-in-field-initializer", 5, 13, dir);
+	}
+
+	/**
+	 * Checks that a call on a null receiver gives a witness whose target is the
+	 * call.
+	 */
+	@Test
+	public void aCallOnANullReceiverGivesAWitnessOnTheCall(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("null-receiver", 5, 5, dir);
+	}
+
+	/**
+	 * Checks that a synchronized statement on a null lock gives a witness whose
+	 * target is the synchronized statement.
+	 */
+	@Test
+	public void aSynchronizedStatementOnANullLockGivesAWitnessOnTheStatement(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("synchronized-null", 3, 5, dir);
+	}
+
+	/**
+	 * Checks that an exception caught in a called method is not an origin of
+	 * the exception that leaves it.
+	 */
+	@Test
+	public void anExceptionCaughtInACalledMethodIsNotTheTarget(
+			@TempDir Path dir)
+			throws Exception {
+		assertRuntimeExceptionTarget("exception-caught-in-callee", 10, 5, dir);
+	}
+
+	/**
+	 * Checks that an exception of the same type raised at two statements gives
+	 * no witness, since the statement of the violation is not known.
+	 */
+	@Test
+	public void anExceptionOfTheSameTypeRaisedAtTwoStatementsGivesNoWitness(
+			@TempDir Path dir)
+			throws Exception {
+		assertDefiniteExceptionWithoutWitness("exception-same-type-twice", dir);
 	}
 
 	/**
@@ -162,9 +326,9 @@ public class ViolationWitnessProducerTest {
 	public void eachPropertyHasItsOwnWitness(
 			@TempDir Path dir)
 			throws Exception {
-		run("assert-fails", dir, SVCOMPProperty.ASSERT, SVCOMPProperty.RUNTIME_EXCEPTION);
-		assertTrue(Files.exists(ViolationWitnessProducer.file(dir, SVCOMPProperty.ASSERT)));
-		assertFalse(Files.exists(ViolationWitnessProducer.file(dir, SVCOMPProperty.RUNTIME_EXCEPTION)));
+		run("exception-thrown", dir, SVCOMPProperty.ASSERT, SVCOMPProperty.RUNTIME_EXCEPTION);
+		assertTrue(Files.exists(ViolationWitnessProducer.file(dir, SVCOMPProperty.RUNTIME_EXCEPTION)));
+		assertFalse(Files.exists(ViolationWitnessProducer.file(dir, SVCOMPProperty.ASSERT)));
 	}
 
 	/**
