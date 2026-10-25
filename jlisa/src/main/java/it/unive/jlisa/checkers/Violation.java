@@ -36,7 +36,7 @@ public final class Violation {
 	}
 
 	/**
-	 * Yields the kind of this violation.
+	 * Returns the kind of this violation.
 	 *
 	 * @return the kind
 	 */
@@ -45,7 +45,7 @@ public final class Violation {
 	}
 
 	/**
-	 * Yields the statement where this violation happens. For an assertion, it
+	 * Returns the statement where this violation happens. For an assertion, it
 	 * is the assertion itself.
 	 *
 	 * @return the statement

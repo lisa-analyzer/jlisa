@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -43,26 +44,48 @@ public class ViolationWitnessProducerTest {
 	 * Runs jlisa on a program of the tests, together with the common files of
 	 * the tasks, as SV-COMP gives them.
 	 *
-	 * @param program  the folder of the program
-	 * @param property the property file
-	 * @param outdir   the output directory
-	 *
-	 * @return the file where the witness is written, if there is one
+	 * @param program    the folder of the program
+	 * @param outdir     the output directory
+	 * @param properties the properties of the task
 	 *
 	 * @throws Exception if the analysis fails
 	 */
-	private static Path run(
+	private static void run(
 			String program,
-			String property,
-			Path outdir)
+			Path outdir,
+			SVCOMPProperty... properties)
 			throws Exception {
-		Main.main(new String[] {
+		List<String> args = new ArrayList<>(List.of(
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
 				"-o", outdir.toString(),
 				"-n", "ConstantPropagation",
-				"--no-html",
-				"--svcomp-property", TASKS.resolve(property).toString() });
-		return outdir.resolve(ViolationWitnessProducer.WITNESS_DIR).resolve(ViolationWitnessProducer.WITNESS_FILE);
+				"--no-html"));
+		for (SVCOMPProperty property : properties) {
+			args.add("--svcomp-property");
+			args.add(TASKS.resolve(property.getName() + ".prp").toString());
+		}
+		Main.main(args.toArray(new String[0]));
+	}
+
+	/**
+	 * Runs jlisa on a program of the tests for a single property, and returns
+	 * the file where the witness of the property is written, if there is one.
+	 *
+	 * @param program  the folder of the program
+	 * @param property the property of the task
+	 * @param outdir   the output directory
+	 *
+	 * @return the file of the witness
+	 *
+	 * @throws Exception if the analysis fails
+	 */
+	private static Path witness(
+			String program,
+			SVCOMPProperty property,
+			Path outdir)
+			throws Exception {
+		run(program, outdir, property);
+		return ViolationWitnessProducer.file(outdir, property);
 	}
 
 	/**
@@ -109,7 +132,7 @@ public class ViolationWitnessProducerTest {
 	public void aFailingAssertionGivesAWitnessOnTheAssertion(
 			@TempDir Path dir)
 			throws Exception {
-		Path file = run("assert-fails", "valid-assert.prp", dir);
+		Path file = witness("assert-fails", SVCOMPProperty.ASSERT, dir);
 		String main = main("assert-fails");
 		assertEquals(new Location(main, 4, 5), target(file));
 
@@ -128,7 +151,20 @@ public class ViolationWitnessProducerTest {
 	public void anUncaughtExceptionGivesNoWitness(
 			@TempDir Path dir)
 			throws Exception {
-		assertFalse(Files.exists(run("exception-thrown", "no-runtime-exception.prp", dir)));
+		assertFalse(Files.exists(witness("exception-thrown", SVCOMPProperty.RUNTIME_EXCEPTION, dir)));
+	}
+
+	/**
+	 * Checks that each property has its own witness, when the task has more
+	 * than one property.
+	 */
+	@Test
+	public void eachPropertyHasItsOwnWitness(
+			@TempDir Path dir)
+			throws Exception {
+		run("assert-fails", dir, SVCOMPProperty.ASSERT, SVCOMPProperty.RUNTIME_EXCEPTION);
+		assertTrue(Files.exists(ViolationWitnessProducer.file(dir, SVCOMPProperty.ASSERT)));
+		assertFalse(Files.exists(ViolationWitnessProducer.file(dir, SVCOMPProperty.RUNTIME_EXCEPTION)));
 	}
 
 	/**
@@ -138,7 +174,7 @@ public class ViolationWitnessProducerTest {
 	public void anAssertionThatHoldsGivesNoWitness(
 			@TempDir Path dir)
 			throws Exception {
-		assertFalse(Files.exists(run("assert-holds", "valid-assert.prp", dir)));
+		assertFalse(Files.exists(witness("assert-holds", SVCOMPProperty.ASSERT, dir)));
 	}
 
 	/**
@@ -149,6 +185,6 @@ public class ViolationWitnessProducerTest {
 	public void aViolationOfAnotherPropertyGivesNoWitness(
 			@TempDir Path dir)
 			throws Exception {
-		assertFalse(Files.exists(run("assert-fails", "no-runtime-exception.prp", dir)));
+		assertFalse(Files.exists(witness("assert-fails", SVCOMPProperty.RUNTIME_EXCEPTION, dir)));
 	}
 }

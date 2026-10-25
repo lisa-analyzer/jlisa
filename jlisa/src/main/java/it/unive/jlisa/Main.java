@@ -25,7 +25,9 @@ import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -119,7 +121,7 @@ public class Main {
 		Option svcompProperty = Option.builder()
 				.longOpt("svcomp-property")
 				.hasArg()
-				.desc("SV-COMP property file of the task: when given, a violation witness is written for a definite violation of the property")
+				.desc("SV-COMP property file of the task. When given, a violation witness is written for a definite violation of the property. The option can be repeated, one witness for each property")
 				.required(false)
 				.build();
 
@@ -146,7 +148,7 @@ public class Main {
 		boolean htmlOutput = true;
 		boolean dumpExceptions = false;
 		boolean debug = false;
-		String propertyFile = null;
+		String[] propertyFiles = null;
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
@@ -213,7 +215,7 @@ public class Main {
 			if (cmd.hasOption("m"))
 				executionMode = cmd.getOptionValue("m");
 
-			propertyFile = cmd.getOptionValue("svcomp-property");
+			propertyFiles = cmd.getOptionValues("svcomp-property");
 
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
@@ -223,11 +225,11 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug, propertyFile);
+			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug, propertyFiles);
 			break;
 		case "Statistics":
 			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug,
-					propertyFile);
+					propertyFiles);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -242,12 +244,12 @@ public class Main {
 			String numericalDomain,
 			boolean htmlOutput,
 			boolean debug,
-			String propertyFile)
+			String[] propertyFiles)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFile);
+		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFiles);
 	}
 
 	private static void runStatistics(
@@ -258,7 +260,7 @@ public class Main {
 			boolean htmlOutput,
 			boolean dumpExceptions,
 			boolean debug,
-			String propertyFile) {
+			String[] propertyFiles) {
 		JavaFrontend frontend = null;
 		try {
 			frontend = runFrontend(sources);
@@ -274,7 +276,7 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFile);
+			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
 			while (root.getCause() != null)
@@ -305,11 +307,18 @@ public class Main {
 			JavaFrontend frontend,
 			boolean htmlOutput,
 			boolean debug,
-			String propertyFile)
+			String[] propertyFiles)
 			throws ParseException {
 		Program p = frontend.getProgram();
-		ViolationWitnessProducer witness = propertyFile == null ? null
-				: ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
+		List<ViolationWitnessProducer> witnesses = new ArrayList<>();
+		if (propertyFiles != null)
+			for (String propertyFile : propertyFiles) {
+				ViolationWitnessProducer witness = ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
+				// a property given twice has a single witness
+				if (witness != null
+						&& witnesses.stream().noneMatch(other -> other.getProperty() == witness.getProperty()))
+					witnesses.add(witness);
+			}
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
@@ -325,7 +334,8 @@ public class Main {
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(witness == null ? new AssertChecker<>() : new AssertChecker<>(witness));
+			conf.semanticChecks.add(witnesses.isEmpty() ? new AssertChecker<>()
+					: new AssertChecker<>(violation -> witnesses.forEach(witness -> witness.accept(violation))));
 			break;
 		case "":
 			break;
@@ -357,8 +367,8 @@ public class Main {
 		LiSA lisa = new LiSA(conf);
 		lisa.run(p);
 
-		// write the witness
-		if (witness != null)
+		// write the witnesses
+		for (ViolationWitnessProducer witness : witnesses)
 			witness.write(outdir);
 	}
 }

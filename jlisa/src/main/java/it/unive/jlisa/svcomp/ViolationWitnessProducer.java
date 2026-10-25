@@ -41,7 +41,8 @@ public final class ViolationWitnessProducer
 	private static final Logger LOG = LogManager.getLogger(ViolationWitnessProducer.class);
 
 	/**
-	 * The name of the folder of the witness, inside the output directory.
+	 * The name of the folder of the witnesses, inside the output directory.
+	 * Each property has its own folder inside it.
 	 */
 	public static final String WITNESS_DIR = "witness";
 
@@ -70,6 +71,15 @@ public final class ViolationWitnessProducer
 	 * has been received yet.
 	 */
 	private Violation violation;
+
+	/**
+	 * Returns the property of the task.
+	 *
+	 * @return the property
+	 */
+	public SVCOMPProperty getProperty() {
+		return property;
+	}
 
 	/**
 	 * Builds the producer of the witness of the given task.
@@ -122,8 +132,8 @@ public final class ViolationWitnessProducer
 	}
 
 	/**
-	 * Yields jlisa as the tool producing the witnesses, with the version of its
-	 * jar.
+	 * Returns jlisa as the tool producing the witnesses, with the version of
+	 * its jar.
 	 *
 	 * @return the tool
 	 */
@@ -162,7 +172,8 @@ public final class ViolationWitnessProducer
 
 	/**
 	 * Writes the witness of the first violation received of the property of the
-	 * task, in the file {@value #WITNESS_FILE} of the folder
+	 * task, in the file {@value #WITNESS_FILE} of the folder named after the
+	 * property (e.g., {@code valid-assert}) inside the folder
 	 * {@value #WITNESS_DIR} of the given output directory. Nothing is written
 	 * if there is no witness, and a failure is only logged.
 	 *
@@ -173,7 +184,7 @@ public final class ViolationWitnessProducer
 		Optional<ViolationWitness> witness = build();
 		if (witness.isEmpty())
 			return;
-		Path file = Paths.get(outdir, WITNESS_DIR, WITNESS_FILE);
+		Path file = file(Paths.get(outdir), property);
 		try {
 			Files.createDirectories(file.getParent());
 			WitnessWriter.write(witness.get(), file);
@@ -184,7 +195,22 @@ public final class ViolationWitnessProducer
 	}
 
 	/**
-	 * Yields the location of the witness for the given statement. It is the
+	 * Returns the file where the witness of the given property is written,
+	 * inside the given output directory.
+	 *
+	 * @param outdir   the output directory
+	 * @param property the property
+	 *
+	 * @return the file
+	 */
+	public static Path file(
+			Path outdir,
+			SVCOMPProperty property) {
+		return outdir.resolve(WITNESS_DIR).resolve(property.getName()).resolve(WITNESS_FILE);
+	}
+
+	/**
+	 * Returns the location of the witness for the given statement. It is the
 	 * start of the statement, or of the full expression, containing the given
 	 * one. Its file is the input file of the task with the same name as the
 	 * source file of the statement, which must be unique. Columns of LiSA start
