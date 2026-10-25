@@ -1,15 +1,4 @@
-class java.util.concurrent.atomic.AtomicInteger extends java.lang.Object:
-
-	instance field value type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-
-	instance method AtomicInteger: it.unive.jlisa.program.java.constructs.atomic.AtomicIntegerConstructor
-		libtype java.util.concurrent.atomic.AtomicInteger*
-		param this libtype java.util.concurrent.atomic.AtomicInteger*
-		param c type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-
-	instance method get: it.unive.jlisa.program.java.constructs.atomic.AtomicIntegerGet
-		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-		param this libtype java.util.concurrent.atomic.AtomicInteger*
-
-
 class java.util.concurrent.atomic.AtomicBoolean extends java.lang.Object:
+
+	
+

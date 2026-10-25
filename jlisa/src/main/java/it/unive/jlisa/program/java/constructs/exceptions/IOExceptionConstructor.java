@@ -58,4 +58,3 @@ public class IOExceptionConstructor extends NaryExpression implements PluggableS
 				originating);
 	}
 }
-

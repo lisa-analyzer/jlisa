@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.atomic;
 
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -19,7 +18,9 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.type.Untyped;
 
-public class AtomicIntegerGet extends it.unive.lisa.program.cfg.statement.UnaryExpression implements PluggableStatement {
+public class AtomicIntegerGet extends it.unive.lisa.program.cfg.statement.UnaryExpression
+		implements
+		PluggableStatement {
 	protected Statement originating;
 
 	public AtomicIntegerGet(
@@ -60,4 +61,3 @@ public class AtomicIntegerGet extends it.unive.lisa.program.cfg.statement.UnaryE
 		return 0;
 	}
 }
-

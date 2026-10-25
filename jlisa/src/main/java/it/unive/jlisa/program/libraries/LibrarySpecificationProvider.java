@@ -10,7 +10,6 @@ import it.unive.jlisa.program.libraries.loader.Runtime;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.AnalysisSetupException;
-import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;

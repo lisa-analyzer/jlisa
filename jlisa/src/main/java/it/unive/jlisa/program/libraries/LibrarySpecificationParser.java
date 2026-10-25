@@ -1,12 +1,10 @@
 package it.unive.jlisa.program.libraries;
 
-import org.antlr.v4.runtime.Token;
-
 import it.unive.jlisa.antlr.LibraryDefinitionParser;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
-import it.unive.jlisa.antlr.LibraryDefinitionParser.InterfaceDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FileContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.InterfaceDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.LibtypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.LisatypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.MethodContext;
@@ -27,6 +25,7 @@ import it.unive.jlisa.program.libraries.loader.Runtime;
 import it.unive.jlisa.program.libraries.loader.StringValue;
 import it.unive.jlisa.program.libraries.loader.Type;
 import it.unive.jlisa.program.libraries.loader.Value;
+import org.antlr.v4.runtime.Token;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 

@@ -11,7 +11,6 @@ import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.NativeCFG;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -136,8 +135,7 @@ public class ClassDef {
 		CompilationUnit unit;
 		if (this.isInterface) {
 			unit = JavaInterfaceType.lookup(this.name).getUnit();
-		}
-		else {
+		} else {
 			unit = JavaClassType.lookup(this.name).getUnit();
 		}
 
@@ -150,7 +148,7 @@ public class ClassDef {
 		for (String interf : this.interfaces) {
 			LibrarySpecificationProvider.importClass(program, interf);
 			JavaInterfaceType interfType = JavaInterfaceType.lookup(interf);
-			assert(interfType != null);
+			assert (interfType != null);
 			CompilationUnit interfUnit = interfType.getUnit();
 			if (!unit.getImmediateAncestors().contains(interfUnit)) {
 				unit.addAncestor(interfUnit);

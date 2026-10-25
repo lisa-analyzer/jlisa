@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.swing;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.java.constructs.CharArrayConstantSupport;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -71,7 +70,8 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 		AnalysisState<A> exceptionState;
 
 		noExceptionState = analysis.smallStepSemantics(state,
-				new PushAny(new JavaReferenceType(JavaClassType.lookup("javax.swing.plaf.ColorUIResource")), getLocation()),
+				new PushAny(new JavaReferenceType(JavaClassType.lookup("javax.swing.plaf.ColorUIResource")),
+						getLocation()),
 				originating);
 
 		LibrarySpecificationProvider.importClass(getProgram(), "java.lang.IllegalArgumentException");
@@ -97,4 +97,3 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 		return noExceptionState.lub(exceptionState);
 	}
 }
-

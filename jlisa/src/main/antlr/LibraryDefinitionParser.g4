@@ -43,15 +43,11 @@ method
    ;
 
 classDef
-   : ROOT? SEALED? CLASS name = IDENTIFIER (EXTENDS base = IDENTIFIER)?
-     (IMPLEMENTS interfaces += IDENTIFIER (COMMA interfaces += IDENTIFIER)*)?
-     (COLON (type_name = IDENTIFIER)? (method | field)*)?
+   : ROOT? SEALED? CLASS name = IDENTIFIER (EXTENDS base = IDENTIFIER)? (IMPLEMENTS interfaces += IDENTIFIER (COMMA interfaces += IDENTIFIER)*)? (COLON (type_name = IDENTIFIER)? (method | field)*)?
    ;
 
 interfaceDef
-   : SEALED? INTERFACE name = IDENTIFIER
-     (EXTENDS bases += IDENTIFIER (COMMA bases += IDENTIFIER)*)?
-     (COLON (method | field)*)?
+   : SEALED? INTERFACE name = IDENTIFIER (EXTENDS bases += IDENTIFIER (COMMA bases += IDENTIFIER)*)? (COLON (method | field)*)?
    ;
 
 file

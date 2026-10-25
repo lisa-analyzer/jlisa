@@ -59,4 +59,3 @@ public class CompositeNameClone extends UnaryExpression implements PluggableStat
 				originating);
 	}
 }
-

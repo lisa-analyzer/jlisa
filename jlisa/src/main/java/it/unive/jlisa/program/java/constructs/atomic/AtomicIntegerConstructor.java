@@ -62,4 +62,3 @@ public class AtomicIntegerConstructor extends BinaryExpression implements Plugga
 		return interprocedural.getAnalysis().assign(state, access, right, originating);
 	}
 }
-

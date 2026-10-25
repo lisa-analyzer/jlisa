@@ -13,7 +13,6 @@ import it.unive.jlisa.program.cfg.expression.JavaUnresolvedSuperCall;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
-import it.unive.jlisa.program.libraries.loader.Method;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.*;
@@ -103,10 +102,11 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 
 							CompilationUnit u = unitType.getUnit();
 
-							// if receiver is interface, surely it's an instance call
+							// if receiver is interface, surely it's an instance
+							// call
 							boolean instanceCall = u instanceof InterfaceUnit
-								|| !u.getInstanceCodeMembersByName(methodName, true).isEmpty()
-								|| !hasStaticMember(u, methodName);
+									|| !u.getInstanceCodeMembersByName(methodName, true).isEmpty()
+									|| !hasStaticMember(u, methodName);
 
 							if (instanceCall) {
 								parameters.add(rec);
@@ -208,7 +208,9 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 
 	}
 
-	private boolean hasStaticMember(Unit u, String methodName) {
+	private boolean hasStaticMember(
+			Unit u,
+			String methodName) {
 		Collection<CodeMember> methods = u.getCodeMembersByName(methodName);
 		for (CodeMember m : methods) {
 			if (!m.getDescriptor().isInstance())
