@@ -8,6 +8,7 @@ import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.Reachability;
@@ -22,6 +23,7 @@ import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
+import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
 import java.io.IOException;
 import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
@@ -316,6 +318,11 @@ public class Main {
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
+		// a descending phase with narrowing after the fixpoint with widening,
+		// only without recursion: the inlining analysis rejects a second
+		// result for a recursive call
+		if (!Recursion.mayBeRecursive(p))
+			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
 		switch (checkerName) {
 		case "Assert":
 			conf.semanticChecks.add(witness == null ? new AssertChecker<>() : new AssertChecker<>(witness));

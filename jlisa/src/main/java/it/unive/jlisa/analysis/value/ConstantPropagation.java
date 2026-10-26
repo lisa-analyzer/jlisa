@@ -6,6 +6,7 @@ import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
@@ -884,11 +885,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
-
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
-				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
-			}
+			if (lVal instanceof Number l && rVal instanceof Number r)
+				return new ConstantValue(minMax(l, r, true));
 		}
 
 		if (operator instanceof JavaMathMin) {
@@ -898,11 +896,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
-
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
-				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
-			}
+			if (lVal instanceof Number l && rVal instanceof Number r)
+				return new ConstantValue(minMax(l, r, false));
 		}
 
 		if (operator instanceof JavaMathAtan2Operator) {
@@ -1876,6 +1871,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) left.getValue()).longValue());
 			else if (right.getValue() instanceof JavaDoubleType)
 				return new ConstantValue(((Number) left.getValue()).doubleValue());
+			else if (right.getValue() instanceof JavaFloatType)
+				return new ConstantValue(((Number) left.getValue()).floatValue());
 			else if (right.getValue() instanceof JavaCharType)
 				return new ConstantValue((int) (char) ((Number) left.getValue()).longValue());
 
@@ -1888,6 +1885,37 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			BinaryExpression expression,
 			ProgramPoint src,
 			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+		ValueEnvironment<ConstantValue> result = assumeOneSide(environment, expression, src, oracle);
+		// only one identifier is refined: when both operands are identifiers,
+		// the right one is refined too, with the value of the left one
+		// (equality and inequality are symmetric)
+		if (!result.isBottom() && expression.getLeft() instanceof Identifier
+				&& expression.getRight() instanceof Identifier right)
+			result = assumeOneSide(result, new BinaryExpression(expression.getStaticType(), right,
+					expression.getLeft(), expression.getOperator(), expression.getCodeLocation()), src, oracle);
+		return result;
+	}
+
+	/**
+	 * Returns the given environment assuming that the given binary expression
+	 * holds, refining its left operand if it is an identifier, or otherwise its
+	 * right operand.
+	 *
+	 * @param environment the environment
+	 * @param expression  the binary expression
+	 * @param src         the program point of the expression
+	 * @param oracle      the oracle for inter-domain communication
+	 *
+	 * @return the refined environment
+	 *
+	 * @throws SemanticException if the expression cannot be evaluated
+	 */
+	private ValueEnvironment<ConstantValue> assumeOneSide(
+			ValueEnvironment<ConstantValue> environment,
+			BinaryExpression expression,
+			ProgramPoint src,
 			SemanticOracle oracle)
 			throws SemanticException {
 		Identifier id;
@@ -1937,6 +1965,29 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return environment.bottom();
 		else
 			return environment.putState(id, update);
+	}
+
+	/**
+	 * Returns the maximum or the minimum of the given numbers, with the type of
+	 * the binary numeric promotion of Java (double, float, long or int).
+	 *
+	 * @param l   the first number
+	 * @param r   the second number
+	 * @param max whether the maximum is returned, otherwise the minimum
+	 *
+	 * @return the maximum or the minimum
+	 */
+	private static Number minMax(
+			Number l,
+			Number r,
+			boolean max) {
+		if (l instanceof Double || r instanceof Double)
+			return max ? Math.max(l.doubleValue(), r.doubleValue()) : Math.min(l.doubleValue(), r.doubleValue());
+		if (l instanceof Float || r instanceof Float)
+			return max ? Math.max(l.floatValue(), r.floatValue()) : Math.min(l.floatValue(), r.floatValue());
+		if (l instanceof Long || r instanceof Long)
+			return max ? Math.max(l.longValue(), r.longValue()) : Math.min(l.longValue(), r.longValue());
+		return max ? Math.max(l.intValue(), r.intValue()) : Math.min(l.intValue(), r.intValue());
 	}
 
 	@Override

@@ -98,6 +98,7 @@ public class JavaNewObj extends NaryExpression {
 				clazz,
 				simpleName,
 				fullExpressions);
+		call.setParentStatement(this);
 		AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, tmp, fullParams, expressions);
 
 		// now remove the instrumented receiver

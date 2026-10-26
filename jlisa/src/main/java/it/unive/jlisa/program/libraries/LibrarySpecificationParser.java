@@ -4,6 +4,7 @@ import it.unive.jlisa.antlr.LibraryDefinitionParser;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FileContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.InterfaceDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.LibtypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.LisatypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.MethodContext;
@@ -24,6 +25,7 @@ import it.unive.jlisa.program.libraries.loader.Runtime;
 import it.unive.jlisa.program.libraries.loader.StringValue;
 import it.unive.jlisa.program.libraries.loader.Type;
 import it.unive.jlisa.program.libraries.loader.Value;
+import org.antlr.v4.runtime.Token;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 
@@ -46,7 +48,35 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 				ctx.SEALED() != null,
 				ctx.type_name == null ? null : ctx.type_name.getText(),
 				ctx.name.getText(),
-				ctx.base == null ? null : ctx.base.getText());
+				ctx.base == null ? null : ctx.base.getText(),
+				false);
+
+		for (Token i : ctx.interfaces)
+			cls.getInterfaces().add(i.getText());
+
+		for (MethodContext mtd : ctx.method())
+			cls.getMethods().add(visitMethod(mtd));
+
+		for (FieldContext fld : ctx.field())
+			cls.getFields().add(visitField(fld));
+		return cls;
+	}
+
+	@Override
+	public ClassDef visitInterfaceDef(
+			InterfaceDefContext ctx) {
+		ClassDef cls = new ClassDef(
+				locationManager,
+				false,
+				ctx.SEALED() != null,
+				null,
+				ctx.name.getText(),
+				null,
+				true);
+
+		for (Token i : ctx.bases)
+			cls.getInterfaces().add(i.getText());
+
 		for (MethodContext mtd : ctx.method())
 			cls.getMethods().add(visitMethod(mtd));
 
@@ -136,6 +166,8 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 
 		for (ClassDefContext cls : ctx.classDef())
 			runtime.getClasses().add(visitClassDef(cls));
+		for (InterfaceDefContext cls : ctx.interfaceDef())
+			runtime.getClasses().add(visitInterfaceDef(cls));
 		for (FieldContext fld : ctx.field())
 			runtime.getFields().add(visitField(fld));
 		for (MethodContext meth : ctx.method())
