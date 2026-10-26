@@ -6,6 +6,7 @@ import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
@@ -1870,6 +1871,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) left.getValue()).longValue());
 			else if (right.getValue() instanceof JavaDoubleType)
 				return new ConstantValue(((Number) left.getValue()).doubleValue());
+			else if (right.getValue() instanceof JavaFloatType)
+				return new ConstantValue(((Number) left.getValue()).floatValue());
 			else if (right.getValue() instanceof JavaCharType)
 				return new ConstantValue((int) (char) ((Number) left.getValue()).longValue());
 
