@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.atomic;
 
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -27,7 +26,7 @@ public class AtomicIntegerGet extends it.unive.lisa.program.cfg.statement.UnaryE
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
-		super(cfg, location, "get", JavaClassType.getIntegerWrapperType(), expr);
+		super(cfg, location, "get", JavaIntType.INSTANCE, expr);
 	}
 
 	public static AtomicIntegerGet build(
