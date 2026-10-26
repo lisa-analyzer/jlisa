@@ -21,4 +21,10 @@ class java.util.Properties extends java.lang.Object:
 		param key libtype java.lang.String*
 		param value libtype java.lang.String*
 
+	instance method load: it.unive.jlisa.program.java.constructs.properties.PropertiesLoad
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Properties*
+		param inputStream libtype java.io.InputStream*
+
+
 

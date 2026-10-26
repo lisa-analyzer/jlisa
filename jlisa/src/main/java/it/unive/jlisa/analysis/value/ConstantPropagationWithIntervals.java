@@ -24,10 +24,20 @@ import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.ComparisonOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.numeric.IntInterval;
 import java.util.Arrays;
@@ -98,6 +108,13 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			SemanticOracle oracle)
 			throws SemanticException {
 
+		// a comparison or a boolean connective that constant propagation
+		// cannot decide may still be decided by the whole domain (e.g., mode !=
+		// 3 with mode in [0, 1] is true)
+		ConstantValueIntInterval decided = decideBoolean(expression, left, right, pp, oracle);
+		if (decided != null)
+			return decided;
+
 		ConstantValue constantResult = constantPropagation.evalBinaryExpression(expression, left.getConstantValue(),
 				right.getConstantValue(), pp, oracle);
 
@@ -105,9 +122,14 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		if (expression.getOperator() instanceof AdditionOperator
 				|| expression.getOperator() instanceof SubtractionOperator
 				|| expression.getOperator() instanceof MultiplicationOperator) {
-			if (left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite())
-				// one of the operands is already unbounded: the result is
-				// unbounded too
+			if ((left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite())
+					&& (expression.getOperator() instanceof MultiplicationOperator
+							|| !JavaNumericInterval.mayBeFloatingPoint(expression, pp, oracle)))
+				// one of the operands is already unbounded: an integral
+				// result may wrap around, and a product may be 0 times an
+				// infinity. The sum and the difference of floating point
+				// values do not wrap around, and their interval is computed
+				// (e.g., [0, +Inf] + 0.2 is [0.2, +Inf])
 				return new ConstantValueIntInterval(constantResult, interval.top());
 
 			IntInterval result = interval.evalBinaryExpression(expression, left.getIntInterval(),
@@ -127,6 +149,73 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		return new ConstantValueIntInterval(
 				constantResult,
 				interval.evalBinaryExpression(expression, left.getIntInterval(), right.getIntInterval(), pp, oracle));
+	}
+
+	/**
+	 * Returns the value of the given comparison or boolean connective when
+	 * constant propagation cannot decide it but the whole domain can. A
+	 * comparison is decided by its satisfiability, and a conjunction or a
+	 * disjunction by three-valued logic (false and anything is false, true or
+	 * anything is true).
+	 *
+	 * @param expression the comparison or connective
+	 * @param left       the value of its left operand
+	 * @param right      the value of its right operand
+	 * @param pp         the program point of the expression
+	 * @param oracle     the oracle for inter-domain communication
+	 *
+	 * @return the boolean value, or {@code null} if it is not decided here
+	 *
+	 * @throws SemanticException if the satisfiability cannot be computed
+	 */
+	private ConstantValueIntInterval decideBoolean(
+			BinaryExpression expression,
+			ConstantValueIntInterval left,
+			ConstantValueIntInterval right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (left.isBottom() || right.isBottom())
+			return null;
+		BinaryOperator operator = expression.getOperator();
+		Boolean value = null;
+		if (operator instanceof ComparisonOperator) {
+			if (!left.getConstantValue().isTop() && !right.getConstantValue().isTop())
+				// constant propagation decides it
+				return null;
+			Satisfiability sat = satisfiesBinaryExpression(expression, left, right, pp, oracle);
+			if (sat == Satisfiability.SATISFIED)
+				value = true;
+			else if (sat == Satisfiability.NOT_SATISFIED)
+				value = false;
+		} else if (operator == LogicalAnd.INSTANCE || operator == LogicalOr.INSTANCE) {
+			Boolean l = booleanOf(left);
+			Boolean r = booleanOf(right);
+			if (l != null && r != null)
+				// constant propagation decides it
+				return null;
+			if (operator == LogicalAnd.INSTANCE && (Boolean.FALSE.equals(l) || Boolean.FALSE.equals(r)))
+				value = false;
+			else if (operator == LogicalOr.INSTANCE && (Boolean.TRUE.equals(l) || Boolean.TRUE.equals(r)))
+				value = true;
+		}
+		if (value == null)
+			return null;
+		return evalConstant(new Constant(expression.getStaticType(), value, expression.getCodeLocation()), pp, oracle);
+	}
+
+	/**
+	 * Returns the boolean constant held by the given value.
+	 *
+	 * @param value the value
+	 *
+	 * @return the boolean, or {@code null} if the value is not a boolean
+	 *             constant
+	 */
+	private static Boolean booleanOf(
+			ConstantValueIntInterval value) {
+		ConstantValue constant = value.getConstantValue();
+		return !constant.isTop() && !constant.isBottom() && constant.getValue() instanceof Boolean b ? b : null;
 	}
 
 	/**
@@ -301,6 +390,18 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		// a variable compared with itself, if it is integral (a floating point
+		// variable may be NaN, which differs from itself)
+		if (expression.getLeft() instanceof Identifier id && id.equals(expression.getRight())
+				&& JavaNumericInterval.isIntegral(id, pp, oracle)) {
+			BinaryOperator operator = expression.getOperator();
+			if (operator == ComparisonEq.INSTANCE || operator == ComparisonLe.INSTANCE
+					|| operator == ComparisonGe.INSTANCE)
+				return Satisfiability.SATISFIED;
+			if (operator == ComparisonNe.INSTANCE || operator == ComparisonLt.INSTANCE
+					|| operator == ComparisonGt.INSTANCE)
+				return Satisfiability.NOT_SATISFIED;
+		}
 		Satisfiability sat = constantPropagation.satisfiesBinaryExpression(expression, left.getConstantValue(),
 				right.getConstantValue(), pp, oracle);
 		switch (sat) {
@@ -416,7 +517,9 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeIdentifier(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeIdentifier(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
+		// a boolean identifier that holds is true
+		return assumeBoolean(mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment),
+				expression, true, src, oracle);
 	}
 
 	@Override
@@ -433,7 +536,49 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 				.assumeUnaryExpression(environments.getLeft(), expression, src, dest, oracle);
 		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeUnaryExpression(environments.getRight(),
 				expression, src, dest, oracle);
-		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
+		ValueEnvironment<ConstantValueIntInterval> result = mergeEnvironments(environment, constantValueEnvironment,
+				intIntervalEnvironment);
+		// the negation of a boolean identifier holds, hence the identifier is
+		// false
+		if (expression.getOperator() == LogicalNegation.INSTANCE && expression.getExpression() instanceof Identifier id)
+			return assumeBoolean(result, id, false, src, oracle);
+		return result;
+	}
+
+	/**
+	 * Returns the given environment where the given boolean identifier has the
+	 * given value, intersected with the value it already has. Identifiers that
+	 * are not booleans, or that cannot be tracked, are left as they are.
+	 *
+	 * @param environment the environment
+	 * @param id          the identifier
+	 * @param value       the value of the identifier
+	 * @param pp          the program point where the identifier is assumed
+	 * @param oracle      the oracle for inter-domain communication
+	 *
+	 * @return the environment, or bottom if the identifier cannot have the
+	 *             given value
+	 *
+	 * @throws SemanticException if the value cannot be computed
+	 */
+	private ValueEnvironment<ConstantValueIntInterval> assumeBoolean(
+			ValueEnvironment<ConstantValueIntInterval> environment,
+			Identifier id,
+			boolean value,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (environment.isBottom() || !id.canBeAssigned() || !canProcess(id, pp, oracle))
+			return environment;
+		// the runtime types are checked one by one: the dynamic type would need
+		// their common supertype, which cannot be computed for every class
+		Set<Type> types = oracle.getRuntimeTypesOf(id, pp);
+		if (types.isEmpty() || !types.stream().allMatch(Type::isBooleanType))
+			return environment;
+		ConstantValueIntInterval assumed = eval(environment, new Constant(id.getStaticType(), value,
+				id.getCodeLocation()), pp, oracle);
+		ConstantValueIntInterval refined = environment.getState(id).glb(assumed);
+		return refined.isBottom() ? environment.bottom() : environment.putState(id, refined);
 	}
 
 	@Override
@@ -451,8 +596,14 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 
 		BinaryExpression reduced = substituteKnownStringExpressions(expression, environments.getLeft(), src, oracle);
 
-		ValueEnvironment<IntInterval> intIntervalEnvironment = interval.assumeBinaryExpression(environments.getRight(),
-				reduced, src, dest, oracle);
+		// an operand without an interval (e.g., a boolean constant) would make
+		// the intervals of the whole environment bottom: they are left as they
+		// are
+		ValueEnvironment<IntInterval> intIntervalEnvironment = environments.getRight();
+		if (!interval.eval(intIntervalEnvironment, (ValueExpression) reduced.getLeft(), src, oracle).isBottom()
+				&& !interval.eval(intIntervalEnvironment, (ValueExpression) reduced.getRight(), src, oracle).isBottom())
+			intIntervalEnvironment = interval.assumeBinaryExpression(intIntervalEnvironment, reduced, src, dest,
+					oracle);
 		return mergeEnvironments(environment, constantValueEnvironment, intIntervalEnvironment);
 	}
 

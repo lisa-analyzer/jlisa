@@ -1,0 +1,8 @@
+interface javax.naming.Name:
+
+class javax.naming.CompositeName extends java.lang.Object implements javax.naming.Name:
+
+    instance method clone: it.unive.jlisa.program.java.constructs.naming.CompositeNameClone
+        libtype javax.naming.CompositeName*
+        param this libtype javax.naming.CompositeName*
+

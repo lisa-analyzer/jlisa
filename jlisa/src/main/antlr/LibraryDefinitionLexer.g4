@@ -36,6 +36,14 @@ EXTENDS
    : 'extends'
    ;
 
+INTERFACE
+   : 'interface'
+   ;
+
+IMPLEMENTS
+   : 'implements'
+   ;
+
 ROOT
    : 'root'
    ;

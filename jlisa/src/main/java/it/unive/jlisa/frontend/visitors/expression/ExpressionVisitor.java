@@ -69,7 +69,6 @@ import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.Not;
-import it.unive.lisa.program.cfg.statement.numeric.Addition;
 import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
@@ -294,7 +293,7 @@ public class ExpressionVisitor
 			expression = new JavaAssignment(cfg, location, left, right);
 			break;
 		case "+=":
-			expression = new JavaCompoundAssignment(cfg, location, "+=", new Addition(cfg, location, left, right));
+			expression = new JavaCompoundAssignment(cfg, location, "+=", new JavaAddition(cfg, location, left, right));
 			break;
 		case "-=":
 			expression = new JavaCompoundAssignment(cfg, location, "-=",

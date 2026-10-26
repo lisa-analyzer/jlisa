@@ -10,9 +10,15 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.Identifier;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 
 /**
  * Conditional operator/expression condition ? expr1 : expr2
@@ -69,8 +75,21 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 			return result.bottomExecution();
 		case UNKNOWN:
 		default:
-			return analysis.smallStepSemantics(result, middle, this)
-					.lub(analysis.smallStepSemantics(result, right, this));
+			// each value is computed where its condition holds, and kept in a
+			// meta variable, since the two values belong to different states.
+			// The condition is assumed at a program point that is not a
+			// statement, so that reachability is not changed: the two values
+			// are not branches of the control flow
+			ProgramPoint value = new ValuePoint(this);
+			Identifier meta = new Variable(getStaticType(), "ternary@" + getLocation(), getLocation());
+			getMetaVariables().add(meta);
+			SymbolicExpression negation = new UnaryExpression(BoolType.INSTANCE, left, LogicalNegation.INSTANCE,
+					getLocation());
+			AnalysisState<A> whenTrue = analysis.assign(analysis.assume(result, left, value, value), meta, middle,
+					this);
+			AnalysisState<A> whenFalse = analysis.assign(analysis.assume(result, negation, value, value), meta,
+					right, this);
+			return analysis.smallStepSemantics(whenTrue.lub(whenFalse), meta, this);
 		}
 
 	}
