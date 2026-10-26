@@ -122,9 +122,14 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		if (expression.getOperator() instanceof AdditionOperator
 				|| expression.getOperator() instanceof SubtractionOperator
 				|| expression.getOperator() instanceof MultiplicationOperator) {
-			if (left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite())
-				// one of the operands is already unbounded: the result is
-				// unbounded too
+			if ((left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite())
+					&& (expression.getOperator() instanceof MultiplicationOperator
+							|| !JavaNumericInterval.mayBeFloatingPoint(expression, pp, oracle)))
+				// one of the operands is already unbounded: an integral
+				// result may wrap around, and a product may be 0 times an
+				// infinity. The sum and the difference of floating point
+				// values do not wrap around, and their interval is computed
+				// (e.g., [0, +Inf] + 0.2 is [0.2, +Inf])
 				return new ConstantValueIntInterval(constantResult, interval.top());
 
 			IntInterval result = interval.evalBinaryExpression(expression, left.getIntInterval(),

@@ -37,6 +37,8 @@ import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.value.*;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.DivisionOperator;
+import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftLeft;
@@ -175,6 +177,61 @@ public class JavaNumericInterval extends Interval {
 		return Satisfiability.UNKNOWN;
 	}
 
+	/**
+	 * Returns the interval of the sine or the cosine of the values of the given
+	 * interval. The bounds are the values at the bounds of the interval, and
+	 * the exact maximum or minimum (1 or -1) of every point inside it where the
+	 * function has one: {@code Math.sin} and {@code Math.cos} are
+	 * semi-monotonic, hence between two of these points their values stay
+	 * between the values at the bounds.
+	 *
+	 * @param i    the interval of the argument
+	 * @param sine whether the function is the sine (otherwise the cosine)
+	 *
+	 * @return the interval of the result
+	 */
+	public static IntInterval sineOrCosine(
+			IntInterval i,
+			boolean sine) {
+		if (i.isBottom())
+			return i;
+		if (i.lowIsMinusInfinity() || i.highIsPlusInfinity())
+			return new IntInterval(-1, 1);
+
+		double a, b;
+		try {
+			a = i.getLow().toDouble();
+			b = i.getHigh().toDouble();
+		} catch (MathNumberConversionException e) {
+			return new IntInterval(-1, 1);
+		}
+		if (Double.isNaN(a) || Double.isNaN(b) || b - a >= 2 * Math.PI)
+			return new IntInterval(-1, 1);
+
+		double fa = sine ? Math.sin(a) : Math.cos(a);
+		double fb = sine ? Math.sin(b) : Math.cos(b);
+		double min = Math.min(fa, fb);
+		double max = Math.max(fa, fb);
+
+		// the maximum and minimum points are pi / 2 + k * pi for the sine and
+		// k * pi for the cosine, with value 1 for an even k and -1 for an odd
+		// one. These points are computed with doubles: a point a few doubles
+		// outside [a, b] is kept, since the exact one may be inside
+		double offset = sine ? Math.PI / 2 : 0;
+		long kStart = (long) Math.floor((a - offset) / Math.PI) - 1;
+		long kEnd = (long) Math.ceil((b - offset) / Math.PI) + 1;
+		for (long k = kStart; k <= kEnd; k++) {
+			double point = offset + k * Math.PI;
+			double tolerance = 4 * Math.ulp(Math.abs(point) + 1);
+			if (point < a - tolerance || point > b + tolerance)
+				continue;
+			double value = k % 2 == 0 ? 1 : -1;
+			min = Math.min(min, value);
+			max = Math.max(max, value);
+		}
+		return new IntInterval(new MathNumber(min), new MathNumber(max));
+	}
+
 	public static IntInterval trigonometric(
 			IntInterval i,
 			Function<Double, Double> function,
@@ -308,9 +365,9 @@ public class JavaNumericInterval extends Interval {
 
 		// numeric
 		if (operator instanceof JavaMathSinOperator)
-			return trigonometric(arg, SIN, 4 * Math.PI);
+			return sineOrCosine(arg, true);
 		if (operator instanceof JavaMathCosOperator)
-			return trigonometric(arg, Math::cos, 4 * Math.PI);
+			return sineOrCosine(arg, false);
 		if (operator instanceof JavaMathTanOperator)
 			return trigonometric(arg, Math::tan, Math.PI);
 
@@ -541,6 +598,16 @@ public class JavaNumericInterval extends Interval {
 			}
 		}
 
+		// exact bounds only between single values (e.g., Math.PI / 4): on
+		// ranges, the bounds rounded to integers let loops converge
+		if ((operator instanceof MultiplicationOperator || operator instanceof DivisionOperator)
+				&& left.isSingleton() && right.isSingleton()
+				&& isFloatingPoint(expression, pp, oracle)) {
+			IntInterval result = floatingPointProduct(left, right, operator instanceof DivisionOperator);
+			if (result != null)
+				return result;
+		}
+
 		if (operator instanceof JavaMathMax)
 			return new IntInterval(left.getLow().max(right.getLow()), left.getHigh().max(right.getHigh()));
 
@@ -656,6 +723,117 @@ public class JavaNumericInterval extends Interval {
 		for (int i = 0; i < exponent; i++)
 			result = result.multiply(two);
 		return result;
+	}
+
+	/**
+	 * Returns whether the given expression may have floating point values.
+	 *
+	 * @param expression the expression
+	 * @param pp         the program point where the expression is evaluated
+	 * @param oracle     the oracle for inter-domain communication
+	 *
+	 * @return {@code true} if a runtime type of the expression is {@code float}
+	 *             or {@code double}
+	 *
+	 * @throws SemanticException if the types cannot be computed
+	 */
+	static boolean mayBeFloatingPoint(
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		return oracle.getRuntimeTypesOf(expression, pp).stream()
+				.anyMatch(type -> type instanceof JavaNumericType numType && !numType.isIntegral());
+	}
+
+	/**
+	 * Returns whether the given expression has only floating point values.
+	 *
+	 * @param expression the expression
+	 * @param pp         the program point where the expression is evaluated
+	 * @param oracle     the oracle for inter-domain communication
+	 *
+	 * @return {@code true} if all the runtime types of the expression are
+	 *             {@code float} or {@code double}
+	 *
+	 * @throws SemanticException if the types cannot be computed
+	 */
+	static boolean isFloatingPoint(
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Set<Type> types = oracle.getRuntimeTypesOf(expression, pp);
+		return !types.isEmpty()
+				&& types.stream().allMatch(type -> type instanceof JavaNumericType numType && !numType.isIntegral());
+	}
+
+	/**
+	 * Returns the product or the quotient of two intervals of floating point
+	 * values. The interval of the integral values rounds the bounds to
+	 * integers; here they are kept, and widened by one double on each side,
+	 * since the result of the operation is rounded to the nearest double.
+	 *
+	 * @param left     the interval of the left operand
+	 * @param right    the interval of the right operand
+	 * @param division whether the operation is a division
+	 *
+	 * @return the interval of the result, or {@code null} if it cannot be
+	 *             computed this way (a divisor that may be zero, or bounds that
+	 *             are not numbers)
+	 */
+	private static IntInterval floatingPointProduct(
+			IntInterval left,
+			IntInterval right,
+			boolean division) {
+		if (division && right.includes(IntInterval.ZERO))
+			return null;
+		MathNumber[] bounds = {
+				combine(left.getLow(), right.getLow(), division),
+				combine(left.getLow(), right.getHigh(), division),
+				combine(left.getHigh(), right.getLow(), division),
+				combine(left.getHigh(), right.getHigh(), division) };
+		MathNumber low = bounds[0];
+		MathNumber high = bounds[0];
+		for (MathNumber bound : bounds) {
+			if (bound.isNaN())
+				return null;
+			low = low.min(bound);
+			high = high.max(bound);
+		}
+		try {
+			if (low.isFinite())
+				low = fromDouble(Math.nextDown(low.toDouble()));
+			if (high.isFinite())
+				high = fromDouble(Math.nextUp(high.toDouble()));
+		} catch (MathNumberConversionException e) {
+			return null;
+		}
+		return new IntInterval(low, high);
+	}
+
+	/**
+	 * Returns the given double as a number, with the infinities as the infinite
+	 * numbers.
+	 *
+	 * @param value the double
+	 *
+	 * @return the number
+	 */
+	private static MathNumber fromDouble(
+			double value) {
+		if (value == Double.POSITIVE_INFINITY)
+			return MathNumber.PLUS_INFINITY;
+		if (value == Double.NEGATIVE_INFINITY)
+			return MathNumber.MINUS_INFINITY;
+		return new MathNumber(value);
+	}
+
+	private static MathNumber combine(
+			MathNumber left,
+			MathNumber right,
+			boolean division) {
+		return division ? left.divide(right) : left.multiply(right);
 	}
 
 	private static JavaNumericType integralTypeOf(
