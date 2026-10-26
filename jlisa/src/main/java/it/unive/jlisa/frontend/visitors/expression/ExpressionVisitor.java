@@ -292,45 +292,8 @@ public class ExpressionVisitor
 		case "=":
 			expression = new JavaAssignment(cfg, location, left, right);
 			break;
-		case "+=":
-			expression = new JavaCompoundAssignment(cfg, location, "+=", new JavaAddition(cfg, location, left, right));
-			break;
-		case "-=":
-			expression = new JavaCompoundAssignment(cfg, location, "-=",
-					new JavaSubtraction(cfg, location, left, right));
-			break;
-		case "*=":
-			expression = new JavaCompoundAssignment(cfg, location, "*=",
-					new Multiplication(cfg, location, left, right));
-			break;
-		case "/=":
-			expression = new JavaCompoundAssignment(cfg, location, "/=", new JavaDivision(cfg, location, left, right));
-			break;
-		case "%=":
-			expression = new JavaCompoundAssignment(cfg, location, "%=", new Modulo(cfg, location, left, right));
-			break;
-		case "&=":
-			expression = new JavaCompoundAssignment(cfg, location, "&=",
-					new JavaBitwiseAnd(cfg, location, left, right));
-			break;
-		case "|=":
-			expression = new JavaCompoundAssignment(cfg, location, "|=", new JavaBitwiseOr(cfg, location, left, right));
-			break;
-		case "^=":
-			expression = new JavaCompoundAssignment(cfg, location, "^=",
-					new JavaBitwiseExclusiveOr(cfg, location, left, right));
-			break;
-		case "<<=":
-			expression = new JavaCompoundAssignment(cfg, location, "<<=",
-					new JavaShiftLeft(cfg, location, left, right));
-			break;
-		case ">>=":
-			expression = new JavaCompoundAssignment(cfg, location, ">>=",
-					new JavaShiftRight(cfg, location, left, right));
-			break;
-		case ">>>=":
-			expression = new JavaCompoundAssignment(cfg, location, ">>>=",
-					new JavaUnsignedShiftRight(cfg, location, left, right));
+		case "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=", ">>>=":
+			expression = new JavaCompoundAssignment(cfg, location, operator.toString(), left, right);
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
