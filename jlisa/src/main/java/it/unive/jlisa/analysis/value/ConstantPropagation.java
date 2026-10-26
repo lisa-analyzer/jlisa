@@ -1887,6 +1887,37 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ProgramPoint dest,
 			SemanticOracle oracle)
 			throws SemanticException {
+		ValueEnvironment<ConstantValue> result = assumeOneSide(environment, expression, src, oracle);
+		// only one identifier is refined: when both operands are identifiers,
+		// the right one is refined too, with the value of the left one
+		// (equality and inequality are symmetric)
+		if (!result.isBottom() && expression.getLeft() instanceof Identifier
+				&& expression.getRight() instanceof Identifier right)
+			result = assumeOneSide(result, new BinaryExpression(expression.getStaticType(), right,
+					expression.getLeft(), expression.getOperator(), expression.getCodeLocation()), src, oracle);
+		return result;
+	}
+
+	/**
+	 * Returns the given environment assuming that the given binary expression
+	 * holds, refining its left operand if it is an identifier, or otherwise its
+	 * right operand.
+	 *
+	 * @param environment the environment
+	 * @param expression  the binary expression
+	 * @param src         the program point of the expression
+	 * @param oracle      the oracle for inter-domain communication
+	 *
+	 * @return the refined environment
+	 *
+	 * @throws SemanticException if the expression cannot be evaluated
+	 */
+	private ValueEnvironment<ConstantValue> assumeOneSide(
+			ValueEnvironment<ConstantValue> environment,
+			BinaryExpression expression,
+			ProgramPoint src,
+			SemanticOracle oracle)
+			throws SemanticException {
 		Identifier id;
 		ConstantValue eval;
 		// boolean rightIsExpr;

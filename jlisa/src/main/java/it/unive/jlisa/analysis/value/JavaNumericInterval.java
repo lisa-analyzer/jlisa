@@ -54,6 +54,7 @@ import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
+import java.util.Set;
 import java.util.function.Function;
 
 public class JavaNumericInterval extends Interval {
@@ -700,7 +701,23 @@ public class JavaNumericInterval extends Interval {
 			return environment;
 
 		if (expression.getOperator() != ComparisonNe.INSTANCE) {
-			return super.assumeBinaryExpression(environment, expression, src, dest, oracle);
+			ValueEnvironment<IntInterval> result = super.assumeBinaryExpression(environment, expression, src, dest,
+					oracle);
+			// the interval domain of LiSA refines only one identifier: when
+			// both operands are identifiers, the right one is refined too, with
+			// the mirrored comparison (e.g., y > x for x < y). Only integral
+			// values are refined, since the strict comparisons refine by one
+			BinaryOperator mirrored = mirror(expression.getOperator());
+			if (!result.isBottom() && mirrored != null
+					&& expression.getLeft() instanceof Identifier left
+					&& expression.getRight() instanceof Identifier right
+					&& isIntegral(left, src, oracle)
+					&& isIntegral(right, src, oracle))
+				result = super.assumeBinaryExpression(result,
+						new BinaryExpression(expression.getStaticType(), right, left, mirrored,
+								expression.getCodeLocation()),
+						src, dest, oracle);
+			return result;
 		}
 
 		Identifier id;
@@ -766,4 +783,51 @@ public class JavaNumericInterval extends Interval {
 		return x.subtract(new MathNumber(1));
 	}
 
+	/**
+	 * Returns the comparison that holds when the operands of the given one are
+	 * swapped (e.g., {@code >} for {@code <}).
+	 *
+	 * @param operator the comparison
+	 *
+	 * @return the mirrored comparison, or {@code null} if the operator is not a
+	 *             comparison that can be mirrored
+	 */
+	private static BinaryOperator mirror(
+			BinaryOperator operator) {
+		if (operator == ComparisonEq.INSTANCE)
+			return ComparisonEq.INSTANCE;
+		if (operator == ComparisonLt.INSTANCE)
+			return ComparisonGt.INSTANCE;
+		if (operator == ComparisonGt.INSTANCE)
+			return ComparisonLt.INSTANCE;
+		if (operator == ComparisonLe.INSTANCE)
+			return ComparisonGe.INSTANCE;
+		if (operator == ComparisonGe.INSTANCE)
+			return ComparisonLe.INSTANCE;
+		return null;
+	}
+
+	/**
+	 * Returns whether all the runtime types of the given expression are
+	 * integral. The runtime types are checked one by one, since the dynamic
+	 * type would need their common supertype, which cannot be computed for
+	 * every class.
+	 *
+	 * @param expression the expression
+	 * @param pp         the program point of the expression
+	 * @param oracle     the oracle for inter-domain communication
+	 *
+	 * @return {@code true} if the expression is integral
+	 *
+	 * @throws SemanticException if the type cannot be computed
+	 */
+	static boolean isIntegral(
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Set<Type> types = oracle.getRuntimeTypesOf(expression, pp);
+		return !types.isEmpty()
+				&& types.stream().allMatch(type -> type instanceof JavaNumericType numType && numType.isIntegral());
+	}
 }
