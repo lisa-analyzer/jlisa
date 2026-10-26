@@ -82,7 +82,7 @@ public class StrictMathMax extends it.unive.lisa.program.cfg.statement.BinaryExp
 				}
 
 				Type rPrimeType;
-				SymbolicExpression rightExpr = left;
+				SymbolicExpression rightExpr = right;
 				if (rType.isReferenceType() && (rPrimeType = JavaClassType
 						.getUnwrappedType(rType.asReferenceType().getInnerType())) != null) {
 					// unboxing

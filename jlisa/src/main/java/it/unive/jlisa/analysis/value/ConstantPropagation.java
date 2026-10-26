@@ -884,11 +884,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
-
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
-				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
-			}
+			if (lVal instanceof Number l && rVal instanceof Number r)
+				return new ConstantValue(minMax(l, r, true));
 		}
 
 		if (operator instanceof JavaMathMin) {
@@ -898,11 +895,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
-
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
-				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
-			}
+			if (lVal instanceof Number l && rVal instanceof Number r)
+				return new ConstantValue(minMax(l, r, false));
 		}
 
 		if (operator instanceof JavaMathAtan2Operator) {
@@ -1937,6 +1931,29 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return environment.bottom();
 		else
 			return environment.putState(id, update);
+	}
+
+	/**
+	 * Returns the maximum or the minimum of the given numbers, with the type of
+	 * the binary numeric promotion of Java (double, float, long or int).
+	 *
+	 * @param l   the first number
+	 * @param r   the second number
+	 * @param max whether the maximum is returned, otherwise the minimum
+	 *
+	 * @return the maximum or the minimum
+	 */
+	private static Number minMax(
+			Number l,
+			Number r,
+			boolean max) {
+		if (l instanceof Double || r instanceof Double)
+			return max ? Math.max(l.doubleValue(), r.doubleValue()) : Math.min(l.doubleValue(), r.doubleValue());
+		if (l instanceof Float || r instanceof Float)
+			return max ? Math.max(l.floatValue(), r.floatValue()) : Math.min(l.floatValue(), r.floatValue());
+		if (l instanceof Long || r instanceof Long)
+			return max ? Math.max(l.longValue(), r.longValue()) : Math.min(l.longValue(), r.longValue());
+		return max ? Math.max(l.intValue(), r.intValue()) : Math.min(l.intValue(), r.intValue());
 	}
 
 	@Override

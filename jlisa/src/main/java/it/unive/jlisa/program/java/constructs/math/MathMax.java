@@ -82,7 +82,7 @@ public class MathMax extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 				}
 
 				Type rPrimeType;
-				SymbolicExpression rightExpr = left;
+				SymbolicExpression rightExpr = right;
 				if (rType.isReferenceType() && (rPrimeType = JavaClassType
 						.getUnwrappedType(rType.asReferenceType().getInnerType())) != null) {
 					// unboxing
