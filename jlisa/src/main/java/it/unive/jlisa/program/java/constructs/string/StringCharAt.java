@@ -27,11 +27,8 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -76,27 +73,17 @@ public class StringCharAt extends BinaryExpression implements PluggableStatement
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		// check for IndexOutOfBoundException
-		// index < 0 or index >= length
-		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE,
-				accessLeft,
-				JavaStringLengthOperator.INSTANCE,
-				getLocation());
-		it.unive.lisa.symbolic.value.BinaryExpression idxCheck1 = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE,
-				right, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
-		it.unive.lisa.symbolic.value.BinaryExpression idxCheck2 = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE,
-				right, length, ComparisonGe.INSTANCE, getLocation());
-		it.unive.lisa.symbolic.value.BinaryExpression or = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE,
-				idxCheck1, idxCheck2, LogicalOr.INSTANCE, getLocation());
+		AccessChild accessLeftLen = new AccessChild(JavaIntType.INSTANCE, derefLeft, lenVar, getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, or, this);
+		it.unive.lisa.symbolic.value.BinaryExpression indexGELen = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				right, accessLeftLen, ComparisonGe.INSTANCE, getLocation());
+
+		Satisfiability sat = analysis.satisfies(state, indexGELen, this);
 
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
