@@ -99,7 +99,7 @@ public final class EventLoop {
             long remaining = deadline - System.currentTimeMillis();
             if (remaining <= 0) {
                 ValidatorLogger.result("Timeout after {}ms — could not validate", TIMEOUT_MS);
-                vm.dispose();
+                vm.exit(1);
                 return handleErrorStatus("timeout", "no verdict after " + TIMEOUT_MS + " ms");
             }
 
@@ -108,7 +108,7 @@ public final class EventLoop {
                 eventSet = queue.remove(Math.min(remaining, 1000L));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                vm.dispose();
+                vm.exit(1);
                 return handleErrorStatus("interrupted", "validator thread interrupted");
             } catch (VMDisconnectedException e) {
                 // VM terminated — it ran to completion without reaching the target
@@ -126,7 +126,7 @@ public final class EventLoop {
 
                 if (result.isPresent()) {
                     try {
-                        vm.dispose();
+                        vm.exit(0);
                     } catch (Exception ignored) {
                         // VM already gone (e.g. after VMDeathEvent): the result still stands
                     }
