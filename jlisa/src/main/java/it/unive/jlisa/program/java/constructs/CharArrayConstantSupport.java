@@ -6,7 +6,6 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -14,7 +13,6 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
@@ -27,7 +25,6 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -141,26 +138,14 @@ public final class CharArrayConstantSupport {
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
+		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
-		}
+		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
 
 		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
