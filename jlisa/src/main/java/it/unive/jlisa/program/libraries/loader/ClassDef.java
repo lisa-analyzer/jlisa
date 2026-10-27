@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ClassDef {
-	private final SourceCodeLocationManager locationManager;
+	private final SyntheticCodeLocationManager locationManager;
 	private final boolean root;
 	private final boolean sealed;
 	private final String typeName;
@@ -31,7 +31,7 @@ public class ClassDef {
 	private final Collection<Field> fields = new HashSet<>();
 
 	public ClassDef(
-			SourceCodeLocationManager locationManager,
+			SyntheticCodeLocationManager locationManager,
 			boolean root,
 			boolean sealed,
 			String typeName,
@@ -115,9 +115,9 @@ public class ClassDef {
 			AtomicReference<CompilationUnit> rootHolder) {
 		CompilationUnit unit;
 		if (this.isInterface) {
-			unit = new InterfaceUnit(locationManager.nextRow(), program, name, this.sealed);
+			unit = new InterfaceUnit(locationManager.nextLocation(), program, name, this.sealed);
 		} else {
-			unit = new ClassUnit(locationManager.nextRow(), program, name, this.sealed);
+			unit = new ClassUnit(locationManager.nextLocation(), program, name, this.sealed);
 			if (this.root)
 				if (rootHolder.get() != null)
 					throw new IllegalStateException("More than one root class defined as hierarchy root");
@@ -156,7 +156,7 @@ public class ClassDef {
 		}
 
 		for (Method mtd : this.methods) {
-			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextRow(), init, unit);
+			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextLocation(), init, unit);
 			if (construct.getDescriptor().isInstance())
 				unit.addInstanceCodeMember(construct);
 			else
@@ -164,7 +164,7 @@ public class ClassDef {
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(program, locationManager.nextRow(), unit);
+			Global field = fld.toLiSAObject(program, locationManager.nextLocation(), unit);
 			if (field.isInstance())
 				unit.addInstanceGlobal(field);
 			else

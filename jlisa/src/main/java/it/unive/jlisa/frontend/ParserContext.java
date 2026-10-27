@@ -2,7 +2,6 @@ package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
-import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.program.*;
@@ -183,24 +182,6 @@ public class ParserContext {
 	 */
 	public int getApiLevel() {
 		return apiLevel;
-	}
-
-	/**
-	 * Creates and returns a new SourceCodeLocationManager for the specified
-	 * file position. This manager is used for tracking real source code
-	 * locations.
-	 *
-	 * @param fileName     the name of the source file
-	 * @param lineNumber   the starting line number
-	 * @param columnNumber the starting column number
-	 * 
-	 * @return a new SourceCodeLocationManager instance
-	 */
-	public SourceCodeLocationManager getLocationManager(
-			String fileName,
-			int lineNumber,
-			int columnNumber) {
-		return new SourceCodeLocationManager(fileName, lineNumber, columnNumber);
 	}
 
 	/**

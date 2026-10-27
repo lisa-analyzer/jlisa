@@ -1,26 +1,26 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':27:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':27:6-27:18] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':29:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':29:6-29:18] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':31:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
+    "message" : "['Main.java':31:6-31:18] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion holds"
   }, {
-    "message" : "['Main.java':33:6] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "message" : "['Main.java':33:6-33:18] on 'void Main::main(java.lang.String*[]* arg)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
   } ],
   "notices" : [ ],
-  "files" : [ "report.json", "void_A.A(A__this)_1250204410.graph.json", "void_A.A(A__this)_1707429226.graph.json", "void_A.A(A__this)_213486193.graph.json", "void_A.A(A__this)_318566977.graph.json", "void_B.B(B__this)_1707429195.graph.json", "void_B.B(B__this)_213461362.graph.json", "void_B.B(B__this)_318566171.graph.json", "void_C.C(C__this)_1707429164.graph.json", "void_C.C(C__this)_318565365.graph.json", "void_D.D(D__this)_1707429133.graph.json", "void_Main.main(java.lang.String_[]__arg).graph.json" ],
+  "files" : [ "report.json", "void_A.A(A__this)_-347573379.graph.json", "void_A.A(A__this)_-733770504.graph.json", "void_A.A(A__this)_1009371316.graph.json", "void_A.A(A__this)_161949935.graph.json", "void_B.B(B__this)_-348496776.graph.json", "void_B.B(B__this)_161920143.graph.json", "void_B.B(B__this)_980746164.graph.json", "void_C.C(C__this)_-349420173.graph.json", "void_C.C(C__this)_161890351.graph.json", "void_D.D(D__this)_161860559.graph.json", "void_Main.main(java.lang.String_[]__arg).graph.json" ],
   "info" : {
     "cfgs" : "19",
-    "duration" : "8ms",
-    "end" : "2026-10-21T18:07:49.505+02:00",
+    "duration" : "11ms",
+    "end" : "2026-10-23T10:44:30.934+02:00",
     "expressions" : "60",
     "files" : "11",
     "globals" : "50",
     "members" : "294",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-21T18:07:49.497+02:00",
+    "start" : "2026-10-23T10:44:30.923+02:00",
     "statements" : "41",
     "units" : "59",
     "version" : "1.0",

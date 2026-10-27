@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.libraries.LibrarySpecificationParser.LibraryCreationException;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -16,10 +16,10 @@ public class Runtime {
 	private final Collection<Method> methods = new HashSet<>();
 	private final Collection<Field> fields = new HashSet<>();
 	private final Collection<ClassDef> classes = new HashSet<>();
-	private final SourceCodeLocationManager locationManager;
+	private final SyntheticCodeLocationManager locationManager;
 
 	public Runtime(
-			SourceCodeLocationManager locationManager) {
+			SyntheticCodeLocationManager locationManager) {
 		this.locationManager = locationManager;
 	}
 
@@ -59,14 +59,14 @@ public class Runtime {
 			CFG init,
 			CompilationUnit root) {
 		for (Method mtd : this.methods) {
-			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextRow(), init, program);
+			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextLocation(), init, program);
 			if (construct.getDescriptor().isInstance())
 				throw new LibraryCreationException();
 			program.addCodeMember(construct);
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(program, locationManager.nextRow(), program);
+			Global field = fld.toLiSAObject(program, locationManager.nextLocation(), program);
 			if (field.isInstance())
 				throw new LibraryCreationException();
 			program.addGlobal(field);

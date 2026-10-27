@@ -11,7 +11,7 @@ import it.unive.jlisa.antlr.LibraryDefinitionParser.MethodContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ParamContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.TypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParserBaseVisitor;
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.libraries.loader.BooleanValue;
 import it.unive.jlisa.program.libraries.loader.ClassDef;
 import it.unive.jlisa.program.libraries.loader.Field;
@@ -30,13 +30,13 @@ import org.antlr.v4.runtime.Token;
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 
 	private final String file;
-	private final SourceCodeLocationManager locationManager;
+	private final SyntheticCodeLocationManager locationManager;
 
 	public LibrarySpecificationParser(
 			String file) {
 		this.file = file;
-		this.locationManager = new SourceCodeLocationManager(
-				"$java_runtime" + file.substring(0, file.lastIndexOf('.')));
+		this.locationManager = new SyntheticCodeLocationManager(
+				"java_runtime" + file.substring(0, file.lastIndexOf('.')));
 	}
 
 	@Override
