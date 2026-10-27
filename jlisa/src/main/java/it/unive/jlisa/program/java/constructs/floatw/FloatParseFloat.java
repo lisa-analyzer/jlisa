@@ -132,9 +132,8 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+			return analysis.moveExecutionToError(noExceptionState, state.withExecutionExpression(throwVar),
 					new Error(nfeType.getReference(), originating), this);
-			return exceptionState.lub(noExceptionState);
 		}
 	}
 }

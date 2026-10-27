@@ -140,6 +140,8 @@ public class JavaAccessInstanceGlobal
 		CodeLocation loc = getLocation();
 
 		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> erroneousState = state.bottom();
+		Error error = null;
 		boolean atLeastOne = false;
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
@@ -163,8 +165,8 @@ public class JavaAccessInstanceGlobal
 						// and all the metavariables from subexpressions
 						state = state.forgetIdentifiers(call.getMetaVariables(), this);
 						state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), this), this));
+						erroneousState = erroneousState.lub(state.withExecutionExpression(throwVar));
+						error = new Error(npeType.getReference(), this);
 					}
 					atLeastOne = true;
 					continue;
@@ -197,7 +199,10 @@ public class JavaAccessInstanceGlobal
 			}
 
 		if (atLeastOne)
-			return result;
+			if (error == null)
+				return result;
+			else
+				return analysis.moveExecutionToError(result, erroneousState, error, this);
 
 		// worst case: we are accessing a global that we know nothing about
 		Set<Type> rectypes = new HashSet<>();

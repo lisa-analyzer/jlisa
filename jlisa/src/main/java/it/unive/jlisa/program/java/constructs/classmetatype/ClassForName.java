@@ -170,7 +170,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+			return analysis.moveExecutionToError(noExceptionState, state.withExecutionExpression(throwVar),
 					new Error(classNotFoundType.getReference(), originating), this);
 		}
 

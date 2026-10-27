@@ -117,6 +117,10 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
+		AnalysisState<A> noSuchMethodState = state.bottom();
+		Error noSuchMethodError = null;
+		AnalysisState<A> instantiationState = state.bottom();
+		Error instantiationError = null;
 
 		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = extractConstraints(interprocedural, state,
 				accessValue);
@@ -148,8 +152,10 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					CompilationUnit cu = ut.getUnit();
 
 					if (!hasDefaultCtor(cu)) {
-						exceptionState = exceptionState
-								.lub(throwNoSuchMethodException(interprocedural, state, expressions));
+						noSuchMethodState = noSuchMethodState
+								.lub(prepareNoSuchMethodException(interprocedural, state, expressions));
+						noSuchMethodError = new Error(JavaClassType.getNoSuchMethodException().getReference(),
+								originating);
 						continue;
 					}
 				}
@@ -181,15 +187,19 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 				callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
 				callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-				exceptionState = exceptionState
-						.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-								new Error(instantiationExceptionType.getReference(), originating), this));
+				instantiationState = instantiationState.lub(state.withExecutionExpression(throwVar));
+				instantiationError = new Error(instantiationExceptionType.getReference(), originating);
 
 			}
 		}
 
 		noExceptionState = noExceptionState.withExecutionExpressions(execExpressions);
-		return noExceptionState.lub(exceptionState);
+		AnalysisState<A> result = noExceptionState.lub(exceptionState);
+		if (noSuchMethodError != null)
+			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, this);
+		if (instantiationError != null)
+			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, this);
+		return result;
 
 		// TODO: IllegalAccessException
 
@@ -242,7 +252,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 				});
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNoSuchMethodException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -266,8 +276,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		state = state.forgetIdentifiers(call.getMetaVariables(), this);
 		state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchMethodType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
 	@Override

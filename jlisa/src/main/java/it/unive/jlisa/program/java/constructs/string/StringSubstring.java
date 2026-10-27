@@ -176,7 +176,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			AnalysisState<A> erroneousState = state.bottomExecution();
 
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
@@ -188,11 +188,11 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
 
-			return exceptionState.lub(noExceptionState);
+			return analysis.moveExecutionToError(noExceptionState, erroneousState,
+					new Error(oonExc.getReference(), originating), this);
 		}
 	}
 }

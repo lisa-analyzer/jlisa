@@ -54,6 +54,8 @@ public class JavaCastExpression extends UnaryExpression {
 		if (type.isReferenceType()) {
 			Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
 			AnalysisState<A> result = state.bottomExecution();
+			AnalysisState<A> erroneousState = state.bottom();
+			Error error = null;
 
 			for (Type t : types) {
 				boolean safe = t.isReferenceType() && t.asReferenceType().getInnerType().isNullType()
@@ -80,12 +82,14 @@ public class JavaCastExpression extends UnaryExpression {
 					// and all the metavariables from subexpressions
 					excState = excState.forgetIdentifiers(call.getMetaVariables(), this);
 					excState = excState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-					result = result.lub(analysis.moveExecutionToError(excState.withExecutionExpression(throwVar),
-							new Error(ccExc.getReference(), this), this));
+					erroneousState = erroneousState.lub(excState.withExecutionExpression(throwVar));
+					error = new Error(ccExc.getReference(), this);
 				}
 			}
 
-			return result;
+			if (error == null)
+				return result;
+			return analysis.moveExecutionToError(result, erroneousState, error, this);
 		} else {
 			BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeConv.INSTANCE,
 					getLocation());

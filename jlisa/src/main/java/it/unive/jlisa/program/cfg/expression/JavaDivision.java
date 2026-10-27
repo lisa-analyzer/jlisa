@@ -121,10 +121,8 @@ public class JavaDivision extends Division {
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+			return analysis.moveExecutionToError(noExceptionState, state.withExecutionExpression(throwVar),
 					new Error(arithExc.getReference(), this), this);
-
-			return exceptionState.lub(noExceptionState);
 		}
 	}
 

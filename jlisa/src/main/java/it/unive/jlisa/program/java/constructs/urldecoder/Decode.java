@@ -121,6 +121,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		}
 
 		noExceptionState = tmp;
+		AnalysisState<A> result = noExceptionState.lub(exceptionState);
 
 		if (satIsValidEncoding != Satisfiability.SATISFIED) {
 
@@ -130,6 +131,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 					ueExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					new StatementStore<A>(state));
+			AnalysisState<A> erroneousState = state.bottom();
 
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
@@ -141,9 +143,11 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(ueExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
+
+			result = analysis.moveExecutionToError(result, erroneousState,
+					new Error(ueExc.getReference(), originating), this);
 		}
 
 		if (satIsIllegalArg != Satisfiability.SATISFIED) {
@@ -154,6 +158,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 					iaExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 					new StatementStore<A>(state));
+			AnalysisState<A> erroneousState = state.bottom();
 
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
@@ -165,11 +170,13 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(iaExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
+
+			result = analysis.moveExecutionToError(result, erroneousState,
+					new Error(iaExc.getReference(), originating), this);
 		}
 
-		return noExceptionState.lub(exceptionState);
+		return result;
 	}
 }

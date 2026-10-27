@@ -67,7 +67,6 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 		CodeLocation location = getLocation();
 
 		AnalysisState<A> noExceptionState;
-		AnalysisState<A> exceptionState;
 
 		noExceptionState = analysis.smallStepSemantics(state,
 				new PushAny(new JavaReferenceType(JavaClassType.lookup("javax.swing.plaf.ColorUIResource")),
@@ -91,9 +90,7 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 		state = state.forgetIdentifiers(getSubExpressions()[2].getMetaVariables(), this);
 		state = state.forgetIdentifiers(getSubExpressions()[3].getMetaVariables(), this);
 
-		exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+		return analysis.moveExecutionToError(noExceptionState, state.withExecutionExpression(throwVar),
 				new Error(IllegalArgumentExceptionType.getReference(), originating), this);
-
-		return noExceptionState.lub(exceptionState);
 	}
 }

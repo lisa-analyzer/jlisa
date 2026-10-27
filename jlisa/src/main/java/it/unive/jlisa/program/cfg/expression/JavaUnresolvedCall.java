@@ -64,6 +64,8 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		ExpressionSet receiver = params[0];
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> erroneousState = state.bottom();
+		Error error = null;
 
 		for (SymbolicExpression rec : receiver) {
 			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, this);
@@ -84,8 +86,8 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 
 							// deletes the receiver of the constructor
 							state = state.forgetIdentifiers(call.getMetaVariables(), this);
-							result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-									new Error(npeType.getReference(), this), this));
+							erroneousState = erroneousState.lub(state.withExecutionExpression(throwVar));
+							error = new Error(npeType.getReference(), this);
 						}
 						continue;
 					} else if (!inner.isUnitType())
@@ -95,6 +97,9 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				}
 			}
 		}
-		return result;
+
+		if (error == null)
+			return result;
+		return analysis.moveExecutionToError(result, erroneousState, error, this);
 	}
 }

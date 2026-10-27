@@ -79,10 +79,8 @@ public class PropertiesLoad extends BinaryExpression implements PluggableStateme
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
+		return analysis.moveExecutionToError(topState, state.withExecutionExpression(throwVar),
 				new Error(IOExceptionType.getReference(), originating), this);
-
-		return exceptionState.lub(topState);
 
 	}
 

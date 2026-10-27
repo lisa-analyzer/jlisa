@@ -207,6 +207,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
 					AnalysisState<A> accessState = state.bottomExecution();
+					AnalysisState<A> npeState = null;
+					Error npeError = null;
 
 					if (mightBeNull) {
 						// create NullPointerException for the null case
@@ -225,10 +227,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						nullAnalysisState = nullAnalysisState
 								.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-						AnalysisState<A> npeState = analysis.moveExecutionToError(
-								nullAnalysisState.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), originating), this);
-						accessState = accessState.lub(npeState);
+						npeState = nullAnalysisState.withExecutionExpression(throwVar);
+						npeError = new Error(npeType.getReference(), originating);
 					}
 
 					// if there are non-null targets, proceed normally
@@ -251,6 +251,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						accessState = accessState.lub(boxedState);
 					}
 
+					if (npeError != null)
+						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, this);
 					result = result.lub(accessState);
 				} else {
 					access = new GlobalVariable(

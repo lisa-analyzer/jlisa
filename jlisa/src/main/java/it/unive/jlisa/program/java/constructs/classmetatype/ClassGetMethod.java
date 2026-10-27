@@ -268,9 +268,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refMethod, this);
 				unknownMethods = unknownMethods.lub(noExceptionState.getExecutionExpressions());
 
-				AnalysisState<A> exceptionState = throwNoSuchMethodException(interprocedural, state, expressions);
-
-				state = noExceptionState.lub(exceptionState);
+				state = throwNoSuchMethodException(interprocedural, noExceptionState, state, expressions);
 			}
 
 			++i;
@@ -477,7 +475,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return res;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNoSuchMethodException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -502,8 +500,27 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchMethodType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(prepareNoSuchMethodException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating), this);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> normal,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(normal,
+				prepareNoSuchMethodException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(

@@ -277,9 +277,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, this);
 				unknownFields = unknownFields.lub(noExceptionState.getExecutionExpressions());
 
-				AnalysisState<A> exceptionState = throwNoSuchFieldException(interprocedural, state, expressions);
-
-				state = noExceptionState.lub(exceptionState);
+				state = throwNoSuchFieldException(interprocedural, noExceptionState, state, expressions);
 			}
 			++i;
 		}
@@ -356,7 +354,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		return tmp.withExecutionExpressions(new ExpressionSet());
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNoSuchFieldException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -381,8 +379,27 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchFieldType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(prepareNoSuchFieldException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating), this);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> normal,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(normal,
+				prepareNoSuchFieldException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(

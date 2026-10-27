@@ -183,6 +183,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		AnalysisState<A> exceptionState = state.bottomExecution();
 		AnalysisState<A> noExceptionState = state.bottomExecution();
+		AnalysisState<A> npeState = state.bottom();
+		Error npeError = null;
+		AnalysisState<A> iaeState = state.bottom();
+		Error iaeError = null;
 
 		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
 		// throw a NullPointerException if the method is not static and the
@@ -190,12 +194,16 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// of the receiver could be null
 		if (isStaticSat == Satisfiability.NOT_SATISFIED
 				&& thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
-			exceptionState = throwNullPointerException(interprocedural, state, expressions);
+			npeState = prepareNullPointerException(interprocedural, state, expressions);
+			npeError = new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating);
 		}
 
 		// if the receiver is certainly null, stop immediately
 		if (thisObjTypes.isEmpty())
-			return exceptionState;
+			if (npeError == null)
+				return exceptionState;
+			else
+				return analysis.moveExecutionToError(npeState, npeError, this);
 
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
 
@@ -210,7 +218,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			boolean mayThrowIA = checkMayThrowIllegalArgumentReceiver(interprocedural, state, thisObjTypes,
 					clazzNameConstraints, derefMethod);
 			if (mayThrowIA) {
-				exceptionState = exceptionState.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+				iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			}
 		}
 
@@ -322,8 +331,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				// if open call, it's a stray call. Throw an illegal argument
 				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
-					exceptionState = exceptionState
-							.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+					iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(),
+							originating);
 					continue;
 				}
 
@@ -357,7 +367,12 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			}
 		}
 
-		return noExceptionState.lub(exceptionState);
+		AnalysisState<A> result = noExceptionState.lub(exceptionState);
+		if (npeError != null)
+			result = analysis.moveExecutionToError(result, npeState, npeError, this);
+		if (iaeError != null)
+			result = analysis.moveExecutionToError(result, iaeState, iaeError, this);
+		return result;
 	}
 
 	@Override
@@ -468,7 +483,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return sat;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNullPointerException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -495,8 +510,16 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		assert (!state.isBottom());
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(nullPointerExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(prepareNullPointerException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> List<BinaryExpression> getClassNameConstraints(
@@ -573,7 +596,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return (UnitType) t;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwIllegalArgumentException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareIllegalArgumentException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -598,8 +621,16 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(illegalArgumentExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwIllegalArgumentException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(prepareIllegalArgumentException(interprocedural, state, expressions),
+				new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> getBoxedState(
