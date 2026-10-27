@@ -58,14 +58,9 @@ public class StringLength extends UnaryExpression implements PluggableStatement 
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
-		AccessChild access = new AccessChild(stringType, deref, var, getLocation());
-		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE,
-				access,
-				JavaStringLengthOperator.INSTANCE,
-				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, length, originating);
+		AccessChild access = new AccessChild(JavaIntType.INSTANCE, deref, var, getLocation());
+		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
 	}
 }

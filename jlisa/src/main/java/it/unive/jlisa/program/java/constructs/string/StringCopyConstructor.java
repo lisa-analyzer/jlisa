@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -60,6 +61,12 @@ public class StringCopyConstructor extends BinaryExpression implements Pluggable
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, rightAccess, originating);
+		AnalysisState<A> res = interprocedural.getAnalysis().assign(state, leftAccess, rightAccess, originating);
+
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
+		AccessChild lenAccessLeft = new AccessChild(JavaIntType.INSTANCE, left, lengthVar, getLocation());
+		AccessChild lenAccessRight = new AccessChild(JavaIntType.INSTANCE, right, lengthVar, getLocation());
+
+		return interprocedural.getAnalysis().assign(res, lenAccessLeft, lenAccessRight, originating);
 	}
 }

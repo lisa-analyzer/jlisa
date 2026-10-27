@@ -1,5 +1,10 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import java.util.Set;
+
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -16,6 +21,9 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.PushFromConstraints;
+import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -57,11 +65,28 @@ public class StringConstructorFromByteArray extends BinaryExpression implements 
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
+
 		// in this case, we always return the top string
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		PushAny topString = new PushAny(stringType, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+
+		AnalysisState<A> tmp = interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+
+		AccessChild leftLenAccess = new AccessChild(JavaIntType.INSTANCE, left, lenVar, getLocation());
+
+		PushFromConstraints length = new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), Set.of(
+				new it.unive.lisa.symbolic.value.BinaryExpression(
+						JavaBooleanType.INSTANCE,
+						new Constant(JavaIntType.INSTANCE, 0, getLocation()),
+						leftLenAccess,
+						ComparisonLe.INSTANCE,
+						getLocation())));
+
+		tmp = interprocedural.getAnalysis().assign(tmp, leftLenAccess, length, this);
+		return tmp;
 	}
 }
+

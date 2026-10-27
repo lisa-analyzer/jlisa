@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement.literal;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -45,6 +46,10 @@ public class JavaStringLiteral extends Literal<String> {
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 
+		int valueLen = getValue().length();
+		Constant len = new Constant(JavaIntType.INSTANCE, valueLen, getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
+
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), reftype, new Expression[0]);
 		AnalysisState<
@@ -57,6 +62,9 @@ public class JavaStringLiteral extends Literal<String> {
 			AnalysisState<A> sem = analysis.assign(callState, access,
 					new Constant(stringType, getValue(), getLocation()), this);
 			tmp = tmp.lub(sem);
+
+			AccessChild lenAccess = new AccessChild(JavaIntType.INSTANCE, ref, lenVar, getLocation());
+			tmp = analysis.assign(tmp, lenAccess, len, this);
 		}
 
 		getMetaVariables().addAll(call.getMetaVariables());

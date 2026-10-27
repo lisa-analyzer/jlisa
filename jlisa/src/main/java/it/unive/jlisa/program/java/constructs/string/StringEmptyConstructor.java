@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -57,9 +58,16 @@ public class StringEmptyConstructor extends UnaryExpression implements Pluggable
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Constant emptyString = new Constant(stringType, "", getLocation());
+		Constant zeroLen = new Constant(JavaIntType.INSTANCE, 0, getLocation());
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(stringType, expr, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, emptyString, originating);
+
+		AnalysisState<A> res = interprocedural.getAnalysis().assign(state, access, emptyString, originating);
+
+		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
+		access = new AccessChild(JavaIntType.INSTANCE, expr, lengthVar, getLocation());
+
+		return interprocedural.getAnalysis().assign(res, access, zeroLen, originating);
 	}
 }
