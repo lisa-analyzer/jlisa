@@ -462,7 +462,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		}
 
 		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
-		Statement nullPointerTrigger = new JavaThrow(getScope().getCFG(), syntheticLocMan.nextLocation(),
+		// the exception is raised by the synchronized statement itself
+		Statement nullPointerTrigger = new JavaThrow(getScope().getCFG(), getSourceCodeLocation(node),
 				new JavaNewObj(getScope().getCFG(), syntheticLocMan.nextLocation(),
 						new JavaReferenceType(npeType),
 						new JavaStringLiteral(getScope().getCFG(),
@@ -536,8 +537,9 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), ref,
 							initializer);
 				} else if (initializer instanceof JavaNewArrayWithInitializer) {
-					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment), ref,
-							((JavaNewArrayWithInitializer) initializer).withStaticType(type));
+					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment),
+							ref,
+							((JavaNewArrayWithInitializer) initializer).withStaticType(type), true);
 				} else if (initializer.getStaticType().canBeAssignedTo(type)
 						&& !type.equals(initializer.getStaticType())) {
 					// implicit cast
@@ -545,10 +547,12 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
 							initializer,
 							type);
-					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment), ref, cast);
+					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment),
+							ref, cast, true);
 				} else
-					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment), ref,
-							initializer);
+					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment),
+							ref,
+							initializer, true);
 			}
 
 			adj.addNode(assignment);

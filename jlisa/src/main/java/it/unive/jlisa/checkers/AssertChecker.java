@@ -25,6 +25,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -149,8 +150,12 @@ public class AssertChecker<V extends ValueLattice<V>>
 			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)
 				// if the normal state is bottom, we raise a definite error
-				if (normaleState.second.isBottom())
+				if (normaleState.second.isBottom()) {
 					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
+					Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
+					if (target.isPresent())
+						violations.accept(new Violation(ViolationKind.RUNTIME_EXCEPTION, target.get()));
+				}
 				// otherwise, we raise a possible error (both normal and
 				// exception states are not bottom)
 				else

@@ -239,6 +239,10 @@ public class JavaClassType
 		return lookup("java.lang.NullPointerException");
 	}
 
+	public static JavaClassType getRuntimeExceptionType() {
+		return lookup("java.lang.RuntimeException");
+	}
+
 	public static JavaClassType getNegativeArraySizeExceptionType() {
 		return lookup("java.lang.NegativeArraySizeException");
 	}

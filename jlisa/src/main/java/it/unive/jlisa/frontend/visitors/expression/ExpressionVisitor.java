@@ -917,7 +917,8 @@ public class ExpressionVisitor
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			Expression initializer = getParserContext().evaluate(expr,
 					new ExpressionVisitor(getEnvironment(), getScope()));
-			expression = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment), ref, initializer);
+			expression = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment), ref,
+					initializer, true);
 		}
 		return false;
 	}

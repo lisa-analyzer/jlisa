@@ -13,10 +13,9 @@ public enum ViolationKind {
 	ASSERT,
 
 	/**
-	 * A runtime exception that is not caught. The {@link AssertChecker} does
-	 * not report violations of this kind yet: the statement that throws the
-	 * exception is not known where the checker finds it, at the end of the
-	 * entry point.
+	 * A runtime exception that is not caught. Its violation is reported at the
+	 * statement that raises the exception, found by
+	 * {@link RuntimeExceptionTarget}.
 	 */
 	RUNTIME_EXCEPTION;
 }

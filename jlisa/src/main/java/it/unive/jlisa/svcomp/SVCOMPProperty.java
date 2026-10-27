@@ -13,13 +13,19 @@ public enum SVCOMPProperty {
 	/**
 	 * No assertion fails ({@code valid-assert.prp}).
 	 */
-	ASSERT("CHECK( init(Main.main()), LTL(G assert) )", ViolationKind.ASSERT),
+	ASSERT("valid-assert", "CHECK( init(Main.main()), LTL(G assert) )", ViolationKind.ASSERT),
 
 	/**
 	 * No runtime exception is left uncaught ({@code no-runtime-exception.prp}).
 	 */
-	RUNTIME_EXCEPTION("CHECK(init(Main.main()), LTL(G ! uncaught(java.lang.RuntimeException)))",
+	RUNTIME_EXCEPTION("no-runtime-exception",
+			"CHECK(init(Main.main()), LTL(G ! uncaught(java.lang.RuntimeException)))",
 			ViolationKind.RUNTIME_EXCEPTION);
+
+	/**
+	 * The name of this property.
+	 */
+	private final String name;
 
 	/**
 	 * The text of the property file, without leading and trailing blanks.
@@ -34,18 +40,30 @@ public enum SVCOMPProperty {
 	/**
 	 * Builds a property.
 	 *
+	 * @param name          the name of the property
 	 * @param specification the text of the property file
 	 * @param violation     the kind of the violations of the property
 	 */
 	private SVCOMPProperty(
+			String name,
 			String specification,
 			ViolationKind violation) {
+		this.name = name;
 		this.specification = specification;
 		this.violation = violation;
 	}
 
 	/**
-	 * Yields the text of the property file of this property, without leading
+	 * Returns the name of this property.
+	 *
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Returns the text of the property file of this property, without leading
 	 * and trailing blanks.
 	 *
 	 * @return the text
@@ -55,7 +73,7 @@ public enum SVCOMPProperty {
 	}
 
 	/**
-	 * Yields the kind of the violations of this property.
+	 * Returns the kind of the violations of this property.
 	 *
 	 * @return the kind
 	 */
@@ -64,7 +82,7 @@ public enum SVCOMPProperty {
 	}
 
 	/**
-	 * Yields the property whose property file has the given text. Leading and
+	 * Returns the property whose property file has the given text. Leading and
 	 * trailing blanks are ignored.
 	 *
 	 * @param specification the text of a property file

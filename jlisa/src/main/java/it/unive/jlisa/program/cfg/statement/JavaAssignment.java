@@ -32,12 +32,49 @@ import java.util.Set;
 
 public class JavaAssignment extends Assignment {
 
+	/**
+	 * Whether this assignment is the initializer of a local variable or field
+	 * in its declaration ({@code int x = e;}).
+	 */
+	private final boolean initializer;
+
 	public JavaAssignment(
 			CFG cfg,
 			CodeLocation location,
 			Expression target,
 			Expression expression) {
+		this(cfg, location, target, expression, false);
+	}
+
+	/**
+	 * Builds the assignment.
+	 *
+	 * @param cfg         the {@link CFG} where this assignment lies
+	 * @param location    the location where this assignment is defined
+	 * @param target      the target of the assignment
+	 * @param expression  the assigned expression
+	 * @param initializer whether this assignment is the initializer of a local
+	 *                        variable or field in its declaration
+	 */
+	public JavaAssignment(
+			CFG cfg,
+			CodeLocation location,
+			Expression target,
+			Expression expression,
+			boolean initializer) {
 		super(cfg, location, RightToLeftEvaluation.INSTANCE, target.getStaticType(), target, expression);
+		this.initializer = initializer;
+	}
+
+	/**
+	 * Returns whether this assignment is the initializer of a local variable or
+	 * field in its declaration ({@code int x = e;}). In this case, the assigned
+	 * expression is a full expression on its own.
+	 *
+	 * @return {@code true} if this assignment is an initializer
+	 */
+	public boolean isInitializer() {
+		return initializer;
 	}
 
 	@Override
