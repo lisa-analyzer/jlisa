@@ -89,24 +89,32 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				this);
 		for (SymbolicExpression clazz : classes) {
 
-			AnalysisState<A> searchResult = state;
 			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
+			if (clazzTypes.isEmpty()) {
+				result = result.lub(state);
+				continue;
+			}
+
+			// each runtime type is an alternative, evaluated on the same state
+			AnalysisState<A> searchResult = state.bottomExecution();
+			AnalysisState<A> npeState = state.bottom();
 
 			for (Type t : clazzTypes) {
 				if (t.isNullType()) {
-					searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
+					npeState = npeState.lub(prepareNullPointerException(interprocedural, state, expressions));
 				}
 				// search the field
 				else {
 					AnalysisState<
-							A> fieldSearched = searchField(interprocedural, searchResult, clazz, right, expressions);
+							A> fieldSearched = searchField(interprocedural, state, clazz, right, expressions);
 
 					if (fieldSearched.isTop() || fieldSearched.isBottom())
 						return fieldSearched;
 
 					// didn't find any matching field
 					if (fieldSearched.getExecutionExpressions().isEmpty()) {
-						searchResult = throwNoSuchFieldException(interprocedural, fieldSearched, expressions);
+						searchResult = searchResult
+								.lub(throwNoSuchFieldException(interprocedural, fieldSearched, expressions));
 					} else {
 						// found at least one field, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -115,10 +123,12 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 							tmp = tmp.lub(copyField.fwdUnarySemantics(interprocedural, fieldSearched, expr,
 									expressions));
 						}
-						searchResult = tmp;
+						searchResult = searchResult.lub(tmp);
 					}
 				}
 			}
+			searchResult = analysis.moveExecutionToError(searchResult, npeState,
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), this);
 			result = result.lub(searchResult);
 		}
 
@@ -384,7 +394,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().moveExecutionToError(prepareNoSuchFieldException(interprocedural, state, expressions),
+		return interprocedural.getAnalysis().moveExecutionToError(
+				prepareNoSuchFieldException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating), this);
 	}
 
@@ -399,7 +410,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating), this);
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNullPointerException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -424,8 +435,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(nullPointerExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
 	private UnitType getTypeFromStr(

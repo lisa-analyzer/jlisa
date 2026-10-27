@@ -43,7 +43,6 @@ import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -147,10 +146,10 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 			return state.topExecution();
 
 		List<BinaryExpression> clazzNameConstraints = clazzNameStream.toList();
-		if (clazzNameConstraints.isEmpty())
+		if (clazzNameConstraints.isEmpty() || fieldNameConstraints.isEmpty())
 			return state;
 
-		AnalysisState<A> result = state;
+		AnalysisState<A> result = state.bottomExecution();
 
 		for (BinaryExpression clazzNameConstraint : clazzNameConstraints) {
 
@@ -162,7 +161,8 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 			assert (clazzUnit instanceof CompilationUnit);
 
 			UnitType ut = getTypeFromStr(clazzName);
-			state = InitializedClassSet.initialize(state, new JavaReferenceType(ut), this, interprocedural);
+			AnalysisState<A> clazzState = InitializedClassSet.initialize(state, new JavaReferenceType(ut), this,
+					interprocedural);
 
 			for (BinaryExpression fieldNameConstraint : fieldNameConstraints) {
 
@@ -186,36 +186,12 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 				if (reflectedGlobal.isInstance()) {
 
 					// get the runtime types of the target object
-					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, middle, this);
+					Set<Type> targetTypes = analysis.getRuntimeTypesOf(clazzState, middle, this);
 
 					// remove null, if present
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
-					// AnalysisState<A> setState = state.bottomExecution();
-
-					if (mightBeNull) {
-						// create NullPointerException for the null case
-						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
-
-						JavaNewObj npeCall = new JavaNewObj(cfg, loc,
-								npeType.getReference(), new Expression[0]);
-						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, result,
-								new ExpressionSet[0], expressions);
-
-						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), loc);
-						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
-								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
-
-						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
-						nullAnalysisState = nullAnalysisState
-								.forgetIdentifiers(getMiddle().getMetaVariables(), this);
-
-						AnalysisState<A> npeState = analysis.moveExecutionToError(
-								nullAnalysisState.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), originating), this);
-
-						result = npeState;
-					}
+					AnalysisState<A> setState = state.bottomExecution();
 
 					// if there are non-null targets, proceed normally
 					if (!targetTypes.isEmpty()) {
@@ -231,10 +207,33 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 						// anything. It should be a fieldAccess expression
 						JavaAssignment assign = new JavaAssignment(getCFG(), loc, getMiddle(), getRight());
 
-						AnalysisState<A> t = assign.fwdBinarySemantics(interprocedural, result, access, right,
+						setState = assign.fwdBinarySemantics(interprocedural, clazzState, access, right,
 								expressions);
-						result = t;
 					}
+
+					if (mightBeNull) {
+						// create NullPointerException for the null case
+						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
+
+						JavaNewObj npeCall = new JavaNewObj(cfg, loc,
+								npeType.getReference(), new Expression[0]);
+						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, clazzState,
+								new ExpressionSet[0], expressions);
+
+						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), loc);
+						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
+								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+
+						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
+						nullAnalysisState = nullAnalysisState
+								.forgetIdentifiers(getMiddle().getMetaVariables(), this);
+
+						setState = analysis.moveExecutionToError(setState,
+								nullAnalysisState.withExecutionExpression(throwVar),
+								new Error(npeType.getReference(), originating), this);
+					}
+
+					result = result.lub(setState);
 				} else {
 					GlobalVariable reflectedAccess = new GlobalVariable(
 							reflectedGlobal.getStaticType(),
@@ -245,13 +244,12 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 							reflectedGlobal.getStaticType());
 					JavaAssignment assign = new JavaAssignment(getCFG(), loc, target, getRight());
 
-					AnalysisState<A> t = assign.fwdBinarySemantics(
+					result = result.lub(assign.fwdBinarySemantics(
 							interprocedural,
-							result,
+							clazzState,
 							reflectedAccess,
 							right,
-							expressions);
-					result = t;
+							expressions));
 				}
 			}
 		}

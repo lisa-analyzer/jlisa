@@ -94,17 +94,24 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				this);
 		for (SymbolicExpression clazz : classes) {
 
-			AnalysisState<A> searchResult = state;
 			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
+			if (clazzTypes.isEmpty()) {
+				result = result.lub(state);
+				continue;
+			}
+
+			// each runtime type is an alternative, evaluated on the same state
+			AnalysisState<A> searchResult = state.bottomExecution();
+			AnalysisState<A> npeState = state.bottom();
 
 			for (Type t : clazzTypes) {
 				if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-					searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
+					npeState = npeState.lub(prepareNullPointerException(interprocedural, state, expressions));
 				}
 				// search for the method
 				else {
 					AnalysisState<
-							A> methodSearched = searchMethod(interprocedural, searchResult, clazz, middle, right,
+							A> methodSearched = searchMethod(interprocedural, state, clazz, middle, right,
 									expressions);
 
 					if (methodSearched.isTop() || methodSearched.isBottom()) {
@@ -113,7 +120,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 					// didn't find any matching method
 					if (methodSearched.getExecutionExpressions().isEmpty()) {
-						searchResult = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
+						searchResult = searchResult
+								.lub(throwNoSuchMethodException(interprocedural, methodSearched, expressions));
 					} else {
 						// found at least one method, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -122,10 +130,12 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 							tmp = tmp.lub(
 									copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
 						}
-						searchResult = tmp;
+						searchResult = searchResult.lub(tmp);
 					}
 				}
 			}
+			searchResult = analysis.moveExecutionToError(searchResult, npeState,
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), this);
 			result = result.lub(searchResult);
 		}
 
@@ -505,7 +515,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().moveExecutionToError(prepareNoSuchMethodException(interprocedural, state, expressions),
+		return interprocedural.getAnalysis().moveExecutionToError(
+				prepareNoSuchMethodException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating), this);
 	}
 
@@ -520,7 +531,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating), this);
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNullPointerException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -545,8 +556,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(nullPointerExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
 	private UnitType getTypeFromStr(

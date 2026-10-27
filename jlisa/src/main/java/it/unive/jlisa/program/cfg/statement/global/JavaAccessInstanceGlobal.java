@@ -154,18 +154,19 @@ public class JavaAccessInstanceGlobal
 					JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
 					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 							npeType.getReference(), new Expression[0]);
-					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural, state,
+							new ExpressionSet[0], expressions);
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-					for (SymbolicExpression th : state.getExecutionExpressions()) {
-						state = analysis.assign(state, throwVar, th, this);
+					for (SymbolicExpression th : npeState.getExecutionExpressions()) {
+						AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, this);
 
 						// deletes the receiver of the constructor
 						// and all the metavariables from subexpressions
-						state = state.forgetIdentifiers(call.getMetaVariables(), this);
-						state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-						erroneousState = erroneousState.lub(state.withExecutionExpression(throwVar));
+						thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
+						thrown = thrown.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+						erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
 						error = new Error(npeType.getReference(), this);
 					}
 					atLeastOne = true;

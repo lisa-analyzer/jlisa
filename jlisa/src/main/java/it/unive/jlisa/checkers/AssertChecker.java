@@ -6,9 +6,9 @@ import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
-import it.unive.lisa.analysis.reachability.ReachabilityStatus;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
+import it.unive.lisa.analysis.reachability.ReachabilityStatus;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.checks.semantic.SemanticTool;
@@ -100,7 +100,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result.getAnalysisStateAfter(node);
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result
+							.getAnalysisStateAfter(node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
@@ -110,7 +111,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 							!state.getSmashedErrors().isTop() &&
 							!state.getSmashedErrors().function.isEmpty());
 
-			SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
+			SimpleAbstractState<HeapEnvironment<AllocationSites>, V,
+					TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
 
 			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)

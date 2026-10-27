@@ -32,6 +32,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.*;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
@@ -96,14 +97,16 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
+			AnalysisState<A> okState = sat == Satisfiability.SATISFIED ? state
+					: analysis.assume(state, isClassDefined, originating, originating);
 
-			List<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessExpr).toList();
+			List<BinaryExpression> constraints = extractConstraints(interprocedural, okState, accessExpr).toList();
 
 			if (constraints.isEmpty())
-				return interprocedural.getAnalysis().smallStepSemantics(state,
+				return interprocedural.getAnalysis().smallStepSemantics(okState,
 						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
 
-			AnalysisState<A> tmp = state;
+			AnalysisState<A> tmp = okState;
 			ExpressionSet execExpressions = new ExpressionSet();
 
 			for (BinaryExpression constraint : constraints) {
@@ -144,30 +147,35 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				execExpressions = execExpressions.lub(clazz);
 			}
 
-			if (tmp != state)
+			if (tmp != okState)
 				noExceptionState = tmp.withExecutionExpressions(execExpressions);
 		}
 
 		// `ClassNotFoundException to be thrown
 		if (sat != Satisfiability.SATISFIED) {
+			AnalysisState<A> koState = sat == Satisfiability.NOT_SATISFIED ? state
+					: analysis.assume(state,
+							new it.unive.lisa.symbolic.value.UnaryExpression(typeSystem.getBooleanType(),
+									isClassDefined, LogicalNegation.INSTANCE, location),
+							originating, originating);
 
 			JavaClassType classNotFoundType = JavaClassType.getClassNotFoundException();
 
 			JavaNewObj call = new JavaNewObj(cfg, location,
 					classNotFoundType.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(cfg, classNotFoundType.getReference(), location);
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			koState = analysis.assign(koState, throwVar,
+					koState.getExecutionExpressions().elements.stream().findFirst().get(), this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+			koState = koState.forgetIdentifiers(call.getMetaVariables(), this);
+			koState = koState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-			return analysis.moveExecutionToError(noExceptionState, state.withExecutionExpression(throwVar),
+			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
 					new Error(classNotFoundType.getReference(), originating), this);
 		}
 

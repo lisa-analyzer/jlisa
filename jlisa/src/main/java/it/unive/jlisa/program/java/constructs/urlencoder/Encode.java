@@ -26,6 +26,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
@@ -95,52 +96,55 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		}
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
-		AnalysisState<A> exceptionState = state.bottomExecution();
+		if (sat != Satisfiability.NOT_SATISFIED) {
+			// as no-exception state, we return the top string...
+			AnalysisState<A> validState = analysis.assume(state, isValidEncoding, originating, originating);
+			JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
+			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
+					new Expression[0]);
+			AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, validState, new ExpressionSet[0],
+					expressions);
 
-		// as no-exception state, we return the top string...
-		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
-				new Expression[0]);
-		AnalysisState<
-				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-		AnalysisState<A> tmp = state.bottomExecution();
-		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
-			tmp = tmp.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
-		}
-
-		noExceptionState = tmp;
-
-		if (sat != Satisfiability.SATISFIED) {
-
-			// builds the exception
-			JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
-			call = new JavaNewObj(getCFG(), getLocation(),
-					oobExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
-					new StatementStore<A>(state));
-
-			AnalysisState<A> erroneousState = state.bottomExecution();
-
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-				tmp = analysis.assign(state, throwVar, th, originating);
-
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
-						.forgetIdentifiers(getLeft().getMetaVariables(), this)
-						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
+			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
+				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
+				AnalysisState<
+						A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
+				noExceptionState = noExceptionState
+						.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 			}
-
-			return analysis.moveExecutionToError(noExceptionState, erroneousState,
-					new Error(oobExc.getReference(), originating), this);
 		}
 
-		return noExceptionState.lub(exceptionState);
+		if (sat == Satisfiability.SATISFIED)
+			return noExceptionState;
+
+		// builds the exception
+		AnalysisState<A> invalidState = analysis.assume(state,
+				new it.unive.lisa.symbolic.value.UnaryExpression(booleanType, isValidEncoding, LogicalNegation.INSTANCE,
+						location),
+				originating, originating);
+		JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
+		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
+				oobExc.getReference(), new Expression[0]);
+		AnalysisState<A> excState = call.forwardSemanticsAux(interprocedural, invalidState, new ExpressionSet[0],
+				new StatementStore<A>(invalidState));
+
+		AnalysisState<A> erroneousState = state.bottomExecution();
+		for (SymbolicExpression th : excState.getExecutionExpressions()) {
+			// assign exception to variable thrower
+			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
+			AnalysisState<A> tmp = analysis.assign(excState, throwVar, th, originating);
+
+			// deletes the receiver of the constructor
+			// and all the metavariables from subexpressions
+			tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
+					.forgetIdentifiers(getLeft().getMetaVariables(), this)
+					.forgetIdentifiers(getRight().getMetaVariables(), this);
+			erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
+		}
+
+		Error error = new Error(oobExc.getReference(), originating);
+		if (sat == Satisfiability.NOT_SATISFIED)
+			return analysis.moveExecutionToError(erroneousState, error, this);
+		return analysis.moveExecutionToError(noExceptionState, erroneousState, error, this);
 	}
 }

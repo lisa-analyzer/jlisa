@@ -184,7 +184,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 				callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
 				callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-				instantiationState = instantiationState.lub(state.withExecutionExpression(throwVar));
+				instantiationState = instantiationState.lub(callState.withExecutionExpression(throwVar));
 				instantiationError = new Error(instantiationExceptionType.getReference(), originating);
 
 			}

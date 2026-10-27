@@ -77,16 +77,17 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
 						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 								npeType.getReference(), new Expression[0]);
-						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+						AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural, state,
+								new ExpressionSet[0], expressions);
 
 						// assign exception to variable thrower
-						for (SymbolicExpression th : state.getExecutionExpressions()) {
+						for (SymbolicExpression th : npeState.getExecutionExpressions()) {
 							CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-							state = analysis.assign(state, throwVar, th, this);
+							AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, this);
 
 							// deletes the receiver of the constructor
-							state = state.forgetIdentifiers(call.getMetaVariables(), this);
-							erroneousState = erroneousState.lub(state.withExecutionExpression(throwVar));
+							thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
+							erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
 							error = new Error(npeType.getReference(), this);
 						}
 						continue;
