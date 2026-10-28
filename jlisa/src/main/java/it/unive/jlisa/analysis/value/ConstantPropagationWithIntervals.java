@@ -26,6 +26,7 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.ComparisonOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
+import it.unive.lisa.symbolic.value.operator.OverflowingOperator;
 import it.unive.lisa.symbolic.value.operator.StringOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
@@ -118,10 +119,12 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		ConstantValue constantResult = constantPropagation.evalBinaryExpression(expression, left.getConstantValue(),
 				right.getConstantValue(), pp, oracle);
 
+		BinaryOperator op = expression.getOperator();
+
 		// this covers potential overflows for +, -, *, ++, --
-		if (expression.getOperator() instanceof AdditionOperator
-				|| expression.getOperator() instanceof SubtractionOperator
-				|| expression.getOperator() instanceof MultiplicationOperator) {
+		if (op instanceof OverflowingOperator && (op instanceof AdditionOperator
+				|| op instanceof SubtractionOperator
+				|| op instanceof MultiplicationOperator)) {
 			if ((left.getIntInterval().isInfinite() || right.getIntInterval().isInfinite())
 					&& (expression.getOperator() instanceof MultiplicationOperator
 							|| !JavaNumericInterval.mayBeFloatingPoint(expression, pp, oracle)))

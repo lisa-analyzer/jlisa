@@ -79,29 +79,26 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
+		AccessChild accessLeftLen = new AccessChild(JavaIntType.INSTANCE, derefLeft, lenVar, getLocation());
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		// check for IndexOutOfBoundException
 		// index < 0 or index >= length
-		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE,
-				accessLeft,
-				JavaStringLengthOperator.INSTANCE,
-				getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheckInit1 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
 				middle, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheckInit2 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
-				middle, length, ComparisonGe.INSTANCE, getLocation());
+				middle, accessLeftLen, ComparisonGe.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheckEnd1 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
 				right, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheckEnd2 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
-				right, length, ComparisonGe.INSTANCE, getLocation());
+				right, accessLeftLen, ComparisonGe.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression or1 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
 				idxCheckInit1, idxCheckInit2, LogicalOr.INSTANCE, getLocation());

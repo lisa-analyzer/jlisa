@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -66,8 +67,11 @@ public class StringToLowerCase extends UnaryExpression implements PluggableState
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
 		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
+		AccessChild accessInitialLen = new AccessChild(JavaIntType.INSTANCE, deref, lenVar, getLocation());
+
 		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(
 				stringType, accessExpr, JavaStringToLowerCaseOperator.INSTANCE, getLocation());
 
@@ -80,7 +84,9 @@ public class StringToLowerCase extends UnaryExpression implements PluggableState
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
+			AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, ref, lenVar, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, lower, this);
+			sem = analysis.assign(sem, accessLen, accessInitialLen, this);
 			tmp = tmp.lub(sem);
 		}
 

@@ -2,6 +2,8 @@ package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -22,6 +24,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -68,14 +72,20 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
+		AccessChild accessLeftLen = new AccessChild(JavaIntType.INSTANCE, derefLeft, lenVar, getLocation());
 
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, getLocation());
+		AccessChild accessRightLen = new AccessChild(JavaIntType.INSTANCE, derefRight, lenVar, getLocation());
 
 		it.unive.lisa.symbolic.value.BinaryExpression concat = new it.unive.lisa.symbolic.value.BinaryExpression(
 				stringType, accessLeft, accessRight, JavaStringConcatOperator.INSTANCE, getLocation());
+
+		it.unive.lisa.symbolic.value.BinaryExpression sumLengths = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaIntType.INSTANCE, accessLeftLen, accessRightLen, NumericNonOverflowingAdd.INSTANCE, getLocation());
 
 		// allocate the string
 		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
@@ -87,6 +97,10 @@ public class StringConcat extends BinaryExpression implements PluggableStatement
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access, concat, this);
+
+			AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, ref, lenVar, getLocation());
+			sem = analysis.assign(sem, accessLen, sumLengths, this);
+
 			tmp = tmp.lub(sem);
 		}
 

@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -63,8 +62,11 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		GlobalVariable lenVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());
+
+		AccessChild rightLenAccess = new AccessChild(JavaIntType.INSTANCE, right, lenVar, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		AnalysisState<A> tmp = analysis.assign(state, leftAccess, rightAccess, originating);
@@ -73,10 +75,8 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 		// as per the Java spec
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
 		AccessChild capAccess = new AccessChild(JavaIntType.INSTANCE, left, capVar, getLocation());
-		it.unive.lisa.symbolic.value.UnaryExpression rightLength = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaIntType.INSTANCE, rightAccess, JavaStringLengthOperator.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression capacityValue = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaIntType.INSTANCE, rightLength, new Constant(JavaIntType.INSTANCE, 16, getLocation()),
+				JavaIntType.INSTANCE, rightLenAccess, new Constant(JavaIntType.INSTANCE, 16, getLocation()),
 				NumericNonOverflowingAdd.INSTANCE, getLocation());
 
 		return analysis.assign(tmp, capAccess, capacityValue, originating);
