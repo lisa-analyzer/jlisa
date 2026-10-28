@@ -3,6 +3,7 @@ package it.unive.jlisa;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithRelations;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
@@ -40,6 +41,10 @@ import org.apache.logging.log4j.Logger;
 public class Main {
 
 	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
+
+	// whether the statistics mode writes the JSON graphs of the analyzed
+	// methods (option --no-graphs)
+	private static boolean jsonGraphs = true;
 
 	public static void main(
 			String[] args)
@@ -82,7 +87,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation)")
+				.desc("Numerical domain: (ConstantPropagation, ConstantPropagationWithRelations)")
 				.required(false)
 				.build();
 
@@ -102,6 +107,12 @@ public class Main {
 		Option noHtmlOutput = Option.builder()
 				.longOpt("no-html")
 				.desc("Disable HTML output (enabled by default)")
+				.required(false)
+				.build();
+
+		Option noGraphs = Option.builder()
+				.longOpt("no-graphs")
+				.desc("When in statistics mode, do not write the JSON graphs of the analyzed methods (written by default)")
 				.required(false)
 				.build();
 
@@ -138,6 +149,7 @@ public class Main {
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
 		options.addOption(svcompProperty);
+		options.addOption(noGraphs);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -185,6 +197,10 @@ public class Main {
 
 			if (cmd.hasOption("no-html")) {
 				htmlOutput = false;
+			}
+
+			if (cmd.hasOption("no-graphs")) {
+				jsonGraphs = false;
 			}
 
 			if (cmd.hasOption("e")) {
@@ -320,7 +336,8 @@ public class Main {
 			}
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
-		conf.outputs.add(new JSONResults<>());
+		if (jsonGraphs)
+			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
 		conf.interproceduralAnalysis = new InliningAnalysis<>(150, false);
 		conf.callGraph = new JavaRTACallGraph();
@@ -345,6 +362,9 @@ public class Main {
 		switch (numericalDomain) {
 		case "ConstantPropagation":
 			domain = new ConstantPropagationWithIntervals();
+			break;
+		case "ConstantPropagationWithRelations":
+			domain = new ConstantPropagationWithRelations();
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
