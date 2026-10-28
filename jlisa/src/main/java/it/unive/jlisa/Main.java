@@ -41,6 +41,10 @@ public class Main {
 
 	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(Main.class);
 
+	// whether the statistics mode writes the JSON graphs of the analyzed
+	// methods (option --no-graphs)
+	private static boolean jsonGraphs = true;
+
 	public static void main(
 			String[] args)
 			throws IOException,
@@ -105,6 +109,12 @@ public class Main {
 				.required(false)
 				.build();
 
+		Option noGraphs = Option.builder()
+				.longOpt("no-graphs")
+				.desc("When in statistics mode, do not write the JSON graphs of the analyzed methods (written by default)")
+				.required(false)
+				.build();
+
 		Option dumpExcs = Option.builder("e")
 				.longOpt("dump-exceptions")
 				.desc("When in statistics mode, log exceptions to standard output")
@@ -138,6 +148,7 @@ public class Main {
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
 		options.addOption(svcompProperty);
+		options.addOption(noGraphs);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -185,6 +196,10 @@ public class Main {
 
 			if (cmd.hasOption("no-html")) {
 				htmlOutput = false;
+			}
+
+			if (cmd.hasOption("no-graphs")) {
+				jsonGraphs = false;
 			}
 
 			if (cmd.hasOption("e")) {
@@ -320,7 +335,8 @@ public class Main {
 			}
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
-		conf.outputs.add(new JSONResults<>());
+		if (jsonGraphs)
+			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
 		conf.interproceduralAnalysis = new InliningAnalysis<>(150, false);
 		conf.callGraph = new JavaRTACallGraph();
