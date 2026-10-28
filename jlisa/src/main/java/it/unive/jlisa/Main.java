@@ -3,6 +3,7 @@ package it.unive.jlisa;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithRelations;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
@@ -82,7 +83,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation)")
+				.desc("Numerical domain: (ConstantPropagation, ConstantPropagationWithRelations)")
 				.required(false)
 				.build();
 
@@ -345,6 +346,9 @@ public class Main {
 		switch (numericalDomain) {
 		case "ConstantPropagation":
 			domain = new ConstantPropagationWithIntervals();
+			break;
+		case "ConstantPropagationWithRelations":
+			domain = new ConstantPropagationWithRelations();
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
