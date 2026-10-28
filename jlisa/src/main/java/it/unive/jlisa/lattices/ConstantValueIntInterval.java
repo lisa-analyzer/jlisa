@@ -124,4 +124,36 @@ public class ConstantValueIntInterval
 				intInterval.widening(other.getIntInterval()));
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((constantValue == null) ? 0 : constantValue.hashCode());
+		result = prime * result + ((intInterval == null) ? 0 : intInterval.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(
+			Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ConstantValueIntInterval other = (ConstantValueIntInterval) obj;
+		if (constantValue == null) {
+			if (other.constantValue != null)
+				return false;
+		} else if (!constantValue.equals(other.constantValue))
+			return false;
+		if (intInterval == null) {
+			if (other.intInterval != null)
+				return false;
+		} else if (!intInterval.equals(other.intInterval))
+			return false;
+		return true;
+	}
+
 }

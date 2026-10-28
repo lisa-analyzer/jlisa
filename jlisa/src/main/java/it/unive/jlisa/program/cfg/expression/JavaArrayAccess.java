@@ -29,6 +29,7 @@ import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.ArrayList;
@@ -113,35 +114,42 @@ public class JavaArrayAccess extends BinaryExpression {
 		} else if (sat == Satisfiability.BOTTOM) {
 			return state.bottomExecution();
 		} else {
+			// restrict each half to the executions it describes
+			AnalysisState<A> okState = analysis.assume(state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, or,
+							LogicalNegation.INSTANCE, getLocation()),
+					this, this);
+			AnalysisState<A> koState = analysis.assume(state, or, this, this);
+
 			Type accessType = arrayType.getInnerType();
 			accessType = accessType.isArrayType() ? accessType.asArrayType().getInnerType() : accessType;
-			AnalysisState<A> noExceptionState = readArrayElement(analysis, state, container, right, lenAccess,
+			AnalysisState<A> noExceptionState = readArrayElement(analysis, okState, container, right, lenAccess,
 					accessType);
 
 			// builds the exception
 			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oobExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
-					new StatementStore<A>(state));
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0],
+					new StatementStore<A>(koState));
 
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			AnalysisState<A> erroneousState = koState.bottomExecution();
 
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
+			for (SymbolicExpression th : koState.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+				AnalysisState<A> tmp = analysis.assign(koState, throwVar, th, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oobExc.getReference(), this), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
 
-			return noExceptionState.lub(exceptionState);
+			return analysis.moveExecutionToError(noExceptionState, erroneousState,
+					new Error(oobExc.getReference(), this), this);
 		}
 	}
 

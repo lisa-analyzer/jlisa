@@ -140,6 +140,8 @@ public class JavaAccessInstanceGlobal
 		CodeLocation loc = getLocation();
 
 		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> erroneousState = state.bottom();
+		Error error = null;
 		boolean atLeastOne = false;
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
@@ -152,19 +154,20 @@ public class JavaAccessInstanceGlobal
 					JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
 					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 							npeType.getReference(), new Expression[0]);
-					state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural, state,
+							new ExpressionSet[0], expressions);
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-					for (SymbolicExpression th : state.getExecutionExpressions()) {
-						state = analysis.assign(state, throwVar, th, this);
+					for (SymbolicExpression th : npeState.getExecutionExpressions()) {
+						AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, this);
 
 						// deletes the receiver of the constructor
 						// and all the metavariables from subexpressions
-						state = state.forgetIdentifiers(call.getMetaVariables(), this);
-						state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-						result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), this), this));
+						thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
+						thrown = thrown.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+						erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
+						error = new Error(npeType.getReference(), this);
 					}
 					atLeastOne = true;
 					continue;
@@ -197,7 +200,10 @@ public class JavaAccessInstanceGlobal
 			}
 
 		if (atLeastOne)
-			return result;
+			if (error == null)
+				return result;
+			else
+				return analysis.moveExecutionToError(result, erroneousState, error, this);
 
 		// worst case: we are accessing a global that we know nothing about
 		Set<Type> rectypes = new HashSet<>();

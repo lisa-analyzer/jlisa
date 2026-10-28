@@ -64,6 +64,8 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		ExpressionSet receiver = params[0];
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> erroneousState = state.bottom();
+		Error error = null;
 
 		for (SymbolicExpression rec : receiver) {
 			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, this);
@@ -75,17 +77,18 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
 						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 								npeType.getReference(), new Expression[0]);
-						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+						AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural, state,
+								new ExpressionSet[0], expressions);
 
 						// assign exception to variable thrower
-						for (SymbolicExpression th : state.getExecutionExpressions()) {
+						for (SymbolicExpression th : npeState.getExecutionExpressions()) {
 							CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-							state = analysis.assign(state, throwVar, th, this);
+							AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, this);
 
 							// deletes the receiver of the constructor
-							state = state.forgetIdentifiers(call.getMetaVariables(), this);
-							result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-									new Error(npeType.getReference(), this), this));
+							thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
+							erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
+							error = new Error(npeType.getReference(), this);
 						}
 						continue;
 					} else if (!inner.isUnitType())
@@ -95,6 +98,9 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				}
 			}
 		}
-		return result;
+
+		if (error == null)
+			return result;
+		return analysis.moveExecutionToError(result, erroneousState, error, this);
 	}
 }

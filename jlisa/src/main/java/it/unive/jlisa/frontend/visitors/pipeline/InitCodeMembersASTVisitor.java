@@ -178,7 +178,6 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 				initCodeMembersInEnum(unit, (EnumDeclaration) decl, newOuter, processed);
 	}
 
-	@SuppressWarnings("unchecked")
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
 			MethodDeclaration node,
 			it.unive.lisa.program.CompilationUnit lisaCU) {

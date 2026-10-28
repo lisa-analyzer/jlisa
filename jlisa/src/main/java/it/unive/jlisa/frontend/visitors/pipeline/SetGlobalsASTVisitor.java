@@ -38,17 +38,6 @@ public class SetGlobalsASTVisitor extends ScopedVisitor<UnitScope> {
 		return false;
 	}
 
-	private void addGlobals(
-			CompilationUnit unit,
-			Set<String> processed) {
-		List<?> types = unit.types();
-		for (Object type : types)
-			if (type instanceof TypeDeclaration)
-				addGlobalsInDeclaration((TypeDeclaration) type, null, processed);
-			else if (type instanceof EnumDeclaration)
-				addEnumConstants((EnumDeclaration) type, null, processed);
-	}
-
 	private void addGlobalsInDeclaration(
 			TypeDeclaration typeDecl,
 			String outer,

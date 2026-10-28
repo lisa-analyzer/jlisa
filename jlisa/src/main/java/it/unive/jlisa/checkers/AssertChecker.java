@@ -4,17 +4,14 @@ import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
+import it.unive.lisa.analysis.reachability.ReachabilityStatus;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.checks.semantic.SemanticTool;
-import it.unive.lisa.lattices.ReachLattice;
-import it.unive.lisa.lattices.ReachLattice.ReachabilityStatus;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
@@ -38,20 +35,8 @@ import org.apache.logging.log4j.Logger;
 public class AssertChecker<V extends ValueLattice<V>>
 		implements
 		SemanticCheck<
-				ReachabilityProduct<
-						SimpleAbstractState<
-								HeapEnvironment<AllocationSites>,
-								V,
-								TypeEnvironment<TypeSet>>>,
-				Reachability<
-						SimpleAbstractDomain<
-								HeapEnvironment<AllocationSites>,
-								V,
-								TypeEnvironment<TypeSet>>,
-						SimpleAbstractState<
-								HeapEnvironment<AllocationSites>,
-								V,
-								TypeEnvironment<TypeSet>>>> {
+				SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+				SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> {
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
 
 	/**
@@ -81,17 +66,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 	@Override
 	public boolean visit(
 			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>>> tool,
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node) {
 
@@ -116,22 +92,16 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 	private void checkRuntimeException(
 			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node)
 			throws SemanticException {
 
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					ReachabilityProduct<
-							SimpleAbstractState<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>>> state = result.getAnalysisStateAfter(node);
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result
+							.getAnalysisStateAfter(node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
@@ -141,16 +111,13 @@ public class AssertChecker<V extends ValueLattice<V>>
 							!state.getSmashedErrors().isTop() &&
 							!state.getSmashedErrors().function.isEmpty());
 
-			ReachabilityProduct<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							V,
-							TypeEnvironment<TypeSet>>> normaleState = state.getExecutionState();
+			SimpleAbstractState<HeapEnvironment<AllocationSites>, V,
+					TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
 
 			// if exceptions had been thrown, we raise a warning
 			if (hasExceptionState)
 				// if the normal state is bottom, we raise a definite error
-				if (normaleState.second.isBottom()) {
+				if (normaleState.isBottom()) {
 					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
 					Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
 					if (target.isPresent())
@@ -165,21 +132,14 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 	private void checkAssert(
 			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			AssertStatement node)
 			throws SemanticException {
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					ReachabilityProduct<
-							SimpleAbstractState<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>>> state = null;
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = null;
 
 			boolean isAssertFalse = false;
 			if (node instanceof SimpleAssert) {
@@ -192,10 +152,10 @@ public class AssertChecker<V extends ValueLattice<V>>
 				isAssertFalse = expr.toString().equals("false");
 			}
 
-			V values = state.getExecutionState().second.valueState;
-			ReachabilityStatus reach = state.getExecutionState().first.lattice;
+			V values = state.getExecutionState().valueState;
+			ReachabilityStatus reach = tool.getReachability(result, (Statement) node);
 
-			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().second.isBottom()) {
+			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().isBottom()) {
 				// if the assertion is not reachable, it won't fail
 				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
 				continue;
@@ -242,10 +202,10 @@ public class AssertChecker<V extends ValueLattice<V>>
 			if (overall == Satisfiability.SATISFIED)
 				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
 			else if (overall == Satisfiability.NOT_SATISFIED) {
-				if (reach == ReachLattice.ReachabilityStatus.REACHABLE) {
+				if (reach == ReachabilityStatus.REACHABLE) {
 					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
 					violations.accept(new Violation(ViolationKind.ASSERT, (Statement) node));
-				} else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE) {
+				} else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE) {
 					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
 				}
 			} else {

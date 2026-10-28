@@ -11,7 +11,6 @@ import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
@@ -351,10 +350,10 @@ public class Main {
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
 
-		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(
+		conf.analysis = new SimpleAbstractDomain<>(
 				new JavaFieldSensitivePointBasedHeap(),
 				domain,
-				new JavaInferredTypes()));
+				new JavaInferredTypes());
 
 		if (htmlOutput)
 			conf.outputs.add(new HtmlResults<>(true));

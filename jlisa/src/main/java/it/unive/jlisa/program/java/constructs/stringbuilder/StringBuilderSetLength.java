@@ -29,6 +29,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -112,7 +113,14 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 
 			return sem.withExecutionExpression(new Skip(getLocation()));
 		} else {
-			AnalysisState<A> sem = truncate(analysis, state, left, accessLeft, right, stringType);
+			// restrict each half to the executions it describes
+			AnalysisState<A> okState = analysis.assume(state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, idxCheck1,
+							LogicalNegation.INSTANCE, getLocation()),
+					this, this);
+			AnalysisState<A> koState = analysis.assume(state, idxCheck1, this, this);
+
+			AnalysisState<A> sem = truncate(analysis, okState, left, accessLeft, right, stringType);
 
 			AnalysisState<A> noExceptionState = sem.withExecutionExpression(new Skip(getLocation()));
 
@@ -120,24 +128,24 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
+			AnalysisState<A> erroneousState = koState.bottomExecution();
 
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
+			for (SymbolicExpression th : koState.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+				AnalysisState<A> tmp = analysis.assign(koState, throwVar, th, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
 
-			return exceptionState.lub(noExceptionState);
+			return analysis.moveExecutionToError(noExceptionState, erroneousState,
+					new Error(oonExc.getReference(), originating), this);
 		}
 	}
 

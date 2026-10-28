@@ -202,7 +202,6 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		JavaArrayType methodArrType = JavaArrayType.lookup(wrappedMethodType, 1);
 		JavaReferenceType refMethodArrType = new JavaReferenceType(methodArrType);
 
-		GlobalVariable lengthVar = new GlobalVariable(Untyped.INSTANCE, "length", getLocation());
 		GlobalVariable declaredMethodsVar = new GlobalVariable(Untyped.INSTANCE, "declaredMethods", getLocation());
 
 		HeapDereference derefClazz = new HeapDereference(classMetaType, clazz, location);

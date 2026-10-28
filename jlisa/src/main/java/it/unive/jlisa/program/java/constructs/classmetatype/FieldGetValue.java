@@ -25,7 +25,6 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -34,7 +33,6 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
@@ -61,7 +59,6 @@ import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -207,6 +204,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
 					AnalysisState<A> accessState = state.bottomExecution();
+					AnalysisState<A> npeState = null;
+					Error npeError = null;
 
 					if (mightBeNull) {
 						// create NullPointerException for the null case
@@ -225,10 +224,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						nullAnalysisState = nullAnalysisState
 								.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-						AnalysisState<A> npeState = analysis.moveExecutionToError(
-								nullAnalysisState.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), originating), this);
-						accessState = accessState.lub(npeState);
+						npeState = nullAnalysisState.withExecutionExpression(throwVar);
+						npeError = new Error(npeType.getReference(), originating);
 					}
 
 					// if there are non-null targets, proceed normally
@@ -251,6 +248,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						accessState = accessState.lub(boxedState);
 					}
 
+					if (npeError != null)
+						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, this);
 					result = result.lub(accessState);
 				} else {
 					access = new GlobalVariable(
@@ -345,7 +344,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		return null;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -354,26 +353,14 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
+		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
-		}
+		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
 
 		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 

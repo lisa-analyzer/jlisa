@@ -37,17 +37,6 @@ public class PopulateUnitsASTVisitor extends ScopedVisitor<UnitScope> {
 		return false;
 	}
 
-	private void addUnits(
-			CompilationUnit unit,
-			Set<String> processed) {
-		List<?> types = unit.types();
-		for (Object type : types)
-			if (type instanceof TypeDeclaration)
-				addUnitsInDeclaration((TypeDeclaration) type, null, processed);
-			else if (type instanceof EnumDeclaration)
-				addEnumUnit(getProgram(), null, (EnumDeclaration) type, processed);
-	}
-
 	private boolean buildInterfaceUnit(
 			Program program,
 			String outer,

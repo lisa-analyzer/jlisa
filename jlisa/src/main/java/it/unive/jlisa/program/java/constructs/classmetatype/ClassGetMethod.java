@@ -14,7 +14,6 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -23,7 +22,6 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
@@ -43,7 +41,6 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -97,17 +94,24 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				this);
 		for (SymbolicExpression clazz : classes) {
 
-			AnalysisState<A> searchResult = state;
 			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
+			if (clazzTypes.isEmpty()) {
+				result = result.lub(state);
+				continue;
+			}
+
+			// each runtime type is an alternative, evaluated on the same state
+			AnalysisState<A> searchResult = state.bottomExecution();
+			AnalysisState<A> npeState = state.bottom();
 
 			for (Type t : clazzTypes) {
 				if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-					searchResult = throwNullPointerException(interprocedural, searchResult, expressions);
+					npeState = npeState.lub(prepareNullPointerException(interprocedural, state, expressions));
 				}
 				// search for the method
 				else {
 					AnalysisState<
-							A> methodSearched = searchMethod(interprocedural, searchResult, clazz, middle, right,
+							A> methodSearched = searchMethod(interprocedural, state, clazz, middle, right,
 									expressions);
 
 					if (methodSearched.isTop() || methodSearched.isBottom()) {
@@ -116,7 +120,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 					// didn't find any matching method
 					if (methodSearched.getExecutionExpressions().isEmpty()) {
-						searchResult = throwNoSuchMethodException(interprocedural, methodSearched, expressions);
+						searchResult = searchResult
+								.lub(throwNoSuchMethodException(interprocedural, methodSearched, expressions));
 					} else {
 						// found at least one method, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -125,10 +130,12 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 							tmp = tmp.lub(
 									copyMethod.fwdUnarySemantics(interprocedural, methodSearched, expr, expressions));
 						}
-						searchResult = tmp;
+						searchResult = searchResult.lub(tmp);
 					}
 				}
 			}
+			searchResult = analysis.moveExecutionToError(searchResult, npeState,
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), this);
 			result = result.lub(searchResult);
 		}
 
@@ -268,9 +275,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refMethod, this);
 				unknownMethods = unknownMethods.lub(noExceptionState.getExecutionExpressions());
 
-				AnalysisState<A> exceptionState = throwNoSuchMethodException(interprocedural, state, expressions);
-
-				state = noExceptionState.lub(exceptionState);
+				state = throwNoSuchMethodException(interprocedural, noExceptionState, state, expressions);
 			}
 
 			++i;
@@ -477,7 +482,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return res;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNoSuchMethodException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -502,11 +507,31 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchMethodType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(
+				prepareNoSuchMethodException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating), this);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> normal,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(normal,
+				prepareNoSuchMethodException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating), this);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNullPointerException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -531,8 +556,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(nullPointerExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
 	private UnitType getTypeFromStr(
@@ -550,7 +574,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return (UnitType) t;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -558,26 +582,14 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
+		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
-		}
+		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
 
 		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 

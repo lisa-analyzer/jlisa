@@ -33,6 +33,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -161,6 +162,13 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			getMetaVariables().addAll(call.getMetaVariables());
 			return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 		} else {
+			// restrict each half to the executions it describes
+			AnalysisState<A> okState = analysis.assume(state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, exprSAt,
+							LogicalNegation.INSTANCE, getLocation()),
+					this, this);
+			AnalysisState<A> koState = analysis.assume(state, exprSAt, this, this);
+
 			it.unive.lisa.symbolic.value.TernaryExpression substring = new it.unive.lisa.symbolic.value.TernaryExpression(
 					getProgram().getTypes().getStringType(),
 					accessLeft,
@@ -173,9 +181,10 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 					new JavaReferenceType(stringType), new Expression[0]);
 			AnalysisState<
-					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					A> callState = call.forwardSemanticsAux(interprocedural, okState, new ExpressionSet[0],
+							expressions);
 
-			AnalysisState<A> tmp = state.bottomExecution();
+			AnalysisState<A> tmp = okState.bottomExecution();
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 				AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, substring, this);
@@ -189,23 +198,23 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
 			call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
+			AnalysisState<A> erroneousState = koState.bottomExecution();
 
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
+			for (SymbolicExpression th : koState.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				tmp = analysis.assign(state, throwVar, th, this);
+				tmp = analysis.assign(koState, throwVar, th, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
-			return exceptionState.lub(noExceptionState);
+			return analysis.moveExecutionToError(noExceptionState, erroneousState,
+					new Error(oonExc.getReference(), originating), this);
 		}
 	}
 }

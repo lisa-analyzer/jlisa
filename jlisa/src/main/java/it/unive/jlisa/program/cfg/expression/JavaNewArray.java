@@ -10,7 +10,6 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -19,7 +18,6 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
@@ -154,7 +152,7 @@ public class JavaNewArray extends UnaryExpression {
 		return "new " + getStaticType() + "[" + getSubExpression() + "]";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Constant getArrLen(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -163,16 +161,12 @@ public class JavaNewArray extends UnaryExpression {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		if (analysis.domain instanceof Reachability r) {
-			SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) r.domain;
+		if (analysis.domain instanceof SimpleAbstractDomain<?, ?, ?> innerDomain) {
 
 			assert (innerDomain != null);
 			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
-			Object executionState = state.getExecutionState();
-			ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
 
 			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 

@@ -8,7 +8,6 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -17,7 +16,6 @@ import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -38,10 +36,8 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -80,8 +76,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
-
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()),
 				this);
 
@@ -103,7 +97,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		CodeLocation location = getLocation();
 
 		Type stringType = getProgram().getTypes().getStringType();
-		Type classMetaType = JavaClassType.getClassMetaType();
 
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
@@ -117,6 +110,10 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
+		AnalysisState<A> noSuchMethodState = state.bottom();
+		Error noSuchMethodError = null;
+		AnalysisState<A> instantiationState = state.bottom();
+		Error instantiationError = null;
 
 		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = extractConstraints(interprocedural, state,
 				accessValue);
@@ -148,8 +145,10 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					CompilationUnit cu = ut.getUnit();
 
 					if (!hasDefaultCtor(cu)) {
-						exceptionState = exceptionState
-								.lub(throwNoSuchMethodException(interprocedural, state, expressions));
+						noSuchMethodState = noSuchMethodState
+								.lub(prepareNoSuchMethodException(interprocedural, state, expressions));
+						noSuchMethodError = new Error(JavaClassType.getNoSuchMethodException().getReference(),
+								originating);
 						continue;
 					}
 				}
@@ -181,21 +180,25 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 				callState = callState.forgetIdentifiers(call.getMetaVariables(), this);
 				callState = callState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-				exceptionState = exceptionState
-						.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-								new Error(instantiationExceptionType.getReference(), originating), this));
+				instantiationState = instantiationState.lub(callState.withExecutionExpression(throwVar));
+				instantiationError = new Error(instantiationExceptionType.getReference(), originating);
 
 			}
 		}
 
 		noExceptionState = noExceptionState.withExecutionExpressions(execExpressions);
-		return noExceptionState.lub(exceptionState);
+		AnalysisState<A> result = noExceptionState.lub(exceptionState);
+		if (noSuchMethodError != null)
+			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, this);
+		if (instantiationError != null)
+			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, this);
+		return result;
 
 		// TODO: IllegalAccessException
 
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -204,26 +207,14 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
-
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
-
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
+		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
-		}
+		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
 
 		assert (innerDomain != null);
 		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
 
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
+		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
@@ -242,7 +233,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 				});
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNoSuchMethodException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
@@ -266,8 +257,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		state = state.forgetIdentifiers(call.getMetaVariables(), this);
 		state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(noSuchMethodType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
 	@Override
