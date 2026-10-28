@@ -1,8 +1,14 @@
 package it.unive.jlisa.lattices;
 
+import apron.Abstract1;
+import apron.ApronException;
+import apron.Environment;
+import apron.Var;
+import it.unive.jlisa.analysis.value.NativeMemory;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.apron.Apron;
+import it.unive.lisa.analysis.apron.ApronAccess;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -11,9 +17,12 @@ import it.unive.lisa.util.representation.StructuredRepresentation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -97,6 +106,7 @@ public class ScopedApron
 	public boolean lessOrEqual(
 			ScopedApron other)
 			throws SemanticException {
+		NativeMemory.operation();
 		return apron.lessOrEqual(other.apron);
 	}
 
@@ -104,6 +114,7 @@ public class ScopedApron
 	public ScopedApron lub(
 			ScopedApron other)
 			throws SemanticException {
+		NativeMemory.operation();
 		return new ScopedApron(apron.lub(other.apron), union(ids, other.ids));
 	}
 
@@ -111,6 +122,7 @@ public class ScopedApron
 	public ScopedApron glb(
 			ScopedApron other)
 			throws SemanticException {
+		NativeMemory.operation();
 		return new ScopedApron(apron.glb(other.apron), union(ids, other.ids));
 	}
 
@@ -118,6 +130,7 @@ public class ScopedApron
 	public ScopedApron widening(
 			ScopedApron other)
 			throws SemanticException {
+		NativeMemory.operation();
 		return new ScopedApron(apron.widening(other.apron), union(ids, other.ids));
 	}
 
@@ -125,6 +138,7 @@ public class ScopedApron
 	public ScopedApron narrowing(
 			ScopedApron other)
 			throws SemanticException {
+		NativeMemory.operation();
 		return new ScopedApron(apron.narrowing(other.apron), union(ids, other.ids));
 	}
 
@@ -163,7 +177,7 @@ public class ScopedApron
 			return this;
 		Map<String, Identifier> m = new HashMap<>(ids);
 		m.remove(id.getName());
-		return new ScopedApron(apron.forgetIdentifier(id, pp), m);
+		return new ScopedApron(remove(apron, List.of(id)), m);
 	}
 
 	@Override
@@ -190,7 +204,7 @@ public class ScopedApron
 				known.add(id);
 		if (known.isEmpty())
 			return this;
-		return new ScopedApron(apron.forgetIdentifiers(known, pp), m);
+		return new ScopedApron(remove(apron, known), m);
 	}
 
 	@Override
@@ -251,7 +265,7 @@ public class ScopedApron
 			if (!m.containsKey(id.getName()))
 				forgotten.add(id);
 		if (!forgotten.isEmpty())
-			state = state.forgetIdentifiers(forgotten, pp);
+			state = remove(state, forgotten);
 		return new ScopedApron(state, m);
 	}
 
@@ -264,6 +278,80 @@ public class ScopedApron
 			ProgramPoint pp)
 			throws SemanticException {
 		return state.assign(state, target, source, pp, null);
+	}
+
+	/**
+	 * Returns this state with at most the given number of variables in Apron:
+	 * when there are more, the ones of the identifiers not in {@code keep} are
+	 * removed (a polyhedron can grow exponentially with its variables).
+	 *
+	 * @param keep the identifiers to keep (e.g., the ones of the current
+	 *                 operation)
+	 * @param max  the maximum number of variables
+	 *
+	 * @return the state, with at most {@code max} variables (or the ones in
+	 *             {@code keep}, if they are more)
+	 *
+	 * @throws SemanticException if Apron fails
+	 */
+	public ScopedApron limit(
+			Set<Identifier> keep,
+			int max)
+			throws SemanticException {
+		if (apron.isBottom() || apron.getApronState().getEnvironment().getSize() <= max)
+			return this;
+		Set<String> kept = new HashSet<>();
+		for (Identifier id : keep)
+			kept.add(id.getName());
+		Map<String, Identifier> m = new HashMap<>();
+		List<Identifier> removed = new ArrayList<>();
+		for (Identifier id : ids.values())
+			if (kept.contains(id.getName()))
+				m.put(id.getName(), id);
+			else
+				removed.add(id);
+		List<String> names = new ArrayList<>();
+		for (Var v : apron.getApronState().getEnvironment().getVars())
+			if (!kept.contains(v.toString()))
+				names.add(v.toString());
+		return new ScopedApron(removeNames(apron, names), m);
+	}
+
+	// the given state without the variables of the given identifiers: Apron
+	// only forgets a variable, keeping its dimension, and the polyhedra grow
+	// with the dimensions; a missing variable stands for any value, as a
+	// forgotten one
+	private static Apron remove(
+			Apron state,
+			Iterable<Identifier> removed)
+			throws SemanticException {
+		List<String> names = new ArrayList<>();
+		for (Identifier id : removed)
+			names.add(id.getName());
+		return removeNames(state, names);
+	}
+
+	private static Apron removeNames(
+			Apron state,
+			List<String> names)
+			throws SemanticException {
+		if (state.isBottom())
+			return state;
+		Abstract1 abs = state.getApronState();
+		Environment env = abs.getEnvironment();
+		// a set: the same name might be given more than once
+		Set<String> present = new LinkedHashSet<>();
+		for (String n : names)
+			if (env.hasVar(n))
+				present.add(n);
+		if (present.isEmpty())
+			return state;
+		try {
+			Environment smaller = env.remove(present.toArray(new String[0]));
+			return ApronAccess.of(abs.changeEnvironmentCopy(abs.getCreationManager(), smaller, false));
+		} catch (ApronException e) {
+			throw new SemanticException("Apron error while removing variables", e);
+		}
 	}
 
 	// whether the environment of the given state has the variable of the

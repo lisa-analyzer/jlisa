@@ -63,6 +63,10 @@ public class ConstantPropagationWithApron
 		implements
 		ValueDomain<ValueLatticeProduct<ValueEnvironment<ConstantValueIntInterval>, ScopedApron>> {
 
+	// the maximum number of variables in Apron: a polyhedron can grow
+	// exponentially with them
+	private static final int MAX_VARIABLES = 16;
+
 	// the constants of type long that Apron converts exactly
 	private static final long MAX_EXACT = 1L << 53;
 
@@ -83,18 +87,22 @@ public class ConstantPropagationWithApron
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		NativeMemory.operation();
 		if (state.isBottom())
 			return state;
 		ValueEnvironment<ConstantValueIntInterval> v = values.assign(state.first, id, expression, pp, oracle);
 		ScopedApron a = state.second;
 		Set<Identifier> used = new HashSet<>();
-		if (isInteger(id, pp, oracle) && exact(state.first, state.second.getApron(), expression, pp, oracle, used)) {
+		if (NativeMemory.exhausted())
+			a = a.isTop() ? a : a.top();
+		else if (isInteger(id, pp, oracle)
+				&& exact(state.first, state.second.getApron(), expression, pp, oracle, used)) {
 			Apron assigned = apron.assign(a.getApron(), id, normalize(expression), pp, oracle);
 			if (id.isWeak())
 				// a weak identifier might keep its old value
 				assigned = assigned.lub(a.getApron());
 			used.add(id);
-			a = a.with(assigned, used);
+			a = a.with(assigned, used).limit(used, MAX_VARIABLES);
 		} else
 			a = a.forgetIdentifier(id, pp);
 		return mk(state, v, a);
@@ -120,14 +128,16 @@ public class ConstantPropagationWithApron
 			ProgramPoint dest,
 			SemanticOracle oracle)
 			throws SemanticException {
+		NativeMemory.operation();
 		if (state.isBottom())
 			return state;
 		ValueEnvironment<ConstantValueIntInterval> v = values.assume(state.first, expression, src, dest, oracle);
 		ScopedApron a = state.second;
 		Set<Identifier> used = new HashSet<>();
-		if (exact(state.first, state.second.getApron(), expression, src, oracle, used)
+		if (!NativeMemory.exhausted() && exact(state.first, state.second.getApron(), expression, src, oracle, used)
 				&& known(a.getApron(), used))
-			a = a.with(apron.assume(a.getApron(), normalize(expression), src, dest, oracle), used);
+			a = a.with(apron.assume(a.getApron(), normalize(expression), src, dest, oracle), used)
+					.limit(used, MAX_VARIABLES);
 		return mk(state, v, a);
 	}
 
@@ -138,6 +148,7 @@ public class ConstantPropagationWithApron
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		NativeMemory.operation();
 		if (state.isBottom())
 			return Satisfiability.BOTTOM;
 		// the connectives are split here: each comparison is checked by both
@@ -161,7 +172,8 @@ public class ConstantPropagationWithApron
 		if (sat == Satisfiability.SATISFIED || sat == Satisfiability.NOT_SATISFIED || sat == Satisfiability.BOTTOM)
 			return sat;
 		Set<Identifier> used = new HashSet<>();
-		if (!exact(state.first, state.second.getApron(), expression, pp, oracle, used)
+		if (NativeMemory.exhausted()
+				|| !exact(state.first, state.second.getApron(), expression, pp, oracle, used)
 				|| !known(state.second.getApron(), used))
 			return sat;
 		return sat.glb(apron.satisfies(state.second.getApron(), normalize(expression), pp, oracle));
