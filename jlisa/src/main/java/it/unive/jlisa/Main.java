@@ -2,6 +2,7 @@ package it.unive.jlisa;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithApron;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
@@ -12,6 +13,7 @@ import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
+import it.unive.lisa.analysis.apron.Apron;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
@@ -86,7 +88,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation)")
+				.desc("Numerical domain: (ConstantPropagation, ApronPolka, ApronPplite, ApronOctagon)")
 				.required(false)
 				.build();
 
@@ -362,6 +364,15 @@ public class Main {
 		case "ConstantPropagation":
 			domain = new ConstantPropagationWithIntervals();
 			break;
+		case "ApronPolka":
+			domain = withApron(Apron.ApronDomain.Polka);
+			break;
+		case "ApronPplite":
+			domain = withApron(Apron.ApronDomain.Pplite);
+			break;
+		case "ApronOctagon":
+			domain = withApron(Apron.ApronDomain.Octagon);
+			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
@@ -385,5 +396,31 @@ public class Main {
 		// write the witnesses
 		for (ViolationWitnessProducer witness : witnesses)
 			witness.write(outdir);
+	}
+
+	/**
+	 * Returns the product of {@link ConstantPropagationWithIntervals} and of
+	 * the given domain of Apron. The native libraries of Apron are loaded from
+	 * the folder given by the system property {@code jlisa.native}, or else
+	 * from {@code java.library.path}.
+	 *
+	 * @param apronDomain the domain of Apron
+	 *
+	 * @return the product
+	 *
+	 * @throws ParseException if the native libraries of Apron cannot be loaded
+	 */
+	private static ValueDomain<?> withApron(
+			Apron.ApronDomain apronDomain)
+			throws ParseException {
+		String folder = System.getProperty("jlisa.native");
+		if (folder != null)
+			Apron.loadLibrary(folder);
+		else
+			Apron.loadLibrary();
+		if (!Apron.isAvailable())
+			throw new ParseException("The native libraries of Apron cannot be loaded");
+		Apron.setManager(apronDomain);
+		return new ConstantPropagationWithApron();
 	}
 }
