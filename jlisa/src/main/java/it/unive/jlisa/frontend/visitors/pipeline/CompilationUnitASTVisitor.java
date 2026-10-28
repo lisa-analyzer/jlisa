@@ -12,15 +12,12 @@ import it.unive.lisa.program.ClassUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class CompilationUnitASTVisitor extends ScopedVisitor<UnitScope> {
-
-	private static Logger LOG = org.apache.logging.log4j.LogManager.getLogger(CompilationUnitASTVisitor.class);
 
 	public CompilationUnitASTVisitor(
 			ParsingEnvironment environment,

@@ -22,7 +22,6 @@ public class ReflectionDataUtils {
 			CodeLocation location) {
 
 		assert (t != null);
-		String clazzName = t.toString();
 		GlobalVariable clazzId = new GlobalVariable(Untyped.INSTANCE, "__" + t.toString(), location);
 		return state.knowsIdentifier(clazzId);
 	}
@@ -37,7 +36,6 @@ public class ReflectionDataUtils {
 		JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
-		JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
 
 		if (clazz instanceof GlobalVariable)
 			clazz = new HeapDereference(classMetaType, clazz, pp.getLocation());

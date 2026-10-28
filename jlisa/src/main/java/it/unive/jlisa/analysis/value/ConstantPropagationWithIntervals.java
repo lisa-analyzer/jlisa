@@ -648,8 +648,6 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 		Object raw = value.getValue();
 		Integer exact = raw instanceof Number number ? number.intValue()
 				: raw instanceof Character character ? (int) character.charValue() : null;
-		if (exact == null)
-			return expression;
 		return new Constant(expression.getStaticType(), exact, expression.getCodeLocation());
 	}
 

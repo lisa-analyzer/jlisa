@@ -152,7 +152,7 @@ public class JavaNewArray extends UnaryExpression {
 		return "new " + getStaticType() + "[" + getSubExpression() + "]";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Constant getArrLen(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,

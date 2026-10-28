@@ -420,7 +420,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return null;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,

@@ -91,7 +91,6 @@ public class Method {
 				+ implementation + ", type=" + type + ", params=" + params + ", throwsList=" + throwsList + "]";
 	}
 
-	@SuppressWarnings("unchecked")
 	public NativeCFG toLiSACfg(
 			Program program,
 			CodeLocation location,

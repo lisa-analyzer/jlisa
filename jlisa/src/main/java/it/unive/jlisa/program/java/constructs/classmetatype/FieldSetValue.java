@@ -263,7 +263,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		return 0;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,

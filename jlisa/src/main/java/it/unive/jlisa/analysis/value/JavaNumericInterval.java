@@ -901,7 +901,6 @@ public class JavaNumericInterval extends Interval {
 		Identifier id;
 		IntInterval eval;
 		IntInterval evalId;
-		boolean rightIsExpr;
 		ValueExpression left = (ValueExpression) expression.getLeft();
 		ValueExpression right = (ValueExpression) expression.getRight();
 		if (left instanceof Identifier) {
@@ -912,7 +911,6 @@ public class JavaNumericInterval extends Interval {
 			eval = eval(environment, right, src, oracle);
 			evalId = eval(environment, left, src, oracle);
 			id = (Identifier) left;
-			rightIsExpr = true;
 		} else if (right instanceof Identifier) {
 			if (!canProcess(left, src, oracle))
 				// the expression does not have a numerical value, we do not
@@ -921,7 +919,6 @@ public class JavaNumericInterval extends Interval {
 			eval = eval(environment, left, src, oracle);
 			evalId = eval(environment, right, src, oracle);
 			id = (Identifier) right;
-			rightIsExpr = false;
 		} else
 			return environment;
 

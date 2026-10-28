@@ -203,7 +203,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return (UnitType) t;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,

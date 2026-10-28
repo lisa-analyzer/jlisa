@@ -213,7 +213,7 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 		return (UnitType) t;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,

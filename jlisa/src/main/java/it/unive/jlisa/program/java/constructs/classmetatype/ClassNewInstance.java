@@ -38,7 +38,6 @@ import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -77,8 +76,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 
-		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
-
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()),
 				this);
 
@@ -100,7 +97,6 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		CodeLocation location = getLocation();
 
 		Type stringType = getProgram().getTypes().getStringType();
-		Type classMetaType = JavaClassType.getClassMetaType();
 
 		GlobalVariable nameVar = new GlobalVariable(Untyped.INSTANCE, "name", location);
 		GlobalVariable valueVar = new GlobalVariable(Untyped.INSTANCE, "value", location);
@@ -202,7 +198,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,

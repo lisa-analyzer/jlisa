@@ -453,7 +453,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		return (UnitType) t;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,

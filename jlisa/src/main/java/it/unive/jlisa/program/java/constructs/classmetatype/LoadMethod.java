@@ -282,12 +282,4 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		return classLoaded;
 	}
 
-	private Type getNoReferenceType(
-			Type t) {
-		Type res = t;
-		if (res instanceof JavaReferenceType jrt) {
-			res = jrt.getInnerType();
-		}
-		return res;
-	}
 }

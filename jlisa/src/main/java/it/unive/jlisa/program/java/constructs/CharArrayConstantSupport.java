@@ -128,7 +128,7 @@ public final class CharArrayConstantSupport {
 		return value;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	private static <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,

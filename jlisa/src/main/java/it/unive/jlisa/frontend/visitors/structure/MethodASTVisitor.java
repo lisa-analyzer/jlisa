@@ -41,9 +41,7 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
@@ -203,7 +201,6 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
 			MethodDeclaration node) {
 		CodeLocation loc = getSourceCodeLocation(node);
@@ -302,33 +299,6 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		}
 
 		return codeMemberDescriptor;
-	}
-
-	private boolean isMain(
-			MethodDeclaration node) {
-		if (!Modifier.isStatic(node.getModifiers())) {
-			return false;
-		}
-		if (!node.getName().getIdentifier().equals("main")) {
-			return false;
-		}
-		if (node.getReceiverType() != null) {
-			return false;
-		}
-		if (node.parameters().size() != 1) {
-			return false;
-		}
-		SingleVariableDeclaration parameter = (SingleVariableDeclaration) node.parameters().getFirst();
-		Type type = parameter.getType();
-		if (parameter.getType().toString().equals("String[]")) {
-			return true;
-		}
-		if (type instanceof SimpleType && ((SimpleType) type).getName().toString().equals("String")
-				&& parameter.getExtraDimensions() == 1) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override

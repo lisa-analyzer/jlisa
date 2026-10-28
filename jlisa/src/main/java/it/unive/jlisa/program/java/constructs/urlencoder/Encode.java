@@ -78,8 +78,6 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		CodeLocation location = getLocation();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", location);
-		HeapDereference derefLeft = new HeapDereference(stringType, left, location);
-		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, location);
 
 		HeapDereference derefRight = new HeapDereference(stringType, right, location);
 		AccessChild accessRight = new AccessChild(stringType, derefRight, var, location);
