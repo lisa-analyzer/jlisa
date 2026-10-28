@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.statement.JavaCompoundAssignment;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -17,6 +18,7 @@ import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -24,7 +26,9 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
@@ -36,6 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JavaArrayAccess extends BinaryExpression {
+
+	// the number of cells of an array that are tracked: a read with an index
+	// that is not a known constant joins these cells only
+	// TODO: move to a configuration file
+	private static final int MAX_CONST_ARRAY_SIZE = 32;
 
 	public JavaArrayAccess(
 			CFG cfg,
@@ -173,23 +182,65 @@ public class JavaArrayAccess extends BinaryExpression {
 
 		if (!concreteIndexes.isEmpty()) {
 			AnalysisState<A> result = state.bottomExecution();
-			for (SymbolicExpression idx : concreteIndexes)
+			boolean untracked = false;
+			for (SymbolicExpression idx : concreteIndexes) {
 				result = result.lub(analysis.smallStepSemantics(state,
 						new AccessChild(accessType, container, idx, getLocation()), this));
+				Object value = ((Constant) idx).getValue();
+				boolean tracked = value instanceof Number && ((Number) value).longValue() < MAX_CONST_ARRAY_SIZE;
+				if (!tracked)
+					untracked = true;
+			}
+			// a write with an unknown index might have changed the cells after
+			// the first MAX_CONST_ARRAY_SIZE (see below)
+			if (untracked && !isWritten())
+				result = result.lub(unknownElement(analysis, state, accessType));
 			return result;
 		}
 
 		AnalysisState<A> result = state.bottomExecution();
-		for (int i = 0;; i++) {
+		for (int i = 0; i < MAX_CONST_ARRAY_SIZE; i++) {
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, getLocation());
 			it.unive.lisa.symbolic.value.BinaryExpression inBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
 					JavaBooleanType.INSTANCE, idx, lenAccess, ComparisonLt.INSTANCE, getLocation());
 			if (analysis.satisfies(state, inBounds, this) == Satisfiability.NOT_SATISFIED)
-				break;
+				return result;
 			result = result.lub(analysis.smallStepSemantics(state,
 					new AccessChild(accessType, container, idx, getLocation()), this));
 		}
-		return result;
+		// the length might be larger (e.g. it has no upper bound): the cells
+		// after the first MAX_CONST_ARRAY_SIZE are not tracked, a read gives
+		// any value of the element type, and a write changes only the first
+		// cells
+		if (isWritten())
+			return result;
+		return result.lub(unknownElement(analysis, state, accessType));
+	}
+
+	// any value of the element type: for references, also null (the cells
+	// of a new array are null)
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> unknownElement(
+			Analysis<A, D> analysis,
+			AnalysisState<A> state,
+			Type accessType)
+			throws SemanticException {
+		AnalysisState<A> any = analysis.smallStepSemantics(state, new PushAny(accessType, getLocation()), this);
+		if (accessType.isReferenceType() || accessType.isInMemoryType())
+			any = any.lub(analysis.smallStepSemantics(state, new NullConstant(getLocation()), this));
+		return any;
+	}
+
+	// whether this access is the target of a write (an assignment, a compound
+	// assignment, an increment or a decrement), which needs the cells
+	// TODO: a compound assignment, an increment and a decrement also read the
+	// cells, and their value (e.g. x = a[i]++) misses the unknown value of the
+	// untracked cells
+	private boolean isWritten() {
+		Statement parent = getParentStatement();
+		if (parent instanceof Assignment || parent instanceof JavaCompoundAssignment)
+			return ((BinaryExpression) parent).getLeft() == this;
+		return parent instanceof PostfixAddition || parent instanceof PostfixSubtraction
+				|| parent instanceof PrefixAddition || parent instanceof PrefixSubtraction;
 	}
 
 	@Override
