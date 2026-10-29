@@ -42,9 +42,9 @@ dependencies {
     // transitively visible to consumers of jLISA. We declare them explicitly so that
     // the correctness-validator code can use it.unive.lisa.* types directly.
     // The jars are already in the Gradle module cache from previous jLISA builds.
-    implementation("io.github.lisa-analyzer:lisa-sdk:0.2")
-    implementation("io.github.lisa-analyzer:lisa-analyses:0.2")
-    implementation("io.github.lisa-analyzer:lisa-program:0.2")
+    implementation("io.github.lisa-analyzer:lisa-sdk:1.1-svcomp-2027-SNAPSHOT")
+    implementation("io.github.lisa-analyzer:lisa-analyses:1.1-svcomp-2027-SNAPSHOT")
+    implementation("io.github.lisa-analyzer:lisa-program:1.1-svcomp-2027-SNAPSHOT")
 
     // Eclipse JDT is also transitively hidden and needed for jLISA frontend types
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
