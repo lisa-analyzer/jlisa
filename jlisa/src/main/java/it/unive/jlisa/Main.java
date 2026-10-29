@@ -88,7 +88,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation, ApronPolka, ApronPplite, ApronOctagon)")
+				.desc("Numerical domain: (ConstantPropagation, ApronPolka, ApronPplite, ApronPplite-<kind of PPLite, e.g., UF_Poly>, ApronOctagon)")
 				.required(false)
 				.build();
 
@@ -374,7 +374,10 @@ public class Main {
 			domain = withApron(Apron.ApronDomain.Octagon);
 			break;
 		default:
-			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
+			if (!numericalDomain.startsWith("ApronPplite-"))
+				throw new ParseException("Invalid numerical domain name: " + numericalDomain);
+			// e.g., ApronPplite-UF_Poly: a kind of polyhedra of PPLite
+			domain = withApron(Apron.ApronDomain.Pplite, numericalDomain.substring("ApronPplite-".length()));
 		}
 
 		conf.analysis = new SimpleAbstractDomain<>(
@@ -413,6 +416,28 @@ public class Main {
 	private static ValueDomain<?> withApron(
 			Apron.ApronDomain apronDomain)
 			throws ParseException {
+		return withApron(apronDomain, null);
+	}
+
+	/**
+	 * Returns the product of {@link ConstantPropagationWithIntervals} and of
+	 * the given domain of Apron, as {@link #withApron(Apron.ApronDomain)}, with
+	 * the given kind of polyhedra of PPLite.
+	 *
+	 * @param apronDomain the domain of Apron
+	 * @param ppliteKind  the kind of polyhedra of PPLite (see
+	 *                        {@link #setPpliteKind(String)}), or {@code null}
+	 *                        for the default one
+	 *
+	 * @return the product
+	 *
+	 * @throws ParseException if the native libraries of Apron cannot be loaded
+	 *                            or the kind cannot be set
+	 */
+	private static ValueDomain<?> withApron(
+			Apron.ApronDomain apronDomain,
+			String ppliteKind)
+			throws ParseException {
 		String folder = System.getProperty("jlisa.native");
 		if (folder != null)
 			Apron.loadLibrary(folder);
@@ -421,6 +446,35 @@ public class Main {
 		if (!Apron.isAvailable())
 			throw new ParseException("The native libraries of Apron cannot be loaded");
 		Apron.setManager(apronDomain);
+		// before any state of Apron is created
+		if (ppliteKind != null)
+			setPpliteKind(ppliteKind);
 		return new ConstantPropagationWithApron();
+	}
+
+	/**
+	 * Sets the kind of polyhedra of the PPLite manager of Apron (e.g.,
+	 * {@code F_Poly}, factored polyhedra, whose variables are split in
+	 * independent blocks; {@code UF_Poly}, that also leaves out the
+	 * unconstrained variables), before any state is created. The manager is
+	 * private in {@link Apron}: it is reached by reflection.
+	 *
+	 * @param kind the kind: Poly, F_Poly, U_Poly, UF_Poly, P_Set or FP_Set
+	 *
+	 * @throws ParseException if the kind cannot be set
+	 */
+	private static void setPpliteKind(
+			String kind)
+			throws ParseException {
+		try {
+			java.lang.reflect.Field field = Apron.class.getDeclaredField("manager");
+			field.setAccessible(true);
+			apron.Pplite manager = (apron.Pplite) field.get(null);
+			manager.setKind(kind);
+			if (!kind.equals(manager.getKind()))
+				throw new ParseException("PPLite did not accept the kind " + kind);
+		} catch (ReflectiveOperationException | ClassCastException e) {
+			throw new ParseException("Cannot set the kind of PPLite: " + e);
+		}
 	}
 }
