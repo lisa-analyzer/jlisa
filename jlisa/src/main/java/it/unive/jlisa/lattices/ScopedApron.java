@@ -3,6 +3,7 @@ package it.unive.jlisa.lattices;
 import apron.Abstract1;
 import apron.ApronException;
 import apron.Environment;
+import apron.Manager;
 import apron.Var;
 import it.unive.jlisa.analysis.value.NativeMemory;
 import it.unive.lisa.analysis.ScopeToken;
@@ -376,12 +377,48 @@ public class ScopedApron
 		if (obj == null || getClass() != obj.getClass())
 			return false;
 		ScopedApron other = (ScopedApron) obj;
-		return Objects.equals(apron, other.apron) && Objects.equals(ids, other.ids);
+		return ids.equals(other.ids) && sameState(apron, other.apron);
+	}
+
+	// whether the two states of Apron have the same variables and represent
+	// the same values: Apron compares its native states by identity, and two
+	// equal states computed separately (e.g., the entry states of two calls
+	// with the same context) would be different
+	private static boolean sameState(
+			Apron a,
+			Apron b) {
+		if (a == b)
+			return true;
+		Abstract1 x = a.getApronState();
+		Abstract1 y = b.getApronState();
+		if (x == y)
+			return true;
+		if (!variables(x).equals(variables(y)))
+			return false;
+		try {
+			Manager man = x.getCreationManager();
+			boolean bottom = x.isBottom(man);
+			if (bottom || y.isBottom(man))
+				return bottom && y.isBottom(man);
+			return x.isEqual(man, y);
+		} catch (ApronException e) {
+			return false;
+		}
+	}
+
+	private static Set<String> variables(
+			Abstract1 state) {
+		Set<String> names = new HashSet<>();
+		for (Var v : state.getEnvironment().getVars())
+			names.add(v.toString());
+		return names;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(apron, ids);
+		// only what equals compares exactly: the polyhedron is compared by
+		// Apron
+		return Objects.hash(ids.keySet(), variables(apron.getApronState()));
 	}
 
 	@Override
