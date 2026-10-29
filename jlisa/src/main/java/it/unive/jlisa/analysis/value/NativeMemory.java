@@ -5,15 +5,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Keeps the native memory of Apron bounded. Apron frees a native state only
- * when the garbage collector reclaims the small Java object that wraps it: with
- * a large heap the collector runs rarely, and the native states pile up (tens
- * of GB). Every {@link #CHECK_EVERY} operations, the resident memory of the
- * process is read from {@code /proc/self/statm}, and a collection is requested
- * when it exceeds the memory used by the heap by more than {@link #MAX_NATIVE}
- * bytes. If it still exceeds it by more than {@link #EXHAUSTED} bytes, Apron is
+ * Optional bounds on the native memory of Apron, off unless the environment
+ * variables below are set. Apron frees a native state only when the garbage
+ * collector reclaims the small Java object that wraps it: with a large heap the
+ * collector runs rarely, and the native states pile up. Every
+ * {@link #CHECK_EVERY} operations, the resident memory of the process minus the
+ * memory of the heap is read (it also counts the memory of the JVM outside the
+ * heap, about 0.5-1 GB):
+ * <ul>
+ * <li>above {@code JLISA_APRON_GC_MB} MB, a collection is requested;</li>
+ * <li>above {@code JLISA_APRON_GIVE_UP_MB} MB, after the collection, Apron is
  * given up for the rest of the analysis (see {@link #exhausted()}): the states
- * kept by the analysis are alive, and no collection can free them.
+ * kept by the analysis are alive, and no collection can free them.</li>
+ * </ul>
  *
  * @author <a href="mailto:giacomo.zanatta@unive.it">Giacomo Zanatta</a>
  */
@@ -21,9 +25,9 @@ public final class NativeMemory {
 
 	private static final int CHECK_EVERY = 500;
 
-	private static final long MAX_NATIVE = 1L << 30;
+	private static final long GC_ABOVE = megabytes("JLISA_APRON_GC_MB");
 
-	private static final long EXHAUSTED = 2L << 30;
+	private static final long GIVE_UP_ABOVE = megabytes("JLISA_APRON_GIVE_UP_MB");
 
 	private static volatile boolean exhausted = false;
 
@@ -36,30 +40,45 @@ public final class NativeMemory {
 	private NativeMemory() {
 	}
 
+	// the bytes given in MB by the environment variable, or 0 (off)
+	private static long megabytes(
+			String variable) {
+		try {
+			String value = System.getenv(variable);
+			return value == null ? 0 : Long.parseLong(value.trim()) << 20;
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
 	/**
-	 * Counts an operation of Apron, requesting a collection when the native
-	 * memory grows too much.
+	 * Counts an operation of Apron, requesting a collection or giving up Apron
+	 * when the native memory grows beyond the limits that are set.
 	 */
 	public static synchronized void operation() {
+		if (GC_ABOVE <= 0 && GIVE_UP_ABOVE <= 0)
+			return;
 		if (++operations < CHECK_EVERY)
 			return;
 		operations = 0;
 		long resident = resident();
 		if (resident < 0)
 			return;
-		long heap = Runtime.getRuntime().totalMemory();
-		if (resident - heap > MAX_NATIVE) {
+		long nativeMemory = resident - Runtime.getRuntime().totalMemory();
+		if (GC_ABOVE > 0 && nativeMemory > GC_ABOVE) {
 			System.gc();
 			resident = resident();
-			heap = Runtime.getRuntime().totalMemory();
-			if (resident >= 0 && resident - heap > EXHAUSTED)
-				exhausted = true;
+			if (resident < 0)
+				return;
+			nativeMemory = resident - Runtime.getRuntime().totalMemory();
 		}
+		if (GIVE_UP_ABOVE > 0 && nativeMemory > GIVE_UP_ABOVE)
+			exhausted = true;
 	}
 
 	/**
-	 * Returns whether the native memory of Apron grew beyond the limit, even
-	 * after a collection: from then on, Apron is not used.
+	 * Returns whether the native memory of Apron grew beyond the limit set by
+	 * {@code JLISA_APRON_GIVE_UP_MB}: from then on, Apron is not used.
 	 *
 	 * @return whether Apron is given up
 	 */
