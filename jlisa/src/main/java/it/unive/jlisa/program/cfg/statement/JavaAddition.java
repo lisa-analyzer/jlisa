@@ -5,6 +5,7 @@ import it.unive.jlisa.program.type.*;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -81,8 +82,9 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, this);
-		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, context, this);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 		SymbolicExpression actualLeft = left;
 		SymbolicExpression actualRight = right;
 		AnalysisState<A> result = state.bottomExecution();
@@ -139,7 +141,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									actualRight,
 									op,
 									getLocation()),
-							this);
+							context, this);
 				} else if ((lType.isReferenceType() || lType.isNumericType())
 						&& (rType.isReferenceType() || rType.isNumericType())) {
 
@@ -183,7 +185,7 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 									actualRight,
 									op,
 									getLocation()),
-							this);
+							context, this);
 				} else {
 					continue;
 				}

@@ -62,6 +62,7 @@ public class StringConstructorFromByteArray extends BinaryExpression implements 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		PushAny topString = new PushAny(stringType, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, topString, originating);
+		return interprocedural.getAnalysis().assign(state, leftAccess, topString, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

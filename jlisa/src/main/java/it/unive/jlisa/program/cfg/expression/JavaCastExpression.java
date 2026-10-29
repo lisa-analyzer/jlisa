@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -50,9 +51,10 @@ public class JavaCastExpression extends UnaryExpression {
 					throws SemanticException {
 		Constant typeConv = new Constant(new TypeTokenType(Collections.singleton(type)), type, getLocation());
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		if (type.isReferenceType()) {
-			Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+			Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
 			AnalysisState<A> result = state.bottomExecution();
 			AnalysisState<A> erroneousState = state.bottom();
 			Error error = null;
@@ -64,7 +66,7 @@ public class JavaCastExpression extends UnaryExpression {
 				if (safe) {
 					BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE,
 							getLocation());
-					result = result.lub(analysis.smallStepSemantics(state, castExpression, this));
+					result = result.lub(analysis.smallStepSemantics(state, castExpression, context, this));
 				} else {
 					// builds the exception
 					JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
@@ -76,7 +78,7 @@ public class JavaCastExpression extends UnaryExpression {
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), ccExc.getReference(), getLocation());
 					excState = analysis.assign(excState, throwVar,
-							excState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+							excState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 					// deletes the receiver of the constructor
 					// and all the metavariables from subexpressions
@@ -89,11 +91,11 @@ public class JavaCastExpression extends UnaryExpression {
 
 			if (error == null)
 				return result;
-			return analysis.moveExecutionToError(result, erroneousState, error, this);
+			return analysis.moveExecutionToError(result, erroneousState, error, context, this);
 		} else {
 			BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeConv.INSTANCE,
 					getLocation());
-			return analysis.smallStepSemantics(state, castExpression, this);
+			return analysis.smallStepSemantics(state, castExpression, context, this);
 		}
 	}
 

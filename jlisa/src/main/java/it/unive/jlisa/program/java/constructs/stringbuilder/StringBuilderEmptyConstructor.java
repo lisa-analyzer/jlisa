@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -69,7 +70,8 @@ public class StringBuilderEmptyConstructor extends UnaryExpression implements Pl
 		Constant defaultCapacity = new Constant(JavaIntType.INSTANCE, 16, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		AnalysisState<A> tmp = analysis.assign(state, access, emptyString, originating);
-		return analysis.assign(tmp, capAccess, defaultCapacity, originating);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		AnalysisState<A> tmp = analysis.assign(state, access, emptyString, context, originating);
+		return analysis.assign(tmp, capAccess, defaultCapacity, context, originating);
 	}
 }

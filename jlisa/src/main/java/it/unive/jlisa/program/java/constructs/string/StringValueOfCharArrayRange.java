@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -92,6 +93,7 @@ public class StringValueOfCharArrayRange extends TernaryExpression implements Pl
 				: new PushAny(stringType, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		// String.valueOf(char[], int, int) allocates and returns a NEW String
 		// object: the char array passed in must not be touched
@@ -103,7 +105,7 @@ public class StringValueOfCharArrayRange extends TernaryExpression implements Pl
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, access, value, originating);
+			AnalysisState<A> sem = analysis.assign(callState, access, value, context, originating);
 			tmp = tmp.lub(sem);
 		}
 

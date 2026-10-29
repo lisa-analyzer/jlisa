@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement.asserts;
 
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -58,6 +59,7 @@ public class AssertionStatement extends BinaryExpression implements AssertStatem
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = analysis.smallStepSemantics(
 				state,
 				new it.unive.lisa.symbolic.value.UnaryExpression(VoidType.INSTANCE, left, new UnaryOperator() {
@@ -72,7 +74,7 @@ public class AssertionStatement extends BinaryExpression implements AssertStatem
 					public String toString() {
 						return "assert-condition";
 					}
-				}, getLocation()), this);
+				}, getLocation()), context, this);
 
 		result = result.lub(analysis.smallStepSemantics(
 				state,
@@ -88,7 +90,7 @@ public class AssertionStatement extends BinaryExpression implements AssertStatem
 					public String toString() {
 						return "assert-message";
 					}
-				}, getLocation()), this));
+				}, getLocation()), context, this));
 
 		return result;
 	}

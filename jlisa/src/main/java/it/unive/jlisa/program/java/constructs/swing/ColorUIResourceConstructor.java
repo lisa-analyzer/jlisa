@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -63,6 +64,7 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CFG cfg = getCFG();
 		CodeLocation location = getLocation();
 
@@ -71,7 +73,7 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 		noExceptionState = analysis.smallStepSemantics(state,
 				new PushAny(new JavaReferenceType(JavaClassType.lookup("javax.swing.plaf.ColorUIResource")),
 						getLocation()),
-				originating);
+				context, originating);
 
 		LibrarySpecificationProvider.importClass(getProgram(), "java.lang.IllegalArgumentException");
 		JavaClassType IllegalArgumentExceptionType = JavaClassType.lookup("java.lang.IllegalArgumentException");
@@ -82,7 +84,7 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 
 		CFGThrow throwVar = new CFGThrow(cfg, IllegalArgumentExceptionType.getReference(), location);
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		state = state.forgetIdentifiers(call.getMetaVariables(), this);
 		state = state.forgetIdentifiers(getSubExpressions()[0].getMetaVariables(), this);
@@ -91,6 +93,6 @@ public class ColorUIResourceConstructor extends NaryExpression implements Plugga
 		state = state.forgetIdentifiers(getSubExpressions()[3].getMetaVariables(), this);
 
 		return analysis.moveExecutionToError(noExceptionState, state.withExecutionExpression(throwVar),
-				new Error(IllegalArgumentExceptionType.getReference(), originating), this);
+				new Error(IllegalArgumentExceptionType.getReference(), originating), context, this);
 	}
 }

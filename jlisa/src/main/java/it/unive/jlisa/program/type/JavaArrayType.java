@@ -7,6 +7,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -229,7 +230,8 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 				Type type = getStaticType();
 				MemoryAllocation alloc = new MemoryAllocation(type, getLocation(), false);
 				Analysis<A, D> analysis = interprocedural.getAnalysis();
-				AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, this);
+				ScopeId<A> context = interprocedural.getCurrentContext();
+				AnalysisState<A> allocSt = analysis.smallStepSemantics(entryState, alloc, context, this);
 				ExpressionSet allocExps = allocSt.getExecutionExpressions();
 
 				AnalysisState<A> initSt = entryState.bottomExecution();
@@ -248,14 +250,14 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 							location);
 
 					initSt = initSt.lub(analysis.assign(allocSt, len,
-							new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), this));
+							new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), constraint), context, this));
 				}
 
 				AnalysisState<A> refSt = entryState.bottomExecution();
 				for (SymbolicExpression loc : allocSt.getExecutionExpressions()) {
 					JavaReferenceType t = new JavaReferenceType(loc.getStaticType());
 					HeapReference ref = new HeapReference(t, loc, getLocation());
-					AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, this);
+					AnalysisState<A> refSem = analysis.smallStepSemantics(initSt, ref, context, this);
 					refSt = refSt.lub(refSem);
 				}
 

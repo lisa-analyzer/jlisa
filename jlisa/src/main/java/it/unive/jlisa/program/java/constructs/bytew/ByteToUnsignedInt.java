@@ -59,6 +59,7 @@ public class ByteToUnsignedInt extends UnaryExpression implements PluggableState
 				expr,
 				JavaByteToUnsignedIntOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

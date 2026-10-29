@@ -7,6 +7,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -63,14 +64,15 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		AnalysisState<A> result = analysis.smallStepSemantics(state, left, this);
-		Satisfiability sat = analysis.satisfies(result, left, this);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		AnalysisState<A> result = analysis.smallStepSemantics(state, left, context, this);
+		Satisfiability sat = analysis.satisfies(result, left, context, this);
 
 		switch (sat) {
 		case SATISFIED:
-			return analysis.smallStepSemantics(result, middle, this);
+			return analysis.smallStepSemantics(result, middle, context, this);
 		case NOT_SATISFIED:
-			return analysis.smallStepSemantics(result, right, this);
+			return analysis.smallStepSemantics(result, right, context, this);
 		case BOTTOM:
 			return result.bottomExecution();
 		case UNKNOWN:
@@ -85,11 +87,12 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 			getMetaVariables().add(meta);
 			SymbolicExpression negation = new UnaryExpression(BoolType.INSTANCE, left, LogicalNegation.INSTANCE,
 					getLocation());
-			AnalysisState<A> whenTrue = analysis.assign(analysis.assume(result, left, value, value), meta, middle,
-					this);
-			AnalysisState<A> whenFalse = analysis.assign(analysis.assume(result, negation, value, value), meta,
-					right, this);
-			return analysis.smallStepSemantics(whenTrue.lub(whenFalse), meta, this);
+			AnalysisState<
+					A> whenTrue = analysis.assign(analysis.assume(result, left, context, value, value), meta, middle,
+							context, this);
+			AnalysisState<A> whenFalse = analysis.assign(analysis.assume(result, negation, context, value, value), meta,
+					right, context, this);
+			return analysis.smallStepSemantics(whenTrue.lub(whenFalse), meta, context, this);
 		}
 
 	}

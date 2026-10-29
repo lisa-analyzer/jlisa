@@ -58,6 +58,7 @@ public class DoubleIsNaN extends UnaryExpression implements PluggableStatement {
 				expr,
 				JavaDoubleIsNaNOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

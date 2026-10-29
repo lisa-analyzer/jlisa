@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -55,15 +56,16 @@ public class JavaSubtraction
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isNumericType))
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, left, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
-		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(Type::isNumericType))
+		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
 
 		return analysis.smallStepSemantics(
 				state,
 				new BinaryExpression(getStaticType(), left, right, NumericNonOverflowingSub.INSTANCE, getLocation()),
-				this);
+				context, this);
 	}
 
 }

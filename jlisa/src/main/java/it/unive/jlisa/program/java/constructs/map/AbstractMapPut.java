@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -54,6 +55,7 @@ public class AbstractMapPut extends BinaryExpression implements PluggableStateme
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaClassType oobExc = JavaClassType.getUnsupportedOperationExceptionType();
 		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
@@ -66,7 +68,7 @@ public class AbstractMapPut extends BinaryExpression implements PluggableStateme
 		for (SymbolicExpression th : state.getExecutionExpressions()) {
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-			AnalysisState<A> tmp = analysis.assign(state, throwVar, th, originating);
+			AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, originating);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
@@ -74,7 +76,7 @@ public class AbstractMapPut extends BinaryExpression implements PluggableStateme
 					.forgetIdentifiers(getLeft().getMetaVariables(), this)
 					.forgetIdentifiers(getRight().getMetaVariables(), this);
 			exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-					new Error(oobExc.getReference(), originating), this));
+					new Error(oobExc.getReference(), originating), context, this));
 		}
 
 		return exceptionState;

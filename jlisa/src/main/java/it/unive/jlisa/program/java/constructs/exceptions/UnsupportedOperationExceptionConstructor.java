@@ -55,6 +55,6 @@ public class UnsupportedOperationExceptionConstructor extends NaryExpression imp
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

@@ -59,6 +59,7 @@ public class DoubleConstructor extends BinaryExpression implements PluggableStat
 					throws SemanticException {
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(JavaDoubleType.INSTANCE, left, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, right, originating);
+		return interprocedural.getAnalysis().assign(state, access, right, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

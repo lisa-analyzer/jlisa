@@ -17,6 +17,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
@@ -88,9 +89,10 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 		// right is the new value
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
-				this);
+				context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {
@@ -109,6 +111,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation loc = getLocation();
 		CFG cfg = getCFG();
 
@@ -186,7 +189,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 				if (reflectedGlobal.isInstance()) {
 
 					// get the runtime types of the target object
-					Set<Type> targetTypes = analysis.getRuntimeTypesOf(clazzState, middle, this);
+					Set<Type> targetTypes = analysis.getRuntimeTypesOf(clazzState, middle, context, this);
 
 					// remove null, if present
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
@@ -222,7 +225,8 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), loc);
 						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
-								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(),
+								context, this);
 
 						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
 						nullAnalysisState = nullAnalysisState
@@ -230,7 +234,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 						setState = analysis.moveExecutionToError(setState,
 								nullAnalysisState.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), originating), this);
+								new Error(npeType.getReference(), originating), context, this);
 					}
 
 					result = result.lub(setState);
@@ -272,6 +276,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -283,9 +288,9 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)

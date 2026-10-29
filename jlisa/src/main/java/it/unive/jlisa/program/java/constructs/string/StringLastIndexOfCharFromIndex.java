@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -63,6 +64,7 @@ public class StringLastIndexOfCharFromIndex extends TernaryExpression implements
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -76,7 +78,7 @@ public class StringLastIndexOfCharFromIndex extends TernaryExpression implements
 				JavaStringLastIndexOfCharFromIndexOperator.INSTANCE,
 				getLocation());
 
-		return analysis.smallStepSemantics(state, indexOf, originating);
+		return analysis.smallStepSemantics(state, indexOf, context, originating);
 
 	}
 }

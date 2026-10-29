@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -70,6 +71,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		TypeSystem typeSystem = getProgram().getTypes();
 		Type booleanType = typeSystem.getBooleanType();
@@ -88,7 +90,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 				JavaIsValidEncoding.INSTANCE,
 				location);
 
-		Satisfiability sat = analysis.satisfies(state, isValidEncoding, originating);
+		Satisfiability sat = analysis.satisfies(state, isValidEncoding, context, originating);
 		if (sat == Satisfiability.BOTTOM) {
 			return state.bottomExecution();
 		}
@@ -96,7 +98,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		if (sat != Satisfiability.NOT_SATISFIED) {
 			// as no-exception state, we return the top string...
-			AnalysisState<A> validState = analysis.assume(state, isValidEncoding, originating, originating);
+			AnalysisState<A> validState = analysis.assume(state, isValidEncoding, context, originating, originating);
 			JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 					new Expression[0]);
@@ -106,7 +108,8 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 				AnalysisState<
-						A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
+						A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), context,
+								this);
 				noExceptionState = noExceptionState
 						.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 			}
@@ -119,7 +122,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		AnalysisState<A> invalidState = analysis.assume(state,
 				new it.unive.lisa.symbolic.value.UnaryExpression(booleanType, isValidEncoding, LogicalNegation.INSTANCE,
 						location),
-				originating, originating);
+				context, originating, originating);
 		JavaClassType oobExc = JavaClassType.getUnsupportedEncodingExceptionType();
 		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 				oobExc.getReference(), new Expression[0]);
@@ -130,7 +133,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		for (SymbolicExpression th : excState.getExecutionExpressions()) {
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-			AnalysisState<A> tmp = analysis.assign(excState, throwVar, th, originating);
+			AnalysisState<A> tmp = analysis.assign(excState, throwVar, th, context, originating);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
@@ -142,7 +145,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		Error error = new Error(oobExc.getReference(), originating);
 		if (sat == Satisfiability.NOT_SATISFIED)
-			return analysis.moveExecutionToError(erroneousState, error, this);
-		return analysis.moveExecutionToError(noExceptionState, erroneousState, error, this);
+			return analysis.moveExecutionToError(erroneousState, error, context, this);
+		return analysis.moveExecutionToError(noExceptionState, erroneousState, error, context, this);
 	}
 }

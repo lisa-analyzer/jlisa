@@ -11,6 +11,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.InterfaceUnit;
@@ -57,11 +58,12 @@ public class ObjectGetClass extends it.unive.lisa.program.cfg.statement.UnaryExp
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 		TypeSystem typeSystem = getProgram().getTypes();
 
-		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
 
 		AnalysisState<A> tmp = state;
 		ExpressionSet execExpressions = new ExpressionSet();

@@ -5,6 +5,7 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -39,6 +40,7 @@ final class StringBuilderMutationSupport {
 	 */
 	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> mutateValue(
 			Analysis<A, D> analysis,
+			ScopeId<?> context,
 			AnalysisState<A> state,
 			SymbolicExpression receiver,
 			Type stringType,
@@ -52,9 +54,9 @@ final class StringBuilderMutationSupport {
 		AccessChild writeTarget = new AccessChild(stringType, receiver, var, location);
 
 		Variable oldValue = new Variable(stringType, "old_value@" + location, location);
-		AnalysisState<A> snapshot = analysis.assign(state, oldValue, currentAccess, pp);
+		AnalysisState<A> snapshot = analysis.assign(state, oldValue, currentAccess, context, pp);
 
-		AnalysisState<A> result = analysis.assign(snapshot, writeTarget, newValue.apply(oldValue), pp);
+		AnalysisState<A> result = analysis.assign(snapshot, writeTarget, newValue.apply(oldValue), context, pp);
 		return result.forgetIdentifier(oldValue, pp);
 	}
 }

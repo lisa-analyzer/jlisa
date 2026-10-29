@@ -53,7 +53,8 @@ public class CharacterIsLetter extends it.unive.lisa.program.cfg.statement.Unary
 				JavaCharacterIsLetterOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

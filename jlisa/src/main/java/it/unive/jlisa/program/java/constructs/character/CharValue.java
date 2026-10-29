@@ -57,6 +57,7 @@ public class CharValue extends UnaryExpression implements PluggableStatement {
 					throws SemanticException {
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(JavaCharType.INSTANCE, expr, var, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, access, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

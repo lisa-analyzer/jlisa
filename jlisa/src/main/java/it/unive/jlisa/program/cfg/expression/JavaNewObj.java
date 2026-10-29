@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -61,6 +62,7 @@ public class JavaNewObj extends NaryExpression {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		JavaReferenceType reftype = (JavaReferenceType) getStaticType();
 		String className = reftype.getInnerType().toString();
 		String simpleName = className.contains(".")
@@ -72,7 +74,7 @@ public class JavaNewObj extends NaryExpression {
 		MemoryAllocation created = new MemoryAllocation(reftype.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(reftype, created, getLocation());
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 
 		// we need to add the receiver to the parameters
 		InstrumentedReceiverRef paramThis = new InstrumentedReceiverRef(getCFG(), getLocation(), false, reftype);
@@ -85,7 +87,7 @@ public class JavaNewObj extends NaryExpression {
 		// we store a reference to the newly created region in the receiver
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression rec : callstate.getExecutionExpressions())
-			tmp = tmp.lub(analysis.assign(callstate, rec, ref, paramThis));
+			tmp = tmp.lub(analysis.assign(callstate, rec, ref, context, paramThis));
 		// we store the approximation of the receiver in the sub-expressions
 		expressions.put(paramThis, tmp);
 

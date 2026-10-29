@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement.asserts;
 
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -53,7 +54,8 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isBooleanType))
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isBooleanType))
 			return state.bottomExecution();
 
 		return analysis.smallStepSemantics(
@@ -69,7 +71,7 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 					public String toString() {
 						return "assert";
 					}
-				}, getLocation()), this);
+				}, getLocation()), context, this);
 	}
 
 	@Override

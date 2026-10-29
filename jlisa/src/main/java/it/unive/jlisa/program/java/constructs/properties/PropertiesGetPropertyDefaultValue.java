@@ -52,7 +52,7 @@ public class PropertiesGetPropertyDefaultValue extends TernaryExpression impleme
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(JavaClassType.getStringType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -68,6 +69,7 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -85,11 +87,11 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 
 		it.unive.lisa.symbolic.value.BinaryExpression growNeeded = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE, right, capacityRead, ComparisonGt.INSTANCE, getLocation());
-		Satisfiability sat = analysis.satisfies(state, growNeeded, this);
+		Satisfiability sat = analysis.satisfies(state, growNeeded, context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		if (sat != Satisfiability.NOT_SATISFIED)
-			result = result.lub(assignMax(analysis, state, capacityWrite, right, doubledPlus2));
+			result = result.lub(assignMax(analysis, context, state, capacityWrite, right, doubledPlus2));
 		if (sat != Satisfiability.SATISFIED)
 			// capacity is already sufficient: no-op
 			result = result.lub(state);
@@ -100,6 +102,7 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 	// assigns target := a > b ? a : b
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> assignMax(
 			Analysis<A, D> analysis,
+			ScopeId<?> context,
 			AnalysisState<A> state,
 			SymbolicExpression target,
 			SymbolicExpression a,
@@ -107,13 +110,13 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 			throws SemanticException {
 		it.unive.lisa.symbolic.value.BinaryExpression aGtB = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE, a, b, ComparisonGt.INSTANCE, getLocation());
-		Satisfiability sat = analysis.satisfies(state, aGtB, this);
+		Satisfiability sat = analysis.satisfies(state, aGtB, context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		if (sat != Satisfiability.NOT_SATISFIED)
-			result = result.lub(analysis.assign(state, target, a, this));
+			result = result.lub(analysis.assign(state, target, a, context, this));
 		if (sat != Satisfiability.SATISFIED)
-			result = result.lub(analysis.assign(state, target, b, this));
+			result = result.lub(analysis.assign(state, target, b, context, this));
 		return result;
 	}
 }

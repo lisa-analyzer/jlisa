@@ -54,7 +54,8 @@ public class StrictMathToRadians extends it.unive.lisa.program.cfg.statement.Una
 				JavaStrictMathToRadiansOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, radius, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, radius, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

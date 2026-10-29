@@ -52,7 +52,8 @@ public class MathToRadians extends it.unive.lisa.program.cfg.statement.UnaryExpr
 				JavaMathToRadiansOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, acos, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, acos, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

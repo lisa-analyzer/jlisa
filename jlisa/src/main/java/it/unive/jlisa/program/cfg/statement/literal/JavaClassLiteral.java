@@ -46,7 +46,7 @@ public class JavaClassLiteral extends Literal<Type> {
 
 		if (t == null)
 			return interprocedural.getAnalysis().smallStepSemantics(entryState,
-					new PushAny(getStaticType(), getLocation()), this);
+					new PushAny(getStaticType(), getLocation()), interprocedural.getCurrentContext(), this);
 
 		LoadClass loadClass = new LoadClass(t, getValue().toString(), cfg, location);
 		AnalysisState<A> callState = loadClass.forwardSemanticsAux(interprocedural, entryState, new ExpressionSet[0],

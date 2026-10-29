@@ -87,6 +87,7 @@ public class StringRegionMatches extends NaryExpression implements PluggableStat
 				JavaStringRegionMatchesOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, matches, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, matches, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

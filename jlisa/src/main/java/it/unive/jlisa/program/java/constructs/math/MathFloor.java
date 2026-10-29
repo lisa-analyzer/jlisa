@@ -52,7 +52,8 @@ public class MathFloor extends it.unive.lisa.program.cfg.statement.UnaryExpressi
 				JavaMathFloorOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, floor, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, floor, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

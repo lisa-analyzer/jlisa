@@ -4,6 +4,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -63,12 +64,13 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		// get receiver
 		ExpressionSet receiver = params[0];
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = state.bottomExecution();
 		AnalysisState<A> erroneousState = state.bottom();
 		Error error = null;
 
 		for (SymbolicExpression rec : receiver) {
-			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, this);
+			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, context, this);
 			for (Type recType : types) {
 				if (recType.isPointerType()) {
 					Type inner = recType.asPointerType().getInnerType();
@@ -83,7 +85,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 						// assign exception to variable thrower
 						for (SymbolicExpression th : npeState.getExecutionExpressions()) {
 							CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-							AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, this);
+							AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, context, this);
 
 							// deletes the receiver of the constructor
 							thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
@@ -101,6 +103,6 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 
 		if (error == null)
 			return result;
-		return analysis.moveExecutionToError(result, erroneousState, error, this);
+		return analysis.moveExecutionToError(result, erroneousState, error, context, this);
 	}
 }

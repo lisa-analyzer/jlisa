@@ -55,6 +55,6 @@ public class CollectionsEmptyMap extends NaryExpression implements PluggableStat
 		return interprocedural.getAnalysis().smallStepSemantics(
 				state,
 				new PushAny(new JavaReferenceType(JavaClassType.getAbstractMapType()), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

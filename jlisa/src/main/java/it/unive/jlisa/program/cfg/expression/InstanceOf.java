@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -45,19 +46,20 @@ public class InstanceOf extends UnaryExpression {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
 		AnalysisState<A> result = state.bottomExecution();
 
 		for (Type t : types)
 			if (t.isReferenceType() && t.asReferenceType().getInnerType().isNullType())
 				result = result.lub(analysis.smallStepSemantics(state,
-						new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), this));
+						new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), context, this));
 			else {
 				TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
 				BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
 						new Constant(typeToken, 0, getLocation()),
 						TypeCheck.INSTANCE, getLocation());
-				result = result.lub(analysis.smallStepSemantics(state, tc, this));
+				result = result.lub(analysis.smallStepSemantics(state, tc, context, this));
 			}
 
 		return result;

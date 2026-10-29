@@ -48,7 +48,7 @@ public class NextBoolean extends UnaryExpression implements PluggableStatement {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(JavaBooleanType.INSTANCE, getLocation()), originating);
+				new PushAny(JavaBooleanType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

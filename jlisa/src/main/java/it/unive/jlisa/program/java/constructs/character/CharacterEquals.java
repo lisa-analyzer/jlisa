@@ -71,6 +71,7 @@ public class CharacterEquals extends BinaryExpression implements PluggableStatem
 				accessRight,
 				JavaCharacterEqualsOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

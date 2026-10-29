@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -56,7 +57,8 @@ public class MathRound extends it.unive.lisa.program.cfg.statement.UnaryExpressi
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, originating);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, originating);
 
 		AnalysisState<A> result = state.bottomExecution();
 
@@ -76,7 +78,7 @@ public class MathRound extends it.unive.lisa.program.cfg.statement.UnaryExpressi
 					exprToAbs,
 					JavaMathRoundOperator.INSTANCE,
 					getLocation());
-			result = result.lub(analysis.smallStepSemantics(state, abs, originating));
+			result = result.lub(analysis.smallStepSemantics(state, abs, context, originating));
 		}
 
 		return result;

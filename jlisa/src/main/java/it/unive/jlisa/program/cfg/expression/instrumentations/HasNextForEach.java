@@ -53,7 +53,7 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(JavaBooleanType.INSTANCE, getLocation()), this);
+				new PushAny(JavaBooleanType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), this);
 
 	}
 

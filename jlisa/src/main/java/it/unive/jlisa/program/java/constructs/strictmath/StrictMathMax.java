@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -64,8 +65,9 @@ public class StrictMathMax extends it.unive.lisa.program.cfg.statement.BinaryExp
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, originating);
-		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, originating);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, context, originating);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, originating);
 
 		AnalysisState<A> result = state.bottomExecution();
 
@@ -97,7 +99,7 @@ public class StrictMathMax extends it.unive.lisa.program.cfg.statement.BinaryExp
 						rightExpr,
 						JavaStrictMathMax.INSTANCE,
 						getLocation());
-				result = result.lub(analysis.smallStepSemantics(state, max, originating));
+				result = result.lub(analysis.smallStepSemantics(state, max, context, originating));
 			}
 		}
 

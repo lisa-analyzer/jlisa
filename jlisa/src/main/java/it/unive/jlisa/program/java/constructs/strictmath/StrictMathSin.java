@@ -52,7 +52,8 @@ public class StrictMathSin extends it.unive.lisa.program.cfg.statement.UnaryExpr
 				JavaStrictMathSinOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, sin, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, sin, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

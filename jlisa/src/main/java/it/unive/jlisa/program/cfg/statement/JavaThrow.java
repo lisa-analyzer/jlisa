@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -39,13 +40,15 @@ public class JavaThrow extends Throw {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		Identifier meta = getMetaVariable();
-		AnalysisState<A> sem = analysis.assign(state, meta, expr, this);
+		AnalysisState<A> sem = analysis.assign(state, meta, expr, context, this);
 		// we forget the meta variables before moving as the operation only
 		// affects the normal execution, and won't be effective after we
 		// move the state to the exception
 		sem = sem.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-		AnalysisState<A> moved = analysis.moveExecutionToError(sem, new Error(expr.getStaticType(), this), this);
+		AnalysisState<
+				A> moved = analysis.moveExecutionToError(sem, new Error(expr.getStaticType(), this), context, this);
 		return moved;
 	}
 }

@@ -52,7 +52,8 @@ public class StrictMathTan extends it.unive.lisa.program.cfg.statement.UnaryExpr
 				JavaStrictMathTanOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, tan, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, tan, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

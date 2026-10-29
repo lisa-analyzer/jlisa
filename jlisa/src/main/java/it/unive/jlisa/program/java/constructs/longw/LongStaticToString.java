@@ -11,6 +11,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -66,6 +67,7 @@ public class LongStaticToString extends UnaryExpression implements PluggableStat
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(JavaIntType.INSTANCE, expr, var, getLocation());
@@ -81,7 +83,7 @@ public class LongStaticToString extends UnaryExpression implements PluggableStat
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild accessExpr = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, accessExpr, lower, this);
+			AnalysisState<A> sem = analysis.assign(callState, accessExpr, lower, context, this);
 			tmp = tmp.lub(sem);
 		}
 

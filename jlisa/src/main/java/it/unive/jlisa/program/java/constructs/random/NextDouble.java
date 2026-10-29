@@ -49,7 +49,7 @@ public class NextDouble extends UnaryExpression implements PluggableStatement {
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(JavaDoubleType.INSTANCE, getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

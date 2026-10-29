@@ -52,7 +52,8 @@ public class StrictMathSqrt extends it.unive.lisa.program.cfg.statement.UnaryExp
 				JavaStrictMathSqrtOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, sqrt, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, sqrt, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

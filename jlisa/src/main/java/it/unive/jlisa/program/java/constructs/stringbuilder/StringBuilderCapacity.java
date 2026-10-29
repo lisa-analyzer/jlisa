@@ -60,6 +60,7 @@ public class StringBuilderCapacity extends UnaryExpression implements PluggableS
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
 		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
 		AccessChild access = new AccessChild(JavaIntType.INSTANCE, deref, capVar, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, access, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, access, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

@@ -59,6 +59,7 @@ public class AtomicIntegerConstructor extends BinaryExpression implements Plugga
 					throws SemanticException {
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(JavaIntType.INSTANCE, left, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, right, originating);
+		return interprocedural.getAnalysis().assign(state, access, right, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

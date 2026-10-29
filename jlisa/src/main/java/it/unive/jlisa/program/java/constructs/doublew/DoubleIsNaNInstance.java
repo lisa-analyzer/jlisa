@@ -69,7 +69,8 @@ public class DoubleIsNaNInstance extends UnaryExpression implements PluggableSta
 				access,
 				JavaDoubleIsNaNOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -57,12 +58,13 @@ public class PropertiesLoad extends BinaryExpression implements PluggableStateme
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CFG cfg = getCFG();
 		CodeLocation location = getLocation();
 
 		AnalysisState<A> topState = interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(new JavaReferenceType(JavaClassType.getStringType()), getLocation()),
-				originating);
+				context, originating);
 
 		LibrarySpecificationProvider.importClass(getProgram(), "java.io.IOException");
 		JavaClassType IOExceptionType = JavaClassType.lookup("java.io.IOException");
@@ -73,14 +75,14 @@ public class PropertiesLoad extends BinaryExpression implements PluggableStateme
 
 		CFGThrow throwVar = new CFGThrow(cfg, IOExceptionType.getReference(), location);
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		state = state.forgetIdentifiers(call.getMetaVariables(), this);
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
 		return analysis.moveExecutionToError(topState, state.withExecutionExpression(throwVar),
-				new Error(IOExceptionType.getReference(), originating), this);
+				new Error(IOExceptionType.getReference(), originating), context, this);
 
 	}
 

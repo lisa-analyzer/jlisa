@@ -52,7 +52,8 @@ public class StrictMathAtan extends it.unive.lisa.program.cfg.statement.UnaryExp
 				JavaStrictMathAtanOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, atan, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, atan, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

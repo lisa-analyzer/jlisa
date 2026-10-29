@@ -53,6 +53,6 @@ public class BitSetEmptyConstructor extends UnaryExpression implements Pluggable
 			throws SemanticException {
 		// TODO: fix semantics
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

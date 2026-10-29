@@ -53,7 +53,8 @@ public class CharacterIsDigit extends it.unive.lisa.program.cfg.statement.UnaryE
 				JavaCharacterIsDigitOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

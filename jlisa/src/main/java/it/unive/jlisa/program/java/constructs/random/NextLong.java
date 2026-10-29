@@ -48,7 +48,7 @@ public class NextLong extends UnaryExpression implements PluggableStatement {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(JavaLongType.INSTANCE, getLocation()), originating);
+				new PushAny(JavaLongType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

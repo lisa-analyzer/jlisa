@@ -63,6 +63,7 @@ public class StrictMathAtan2 extends it.unive.lisa.program.cfg.statement.BinaryE
 				JavaStrictMathAtan2Operator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, atan2, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, atan2, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

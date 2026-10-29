@@ -53,6 +53,6 @@ public class ThrowableGetMessage extends UnaryExpression implements PluggableSta
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(getProgram().getTypes().getStringType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

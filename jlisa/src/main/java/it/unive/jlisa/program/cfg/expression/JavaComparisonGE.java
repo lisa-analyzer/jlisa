@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -49,6 +50,7 @@ public class JavaComparisonGE extends GreaterOrEqual {
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		boolean bothRef = (left.getStaticType().isReferenceType() || left.getStaticType().isNullType())
 				&& (right.getStaticType().isReferenceType() || right.getStaticType().isNullType());
 		boolean bothPrimitive = !left.getStaticType().isReferenceType() && !right.getStaticType().isReferenceType();
@@ -60,15 +62,16 @@ public class JavaComparisonGE extends GreaterOrEqual {
 		// try unboxing
 		AnalysisState<A> res = state.bottomExecution();
 		if (left.getStaticType().isReferenceType()) {
-			res = geWithUnbox(analysis, state, left, right, expressions);
+			res = geWithUnbox(analysis, context, state, left, right, expressions);
 		} else {
-			res = geWithUnbox(analysis, state, right, left, expressions);
+			res = geWithUnbox(analysis, context, state, right, left, expressions);
 		}
 		return res;
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> geWithUnbox(
 			Analysis<A, D> analysis,
+			ScopeId<?> context,
 			AnalysisState<A> state,
 			SymbolicExpression x,
 			SymbolicExpression y,
@@ -84,7 +87,8 @@ public class JavaComparisonGE extends GreaterOrEqual {
 			SymbolicExpression unboxed = unbox(analysis, state, x, innerType, expressions);
 
 			AnalysisState<A> tmp = analysis.smallStepSemantics(state,
-					new BinaryExpression(getStaticType(), unboxed, y, ComparisonGe.INSTANCE, getLocation()), this);
+					new BinaryExpression(getStaticType(), unboxed, y, ComparisonGe.INSTANCE, getLocation()), context,
+					this);
 			res = res.lub(tmp);
 		}
 		return res;

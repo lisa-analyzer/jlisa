@@ -52,7 +52,8 @@ public class StrictMathAsin extends it.unive.lisa.program.cfg.statement.UnaryExp
 				JavaStrictMathAsinOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, asin, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, asin, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

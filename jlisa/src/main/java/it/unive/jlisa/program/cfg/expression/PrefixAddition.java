@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -47,7 +48,8 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
 
 		state = analysis.assign(
@@ -59,9 +61,9 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
 						new Constant(JavaIntType.INSTANCE, 1, getLocation()),
 						NumericNonOverflowingAdd.INSTANCE,
 						getLocation()),
-				this);
+				context, this);
 
-		return analysis.smallStepSemantics(state, expr, this);
+		return analysis.smallStepSemantics(state, expr, context, this);
 
 	}
 

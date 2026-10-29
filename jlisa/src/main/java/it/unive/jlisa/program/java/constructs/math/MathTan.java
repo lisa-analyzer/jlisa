@@ -52,7 +52,8 @@ public class MathTan extends it.unive.lisa.program.cfg.statement.UnaryExpression
 				JavaMathTanOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, tan, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, tan, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

@@ -56,6 +56,6 @@ public class CompositeNameClone extends UnaryExpression implements PluggableStat
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(new JavaReferenceType(JavaClassType.lookup("javax.naming.CompositeName")), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

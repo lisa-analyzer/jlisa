@@ -13,6 +13,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -92,6 +93,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 
 			String src = ((SourceCodeLocation) getLocation()).getSourceFile() + "::System";
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
+			ScopeId<A> context = interprocedural.getCurrentContext();
 
 			// System.out
 			SyntheticCodeLocation outLocation = new SyntheticCodeLocation(src, 1);
@@ -105,7 +107,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			for (SymbolicExpression callExpr : outCallState.getExecutionExpressions()) {
 				GlobalVariable outId = new GlobalVariable(refPrinterType, "java.lang.System::out",
 						outLocation);
-				tmpOut = tmpOut.lub(analysis.assign(outCallState, outId, callExpr, originating));
+				tmpOut = tmpOut.lub(analysis.assign(outCallState, outId, callExpr, context, originating));
 			}
 
 			// System.err
@@ -121,7 +123,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			for (SymbolicExpression callExpr : errCallState.getExecutionExpressions()) {
 				GlobalVariable errId = new GlobalVariable(refPrinterType, "java.lang.System::err",
 						errLocation);
-				tmpErr = tmpErr.lub(analysis.assign(errCallState, errId, callExpr, originating));
+				tmpErr = tmpErr.lub(analysis.assign(errCallState, errId, callExpr, context, originating));
 			}
 
 			// System.in
@@ -137,7 +139,7 @@ public class SystemClassInitializer extends NativeCFG implements PluggableStatem
 			for (SymbolicExpression callExpr : inCallState.getExecutionExpressions()) {
 				GlobalVariable inId = new GlobalVariable(refInputStreamType, "java.lang.System::in",
 						inLocation);
-				tmpIn = tmpIn.lub(analysis.assign(inCallState, inId, callExpr, originating));
+				tmpIn = tmpIn.lub(analysis.assign(inCallState, inId, callExpr, context, originating));
 			}
 
 			tmpIn = tmpIn.forgetIdentifiers(newIn.getMetaVariables(), this)

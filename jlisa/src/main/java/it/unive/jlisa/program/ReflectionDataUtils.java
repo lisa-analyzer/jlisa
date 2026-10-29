@@ -5,6 +5,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -46,7 +47,8 @@ public class ReflectionDataUtils {
 				pp.getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Type type = analysis.getDynamicTypeOf(state, accessFields, pp);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Type type = analysis.getDynamicTypeOf(state, accessFields, context, pp);
 		assert (type != null);
 		// either null* or java.lang.reflect.Field*[]*
 		assert (type instanceof JavaReferenceType);

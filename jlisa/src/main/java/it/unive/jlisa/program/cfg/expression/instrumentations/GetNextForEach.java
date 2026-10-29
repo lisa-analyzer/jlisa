@@ -56,6 +56,6 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 		Type contentType = containerType.asArrayType().getInnerType();
 
 		PushAny top = new PushAny(contentType, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, top, this);
+		return interprocedural.getAnalysis().smallStepSemantics(state, top, interprocedural.getCurrentContext(), this);
 	}
 }

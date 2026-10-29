@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -138,6 +139,7 @@ public final class CharArrayConstantSupport {
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -149,9 +151,9 @@ public final class CharArrayConstantSupport {
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, pp);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, pp);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)

@@ -197,7 +197,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 			Satisfiability overall = Satisfiability.BOTTOM;
 			for (SymbolicExpression expr : state.getExecutionExpressions())
-				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
+				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, result.getId(), (ProgramPoint) node));
 
 			if (overall == Satisfiability.SATISFIED)
 				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");

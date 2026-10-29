@@ -11,6 +11,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.CFG;
@@ -87,8 +88,9 @@ public class StrictMathClassInitializer extends NativeCFG implements PluggableSt
 			Constant piConst = new Constant(JavaDoubleType.INSTANCE, 3.141592653589793, getLocation());
 			Constant eConst = new Constant(JavaDoubleType.INSTANCE, 2.718281828459045, getLocation());
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
-			state = analysis.assign(state, idPI, piConst, this);
-			state = analysis.assign(state, idE, eConst, this);
+			ScopeId<A> context = interprocedural.getCurrentContext();
+			state = analysis.assign(state, idPI, piConst, context, this);
+			state = analysis.assign(state, idE, eConst, context, this);
 			return state;
 		}
 	}

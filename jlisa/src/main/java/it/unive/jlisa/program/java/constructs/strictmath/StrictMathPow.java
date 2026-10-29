@@ -61,7 +61,8 @@ public class StrictMathPow extends it.unive.lisa.program.cfg.statement.BinaryExp
 				JavaStrictMathPowOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, pow, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, pow, interprocedural.getCurrentContext(),
+				originating);
 
 	}
 }

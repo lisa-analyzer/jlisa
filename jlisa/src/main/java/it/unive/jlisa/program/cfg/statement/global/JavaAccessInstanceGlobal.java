@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -144,7 +145,8 @@ public class JavaAccessInstanceGlobal
 		Error error = null;
 		boolean atLeastOne = false;
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, this);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
 
 		for (Type recType : types)
 			if (recType.isPointerType()) {
@@ -160,7 +162,7 @@ public class JavaAccessInstanceGlobal
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
 					for (SymbolicExpression th : npeState.getExecutionExpressions()) {
-						AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, this);
+						AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, context, this);
 
 						// deletes the receiver of the constructor
 						// and all the metavariables from subexpressions
@@ -193,7 +195,7 @@ public class JavaAccessInstanceGlobal
 								access = new AccessChild(global.getStaticType(), expr, var, loc);
 							else
 								access = new AccessChild(global.getStaticType(), container, var, loc);
-							result = result.lub(analysis.smallStepSemantics(state, access, this));
+							result = result.lub(analysis.smallStepSemantics(state, access, context, this));
 							atLeastOne = true;
 						}
 					}
@@ -203,7 +205,7 @@ public class JavaAccessInstanceGlobal
 			if (error == null)
 				return result;
 			else
-				return analysis.moveExecutionToError(result, erroneousState, error, this);
+				return analysis.moveExecutionToError(result, erroneousState, error, context, this);
 
 		// worst case: we are accessing a global that we know nothing about
 		Set<Type> rectypes = new HashSet<>();
@@ -218,6 +220,6 @@ public class JavaAccessInstanceGlobal
 		Variable var = new Variable(Untyped.INSTANCE, target, new Annotations(), getLocation());
 		HeapDereference container = new HeapDereference(rectype, expr, getLocation());
 		AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
-		return analysis.smallStepSemantics(state, access, this);
+		return analysis.smallStepSemantics(state, access, context, this);
 	}
 }

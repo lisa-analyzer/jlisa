@@ -69,7 +69,8 @@ public class LongBitCount extends UnaryExpression implements PluggableStatement 
 				JavaLongBitCountOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, bitCount, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, bitCount, interprocedural.getCurrentContext(),
+				originating);
 
 	}
 }

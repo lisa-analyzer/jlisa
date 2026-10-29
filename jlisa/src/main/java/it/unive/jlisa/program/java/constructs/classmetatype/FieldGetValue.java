@@ -32,6 +32,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
@@ -98,9 +99,10 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
-				this);
+				context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {
@@ -118,6 +120,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
@@ -198,7 +201,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				if (reflectedGlobal.isInstance()) {
 
 					// get the runtime types of the target object
-					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, right, this);
+					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 
 					// remove null, if present
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
@@ -218,7 +221,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), location);
 						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
-								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(),
+								context, this);
 
 						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
 						nullAnalysisState = nullAnalysisState
@@ -242,14 +246,14 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 							access = new HeapReference(reflectedFieldType, access, location);
 						}
 
-						AnalysisState<A> okState = analysis.smallStepSemantics(state, access, this);
+						AnalysisState<A> okState = analysis.smallStepSemantics(state, access, context, this);
 						AnalysisState<A> boxedState = getBoxedState(interprocedural, okState, reflectedFieldType,
 								expressions);
 						accessState = accessState.lub(boxedState);
 					}
 
 					if (npeError != null)
-						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, this);
+						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, context, this);
 					result = result.lub(accessState);
 				} else {
 					access = new GlobalVariable(
@@ -262,7 +266,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						access = new HeapReference(reflectedFieldType, access, location);
 					}
 
-					AnalysisState<A> accessedFieldState = analysis.smallStepSemantics(state, access, this);
+					AnalysisState<A> accessedFieldState = analysis.smallStepSemantics(state, access, context, this);
 					AnalysisState<A> boxedState = getBoxedState(interprocedural, accessedFieldState,
 							reflectedFieldType, expressions);
 					result = result.lub(boxedState);
@@ -353,6 +357,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -364,9 +369,9 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)

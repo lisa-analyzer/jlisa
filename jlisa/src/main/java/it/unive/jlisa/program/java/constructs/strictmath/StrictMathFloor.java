@@ -52,7 +52,8 @@ public class StrictMathFloor extends it.unive.lisa.program.cfg.statement.UnaryEx
 				JavaStrictMathFloorOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, floor, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, floor, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

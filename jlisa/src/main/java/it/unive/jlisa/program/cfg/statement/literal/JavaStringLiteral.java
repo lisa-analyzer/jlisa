@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -42,6 +43,7 @@ public class JavaStringLiteral extends Literal<String> {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		Type stringType = getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 
@@ -55,7 +57,7 @@ public class JavaStringLiteral extends Literal<String> {
 			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 			AnalysisState<A> sem = analysis.assign(callState, access,
-					new Constant(stringType, getValue(), getLocation()), this);
+					new Constant(stringType, getValue(), getLocation()), context, this);
 			tmp = tmp.lub(sem);
 		}
 

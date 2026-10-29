@@ -52,6 +52,6 @@ public class AssertionErrorEmptyConstructor extends NaryExpression implements Pl
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

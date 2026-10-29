@@ -14,6 +14,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
@@ -82,8 +83,9 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 				getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		Satisfiability sat = analysis.satisfies(state, isParsable, originating);
+		Satisfiability sat = analysis.satisfies(state, isParsable, context, originating);
 		if (sat == Satisfiability.SATISFIED) {
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
@@ -91,7 +93,7 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 					JavaFloatParseFloatOperator.INSTANCE,
 					getLocation());
 
-			return analysis.smallStepSemantics(state, un, originating);
+			return analysis.smallStepSemantics(state, un, context, originating);
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
@@ -102,21 +104,21 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), nfeType.getReference(), getLocation());
 			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), originating), this);
+					new Error(nfeType.getReference(), originating), context, this);
 		} else {
 			// restrict each half to the executions it describes
-			AnalysisState<A> okState = analysis.assume(state, isParsable, originating, originating);
+			AnalysisState<A> okState = analysis.assume(state, isParsable, context, originating, originating);
 			AnalysisState<A> koState = analysis.assume(state,
 					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, isParsable,
 							LogicalNegation.INSTANCE, getLocation()),
-					originating, originating);
+					context, originating, originating);
 
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
@@ -124,7 +126,7 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 					JavaFloatParseFloatOperator.INSTANCE,
 					getLocation());
 
-			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(okState, un, originating);
+			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(okState, un, context, originating);
 
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
@@ -135,14 +137,14 @@ public class FloatParseFloat extends UnaryExpression implements PluggableStateme
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), nfeType.getReference(), getLocation());
 			koState = analysis.assign(koState, throwVar,
-					koState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					koState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
 			koState = koState.forgetIdentifiers(call.getMetaVariables(), this);
 			koState = koState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), originating), this);
+					new Error(nfeType.getReference(), originating), context, this);
 		}
 	}
 }

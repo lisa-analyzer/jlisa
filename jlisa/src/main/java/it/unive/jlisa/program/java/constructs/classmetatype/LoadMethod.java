@@ -13,6 +13,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -94,6 +95,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		int paramCount = methodParameters.length;
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		SymbolicExpression clazz = expr;
@@ -121,15 +123,15 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		MemoryAllocation created = new MemoryAllocation(methodMetaType, synGen.nextLocation(), false);
 		HeapReference ref = new HeapReference(refMethodMetaType, created, location);
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 
 		InstrumentedReceiver method = new InstrumentedReceiver(refMethodMetaType, false, synGen.nextLocation());
-		AnalysisState<A> methodAllocated = analysis.assign(allocated, method, ref, this);
+		AnalysisState<A> methodAllocated = analysis.assign(allocated, method, ref, context, this);
 
 		// store into the destination array cell BEFORE writing any fields:
 		// see this method's Javadoc for why the order matters
 		if (destAccessIdx != null)
-			methodAllocated = analysis.assign(methodAllocated, destAccessIdx, ref, this);
+			methodAllocated = analysis.assign(methodAllocated, destAccessIdx, ref, context, this);
 
 		HeapDereference derefThisMethod = destAccessIdx != null
 				? new HeapDereference(methodMetaType, destAccessIdx, location)
@@ -137,7 +139,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 
 		// assign method clazz
 		AccessChild accessThisMethodClazz = new AccessChild(refClassMetaType, derefThisMethod, clazzVar, location);
-		AnalysisState<A> sem = analysis.assign(methodAllocated, accessThisMethodClazz, clazz, this);
+		AnalysisState<A> sem = analysis.assign(methodAllocated, accessThisMethodClazz, clazz, context, this);
 
 		// assign method name
 		sem = sem.lub(allocateSubField(interprocedural, methodAllocated, derefThisMethod, nameVar, refStringType,
@@ -149,7 +151,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		AccessChild dst = new AccessChild(stringType, derefMethodName, valueVar, location);
 
 		Constant methodNameConstant = new Constant(stringType, methodData.getName(), location);
-		sem = analysis.assign(sem, dst, methodNameConstant, this);
+		sem = analysis.assign(sem, dst, methodNameConstant, context, this);
 
 		// assign method type
 		Type returnType = methodData.getReturnType();
@@ -159,16 +161,16 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 
 		assert (sem.getExecutionExpressions().size() == 1);
 		SymbolicExpression returnTypeClazzVar = sem.getExecutionExpressions().iterator().next();
-		sem = analysis.assign(sem, accessThisMethodType, returnTypeClazzVar, this);
+		sem = analysis.assign(sem, accessThisMethodType, returnTypeClazzVar, context, this);
 
 		// assign parameter types
 		MemoryAllocation arrCreated = new MemoryAllocation(classArrType, synGen.nextLocation(), false);
 		HeapReference arrRef = new HeapReference(refClassArrType, arrCreated, location);
 
-		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, this);
+		AnalysisState<A> arrAllocated = analysis.smallStepSemantics(sem, arrCreated, context, this);
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refClassArrType, true, synGen.nextLocation());
-		arrAllocated = analysis.assign(arrAllocated, array, arrRef, this);
+		arrAllocated = analysis.assign(arrAllocated, array, arrRef, context, this);
 
 		AnalysisState<A> tmp = arrAllocated.bottomExecution();
 
@@ -181,7 +183,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		int subtractReceiver = methodData.isInstance() ? 1 : 0;
 		Constant arrLen = new Constant(JavaIntType.INSTANCE, paramCount - subtractReceiver, location);
 		AccessChild accessLen = new AccessChild(JavaIntType.INSTANCE, arrayDeref, lengthVar, location);
-		sem = analysis.assign(arrAllocated, accessLen, arrLen, this);
+		sem = analysis.assign(arrAllocated, accessLen, arrLen, context, this);
 
 		for (int i = 1; i < paramCount; ++i) {
 
@@ -197,12 +199,12 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 			assert (t.getExecutionExpressions().size() == 1);
 			SymbolicExpression parameterClazzVar = t.getExecutionExpressions().iterator().next();
 
-			sem = analysis.assign(t, accessIdx, parameterClazzVar, this);
+			sem = analysis.assign(t, accessIdx, parameterClazzVar, context, this);
 		}
 
 		AccessChild accessParameterTypes = new AccessChild(refClassArrType, derefThisMethod, paramTypesVar, location);
 
-		sem = analysis.assign(sem, accessParameterTypes, array, this);
+		sem = analysis.assign(sem, accessParameterTypes, array, context, this);
 		sem = sem.forgetIdentifier(array, this);
 
 		// assign method modifiers
@@ -213,7 +215,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		// (*method)->modifiers
 		AccessChild accessThisMethodModifiers = new AccessChild(intType, derefThisMethod, modifiersVar, location);
 
-		sem = analysis.assign(sem, accessThisMethodModifiers, modifiersConstant, this);
+		sem = analysis.assign(sem, accessThisMethodModifiers, modifiersConstant, context, this);
 
 		tmp = tmp.lub(sem);
 
@@ -245,6 +247,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaNewObj call = new JavaNewObj(getCFG(), synGen.nextLocation(),
 				type,
@@ -257,7 +260,7 @@ public class LoadMethod extends UnaryExpression implements PluggableStatement {
 		AnalysisState<A> tmp = state.bottomExecution();
 
 		for (SymbolicExpression allocatedTypeExpr : callState.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState, accessThisFieldName, allocatedTypeExpr, this);
+			AnalysisState<A> t = analysis.assign(callState, accessThisFieldName, allocatedTypeExpr, context, this);
 			tmp = tmp.lub(t);
 		}
 

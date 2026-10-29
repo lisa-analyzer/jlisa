@@ -194,7 +194,7 @@ public final class RuntimeExceptionTarget {
 		AnalysisState<A> state = result.getAnalysisStateAfter(parameters[parameters.length - 1]);
 		AnalysisState<A> receiver = result.getAnalysisStateAfter(parameters[0]);
 		for (SymbolicExpression value : receiver.getExecutionExpressions())
-			for (Type type : tool.getAnalysis().getRuntimeTypesOf(state, value, call))
+			for (Type type : tool.getAnalysis().getRuntimeTypesOf(state, value, result.getId(), call))
 				if (type.isPointerType() && type.asPointerType().getInnerType().isNullType())
 					return true;
 		return false;

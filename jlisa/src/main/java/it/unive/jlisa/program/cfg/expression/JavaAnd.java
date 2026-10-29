@@ -7,6 +7,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -38,13 +39,14 @@ public class JavaAnd extends And {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = state.bottomExecution();
 
 		AnalysisState<A> leftState = getLeft().forwardSemantics(state, interprocedural, expressions);
 		expressions.put(getLeft(), leftState);
 
 		for (SymbolicExpression left : leftState.getExecutionExpressions()) {
-			Satisfiability sat = analysis.satisfies(leftState, left, this);
+			Satisfiability sat = analysis.satisfies(leftState, left, context, this);
 			if (sat == Satisfiability.NOT_SATISFIED)
 				result = result.lub(leftState);
 			else {
@@ -57,8 +59,9 @@ public class JavaAnd extends And {
 					ProgramPoint value = new ValuePoint(this);
 					SymbolicExpression negation = new UnaryExpression(BoolType.INSTANCE, left,
 							LogicalNegation.INSTANCE, getLocation());
-					evaluated = analysis.assume(leftState, left, value, value);
-					shortCircuit = analysis.assume(leftState, negation, value, value).withExecutionExpression(left);
+					evaluated = analysis.assume(leftState, left, context, value, value);
+					shortCircuit = analysis.assume(leftState, negation, context, value, value)
+							.withExecutionExpression(left);
 				}
 				AnalysisState<A> rightState = getRight().forwardSemantics(evaluated, interprocedural, expressions);
 				expressions.put(getRight(), rightState);
@@ -93,16 +96,17 @@ public class JavaAnd extends And {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isBooleanType))
+		if (analysis.getRuntimeTypesOf(state, left, context, this).stream().noneMatch(Type::isBooleanType))
 			return state.bottomExecution();
-		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(Type::isBooleanType))
+		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(Type::isBooleanType))
 			return state.bottomExecution();
 
 		return analysis.smallStepSemantics(
 				state,
 				new BinaryExpression(getStaticType(), left, right, LogicalAnd.INSTANCE, getLocation()),
-				this);
+				context, this);
 	}
 
 }

@@ -13,6 +13,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -71,6 +72,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		TypeSystem typeSystem = getProgram().getTypes();
 		Type booleanType = typeSystem.getBooleanType();
@@ -91,7 +93,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 				JavaIsValidEncoding.INSTANCE,
 				location);
 
-		Satisfiability satIsValidEncoding = analysis.satisfies(state, isValidEncoding, originating);
+		Satisfiability satIsValidEncoding = analysis.satisfies(state, isValidEncoding, context, originating);
 		if (satIsValidEncoding == Satisfiability.BOTTOM) {
 			return state.bottomExecution();
 		}
@@ -102,14 +104,14 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 				JavaURLDecoderIsIllegalArg.INSTANCE,
 				location);
 
-		Satisfiability satIsIllegalArg = analysis.satisfies(state, isIllegalArgument, originating);
+		Satisfiability satIsIllegalArg = analysis.satisfies(state, isIllegalArgument, context, originating);
 
 		// executions with a valid encoding
 		AnalysisState<A> validState = state.bottomExecution();
 		if (satIsValidEncoding == Satisfiability.SATISFIED)
 			validState = state;
 		else if (satIsValidEncoding == Satisfiability.UNKNOWN)
-			validState = analysis.assume(state, isValidEncoding, originating, originating);
+			validState = analysis.assume(state, isValidEncoding, context, originating, originating);
 
 		// as no-exception state, we return the top string...
 		AnalysisState<A> noExceptionState = state.bottomExecution();
@@ -117,7 +119,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			// despite its name, the operator holds when the argument can be
 			// decoded
 			AnalysisState<A> legalState = satIsIllegalArg == Satisfiability.SATISFIED ? validState
-					: analysis.assume(validState, isIllegalArgument, originating, originating);
+					: analysis.assume(validState, isIllegalArgument, context, originating, originating);
 			JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
 					new Expression[0]);
@@ -127,7 +129,8 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
 				AnalysisState<
-						A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), this);
+						A> sem = analysis.assign(callState, access, new PushAny(stringType, getLocation()), context,
+								this);
 				noExceptionState = noExceptionState
 						.lub(sem.withExecutionExpressions(callState.getExecutionExpressions()));
 			}
@@ -138,19 +141,19 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		if (satIsValidEncoding != Satisfiability.SATISFIED) {
 			// builds the UnsupportedEncoding exception
 			AnalysisState<A> invalidState = satIsValidEncoding == Satisfiability.NOT_SATISFIED ? state
-					: analysis.assume(state, negate(isValidEncoding), originating, originating);
+					: analysis.assume(state, negate(isValidEncoding), context, originating, originating);
 			JavaClassType ueExc = JavaClassType.getUnsupportedEncodingExceptionType();
 			result = analysis.moveExecutionToError(result, buildException(interprocedural, invalidState, ueExc),
-					new Error(ueExc.getReference(), originating), this);
+					new Error(ueExc.getReference(), originating), context, this);
 		}
 
 		if (!validState.getExecution().isBottom() && satIsIllegalArg != Satisfiability.SATISFIED) {
 			// builds the IllegalArgument exception
 			AnalysisState<A> illegalState = satIsIllegalArg == Satisfiability.NOT_SATISFIED ? validState
-					: analysis.assume(validState, negate(isIllegalArgument), originating, originating);
+					: analysis.assume(validState, negate(isIllegalArgument), context, originating, originating);
 			JavaClassType iaExc = JavaClassType.getIllegalArgumentExceptionType();
 			result = analysis.moveExecutionToError(result, buildException(interprocedural, illegalState, iaExc),
-					new Error(iaExc.getReference(), originating), this);
+					new Error(iaExc.getReference(), originating), context, this);
 		}
 
 		return result;
@@ -168,6 +171,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 			JavaClassType excType)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 				excType.getReference(), new Expression[0]);
 		AnalysisState<A> excState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
@@ -177,7 +181,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 		for (SymbolicExpression th : excState.getExecutionExpressions()) {
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), excType.getReference(), getLocation());
-			AnalysisState<A> tmp = analysis.assign(excState, throwVar, th, originating);
+			AnalysisState<A> tmp = analysis.assign(excState, throwVar, th, context, originating);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions

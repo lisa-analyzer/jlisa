@@ -69,7 +69,8 @@ public class DoubleIsInfiniteInstance extends UnaryExpression implements Pluggab
 				access,
 				JavaDoubleIsInfiniteOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

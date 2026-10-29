@@ -52,7 +52,7 @@ public class PropertiesSetProperty extends TernaryExpression implements Pluggabl
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(JavaClassType.getObjectType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

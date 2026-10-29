@@ -54,6 +54,6 @@ public class PropertiesEmptyConstructor extends UnaryExpression implements Plugg
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(JavaClassType.getPropertiesType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

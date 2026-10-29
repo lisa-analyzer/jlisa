@@ -51,7 +51,8 @@ public class AtomicIntegerGet extends it.unive.lisa.program.cfg.statement.UnaryE
 			throws SemanticException {
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(JavaIntType.INSTANCE, expr, var, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, access, this);
+		return interprocedural.getAnalysis().smallStepSemantics(state, access, interprocedural.getCurrentContext(),
+				this);
 	}
 
 	@Override

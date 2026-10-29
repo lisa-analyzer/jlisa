@@ -74,7 +74,8 @@ public class StringStartsWith extends BinaryExpression implements PluggableState
 				JavaStringStartsWithOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, startsWith, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, startsWith, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

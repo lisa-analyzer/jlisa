@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
@@ -65,6 +66,7 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -102,7 +104,7 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 					JavaBooleanType.INSTANCE,
 					idx, accessSourceLen, ComparisonLt.INSTANCE, location);
 
-			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			Satisfiability sat = analysis.satisfies(state, withinBounds, context, this);
 			if (sat != Satisfiability.SATISFIED) {
 				outOfBoundsMethodArr = true;
 				break;
@@ -125,13 +127,13 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 		for (SymbolicExpression allocated : methodsAllocated.getExecutionExpressions()) {
 			HeapDereference derefArr = new HeapDereference(refMethodArrType.getInnerType(), allocated, location);
 			AccessChild accessDestLen = new AccessChild(JavaIntType.INSTANCE, derefArr, lengthVar, location);
-			tmp = analysis.assign(tmp, accessDestLen, c, this);
+			tmp = analysis.assign(tmp, accessDestLen, c, context, this);
 		}
 
 		ExpressionSet exprs = methodsAllocated.getExecutionExpressions();
 		AnalysisState<A> res = tmp;
 		for (SymbolicExpression e : exprs) {
-			res = res.lub(analysis.smallStepSemantics(res, e, this));
+			res = res.lub(analysis.smallStepSemantics(res, e, context, this));
 		}
 		return res;
 	}
@@ -171,7 +173,8 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 		List<BinaryExpression> constraintList = constraints.toList();
 		if (constraintList.isEmpty())
 			return interprocedural.getAnalysis().smallStepSemantics(state,
-					new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+					new PushAny(new JavaReferenceType(getStaticType()), getLocation()),
+					interprocedural.getCurrentContext(), this);
 
 		// make sure that the class we are searching has its reflection data
 		// loaded
@@ -221,6 +224,7 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -232,9 +236,9 @@ public class ClassGetMethods extends it.unive.lisa.program.cfg.statement.UnaryEx
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)

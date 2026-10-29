@@ -55,6 +55,6 @@ public class CollectionsEnumeration
 		return interprocedural.getAnalysis().smallStepSemantics(
 				state,
 				new PushAny(new JavaReferenceType(JavaClassType.lookup("java.util.Enumeration")), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

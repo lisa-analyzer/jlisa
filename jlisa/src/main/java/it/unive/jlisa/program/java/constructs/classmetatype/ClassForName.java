@@ -17,6 +17,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
@@ -73,6 +74,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 		TypeSystem typeSystem = getProgram().getTypes();
@@ -90,7 +92,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				JavaIsClassDefinedOperator.INSTANCE,
 				location);
 
-		Satisfiability sat = analysis.satisfies(state, isClassDefined, originating);
+		Satisfiability sat = analysis.satisfies(state, isClassDefined, context, originating);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
@@ -98,13 +100,13 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
 			AnalysisState<A> okState = sat == Satisfiability.SATISFIED ? state
-					: analysis.assume(state, isClassDefined, originating, originating);
+					: analysis.assume(state, isClassDefined, context, originating, originating);
 
 			List<BinaryExpression> constraints = extractConstraints(interprocedural, okState, accessExpr).toList();
 
 			if (constraints.isEmpty())
 				return interprocedural.getAnalysis().smallStepSemantics(okState,
-						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), context, this);
 
 			AnalysisState<A> tmp = okState;
 			ExpressionSet execExpressions = new ExpressionSet();
@@ -157,7 +159,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 					: analysis.assume(state,
 							new it.unive.lisa.symbolic.value.UnaryExpression(typeSystem.getBooleanType(),
 									isClassDefined, LogicalNegation.INSTANCE, location),
-							originating, originating);
+							context, originating, originating);
 
 			JavaClassType classNotFoundType = JavaClassType.getClassNotFoundException();
 
@@ -168,7 +170,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(cfg, classNotFoundType.getReference(), location);
 			koState = analysis.assign(koState, throwVar,
-					koState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					koState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
@@ -176,7 +178,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			koState = koState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
 			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
-					new Error(classNotFoundType.getReference(), originating), this);
+					new Error(classNotFoundType.getReference(), originating), context, this);
 		}
 
 		return exceptionState.lub(noExceptionState);
@@ -211,6 +213,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -222,9 +225,9 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)

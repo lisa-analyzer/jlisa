@@ -61,6 +61,7 @@ public class LongEmptyConstructor extends UnaryExpression implements PluggableSt
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(longType, expr, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, defaultLong, originating);
+		return interprocedural.getAnalysis().assign(state, access, defaultLong, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

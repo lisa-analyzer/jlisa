@@ -60,6 +60,7 @@ public class StringBufferEmptyConstructor extends UnaryExpression implements Plu
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(stringType, expr, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, emptyString, originating);
+		return interprocedural.getAnalysis().assign(state, access, emptyString, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

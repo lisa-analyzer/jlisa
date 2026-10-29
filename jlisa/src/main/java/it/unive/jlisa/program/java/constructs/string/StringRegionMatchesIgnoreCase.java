@@ -87,7 +87,8 @@ public class StringRegionMatchesIgnoreCase extends NaryExpression implements Plu
 				JavaStringRegionMatchesIgnoreCaseOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, matches, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, matches, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

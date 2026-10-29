@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -100,6 +101,7 @@ public class JavaAssigningStrategy
 		boolean boxingUnboxingNeeded = false;
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		for (int i = 0; i < formals.length; i++) {
 
@@ -129,7 +131,7 @@ public class JavaAssigningStrategy
 											prepared,
 											formal.toSymbolicVariable(),
 											expr,
-											call));
+											context, call));
 						}
 					} else {
 						temp = temp.lub(prepared);
@@ -162,7 +164,7 @@ public class JavaAssigningStrategy
 											arrInitialized,
 											formalVar,
 											s,
-											call))
+											context, call))
 									.forgetIdentifiers(newArr.getMetaVariables(), call);
 						}
 						pars.set(formals.length - 1, new ExpressionSet(formalVar));
@@ -196,7 +198,8 @@ public class JavaAssigningStrategy
 
 						if (assignFormals)
 							temp = temp.lub(
-									interprocedural.getAnalysis().assign(prepared, formalVar, castExpression, call));
+									interprocedural.getAnalysis().assign(prepared, formalVar, castExpression, context,
+											call));
 						else
 							temp = temp.lub(prepared);
 
@@ -220,7 +223,7 @@ public class JavaAssigningStrategy
 												wrapState,
 												formalVar,
 												wrapExp,
-												call)
+												context, call)
 												.forgetIdentifiers(wrap.getMetaVariables(), call));
 						} else {
 							temp = temp.lub(wrapState);
@@ -242,7 +245,7 @@ public class JavaAssigningStrategy
 
 						if (assignFormals)
 							temp = temp.lub(interprocedural.getAnalysis().assign(prepared, formalVar,
-									rightExpr, call));
+									rightExpr, context, call));
 						else
 							temp = temp.lub(prepared);
 
@@ -258,7 +261,7 @@ public class JavaAssigningStrategy
 											prepared,
 											formalVar,
 											exp,
-											call));
+											context, call));
 						else
 							temp = temp.lub(prepared);
 					}

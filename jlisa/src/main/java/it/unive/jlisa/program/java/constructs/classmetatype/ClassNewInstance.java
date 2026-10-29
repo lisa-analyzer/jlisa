@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.CompilationUnit;
@@ -75,9 +76,10 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, expr, getLocation()),
-				this);
+				context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {
@@ -94,6 +96,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type stringType = getProgram().getTypes().getStringType();
@@ -173,7 +176,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), instantiationExceptionType.getReference(), location);
 				callState = analysis.assign(callState, throwVar,
-						callState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+						callState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
@@ -189,9 +192,9 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		noExceptionState = noExceptionState.withExecutionExpressions(execExpressions);
 		AnalysisState<A> result = noExceptionState.lub(exceptionState);
 		if (noSuchMethodError != null)
-			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, this);
+			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, context, this);
 		if (instantiationError != null)
-			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, this);
+			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, context, this);
 		return result;
 
 		// TODO: IllegalAccessException
@@ -207,6 +210,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -218,9 +222,9 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)
@@ -240,6 +244,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaClassType noSuchMethodType = JavaClassType.getNoSuchMethodException();
 
@@ -250,7 +255,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		// assign exception to variable thrower
 		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchMethodType.getReference(), getLocation());
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		// deletes the receiver of the constructor
 		// and all the metavariables from subexpressions

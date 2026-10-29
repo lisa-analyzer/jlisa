@@ -20,6 +20,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
@@ -82,14 +83,15 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		AnalysisState<A> result = state.bottomExecution();
 
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
-				this);
+				context, this);
 		for (SymbolicExpression clazz : classes) {
 
-			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, this);
+			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, context, this);
 			if (clazzTypes.isEmpty()) {
 				result = result.lub(state);
 				continue;
@@ -128,7 +130,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				}
 			}
 			searchResult = analysis.moveExecutionToError(searchResult, npeState,
-					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), this);
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), context, this);
 			result = result.lub(searchResult);
 		}
 
@@ -150,6 +152,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type stringType = getProgram().getTypes().getStringType();
@@ -163,7 +166,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		SymbolicExpression derefClazz = left;
 
 		// get the type of the left expression
-		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, this);
+		Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, left, context, this);
 		// NOTE: this is always either Class or null (in case we reached the top
 		// of the class hierarchy)
 
@@ -196,7 +199,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		List<it.unive.lisa.symbolic.value.BinaryExpression> constraintList = constraints.toList();
 		if (constraintList.isEmpty())
 			return interprocedural.getAnalysis().smallStepSemantics(state,
-					new PushAny(new JavaReferenceType(getStaticType()), getLocation()), this);
+					new PushAny(new JavaReferenceType(getStaticType()), getLocation()), context, this);
 
 		// make sure that all classes we are searching have their reflection
 		// data
@@ -253,7 +256,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					JavaBooleanType.INSTANCE,
 					idx, accessLen, ComparisonLt.INSTANCE, location);
 
-			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			Satisfiability sat = analysis.satisfies(state, withinBounds, context, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
 				outOfBoundsFieldArr = true;
 				break;
@@ -273,15 +276,15 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					JavaStringEqualsOperator.INSTANCE,
 					getLocation());
 
-			Satisfiability match = analysis.satisfies(state, equalsExpr, this);
+			Satisfiability match = analysis.satisfies(state, equalsExpr, context, this);
 
 			if (match == Satisfiability.SATISFIED) {
 				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
-				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, this);
+				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, context, this);
 				return noExceptionState;
 			} else if (match == Satisfiability.UNKNOWN) {
 				HeapReference refField = new HeapReference(refFieldMetaType, accessIdx, getLocation());
-				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, this);
+				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, context, this);
 				unknownFields = unknownFields.lub(noExceptionState.getExecutionExpressions());
 
 				state = throwNoSuchFieldException(interprocedural, noExceptionState, state, expressions);
@@ -311,6 +314,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type classMetaType = JavaClassType.getClassMetaType();
@@ -338,7 +342,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					JavaBooleanType.INSTANCE,
 					idx, accessLen, ComparisonLt.INSTANCE, location);
 
-			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			Satisfiability sat = analysis.satisfies(state, withinBounds, context, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
 				outOfBoundsArr = true;
 				break;
@@ -368,6 +372,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaClassType noSuchFieldType = JavaClassType.getNoSuchFieldException();
 
@@ -378,7 +383,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		// assign exception to variable thrower
 		CFGThrow throwVar = new CFGThrow(getCFG(), noSuchFieldType.getReference(), getLocation());
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		// deletes the receiver of the constructor
 		// and all the metavariables from subexpressions
@@ -396,7 +401,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 		return interprocedural.getAnalysis().moveExecutionToError(
 				prepareNoSuchFieldException(interprocedural, state, expressions),
-				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating), this);
+				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating),
+				interprocedural.getCurrentContext(), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
@@ -407,7 +413,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 		return interprocedural.getAnalysis().moveExecutionToError(normal,
 				prepareNoSuchFieldException(interprocedural, state, expressions),
-				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating), this);
+				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating),
+				interprocedural.getCurrentContext(), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNullPointerException(
@@ -417,6 +424,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
 
@@ -427,7 +435,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		// assign exception to variable thrower
 		CFGThrow throwVar = new CFGThrow(getCFG(), nullPointerExceptionType.getReference(), getLocation());
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		// deletes the receiver of the constructor
 		// and all the metavariables from subexpressions
@@ -462,6 +470,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!(analysis.domain instanceof SimpleAbstractDomain))
 			return null;
 		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
@@ -473,9 +482,9 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
 
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
+		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
 
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)

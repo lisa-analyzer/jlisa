@@ -11,6 +11,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -69,6 +70,7 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type intType = JavaIntType.INSTANCE;
@@ -92,13 +94,13 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 		MemoryAllocation created = new MemoryAllocation(methodMetaType, getLocation(), false);
 		HeapReference ref = new HeapReference(refMethodMetaType, created, location);
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 
 		InstrumentedReceiver method = new InstrumentedReceiver(refMethodMetaType, false, getLocation());
-		AnalysisState<A> methodAllocated = analysis.assign(allocated, method, ref, this);
+		AnalysisState<A> methodAllocated = analysis.assign(allocated, method, ref, context, this);
 
 		if (destAccessIdx != null)
-			methodAllocated = analysis.assign(methodAllocated, destAccessIdx, ref, this);
+			methodAllocated = analysis.assign(methodAllocated, destAccessIdx, ref, context, this);
 
 		HeapDereference derefThisMethod = destAccessIdx != null
 				? new HeapDereference(methodMetaType, destAccessIdx, location)
@@ -107,21 +109,22 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 		HeapDereference derefOther = new HeapDereference(methodMetaType, expr, location);
 
 		// shallow copy clazz
-		result = copyField(analysis, methodAllocated, derefOther, derefThisMethod, clazzVar, refClassMetaType,
+		result = copyField(analysis, context, methodAllocated, derefOther, derefThisMethod, clazzVar, refClassMetaType,
 				expressions);
 
 		// shallow copy name
-		result = copyField(analysis, result, derefOther, derefThisMethod, nameVar, refStringType, expressions);
+		result = copyField(analysis, context, result, derefOther, derefThisMethod, nameVar, refStringType, expressions);
 
 		// shallow copy return type
-		result = copyField(analysis, result, derefOther, derefThisMethod, typeVar, refClassMetaType, expressions);
+		result = copyField(analysis, context, result, derefOther, derefThisMethod, typeVar, refClassMetaType,
+				expressions);
 
 		// shallow copy parameter types
-		result = copyField(analysis, result, derefOther, derefThisMethod, paramTypesVar,
+		result = copyField(analysis, context, result, derefOther, derefThisMethod, paramTypesVar,
 				refClassArrType, expressions);
 
 		// copy modifiers
-		result = copyField(analysis, result, derefOther, derefThisMethod, modifiersVar, intType, expressions);
+		result = copyField(analysis, context, result, derefOther, derefThisMethod, modifiersVar, intType, expressions);
 
 		AnalysisState<A> tmp = destAccessIdx != null
 				? result.forgetIdentifier(method, this).withExecutionExpression(ref)
@@ -131,6 +134,7 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> copyField(
 			Analysis<A, D> analysis,
+			ScopeId<?> context,
 			AnalysisState<A> state,
 			HeapDereference source,
 			HeapDereference dst,
@@ -145,7 +149,7 @@ public class ClassCopyMethod extends it.unive.lisa.program.cfg.statement.UnaryEx
 
 		AccessChild accessDst = new AccessChild(t, dst, var, getLocation());
 
-		AnalysisState<A> tmp = analysis.assign(state, accessDst, ref, this);
+		AnalysisState<A> tmp = analysis.assign(state, accessDst, ref, context, this);
 		return tmp;
 	}
 

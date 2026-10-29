@@ -53,6 +53,6 @@ public class ArraysAsList extends UnaryExpression implements PluggableStatement 
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

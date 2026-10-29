@@ -52,6 +52,6 @@ public class RandomEmptyConstructor extends NaryExpression implements PluggableS
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

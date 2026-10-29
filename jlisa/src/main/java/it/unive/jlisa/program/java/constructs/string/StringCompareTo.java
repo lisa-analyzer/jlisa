@@ -72,6 +72,7 @@ public class StringCompareTo extends BinaryExpression implements PluggableStatem
 				accessRight,
 				JavaStringCompareToOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, compareTo, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, compareTo, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -61,6 +62,7 @@ public class StringBufferAppendString extends BinaryExpression implements Plugga
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -72,8 +74,8 @@ public class StringBufferAppendString extends BinaryExpression implements Plugga
 		it.unive.lisa.symbolic.value.BinaryExpression append = new it.unive.lisa.symbolic.value.BinaryExpression(
 				stringType, accessLeft, accessRight, JavaStringAppendStringOperator.INSTANCE, getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
-		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, originating);
+		AnalysisState<A> result = interprocedural.getAnalysis().assign(state, leftAccess, append, context, originating);
 
-		return analysis.smallStepSemantics(result, left, originating);
+		return analysis.smallStepSemantics(result, left, context, originating);
 	}
 }

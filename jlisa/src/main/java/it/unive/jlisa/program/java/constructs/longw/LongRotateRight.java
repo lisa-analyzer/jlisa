@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -59,6 +60,7 @@ public class LongRotateRight extends BinaryExpression implements PluggableStatem
 		Type longType = left.getStaticType();
 		Type intType = right.getStaticType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(longType, left, getLocation());
@@ -74,7 +76,7 @@ public class LongRotateRight extends BinaryExpression implements PluggableStatem
 				JavaLongRotateRightOperator.INSTANCE,
 				getLocation());
 
-		return analysis.smallStepSemantics(state, rotate, originating);
+		return analysis.smallStepSemantics(state, rotate, context, originating);
 	}
 
 	@Override

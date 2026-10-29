@@ -52,7 +52,8 @@ public class MathExp extends it.unive.lisa.program.cfg.statement.UnaryExpression
 				JavaMathExpOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, exp, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, exp, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

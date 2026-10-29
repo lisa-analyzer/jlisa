@@ -11,6 +11,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -63,13 +64,14 @@ public class ListToArray
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		JavaReferenceType refType = JavaArrayType.OBJECT_ARRAY;
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
-		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
+		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, context, this);
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 		PushFromConstraints length = new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), Set.of(
@@ -79,10 +81,10 @@ public class ListToArray
 						lenAccess,
 						ComparisonLe.INSTANCE,
 						getLocation())));
-		tmp = analysis.assign(tmp, lenAccess, length, this);
+		tmp = analysis.assign(tmp, lenAccess, length, context, this);
 
 		getMetaVariables().add(array);
-		return analysis.smallStepSemantics(tmp, array, this);
+		return analysis.smallStepSemantics(tmp, array, context, this);
 	}
 
 	@Override

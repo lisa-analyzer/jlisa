@@ -16,6 +16,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -75,6 +76,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 		SymbolicExpression clazz = param;
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 
@@ -96,7 +98,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 			}
 		}
 
-		noExceptionState = analysis.smallStepSemantics(tmp, clazz, this);
+		noExceptionState = analysis.smallStepSemantics(tmp, clazz, context, this);
 
 		return noExceptionState;
 	}
@@ -123,6 +125,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 		CodeLocation location = getLocation();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
@@ -144,7 +147,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 		AnalysisState<A> fieldsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
 		for (SymbolicExpression expr : fieldsAllocated.getExecutionExpressions()) {
-			tmp = analysis.assign(fieldsAllocated, accessFields, expr, this);
+			tmp = analysis.assign(fieldsAllocated, accessFields, expr, context, this);
 		}
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
 
@@ -196,6 +199,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 		CodeLocation location = getLocation();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaReferenceType wrappedMethodType = new JavaReferenceType(JavaClassType.getMethodType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
@@ -216,7 +220,7 @@ public class InternalInitClassMetaObject extends UnaryExpression implements Plug
 
 		AnalysisState<A> methodsAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
 		for (SymbolicExpression expr : methodsAllocated.getExecutionExpressions()) {
-			tmp = analysis.assign(methodsAllocated, accessMethods, expr, this);
+			tmp = analysis.assign(methodsAllocated, accessMethods, expr, context, this);
 		}
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
 

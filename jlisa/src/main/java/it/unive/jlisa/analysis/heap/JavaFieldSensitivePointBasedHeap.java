@@ -48,6 +48,25 @@ public class JavaFieldSensitivePointBasedHeap
 		extends
 		FieldSensitivePointBasedHeap {
 
+	/**
+	 * Builds a context-insensitive, field-sensitive heap domain.
+	 */
+	public JavaFieldSensitivePointBasedHeap() {
+		super();
+	}
+
+	/**
+	 * Builds a field-sensitive heap domain.
+	 *
+	 * @param contextSensitive whether or not allocation sites should be
+	 *                             qualified by the interprocedural context
+	 *                             where the allocation happens
+	 */
+	public JavaFieldSensitivePointBasedHeap(
+			boolean contextSensitive) {
+		super(contextSensitive);
+	}
+
 	@Override
 	public ExpressionSet rewritePushAny(
 			PushAny expression,
@@ -130,10 +149,10 @@ public class JavaFieldSensitivePointBasedHeap
 					// initialized (eg with a constructor call) so we
 					// perform normal aliasing as there is nothing to copy
 					&& !rhsIsReceiver
-					&& !getAllocatedAt(sss, ((StackAllocationSite) rhs_ref).getLocationName()).isEmpty())
+					&& !getAllocatedAt(sss, rhs_ref.getLocationName(), rhs_ref.getContext()).isEmpty())
 				// for stack elements, assignment works as a shallow copy
 				// since there are no pointers to alias
-				return shallowCopy(sss, id, (StackAllocationSite) rhs_ref, replacements);
+				return shallowCopy(sss, id, (StackAllocationSite) rhs_ref, contextOf(oracle), replacements);
 			else {
 				// aliasing: id and star_y points to the same object
 				if (!sss.knowsIdentifier(rhs_ref))

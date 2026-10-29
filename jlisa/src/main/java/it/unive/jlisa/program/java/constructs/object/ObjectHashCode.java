@@ -51,6 +51,6 @@ public class ObjectHashCode extends UnaryExpression implements PluggableStatemen
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -53,12 +54,14 @@ public class PropertiesGetProperty extends BinaryExpression implements Pluggable
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		AnalysisState<A> nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), originating);
+		AnalysisState<A> nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), context,
+				originating);
 
 		AnalysisState<A> topState = interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(new JavaReferenceType(JavaClassType.getStringType()), getLocation()),
-				originating);
+				context, originating);
 
 		return nullState.lub(topState);
 	}

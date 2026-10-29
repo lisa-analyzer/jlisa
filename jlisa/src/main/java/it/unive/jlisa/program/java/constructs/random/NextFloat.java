@@ -48,7 +48,7 @@ public class NextFloat extends UnaryExpression implements PluggableStatement {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(JavaFloatType.INSTANCE, getLocation()), originating);
+				new PushAny(JavaFloatType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

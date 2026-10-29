@@ -61,6 +61,7 @@ public class CharacterForDigit extends BinaryExpression implements PluggableStat
 				right,
 				JavaCharacterForDigitOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

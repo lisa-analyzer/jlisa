@@ -7,6 +7,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -41,9 +42,10 @@ public class JavaBitwiseOr extends BinaryExpression {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		if (analysis.getRuntimeTypesOf(state, left, this).stream().noneMatch(Type::isNumericType))
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, left, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
-		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(Type::isNumericType))
+		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
 
 		return analysis.smallStepSemantics(
@@ -54,6 +56,6 @@ public class JavaBitwiseOr extends BinaryExpression {
 						right,
 						it.unive.lisa.symbolic.value.operator.binary.BitwiseOr.INSTANCE,
 						getLocation()),
-				this);
+				context, this);
 	}
 }

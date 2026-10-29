@@ -18,6 +18,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
@@ -118,11 +119,12 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		if (ReflectionDataUtils.isClassLoaded(state, loadingType, location)) {
 			SymbolicExpression accessClazz = ReflectionDataUtils.getLoadedClassHandle(loadingType, location);
-			return analysis.smallStepSemantics(state, accessClazz, this);
+			return analysis.smallStepSemantics(state, accessClazz, context, this);
 		}
 
 		AnalysisState<A> callState = allocateClass(interprocedural, state, expressions);
@@ -166,7 +168,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 							new JavaReferenceType(JavaClassType.getClassMetaType()), derefClazz, superClassVar,
 							location);
 
-					tmp = analysis.assign(tmp, accessSuperClazz, superClazz, this);
+					tmp = analysis.assign(tmp, accessSuperClazz, superClazz, context, this);
 				} else if (ancestor instanceof InterfaceUnit) {
 					// load interface Class
 
@@ -197,7 +199,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 				// update the length of the array
 				Constant c = new Constant(JavaIntType.INSTANCE, loadedInterfaces.size(), location);
-				tmp = analysis.assign(tmp, accessLen, c, this);
+				tmp = analysis.assign(tmp, accessLen, c, context, this);
 
 				int i = 0;
 				// assign the single values
@@ -208,7 +210,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 					for (SymbolicExpression loadedInterface : loadedInterfaceAllocs) {
 						AccessChild accessIdx = new AccessChild(refClassType, derefInterfaces, idxConstant, location);
 
-						tmp = analysis.assign(tmp, accessIdx, loadedInterface, this);
+						tmp = analysis.assign(tmp, accessIdx, loadedInterface, context, this);
 					}
 
 					++i;
@@ -236,6 +238,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Constant clazzName = new Constant(JavaClassType.getStringType(), loadingClazzName, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type stringType = JavaClassType.getStringType();
@@ -265,10 +268,10 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		MemoryAllocation created = new MemoryAllocation(refClassMetaType.getInnerType(), synGen.nextLocation(), false);
 		HeapReference ref = new HeapReference(refClassMetaType, created, location);
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 
 		InstrumentedReceiver clazz = new InstrumentedReceiver(refClassMetaType, false, location);
-		AnalysisState<A> clazzAllocated = analysis.assign(allocated, clazz, ref, this);
+		AnalysisState<A> clazzAllocated = analysis.assign(allocated, clazz, ref, context, this);
 
 		HeapDereference derefThisClazz = new HeapDereference(classMetaType, clazz, location);
 
@@ -282,14 +285,15 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression allocatedStringExpr : stringAllocated.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(stringAllocated, accessThisClazzName, allocatedStringExpr, this);
+			AnalysisState<
+					A> t = analysis.assign(stringAllocated, accessThisClazzName, allocatedStringExpr, context, this);
 			tmp = tmp.lub(t);
 		}
 
 		HeapDereference derefClazzName = new HeapDereference(stringType, accessThisClazzName, location);
 		AccessChild accessValue = new AccessChild(stringType, derefClazzName, valueVar, location);
 
-		tmp = analysis.assign(tmp, accessValue, clazzName, this);
+		tmp = analysis.assign(tmp, accessValue, clazzName, context, this);
 		tmp = tmp.forgetIdentifiers(allocString.getMetaVariables(), this);
 
 		// assign the isArray field
@@ -297,7 +301,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		Constant isArrayConstant = new Constant(JavaBooleanType.INSTANCE, loadingType instanceof JavaArrayType,
 				location);
 
-		AnalysisState<A> assigned = analysis.assign(tmp, accessIsArray, isArrayConstant, this);
+		AnalysisState<A> assigned = analysis.assign(tmp, accessIsArray, isArrayConstant, context, this);
 		tmp = tmp.lub(assigned);
 
 		// assign the superClass field with null
@@ -311,7 +315,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		BinaryExpression castAs = new BinaryExpression(refClassMetaType, nc, castTo, TypeCast.INSTANCE, location);
 
-		tmp = analysis.assign(tmp, accessSuperClass, castAs, this);
+		tmp = analysis.assign(tmp, accessSuperClass, castAs, context, this);
 
 		// assign the array of interfaces that the class implements.
 		// Default is an empty array
@@ -323,7 +327,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 
 		AnalysisState<A> interfacesAllocated = newArr.fwdUnarySemantics(interprocedural, tmp, c, expressions);
 		for (SymbolicExpression expr : interfacesAllocated.getExecutionExpressions()) {
-			tmp = analysis.assign(interfacesAllocated, accessInterfaces, expr, this);
+			tmp = analysis.assign(interfacesAllocated, accessInterfaces, expr, context, this);
 		}
 
 		tmp = tmp.forgetIdentifiers(newArr.getMetaVariables(), this);
@@ -337,7 +341,7 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		typeToken = new TypeTokenType(types);
 		castTo = new Constant(typeToken, refFieldArray, location);
 		castAs = new BinaryExpression(refFieldArray, nc, castTo, TypeCast.INSTANCE, location);
-		tmp = analysis.assign(tmp, accessDeclaredFields, castAs, this);
+		tmp = analysis.assign(tmp, accessDeclaredFields, castAs, context, this);
 
 		// set array of methods = null
 		AccessChild accessDeclaredMethods = new AccessChild(refMethodArray, derefThisClazz, declaredMethodsVar,
@@ -349,13 +353,13 @@ public class LoadClass extends NaryExpression implements PluggableStatement {
 		typeToken = new TypeTokenType(types);
 		castTo = new Constant(typeToken, refMethodArray, location);
 		castAs = new BinaryExpression(refMethodArray, nc, castTo, TypeCast.INSTANCE, location);
-		tmp = analysis.assign(tmp, accessDeclaredMethods, castAs, this);
+		tmp = analysis.assign(tmp, accessDeclaredMethods, castAs, context, this);
 
 		// assign the Class object to a global variable
 		String internalGlobalVarName = "__" + loadingType.toString();
 
 		GlobalVariable clazzVar = new GlobalVariable(refClassMetaType, internalGlobalVarName, getLocation());
-		AnalysisState<A> t = analysis.assign(tmp, clazzVar, clazz, this);
+		AnalysisState<A> t = analysis.assign(tmp, clazzVar, clazz, context, this);
 		tmp = tmp.lub(t);
 
 		tmp = tmp.forgetIdentifier(clazz, this);

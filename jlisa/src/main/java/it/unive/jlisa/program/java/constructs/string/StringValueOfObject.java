@@ -81,7 +81,8 @@ public class StringValueOfObject extends UnaryExpression implements PluggableSta
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, valueOf, this);
+			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, valueOf,
+					interprocedural.getCurrentContext(), this);
 			tmp = tmp.lub(sem);
 		}
 

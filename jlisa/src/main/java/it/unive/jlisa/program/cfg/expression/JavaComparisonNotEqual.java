@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -59,6 +60,7 @@ public class JavaComparisonNotEqual extends NotEqual {
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		boolean bothRef = (left.getStaticType().isReferenceType() || left.getStaticType().isNullType())
 				&& (right.getStaticType().isReferenceType() || right.getStaticType().isNullType());
 		boolean bothPrimitive = !left.getStaticType().isReferenceType() && !right.getStaticType().isReferenceType();
@@ -69,9 +71,9 @@ public class JavaComparisonNotEqual extends NotEqual {
 
 		AnalysisState<A> res = state.bottomExecution();
 		if (left.getStaticType().isReferenceType()) {
-			res = notEqWithUnbox(analysis, state, left, right, expressions);
+			res = notEqWithUnbox(analysis, context, state, left, right, expressions);
 		} else {
-			res = notEqWithUnbox(analysis, state, right, left, expressions);
+			res = notEqWithUnbox(analysis, context, state, right, left, expressions);
 		}
 		return res;
 
@@ -79,6 +81,7 @@ public class JavaComparisonNotEqual extends NotEqual {
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> notEqWithUnbox(
 			Analysis<A, D> analysis,
+			ScopeId<?> context,
 			AnalysisState<A> state,
 			SymbolicExpression x,
 			SymbolicExpression y,
@@ -94,11 +97,12 @@ public class JavaComparisonNotEqual extends NotEqual {
 			SymbolicExpression unboxed = unbox(analysis, state, x, innerType, expressions);
 
 			AnalysisState<A> tmp = analysis.smallStepSemantics(state,
-					new BinaryExpression(getStaticType(), unboxed, y, ComparisonNe.INSTANCE, getLocation()), this);
+					new BinaryExpression(getStaticType(), unboxed, y, ComparisonNe.INSTANCE, getLocation()), context,
+					this);
 			res = res.lub(tmp);
 		} else {
 			Constant c = new Constant(BoolType.INSTANCE, true, getLocation());
-			res = res.lub(analysis.smallStepSemantics(state, c, this));
+			res = res.lub(analysis.smallStepSemantics(state, c, context, this));
 		}
 		return res;
 	}

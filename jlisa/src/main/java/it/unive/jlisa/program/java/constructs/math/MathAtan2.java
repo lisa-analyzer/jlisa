@@ -61,6 +61,7 @@ public class MathAtan2 extends it.unive.lisa.program.cfg.statement.BinaryExpress
 				JavaMathAtan2Operator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, atan2, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, atan2, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

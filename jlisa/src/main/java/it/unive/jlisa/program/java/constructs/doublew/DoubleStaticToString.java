@@ -81,7 +81,8 @@ public class DoubleStaticToString extends UnaryExpression implements PluggableSt
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, un, this);
+			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, un,
+					interprocedural.getCurrentContext(), this);
 			tmp = tmp.lub(sem);
 		}
 

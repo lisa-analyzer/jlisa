@@ -58,7 +58,8 @@ public class NextInt extends UnaryExpression implements PluggableStatement {
 		BinaryExpression lowerBound = new BinaryExpression(JavaIntType.INSTANCE, min, min, ComparisonLe.INSTANCE,
 				getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), upperBound, lowerBound), originating);
+				new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), upperBound, lowerBound),
+				interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

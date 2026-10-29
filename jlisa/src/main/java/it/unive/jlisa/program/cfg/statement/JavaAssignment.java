@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Assignment;
@@ -87,10 +88,11 @@ public class JavaAssignment extends Assignment {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state.bottomExecution();
 		Type targetType = left.getStaticType();
-		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 
 		if (targetType instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaArrayType arrType) {
 			if (arrType.getDimensions() > 1) {
@@ -174,7 +176,7 @@ public class JavaAssignment extends Assignment {
 				HeapDereference derefRight = new HeapDereference(rType.asReferenceType().getInnerType(), rhs,
 						getLocation());
 				AccessChild rightExpr = new AccessChild(targetType, derefRight, var, getLocation());
-				result = result.lub(analysis.assign(state, lhs, rightExpr, this));
+				result = result.lub(analysis.assign(state, lhs, rightExpr, context, this));
 			}
 		}
 		return result;

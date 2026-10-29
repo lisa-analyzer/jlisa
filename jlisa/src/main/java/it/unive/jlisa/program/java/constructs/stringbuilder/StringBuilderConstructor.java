@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -67,7 +68,8 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		AnalysisState<A> tmp = analysis.assign(state, leftAccess, rightAccess, originating);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		AnalysisState<A> tmp = analysis.assign(state, leftAccess, rightAccess, context, originating);
 
 		// capacity of a StringBuilder(String) is initialValue.length() + 16,
 		// as per the Java spec
@@ -79,6 +81,6 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 				JavaIntType.INSTANCE, rightLength, new Constant(JavaIntType.INSTANCE, 16, getLocation()),
 				NumericNonOverflowingAdd.INSTANCE, getLocation());
 
-		return analysis.assign(tmp, capAccess, capacityValue, originating);
+		return analysis.assign(tmp, capAccess, capacityValue, context, originating);
 	}
 }

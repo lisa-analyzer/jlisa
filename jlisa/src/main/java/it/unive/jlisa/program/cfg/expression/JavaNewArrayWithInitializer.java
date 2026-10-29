@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -78,13 +79,14 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		JavaReferenceType refType = (JavaReferenceType) getStaticType();
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
-		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
+		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, context, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
@@ -92,18 +94,18 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 		Constant length = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
-		tmp = analysis.assign(tmp, lenAccess, length, this);
+		tmp = analysis.assign(tmp, lenAccess, length, context, this);
 
 		for (int i = 0; i < params.length; i++)
 			for (SymbolicExpression expr : params[i]) {
 				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
-				AnalysisState<A> init = analysis.assign(tmp, access, expr, getEvaluationPredecessor());
+				AnalysisState<A> init = analysis.assign(tmp, access, expr, context, getEvaluationPredecessor());
 				tmp = init;
 			}
 
 		getMetaVariables().add(array);
-		return analysis.smallStepSemantics(tmp, array, this);
+		return analysis.smallStepSemantics(tmp, array, context, this);
 	}
 
 }
