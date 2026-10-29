@@ -115,17 +115,37 @@ public record Val(
 	Value mirror(
 			VirtualMachine vm,
 			String type) {
+		return switch (java(type)) {
+		case Boolean b -> vm.mirrorOf(b);
+		case Byte b -> vm.mirrorOf(b);
+		case Short s -> vm.mirrorOf(s);
+		case Character c -> vm.mirrorOf(c);
+		case Integer i -> vm.mirrorOf(i);
+		case Long l -> vm.mirrorOf(l);
+		case Float f -> vm.mirrorOf(f);
+		case Double d -> vm.mirrorOf(d);
+		case String s -> vm.mirrorOf(s);
+		case null, default -> null;
+		};
+	}
+
+	/**
+	 * The Java value {@link #mirror} gives the program, for the given return
+	 * type, or null.
+	 */
+	Object java(
+			String type) {
 		double d = num != null ? num : 0;
 		return switch (type) {
-		case "boolean" -> vm.mirrorOf(num != null ? d != 0 : str != null && !str.isEmpty());
-		case "byte" -> vm.mirrorOf((byte) clamp(d, Byte.MIN_VALUE, Byte.MAX_VALUE));
-		case "short" -> vm.mirrorOf((short) clamp(d, Short.MIN_VALUE, Short.MAX_VALUE));
-		case "char" -> vm.mirrorOf((char) clamp(d, Character.MIN_VALUE, Character.MAX_VALUE));
-		case "int" -> vm.mirrorOf((int) clamp(d, Integer.MIN_VALUE, Integer.MAX_VALUE));
-		case "long" -> vm.mirrorOf((long) clamp(d, Long.MIN_VALUE, Long.MAX_VALUE));
-		case "float" -> vm.mirrorOf((float) d);
-		case "double" -> vm.mirrorOf(d);
-		case "java.lang.String" -> vm.mirrorOf(str != null ? str : format(d));
+		case "boolean" -> num != null ? d != 0 : str != null && !str.isEmpty();
+		case "byte" -> (byte) clamp(d, Byte.MIN_VALUE, Byte.MAX_VALUE);
+		case "short" -> (short) clamp(d, Short.MIN_VALUE, Short.MAX_VALUE);
+		case "char" -> (char) clamp(d, Character.MIN_VALUE, Character.MAX_VALUE);
+		case "int" -> (int) clamp(d, Integer.MIN_VALUE, Integer.MAX_VALUE);
+		case "long" -> (long) clamp(d, Long.MIN_VALUE, Long.MAX_VALUE);
+		case "float" -> (float) d;
+		case "double" -> d;
+		case "java.lang.String" -> str != null ? str : format(d);
 		default -> null;
 		};
 	}

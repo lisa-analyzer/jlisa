@@ -183,6 +183,31 @@ public final class InputSearch {
 		return r.outcome == SearchRun.Outcome.VIOLATION;
 	}
 
+	/**
+	 * Runs the program once more with the values found, recording every nondet
+	 * call and the stack at the violation. Assertions are enabled only for the
+	 * assert property, as in {@link #violatesWithoutAssertions}.
+	 *
+	 * @return the trace, or nothing if the run does not violate the property,
+	 *             or if the value of a call is not known or there are more than
+	 *             {@link Trace#MAX_CALLS} calls
+	 */
+	public Optional<Trace> trace(
+			Map<String, Val> values,
+			long deadline)
+			throws ValidationException {
+		long left = deadline - System.currentTimeMillis();
+		if (left <= 0) {
+			return Optional.empty();
+		}
+		SearchRun r = SearchRun.run(mainClass, classpath, java, text, property, targets, witnessValues,
+				values, false, Math.min(left, RUN_TIMEOUT_MILLIS), property == Property.ASSERT, true);
+		if (r.outcome != SearchRun.Outcome.VIOLATION || !r.traced || r.frames.isEmpty()) {
+			return Optional.empty();
+		}
+		return Optional.of(new Trace(List.copyOf(r.calls), r.exceptionType, List.copyOf(r.frames)));
+	}
+
 	private SearchRun run(
 			Map<String, Val> assignment,
 			boolean colored,

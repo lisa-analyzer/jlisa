@@ -36,6 +36,7 @@ import it.unive.jlisa.witness.validator.model.TargetPoint;
 import it.unive.jlisa.witness.validator.violation.ForceReturnSteerer;
 import it.unive.jlisa.witness.validator.violation.JdiLauncher;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -95,17 +96,30 @@ final class SearchRun {
 	final Map<String, LinkedHashSet<Val>> learned = new LinkedHashMap<>();
 	final Set<String> linesHit = new java.util.HashSet<>();
 	boolean assertLineHit;
+	/** When tracing: every nondet call with the value it returned, in order. */
+	final List<Trace.Call> calls = new ArrayList<>();
+	/**
+	 * When tracing: false if the value of a call is not known, or there are too
+	 * many calls.
+	 */
+	boolean traced = true;
+	/** The frames of the thread at the violation. */
+	final List<Trace.Frame> frames = new ArrayList<>();
+	String exceptionType;
 
 	private final ProgramText text;
 	private final Property property;
 	private final List<TargetPoint> targets;
 	private final Map<String, Queue<Interception>> witness = new HashMap<>();
+	private final boolean tracing;
 
 	private SearchRun(
 			ProgramText text,
 			Property property,
 			List<TargetPoint> targets,
-			List<Interception> witnessValues) {
+			List<Interception> witnessValues,
+			boolean tracing) {
+		this.tracing = tracing;
 		this.text = text;
 		this.property = property;
 		this.targets = targets;
@@ -154,17 +168,33 @@ final class SearchRun {
 			long timeoutMillis,
 			boolean assertions)
 			throws ValidationException {
-		SearchRun r = new SearchRun(text, property, targets, witnessValues);
+		return run(mainClass, classpath, java, text, property, targets, witnessValues, assignment, colored,
+				timeoutMillis, assertions, false);
+	}
+
+	/**
+	 * As above, recording the nondet calls ({@link #calls}) if {@code tracing}.
+	 */
+	static SearchRun run(
+			String mainClass,
+			String classpath,
+			String java,
+			ProgramText text,
+			Property property,
+			List<TargetPoint> targets,
+			List<Interception> witnessValues,
+			Map<String, Val> assignment,
+			boolean colored,
+			long timeoutMillis,
+			boolean assertions,
+			boolean tracing)
+			throws ValidationException {
+		SearchRun r = new SearchRun(text, property, targets, witnessValues, tracing);
 		VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java, assertions);
 		try {
 			r.loop(vm, assignment, colored, System.currentTimeMillis() + timeoutMillis);
 		} finally {
-			try {
-				vm.exit(1);
-			} catch (Exception ignored) {
-				// already gone
-			}
-			vm.process().destroyForcibly();
+			JdiLauncher.stop(vm);
 		}
 		return r;
 	}
@@ -273,10 +303,12 @@ final class SearchRun {
 			}
 		}
 		String site;
+		Location caller;
 		try {
-			Location caller = thread.frame(1).location();
+			caller = thread.frame(1).location();
 			site = sourceName(caller) + ":" + caller.lineNumber();
 		} catch (IncompatibleThreadStateException e) {
+			traced = false;
 			return true;
 		}
 		String type = m.method().returnTypeName();
@@ -290,11 +322,20 @@ final class SearchRun {
 		if (mirror != null) {
 			try {
 				thread.forceEarlyReturn(mirror);
+				if (tracing && traced) {
+					if (calls.size() < Trace.MAX_CALLS) {
+						calls.add(new Trace.Call(name, type, v.java(type), frame(caller)));
+					} else {
+						traced = false;
+					}
+				}
+				return true;
 			} catch (Exception e) {
 				// the method then runs normally: its own value is consistent
 				// with any witness
 			}
 		}
+		traced = false; // the value the call returned is not known
 		return true;
 	}
 
@@ -318,6 +359,25 @@ final class SearchRun {
 		}
 		outcome = Outcome.VIOLATION;
 		detail = type + " at " + sourceName(x.location()) + ":" + x.location().lineNumber();
+		exceptionType = type;
+		try {
+			for (StackFrame f : x.thread().frames()) {
+				frames.add(frame(f.location()));
+			}
+		} catch (IncompatibleThreadStateException e) {
+			frames.clear();
+		}
+	}
+
+	private static Trace.Frame frame(
+			Location l) {
+		String path;
+		try {
+			path = l.sourcePath();
+		} catch (AbsentInformationException e) {
+			path = null;
+		}
+		return new Trace.Frame(path, l.lineNumber(), l.codeIndex(), l.declaringType().name(), l.method().name());
 	}
 
 	/**

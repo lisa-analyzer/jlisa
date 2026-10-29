@@ -3,26 +3,38 @@ package it.unive.jlisa.witness.validator.violation;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;
-import com.sun.jdi.connect.LaunchingConnector;
+import com.sun.jdi.connect.ListeningConnector;
 import it.unive.jlisa.witness.validator.ValidationException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Launches the target JVM under JDI control using the standard
- * {@link LaunchingConnector} API — no {@link ProcessBuilder}, no shell
- * invocations.
+ * Launches the target JVM under JDI control: the validator listens on a local
+ * port ({@link ListeningConnector}), and starts the target JVM with a
+ * {@link ProcessBuilder} (no shell), asking it to connect to that port.
+ * <h3>Working directory</h3>
+ * <p>
+ * The target program runs in a new temporary directory, deleted when it exits:
+ * what it writes never ends up in the directory of the validator (for SV-COMP,
+ * the directory of the run, whose files BenchExec keeps). The validator itself
+ * keeps its working directory, and reads the task with the paths it was given.
  * <h3>Cross-version operation</h3>
  * <p>
- * The validator runs on Java 21 or newer but can debug a Java 8 JVM by setting
- * the {@code vmexec} connector argument to a Java 8 executable. JDWP (Java
- * Debug Wire Protocol) is backwards-compatible, so a newer JDI can control a
- * Java 8 target transparently.
+ * The validator runs on Java 21 or newer but can debug a Java 8 JVM, given its
+ * Java executable. JDWP (Java Debug Wire Protocol) is backwards-compatible, so
+ * a newer JDI can control a Java 8 target transparently.
  * <h3>Assertions</h3>
  * <p>
  * The target JVM is launched with {@code -ea} by default, so that
@@ -32,6 +44,40 @@ import java.util.Map;
  * depend on assertions.
  */
 public final class JdiLauncher {
+
+	/** Milliseconds to wait for the target JVM to connect. */
+	private static final String CONNECT_TIMEOUT_MILLIS = "30000";
+
+	/**
+	 * The process of each target JVM (a JVM that connects to the validator has
+	 * no {@link VirtualMachine#process()}).
+	 */
+	private static final Map<VirtualMachine, Process> PROCESSES = new ConcurrentHashMap<>();
+
+	/**
+	 * The working directory of each target JVM launched and not yet cleaned up:
+	 * when the validator exits first (e.g., right after its verdict), the
+	 * target JVMs still running are killed and the directories deleted here,
+	 * since the callbacks on their exit would not run.
+	 */
+	private static final Map<Process, Path> WORKING_DIRS = new ConcurrentHashMap<>();
+
+	static {
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			for (Map.Entry<Process, Path> entry : WORKING_DIRS.entrySet()) {
+				Process process = entry.getKey();
+				process.destroyForcibly();
+				try {
+					// a JVM still writing in its directory would keep some
+					// files there
+					process.waitFor(1, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				delete(entry.getValue());
+			}
+		}));
+	}
 
 	private JdiLauncher() {
 	}
@@ -74,36 +120,93 @@ public final class JdiLauncher {
 			boolean assertions)
 			throws ValidationException {
 
-		LaunchingConnector connector = findLaunchingConnector();
-		Map<String, Connector.Argument> args = connector.defaultArguments();
-
-		args.get("main").setValue(mainClass);
-		// Enable assertions (-ea) and set classpath; the connector appends
-		// these to
-		// the JVM command line before starting the process.
-		args.get("options").setValue((assertions ? "-ea " : "") + "-cp " + quoteIfNeeded(classpath));
-		// Start suspended so we can register event requests before any code
-		// runs.
-		args.get("suspend").setValue("true");
-
 		// Point at the desired Java executable (Java 8 for SV-COMP benchmarks).
 		// Defaults to "java" (uses PATH) when the user did not supply --java.
 		String exec = (java8Executable != null && !java8Executable.isBlank())
-				? java8Executable
+				? absolute(java8Executable)
 				: "java";
-		args.get("vmexec").setValue(exec);
 
-		ValidatorLogger.jdi("Launching JVM: vmexec={} main={} options={}",
-				exec, mainClass, args.get("options").value());
+		ListeningConnector connector = findListeningConnector();
+		Map<String, Connector.Argument> args = connector.defaultArguments();
+		args.get("localAddress").setValue("127.0.0.1");
+		args.get("port").setValue("0");
+		args.get("timeout").setValue(CONNECT_TIMEOUT_MILLIS);
 
+		Path workingDir;
 		try {
-			VirtualMachine vm = connector.launch(args);
-			ValidatorLogger.jdi("Connected to target VM ({})",
-					vm.version());
-			discardOutput(vm.process());
+			workingDir = Files.createTempDirectory("jlisa-wit-run-");
+		} catch (IOException e) {
+			throw new ValidationException("Cannot create a working directory for the target JVM: " + e.getMessage(), e);
+		}
+
+		Process process = null;
+		try {
+			String address = connector.startListening(args);
+			List<String> command = new ArrayList<>();
+			command.add(exec);
+			// Start suspended so we can register event requests before any code
+			// runs.
+			command.add("-agentlib:jdwp=transport=dt_socket,server=n,suspend=y,address=" + address);
+			if (assertions) {
+				command.add("-ea");
+			}
+			command.add("-cp");
+			command.add(absoluteClasspath(classpath));
+			command.add(mainClass);
+			ValidatorLogger.jdi("Launching JVM in {}: {}", workingDir, command);
+
+			// The output is not needed, since the validator observes the
+			// program through JDI
+			// events. Standard input stays an open pipe that is never written,
+			// as with the JDI
+			// launching connector.
+			process = new ProcessBuilder(command)
+					.directory(workingDir.toFile())
+					.redirectOutput(ProcessBuilder.Redirect.DISCARD)
+					.redirectError(ProcessBuilder.Redirect.DISCARD)
+					.start();
+			WORKING_DIRS.put(process, workingDir);
+			// a target JVM that exits before connecting must not leave accept
+			// waiting
+			Process started = process;
+			process.onExit().thenRun(() -> {
+				stopListening(connector, args);
+				delete(workingDir);
+				WORKING_DIRS.remove(started);
+			});
+
+			VirtualMachine vm = connector.accept(args);
+			stopListening(connector, args);
+			PROCESSES.put(vm, process);
+			Process launched = process;
+			process.onExit().thenRun(() -> PROCESSES.remove(vm, launched));
+			ValidatorLogger.jdi("Connected to target VM ({})", vm.version());
 			return vm;
 		} catch (Exception e) {
+			stopListening(connector, args);
+			if (process != null) {
+				process.destroyForcibly();
+			} else {
+				delete(workingDir);
+			}
 			throw new ValidationException("Failed to launch target JVM: " + e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Stops the target JVM of the given VM, if it is still running: asks it to
+	 * exit, then kills its process.
+	 */
+	public static void stop(
+			VirtualMachine vm) {
+		try {
+			vm.exit(1);
+		} catch (Exception ignored) {
+			// already gone
+		}
+		Process process = PROCESSES.remove(vm);
+		if (process != null) {
+			process.destroyForcibly();
 		}
 	}
 
@@ -112,58 +215,59 @@ public final class JdiLauncher {
 	// ------------------------------------------------------------------
 
 	/**
-	 * Returns the default {@link LaunchingConnector} (typically
-	 * {@code com.sun.jdi.connect.CommandLineLaunch}).
+	 * Returns the JDI connector that listens on a socket
+	 * ({@code com.sun.jdi.SocketListen}).
 	 */
-	private static LaunchingConnector findLaunchingConnector() throws ValidationException {
-		LaunchingConnector connector = Bootstrap.virtualMachineManager().defaultConnector();
-		if (connector == null) {
-			throw new ValidationException("No default JDI LaunchingConnector found in this JDK");
+	private static ListeningConnector findListeningConnector() throws ValidationException {
+		for (ListeningConnector connector : Bootstrap.virtualMachineManager().listeningConnectors()) {
+			if (connector.transport().name().equals("dt_socket")) {
+				return connector;
+			}
 		}
-		return connector;
+		throw new ValidationException("No JDI socket ListeningConnector found in this JDK");
+	}
+
+	private static void stopListening(
+			ListeningConnector connector,
+			Map<String, Connector.Argument> args) {
+		try {
+			connector.stopListening(args);
+		} catch (Exception ignored) {
+			// not listening any more
+		}
 	}
 
 	/**
-	 * Wraps a classpath in double quotes when it contains spaces, to prevent
-	 * the connector from splitting it into multiple arguments.
+	 * Returns the given path as an absolute path, if it is a path and not a
+	 * command name.
 	 */
-	private static String quoteIfNeeded(
+	private static String absolute(
+			String path) {
+		return path.contains(File.separator) ? new File(path).getAbsolutePath() : path;
+	}
+
+	/**
+	 * Returns the classpath with absolute entries: the target JVM runs in
+	 * another directory.
+	 */
+	private static String absoluteClasspath(
 			String cp) {
 		if (cp == null || cp.isBlank()) {
-			return ".";
+			cp = ".";
 		}
-		return cp.contains(" ") ? "\"" + cp + "\"" : cp;
+		return Arrays.stream(cp.split(File.pathSeparator))
+				.filter(entry -> !entry.isEmpty())
+				.map(entry -> new File(entry).getAbsolutePath())
+				.collect(Collectors.joining(File.pathSeparator));
 	}
 
-	/**
-	 * Discards what the target program prints to stdout and stderr.
-	 * <p>
-	 * As required by {@link LaunchingConnector#launch}, both streams are read
-	 * while the program runs: they are pipes to the validator, and a program
-	 * that fills one would block on its next write. The output itself is not
-	 * needed, since the validator observes the program through JDI events. This
-	 * is the equivalent of {@link ProcessBuilder.Redirect#DISCARD} for a
-	 * process started by the JDI connector.
-	 */
-	private static void discardOutput(
-			Process process) {
-		discard(process.getInputStream(), "target-stdout");
-		discard(process.getErrorStream(), "target-stderr");
-	}
-
-	/** Reads and drops a stream in a daemon thread, until the stream ends. */
-	private static void discard(
-			InputStream in,
-			String threadName) {
-		Thread thread = new Thread(() -> {
-			try {
-				in.transferTo(OutputStream.nullOutputStream());
-			} catch (IOException ignored) {
-				// the target VM is gone
-			}
-		}, threadName);
-		thread.setDaemon(true);
-		thread.start();
+	private static void delete(
+			Path dir) {
+		try (Stream<Path> paths = Files.walk(dir)) {
+			paths.sorted(Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+		} catch (IOException | UncheckedIOException e) {
+			// a temporary directory
+		}
 	}
 
 	// ------------------------------------------------------------------

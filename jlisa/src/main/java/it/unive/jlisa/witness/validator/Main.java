@@ -1,13 +1,20 @@
 package it.unive.jlisa.witness.validator;
 
+import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.witness.validator.correctness.CorrectnessValidator;
 import it.unive.jlisa.witness.validator.model.Property;
+import it.unive.jlisa.witness.validator.model.TaskSources;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV1;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV2;
 import it.unive.jlisa.witness.validator.violation.BugFinder;
 import it.unive.jlisa.witness.validator.violation.ViolationValidator;
+import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -19,10 +26,12 @@ import org.apache.logging.log4j.core.config.Configurator;
  * <h3>Usage</h3>
  * 
  * <pre>{@code
- * jlisa-witness-validator --witness <file> --benchmark <task.yml> --property assert|runtime
- *                         [--input-search] [--java <path>] [--verbose]
- * jlisa-witness-validator --find-bug --benchmark <task.yml> --property assert|runtime
- *                         [--time-limit <seconds>] [--java <path>] [--verbose]
+ * jlisa-witness-validator --witness <file> [--input-search] TASK [--java <path>] [--verbose]
+ * jlisa-witness-validator --find-bug [--time-limit <seconds>] [--witness-output <file>] TASK
+ *                         [--java <path>] [--verbose]
+ *
+ * TASK: --source <inputs...> --svcomp-property <file.prp>   (as SV-COMP gives it to the tool)
+ *    or --benchmark <task.yml> --property assert|runtime [--extra-sources <dir>]
  * }</pre>
  * <p>
  * The property is given explicitly; it is never derived from the task file.
@@ -81,57 +90,61 @@ public final class Main {
 		}
 
 		String witnessPath = cmd.getOptionValue("witness");
-		String benchmarkPath = cmd.getOptionValue("benchmark");
-		String propertyName = cmd.getOptionValue("property");
 		String java8Exec = cmd.getOptionValue("java");
-		String extraSourcesPath = cmd.getOptionValue("extra-sources");
+		boolean findBug = cmd.hasOption("find-bug");
 
-		if (cmd.hasOption("find-bug")) {
-			findBug(benchmarkPath, propertyName, java8Exec, extraSourcesPath, cmd.getOptionValue("time-limit", "60"));
-			System.exit(0);
+		if (!findBug && witnessPath == null) {
+			usage(options, "--witness or --find-bug is required");
 			return;
 		}
-
-		if (witnessPath == null || benchmarkPath == null || propertyName == null) {
-			System.err.println("Error: --witness, --benchmark and --property are required.");
-			new HelpFormatter().printHelp("jlisa-witness-validator", options);
-			RunSummary.couldNotValidate("usage", "--witness, --benchmark and --property are required");
-			System.exit(0);
-			return;
-		}
-
-		File witnessFile = new File(witnessPath);
-		File benchmarkFile = new File(benchmarkPath);
-
-		if (!witnessFile.exists()) {
+		if (witnessPath != null && !new File(witnessPath).exists()) {
 			System.err.println("Error: witness file not found: " + witnessPath);
 			RunSummary.couldNotValidate("witness-not-found", witnessPath);
 			System.exit(0);
 			return;
 		}
-
-		if (!benchmarkFile.exists()) {
-			System.err.println("Error: benchmark file not found: " + benchmarkPath);
-			RunSummary.couldNotValidate("benchmark-not-found", benchmarkPath);
-			System.exit(0);
-			return;
+		ViolationWitnessWriter.Request witnessOutput = null;
+		if (cmd.hasOption("witness-output")) {
+			if (!findBug || !cmd.hasOption("source")) {
+				usage(options, "--witness-output needs --find-bug, --source and --svcomp-property");
+				return;
+			}
+			witnessOutput = new ViolationWitnessWriter.Request(Paths.get(cmd.getOptionValue("witness-output")),
+					List.of(cmd.getOptionValues("source")), cmd.getOptionValue("svcomp-property"));
 		}
 
 		try {
-			Property property = Property.fromName(propertyName);
-			WitnessModel model = parseWitness(witnessFile);
-			LOG.info("Parsed witness: {}", model);
-
-			File extraSourcesDir = (extraSourcesPath != null && !extraSourcesPath.isBlank())
-					? new File(extraSourcesPath)
-					: null;
-
-			switch (model.type()) {
-			case VIOLATION -> ViolationValidator.validate(model, property, benchmarkFile, java8Exec, extraSourcesDir,
-					cmd.hasOption("input-search"));
-			case CORRECTNESS -> CorrectnessValidator.validate(model, benchmarkFile);
+			Task task = task(cmd, options);
+			if (task == null) {
+				return;
 			}
-
+			if (findBug) {
+				String timeLimit = cmd.getOptionValue("time-limit", "60");
+				long millis;
+				try {
+					millis = (long) (Double.parseDouble(timeLimit) * 1000);
+				} catch (NumberFormatException e) {
+					RunSummary.couldNotValidate("usage", "--time-limit is not a number: " + timeLimit);
+					System.exit(0);
+					return;
+				}
+				BugFinder.find(task.property(), task.sources(), java8Exec, millis, witnessOutput);
+			} else {
+				WitnessModel model = parseWitness(new File(witnessPath));
+				LOG.info("Parsed witness: {}", model);
+				switch (model.type()) {
+				case VIOLATION -> ViolationValidator.validate(model, task.property(), task.sources(), java8Exec,
+						cmd.hasOption("input-search"));
+				case CORRECTNESS -> {
+					if (task.taskFile() == null) {
+						RunSummary.couldNotValidate("correctness-witness",
+								"correctness witnesses are only validated with --benchmark");
+					} else {
+						CorrectnessValidator.validate(model, task.taskFile());
+					}
+				}
+				}
+			}
 		} catch (ValidationException e) {
 			LOG.error("Validation error: {}", e.getMessage(), e);
 			RunSummary.couldNotValidate("validation-error", e.getMessage());
@@ -144,40 +157,78 @@ public final class Main {
 	}
 
 	/**
-	 * Bug-finding mode: no witness; looks for a run that violates the property
-	 * (see {@link BugFinder}).
+	 * The task to validate or to search, with its property.
+	 *
+	 * @param sources  the sources of the task
+	 * @param property the property
+	 * @param taskFile the task file ({@code --benchmark}), or null when the
+	 *                     task is given by its inputs
 	 */
-	private static void findBug(
-			String benchmarkPath,
-			String propertyName,
-			String java8Exec,
-			String extraSourcesPath,
-			String timeLimitSeconds) {
+	private record Task(
+			TaskSources sources,
+			Property property,
+			File taskFile) {
+	}
+
+	/**
+	 * The task of the command line, given either as SV-COMP gives it to the
+	 * tool ({@code --source} and {@code --svcomp-property}), or by a task file
+	 * ({@code --benchmark}, {@code --property} and {@code --extra-sources}).
+	 * Returns null after reporting a wrong command line.
+	 */
+	private static Task task(
+			CommandLine cmd,
+			Options options)
+			throws ValidationException,
+			IOException {
+		boolean svcomp = cmd.hasOption("source") || cmd.hasOption("svcomp-property");
+		if (svcomp && (cmd.hasOption("benchmark") || cmd.hasOption("property") || cmd.hasOption("extra-sources"))) {
+			usage(options, "--source and --svcomp-property cannot be given with --benchmark, --property or "
+					+ "--extra-sources");
+			return null;
+		}
+		if (svcomp) {
+			if (!cmd.hasOption("source") || !cmd.hasOption("svcomp-property")) {
+				usage(options, "--source and --svcomp-property go together");
+				return null;
+			}
+			String propertyFile = cmd.getOptionValue("svcomp-property");
+			SVCOMPProperty property = SVCOMPProperty.of(Files.readString(Paths.get(propertyFile)));
+			if (property == null) {
+				RunSummary.couldNotValidate("unsupported-property", propertyFile);
+				System.exit(0);
+				return null;
+			}
+			return new Task(TaskSources.fromInputs(List.of(cmd.getOptionValues("source"))),
+					property == SVCOMPProperty.ASSERT ? Property.ASSERT : Property.RUNTIME, null);
+		}
+		String benchmarkPath = cmd.getOptionValue("benchmark");
+		String propertyName = cmd.getOptionValue("property");
 		if (benchmarkPath == null || propertyName == null) {
-			System.err.println("Error: --find-bug needs --benchmark and --property.");
-			RunSummary.couldNotValidate("usage", "--find-bug needs --benchmark and --property");
-			return;
+			usage(options, "--source and --svcomp-property, or --benchmark and --property, are required");
+			return null;
 		}
 		File benchmarkFile = new File(benchmarkPath);
 		if (!benchmarkFile.exists()) {
+			System.err.println("Error: benchmark file not found: " + benchmarkPath);
 			RunSummary.couldNotValidate("benchmark-not-found", benchmarkPath);
-			return;
+			System.exit(0);
+			return null;
 		}
-		try {
-			long millis = (long) (Double.parseDouble(timeLimitSeconds) * 1000);
-			File extraSourcesDir = (extraSourcesPath != null && !extraSourcesPath.isBlank())
-					? new File(extraSourcesPath)
-					: null;
-			BugFinder.find(Property.fromName(propertyName), benchmarkFile, java8Exec, extraSourcesDir, millis);
-		} catch (NumberFormatException e) {
-			RunSummary.couldNotValidate("usage", "--time-limit is not a number: " + timeLimitSeconds);
-		} catch (ValidationException e) {
-			LOG.error("Validation error: {}", e.getMessage(), e);
-			RunSummary.couldNotValidate("validation-error", e.getMessage());
-		} catch (Exception e) {
-			LOG.error("Unexpected error: {}", e.getMessage(), e);
-			RunSummary.couldNotValidate("internal-error", e.getClass().getSimpleName() + ": " + e.getMessage());
-		}
+		String extraSourcesPath = cmd.getOptionValue("extra-sources");
+		File extraSourcesDir = extraSourcesPath != null && !extraSourcesPath.isBlank() ? new File(extraSourcesPath)
+				: null;
+		return new Task(TaskSources.fromTaskFile(benchmarkFile, extraSourcesDir), Property.fromName(propertyName),
+				benchmarkFile);
+	}
+
+	private static void usage(
+			Options options,
+			String message) {
+		System.err.println("Error: " + message + ".");
+		new HelpFormatter().printHelp("jlisa-witness-validator", options);
+		RunSummary.couldNotValidate("usage", message);
+		System.exit(0);
 	}
 
 	// ------------------------------------------------------------------
@@ -293,6 +344,29 @@ public final class Main {
 				.hasArg()
 				.argName("SECONDS")
 				.desc("Time for the bug-finding search (default 60)")
+				.build());
+
+		opts.addOption(Option.builder()
+				.longOpt("witness-output")
+				.hasArg()
+				.argName("FILE")
+				.desc("Bug-finding mode: write the violation witness of the violation found to this file "
+						+ "(needs --source and --svcomp-property)")
+				.build());
+
+		opts.addOption(Option.builder()
+				.longOpt("source")
+				.hasArgs()
+				.argName("INPUTS")
+				.desc("The input files and directories of the task, as SV-COMP gives them to the tool "
+						+ "(with --svcomp-property, instead of --benchmark)")
+				.build());
+
+		opts.addOption(Option.builder()
+				.longOpt("svcomp-property")
+				.hasArg()
+				.argName("PRP")
+				.desc("The property file of the task (with --source, instead of --property)")
 				.build());
 
 		opts.addOption(Option.builder("v")

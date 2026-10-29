@@ -95,44 +95,40 @@ environment variable.
 
 The launcher is generated in `build/install/jlisa-witness-validator/bin/`.
 
-### SV-COMP archive
+### SV-COMP
 
-```bash
-svcomp/make-release.sh      # builds build/svcomp/jlisa-wit.zip
-svcomp/check-release.sh     # checks the archive and runs its smoke test
-```
-
-The archive contains a single executable, `jlisa-wit`, that bundles the validator and its
-dependencies. See [`svcomp/README.md`](svcomp/README.md).
+For SV-COMP, the validator ships inside the JLiSA archive, as `jlisa validate` (and as the bug-finding
+fallback of `jlisa check`), built by `build_jlisa.sh --jlisa-wit-dir` in
+https://github.com/lisa-analyzer/sv-comp.
 
 ---
 
 ## Usage
 
-Validate a violation witness:
+The task is given as SV-COMP gives it to the tool, its input files and its property file:
+
+```bash
+# validate a violation witness
+build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
+    --witness witness.graphml \
+    --svcomp-property valid-assert.prp --source common/ task/
+
+# search for a violation without a witness, and write the witness of the violation found
+build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
+    --find-bug --time-limit 60 --witness-output witness.yml \
+    --svcomp-property valid-assert.prp --source common/ task/
+```
+
+The task is compiled into a temporary directory: its files are only read. `--source` takes all the
+following arguments, hence it comes last.
+
+The task can also be given by a task file, with the property by name; the task is then compiled into
+its own directory:
 
 ```bash
 build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
     --witness witness.graphml \
-    --benchmark /path/to/task.yml \
-    --property assert
-```
-
-Search for a violation without a witness:
-
-```bash
-build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
-    --find-bug --time-limit 60 \
-    --benchmark /path/to/task.yml \
-    --property assert
-```
-
-Through the SV-COMP wrapper, which takes the property file and the task's input files as BenchExec
-passes them:
-
-```bash
-python3 svcomp/jlisa-wit.py --witness witness.graphml --property valid-assert.prp common/ task/
-python3 svcomp/jlisa-wit.py --find-bug --property valid-assert.prp common/ task/
+    --benchmark /path/to/task.yml --property assert
 ```
 
 ---
@@ -142,12 +138,15 @@ python3 svcomp/jlisa-wit.py --find-bug --property valid-assert.prp common/ task/
 | Option | Description |
 | --- | --- |
 | `--witness <file>` | Witness to validate: `.graphml` (format 1.0) or `.yml` (format 2.x). |
-| `--benchmark <task.yml>` | Verification task. |
-| `--property <assert\|runtime>` | Property to check. |
+| `--source <inputs...>` | The input files and directories of the task, as SV-COMP gives them (with `--svcomp-property`). |
+| `--svcomp-property <file.prp>` | The property file of the task (with `--source`). |
+| `--benchmark <task.yml>` | Verification task file (with `--property`, instead of `--source`). |
+| `--property <assert\|runtime>` | Property to check (with `--benchmark`). |
+| `--extra-sources <dir>` | Additional sources compiled with the benchmark, e.g. SV-COMP's `common/` (with `--benchmark`). |
 | `--input-search` | Search for values of the nondeterministic calls the witness does not specify. Off by default. |
 | `--find-bug` | Bug-finding mode: no witness, search for a violating execution. |
 | `--time-limit <seconds>` | Time budget for `--find-bug` (default: 60). |
-| `--extra-sources <dir>` | Additional sources compiled with the benchmark, e.g. SV-COMP's `common/`. |
+| `--witness-output <file>` | With `--find-bug`: write the violation witness (format 2.4) of the violation found (needs `--source`). |
 | `--java <path>` | Java executable used to run the benchmark (default: `java` on the `PATH`). |
 | `--verbose` | Detailed logging on standard error. |
 | `--help` | Print the usage. |
@@ -164,6 +163,12 @@ The verdict is printed as the only line on standard output:
 | `Witness Spurious` | The execution described by the witness does not violate the property. | `true` — witness rejected |
 | `Could not validate` | No verdict: unsupported input, parse error or timeout. | `unknown` |
 | `Violation found` | `--find-bug` only: an execution violates the property. | — |
+
+With `--witness-output`, the witness of the violation found has one `function_return` waypoint for
+each `Verifier.nondet*()` call of the execution, with the value it returned, then the target. Its
+metadata are those of JLiSA, with the description "Found with bug-finding mode". When the source
+locations cannot be told apart (e.g., two candidates on the same line), no witness is written and the
+summary says why.
 
 The exit code is always `0`. Diagnostic output goes to standard error; by default only warnings are
 printed, including a one-line summary of each run:
@@ -227,7 +232,6 @@ src/main/java/it/unive/jlisa/witness/validator/
 ├── violation/         JDI launch, event loop, value injection, bug finding
 ├── search/            input search
 └── correctness/       correctness witnesses (JLiSA)
-svcomp/                SV-COMP wrapper, archive scripts, smoke test
 tools/                 scripts for local benchmark runs
 ```
 

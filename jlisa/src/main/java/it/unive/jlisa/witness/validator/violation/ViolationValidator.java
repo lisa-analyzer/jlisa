@@ -3,19 +3,16 @@ package it.unive.jlisa.witness.validator.violation;
 import com.sun.jdi.VirtualMachine;
 import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
-import it.unive.jlisa.witness.validator.model.BenchmarkProperties;
 import it.unive.jlisa.witness.validator.model.Interception;
 import it.unive.jlisa.witness.validator.model.Property;
+import it.unive.jlisa.witness.validator.model.TaskSources;
 import it.unive.jlisa.witness.validator.model.ViolationPlan;
-import it.unive.jlisa.witness.validator.parser.BenchmarkPropertiesParser;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
 import it.unive.jlisa.witness.validator.search.InputSearch;
 import it.unive.jlisa.witness.validator.violation.EventLoop.ValidationResult;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,19 +52,16 @@ public final class ViolationValidator {
 	/**
 	 * Validates the violation witness and prints the verdict to {@code stdout}.
 	 *
-	 * @param model           the parsed witness model
-	 * @param property        the property the witness is validated against
-	 * @param benchmarkFile   directory containing the benchmark Java sources /
-	 *                            classes
-	 * @param java8Exec       path to the Java 8 executable, or {@code null} to
-	 *                            use {@code PATH}
-	 * @param extraSourcesDir optional root directory of additional sources to
-	 *                            compile alongside the benchmark (e.g. the
-	 *                            SV-COMP {@code common/} directory containing
-	 *                            {@code Verifier.java}); may be {@code null}
-	 * @param inputSearch     whether to search for values of the nondet calls
-	 *                            the witness does not fix, when the first run
-	 *                            does not reach the violation
+	 * @param model         the parsed witness model
+	 * @param property      the property the witness is validated against
+	 * @param benchmarkFile directory containing the benchmark Java sources /
+	 *                          classes
+	 * @param java8Exec     path to the Java 8 executable, or {@code null} to
+	 *                          use {@code PATH}
+	 * @param task          the sources of the task and where to compile them
+	 * @param inputSearch   whether to search for values of the nondet calls the
+	 *                          witness does not fix, when the first run does
+	 *                          not reach the violation
 	 * 
 	 * @throws ValidationException propagated to {@code Main}, which maps it to
 	 *                                 {@code Tool Error}
@@ -75,21 +69,13 @@ public final class ViolationValidator {
 	public static void validate(
 			WitnessModel model,
 			Property property,
-			File benchmarkFile,
+			TaskSources task,
 			String java8Exec,
-			File extraSourcesDir,
 			boolean inputSearch)
 			throws ValidationException {
 
 		long start = System.currentTimeMillis();
 		ViolationPlan plan = model.violationPlan();
-		BenchmarkProperties properties;
-		try {
-			properties = BenchmarkPropertiesParser.parse(benchmarkFile);
-		} catch (FileNotFoundException e) {
-			throw new ValidationException(e.getMessage());
-		}
-		File benchmarkDir = properties.directory();
 
 		ValidatorLogger.plan("Plan: {}", plan);
 		for (var ix : plan.interceptions()) {
@@ -114,18 +100,14 @@ public final class ViolationValidator {
 
 		// Compile if needed (including any extra sources such as Verifier.java
 		// from common/)
-		File classOutputDir = benchmarkDir;
-
-		List<File> extraSources = new ArrayList<>();
-		extraSources.add(extraSourcesDir);
-		extraSources.addAll(properties.inputFiles());
-		JdiLauncher.compileIfNeeded(benchmarkDir, classOutputDir, null, extraSources);
+		List<File> extraSources = task.inputs();
+		JdiLauncher.compileIfNeeded(task.benchmark(), task.classesDir(), null, extraSources);
 
 		// Build classpath
-		String classpath = buildClasspath(benchmarkDir);
+		String classpath = buildClasspath(task.classesDir());
 
 		// Find the main class
-		String mainClass = findMainClass(benchmarkDir);
+		String mainClass = findMainClass(task.benchmark());
 		ValidatorLogger.jdi("Main class: {}", mainClass);
 
 		// Launch the target JVM
