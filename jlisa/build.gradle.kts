@@ -62,13 +62,42 @@ dependencies {
     testImplementation("junit:junit:4.13.1")
 
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
-    implementation("commons-cli:commons-cli:1.4")
+    implementation("commons-cli:commons-cli:1.5.0")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("io.github.lisa-analyzer:lisa-sdk:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-analyses:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-program:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.classgraph:classgraph:4.8.175")
+    // YAML parsing for v2 witnesses in the witness validator
+    implementation("org.yaml:snakeyaml:2.2")
+}
+
+// WITNESS VALIDATOR
+// The validator runs the programs under JDI: jdk.jdi is not in the default module graph of
+// classpath applications, both when compiling and when running.
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(listOf("--add-modules", "jdk.jdi"))
+}
+
+// bin/jlisa-wit next to bin/jlisa in the distribution, on the same lib folder
+val jlisaWitStartScripts by tasks.registering(CreateStartScripts::class) {
+    applicationName = "jlisa-wit"
+    mainClass.set("it.unive.jlisa.witness.validator.Main")
+    defaultJvmOpts = listOf("--add-modules", "jdk.jdi")
+    outputDir = layout.buildDirectory.dir("jlisa-wit-scripts").get().asFile
+    classpath = tasks.startScripts.get().classpath
+}
+
+distributions {
+    main {
+        contents {
+            into("bin") {
+                from(jlisaWitStartScripts)
+                filePermissions { unix("rwxr-xr-x") }
+            }
+        }
+    }
 }
 
 // ANTLR
