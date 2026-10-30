@@ -14,29 +14,30 @@ import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
-public class AbstractMapPut extends BinaryExpression implements PluggableStatement {
+public class AbstractMapPut extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	public AbstractMapPut(
 			CFG cfg,
 			CodeLocation location,
 			Expression left,
+			Expression middle,
 			Expression right) {
-		super(cfg, location, "put", left, right);
+		super(cfg, location, "put", left, middle, right);
 	}
 
 	public static AbstractMapPut build(
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
-		return new AbstractMapPut(cfg, location, params[0], params[1]);
+		return new AbstractMapPut(cfg, location, params[0], params[1], params[2]);
 	}
 
 	@Override
@@ -46,10 +47,11 @@ public class AbstractMapPut extends BinaryExpression implements PluggableStateme
 	}
 
 	@Override
-	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			SymbolicExpression left,
+			SymbolicExpression middle,
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
