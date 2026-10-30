@@ -11,13 +11,13 @@ class java.util.AbstractMap extends java.util.Map:
 class java.util.HashMap extends java.util.Map:
 
 	instance method put: it.unive.jlisa.program.java.constructs.map.MapPut
-		type it.unive.lisa.type.Untyped::INSTANCE
+		libtype java.lang.Object*
 		param this libtype java.util.Map*
 		param key type it.unive.lisa.type.Untyped::INSTANCE
 		param value type it.unive.lisa.type.Untyped::INSTANCE
 
 	instance method get: it.unive.jlisa.program.java.constructs.map.MapGet
-		type it.unive.lisa.type.Untyped::INSTANCE
+		libtype java.lang.Object*
 		param this libtype java.util.Map*
 		param key type it.unive.lisa.type.Untyped::INSTANCE
 

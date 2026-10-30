@@ -5,11 +5,13 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -18,6 +20,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -151,13 +154,40 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 
 		GlobalVariable keyStringVar = new GlobalVariable(Untyped.INSTANCE, keyString, location);
 
-		AnalysisState<A> tmp = state.bottomExecution();
+		AnalysisState<A> tmp = state;
 		for (Type t : analysis.getRuntimeTypesOf(state, right, context, this)) {
+
 			AccessChild accessMapKey = new AccessChild(t, derefMap, keyStringVar, location);
-			tmp = tmp.lub(analysis.assign(state, accessMapKey, right, context, this));
+
+			ExpressionSet rightExprs = new ExpressionSet(right);
+			AnalysisState<A> wrapped = tmp;
+			if (JavaTypeSystem.isPrimitive(t)) {
+				wrapped = boxValue(interprocedural, wrapped, right, t, expressions);
+				rightExprs = wrapped.getExecutionExpressions();
+			}
+
+			for (SymbolicExpression s : rightExprs) {
+				wrapped = wrapped.lub(analysis.assign(wrapped, accessMapKey, s, context, this));
+			}
+			tmp = wrapped;
 		}
 		return tmp;
 	}
 
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> boxValue(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			Type valueType,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		// CodeLocation location = getLocation();
+		Type boxedType = new JavaReferenceType(JavaClassType.getWrappedType(valueType));
+
+		JavaNewObj wrap = new JavaNewObj(getCFG(), getRight().getLocation(), (JavaReferenceType) boxedType,
+				new Expression[] { getRight() });
+
+		return wrap.forwardSemantics(state, interprocedural, expressions);
+	}
 }
 

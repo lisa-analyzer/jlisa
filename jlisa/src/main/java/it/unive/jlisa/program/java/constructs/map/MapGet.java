@@ -105,7 +105,7 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			throws SemanticException {
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> topState = interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(Untyped.INSTANCE, getLocation()),
+				new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), getLocation()),
 				context, originating);
 		return topState;
 	}
