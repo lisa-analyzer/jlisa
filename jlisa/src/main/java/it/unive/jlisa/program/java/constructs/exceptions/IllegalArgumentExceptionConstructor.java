@@ -2,10 +2,12 @@ package it.unive.jlisa.program.java.constructs.exceptions;
 
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -13,7 +15,12 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
 public class IllegalArgumentExceptionConstructor extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -54,7 +61,23 @@ public class IllegalArgumentExceptionConstructor extends NaryExpression implemen
 			ExpressionSet[] params,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				interprocedural.getCurrentContext(), originating);
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (params.length != 2)
+			return analysis.smallStepSemantics(state, new PushAny(getStaticType(), getLocation()), context,
+					originating);
+
+		// stores the message, read back by Throwable.getMessage()
+		Type stringType = getProgram().getTypes().getStringType();
+		GlobalVariable msgVar = new GlobalVariable(Untyped.INSTANCE, "message", getLocation());
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		AnalysisState<A> result = state.bottomExecution();
+		for (SymbolicExpression self : params[0])
+			for (SymbolicExpression str : params[1]) {
+				AccessChild msgAccess = new AccessChild(stringType, self, msgVar, getLocation());
+				AccessChild strAccess = new AccessChild(stringType, str, var, getLocation());
+				result = result.lub(analysis.assign(state, msgAccess, strAccess, context, originating));
+			}
+		return result;
 	}
 }
