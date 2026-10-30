@@ -58,48 +58,23 @@ Supported properties:
 
 ## Installation
 
-**Prerequisites:** Java 21+, Gradle (wrapper included), GitHub credentials for the LiSA dependency,
-and a local checkout of JLiSA.
-
-### LiSA dependency
-
-LiSA snapshots are published on GitHub Packages, which requires authentication. Add a personal
-access token with the `read:packages` scope to `~/.gradle/gradle.properties`:
+JLiSA-Wit is part of JLiSA: it is built with it, from the `jlisa` folder (the one with
+`build.gradle.kts`). The prerequisites are those of JLiSA: Java 21+ and GitHub credentials for the LiSA
+dependency, a personal access token with the `read:packages` scope in `~/.gradle/gradle.properties`:
 
 ```properties
 gpr.user=<github-username>
 gpr.key=<github-token>
 ```
 
-The environment variables `USERNAME` and `TOKEN` can be used instead.
-
-### JLiSA checkout
-
-JLiSA is built together with the validator as a Gradle composite build. By default it is expected
-next to this repository:
-
-```
-workspace/
-├── jlisa/                     # git clone -b svcomp-2027 https://github.com/lisa-analyzer/jlisa.git
-└── jlisa-witness-validator/   # this repository
-```
-
-A different location can be given with `-PjlisaPath=<path>/jlisa/jlisa` or with the `JLISA_HOME`
-environment variable.
-
-### Build
-
 ```bash
 ./gradlew installDist
 ```
 
-The launcher is generated in `build/install/jlisa-witness-validator/bin/`.
-
-### SV-COMP
+The launchers of both tools are generated in `build/install/jlisa/bin/`: `jlisa` and `jlisa-wit`.
 
 For SV-COMP, the validator ships inside the JLiSA archive, as `jlisa validate` (and as the bug-finding
-fallback of `jlisa check`), built by `build_jlisa.sh --jlisa-wit-dir` in
-https://github.com/lisa-analyzer/sv-comp.
+fallback of `jlisa check`), built by `build_jlisa.sh` in https://github.com/lisa-analyzer/sv-comp.
 
 ---
 
@@ -109,12 +84,12 @@ The task is given as SV-COMP gives it to the tool, its input files and its prope
 
 ```bash
 # validate a violation witness
-build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
-    --witness witness.graphml \
+build/install/jlisa/bin/jlisa-wit \
+    --witness witness.yml \
     --svcomp-property valid-assert.prp --source common/ task/
 
 # search for a violation without a witness, and write the witness of the violation found
-build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
+build/install/jlisa/bin/jlisa-wit \
     --find-bug --time-limit 60 --witness-output witness.yml \
     --svcomp-property valid-assert.prp --source common/ task/
 ```
@@ -122,14 +97,53 @@ build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
 The task is compiled into a temporary directory: its files are only read. `--source` takes all the
 following arguments, hence it comes last.
 
+The same runs from the sources, without building the launchers, with the Gradle tasks
+`runWitnessValidator` and `runBugFinder` (which adds `--find-bug`):
+
+```bash
+./gradlew runWitnessValidator --args="--witness witness.yml --svcomp-property valid-assert.prp --source common/ task/"
+./gradlew runBugFinder --args="--witness-output witness.yml --svcomp-property valid-assert.prp --source common/ task/"
+```
+
+Gradle runs them in the `jlisa` folder: relative paths start from there.
+
 The task can also be given by a task file, with the property by name; the task is then compiled into
 its own directory:
 
 ```bash
-build/install/jlisa-witness-validator/bin/jlisa-witness-validator \
-    --witness witness.graphml \
-    --benchmark /path/to/task.yml --property assert
+build/install/jlisa/bin/jlisa-wit \
+    --witness witness.yml \
+    --benchmark task.yml --property assert
 ```
+
+### Examples
+
+With checkouts of [SV-Benchmarks](https://gitlab.com/sosy-lab/benchmarking/sv-benchmarks) and
+[SV-Witnesses](https://gitlab.com/sosy-lab/benchmarking/sv-witnesses), on the task `ExDarko_false`
+(the assertion fails for some inputs) and `ExDarko_true` (it never fails), the Java examples of
+SV-Witnesses that LiSA also uses in its tests (`lisa-sdk/witness-testcases/java`). The paths below
+assume both checkouts next to the jlisa repository:
+
+```bash
+SVB=../../sv-benchmarks/java
+SVW=../../sv-witnesses
+
+# validate a violation witness (format 2.4)
+./gradlew runWitnessValidator --args="--witness $SVW/examples/java/ExDarko_false.witness-2.4.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_false"
+
+# validate a correctness witness (format 2.4)
+./gradlew runWitnessValidator --args="--witness $SVW/examples/java/ExDarko_true.witness-2.4.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_true"
+
+# bug finding: look for a violation and write its witness
+./gradlew runBugFinder --args="--witness-output build/witness.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_false"
+
+# validate the witness just written
+./gradlew runWitnessValidator --args="--witness build/witness.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_false"
+```
+
+Bug finding prints `Violation found`. The validator does not read the format 2.x yet (a list of
+entries): for now the three validations give `Could not validate` ("YAML witness root is not a
+mapping").
 
 ---
 
