@@ -1,0 +1,64 @@
+{
+  "warnings" : [ {
+    "message" : "['TarsisTest.java':16:2-16:30] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':17:2-17:24] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':19:2-19:17] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':23:2-23:27] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':24:2-24:25] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':29:3-29:25] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':31:3-31:25] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':35:2-35:39] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':36:2-36:28] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':40:2-40:27] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['TarsisTest.java':44:2-44:26] on 'void TarsisTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "java.lang.String__TarsisTest.any(byte[]__bytes)_10374c54e20c568b8645f61da74fb53f.graph.json", "java.lang.String__TarsisTest.any(byte[]__bytes)_80827714fb0648873ceacbdbadd33373.graph.json", "java.lang.String__TarsisTest.any(byte[]__bytes)_d4c84c95cf1324ed05cea481c61e8989.graph.json", "java.lang.String__TarsisTest.pick(bool_b)_53f4bdc570cca4d1e4374e1e6e5d68c7.graph.json", "java.lang.String__TarsisTest.pick(bool_b)_a9b580ee0b289b25b2883c5c663f648c.graph.json", "java.lang.String__TarsisTest.pick(bool_b)_dcd3181601d1258bfd1a4b55b5d835d8.graph.json", "report.json", "void_TarsisTest.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "4",
+    "duration" : "207ms",
+    "end" : "2026-10-29T16:51:33.903+01:00",
+    "expressions" : "95",
+    "files" : "7",
+    "globals" : "50",
+    "members" : "273",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-10-29T16:51:33.696+01:00",
+    "statements" : "26",
+    "units" : "52",
+    "version" : "1.0",
+    "warnings" : "11"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/tarsis"
+  }
+}
