@@ -3,6 +3,7 @@ package it.unive.jlisa;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
@@ -82,7 +83,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation)")
+				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals)")
 				.required(false)
 				.build();
 
@@ -320,7 +321,7 @@ public class Main {
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new InliningAnalysis<>(150, false);
+		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
@@ -342,6 +343,10 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
+		case "ConstantPropagationWithTarsis":
+			domain = new ConstantPropagationWithTarsis();
+			break;
+		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
 			break;
 		default:

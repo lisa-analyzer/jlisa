@@ -1661,7 +1661,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonEq) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Number && rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
@@ -1687,9 +1691,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonNe) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
-			if (lVal instanceof Number || rVal instanceof Number)
+			if (lVal instanceof Number && rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
 					return ((Number) lVal).doubleValue() != ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
 							: Satisfiability.NOT_SATISFIED;
@@ -1713,7 +1721,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonLt) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() < ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1732,7 +1744,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonLe) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() <= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1751,7 +1767,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonGt) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() > ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1770,7 +1790,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonGe) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() >= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
