@@ -323,7 +323,7 @@ public class Main {
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new InliningAnalysis<>(150, false);
+		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
