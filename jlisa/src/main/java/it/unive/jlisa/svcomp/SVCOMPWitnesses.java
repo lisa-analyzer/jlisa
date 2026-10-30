@@ -1,5 +1,6 @@
 package it.unive.jlisa.svcomp;
 
+import it.unive.jlisa.Version;
 import it.unive.lisa.witness.v2.Language;
 import it.unive.lisa.witness.v2.metadata.Producer;
 import it.unive.lisa.witness.v2.metadata.Task;
@@ -52,8 +53,9 @@ public final class SVCOMPWitnesses {
 	}
 
 	/**
-	 * Returns jlisa as the tool producing a witness, with the version of its
-	 * jar ({@code unknown} if the jar has none) and the given description.
+	 * Returns jlisa as the tool producing a witness, with its version
+	 * ({@code unknown} if there is none, see {@link Version#get()}) and the
+	 * given description.
 	 *
 	 * @param description how the violation was found, or {@code null} for none
 	 *
@@ -61,7 +63,7 @@ public final class SVCOMPWitnesses {
 	 */
 	public static Producer producer(
 			String description) {
-		String version = SVCOMPWitnesses.class.getPackage().getImplementationVersion();
+		String version = Version.get();
 		return new Producer(NAME, version == null ? "unknown" : version, null, null, description);
 	}
 

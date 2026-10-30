@@ -159,9 +159,7 @@ public class Main {
 			}
 
 			if (cmd.hasOption("v")) {
-				Package jlisaPkg = Main.class.getPackage();
-				String implementationVersion = jlisaPkg.getImplementationVersion();
-				System.out.println("JLiSA version: " + implementationVersion);
+				System.out.println("JLiSA version: " + Version.get());
 				System.exit(0);
 			}
 

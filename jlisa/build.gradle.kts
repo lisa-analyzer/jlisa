@@ -42,6 +42,12 @@ application {
     mainClass.set("it.unive.jlisa.Main")
 }
 
+// the Gradle tasks run the compiled classes, without the manifest of the jar: they give the version of jlisa
+// as a system property (see it.unive.jlisa.Version)
+tasks.withType<JavaExec>().configureEach {
+    systemProperty("jlisa.version", project.version.toString())
+}
+
 repositories {
     mavenCentral()
     maven {
@@ -97,6 +103,29 @@ distributions {
                 filePermissions { unix("rwxr-xr-x") }
             }
         }
+    }
+}
+
+// ./gradlew runWitnessValidator --args="..." runs jlisa-wit from the sources, as ./gradlew run does for jlisa
+tasks.register<JavaExec>("runWitnessValidator") {
+    group = "application"
+    description = "Runs the witness validator (jlisa-wit)"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("it.unive.jlisa.witness.validator.Main")
+    jvmArgs("--add-modules", "jdk.jdi")
+}
+
+// ./gradlew runBugFinder --args="..." runs the bug-finding mode of jlisa-wit (no witness). --find-bug goes
+// first, since --source takes all the arguments after it
+tasks.register<JavaExec>("runBugFinder") {
+    group = "application"
+    description = "Runs the bug-finding mode of the witness validator (jlisa-wit --find-bug)"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("it.unive.jlisa.witness.validator.Main")
+    jvmArgs("--add-modules", "jdk.jdi")
+    val exec = this
+    doFirst {
+        exec.args = listOf("--find-bug") + exec.args.orEmpty()
     }
 }
 
