@@ -8,6 +8,7 @@ sources. The task is `nondet-assert/Main.java`: the assertion fails when `Verifi
 - `valid-assert.prp`: the property
 - `witness-correct.graphml`: a violation witness in the GraphML format (v1)
 - `witness-correct.yml`: the violation witness (format 2.4) that jlisa writes in bug-finding mode
+- `ExDarko_true/Main.java` and `correctness-witness.yml`: a task without violations and its correctness witness (format 2.4)
 
 Run from the `jlisa` folder (the one with `build.gradle.kts`), since the paths below, and those inside
 `witness-correct.yml`, are relative to it:
@@ -33,3 +34,13 @@ it is; `--time-limit SECONDS`, default 60):
 ```
 
 `witness-correct.yml` was written this way.
+
+`correctness-witness.yml` is the Java correctness witness of [SV-Witnesses](https://gitlab.com/sosy-lab/benchmarking/sv-witnesses)
+(`examples/java/ExDarko_true.witness-2.4.yml`, Apache-2.0), for the task `ExDarko_true/` of SV-Benchmarks, with
+its paths made relative to the `jlisa` folder and the hash of the `Verifier.java` in `common/`:
+
+```bash
+./gradlew runWitnessValidator --args="--witness witness-validator-examples/correctness-witness.yml --svcomp-property witness-validator-examples/valid-assert.prp --source witness-validator-examples/common witness-validator-examples/ExDarko_true"
+```
+
+For now it gives `Could not validate`, as the YAML violation witness.
