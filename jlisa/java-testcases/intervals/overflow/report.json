@@ -1,0 +1,54 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':16:84-16:96] on 'void Main::addOverflow()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':17:78-17:90] on 'void Main::mulOverflow()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':18:103-18:115] on 'void Main::longAdd()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':19:78-19:90] on 'void Main::negMin()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':20:86-20:98] on 'void Main::subOverflow()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':21:95-21:107] on 'void Main::unboundedAdd()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int_Main.range(int_lo,_int_hi)_0c4685cd3b131e9710dfc20434b43191.graph.json", "int_Main.range(int_lo,_int_hi)_26cde5d0cdb7337c51d14dbec37bc8c1.graph.json", "int_Main.range(int_lo,_int_hi)_3b0b3b0a79e16a6eff23f3dbd6773ef5.graph.json", "int_Main.range(int_lo,_int_hi)_d65b9aef53c90340744e1d8ab5eb8481.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_182d241b949e8ce0b62e79969e8f24fa.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_191ac0ae97cb47aed2272b93478f0c60.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_35778ece783d3941079e6c114a06ac63.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_9bcc0b3f3141a72079659916c4bf7363.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_fe6c1f5576b5893852eeae36cade4869.graph.json", "long_Main.lrange(long_lo,_long_hi)_305e08f8dddc43a6fe4ca5196e99b4d8.graph.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_c6d4b185db7649d534342ed815e91eb2.graph.json", "report.json", "void_Main.addOverflow()_f9b64dd4bdd93e868553912392f1e7db.graph.json", "void_Main.longAdd()_9c652780e389af64e45f9455dbd68e5e.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.mulOverflow()_845f5e6e518358b4619310af2fc3d008.graph.json", "void_Main.negMin()_28df674007150fa67a07f96c6745bfe9.graph.json", "void_Main.subOverflow()_5bb7cf06e212a70b6b1731765d436674.graph.json", "void_Main.unboundedAdd()_910563ae638e8b7e00424a89326d2953.graph.json" ],
+  "info" : {
+    "cfgs" : "23",
+    "duration" : "66ms",
+    "end" : "2026-10-31T14:40:46.177+01:00",
+    "expressions" : "142",
+    "files" : "19",
+    "globals" : "50",
+    "members" : "300",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-10-31T14:40:46.111+01:00",
+    "statements" : "70",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "6"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/intervals/overflow"
+  }
+}
