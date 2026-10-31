@@ -32,6 +32,7 @@ import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaOr;
+import it.unive.jlisa.program.cfg.expression.JavaRemainder;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
@@ -69,7 +70,6 @@ import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.Not;
-import it.unive.lisa.program.cfg.statement.numeric.Modulo;
 import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
@@ -137,7 +137,7 @@ public class ExpressionVisitor
 	private static final Map<InfixExpression.Operator, BinaryFactory> INFIX_OPS = Map.ofEntries(
 			Map.entry(InfixExpression.Operator.TIMES, Multiplication::new),
 			Map.entry(InfixExpression.Operator.DIVIDE, JavaDivision::new),
-			Map.entry(InfixExpression.Operator.REMAINDER, Modulo::new),
+			Map.entry(InfixExpression.Operator.REMAINDER, JavaRemainder::new),
 			Map.entry(InfixExpression.Operator.PLUS, JavaAddition::new),
 			Map.entry(InfixExpression.Operator.MINUS, JavaSubtraction::new),
 			Map.entry(InfixExpression.Operator.RIGHT_SHIFT_SIGNED, JavaShiftRight::new),
