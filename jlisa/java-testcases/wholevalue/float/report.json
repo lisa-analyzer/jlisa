@@ -1,0 +1,62 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':18:124-18:158] on 'void Main::sumOverflow()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':19:134-19:147] on 'void Main::sumInDouble()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':20:126-20:160] on 'void Main::narrowing()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':21:111-21:124] on 'void Main::divNaN()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':22:95-22:108] on 'void Main::loopFinite()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':23:118-23:130] on 'void Main::negatedComparison()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':24:122-24:156] on 'void Main::mulInfinity()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':25:90-25:124] on 'void Main::oneSided()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':26:125-26:159] on 'void Main::againstInfinity()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':27:157-27:170] on 'void Main::strictAgainstInfinity()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_34c28bb812958eee635f74431847c7a2.graph.json", "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_62ad65b42e454bc4014c322e227b72cd.graph.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_d5be69e7cfe123cb44d99e94fcdabc9f.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_01e1448de8d0ef97ff2293460cdac284.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_02dc794e1110236b75e71e60937bfe0a.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_29f9ca0634151ea5f8968eb922de67da.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_52aa63728e305a7b87ff916a59e00790.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_796d4c2f7eda6c1999035dea317f79ff.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_a4161f0c14fd94ae7ce12d955cf41082.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_b148fbdcc9d710431339cf32d5e46270.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_d40eaf5bb24e6889e9d8e373c5e3e9f6.graph.json", "float_org.sosy_lab.sv_benchmarks.Verifier.nondetFloat()_ea7b28f281ea446cf7bda162022c29da.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "report.json", "void_Main.againstInfinity()_001ae61d77062e7b7603ecaabde7aa38.graph.json", "void_Main.divNaN()_28df674007150fa67a07f96c6745bfe9.graph.json", "void_Main.loopFinite()_608808e6a746d10cbccbc14ff329f8d0.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.mulInfinity()_7aca52dc2f782f7cb5151d4e80a12a9a.graph.json", "void_Main.narrowing()_f17183e160403da9b63080c6a4c88e7f.graph.json", "void_Main.negatedComparison()_18d6f7f1b3693bd99e535c480d99fc8b.graph.json", "void_Main.oneSided()_3ef60f31ff996f32c6ca45813379af53.graph.json", "void_Main.strictAgainstInfinity()_4b50945cbc0e20382c194a6135ac8463.graph.json", "void_Main.sumInDouble()_845f5e6e518358b4619310af2fc3d008.graph.json", "void_Main.sumOverflow()_f9b64dd4bdd93e868553912392f1e7db.graph.json" ],
+  "info" : {
+    "cfgs" : "25",
+    "duration" : "353ms",
+    "end" : "2026-10-31T20:21:53.396+01:00",
+    "expressions" : "199",
+    "files" : "24",
+    "globals" : "50",
+    "members" : "302",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-10-31T20:21:53.043+01:00",
+    "statements" : "103",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "10"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/wholevalue/float"
+  }
+}
