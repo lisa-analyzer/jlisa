@@ -88,7 +88,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis)")
+				.desc("Numerical domain: (ConstantPropagation [the same as JavaWholeValueTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis)")
 				.required(false)
 				.build();
 
@@ -347,13 +347,13 @@ public class Main {
 		}
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
-		case "ConstantPropagation":
 		case "ConstantPropagationWithTarsis":
 			domain = new ConstantPropagationWithTarsis();
 			break;
 		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
 			break;
+		case "ConstantPropagation":
 		case "JavaWholeValueTarsis":
 			// the participants of ConstantPropagationWithTarsis (plus the kinds
 			// of floating point values), combined by the whole-value analysis
