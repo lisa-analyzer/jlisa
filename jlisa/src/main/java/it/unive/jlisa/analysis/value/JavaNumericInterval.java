@@ -28,11 +28,13 @@ import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -41,6 +43,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.ComparisonOperator;
 import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.RemainderOperator;
@@ -66,6 +69,7 @@ import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -1158,6 +1162,20 @@ public class JavaNumericInterval extends Interval {
 		return low.compareTo(high) > 0 ? interval : new IntInterval(low, high);
 	}
 
+	// whether the given finite number is an int (toInt truncates the others)
+	private static boolean fitsInt(
+			MathNumber n) {
+		return !n.isInfinite() && n.compareTo(new MathNumber(Integer.MIN_VALUE)) >= 0
+				&& n.compareTo(new MathNumber(Integer.MAX_VALUE)) <= 0 && n.roundDown().compareTo(n) == 0;
+	}
+
+	// whether the given finite number is a long
+	private static boolean fitsLong(
+			MathNumber n) {
+		return !n.isInfinite() && n.compareTo(new MathNumber(Long.MIN_VALUE)) >= 0
+				&& n.compareTo(new MathNumber(Long.MAX_VALUE)) <= 0 && n.roundDown().compareTo(n) == 0;
+	}
+
 	// the interval of an operand of the given floating point operation: an
 	// operand with only integral values is cut to the values of its types and
 	// rounded outward to the type of the operation, to which it is converted
@@ -1274,6 +1292,71 @@ public class JavaNumericInterval extends Interval {
 						&& constraint.getLeft() instanceof Constant c && Boolean.TRUE.equals(c.getValue()))
 					return false;
 		return true;
+	}
+
+	@Override
+	public Set<BinaryExpression> constraints(
+			ValueDomain<?> requesting,
+			ValueEnvironment<IntInterval> state,
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (state.isBottom())
+			return null;
+		if (!(e instanceof BinaryExpression b && b.getOperator() instanceof ComparisonOperator)
+				&& mayBeFloatingPoint(e, pp, oracle)) {
+			// the bounds of a floating point value are not integers, which
+			// the constraints of LiSA require: only a range with both bounds
+			// finite is given (a single bound is read in the opposite
+			// direction by Interval.generate)
+			IntInterval value = eval(state, e, pp, oracle);
+			if (value.isBottom() || value.isTop() || value.isInfinite())
+				return Collections.emptySet();
+			try {
+				return ValueDomain.makeRangeConstraints(JavaDoubleType.INSTANCE, value.getLow().toDouble(),
+						value.getHigh().toDouble(), e, pp);
+			} catch (MathNumberConversionException ex) {
+				return Collections.emptySet();
+			}
+		}
+		Set<Type> types = oracle.getRuntimeTypesOf(e, pp);
+		if (!types.isEmpty()
+				&& types.stream().allMatch(type -> type instanceof JavaNumericType numType && numType.isIntegral())
+				&& !(e instanceof BinaryExpression b && (b.getOperator() instanceof ComparisonOperator
+						|| b.getOperator() == LogicalAnd.INSTANCE || b.getOperator() == LogicalOr.INSTANCE))
+				&& !(e instanceof UnaryExpression u && u.getOperator() == LogicalNegation.INSTANCE)) {
+			// an integral value with one unbounded side: the range is cut to
+			// the values of its type, since a single bound is read in the
+			// opposite direction by Interval.generate (e.g., n >= 2 gives the
+			// range [2, 2147483647] of an int). The bounds are given as long
+			// constants when they do not fit in an int: the intervals of LiSA
+			// truncate them with toInt (e.g., the range of a long is read as
+			// [-1, 0])
+			IntInterval value = eval(state, e, pp, oracle);
+			if (value.isBottom())
+				return null;
+			if (value.isTop())
+				return Collections.emptySet();
+			if (value.isInfinite())
+				value = withinType(e, value, pp, oracle);
+			if (value.isInfinite())
+				return fitsInt(value.lowIsMinusInfinity() ? value.getHigh() : value.getLow())
+						? super.constraints(requesting, state, e, pp, oracle)
+						: Collections.emptySet();
+			try {
+				if (fitsInt(value.getLow()) && fitsInt(value.getHigh()))
+					return ValueDomain.makeRangeConstraints(pp.getProgram().getTypes().getIntegerType(),
+							value.getLow().toInt(), value.getHigh().toInt(), e, pp);
+				if (fitsLong(value.getLow()) && fitsLong(value.getHigh()))
+					return ValueDomain.makeRangeConstraints(JavaLongType.INSTANCE, value.getLow().toLong(),
+							value.getHigh().toLong(), e, pp);
+			} catch (MathNumberConversionException ex) {
+				// not reached: the bounds are finite and in range
+			}
+			return Collections.emptySet();
+		}
+		return super.constraints(requesting, state, e, pp, oracle);
 	}
 
 	@Override
