@@ -669,7 +669,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() | ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (lVal instanceof Number && rVal instanceof Number) {
+				// byte and short are promoted to int, as in Java
 				return new ConstantValue(((Number) lVal).intValue() | ((Number) rVal).intValue());
 			}
 		}
@@ -682,10 +683,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			// the width of the shift is the one of the left operand only (JLS
+			// 15.19): int << long is an int shift, by the 5 lowest bits of the
+			// distance; byte and short are promoted to int
+			if (lVal instanceof Long && rVal instanceof Number) {
 				return new ConstantValue(((Number) lVal).longValue() >> ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
-				return new ConstantValue(((Number) lVal).intValue() >> ((Number) rVal).intValue());
+			} else if (lVal instanceof Number && rVal instanceof Number) {
+				return new ConstantValue(((Number) lVal).intValue() >> (int) ((Number) rVal).longValue());
 			}
 		}
 
@@ -697,10 +701,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			// the width of the shift is the one of the left operand only (JLS
+			// 15.19): int << long is an int shift, by the 5 lowest bits of the
+			// distance; byte and short are promoted to int
+			if (lVal instanceof Long && rVal instanceof Number) {
 				return new ConstantValue(((Number) lVal).longValue() >>> ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
-				return new ConstantValue(((Number) lVal).intValue() >>> ((Number) rVal).intValue());
+			} else if (lVal instanceof Number && rVal instanceof Number) {
+				return new ConstantValue(((Number) lVal).intValue() >>> (int) ((Number) rVal).longValue());
 			}
 		}
 
@@ -712,10 +719,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
 
-			if (lVal instanceof Long || rVal instanceof Long) {
+			// the width of the shift is the one of the left operand only (JLS
+			// 15.19): int << long is an int shift, by the 5 lowest bits of the
+			// distance; byte and short are promoted to int
+			if (lVal instanceof Long && rVal instanceof Number) {
 				return new ConstantValue(((Number) lVal).longValue() << ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
-				return new ConstantValue(((Number) lVal).intValue() << ((Number) rVal).intValue());
+			} else if (lVal instanceof Number && rVal instanceof Number) {
+				return new ConstantValue(((Number) lVal).intValue() << (int) ((Number) rVal).longValue());
 			}
 		}
 
@@ -729,7 +739,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() ^ ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (lVal instanceof Number && rVal instanceof Number) {
+				// byte and short are promoted to int, as in Java
 				return new ConstantValue(((Number) lVal).intValue() ^ ((Number) rVal).intValue());
 			}
 		}
@@ -744,7 +755,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 			if (lVal instanceof Long || rVal instanceof Long) {
 				return new ConstantValue(((Number) lVal).longValue() & ((Number) rVal).longValue());
-			} else if (lVal instanceof Integer || rVal instanceof Integer) {
+			} else if (lVal instanceof Number && rVal instanceof Number) {
+				// byte and short are promoted to int, as in Java
 				return new ConstantValue(((Number) lVal).intValue() & ((Number) rVal).intValue());
 			}
 		}
