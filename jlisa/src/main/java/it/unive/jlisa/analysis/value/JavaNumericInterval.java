@@ -100,10 +100,8 @@ public class JavaNumericInterval extends Interval {
 				|| constant.getValue() instanceof Double || constant.getValue() instanceof Float) {
 			double valueD = ((Number) constant.getValue()).doubleValue();
 			if (Double.isNaN(valueD))
-				// not a number, but a value of double: no interval holds it,
-				// and bottom would make the state unreachable. Returning TOP is
-				// sound, as it represents any possible value of the type,
-				// including NaN.
+				// not a number, but a value of the type: no interval holds it,
+				// and bottom would make the state unreachable
 				return IntInterval.TOP;
 			if (Double.isInfinite(valueD))
 				return IntInterval.TOP;
@@ -1260,7 +1258,22 @@ public class JavaNumericInterval extends Interval {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		return !isIntegral(operand, pp, oracle) && eval(environment, operand, pp, oracle).isTop();
+		if (isIntegral(operand, pp, oracle) || !eval(environment, operand, pp, oracle).isTop())
+			return false;
+		if (!oracle.hasWholeValueAnlysis())
+			return true;
+		// another domain may know that the operand is not NaN, that is, that
+		// operand == operand holds (e.g., JavaFPFlags)
+		Set<BinaryExpression> constraints = oracle.constraints(this,
+				new BinaryExpression(pp.getProgram().getTypes().getBooleanType(), operand, operand,
+						ComparisonEq.INSTANCE, operand.getCodeLocation()),
+				pp);
+		if (constraints != null)
+			for (BinaryExpression constraint : constraints)
+				if (constraint.getOperator() == ComparisonEq.INSTANCE
+						&& constraint.getLeft() instanceof Constant c && Boolean.TRUE.equals(c.getValue()))
+					return false;
+		return true;
 	}
 
 	@Override
