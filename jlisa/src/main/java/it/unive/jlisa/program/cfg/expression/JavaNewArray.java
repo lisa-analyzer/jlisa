@@ -36,6 +36,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import java.util.Set;
@@ -181,10 +182,22 @@ public class JavaNewArray extends UnaryExpression {
 				ValueExpression first = (ValueExpression) rewritten.iterator().next();
 				Set<BinaryExpression> constraints = vdom.constraints(null, env, first, this, oracle);
 
-				if (constraints == null || constraints.size() != 1)
+				if (constraints == null)
 					return null;
 
-				Constant value = (Constant) ((BinaryExpression) constraints.iterator().next()).getLeft();
+				// the length is the value of the == constraints, if they agree
+				// (the others are bounds, e.g., 1 <= c from the intervals)
+				Constant value = null;
+				for (BinaryExpression constraint : constraints) {
+					if (constraint.getOperator() != ComparisonEq.INSTANCE)
+						continue;
+					if (!(constraint.getLeft() instanceof Constant c) || !(c.getValue() instanceof Integer))
+						return null;
+					if (value == null)
+						value = c;
+					else if (!value.getValue().equals(c.getValue()))
+						return null;
+				}
 				return value;
 			}
 		}
