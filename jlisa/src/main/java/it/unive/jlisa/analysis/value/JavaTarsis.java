@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
+import it.unive.jlisa.lattices.ConstantValueIntIntervalAutomaton;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharArrayOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
@@ -9,41 +10,77 @@ import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendLongOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendObjectOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.operator.JavaStringContainsOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringReverseOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringFromToOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
 import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringTrimOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
+import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.string.tarsis.Tarsis;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.string.tarsis.RegexAutomaton;
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.Identifier;
+import it.unive.lisa.symbolic.value.Operator;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
+import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.automaton.State;
 import it.unive.lisa.util.datastructures.automaton.Transition;
 import it.unive.lisa.util.datastructures.regex.Atom;
 import it.unive.lisa.util.datastructures.regex.RegularExpression;
 import it.unive.lisa.util.datastructures.regex.TopAtom;
+import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
 import it.unive.lisa.util.numeric.IntInterval;
+import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
+import it.unive.lisa.util.representation.MapRepresentation;
+import it.unive.lisa.util.representation.StringRepresentation;
+import it.unive.lisa.util.representation.StructuredRepresentation;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -123,6 +160,11 @@ public class JavaTarsis extends Tarsis {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		if (oracle != null && oracle.hasWholeValueAnlysis()) {
+			RegexAutomaton result = withNumbers(expression, pp, oracle);
+			if (result != null)
+				return result;
+		}
 		UnaryOperator operator = expression.getOperator();
 		if (operator == JavaStringToLowerCaseOperator.INSTANCE)
 			// the unknown marker is a letter: case is changed part by part
@@ -145,6 +187,11 @@ public class JavaTarsis extends Tarsis {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		if (oracle != null && oracle.hasWholeValueAnlysis()) {
+			RegexAutomaton result = withNumbers(expression, left, pp, oracle);
+			if (result != null)
+				return result;
+		}
 		BinaryOperator operator = expression.getOperator();
 		if (left.isBottom() || right.isBottom())
 			return bottom();
@@ -174,6 +221,11 @@ public class JavaTarsis extends Tarsis {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+		if (oracle != null && oracle.hasWholeValueAnlysis()) {
+			RegexAutomaton result = withNumbers(expression, left, middle, right, pp, oracle);
+			if (result != null)
+				return result;
+		}
 		TernaryOperator operator = expression.getOperator();
 		if (operator == JavaStringReplaceOperator.INSTANCE)
 			return replace(left, middle, right);
@@ -1049,5 +1101,608 @@ public class JavaTarsis extends Tarsis {
 			return instanceOf(UNKNOWN_STRING + searched + UNKNOWN_STRING, s) ? Satisfiability.UNKNOWN
 					: Satisfiability.NOT_SATISFIED;
 		return Satisfiability.UNKNOWN;
+	}
+
+	// ADAPTER TO JavaWholeValueAnalysis. As a participant of a whole-value
+	// analysis, this domain does what ConstantPropagationWithTarsis does
+	// between its two components, with the other participants in place of
+	// ConstantPropagationWithIntervals: the integers and the booleans that
+	// string operations take are read from the constraints of the other
+	// participants, and the integers and booleans that string operations give
+	// are given to them as constraints. The methods below follow the ones of
+	// ConstantPropagationWithTarsis, with the same names.
+
+	@Override
+	public ValueEnvironment<RegexAutomaton> makeLattice() {
+		return new Strings(top());
+	}
+
+	/**
+	 * The environment of the automata of the string identifiers. As in
+	 * {@link ConstantValueIntIntervalAutomaton}, an automaton is kept only if
+	 * it recognizes a finite language that {@link #language(RegexAutomaton)}
+	 * can enumerate (and it is not too large), otherwise it is replaced by the
+	 * top automaton, and it is represented as the strings of its language (see
+	 * {@link JavaTarsis#representation(RegexAutomaton)}).
+	 */
+	private static class Strings extends ValueEnvironment<RegexAutomaton> {
+
+		private Strings(
+				RegexAutomaton domain) {
+			super(domain);
+		}
+
+		private Strings(
+				RegexAutomaton domain,
+				PatriciaTrieMap<Identifier, RegexAutomaton> function) {
+			super(domain, function);
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> top() {
+			return isTop() ? this : new Strings(lattice.top(), null);
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> bottom() {
+			return isBottom() ? this : new Strings(lattice.bottom(), null);
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> mk(
+				RegexAutomaton lattice,
+				PatriciaTrieMap<Identifier, RegexAutomaton> function) {
+			if (function != null)
+				for (Map.Entry<Identifier, RegexAutomaton> entry : function.entrySet())
+					if (!kept(entry.getValue()))
+						function = function.put(entry.getKey(), RegexAutomaton.TOP);
+			return new Strings(lattice, function);
+		}
+
+		// as the constructor of ConstantValueIntIntervalAutomaton
+		private static boolean kept(
+				RegexAutomaton automaton) {
+			return automaton.isBottom() || automaton != RegexAutomaton.TOP
+					&& automaton.getStates().size() <= ConstantValueIntIntervalAutomaton.MAX_STATES
+					&& language(automaton) != null;
+		}
+
+		@Override
+		public StructuredRepresentation representation() {
+			if (isTop() || isBottom() || function == null)
+				return super.representation();
+			Map<StructuredRepresentation, StructuredRepresentation> map = new TreeMap<>();
+			for (Map.Entry<Identifier, RegexAutomaton> entry : function)
+				map.put(new StringRepresentation(entry.getKey()), JavaTarsis.representation(entry.getValue()));
+			return new MapRepresentation(map);
+		}
+	}
+
+	/**
+	 * Yields the representation of the given automaton, listing its strings
+	 * when the language is finite (converting the automaton to a regular
+	 * expression may take exponential time).
+	 *
+	 * @param automaton the automaton
+	 *
+	 * @return the representation
+	 */
+	public static StructuredRepresentation representation(
+			RegexAutomaton automaton) {
+		SortedSet<String> lang = language(automaton);
+		if (lang == null)
+			return automaton.representation();
+		List<String> strings = new ArrayList<>();
+		for (String s : lang)
+			strings.add(s.isEmpty() ? "ε" : s);
+		if (strings.size() == 1)
+			return new StringRepresentation(strings.get(0));
+		return new StringRepresentation("(" + String.join(" + ", strings) + ")");
+	}
+
+	@Override
+	public boolean canProcess(
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle) {
+		try {
+			if (isString(e, pp, oracle))
+				return true;
+			// the integers compared with the lengths of strings (see
+			// refineLengths)
+			if (e instanceof Constant c && (c.getValue() instanceof Number || c.getValue() instanceof Character))
+				return true;
+			// the integers and booleans given by string operations (see
+			// constraints)
+			if (e instanceof UnaryExpression u && u.getOperator() == JavaStringLengthOperator.INSTANCE)
+				return isString(u.getExpression(), pp, oracle);
+			if (e instanceof BinaryExpression b) {
+				BinaryOperator operator = b.getOperator();
+				if (operator == JavaStringCharAtOperator.INSTANCE
+						|| operator == JavaStringIndexOfCharOperator.INSTANCE)
+					return isString(b.getLeft(), pp, oracle);
+				if (operator == JavaStringIndexOfOperator.INSTANCE || isPredicate(operator))
+					return isString(b.getLeft(), pp, oracle) && isString(b.getRight(), pp, oracle);
+			}
+			return false;
+		} catch (SemanticException ex) {
+			return false;
+		}
+	}
+
+	/**
+	 * Yields whether the given expression is a string, that is, the automaton
+	 * of its value is meaningful.
+	 */
+	private static boolean isString(
+			SymbolicExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		Type type = expression.getStaticType();
+		if (type.isStringType())
+			return true;
+		if (!type.isUntyped())
+			return false;
+		Set<Type> types = oracle.getRuntimeTypesOf(expression, pp);
+		return !types.isEmpty() && types.stream().allMatch(Type::isStringType);
+	}
+
+	@Override
+	public ValueEnvironment<RegexAutomaton> assign(
+			ValueEnvironment<RegexAutomaton> environment,
+			Identifier id,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle != null && oracle.hasWholeValueAnlysis() && !isString(id, pp, oracle))
+			// not a string (e.g., n = s.length()): tracked by the other
+			// participants
+			return environment.knowsIdentifier(id) ? environment.forgetIdentifier(id, pp) : environment;
+		return super.assign(environment, id, expression, pp, oracle);
+	}
+
+	// as evalUnaryExpression of ConstantPropagationWithTarsis: the operations
+	// building strings from numbers and booleans, or null
+	private RegexAutomaton withNumbers(
+			UnaryExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!isString(expression, pp, oracle))
+			return null;
+		Operator operator = expression.getOperator();
+		ValueExpression arg = (ValueExpression) expression.getExpression();
+		if (operator == JavaStringValueOfIntOperator.INSTANCE || operator == JavaStringValueOfLongOperator.INSTANCE)
+			return integers(interval(arg, pp, oracle));
+		if (operator == JavaStringValueOfCharOperator.INSTANCE)
+			return chars(interval(arg, pp, oracle));
+		if (operator == JavaStringValueOfBooleanOperator.INSTANCE)
+			return booleans(arg, pp, oracle);
+		return null;
+	}
+
+	// as evalBinaryExpression of ConstantPropagationWithTarsis: the operations
+	// on a string and a number or a boolean, or null
+	private RegexAutomaton withNumbers(
+			BinaryExpression expression,
+			RegexAutomaton left,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!isString(expression, pp, oracle) || !isString(expression.getLeft(), pp, oracle))
+			return null;
+		BinaryOperator operator = expression.getOperator();
+		ValueExpression right = (ValueExpression) expression.getRight();
+		if (operator == JavaStringSubstringOperator.INSTANCE)
+			return substring(left, interval(right, pp, oracle), null);
+		if (operator == JavaStringAppendCharOperator.INSTANCE)
+			return left.concat(chars(interval(right, pp, oracle)));
+		if (operator == JavaStringAppendIntOperator.INSTANCE || operator == JavaStringAppendLongOperator.INSTANCE)
+			return left.concat(integers(interval(right, pp, oracle)));
+		if (operator == JavaStringAppendBooleanOperator.INSTANCE)
+			return left.concat(booleans(right, pp, oracle));
+		return null;
+	}
+
+	// as evalTernaryExpression of ConstantPropagationWithTarsis: the
+	// operations on a string and numbers or characters, or null
+	private RegexAutomaton withNumbers(
+			TernaryExpression expression,
+			RegexAutomaton left,
+			RegexAutomaton middle,
+			RegexAutomaton right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!isString(expression, pp, oracle) || !isString(expression.getLeft(), pp, oracle))
+			return null;
+		Operator operator = expression.getOperator();
+		if (operator == JavaStringSubstringFromToOperator.INSTANCE)
+			return substring(left, interval((ValueExpression) expression.getMiddle(), pp, oracle),
+					interval((ValueExpression) expression.getRight(), pp, oracle));
+		if (operator == JavaStringReplaceOperator.INSTANCE)
+			return replace(left, stringOrChar(expression.getMiddle(), middle, pp, oracle),
+					stringOrChar(expression.getRight(), right, pp, oracle));
+		return null;
+	}
+
+	private RegexAutomaton stringOrChar(
+			SymbolicExpression expression,
+			RegexAutomaton value,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (isString(expression, pp, oracle))
+			return value;
+		return chars(interval((ValueExpression) expression, pp, oracle));
+	}
+
+	private RegexAutomaton booleans(
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		SortedSet<String> result = new TreeSet<>();
+		Boolean b = bool(expression, pp, oracle);
+		if (b != null)
+			result.add(String.valueOf(b));
+		else {
+			result.add("true");
+			result.add("false");
+		}
+		return fromLanguage(result);
+	}
+
+	@Override
+	public RegexAutomaton evalTypeCast(
+			BinaryExpression cast,
+			RegexAutomaton left,
+			RegexAutomaton right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle != null && oracle.hasWholeValueAnlysis())
+			// as evalTypeCast of ConstantPropagationWithTarsis
+			return isString(cast.getLeft(), pp, oracle) ? left : top();
+		return super.evalTypeCast(cast, left, right, pp, oracle);
+	}
+
+	@Override
+	public RegexAutomaton evalTypeConv(
+			BinaryExpression conv,
+			RegexAutomaton left,
+			RegexAutomaton right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle != null && oracle.hasWholeValueAnlysis())
+			// as evalTypeConv of ConstantPropagationWithTarsis
+			return isString(conv.getLeft(), pp, oracle) ? left : top();
+		return super.evalTypeConv(conv, left, right, pp, oracle);
+	}
+
+	// the value of a boolean, as known by the other participants, or null
+	private Boolean bool(
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (e instanceof Constant c && c.getValue() instanceof Boolean b)
+			return b;
+		Set<BinaryExpression> constraints = oracle.constraints(this, e, pp);
+		if (constraints != null)
+			for (BinaryExpression c : constraints)
+				if (c.getOperator() == ComparisonEq.INSTANCE && c.getLeft() instanceof Constant k
+						&& k.getValue() instanceof Boolean b)
+					return b;
+		return null;
+	}
+
+	// the interval of an integer (or of the code of a character), as known by
+	// the other participants: the value of a constant, or a range with both
+	// bounds (in ConstantPropagationWithTarsis, the interval of the first
+	// component)
+	private IntInterval interval(
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (e instanceof Constant c) {
+			Object v = c.getValue();
+			if (v instanceof Character ch)
+				return new IntInterval((int) ch, (int) ch);
+			if (v instanceof Integer || v instanceof Short || v instanceof Byte)
+				return new IntInterval(((Number) v).intValue(), ((Number) v).intValue());
+			if (v instanceof Long l && l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE)
+				return new IntInterval(l.intValue(), l.intValue());
+			return IntInterval.INFINITY;
+		}
+		Set<BinaryExpression> constraints = oracle.constraints(this, e, pp);
+		if (constraints == null)
+			return IntInterval.INFINITY;
+		Long ge = null, le = null;
+		for (BinaryExpression c : constraints)
+			if (c.getLeft() instanceof Constant k) {
+				Object v = k.getValue();
+				if (v instanceof Character ch)
+					v = (int) ch;
+				if (!(v instanceof Integer || v instanceof Long || v instanceof Short || v instanceof Byte))
+					continue;
+				long n = ((Number) v).longValue();
+				if (c.getOperator() == ComparisonEq.INSTANCE)
+					return new IntInterval(new MathNumber(n), new MathNumber(n));
+				// low <= e and high >= e (see ValueDomain.makeRangeConstraints)
+				if (c.getOperator() == ComparisonLe.INSTANCE)
+					ge = n;
+				else if (c.getOperator() == ComparisonGe.INSTANCE)
+					le = n;
+			}
+		if (ge == null || le == null)
+			return IntInterval.INFINITY;
+		return new IntInterval(new MathNumber(Math.min(ge, le)), new MathNumber(Math.max(ge, le)));
+	}
+
+	// as refineInteger and evalBinaryExpression of
+	// ConstantPropagationWithTarsis:
+	// the integers and the booleans given by string operations, and the
+	// string of an automaton with a single one (as in reduce)
+	@Override
+	public Set<BinaryExpression> constraints(
+			ValueDomain<?> requesting,
+			ValueEnvironment<RegexAutomaton> state,
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (state.isBottom())
+			return null;
+		if (isString(e, pp, oracle)) {
+			String single = singleString(eval(state, e, pp, oracle));
+			if (single != null)
+				return ValueDomain.makeEqConstraint(pp.getProgram().getTypes().getStringType(), single, e, pp);
+			return Collections.emptySet();
+		}
+		IntInterval result = null;
+		if (e instanceof UnaryExpression u && u.getOperator() == JavaStringLengthOperator.INSTANCE
+				&& isString(u.getExpression(), pp, oracle))
+			result = length(eval(state, (ValueExpression) u.getExpression(), pp, oracle));
+		else if (e instanceof BinaryExpression b) {
+			BinaryOperator operator = b.getOperator();
+			ValueExpression left = (ValueExpression) b.getLeft();
+			ValueExpression right = (ValueExpression) b.getRight();
+			boolean stringLeft = isString(left, pp, oracle);
+			boolean stringRight = isString(right, pp, oracle);
+			if (isPredicate(operator) && stringLeft && stringRight) {
+				Satisfiability sat = satisfiesPredicate(operator, eval(state, left, pp, oracle),
+						eval(state, right, pp, oracle));
+				if (sat == Satisfiability.SATISFIED || sat == Satisfiability.NOT_SATISFIED)
+					return ValueDomain.makeEqConstraint(pp.getProgram().getTypes().getBooleanType(),
+							sat == Satisfiability.SATISFIED, e, pp);
+				return Collections.emptySet();
+			}
+			if (operator == JavaStringCharAtOperator.INSTANCE && stringLeft)
+				// characters are kept as intervals of codes
+				result = charAt(eval(state, left, pp, oracle), interval(right, pp, oracle));
+			else if (operator == JavaStringIndexOfOperator.INSTANCE && stringLeft && stringRight)
+				result = indexOf(eval(state, left, pp, oracle), eval(state, right, pp, oracle));
+			else if (operator == JavaStringIndexOfCharOperator.INSTANCE && stringLeft)
+				result = indexOf(eval(state, left, pp, oracle), chars(interval(right, pp, oracle)));
+		}
+		if (result == null || result.isBottom() || result.isTop())
+			return Collections.emptySet();
+		// low <= e and high >= e, as the intervals read them, with int
+		// constants
+		Set<BinaryExpression> constraints = new HashSet<>();
+		Type type = pp.getProgram().getTypes().getIntegerType();
+		Long low = result.lowIsMinusInfinity() ? null : bound(result.getLow());
+		Long high = result.highIsPlusInfinity() ? null : bound(result.getHigh());
+		if (low != null && low >= Integer.MIN_VALUE && low <= Integer.MAX_VALUE)
+			constraints.addAll(ValueDomain.makeConstraint(type, (int) (long) low, ComparisonLe.INSTANCE, e, pp));
+		if (high != null && high >= Integer.MIN_VALUE && high <= Integer.MAX_VALUE)
+			constraints.addAll(ValueDomain.makeConstraint(type, (int) (long) high, ComparisonGe.INSTANCE, e, pp));
+		return constraints;
+	}
+
+	// as assume of ConstantPropagationWithTarsis, for the automata only: the
+	// first component (the other participants) assumes the expression by
+	// itself, asking the bounds of the string operations through constraints
+	@Override
+	public ValueEnvironment<RegexAutomaton> assume(
+			ValueEnvironment<RegexAutomaton> environment,
+			ValueExpression expression,
+			ProgramPoint src,
+			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle == null || !oracle.hasWholeValueAnlysis())
+			return super.assume(environment, expression, src, dest, oracle);
+		if (environment.isBottom())
+			return environment;
+		ValueExpression e = expression.removeNegations();
+		Map<Identifier, RegexAutomaton> refined = new HashMap<>();
+		if (!refineStrings(environment, e, refined, src, oracle)
+				|| !refineLengths(environment, e, refined, src, oracle))
+			return environment.bottom();
+		ValueEnvironment<RegexAutomaton> result = environment;
+		for (Map.Entry<Identifier, RegexAutomaton> entry : refined.entrySet())
+			result = result.putState(entry.getKey(), entry.getValue());
+		return result;
+	}
+
+	/**
+	 * Refines the automata of the string identifiers of the predicates on
+	 * strings inside {@code expression} (and of its conjunctions and
+	 * disjunctions), assuming that {@code expression} holds.
+	 *
+	 * @return {@code false} if the expression cannot hold
+	 */
+	private boolean refineStrings(
+			ValueEnvironment<RegexAutomaton> environment,
+			ValueExpression expression,
+			Map<Identifier, RegexAutomaton> refined,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (expression instanceof BinaryExpression binary && binary.getOperator() == LogicalAnd.INSTANCE)
+			return refineStrings(environment, (ValueExpression) binary.getLeft(), refined, pp, oracle)
+					&& refineStrings(environment, (ValueExpression) binary.getRight(), refined, pp, oracle);
+
+		if (expression instanceof BinaryExpression binary && binary.getOperator() == LogicalOr.INSTANCE) {
+			Map<Identifier, RegexAutomaton> left = new HashMap<>(refined);
+			Map<Identifier, RegexAutomaton> right = new HashMap<>(refined);
+			boolean l = refineStrings(environment, (ValueExpression) binary.getLeft(), left, pp, oracle);
+			boolean r = refineStrings(environment, (ValueExpression) binary.getRight(), right, pp, oracle);
+			if (!l && !r)
+				return false;
+			refined.clear();
+			if (!l)
+				refined.putAll(right);
+			else if (!r)
+				refined.putAll(left);
+			else
+				// an identifier refined by one side only keeps its value
+				for (Identifier id : left.keySet())
+					if (right.containsKey(id))
+						refined.put(id, left.get(id).lub(right.get(id)));
+			return true;
+		}
+
+		boolean positive = true;
+		ValueExpression leaf = expression;
+		if (expression instanceof UnaryExpression unary && unary.getOperator() == LogicalNegation.INSTANCE) {
+			positive = false;
+			leaf = (ValueExpression) unary.getExpression();
+		}
+		if (!(leaf instanceof BinaryExpression binary) || !isPredicate(binary.getOperator()))
+			return true;
+		ValueExpression left = (ValueExpression) binary.getLeft();
+		ValueExpression right = (ValueExpression) binary.getRight();
+		if (!isString(left, pp, oracle) || !isString(right, pp, oracle))
+			return true;
+		RegexAutomaton leftAutomaton = automatonOf(environment, refined, left, pp, oracle);
+		RegexAutomaton rightAutomaton = automatonOf(environment, refined, right, pp, oracle);
+		for (boolean refineLeft : new boolean[] { true, false }) {
+			ValueExpression target = refineLeft ? left : right;
+			if (!(target instanceof Identifier id) || !id.canBeAssigned() || id.isWeak())
+				continue;
+			RegexAutomaton result = refine(binary.getOperator(), leftAutomaton, rightAutomaton, refineLeft, positive);
+			if (result == null)
+				continue;
+			if (result.isBottom())
+				return false;
+			refined.put(id, result);
+		}
+		return true;
+	}
+
+	/**
+	 * Refines the automata of the string identifiers whose length is compared
+	 * inside {@code expression} (and of its conjunctions), assuming that
+	 * {@code expression} holds.
+	 *
+	 * @return {@code false} if the expression cannot hold
+	 */
+	private boolean refineLengths(
+			ValueEnvironment<RegexAutomaton> environment,
+			ValueExpression expression,
+			Map<Identifier, RegexAutomaton> refined,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!(expression instanceof BinaryExpression binary))
+			return true;
+		BinaryOperator operator = binary.getOperator();
+		ValueExpression left = (ValueExpression) binary.getLeft();
+		ValueExpression right = (ValueExpression) binary.getRight();
+		if (operator == LogicalAnd.INSTANCE)
+			return refineLengths(environment, left, refined, pp, oracle)
+					&& refineLengths(environment, right, refined, pp, oracle);
+
+		boolean lengthLeft = isLengthOf(left);
+		if (!lengthLeft && !isLengthOf(right))
+			return true;
+		Identifier id = (Identifier) ((UnaryExpression) (lengthLeft ? left : right)).getExpression();
+		IntInterval other = interval(lengthLeft ? right : left, pp, oracle);
+		if (other.isBottom())
+			return true;
+		// the comparison is turned into length op other
+		if (!lengthLeft)
+			operator = operator == ComparisonLt.INSTANCE ? ComparisonGt.INSTANCE
+					: operator == ComparisonLe.INSTANCE ? ComparisonGe.INSTANCE
+							: operator == ComparisonGt.INSTANCE ? ComparisonLt.INSTANCE
+									: operator == ComparisonGe.INSTANCE ? ComparisonLe.INSTANCE : operator;
+		Long low = other.lowIsMinusInfinity() ? null : bound(other.getLow());
+		Long high = other.highIsPlusInfinity() ? null : bound(other.getHigh());
+		IntInterval length;
+		if (operator == ComparisonLt.INSTANCE)
+			length = interval(null, high == null ? null : high - 1);
+		else if (operator == ComparisonLe.INSTANCE)
+			length = interval(null, high);
+		else if (operator == ComparisonGt.INSTANCE)
+			length = interval(low == null ? null : low + 1, null);
+		else if (operator == ComparisonGe.INSTANCE)
+			length = interval(low, null);
+		else if (operator == ComparisonEq.INSTANCE)
+			length = interval(low, high);
+		else
+			return true;
+		if (length == null)
+			return true;
+		if (length.isBottom())
+			return false;
+		RegexAutomaton result = refineLength(automatonOf(environment, refined, id, pp, oracle), length);
+		if (result == null)
+			return true;
+		if (result.isBottom())
+			return false;
+		refined.put(id, result);
+		return true;
+	}
+
+	private static boolean isLengthOf(
+			ValueExpression expression) {
+		return expression instanceof UnaryExpression unary
+				&& unary.getOperator() == JavaStringLengthOperator.INSTANCE
+				&& unary.getExpression() instanceof Identifier id && id.canBeAssigned() && !id.isWeak();
+	}
+
+	private static Long bound(
+			MathNumber n) {
+		try {
+			return n.toLong();
+		} catch (MathNumberConversionException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Yields the interval of the lengths between the given bounds (where
+	 * {@code null} is unbounded), or {@code null} if it is not bounded.
+	 */
+	private static IntInterval interval(
+			Long low,
+			Long high) {
+		long l = low == null ? 0 : Math.max(0, low);
+		if (high != null && high < l)
+			return IntInterval.BOTTOM;
+		if (high == null && l == 0)
+			return null;
+		if (l > Integer.MAX_VALUE || (high != null && high > Integer.MAX_VALUE))
+			return null;
+		return new IntInterval(Integer.valueOf((int) l), high == null ? null : Integer.valueOf((int) (long) high));
+	}
+
+	private RegexAutomaton automatonOf(
+			ValueEnvironment<RegexAutomaton> environment,
+			Map<Identifier, RegexAutomaton> refined,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (expression instanceof Identifier id && refined.containsKey(id))
+			return refined.get(id);
+		return eval(environment, expression, pp, oracle);
 	}
 }
