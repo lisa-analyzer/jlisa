@@ -2,8 +2,13 @@ package it.unive.jlisa;
 
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
+import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
+import it.unive.jlisa.analysis.value.JavaFPFlags;
+import it.unive.jlisa.analysis.value.JavaNumericInterval;
+import it.unive.jlisa.analysis.value.JavaTarsis;
+import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
@@ -83,7 +88,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals)")
+				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis)")
 				.required(false)
 				.build();
 
@@ -348,6 +353,12 @@ public class Main {
 			break;
 		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
+			break;
+		case "JavaWholeValueTarsis":
+			// the participants of ConstantPropagationWithTarsis (plus the kinds
+			// of floating point values), combined by the whole-value analysis
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
+					new JavaTarsis());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
