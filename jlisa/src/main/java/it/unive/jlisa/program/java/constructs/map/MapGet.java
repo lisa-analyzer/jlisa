@@ -18,18 +18,20 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushAny;
 
 public class MapGet extends BinaryExpression implements PluggableStatement {
@@ -149,13 +151,28 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 		GlobalVariable keyStringVar = new GlobalVariable(Untyped.INSTANCE, keyString, location);
 
 		AccessChild accessMapKey = new AccessChild(Untyped.INSTANCE, derefMap, keyStringVar, location);
-		return analysis.smallStepSemantics(state, accessMapKey, context, this);
 
-		// AnalysisState<A> tmp = state.bottomExecution();
-		// for (Type t : analysis.getRuntimeTypesOf(state, right, context, this)) {
-		// 	AccessChild accessMapKey = new AccessChild(t, derefMap, keyStringVar, location);
-		// 	tmp = tmp.lub(analysis.assign(state, accessMapKey, right, context, this));
-		// }
+		ExpressionSet ids = analysis.rewrite(state, accessMapKey, context, this);
+		boolean anyKnown = false;
+		boolean anyUnknown = ids.isEmpty();
+
+		for (SymbolicExpression e : ids) {
+		    if (e instanceof Identifier id && state.knowsIdentifier(id))
+			    anyKnown = true;
+		    else
+			    anyUnknown = true;
+		}
+
+		AnalysisState<A> foundState = state.bottomExecution();
+		AnalysisState<A> nullState = state.bottomExecution();
+		if (anyKnown) {
+			foundState = analysis.smallStepSemantics(state, accessMapKey, context, this);
+		}
+		if (anyUnknown) {
+			nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), context,
+					originating);
+		}
+		return foundState.lub(nullState);
 	}
 
 }
