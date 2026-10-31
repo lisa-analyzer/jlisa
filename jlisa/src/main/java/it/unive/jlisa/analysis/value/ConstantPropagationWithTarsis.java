@@ -483,11 +483,12 @@ public class ConstantPropagationWithTarsis
 			return environment.bottom();
 
 		ValueEnvironment<ConstantValueIntIntervalAutomaton> result = environment;
-		Set<Identifier> ids = new HashSet<>(assumed.getKeys());
+		Set<Identifier> assumedIds = new HashSet<>(assumed.getKeys());
+		Set<Identifier> ids = new HashSet<>(assumedIds);
 		ids.addAll(refined.keySet());
 		for (Identifier id : ids) {
 			ConstantValueIntIntervalAutomaton old = environment.getState(id);
-			ConstantValueIntInterval value = assumed.getKeys().contains(id) ? assumed.getState(id)
+			ConstantValueIntInterval value = assumedIds.contains(id) ? assumed.getState(id)
 					: old.getValue();
 			if (!refined.containsKey(id) && value.equals(old.getValue()))
 				continue;

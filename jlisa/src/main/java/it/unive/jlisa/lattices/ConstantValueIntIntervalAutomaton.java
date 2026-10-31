@@ -8,7 +8,9 @@ import it.unive.lisa.lattices.string.tarsis.RegexAutomaton;
 import it.unive.lisa.util.representation.MapRepresentation;
 import it.unive.lisa.util.representation.StringRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
@@ -95,8 +97,25 @@ public class ConstantValueIntIntervalAutomaton
 			return value.representation();
 		Map<StructuredRepresentation, StructuredRepresentation> mapping = new HashMap<>();
 		mapping.put(new StringRepresentation("value"), value.representation());
-		mapping.put(new StringRepresentation("automaton"), automaton.representation());
+		mapping.put(new StringRepresentation("automaton"), automatonRepresentation());
 		return new MapRepresentation(mapping);
+	}
+
+	/**
+	 * Yields the representation of the automaton, listing its strings when the
+	 * language is finite (converting the automaton to a regular expression may
+	 * take exponential time).
+	 */
+	private StructuredRepresentation automatonRepresentation() {
+		SortedSet<String> lang = JavaTarsis.language(automaton);
+		if (lang == null)
+			return automaton.representation();
+		List<String> strings = new ArrayList<>();
+		for (String s : lang)
+			strings.add(s.isEmpty() ? "ε" : s);
+		if (strings.size() == 1)
+			return new StringRepresentation(strings.get(0));
+		return new StringRepresentation("(" + String.join(" + ", strings) + ")");
 	}
 
 	@Override
