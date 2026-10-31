@@ -1,12 +1,6 @@
 package it.unive.jlisa.program.java.constructs.map;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import it.unive.jlisa.program.ConstraintUtils;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -33,6 +27,11 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class MapGet extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -135,7 +134,8 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			accessKeyArg = new AccessChild(keyType, derefKeyArg, var, location);
 		}
 
-		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = ConstraintUtils.extractConstraints(interprocedural, state, accessKeyArg, this);
+		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = ConstraintUtils
+				.extractConstraints(interprocedural, state, accessKeyArg, this);
 		if (constraints == null)
 			return state.bottomExecution();
 
@@ -157,10 +157,10 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 		boolean anyUnknown = ids.isEmpty();
 
 		for (SymbolicExpression e : ids) {
-		    if (e instanceof Identifier id && state.knowsIdentifier(id))
-			    anyKnown = true;
-		    else
-			    anyUnknown = true;
+			if (e instanceof Identifier id && state.knowsIdentifier(id))
+				anyKnown = true;
+			else
+				anyUnknown = true;
 		}
 
 		AnalysisState<A> foundState = state.bottomExecution();
@@ -176,5 +176,3 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 	}
 
 }
-
-

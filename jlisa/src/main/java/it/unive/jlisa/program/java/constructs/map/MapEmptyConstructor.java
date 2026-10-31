@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.java.constructs.map;
 
-import it.unive.lisa.type.Type;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -18,9 +15,6 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.HeapReference;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
-import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 
 public class MapEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -63,5 +57,3 @@ public class MapEmptyConstructor extends UnaryExpression implements PluggableSta
 		return 0;
 	}
 }
-
-

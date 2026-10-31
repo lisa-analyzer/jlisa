@@ -1,9 +1,5 @@
 
-
 package it.unive.jlisa.program;
-
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.value.ValueDomain;
@@ -16,16 +12,19 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class ConstraintUtils {
 
 	@SuppressWarnings({ "rawtypes" })
-	static public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			SymbolicExpression expr,
-			ProgramPoint pp)
-			throws SemanticException {
+	static public <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					ProgramPoint pp)
+					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();

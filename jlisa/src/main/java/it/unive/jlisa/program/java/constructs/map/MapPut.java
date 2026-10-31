@@ -1,13 +1,7 @@
 package it.unive.jlisa.program.java.constructs.map;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -34,6 +28,11 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class MapPut extends TernaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -139,7 +138,8 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 			accessKeyArg = new AccessChild(keyType, derefKeyArg, var, location);
 		}
 
-		Stream<BinaryExpression> constraints = ConstraintUtils.extractConstraints(interprocedural, state, accessKeyArg, this);
+		Stream<BinaryExpression> constraints = ConstraintUtils.extractConstraints(interprocedural, state, accessKeyArg,
+				this);
 		if (constraints == null)
 			return state.bottomExecution();
 
@@ -190,4 +190,3 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 		return wrap.forwardSemantics(state, interprocedural, expressions);
 	}
 }
-
