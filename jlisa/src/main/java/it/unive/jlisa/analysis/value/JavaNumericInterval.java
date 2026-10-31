@@ -564,15 +564,25 @@ public class JavaNumericInterval extends Interval {
 			// exact, no truncation/wrap-around can occur
 			return left;
 
-		if (left.isSingleton()
+		if (!left.isInfinite()
 				&& left.getLow().compareTo(new MathNumber(Long.MIN_VALUE)) >= 0
-				&& left.getLow().compareTo(new MathNumber(Long.MAX_VALUE)) <= 0) {
-			// the value is exactly known: we can precisely replicate Java's
-			// narrowing conversion (JLS 5.1.3) instead of conservatively
-			// falling back to the whole range of the target type
+				&& left.getHigh().compareTo(new MathNumber(Long.MAX_VALUE)) <= 0) {
+			// the values are known up to a range: the narrowing conversion of
+			// Java (JLS 5.1.3) is replicated on the bounds. If the range has
+			// fewer values than the target type and its converted bounds stay
+			// in order, every value in between wraps around by the same amount
+			// (e.g., (char) [65536, 65538] is [0, 2]); otherwise the range
+			// crosses a wrap-around point (e.g., (char) [65534, 65537] is
+			// 65534, 65535, 0, 1) and an interval cannot hold it
 			try {
-				long truncated = truncate(left.getLow().toLong(), numType.getNBits(), numType.isUnsigned());
-				return new IntInterval(new MathNumber(truncated), new MathNumber(truncated));
+				long low = left.getLow().toLong(), high = left.getHigh().toLong();
+				int bits = numType.getNBits();
+				if (bits < 64 && high - low >= 0 && high - low < (1L << bits)) {
+					long first = truncate(low, bits, numType.isUnsigned());
+					long last = truncate(high, bits, numType.isUnsigned());
+					if (first <= last)
+						return new IntInterval(new MathNumber(first), new MathNumber(last));
+				}
 			} catch (MathNumberConversionException e) {
 				// should not happen given the bound checks above, but fall
 				// back to a sound over-approximation just in case
