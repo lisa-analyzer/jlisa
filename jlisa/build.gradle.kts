@@ -42,6 +42,12 @@ application {
     mainClass.set("it.unive.jlisa.Main")
 }
 
+// the Gradle tasks run the compiled classes, without the manifest of the jar: they give the version of jlisa
+// as a system property (see it.unive.jlisa.Version)
+tasks.withType<JavaExec>().configureEach {
+    systemProperty("jlisa.version", project.version.toString())
+}
+
 repositories {
     mavenCentral()
     maven {
@@ -62,13 +68,65 @@ dependencies {
     testImplementation("junit:junit:4.13.1")
 
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
-    implementation("commons-cli:commons-cli:1.4")
+    implementation("commons-cli:commons-cli:1.5.0")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("io.github.lisa-analyzer:lisa-sdk:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-analyses:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.lisa-analyzer:lisa-program:1.1-svcomp-2027-SNAPSHOT")
     implementation("io.github.classgraph:classgraph:4.8.175")
+    // YAML parsing for v2 witnesses in the witness validator
+    implementation("org.yaml:snakeyaml:2.2")
+}
+
+// WITNESS VALIDATOR
+// The validator runs the programs under JDI: jdk.jdi is not in the default module graph of
+// classpath applications, both when compiling and when running.
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(listOf("--add-modules", "jdk.jdi"))
+}
+
+// bin/jlisa-wit next to bin/jlisa in the distribution, on the same lib folder
+val jlisaWitStartScripts by tasks.registering(CreateStartScripts::class) {
+    applicationName = "jlisa-wit"
+    mainClass.set("it.unive.jlisa.witness.validator.Main")
+    defaultJvmOpts = listOf("--add-modules", "jdk.jdi")
+    outputDir = layout.buildDirectory.dir("jlisa-wit-scripts").get().asFile
+    classpath = tasks.startScripts.get().classpath
+}
+
+distributions {
+    main {
+        contents {
+            into("bin") {
+                from(jlisaWitStartScripts)
+                filePermissions { unix("rwxr-xr-x") }
+            }
+        }
+    }
+}
+
+// ./gradlew runWitnessValidator --args="..." runs jlisa-wit from the sources, as ./gradlew run does for jlisa
+tasks.register<JavaExec>("runWitnessValidator") {
+    group = "application"
+    description = "Runs the witness validator (jlisa-wit)"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("it.unive.jlisa.witness.validator.Main")
+    jvmArgs("--add-modules", "jdk.jdi")
+}
+
+// ./gradlew runBugFinder --args="..." runs the bug-finding mode of jlisa-wit (no witness). --find-bug goes
+// first, since --source takes all the arguments after it
+tasks.register<JavaExec>("runBugFinder") {
+    group = "application"
+    description = "Runs the bug-finding mode of the witness validator (jlisa-wit --find-bug)"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("it.unive.jlisa.witness.validator.Main")
+    jvmArgs("--add-modules", "jdk.jdi")
+    val exec = this
+    doFirst {
+        exec.args = listOf("--find-bug") + exec.args.orEmpty()
+    }
 }
 
 // ANTLR

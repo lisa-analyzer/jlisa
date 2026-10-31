@@ -39,6 +39,7 @@ import it.unive.lisa.symbolic.value.*;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
+import it.unive.lisa.symbolic.value.operator.RemainderOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftLeft;
@@ -635,7 +636,44 @@ public class JavaNumericInterval extends Interval {
 		if (operator instanceof BitwiseUnsignedShiftRight)
 			return evalShiftRight(left, right, true);
 
+		if (operator instanceof RemainderOperator)
+			return remainder(left, right, oracle != null && !mayBeFloatingPoint(expression, pp, oracle));
+
 		return super.evalBinaryExpression(expression, left, right, pp, oracle);
+	}
+
+	/**
+	 * Returns the interval of {@code n % m}, as computed by Java: the result
+	 * has the sign of {@code n}, and its absolute value is at most the one of
+	 * {@code n} and smaller than the one of {@code m} (e.g., {@code n % 3} is
+	 * in [-2, 2] on integers). On floating point numbers, the result is NaN if
+	 * {@code m} is 0 or {@code n} is infinite, and it is not an integer (e.g.,
+	 * {@code 5.5 % 3.0} is 2.5).
+	 *
+	 * @param n        the interval of the dividend
+	 * @param m        the interval of the divisor
+	 * @param integral whether the operands are surely integers
+	 *
+	 * @return the interval of the remainder
+	 */
+	public static IntInterval remainder(
+			IntInterval n,
+			IntInterval m,
+			boolean integral) {
+		if (!integral && (m.includes(IntInterval.ZERO) || n.isInfinite()))
+			return IntInterval.TOP;
+		MathNumber low = n.lowIsMinusInfinity() ? MathNumber.MINUS_INFINITY : n.getLow().min(MathNumber.ZERO);
+		MathNumber high = n.highIsPlusInfinity() ? MathNumber.PLUS_INFINITY : n.getHigh().max(MathNumber.ZERO);
+		if (!m.isInfinite()) {
+			MathNumber largest = m.getLow().abs().max(m.getHigh().abs());
+			if (largest.isZero())
+				// only a divisor 0: an exception, raised by the statement
+				return IntInterval.BOTTOM;
+			MathNumber bound = integral ? largest.subtract(MathNumber.ONE) : largest;
+			low = low.max(bound.multiply(MathNumber.MINUS_ONE));
+			high = high.min(bound);
+		}
+		return new IntInterval(low, high);
 	}
 
 	private IntInterval evalShiftLeft(

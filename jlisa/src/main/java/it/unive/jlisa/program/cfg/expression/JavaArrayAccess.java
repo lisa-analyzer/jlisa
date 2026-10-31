@@ -38,6 +38,12 @@ import java.util.List;
 
 public class JavaArrayAccess extends BinaryExpression {
 
+	/**
+	 * The maximum number of cells joined when reading an array element with a
+	 * non-constant index.
+	 */
+	private static final int MAX_ENUMERATED_CELLS = 64;
+
 	public JavaArrayAccess(
 			CFG cfg,
 			Type staticType,
@@ -185,6 +191,11 @@ public class JavaArrayAccess extends BinaryExpression {
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (int i = 0;; i++) {
+			if (i == MAX_ENUMERATED_CELLS)
+				// the length is unbounded or too large: the cell is read
+				// through the non-constant index
+				return result.lub(analysis.smallStepSemantics(state,
+						new AccessChild(accessType, container, right, getLocation()), context, this));
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, getLocation());
 			it.unive.lisa.symbolic.value.BinaryExpression inBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
 					JavaBooleanType.INSTANCE, idx, lenAccess, ComparisonLt.INSTANCE, getLocation());
