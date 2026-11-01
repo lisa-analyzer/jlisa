@@ -3,3 +3,9 @@ class java.io.OutputStream extends java.lang.Object:
 instance method OutputStream: it.unive.jlisa.program.java.constructs.outputstream.OutputStreamConstructor
         libtype java.io.OutputStream*
         param this libtype java.io.OutputStream*
+
+class java.io.FileOutputStream extends java.io.OutputStream:
+
+class java.io.ByteArrayOutputStream extends java.io.OutputStream:
+
+class java.io.DataOutputStream extends java.io.FilterOutputStream:
