@@ -58,8 +58,7 @@ public class ViolationWitnessProducerTest {
 		List<String> args = new ArrayList<>(List.of(
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
 				"-o", outdir.toString(),
-				"-n", "ConstantPropagation",
-				"--no-html"));
+				"-n", "ConstantPropagation"));
 		for (SVCOMPProperty property : properties) {
 			args.add("--svcomp-property");
 			args.add(TASKS.resolve(property.getName() + ".prp").toString());
