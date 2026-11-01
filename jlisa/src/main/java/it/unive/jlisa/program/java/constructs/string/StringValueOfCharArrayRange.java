@@ -21,7 +21,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -70,12 +69,12 @@ public class StringValueOfCharArrayRange extends TernaryExpression implements Pl
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 
-		String constantValue;
+		SymbolicExpression constantValue;
 		try {
 			Object offsetVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, middle, this);
 			Object countVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, right, this);
 			constantValue = offsetVal instanceof Integer && countVal instanceof Integer
-					? CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, left,
+					? CharArrayConstantSupport.computeSubstring(stringType, interprocedural, state, left,
 							(Integer) offsetVal, (Integer) countVal, getLocation(), this)
 					: null;
 		} catch (SemanticException e) {
@@ -89,7 +88,7 @@ public class StringValueOfCharArrayRange extends TernaryExpression implements Pl
 		}
 
 		SymbolicExpression value = constantValue != null
-				? new Constant(stringType, constantValue, getLocation())
+				? constantValue
 				: new PushAny(stringType, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
