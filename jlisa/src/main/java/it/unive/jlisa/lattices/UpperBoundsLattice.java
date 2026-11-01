@@ -10,7 +10,9 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.util.representation.ListRepresentation;
 import it.unive.lisa.util.representation.StructuredRepresentation;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -228,7 +230,7 @@ public class UpperBoundsLattice
 			ScopeToken token,
 			ProgramPoint pp)
 			throws SemanticException {
-		Lifter lifter = id -> (Identifier) id.pushScope(token, pp);
+		Lifter lifter = cached(id -> (Identifier) id.pushScope(token, pp));
 		return new UpperBoundsLattice(liftElements(bounds.pushScope(token, pp), lifter),
 				liftElements(atMost.pushScope(token, pp), lifter));
 	}
@@ -238,7 +240,7 @@ public class UpperBoundsLattice
 			ScopeToken token,
 			ProgramPoint pp)
 			throws SemanticException {
-		Lifter lifter = id -> (Identifier) id.popScope(token, pp);
+		Lifter lifter = cached(id -> (Identifier) id.popScope(token, pp));
 		return new UpperBoundsLattice(liftElements(bounds.popScope(token, pp), lifter),
 				liftElements(atMost.popScope(token, pp), lifter));
 	}
@@ -280,6 +282,21 @@ public class UpperBoundsLattice
 		Identifier lift(
 				Identifier id)
 				throws SemanticException;
+	}
+
+	// each identifier is renamed once, and the same renamed identifier is
+	// shared by all the relations it appears in
+	private static Lifter cached(
+			Lifter lifter) {
+		Map<Identifier, Identifier> renamed = new HashMap<>();
+		return id -> {
+			Identifier l = renamed.get(id);
+			if (l == null) {
+				l = lifter.lift(id);
+				renamed.put(id, l);
+			}
+			return l;
+		};
 	}
 
 	// the relations where the related identifiers are renamed as the keys of
