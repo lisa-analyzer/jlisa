@@ -16,6 +16,7 @@ import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
+import it.unive.lisa.interprocedural.context.EntryStateContextBasedAnalysis;
 import it.unive.lisa.interprocedural.inlining.InliningAnalysis;
 import it.unive.lisa.listeners.BottomTopListener;
 import it.unive.lisa.listeners.CallResolutionListener;
@@ -321,7 +322,15 @@ public class Main {
 		conf.workdir = outdir;
 		conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
+		// a recursive program is analyzed unrolling each recursive call while
+		// its entry state is new, and with a fixpoint over the recursion when
+		// it repeats: inlining unrolls each call up to 200 times, which grows
+		// exponentially with more than one recursive call (e.g., fib(n - 1) +
+		// fib(n - 2))
+		if (Recursion.mayBeRecursive(p))
+			conf.interproceduralAnalysis = new EntryStateContextBasedAnalysis<>(200);
+		else
+			conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
