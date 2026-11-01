@@ -106,15 +106,15 @@ public class Main {
 				.required(false)
 				.build();
 
-		Option noHtmlOutput = Option.builder()
-				.longOpt("no-html")
-				.desc("Disable HTML output (enabled by default)")
+		Option htmlOutput = Option.builder()
+				.longOpt("dump-html")
+				.desc("Write the HTML pages of the analysed methods (disabled by default)")
 				.required(false)
 				.build();
 
-		Option noGraphOutput = Option.builder()
-				.longOpt("no-graphs")
-				.desc("Disable the JSON graphs of the analysed methods (enabled by default); the report is still written")
+		Option graphOutput = Option.builder()
+				.longOpt("dump-graphs")
+				.desc("Write the JSON graphs of the analysed methods (disabled by default); the report is always written")
 				.required(false)
 				.build();
 
@@ -137,8 +137,6 @@ public class Main {
 				.required(false)
 				.build();
 
-		options.addOption(noHtmlOutput);
-
 		options.addOption(helpOption);
 		options.addOption(sourceOption);
 		options.addOption(outdirOption);
@@ -147,8 +145,8 @@ public class Main {
 		options.addOption(numericalDomainOption);
 		options.addOption(mode);
 		options.addOption(version);
-		options.addOption(noHtmlOutput);
-		options.addOption(noGraphOutput);
+		options.addOption(htmlOutput);
+		options.addOption(graphOutput);
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
 		options.addOption(svcompProperty);
@@ -158,8 +156,8 @@ public class Main {
 		String[] sources = new String[0];
 		String outdir = "";
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
-		boolean htmlOutput = true;
-		boolean graphOutput = true;
+		boolean html = false;
+		boolean graphs = false;
 		boolean dumpExceptions = false;
 		boolean debug = false;
 		String[] propertyFiles = null;
@@ -196,12 +194,12 @@ public class Main {
 				LogManager.setLogLevel(level);
 			}
 
-			if (cmd.hasOption("no-html")) {
-				htmlOutput = false;
+			if (cmd.hasOption("dump-html")) {
+				html = true;
 			}
 
-			if (cmd.hasOption("no-graphs")) {
-				graphOutput = false;
+			if (cmd.hasOption("dump-graphs")) {
+				graphs = true;
 			}
 
 			if (cmd.hasOption("e")) {
@@ -241,10 +239,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, graphOutput, debug, propertyFiles);
+			runDebug(sources, outdir, checkerName, numericalDomain, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, graphOutput, dumpExceptions, debug,
+			runStatistics(sources, outdir, checkerName, numericalDomain, html, graphs, dumpExceptions, debug,
 					propertyFiles);
 			break;
 		default:
