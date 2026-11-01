@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -54,6 +55,54 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 	}
 
 	@Override
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemantics(
+			AnalysisState<A> entryState,
+			InterproceduralAnalysis<A, D> interprocedural,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Expression[] subExprs = getSubExpressions();
+		CodeLocation location = getLocation();
+
+		AnalysisState<A> condState = subExprs[0].forwardSemantics(entryState, interprocedural, expressions);
+		expressions.put(subExprs[0], condState);
+
+		Identifier ternaryMeta = new Variable(getStaticType(), "$ternary" + location, location);
+		getMetaVariables().add(ternaryMeta);
+		ProgramPoint value = new ValuePoint(this);
+
+		AnalysisState<A> res = entryState.bottomExecution();
+		for (SymbolicExpression cond : condState.getExecutionExpressions()) {
+
+			Satisfiability sat = analysis.satisfies(entryState, cond, context, this);
+
+			if (sat != Satisfiability.NOT_SATISFIED && sat != Satisfiability.BOTTOM) {
+				AnalysisState<A> tmp = analysis.assume(condState, cond, context, value, value);
+				AnalysisState<A> branchEvaluated = evalBranch(tmp, interprocedural, analysis, ternaryMeta, subExprs[1], expressions);
+				res = res.lub(branchEvaluated);
+			}
+
+			if (sat != Satisfiability.SATISFIED && sat != Satisfiability.BOTTOM) {
+				SymbolicExpression negation = new UnaryExpression(JavaBooleanType.INSTANCE, cond, LogicalNegation.INSTANCE, location);
+
+				AnalysisState<A> tmp = analysis.assume(condState, negation, context, value, value);
+
+				AnalysisState<A> branchEvaluated = evalBranch(tmp, interprocedural, analysis, ternaryMeta, subExprs[2], expressions);
+				res = res.lub(branchEvaluated);
+			}
+
+		}
+
+		for (Expression s : subExprs) {
+		    getMetaVariables().addAll(s.getMetaVariables());
+		    s.getMetaVariables().clear();
+		}
+
+		return analysis.smallStepSemantics(res, ternaryMeta, context, this);
+	}
+
+	@Override
 	public <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> AnalysisState<A> fwdTernarySemantics(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -95,6 +144,27 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 			return analysis.smallStepSemantics(whenTrue.lub(whenFalse), meta, context, this);
 		}
 
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> evalBranch(
+			AnalysisState<A> state,
+			InterproceduralAnalysis<A, D> interprocedural,
+			Analysis<A, D> analysis,
+			Identifier meta,
+			Expression branch,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		ScopeId<A> context = interprocedural.getCurrentContext();
+
+		AnalysisState<A> evaluated = branch.forwardSemantics(state, interprocedural, expressions);
+		expressions.put(branch, evaluated);
+
+		AnalysisState<A> out = state.bottomExecution();
+		for (SymbolicExpression s : evaluated.getExecutionExpressions()) {
+			out = out.lub(analysis.assign(evaluated, meta, s, context, this));
+		}
+		return out;
 	}
 
 }
