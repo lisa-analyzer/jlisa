@@ -111,6 +111,12 @@ public class Main {
 				.required(false)
 				.build();
 
+		Option noGraphOutput = Option.builder()
+				.longOpt("no-graphs")
+				.desc("Disable the JSON graphs of the analysed methods (enabled by default); the report is still written")
+				.required(false)
+				.build();
+
 		Option dumpExcs = Option.builder("e")
 				.longOpt("dump-exceptions")
 				.desc("When in statistics mode, log exceptions to standard output")
@@ -141,6 +147,7 @@ public class Main {
 		options.addOption(mode);
 		options.addOption(version);
 		options.addOption(noHtmlOutput);
+		options.addOption(noGraphOutput);
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
 		options.addOption(svcompProperty);
@@ -151,6 +158,7 @@ public class Main {
 		String outdir = "";
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
 		boolean htmlOutput = true;
+		boolean graphOutput = true;
 		boolean dumpExceptions = false;
 		boolean debug = false;
 		String[] propertyFiles = null;
@@ -191,6 +199,10 @@ public class Main {
 				htmlOutput = false;
 			}
 
+			if (cmd.hasOption("no-graphs")) {
+				graphOutput = false;
+			}
+
 			if (cmd.hasOption("e")) {
 				dumpExceptions = true;
 			}
@@ -228,10 +240,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug, propertyFiles);
+			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, graphOutput, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug,
+			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, graphOutput, dumpExceptions, debug,
 					propertyFiles);
 			break;
 		default:
@@ -246,13 +258,15 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
+			boolean graphOutput,
 			boolean debug,
 			String[] propertyFiles)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFiles);
+		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+				propertyFiles);
 	}
 
 	private static void runStatistics(
@@ -261,6 +275,7 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
+			boolean graphOutput,
 			boolean dumpExceptions,
 			boolean debug,
 			String[] propertyFiles) {
@@ -279,7 +294,8 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFiles);
+			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+					propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
 			while (root.getCause() != null)
@@ -309,6 +325,7 @@ public class Main {
 			String numericalDomain,
 			JavaFrontend frontend,
 			boolean htmlOutput,
+			boolean graphOutput,
 			boolean debug,
 			String[] propertyFiles)
 			throws ParseException {
@@ -324,7 +341,8 @@ public class Main {
 			}
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
-		conf.outputs.add(new JSONResults<>());
+		if (graphOutput)
+			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
 		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
 		conf.callGraph = new JavaRTACallGraph();
