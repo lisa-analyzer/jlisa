@@ -79,24 +79,27 @@ public class JavaConditionalExpression extends it.unive.lisa.program.cfg.stateme
 
 			if (sat != Satisfiability.NOT_SATISFIED && sat != Satisfiability.BOTTOM) {
 				AnalysisState<A> tmp = analysis.assume(condState, cond, context, value, value);
-				AnalysisState<A> branchEvaluated = evalBranch(tmp, interprocedural, analysis, ternaryMeta, subExprs[1], expressions);
+				AnalysisState<A> branchEvaluated = evalBranch(tmp, interprocedural, analysis, ternaryMeta, subExprs[1],
+						expressions);
 				res = res.lub(branchEvaluated);
 			}
 
 			if (sat != Satisfiability.SATISFIED && sat != Satisfiability.BOTTOM) {
-				SymbolicExpression negation = new UnaryExpression(JavaBooleanType.INSTANCE, cond, LogicalNegation.INSTANCE, location);
+				SymbolicExpression negation = new UnaryExpression(JavaBooleanType.INSTANCE, cond,
+						LogicalNegation.INSTANCE, location);
 
 				AnalysisState<A> tmp = analysis.assume(condState, negation, context, value, value);
 
-				AnalysisState<A> branchEvaluated = evalBranch(tmp, interprocedural, analysis, ternaryMeta, subExprs[2], expressions);
+				AnalysisState<A> branchEvaluated = evalBranch(tmp, interprocedural, analysis, ternaryMeta, subExprs[2],
+						expressions);
 				res = res.lub(branchEvaluated);
 			}
 
 		}
 
 		for (Expression s : subExprs) {
-		    getMetaVariables().addAll(s.getMetaVariables());
-		    s.getMetaVariables().clear();
+			getMetaVariables().addAll(s.getMetaVariables());
+			s.getMetaVariables().clear();
 		}
 
 		return analysis.smallStepSemantics(res, ternaryMeta, context, this);

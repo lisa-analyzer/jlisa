@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.map;
 
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -13,6 +14,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -27,6 +29,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.List;
@@ -70,6 +73,13 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		Set<Type> keyTypes = analysis.getRuntimeTypesOf(state, right, context, this);
+
+		Satisfiability isEmpty = checkZeroSize(interprocedural, state, left, expressions);
+		if (isEmpty.isBottom())
+			return state.bottomExecution();
+		if (isEmpty == Satisfiability.SATISFIED) {
+			return analysis.smallStepSemantics(state, new NullConstant(getLocation()), context, this);
+		}
 
 		AnalysisState<A> res = state.bottomExecution();
 
@@ -173,6 +183,29 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 					originating);
 		}
 		return foundState.lub(nullState);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Satisfiability checkZeroSize(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression map,
+			StatementStore<A> expressions)
+			throws SemanticException {
+
+		CodeLocation location = getLocation();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Type mapType = JavaClassType.lookup("java.util.Map");
+
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
+		HeapDereference derefMap = new HeapDereference(mapType, map, location);
+		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+
+		Constant zero = new Constant(JavaIntType.INSTANCE, 0, location);
+		SymbolicExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, accessSize,
+				zero, ComparisonEq.INSTANCE, location);
+
+		Satisfiability sat = interprocedural.getAnalysis().satisfies(state, eq, context, this);
+		return sat;
 	}
 
 }

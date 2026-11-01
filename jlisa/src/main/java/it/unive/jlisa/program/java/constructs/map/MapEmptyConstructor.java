@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.map;
 
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -15,6 +17,12 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.type.Type;
+import it.unive.lisa.type.Untyped;
 
 public class MapEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -48,7 +56,18 @@ public class MapEmptyConstructor extends UnaryExpression implements PluggableSta
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		return analysis.smallStepSemantics(state, expr, context, this);
+		CodeLocation location = getLocation();
+
+		Type mapType = JavaClassType.lookup("java.util.Map");
+
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
+		HeapDereference derefMap = new HeapDereference(mapType, expr, location);
+		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+
+		Constant zero = new Constant(JavaIntType.INSTANCE, 0, location);
+		AnalysisState<A> tmp = analysis.assign(state, accessSize, zero, context, this);
+
+		return analysis.smallStepSemantics(tmp, expr, context, this);
 	}
 
 	@Override

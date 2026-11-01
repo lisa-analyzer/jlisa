@@ -28,6 +28,7 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.List;
@@ -93,7 +94,8 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 		else {
 			res = topReturnValue(interprocedural, state, expressions);
 		}
-		return res;
+
+		return incrementSize(interprocedural, res, left, expressions);
 	}
 
 	@Override
@@ -188,5 +190,26 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 				new Expression[] { getRight() });
 
 		return wrap.forwardSemantics(state, interprocedural, expressions);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> incrementSize(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression map,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		CodeLocation location = getLocation();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Type mapType = JavaClassType.lookup("java.util.Map");
+
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
+		HeapDereference derefMap = new HeapDereference(mapType, map, location);
+		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+
+		Constant one = new Constant(JavaIntType.INSTANCE, 1, location);
+		SymbolicExpression add = new BinaryExpression(JavaIntType.INSTANCE, accessSize, one,
+				NumericNonOverflowingAdd.INSTANCE, location);
+
+		return interprocedural.getAnalysis().assign(state, accessSize, add, context, this);
 	}
 }
