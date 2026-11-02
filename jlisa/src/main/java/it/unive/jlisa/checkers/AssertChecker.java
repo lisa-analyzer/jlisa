@@ -1,5 +1,6 @@
 package it.unive.jlisa.checkers;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
@@ -131,9 +132,16 @@ public class AssertChecker<V extends ValueLattice<V>>
 							!state.getSmashedErrors().isTop() &&
 							!state.getSmashedErrors().function.isEmpty());
 
-			// if exceptions might have been thrown, we raise a possible warning
+			// if exceptions might have been thrown, we raise a possible warning.
+			// Its violation concerns exceptions only: errors (e.g., the
+			// AssertionError of a failed assertion) are not runtime
+			// exceptions, and they can neither confirm nor prevent the
+			// refutation of the warning. Checked exceptions also match
+			// Exception, while thrown values whose static type is a supertype
+			// of Exception (e.g., Throwable) do not
 			if (hasExceptionState) {
-				tool.warnOn(node, result.getId(), it.unive.lisa.checks.verification.Violation.error(),
+				tool.warnOn(node, result.getId(),
+						it.unive.lisa.checks.verification.Violation.error(JavaClassType.getExceptionType().getReference()),
 						"uncaught runtime exception in main method");
 				Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
 				if (target.isPresent())
