@@ -1,0 +1,8 @@
+
+interface javax.lang.model.element.Element:
+
+interface javax.lang.model.element.TypeElement extends javax.lang.model.element.Element:
+
+interface javax.lang.model.type.TypeMirror:
+
+
