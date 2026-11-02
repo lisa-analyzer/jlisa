@@ -5,13 +5,18 @@ import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.checkers.Violation;
+import it.unive.jlisa.checkers.ViolationKind;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
+import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
+import it.unive.lisa.LiSAReport;
+import it.unive.lisa.checks.verification.ErrorViolation;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
@@ -22,6 +27,9 @@ import it.unive.lisa.listeners.CallResolutionListener;
 import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
+import it.unive.lisa.outputs.messages.Message;
+import it.unive.lisa.outputs.messages.StatementMessage;
+import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
 import java.io.IOException;
@@ -346,10 +354,14 @@ public class Main {
 		// result for a recursive call
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
+		// warnings are verified after the checks, stopping at the first one that
+		// is confirmed for each property
+		conf.warningVerifier = new SVCOMPVerifier<>();
+		AssertChecker<?> checker = null;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(witnesses.isEmpty() ? new AssertChecker<>()
-					: new AssertChecker<>(violation -> witnesses.forEach(witness -> witness.accept(violation))));
+			checker = new AssertChecker<>();
+			conf.semanticChecks.add(checker);
 			break;
 		case "":
 			break;
@@ -383,10 +395,49 @@ public class Main {
 		}
 
 		LiSA lisa = new LiSA(conf);
-		lisa.run(p);
+		LiSAReport report = lisa.run(p);
+
+		// the violations confirmed by the verification of the warnings
+		if (checker != null && !witnesses.isEmpty())
+			for (Violation violation : confirmedViolations(report, checker))
+				witnesses.forEach(witness -> witness.accept(violation));
 
 		// write the witnesses
 		for (ViolationWitnessProducer witness : witnesses)
 			witness.write(outdir);
+	}
+
+	/**
+	 * Yields the violations reported by the warnings of the given checker that
+	 * have been confirmed by the verification of the warnings, with the inputs
+	 * reproducing them, if known. The target of an uncaught runtime exception
+	 * is the statement raising it, as recorded by the checker; the target of a
+	 * failing assertion is the assertion itself.
+	 *
+	 * @param report  the report of the analysis
+	 * @param checker the checker that issued the warnings
+	 *
+	 * @return the violations
+	 */
+	private static List<Violation> confirmedViolations(
+			LiSAReport report,
+			AssertChecker<?> checker) {
+		List<Violation> violations = new ArrayList<>();
+		for (Message warning : report.getWarnings()) {
+			if (!warning.isDefinite() || warning.getViolation() == null || !(warning instanceof StatementMessage))
+				continue;
+			Statement target;
+			ViolationKind kind;
+			if (warning.getViolation() instanceof ErrorViolation) {
+				kind = ViolationKind.RUNTIME_EXCEPTION;
+				target = checker.runtimeExceptionTarget(warning).orElse(null);
+			} else {
+				kind = ViolationKind.ASSERT;
+				target = ((StatementMessage) warning).getStatement();
+			}
+			if (target != null)
+				violations.add(new Violation(kind, target, warning.getReproducingInputs()));
+		}
+		return violations;
 	}
 }

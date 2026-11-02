@@ -1,8 +1,9 @@
 package it.unive.jlisa.svcomp;
 
 import it.unive.jlisa.checkers.Violation;
+import it.unive.lisa.checks.verification.ReproducingInput;
+import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.SourceCodeLocation;
-import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.witness.v2.InvalidWitnessException;
 import it.unive.lisa.witness.v2.Location;
 import it.unive.lisa.witness.v2.ViolationWitness;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,9 +25,12 @@ import org.apache.logging.log4j.Logger;
 /**
  * A producer of the violation witness of an SV-COMP task. It receives the
  * definite violations found by the analysis, keeps the first one of the
- * property of the task, and writes a witness whose only waypoint is the target,
- * where the violation happens. The witness only claims that an execution
- * violates the property at the target, hence it needs no other waypoint.
+ * property of the task, and writes a witness ending with the target, where the
+ * violation happens. If the violation comes with the inputs reproducing it,
+ * the values returned by nondeterministic calls are given as function return
+ * waypoints before the target, in the order they are consumed; otherwise, the
+ * witness only claims that an execution violates the property at the target,
+ * hence it needs no other waypoint.
  *
  * @author <a href="mailto:giacomo.zanatta@unive.it">Giacomo Zanatta</a>
  */
@@ -34,6 +39,14 @@ public final class ViolationWitnessProducer
 		Consumer<Violation> {
 
 	private static final Logger LOG = LogManager.getLogger(ViolationWitnessProducer.class);
+
+	/**
+	 * The prefix of the description of the inputs that are values returned by
+	 * calls (see {@link it.unive.lisa.triage.inputs.InputSource}).
+	 */
+	private static final String CALL_RESULT = "return of ";
+
+	private static final Pattern INTEGER = Pattern.compile("-?[0-9]+");
 
 	/**
 	 * The name of the folder of the witnesses, inside the output directory.
@@ -140,11 +153,20 @@ public final class ViolationWitnessProducer
 	public Optional<ViolationWitness> build() {
 		if (violation == null)
 			return Optional.empty();
-		Location target = location(violation.getTarget());
+		Location target = location(violation.getTarget().getLocation());
 		if (target == null)
 			return Optional.empty();
 		try {
-			return Optional.of(new ViolationWitnessBuilder(task, producer).target(target).build());
+			ViolationWitnessBuilder builder = new ViolationWitnessBuilder(task, producer);
+			for (ReproducingInput input : violation.getInputs()) {
+				String constraint = returnConstraint(input);
+				if (constraint == null)
+					continue;
+				Location call = location(input.getLocation());
+				if (call != null)
+					builder.functionReturn(call, constraint);
+			}
+			return Optional.of(builder.target(target).build());
 		} catch (InvalidWitnessException e) {
 			LOG.warn("No violation witness for {}: {}", violation, e.getMessage());
 			return Optional.empty();
@@ -191,24 +213,46 @@ public final class ViolationWitnessProducer
 	}
 
 	/**
-	 * Returns the location of the witness for the given statement, that is, its
-	 * start. The statement is the target of the violation, the innermost
-	 * statement or full expression where it happens. Its file is the input file
-	 * of the task with the same name as the source file of the statement, which
-	 * must be unique. Columns of LiSA start from 0, while those of witnesses
-	 * start from 1.
+	 * Returns the constraint of the function return waypoint for the given
+	 * input, if it is the value returned by a call and it can be written in a
+	 * witness (integers and booleans).
 	 *
-	 * @param statement the statement
+	 * @param input the input
+	 *
+	 * @return the constraint, such as {@code \result == 42}, or {@code null}
+	 */
+	private static String returnConstraint(
+			ReproducingInput input) {
+		if (!input.getSource().startsWith(CALL_RESULT))
+			// e.g., parameters of the main method
+			return null;
+		String value = input.getValue();
+		if (value == null || !(INTEGER.matcher(value).matches() || value.equals("true") || value.equals("false"))) {
+			LOG.debug("The value of {} cannot be written in the witness", input);
+			return null;
+		}
+		return "\\result == " + value;
+	}
+
+	/**
+	 * Returns the location of the witness for the given code location, that
+	 * is, its start. The location is the one of the target of the violation,
+	 * the innermost statement or full expression where it happens, or of a
+	 * call returning a nondeterministic value. Its file is the input file of
+	 * the task with the same name as its source file, which must be unique.
+	 * Columns of LiSA start from 0, while those of witnesses start from 1.
+	 *
+	 * @param codeLocation the code location
 	 *
 	 * @return the location, or {@code null} if it cannot be determined
 	 */
 	private Location location(
-			Statement statement) {
-		if (!(statement.getLocation() instanceof SourceCodeLocation)) {
+			CodeLocation codeLocation) {
+		if (!(codeLocation instanceof SourceCodeLocation)) {
 			LOG.warn("No violation witness for {}: no source location", violation);
 			return null;
 		}
-		SourceCodeLocation location = (SourceCodeLocation) statement.getLocation();
+		SourceCodeLocation location = (SourceCodeLocation) codeLocation;
 		if (location.getLine() < 1) {
 			LOG.warn("No violation witness for {}: no line", violation);
 			return null;

@@ -6,6 +6,7 @@ import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
@@ -87,6 +88,9 @@ public class TestHelpers {
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
 		conf.semanticChecks.add(new AssertChecker<>());
+		// warnings are verified after the checks, stopping at the first one
+		// that is confirmed for each property
+		conf.warningVerifier = new SVCOMPVerifier<>();
 
 		return conf;
 	}
@@ -104,6 +108,9 @@ public class TestHelpers {
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
 		conf.semanticChecks.add(new AssertChecker<>());
+		// warnings are verified after the checks, stopping at the first one
+		// that is confirmed for each property
+		conf.warningVerifier = new SVCOMPVerifier<>();
 
 		return conf;
 	}

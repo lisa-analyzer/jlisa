@@ -15,22 +15,34 @@ import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.types.TypeSet;
+import it.unive.lisa.outputs.messages.Message;
+import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import java.util.function.Consumer;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
+import it.unive.lisa.type.Type;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * Assert Checker It checks whether an assertion's condition might not hold,
  * and whether the main method might terminate with an uncaught runtime
- * exception. All warnings are possible: they can be confirmed or refuted by
- * the verification of warnings performed after the checks, if a verifier has
- * been selected.
+ * exception. All warnings are possible, and report the violation they refer
+ * to: they can be confirmed or refuted by the verification of warnings
+ * performed after the checks, if a verifier has been selected. For uncaught
+ * runtime exceptions, the checker also records the statement raising the
+ * exception ({@link #runtimeExceptionTarget(Message)}), the target of the
+ * violation witness of a confirmed warning.
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
@@ -44,30 +56,30 @@ public class AssertChecker<V extends ValueLattice<V>>
 	private static final String POSSIBLE_FAILURE = "the assertion might not hold";
 
 	/**
-	 * The consumer of the definite violations found by this checker. Since
-	 * this checker only issues possible warnings, no violation is currently
-	 * given to it.
+	 * The statements raising the runtime exceptions reported by the warnings
+	 * of this checker, for each return statement of a main method and each
+	 * context (in textual form) it has been analyzed in.
 	 */
-	@SuppressWarnings("unused")
-	private final Consumer<Violation> violations;
+	private final Map<Statement, Map<String, Statement>> exceptionTargets = new ConcurrentHashMap<>();
 
 	/**
-	 * Builds the checker.
-	 */
-	public AssertChecker() {
-		this(violation -> {
-		});
-	}
-
-	/**
-	 * Builds the checker, giving each definite violation it finds to the given
-	 * consumer.
+	 * Yields the statement raising the runtime exception reported by the given
+	 * warning of this checker, that is the target of its violation witness.
 	 * 
-	 * @param violations the consumer of the definite violations
+	 * @param warning the warning
+	 * 
+	 * @return the statement, or nothing if the warning is not about an
+	 *             uncaught runtime exception, or if the statement could not be
+	 *             determined
 	 */
-	public AssertChecker(
-			Consumer<Violation> violations) {
-		this.violations = violations;
+	public Optional<Statement> runtimeExceptionTarget(
+			Message warning) {
+		if (!(warning instanceof StatementMessage))
+			return Optional.empty();
+		Map<String, Statement> targets = exceptionTargets.get(((StatementMessage) warning).getStatement());
+		if (targets == null)
+			return Optional.empty();
+		return Optional.ofNullable(targets.get(String.valueOf(warning.getContext())));
 	}
 
 	@Override
@@ -119,8 +131,14 @@ public class AssertChecker<V extends ValueLattice<V>>
 							!state.getSmashedErrors().function.isEmpty());
 
 			// if exceptions might have been thrown, we raise a possible warning
-			if (hasExceptionState)
-				tool.warnOn((Statement) node, "uncaught runtime exception in main method");
+			if (hasExceptionState) {
+				tool.warnOn(node, result.getId(), it.unive.lisa.checks.verification.Violation.error(),
+						"uncaught runtime exception in main method");
+				Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
+				if (target.isPresent())
+					exceptionTargets.computeIfAbsent(node, n -> new ConcurrentHashMap<>())
+							.put(String.valueOf(result.getId()), target.get());
+			}
 		}
 	}
 
@@ -131,30 +149,35 @@ public class AssertChecker<V extends ValueLattice<V>>
 			CFG graph,
 			AssertStatement node)
 			throws SemanticException {
+		Expression expr;
+		if (node instanceof SimpleAssert)
+			expr = ((SimpleAssert) node).getSubExpression();
+		else if (node instanceof AssertionStatement)
+			expr = ((AssertionStatement) node).getLeft();
+		else
+			return;
+		boolean isAssertFalse = expr.toString().equals("false");
+
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = null;
-
-			boolean isAssertFalse = false;
-			if (node instanceof SimpleAssert) {
-				Expression expr = ((SimpleAssert) node).getSubExpression();
-				state = result.getAnalysisStateAfter(expr);
-				isAssertFalse = expr.toString().equals("false");
-			} else if (node instanceof AssertionStatement) {
-				Expression expr = ((AssertionStatement) node).getLeft();
-				state = result.getAnalysisStateAfter(expr);
-				isAssertFalse = expr.toString().equals("false");
-			}
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result
+							.getAnalysisStateAfter(expr);
 
 			if (state.getExecutionState().isBottom())
 				// the assertion is never evaluated in this result: it cannot
 				// fail
 				continue;
 
+			// the violation of the assertion: reaching it if it is an assert
+			// false, or its condition not holding otherwise
+			it.unive.lisa.checks.verification.Violation violation = isAssertFalse
+					? it.unive.lisa.checks.verification.Violation.reach()
+					: failure(expr, state);
+
 			if (isAssertFalse) {
 				// we do not need to query the satisfiability of the expression:
 				// the assertion fails whenever it is evaluated
-				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 				continue;
 			}
 
@@ -163,7 +186,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 				// the assertion is evaluated, but we have a bottom value state:
 				// we cannot do much other than being conservative and say that
 				// the assertion might not hold
-				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 				LOG.error("The abstract state of assert's expression is BOTTOM");
 				continue;
 			}
@@ -172,17 +195,38 @@ public class AssertChecker<V extends ValueLattice<V>>
 				// the assertion is evaluated, but we have a top value state:
 				// we cannot do much other than being conservative and say that
 				// the assertion might not hold
-				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 				continue;
 			}
 
 			Satisfiability overall = Satisfiability.BOTTOM;
-			for (SymbolicExpression expr : state.getExecutionExpressions())
-				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, result.getId(), (ProgramPoint) node));
+			for (SymbolicExpression e : state.getExecutionExpressions())
+				overall = overall.lub(tool.getAnalysis().satisfies(state, e, result.getId(), (ProgramPoint) node));
 
 			// only assertions that surely hold do not raise warnings
 			if (overall != Satisfiability.SATISFIED)
-				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 		}
+	}
+
+	/**
+	 * Yields the violation of the assertion whose condition is the given
+	 * expression: after its evaluation, one of the values it might evaluate to
+	 * is false. If the values of the expression are unknown, the violation is
+	 * reaching the assertion.
+	 */
+	private static it.unive.lisa.checks.verification.Violation failure(
+			Expression expr,
+			AnalysisState<?> state) {
+		Type bool = expr.getProgram().getTypes().getBooleanType();
+		SymbolicExpression condition = null;
+		for (SymbolicExpression e : state.getExecutionExpressions()) {
+			SymbolicExpression negated = new UnaryExpression(bool, e, LogicalNegation.INSTANCE, expr.getLocation());
+			condition = condition == null ? negated
+					: new BinaryExpression(bool, condition, negated, LogicalOr.INSTANCE, expr.getLocation());
+		}
+		if (condition == null)
+			return it.unive.lisa.checks.verification.Violation.reach();
+		return it.unive.lisa.checks.verification.Violation.condition(expr, condition);
 	}
 }
