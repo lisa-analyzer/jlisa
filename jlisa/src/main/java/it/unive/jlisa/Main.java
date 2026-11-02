@@ -32,6 +32,7 @@ import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
+import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -151,7 +152,15 @@ public class Main {
 		options.addOption(graphOutput);
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
+		Option z3Path = Option.builder()
+				.longOpt("z3")
+				.hasArg()
+				.desc("Path to the z3 executable used to verify warnings (by default, z3 is searched in the PATH; without it, warnings that cannot be verified through the results of the analysis stay possible)")
+				.required(false)
+				.build();
+
 		options.addOption(svcompProperty);
+		options.addOption(z3Path);
 		// Create parser and formatter
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
@@ -232,6 +241,9 @@ public class Main {
 				executionMode = cmd.getOptionValue("m");
 
 			propertyFiles = cmd.getOptionValues("svcomp-property");
+
+			if (cmd.hasOption("z3"))
+				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
 
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
