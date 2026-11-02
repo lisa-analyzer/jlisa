@@ -15,7 +15,9 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
+import it.unive.jlisa.program.java.constructs.verifier.VerifierNondet;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
@@ -74,6 +76,18 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			}
 			boolean isMain = isMain(methodsDecl);
 			int modifiers = methodsDecl.getModifiers();
+			if (Modifier.isStatic(modifiers) && VerifierNondet.replaces(name, methodsDecl.getName().getIdentifier(),
+					methodsDecl.parameters().size())) {
+				// the nondeterministic values of SV-COMP benchmarks are
+				// inputs, not the results of their approximated bodies
+				NativeCFG stub = new NativeCFG(codeMemberDescriptor, VerifierNondet.class);
+				if (!lisaCU.addCodeMember(stub))
+					throw new ParsingException("duplicated_method_descriptor",
+							ParsingException.Type.MALFORMED_SOURCE,
+							"Duplicate descriptor " + stub.getDescriptor() + " in unit " + lisaCU.getName(),
+							getSourceCodeLocation(methodsDecl));
+				continue;
+			}
 			CFG cfg = new CFG(codeMemberDescriptor);
 			boolean added;
 			if (!Modifier.isStatic(modifiers)) {

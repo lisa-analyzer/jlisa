@@ -20,7 +20,6 @@ import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -57,7 +56,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 	/**
 	 * The statements raising the runtime exceptions reported by the warnings
-	 * of this checker, for each return statement of a main method and each
+	 * of this checker, for each exit point of a main method and each
 	 * context (in textual form) it has been analyzed in.
 	 */
 	private final Map<Statement, Map<String, Statement>> exceptionTargets = new ConcurrentHashMap<>();
@@ -91,7 +90,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			Statement node) {
 
 		// RuntimeException property checker
-		if (graph.getProgram().getEntryPoints().contains(graph) && node instanceof Ret)
+		if (graph.getProgram().getEntryPoints().contains(graph) && graph.getAllExitpoints().contains(node))
 			try {
 				checkRuntimeException(tool, graph, node);
 			} catch (SemanticException e) {
@@ -118,9 +117,11 @@ public class AssertChecker<V extends ValueLattice<V>>
 			throws SemanticException {
 
 		for (var result : tool.getResultOf(graph)) {
+			// errors caught by the error edges leaving the node (e.g., a throw
+			// inside a try block) do not escape the method
 			AnalysisState<
-					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result
-							.getAnalysisStateAfter(node);
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = tool
+							.getAnalysis().removeCaughtErrors(result.getAnalysisStateAfter(node), node);
 
 			// checking if there exists at least one exception state
 			boolean hasExceptionState = !state.getErrors().isBottom() &&

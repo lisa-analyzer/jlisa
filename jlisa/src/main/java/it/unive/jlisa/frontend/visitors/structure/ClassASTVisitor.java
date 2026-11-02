@@ -28,6 +28,7 @@ import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotations;
+import it.unive.jlisa.program.java.constructs.verifier.VerifierNondet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.Parameter;
@@ -97,6 +98,11 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
+			if (Modifier.isStatic(md.getModifiers())
+					&& VerifierNondet.replaces(getScope().getLiSACompilationUnit().getName(),
+							md.getName().getIdentifier(), md.parameters().size()))
+				// replaced by a native code member, without a body
+				continue;
 			CFG cfg = getParserContext().evaluate(
 					md,
 					new MethodASTVisitor(getEnvironment(), getScope()));
