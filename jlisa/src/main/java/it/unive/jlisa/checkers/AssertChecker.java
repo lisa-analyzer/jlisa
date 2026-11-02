@@ -8,7 +8,6 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
 import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
-import it.unive.lisa.analysis.reachability.ReachabilityStatus;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.checks.semantic.SemanticTool;
@@ -22,13 +21,16 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Assert Checker It checks whether an assertion's condition holds.
+ * Assert Checker It checks whether an assertion's condition might not hold,
+ * and whether the main method might terminate with an uncaught runtime
+ * exception. All warnings are possible: they can be confirmed or refuted by
+ * the verification of warnings performed after the checks, if a verifier has
+ * been selected.
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
@@ -39,9 +41,14 @@ public class AssertChecker<V extends ValueLattice<V>>
 				SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> {
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
 
+	private static final String POSSIBLE_FAILURE = "the assertion might not hold";
+
 	/**
-	 * The consumer of the definite violations found by this checker.
+	 * The consumer of the definite violations found by this checker. Since
+	 * this checker only issues possible warnings, no violation is currently
+	 * given to it.
 	 */
+	@SuppressWarnings("unused")
 	private final Consumer<Violation> violations;
 
 	/**
@@ -111,22 +118,9 @@ public class AssertChecker<V extends ValueLattice<V>>
 							!state.getSmashedErrors().isTop() &&
 							!state.getSmashedErrors().function.isEmpty());
 
-			SimpleAbstractState<HeapEnvironment<AllocationSites>, V,
-					TypeEnvironment<TypeSet>> normaleState = state.getExecutionState();
-
-			// if exceptions had been thrown, we raise a warning
+			// if exceptions might have been thrown, we raise a possible warning
 			if (hasExceptionState)
-				// if the normal state is bottom, we raise a definite error
-				if (normaleState.isBottom()) {
-					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
-					Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
-					if (target.isPresent())
-						violations.accept(new Violation(ViolationKind.RUNTIME_EXCEPTION, target.get()));
-				}
-				// otherwise, we raise a possible error (both normal and
-				// exception states are not bottom)
-				else
-					tool.warnOn((Statement) node, "POSSIBLE: uncaught runtime exception in main method");
+				tool.warnOn((Statement) node, "uncaught runtime exception in main method");
 		}
 	}
 
@@ -152,46 +146,33 @@ public class AssertChecker<V extends ValueLattice<V>>
 				isAssertFalse = expr.toString().equals("false");
 			}
 
-			V values = state.getExecutionState().valueState;
-			ReachabilityStatus reach = tool.getReachability(result, (Statement) node);
-
-			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().isBottom()) {
-				// if the assertion is not reachable, it won't fail
-				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+			if (state.getExecutionState().isBottom())
+				// the assertion is never evaluated in this result: it cannot
+				// fail
 				continue;
-			}
 
 			if (isAssertFalse) {
-				// we do not need to query the satisfiability of of the
-				// expression:
-				// we rely on reachability to determine its status
-				if (reach == ReachabilityStatus.REACHABLE) {
-					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-					violations.accept(new Violation(ViolationKind.ASSERT, (Statement) node));
-				} else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE) {
-					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				}
+				// we do not need to query the satisfiability of the expression:
+				// the assertion fails whenever it is evaluated
+				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
 				continue;
 			}
 
+			V values = state.getExecutionState().valueState;
 			if (values.isBottom()) {
-				// the statement is (possibly) reachable, is not an assert
-				// false,
-				// but we have a bottom value state
-				// we cannot do much other than being conservative and
-				// say that the assertion might not hold
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				// the assertion is evaluated, but we have a bottom value state:
+				// we cannot do much other than being conservative and say that
+				// the assertion might not hold
+				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
 				LOG.error("The abstract state of assert's expression is BOTTOM");
 				continue;
 			}
 
 			if (values.isTop()) {
-				// the statement is (possibly) reachable, is not an assert
-				// false,
-				// but we have a top value state
-				// we cannot do much other than being conservative and
-				// say that the assertion might not hold
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
+				// the assertion is evaluated, but we have a top value state:
+				// we cannot do much other than being conservative and say that
+				// the assertion might not hold
+				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
 				continue;
 			}
 
@@ -199,18 +180,9 @@ public class AssertChecker<V extends ValueLattice<V>>
 			for (SymbolicExpression expr : state.getExecutionExpressions())
 				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, result.getId(), (ProgramPoint) node));
 
-			if (overall == Satisfiability.SATISFIED)
-				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
-			else if (overall == Satisfiability.NOT_SATISFIED) {
-				if (reach == ReachabilityStatus.REACHABLE) {
-					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-					violations.accept(new Violation(ViolationKind.ASSERT, (Statement) node));
-				} else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE) {
-					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				}
-			} else {
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-			}
+			// only assertions that surely hold do not raise warnings
+			if (overall != Satisfiability.SATISFIED)
+				tool.warnOn((Statement) node, POSSIBLE_FAILURE);
 		}
 	}
 }
