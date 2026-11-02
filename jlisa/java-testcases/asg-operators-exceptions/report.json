@@ -1,9 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':16:2-16:15] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':24:2-24:15] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "int_Main.divide(int_x,_int_y)_f10be75b6671c8e7616ed0e97f28f581.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -20,7 +16,7 @@
     "statements" : "14",
     "units" : "52",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

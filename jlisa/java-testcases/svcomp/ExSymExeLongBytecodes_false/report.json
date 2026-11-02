@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':67:6-67:18] on 'void Main::test(long x, long z)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':67:6-67:18",
+    "cfg" : "void Main::test(long x, long z)",
+    "text" : "assert false",
+    "context" : "['Main.java':35:4-35:18]",
+    "contextHash" : "b679eb274015414f2a32ce2309ab4658",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_bfdf97a61d9ca8f3c78a9d4fe23699e0.graph.json", "report.json", "void_Main.Main(Main__this)_fc9796d25689e47dd35e05b6bfaad469.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.test(long_x,_long_z)_b679eb274015414f2a32ce2309ab4658.graph.json" ],

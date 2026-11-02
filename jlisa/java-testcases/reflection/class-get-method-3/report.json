@@ -1,22 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':10:2-10:37] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':10:2-10:37",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert ==(getDeclaringClass(m1), c)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':12:2-12:34] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':13:2-13:39] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':16:2-16:47] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':17:2-17:41] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':18:2-18:37] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':21:2-21:45] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':22:2-22:54] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:2-23:41] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':12:2-12:34",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert ==(getReturnType(m1), c2)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
@@ -34,7 +34,7 @@
     "statements" : "29",
     "units" : "56",
     "version" : "1.0",
-    "warnings" : "9"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

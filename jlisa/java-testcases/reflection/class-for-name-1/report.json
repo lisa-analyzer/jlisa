@@ -1,11 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':10:2-10:17] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':12:2-12:24] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':7:2-7:35] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Foo.Foo_clinit()_719148799eb1cdaefdf4d039364951be.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -22,7 +16,7 @@
     "statements" : "23",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

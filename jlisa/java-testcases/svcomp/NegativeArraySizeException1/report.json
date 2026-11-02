@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:6-14:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "location" : "'Main.java':14:6-14:18",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert false",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

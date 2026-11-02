@@ -1,17 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':16:4-16:26] on 'void A::A(A* this, int param)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':30:4-30:31] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':31:4-31:32] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':32:4-32:39] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':34:4-34:32] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':35:4-35:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_c17da2146ecd134cbf65af2fea81ddc5.graph.json", "void_A.A(A__this,_int_param)_3d718393f75783d63f62debd1a7fef81.graph.json", "void_A.A_clinit()_c17da2146ecd134cbf65af2fea81ddc5.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -28,7 +16,7 @@
     "statements" : "45",
     "units" : "57",
     "version" : "1.0",
-    "warnings" : "6"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

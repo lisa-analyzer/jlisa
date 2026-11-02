@@ -1,11 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':10:1-10:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':6:1-6:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':7:1-7:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_BaseConfig.BaseConfig_clinit()_3aa99874611c62fb36db40a622bed607.graph.json", "void_DerivedConfig.DerivedConfig_clinit()_e2f8c11f2efb8c2c1d68f58c04294a02.graph.json", "void_DerivedConfig.InnerConfig.InnerConfig_clinit()_b5773397db83b1be9a873ac273209d1a.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -22,7 +16,7 @@
     "statements" : "32",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

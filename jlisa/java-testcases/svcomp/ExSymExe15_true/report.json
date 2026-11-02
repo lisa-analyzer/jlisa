@@ -1,7 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':55:6-55:18] on 'void Main::test(Main* this, int x, int z, int r)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "short_org.sosy_lab.sv_benchmarks.Verifier.nondetShort()_d3004c0e2315981dfce97e079239a255.graph.json", "void_Main.Main(Main__this)_d147df60018d3094da71aaaf18fce083.graph.json", "void_Main.Main_clinit()_d147df60018d3094da71aaaf18fce083.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.test(Main__this,_int_x,_int_z,_int_r)_58a79ca538c8cddfebd7544356d3c1d4.graph.json" ],
   "info" : {
@@ -18,7 +16,7 @@
     "statements" : "45",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "1"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

@@ -1,8 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':34:8-34:25] on 'int Main::read(byte[]* b, int count)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':56:8-56:28] on 'int Main::read(byte[]* b, int count)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':56:8-56:28",
+    "cfg" : "int Main::read(byte[]* b, int count)",
+    "text" : "assert >=(copied, 0)",
+    "context" : "['Main.java':72:23-72:36]",
+    "contextHash" : "d3762e9d572e83bf49d2c0ef8fb58837",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "int_Main.read(byte[]__b,_int_count)_d3762e9d572e83bf49d2c0ef8fb58837.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_0ce62176ff04b15d2316bd5da68e9201.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_2ac9ed78b8a660164d2a3080520cb609.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_5140ec564853e0e16e53a40aa4296eab.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7c307795ffc692cc62fba2047bd0390d.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_8e3c710fbac15b0ee84e132e6562fd16.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_9b42efa7400cb3ba17f6156f23aa98c6.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_c612d2be786d4da8af2e8fa2f9cf2d56.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_fc3d3e27df3442dfae5fd75c2cf7446d.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -20,7 +25,7 @@
     "statements" : "57",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",

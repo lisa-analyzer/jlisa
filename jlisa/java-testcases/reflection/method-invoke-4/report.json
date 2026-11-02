@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':20:2-20:29] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':20:2-20:29",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert instanceof(o,java.lang.String*)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_43d0ac530b7b7b99e4a7b072b2e24a0e.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],

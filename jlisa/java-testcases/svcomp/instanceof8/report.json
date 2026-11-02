@@ -1,9 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':19:4-19:24] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':20:4-20:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "bool_Main.test(java.lang.Integer__i)_5c0c82b4a23341fdc49e0b56c125ce4b.graph.json", "bool_Main.test(java.lang.Integer__i)_9147ca1456dd8052b08b16685439ad1e.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -20,7 +16,7 @@
     "statements" : "28",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

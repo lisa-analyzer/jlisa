@@ -1,8 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:4-17:15] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':18:9-18:21] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "location" : "'Main.java':18:9-18:21",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert false",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_0d35fb583859b03ffebba91f6671e3b3.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -20,7 +25,7 @@
     "statements" : "28",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",

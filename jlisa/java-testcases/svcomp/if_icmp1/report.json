@@ -1,18 +1,49 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:6-14:18] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':14:6-14:18",
+    "cfg" : "void Main::f(int i, int j)",
+    "text" : "assert false",
+    "context" : "['Main.java':37:4-37:14]",
+    "contextHash" : "d7d0b99ae2d287982299d886ea62de52",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':17:6-17:18] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':17:6-17:18",
+    "cfg" : "void Main::f(int i, int j)",
+    "text" : "assert false",
+    "context" : "['Main.java':37:4-37:14]",
+    "contextHash" : "d7d0b99ae2d287982299d886ea62de52",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':20:6-20:17] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':22:6-22:18",
+    "cfg" : "void Main::f(int i, int j)",
+    "text" : "assert false",
+    "context" : "['Main.java':37:4-37:14]",
+    "contextHash" : "d7d0b99ae2d287982299d886ea62de52",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':22:6-22:18] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':25:6-25:18",
+    "cfg" : "void Main::f(int i, int j)",
+    "text" : "assert false",
+    "context" : "['Main.java':37:4-37:14]",
+    "contextHash" : "d7d0b99ae2d287982299d886ea62de52",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':25:6-25:18] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':28:6-28:18] on 'void Main::f(int i, int j)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':30:6-30:17] on 'void Main::f(int i, int j)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':28:6-28:18",
+    "cfg" : "void Main::f(int i, int j)",
+    "text" : "assert false",
+    "context" : "['Main.java':37:4-37:14]",
+    "contextHash" : "d7d0b99ae2d287982299d886ea62de52",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_ff6b2d7f1f52eeaa41f1a7d789aa17a8.graph.json", "report.json", "void_Main.f(int_i,_int_j)_d7d0b99ae2d287982299d886ea62de52.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -30,7 +61,7 @@
     "statements" : "40",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "7"
+    "warnings" : "5"
   },
   "configuration" : {
     "asynchronousListeners" : "",

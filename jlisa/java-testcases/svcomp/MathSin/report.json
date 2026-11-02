@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:4-14:29] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':14:4-14:29",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert <(mysin(sin, d), 0.5)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "double_MathSin.mysin(MathSin__this,_double_x)_6d9ee7ed71948326c47643fc585b4223.graph.json", "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_482b54c6f24f61fd49e223b3888c003f.graph.json", "long_MathSin.helperdoubleToRawBits(double_xm)_bd204b4a2636ff6a4d9531588dba7c2b.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_MathSin.MathSin(MathSin__this)_a489e22e0763156e5aa3558a519ec2fe.graph.json", "void_MathSin.MathSin_clinit()_a489e22e0763156e5aa3558a519ec2fe.graph.json" ],

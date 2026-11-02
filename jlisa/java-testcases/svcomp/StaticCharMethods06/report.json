@@ -1,10 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':4] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    "location" : "'$Main.java':4",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false
   }, {
-    "message" : "['Main.java':22:6-22:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':25:6-25:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':25:6-25:18",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert false",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_88f4419dc04a81ee19731069b8ac760d.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -22,7 +34,7 @@
     "statements" : "34",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

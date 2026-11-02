@@ -1,24 +1,22 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:2-17:27] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':31:2-31:38",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(Holder::label, \"right\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':22:3-22:38] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:3-23:34] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':27:3-27:39] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':28:3-28:34] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':31:2-31:38] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':32:2-32:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':7:2-7:27] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':8:2-8:30] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':9:2-9:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':32:2-32:33",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(Holder::branchCount, 2)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Holder.Holder_clinit()_22eecd1edbfd571a3ff497017693103a.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -36,7 +34,7 @@
     "statements" : "30",
     "units" : "53",
     "version" : "1.0",
-    "warnings" : "10"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

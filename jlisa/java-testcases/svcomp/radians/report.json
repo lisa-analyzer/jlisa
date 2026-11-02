@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':38:6-38:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':38:6-38:18",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert false",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_6e7167c8278e08aca5c8a47f53deacd4.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

@@ -1,8 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':21:6-21:18] on 'void Main::foo()': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-  }, {
-    "message" : "['Main.java':30:6-30:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':21:6-21:18",
+    "cfg" : "void Main::foo()",
+    "text" : "assert false",
+    "context" : "['Main.java':28:6-28:10]",
+    "contextHash" : "54154623608c8bab99adfda41d370592",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_3d1e913e0998d131b6ad71623b00dabb.graph.json", "void_A.A(A__this)_7a878d73fbb02cf9de0535e5caebe377.graph.json", "void_Main.foo()_54154623608c8bab99adfda41d370592.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -20,7 +25,7 @@
     "statements" : "36",
     "units" : "58",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",

@@ -16,7 +16,6 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
@@ -24,7 +23,6 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -592,18 +590,15 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		if (!(analysis.domain instanceof SimpleAbstractDomain))
-			return null;
-		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
+		// the value domain and its state are retrieved without depending on
+		// how the domain of the analysis is built (e.g., it might be wrapped by
+		// another domain)
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom == null || env == null)
+			return Stream.empty();
 
-		assert (innerDomain != null);
-		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
-
-		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
+		SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
 
 		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
@@ -611,9 +606,11 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				.map(ex -> (ValueExpression) ex)
 				.flatMap(vex -> {
 					try {
-						return vdom.constraints(null, env, vex, this, oracle).stream();
+						Set<BinaryExpression> c = vdom.constraints(null, env, vex, this, oracle);
+						// a null result means the value is bottom
+						return c == null ? Stream.<BinaryExpression>empty() : c.stream();
 					} catch (SemanticException e) {
-						return null;
+						return Stream.<BinaryExpression>empty();
 					}
 				});
 	}

@@ -1,7 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':48:4-48:57] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_869bc665671ef5b94635d65bd6f7a968.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -18,7 +16,7 @@
     "statements" : "43",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "1"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

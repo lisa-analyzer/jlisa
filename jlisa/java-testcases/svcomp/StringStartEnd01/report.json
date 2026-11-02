@@ -1,10 +1,31 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:4-17:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':17:4-17:17",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(i, 2)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':23:4-23:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':23:4-23:17",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(i, 1)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':29:4-29:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':29:4-29:17",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(i, 2)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

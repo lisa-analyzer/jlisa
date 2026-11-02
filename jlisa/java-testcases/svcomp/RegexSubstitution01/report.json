@@ -1,18 +1,58 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':11] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    "location" : "'$Main.java':11",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false
   }, {
-    "message" : "['Main.java':18:4-18:45] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':33:4-33:91",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(secondString, \"automatedautomatedautomatedAutomated Test Case Generation\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':33:4-33:91] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':38:4-38:68",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(results[0], \"automatedautomatedautomatedAutomated\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':38:4-38:68] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':39:4-39:36",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(results[1], \"Test\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':39:4-39:36] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':40:4-40:36",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(results[2], \"Case\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':40:4-40:36] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':41:4-41:42] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':41:4-41:42",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(results[3], \"Generation\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -30,7 +70,7 @@
     "statements" : "45",
     "units" : "58",
     "version" : "1.0",
-    "warnings" : "7"
+    "warnings" : "6"
   },
   "configuration" : {
     "asynchronousListeners" : "",

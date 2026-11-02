@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':4] on 'void ReflectionTest::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    "location" : "'$Main.java':4",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Baz.Baz(Baz__this)_006834ad676324341095ea7a2823c4ab.graph.json", "void_Foo.Foo(Foo__this)_8c7bdd476a045e591fdf6a2d6ad51f93.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],

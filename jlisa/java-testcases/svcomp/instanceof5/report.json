@@ -1,7 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':12:4-12:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -18,7 +16,7 @@
     "statements" : "25",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "1"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

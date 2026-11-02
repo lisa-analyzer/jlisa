@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':16:4-16:16] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "location" : "'Main.java':16:4-16:16",
+    "cfg" : "void B::f(B* this)",
+    "text" : "assert false",
+    "context" : "['Main.java':24:4-24:8]",
+    "contextHash" : "2e68f0feb72b21b9295e4998929b40f8",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_93362ec6ab038604fce9ce8d66a9219c.graph.json", "void_B.B(B__this)_c0b9496b97c6fdc1d61ef23369db1bb4.graph.json", "void_B.f(B__this)_2e68f0feb72b21b9295e4998929b40f8.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

@@ -9,9 +9,10 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
+import it.unive.jlisa.program.operator.JavaArithmeticOperators;
 import it.unive.lisa.type.NumericType;
 import it.unive.lisa.type.Type;
+import java.util.Set;
 
 /**
  * An expression modeling the subtraction operation ({@code -}). Both operands'
@@ -57,14 +58,19 @@ public class JavaSubtraction
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		if (analysis.getRuntimeTypesOf(state, left, context, this).stream().noneMatch(Type::isNumericType))
+		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, context, this);
+		if (leftTypes.stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
-		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(Type::isNumericType))
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
+		if (rightTypes.stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
 
+		Type type = JavaArithmeticOperators.promote(leftTypes, rightTypes);
+		if (type.isUntyped())
+			type = getStaticType();
 		return analysis.smallStepSemantics(
 				state,
-				new BinaryExpression(getStaticType(), left, right, NumericNonOverflowingSub.INSTANCE, getLocation()),
+				new BinaryExpression(type, left, right, JavaArithmeticOperators.sub(type), getLocation()),
 				context, this);
 	}
 

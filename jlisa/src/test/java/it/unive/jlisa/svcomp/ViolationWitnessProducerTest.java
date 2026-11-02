@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unive.jlisa.Main;
+import it.unive.lisa.outputs.json.JsonReport;
 import it.unive.lisa.witness.v2.Location;
 import it.unive.lisa.witness.v2.ViolationWitness;
 import it.unive.lisa.witness.v2.WitnessReader;
@@ -12,6 +13,7 @@ import it.unive.lisa.witness.v2.metadata.Task;
 import it.unive.lisa.witness.v2.violation.Segment;
 import it.unive.lisa.witness.v2.violation.Waypoint;
 import it.unive.lisa.witness.v2.violation.WaypointType;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -157,8 +159,13 @@ public class ViolationWitnessProducerTest {
 			Path outdir)
 			throws Exception {
 		assertFalse(Files.exists(witness(program, SVCOMPProperty.RUNTIME_EXCEPTION, outdir)));
-		assertTrue(Files.readString(outdir.resolve("report.json"))
-				.contains("DEFINITE: uncaught runtime exception in main method"));
+		JsonReport report;
+		try (Reader reader = Files.newBufferedReader(outdir.resolve("report.json"))) {
+			report = JsonReport.read(reader);
+		}
+		assertTrue(report.getWarnings().stream()
+				.anyMatch(w -> w.getMessage().equals("uncaught runtime exception in main method") && w.isDefinite()),
+				report.getWarnings().toString());
 	}
 
 	/**

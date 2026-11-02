@@ -1,8 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':15:2-15:37] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':16:2-16:39] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':15:2-15:37",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert ==(getDeclaringClass(m1), c)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
@@ -20,7 +25,7 @@
     "statements" : "15",
     "units" : "53",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",

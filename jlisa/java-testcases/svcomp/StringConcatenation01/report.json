@@ -1,12 +1,40 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':20:4-20:29] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':20:4-20:29",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(s1, args[0])",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':21:4-21:29] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':21:4-21:29",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(s2, args[1])",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':24:4-24:40] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':24:4-24:40",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(tmp, +(args[0], args[1]))",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   }, {
-    "message" : "['Main.java':27:4-27:30] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':27:4-27:30",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(tmp, args[0])",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_39182d1f254e90d2149be1f3266cf629.graph.json", "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_61ab0536620fb2d578179e686fbc8709.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

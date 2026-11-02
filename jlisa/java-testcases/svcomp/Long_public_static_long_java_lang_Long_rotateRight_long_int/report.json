@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':23:4-24:44] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':23:4-24:44",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert !(&&(==(output_1, 5788777621957833123), ==(output_2, 2041887375902113793)))",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_0102ffb44ae22651cef3643727a0c26a.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_cff1e9079ba1535b42289ec25fa9ef51.graph.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_05316aa49cfb675c0f08dca92bc179f7.graph.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_d39f8d4c5644f16054db59ad7183fcc5.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

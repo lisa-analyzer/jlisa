@@ -1,6 +1,13 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':18:18-18:52] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':18:18-18:52",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(token, \"genneration\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_06d41e9ebd3aed1f0074e2e1ee4432fd.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

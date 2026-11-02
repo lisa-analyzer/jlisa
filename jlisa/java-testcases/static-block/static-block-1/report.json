@@ -1,9 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':4:1-4:21] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':5:1-5:40] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_SimpleStatic.SimpleStatic_clinit()_d4817db7e7f2d642c567393afcd47571.graph.json", "void_SimpleStatic2.SimpleStatic2(SimpleStatic2__this)_cbf6bb8aa7d363ca7b27727495eb79d0.graph.json", "void_SimpleStatic2.SimpleStatic2_clinit()_cbf6bb8aa7d363ca7b27727495eb79d0.graph.json" ],
   "info" : {
@@ -20,7 +16,7 @@
     "statements" : "19",
     "units" : "54",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",
