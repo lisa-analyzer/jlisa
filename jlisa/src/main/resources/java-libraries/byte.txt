@@ -1,5 +1,5 @@
 class java.lang.Byte extends java.lang.Number:
-	instance field value type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+	instance final field value type it.unive.jlisa.program.type.JavaByteType::INSTANCE
 	
 	instance method Byte: it.unive.jlisa.program.java.constructs.bytew.ByteConstructor
 		libtype java.lang.Byte*

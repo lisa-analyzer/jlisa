@@ -1,4 +1,5 @@
 class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.type.JavaStringType
+	instance final field value libtype java.lang.String
 
 	instance method String: it.unive.jlisa.program.java.constructs.string.StringEmptyConstructor
 		type it.unive.lisa.type.VoidType::INSTANCE

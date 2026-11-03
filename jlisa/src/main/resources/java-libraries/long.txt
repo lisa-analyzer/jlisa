@@ -1,8 +1,8 @@
 class java.lang.Long extends java.lang.Number:
-	field MAX_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
-    field MIN_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+	final field MAX_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+    final field MIN_VALUE type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 
-	instance field value type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+	instance final field value type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 
 	method Long_clinit: it.unive.jlisa.program.java.constructs.longw.LongClassInitializer
 		type it.unive.lisa.type.VoidType::INSTANCE
