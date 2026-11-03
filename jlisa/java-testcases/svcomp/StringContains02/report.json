@@ -7,21 +7,35 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':12:26-12:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\""
+    }, {
+      "location" : "'Main.java':13:17-13:39",
+      "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\""
+    } ],
+    "explanation" : "violation reached in 1 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), assert contains(arg, \"Hello\")] (not yet certified by execution)"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "31ms",
-    "end" : "2026-11-02T16:37:37.223+01:00",
+    "duration" : "65ms",
+    "end" : "2026-11-03T12:22:59.948+01:00",
     "expressions" : "12",
     "files" : "1",
     "globals" : "51",
     "members" : "285",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-02T16:37:37.192+01:00",
+    "start" : "2026-11-03T12:22:59.883+01:00",
     "statements" : "11",
     "units" : "54",
     "version" : "1.0",
