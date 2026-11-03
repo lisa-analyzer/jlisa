@@ -7,7 +7,8 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
-    "definite" : false
+    "definite" : false,
+    "explanation" : "violation reached in 4 steps through [c = java.lang.Class::forName(\"Cat\"), s = null, ==(args::length, 1), s = \"name\", f = getField(c, s)], relying on values that are not computed precisely (merged values, heap values, operations on values of other kinds, comparisons of non-integers): merged value of $field:declaredFields; contents of $field:name after unmodeled writes; contents of $written:name after unmodeled writes; merged value of $written:declaredFields; merged value of __Cat"
   }, {
     "location" : "'Main.java':16:2-16:36",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -16,7 +17,8 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false
+    "definite" : false,
+    "explanation" : "violation reached in 6 steps through [c = java.lang.Class::forName(\"Cat\"), s = null, ==(args::length, 1), s = \"name\", f = getField(c, s), set(f, null, \"newName\"), assert equals(Cat::name, \"newName\")], relying on values that are not computed precisely (merged values, heap values, unsupported operations, operations on values of other kinds, comparisons of non-integers, unprojected values): merged value of $field:declaredFields; contents of $field:name after unmodeled writes; contents of $written:name after unmodeled writes; merged value of $written:declaredFields; merged value of __Cat"
   }, {
     "location" : "'Main.java':17:2-17:40",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -25,21 +27,22 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false
+    "definite" : false,
+    "explanation" : "violation reached in 7 steps through [c = java.lang.Class::forName(\"Cat\"), s = null, ==(args::length, 1), s = \"name\", f = getField(c, s), set(f, null, \"newName\"), assert equals(Cat::name, \"newName\"), assert equals(Cat::nickname, \"newName\")], relying on values that are not computed precisely (merged values, heap values, unsupported operations, operations on values of other kinds, comparisons of non-integers, unprojected values): merged value of $field:declaredFields; contents of $field:name after unmodeled writes; contents of $written:name after unmodeled writes; merged value of $written:declaredFields; merged value of __Cat"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Cat.Cat_clinit()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "76ms",
-    "end" : "2026-10-29T11:19:35.212+01:00",
+    "duration" : "3m 2s 195ms",
+    "end" : "2026-11-03T14:27:25.955+01:00",
     "expressions" : "31",
     "files" : "2",
     "globals" : "53",
     "members" : "274",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-29T11:19:35.136+01:00",
+    "start" : "2026-11-03T14:24:23.760+01:00",
     "statements" : "18",
     "units" : "53",
     "version" : "1.0",

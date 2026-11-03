@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 8 steps through [a = new B(), assert equals(a::name, \"ziggy\"), assert ==(a::z, 12), o = B::getSomeField(a, \"name\"), assert instanceof(o,java.lang.String*), str = (java.lang.String*) o, assert equals(str, \"ziggy\"), o = B::getSomeField(a, \"z\"), assert instanceof(o,java.lang.Double*)], relying on values that are not computed precisely (heap values, unsupported operations, operations on values of other kinds, call results): objects allocated by unmodeled code; TypeCheck; LogicalNegation; result of call to B::getSomeField"
+    "explanation" : "violation reached in 8 steps through [a = new B(), assert equals(a::name, \"ziggy\"), assert ==(a::z, 12), o = B::getSomeField(a, \"name\"), assert instanceof(o,java.lang.String*), str = (java.lang.String*) o, assert equals(str, \"ziggy\"), o = B::getSomeField(a, \"z\"), assert instanceof(o,java.lang.Double*)], relying on values that are not computed precisely (operations on values of other kinds, comparisons of non-integers, type tests, unprojected values, call results): ReferenceRead; ComparisonEq; java.lang.String*; java.lang.Double*; fresh values left unconstrained by the projection"
   }, {
     "location" : "'Main.java':26:3-26:32",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -18,36 +18,25 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 10 steps through [a = new B(), assert equals(a::name, \"ziggy\"), assert ==(a::z, 12), o = B::getSomeField(a, \"name\"), assert instanceof(o,java.lang.String*), str = (java.lang.String*) o, assert equals(str, \"ziggy\"), o = B::getSomeField(a, \"z\"), assert instanceof(o,java.lang.Double*), d = (java.lang.Double*) o, assert ==(doubleValue(d), 12)], relying on values that are not computed precisely (heap values, operations on values of other kinds, comparisons of non-integers, call results): objects allocated by unmodeled code; ReferenceRead; ComparisonEq; result of call to B::getSomeField"
-  }, {
-    "location" : "'Main.java':29:3-29:15",
-    "cfg" : "void Main::main(java.lang.String*[]* args)",
-    "text" : "assert false",
-    "context" : "<empty>",
-    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
-    "targetKind" : "EXPRESSION",
-    "message" : "the assertion might not hold",
-    "definite" : false,
-    "refuted" : true,
-    "explanation" : "inductive invariant found: {assert false=[!true]}"
+    "explanation" : "violation reached in 10 steps through [a = new B(), assert equals(a::name, \"ziggy\"), assert ==(a::z, 12), o = B::getSomeField(a, \"name\"), assert instanceof(o,java.lang.String*), str = (java.lang.String*) o, assert equals(str, \"ziggy\"), o = B::getSomeField(a, \"z\"), assert instanceof(o,java.lang.Double*), d = (java.lang.Double*) o, assert ==(doubleValue(d), 12)], relying on values that are not computed precisely (operations on values of other kinds, comparisons of non-integers, type tests, unprojected values, call results): ReferenceRead; ComparisonEq; java.lang.String*; java.lang.Double*; fresh values left unconstrained by the projection"
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_4b90900dfba7655ffd97438e2add1ac5.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_bb035935c1d6d6fedb470a9a559561f0.graph.json", "report.json", "void_A.A(A__this)_3cd489dd0f89ac56471d2a949e1854f7.graph.json", "void_B.B(B__this)_3a89ef35a06f0cb145102446759a7a35.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "1s 766ms",
-    "end" : "2026-11-03T12:22:49.360+01:00",
+    "duration" : "422ms",
+    "end" : "2026-11-03T14:24:21.163+01:00",
     "expressions" : "64",
     "files" : "5",
     "globals" : "55",
     "members" : "275",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-03T12:22:47.594+01:00",
+    "start" : "2026-11-03T14:24:20.741+01:00",
     "statements" : "28",
     "units" : "54",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

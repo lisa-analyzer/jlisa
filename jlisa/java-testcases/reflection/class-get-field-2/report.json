@@ -8,33 +8,24 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : true
-  }, {
-    "location" : "'Main.java':44:3-44:15",
-    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
-    "text" : "assert false",
-    "context" : "<empty>",
-    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
-    "targetKind" : "EXPRESSION",
-    "message" : "the assertion might not hold",
-    "definite" : false
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "7",
-    "duration" : "271ms",
-    "end" : "2026-10-27T15:45:15.913+01:00",
+    "duration" : "197ms",
+    "end" : "2026-11-03T14:24:15.157+01:00",
     "expressions" : "112",
     "files" : "1",
     "globals" : "56",
     "members" : "277",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-27T15:45:15.642+01:00",
+    "start" : "2026-11-03T14:24:14.960+01:00",
     "statements" : "46",
     "units" : "56",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",
