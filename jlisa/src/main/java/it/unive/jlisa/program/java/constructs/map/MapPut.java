@@ -159,16 +159,17 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 		AnalysisState<A> tmp = state;
 		for (Type t : analysis.getRuntimeTypesOf(state, right, context, this)) {
 
-			AccessChild accessMapKey = new AccessChild(t, derefMap, keyStringVar, location);
-
 			ExpressionSet rightExprs = new ExpressionSet(right);
 			AnalysisState<A> wrapped = tmp;
 			if (JavaTypeSystem.isPrimitive(t)) {
 				wrapped = boxValue(interprocedural, wrapped, right, t, expressions);
 				rightExprs = wrapped.getExecutionExpressions();
+                                t = new JavaReferenceType(JavaClassType.getWrappedType(t));
 			}
 
-			for (SymbolicExpression s : rightExprs) {
+                        AccessChild accessMapKey = new AccessChild(t, derefMap, keyStringVar, location);
+
+                        for (SymbolicExpression s : rightExprs) {
 				wrapped = wrapped.lub(analysis.assign(wrapped, accessMapKey, s, context, this));
 			}
 			tmp = wrapped;

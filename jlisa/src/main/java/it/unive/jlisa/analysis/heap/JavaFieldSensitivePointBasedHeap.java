@@ -25,6 +25,7 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
@@ -131,6 +132,10 @@ public class JavaFieldSensitivePointBasedHeap
 			List<HeapReplacement> replacements,
 			boolean rhsIsReceiver)
 			throws SemanticException {
+
+		if (JavaTypeSystem.isPrimitive(id.getStaticType()) || JavaTypeSystem.isPrimitive(rhs.getStaticType()))
+			return sss;
+
 		if (rhs instanceof AllocationSite) {
 			// this whole branch is custom just for java
 			// we have x = y, where y is a pointer to an allocation site
