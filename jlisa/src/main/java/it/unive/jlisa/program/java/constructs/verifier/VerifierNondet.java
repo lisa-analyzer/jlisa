@@ -26,6 +26,7 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.UserInput;
 import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
@@ -54,7 +55,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
  */
-public class VerifierNondet extends NaryExpression implements PluggableStatement {
+public class VerifierNondet extends NaryExpression implements PluggableStatement, UserInput {
 
 	/**
 	 * The name of the class of the SV-COMP benchmarks defining the methods.
