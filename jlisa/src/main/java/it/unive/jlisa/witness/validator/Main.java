@@ -158,7 +158,8 @@ public final class Main {
 						ViolationValidatorV2.validate(violationWitness, task.property(), task.sources(), java8Exec,
 								cmd.hasOption("input-search"));
 					} else {
-						throw new ValidationException("Correctness witnesses V2 not supported yet");
+						// just linting
+						CorrectnessValidator.validateMock();
 					}
 				}
 			}
@@ -256,7 +257,7 @@ public final class Main {
 	 * Selects the appropriate parser based on the witness file extension.
 	 * <ul>
 	 * <li>{@code .graphml} → {@link WitnessParserV1}</li>
-	 * <li>{@code .yaml} / {@code .yml} → {@link WitnessParserV2}</li>
+	 * <li>{@code .yaml} / {@code .yml} → {@link WitnessReader}</li>
 	 * </ul>
 	 */
 	private static Either<WitnessModel, Witness> parseWitness(
