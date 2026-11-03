@@ -74,7 +74,10 @@ public final class RuntimeExceptionTarget {
 		Set<Statement> origins = new HashSet<>();
 		Set<AnalysisState.Error> visited = new HashSet<>();
 		for (var error : state.getErrors())
-			if (!isRuntimeException(error.getKey().getType())
+			if (isAssertionError(error.getKey().getType()))
+				// failed assertions are not runtime exceptions
+				continue;
+			else if (!isRuntimeException(error.getKey().getType())
 					|| !collectOrigins(tool, error.getKey(), origins, visited))
 				return Optional.empty();
 		if (origins.size() != 1)
@@ -208,6 +211,11 @@ public final class RuntimeExceptionTarget {
 	 *
 	 * @return {@code true} if the type is a runtime exception
 	 */
+	private static boolean isAssertionError(
+			Type type) {
+		return type.canBeAssignedTo(JavaClassType.getAssertionErrorType().getReference());
+	}
+
 	private static boolean isRuntimeException(
 			Type type) {
 		if (!type.isReferenceType() || !type.asReferenceType().getInnerType().isUnitType())

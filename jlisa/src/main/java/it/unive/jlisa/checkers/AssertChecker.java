@@ -124,13 +124,15 @@ public class AssertChecker<V extends ValueLattice<V>>
 					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = tool
 							.getAnalysis().removeCaughtErrors(result.getAnalysisStateAfter(node), node);
 
-			// checking if there exists at least one exception state
+			// checking if there exists at least one exception state, ignoring
+			// the AssertionErrors of failed assertions (reported by the
+			// assert checker)
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
 					!state.getErrors().isTop() &&
-					!state.getErrors().function.isEmpty() ||
+					state.getErrors().function.keySet().stream().anyMatch(e -> !isAssertionError(e.getType())) ||
 					(!state.getSmashedErrors().isBottom() &&
 							!state.getSmashedErrors().isTop() &&
-							!state.getSmashedErrors().function.isEmpty());
+							state.getSmashedErrors().function.keySet().stream().anyMatch(t -> !isAssertionError(t)));
 
 			// if exceptions might have been thrown, we raise a possible warning.
 			// Its violation concerns exceptions only: errors (e.g., the
@@ -149,6 +151,11 @@ public class AssertChecker<V extends ValueLattice<V>>
 							.put(String.valueOf(result.getId()), target.get());
 			}
 		}
+	}
+
+	private static boolean isAssertionError(
+			Type type) {
+		return type.canBeAssignedTo(JavaClassType.getAssertionErrorType().getReference());
 	}
 
 	private void checkAssert(
