@@ -1,15 +1,20 @@
 package it.unive.jlisa.witness.validator;
 
 import it.unive.jlisa.svcomp.SVCOMPProperty;
+import it.unive.jlisa.utils.Either;
 import it.unive.jlisa.witness.validator.correctness.CorrectnessValidator;
 import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.TaskSources;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
 import it.unive.jlisa.witness.validator.parser.WitnessParserV1;
-import it.unive.jlisa.witness.validator.parser.WitnessParserV2;
 import it.unive.jlisa.witness.validator.violation.BugFinder;
-import it.unive.jlisa.witness.validator.violation.ViolationValidator;
+import it.unive.jlisa.witness.validator.violation.ViolationValidatorV1;
+import it.unive.jlisa.witness.validator.violation.ViolationValidatorV2;
 import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
+import it.unive.lisa.witness.v2.ViolationWitness;
+import it.unive.lisa.witness.v2.Witness;
+import it.unive.lisa.witness.v2.WitnessReadException;
+import it.unive.lisa.witness.v2.WitnessReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +29,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 /**
  * Entry point for the jLISA Witness Validator.
  * <h3>Usage</h3>
- * 
+ *
  * <pre>{@code
  * jlisa-witness-validator --witness <file> [--input-search] TASK [--java <path>] [--verbose]
  * jlisa-witness-validator --find-bug [--time-limit <seconds>] [--witness-output <file>] TASK
@@ -130,19 +135,31 @@ public final class Main {
 				}
 				BugFinder.find(task.property(), task.sources(), java8Exec, millis, witnessOutput);
 			} else {
-				WitnessModel model = parseWitness(new File(witnessPath));
-				LOG.info("Parsed witness: {}", model);
-				switch (model.type()) {
-				case VIOLATION -> ViolationValidator.validate(model, task.property(), task.sources(), java8Exec,
-						cmd.hasOption("input-search"));
-				case CORRECTNESS -> {
-					if (task.taskFile() == null) {
-						RunSummary.couldNotValidate("correctness-witness",
-								"correctness witnesses are only validated with --benchmark");
-					} else {
-						CorrectnessValidator.validate(model, task.taskFile());
+				Either<WitnessModel, Witness> witnessEither = parseWitness(new File(witnessPath));
+				LOG.info("Parsed witness: {}", witnessEither);
+
+				if (witnessEither.isLeft()) {
+					WitnessModel model = witnessEither.getLeft();
+					switch (model.type()) {
+					case VIOLATION -> ViolationValidatorV1.validate(model, task.property(), task.sources(), java8Exec,
+							cmd.hasOption("input-search"));
+					case CORRECTNESS -> {
+						if (task.taskFile() == null) {
+							RunSummary.couldNotValidate("correctness-witness",
+									"correctness witnesses are only validated with --benchmark");
+						} else {
+							CorrectnessValidator.validate(model, task.taskFile());
+						}
 					}
-				}
+					}
+				} else {
+					Witness witness = witnessEither.getRight();
+					if (witness instanceof ViolationWitness violationWitness) {
+						ViolationValidatorV2.validate(violationWitness, task.property(), task.sources(), java8Exec,
+								cmd.hasOption("input-search"));
+					} else {
+						throw new ValidationException("Correctness witnesses V2 not supported yet");
+					}
 				}
 			}
 		} catch (ValidationException e) {
@@ -242,15 +259,17 @@ public final class Main {
 	 * <li>{@code .yaml} / {@code .yml} → {@link WitnessParserV2}</li>
 	 * </ul>
 	 */
-	private static WitnessModel parseWitness(
+	private static Either<WitnessModel, Witness> parseWitness(
 			File witnessFile)
-			throws ValidationException {
+			throws ValidationException,
+			IOException,
+			WitnessReadException {
 		String name = witnessFile.getName().toLowerCase();
 		if (name.endsWith(".graphml") || name.endsWith(".xml")) {
-			return WitnessParserV1.parse(witnessFile);
+			return Either.left(WitnessParserV1.parse(witnessFile));
 		}
 		if (name.endsWith(".yaml") || name.endsWith(".yml")) {
-			return WitnessParserV2.parse(witnessFile);
+			return Either.right(WitnessReader.read(witnessFile.toPath()));
 		}
 		// Unknown extension — peek at the first line to decide
 		try {
@@ -259,10 +278,10 @@ public final class Main {
 					.findFirst()
 					.orElse("");
 			if (firstLine.contains("<graphml") || firstLine.startsWith("<?xml")) {
-				return WitnessParserV1.parse(witnessFile);
+				return Either.left(WitnessParserV1.parse(witnessFile));
 			}
 			if (firstLine.startsWith("format_version") || firstLine.startsWith("---")) {
-				return WitnessParserV2.parse(witnessFile);
+				return Either.right(WitnessReader.read(witnessFile.toPath()));
 			}
 		} catch (java.io.IOException e) {
 			throw new ValidationException("Cannot read witness file: " + e.getMessage(), e);
