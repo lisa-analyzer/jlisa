@@ -5,6 +5,7 @@ import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.model.*;
+import it.unive.jlisa.witness.validator.search.Trace;
 import java.util.*;
 
 /**
@@ -67,6 +68,8 @@ public final class EventLoop {
 
 	// the function_return waypoints of the witness, passed in order
 	private final WitnessCalls calls;
+	// the task sources, for the target of the violation
+	private final WitnessLocations locations;
 	// Verifier.nondet* calls that returned a value not fixed by the witness
 	private int freeNondetCalls = 0;
 	// a witness value that could not be returned (the run left the witness)
@@ -102,6 +105,7 @@ public final class EventLoop {
 		this.vm = vm;
 		this.plan = plan;
 		this.property = property;
+		this.locations = locations;
 		this.calls = new WitnessCalls(plan.interceptions(), locations);
 	}
 
@@ -187,10 +191,8 @@ public final class EventLoop {
 		req.enable();
 		ValidatorLogger.jdi("MethodEntryRequest: {} ({} witness values)", VERIFIER_CLASS_FILTER, calls.size());
 
-		// 2. ClassPrepareRequests for classes with breakpoints
-		for (TargetPoint tp : plan.targetPoints()) {
-			queueBreakpoint(tp.fileName(), tp.line(), PointType.TARGET, tp);
-		}
+		// 2. ClassPrepareRequests for classes with breakpoints (the target is
+		// checked at the violation, from the stack)
 		for (AvoidPoint ap : plan.avoidPoints()) {
 			queueBreakpoint(ap.fileName(), ap.line(), PointType.AVOID, ap);
 		}
@@ -434,8 +436,7 @@ public final class EventLoop {
 
 		if (property == Property.ASSERT) {
 			if (exceptionClass.contains("AssertionError")) {
-				ValidatorLogger.event("Uncaught exception confirms violation - CORRECT");
-				return Optional.of(correct("assertion-error", exceptionClass + " at " + where(loc)));
+				return Optional.of(violation(event, "assertion-error", exceptionClass + " at " + where(loc)));
 			}
 		}
 
@@ -451,7 +452,7 @@ public final class EventLoop {
 			return Optional.of(ValidationResult.ERROR);
 		} else if (isException) {
 			if (property == Property.RUNTIME && isRuntimeException) {
-				return Optional.of(correct("runtime-exception", exceptionClass + " at " + where(loc)));
+				return Optional.of(violation(event, "runtime-exception", exceptionClass + " at " + where(loc)));
 			}
 			ValidatorLogger.event("Uncaught Exception - " + reference);
 			return Optional.of(noViolation("other-exception", exceptionClass + " at " + where(loc)
@@ -523,6 +524,77 @@ public final class EventLoop {
 		}
 		RunSummary.reason(code, detail + "; every nondet call was fixed by the witness");
 		return ValidationResult.SPURIOUS;
+	}
+
+	/**
+	 * The property is violated: the witness is confirmed if the violation is at
+	 * its target, that is, a frame of the thread is at the target line, or the
+	 * target is where jlisa would put the target of this violation. A violation
+	 * elsewhere rejects the witness if the witness fixed every nondet value of
+	 * the run; otherwise it says nothing about the witness.
+	 */
+	private ValidationResult violation(
+			ExceptionEvent event,
+			String code,
+			String detail) {
+		if (plan.targetPoints().isEmpty() || atTarget(event.thread())) {
+			ValidatorLogger.event("Violation at the target — CORRECT");
+			return correct(code, detail);
+		}
+		recordUnusedValues();
+		// When the witness fixed every nondet value, the run is the only one
+		// the witness allows: its violation elsewhere rejects the witness.
+		// Otherwise the run took values of its own and says nothing about it.
+		if (freeNondetCalls == 0 && !witnessValueNotApplied) {
+			ValidatorLogger.event("Violation, but not at the target {} — spurious", plan.targetPoints());
+			RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints()
+					+ "; every nondet call was fixed by the witness");
+			return ValidationResult.SPURIOUS;
+		}
+		ValidatorLogger.event("Violation, but not at the target {} — unknown", plan.targetPoints());
+		RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints() + "; "
+				+ freeNondetCalls + " nondet call(s) not fixed by the witness");
+		return ValidationResult.UNKNOWN;
+	}
+
+	private boolean atTarget(
+			ThreadReference thread) {
+		List<Trace.Frame> frames = new ArrayList<>();
+		try {
+			for (StackFrame f : thread.frames()) {
+				Location l = f.location();
+				String path;
+				try {
+					path = l.sourcePath();
+				} catch (AbsentInformationException e) {
+					path = null;
+				}
+				for (TargetPoint t : plan.targetPoints()) {
+					if (l.lineNumber() == t.line()
+							&& WitnessCalls.baseName(t.fileName()).equals(safeSourceName(l))) {
+						return true;
+					}
+				}
+				frames.add(new Trace.Frame(path, l.lineNumber(), l.codeIndex(), l.declaringType().name(),
+						l.method().name()));
+			}
+		} catch (IncompatibleThreadStateException e) {
+			return false;
+		}
+		if (locations == null) {
+			return false;
+		}
+		WitnessLocations.Point p = locations.target(new Trace(List.of(), null, frames), property);
+		if (p == null) {
+			return false;
+		}
+		for (TargetPoint t : plan.targetPoints()) {
+			if (p.line() == t.line() && WitnessCalls.baseName(t.fileName())
+					.equals(WitnessCalls.baseName(p.sourcePath()))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private ValidationResult correct(
