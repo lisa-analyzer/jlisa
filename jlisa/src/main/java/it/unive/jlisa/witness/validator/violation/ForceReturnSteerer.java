@@ -58,6 +58,85 @@ public final class ForceReturnSteerer {
 		}
 	}
 
+	/**
+	 * Forces the currently-entered method to return the value of a witness
+	 * constraint (see {@link ReturnConstraint#value}), converted to the return
+	 * type of the method: an integer literal fits any integer type or
+	 * {@code char} when in range, a number any floating-point type.
+	 *
+	 * @param thread     the suspended thread at the {@code MethodEntryEvent}
+	 * @param value      the value
+	 * @param descriptor the JVM method descriptor
+	 * 
+	 * @throws ValidationException if the value does not fit the return type or
+	 *                                 the early return fails
+	 */
+	public static void steer(
+			ThreadReference thread,
+			Object value,
+			String descriptor)
+			throws ValidationException {
+		Value mirror = mirrorTyped(thread.virtualMachine(), value, returnTypeDescriptor(descriptor));
+		try {
+			thread.forceEarlyReturn(mirror);
+		} catch (Exception e) {
+			throw new ValidationException(
+					"forceEarlyReturn failed for value=" + value + " descriptor='" + descriptor + "': "
+							+ e.getMessage(),
+					e);
+		}
+	}
+
+	private static Value mirrorTyped(
+			VirtualMachine vm,
+			Object value,
+			String retType)
+			throws ValidationException {
+		Value mirror = switch (retType) {
+		case "Z" -> value instanceof Boolean b ? vm.mirrorOf(b) : null;
+		case "I" -> integral(value, Integer.MIN_VALUE, Integer.MAX_VALUE) instanceof Long l ? vm.mirrorOf(l.intValue())
+				: null;
+		case "J" -> integral(value, Long.MIN_VALUE, Long.MAX_VALUE) instanceof Long l ? vm.mirrorOf(l) : null;
+		case "S" -> integral(value, Short.MIN_VALUE, Short.MAX_VALUE) instanceof Long l
+				? vm.mirrorOf(l.shortValue())
+				: null;
+		case "B" -> integral(value, Byte.MIN_VALUE, Byte.MAX_VALUE) instanceof Long l ? vm.mirrorOf(l.byteValue())
+				: null;
+		case "C" -> value instanceof Character c ? vm.mirrorOf(c)
+				: integral(value, Character.MIN_VALUE, Character.MAX_VALUE) instanceof Long l
+						? vm.mirrorOf((char) l.longValue())
+						: null;
+		case "F" -> value instanceof Number n && !(value instanceof Double d && !d.isNaN() && !d.isInfinite()
+				&& (double) d.floatValue() != d) ? vm.mirrorOf(n.floatValue()) : null;
+		case "D" -> value instanceof Number n ? vm.mirrorOf(n.doubleValue()) : null;
+		case "Ljava/lang/String;" -> value instanceof String s ? vm.mirrorOf(s) : null;
+		default -> null;
+		};
+		if (mirror == null) {
+			throw new ValidationException("The value " + value + " of the witness does not fit the return type '"
+					+ retType + "'");
+		}
+		return mirror;
+	}
+
+	/**
+	 * Returns the value as a Long if it is an integer in the range, else null.
+	 */
+	private static Long integral(
+			Object value,
+			long min,
+			long max) {
+		long v;
+		if (value instanceof Long l) {
+			v = l;
+		} else if (value instanceof Character c) {
+			v = c;
+		} else {
+			return null;
+		}
+		return v < min || v > max ? null : v;
+	}
+
 	// ------------------------------------------------------------------
 	// private helpers
 	// ------------------------------------------------------------------
