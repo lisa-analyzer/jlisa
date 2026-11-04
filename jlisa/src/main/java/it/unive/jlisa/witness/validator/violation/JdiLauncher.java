@@ -321,16 +321,6 @@ public final class JdiLauncher {
 			throw new ValidationException("No .java source files found in " + sourceDir.getAbsolutePath());
 		}
 
-		// Check if .class files already exist at the top level — skip if so
-		File[] existing = sourceDir.listFiles((
-				dir,
-				name) -> name.endsWith(".class"));
-		if (existing != null && existing.length > 0) {
-			ValidatorLogger.jdi("Skipping compilation — .class files already present in {}",
-					sourceDir.getAbsolutePath());
-			return;
-		}
-
 		// Accumulate all sources: benchmark dir (flat) + extra sources dir
 		// (recursive)
 		java.util.List<File> allSources = recSourceDir;

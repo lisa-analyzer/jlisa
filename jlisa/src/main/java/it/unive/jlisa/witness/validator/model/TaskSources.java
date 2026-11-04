@@ -28,7 +28,8 @@ public record TaskSources(
 	/**
 	 * The task of an SV-COMP task file ({@code --benchmark}): its benchmark
 	 * directory is the input named as the task file, and the program is
-	 * compiled into it.
+	 * compiled into a temporary directory, deleted when the tool exits, so that
+	 * the inputs are only read.
 	 *
 	 * @param extraSourcesDir more sources to compile with the task, or null
 	 */
@@ -47,7 +48,7 @@ public record TaskSources(
 			inputs.add(extraSourcesDir);
 		}
 		inputs.addAll(properties.inputFiles());
-		return new TaskSources(inputs, properties.directory(), properties.directory());
+		return new TaskSources(inputs, properties.directory(), temporaryClassesDir());
 	}
 
 	/**
@@ -78,6 +79,15 @@ public record TaskSources(
 		}
 		File benchmark = inputs.stream().filter(f -> new File(f, "Main.java").isFile()).findFirst()
 				.orElse(inputs.getLast());
+		return new TaskSources(List.copyOf(inputs), benchmark, temporaryClassesDir());
+	}
+
+	/**
+	 * Returns a new temporary directory for the classes of the program, deleted
+	 * when the tool exits.
+	 */
+	private static File temporaryClassesDir()
+			throws ValidationException {
 		File classesDir;
 		try {
 			classesDir = Files.createTempDirectory("jlisa-wit-").toFile();
@@ -85,7 +95,7 @@ public record TaskSources(
 			throw new ValidationException("Cannot create a directory for the classes: " + e.getMessage(), e);
 		}
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> delete(classesDir.toPath())));
-		return new TaskSources(List.copyOf(inputs), benchmark, classesDir);
+		return classesDir;
 	}
 
 	private static void delete(
