@@ -125,6 +125,45 @@ public final class WitnessLocations {
 	}
 
 	/**
+	 * Returns the {@code Verifier.nondet*()} invocations of the given line of a
+	 * task file, in source order, each as its first and last column (from 1);
+	 * an empty list if the file is not a task file.
+	 *
+	 * @param sourcePath the path of the file from the package root
+	 * @param line       the line
+	 */
+	public List<int[]> nondetCalls(
+			String sourcePath,
+			int line) {
+		CompilationUnit unit = unit(sourcePath);
+		if (unit == null) {
+			return List.of();
+		}
+		List<MethodInvocation> candidates = new ArrayList<>();
+		unit.accept(new ASTVisitor() {
+			@Override
+			public boolean visit(
+					MethodInvocation node) {
+				if (isNondet(node) && unit.getLineNumber(node.getName().getStartPosition()) == line) {
+					candidates.add(node);
+				}
+				return true;
+			}
+		});
+		candidates.sort((
+				a,
+				b) -> Integer.compare(a.getStartPosition(), b.getStartPosition()));
+		List<int[]> result = new ArrayList<>();
+		for (MethodInvocation node : candidates) {
+			int end = node.getStartPosition() + node.getLength() - 1;
+			int first = unit.getColumnNumber(node.getStartPosition()) + 1;
+			int last = unit.getLineNumber(end) == line ? unit.getColumnNumber(end) + 1 : Integer.MAX_VALUE;
+			result.add(new int[] { first, last });
+		}
+		return result;
+	}
+
+	/**
 	 * The target of the violation of the trace, or null if it cannot be told.
 	 */
 	public Point target(

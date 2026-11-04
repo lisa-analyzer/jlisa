@@ -115,14 +115,11 @@ public final class ViolationValidatorV2 {
 		// Launch the target JVM
 		VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
 
-		// The witness values, as they are before the first run consumes them
-		// (for the search)
-		List<Interception> witnessValues = plan.interceptions().stream()
-				.map(ix -> new Interception(ix.className(), ix.lineNumber(), ix.returnValue()))
-				.toList();
+		// The witness values (each run passes them again from the first)
+		List<Interception> witnessValues = plan.interceptions();
 
 		// Run the event loop
-		EventLoop loop = new EventLoop(vm, plan, property);
+		EventLoop loop = new EventLoop(vm, plan, property, new WitnessLocations(extraSources));
 		ValidationResult result = loop.run();
 
 		// No violation, but the run chose values of its own for calls the
@@ -165,9 +162,9 @@ public final class ViolationValidatorV2 {
 									wpt.getLocation().getFileName(),
 									wpt.getLocation().getLine()));
 				} else if (wpt.getType() == WaypointType.FUNCTION_RETURN) {
-					interceptions.add(
-							new Interception(wpt.getLocation().getClass().getName(), wpt.getLocation().getLine(),
-									wpt.getConstraint().getValue()));
+					String constraint = wpt.getConstraint().getValue();
+					interceptions.add(new Interception(wpt.getLocation().getFileName(), wpt.getLocation().getLine(),
+							wpt.getLocation().getColumn(), ReturnConstraint.value(constraint), constraint));
 				}
 
 			}

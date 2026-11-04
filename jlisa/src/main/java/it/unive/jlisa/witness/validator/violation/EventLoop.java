@@ -65,9 +65,8 @@ public final class EventLoop {
 	private final ViolationPlan plan;
 	private final Property property;
 
-	// Runtime state for interceptions: map from "className.methodName" →
-	// Interception
-	private final Map<String, Queue<Interception>> interceptMap = new HashMap<>();
+	// the function_return waypoints of the witness, passed in order
+	private final WitnessCalls calls;
 	// Verifier.nondet* calls that returned a value not fixed by the witness
 	private int freeNondetCalls = 0;
 	// a witness value that could not be returned (the run left the witness)
@@ -89,13 +88,21 @@ public final class EventLoop {
 		BRANCH
 	}
 
+	/**
+	 * @param vm        the target VM, suspended at start
+	 * @param plan      the plan of the witness
+	 * @param property  the property
+	 * @param locations the task sources, or null if they cannot be read
+	 */
 	public EventLoop(
 			VirtualMachine vm,
 			ViolationPlan plan,
-			Property property) {
+			Property property,
+			WitnessLocations locations) {
 		this.vm = vm;
 		this.plan = plan;
 		this.property = property;
+		this.calls = new WitnessCalls(plan.interceptions(), locations);
 	}
 
 	/**
@@ -167,12 +174,8 @@ public final class EventLoop {
 	private void setupRequests() {
 		EventRequestManager erm = vm.eventRequestManager();
 
-		// 1. MethodEntryRequests for all Verifier.nondet* interceptions
-		for (Interception ix : plan.interceptions()) {
-			String key = ix.className() + "." + ix.lineNumber();
-			ValidatorLogger.jdi("SETTING KEY: " + key);
-			interceptMap.computeIfAbsent(key, s -> new ArrayDeque<>()).offer(ix);
-		}
+		// 1. MethodEntryRequest for the Verifier.nondet* calls
+		RunSummary.add("witness.values", calls.size());
 
 		// One request for every Verifier method: each nondet* call either gets
 		// the witness value
@@ -182,8 +185,7 @@ public final class EventLoop {
 		req.addClassFilter(VERIFIER_CLASS_FILTER);
 		req.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 		req.enable();
-		ValidatorLogger.jdi("MethodEntryRequest: {} (interceptions for {})",
-				VERIFIER_CLASS_FILTER, interceptMap.keySet());
+		ValidatorLogger.jdi("MethodEntryRequest: {} ({} witness values)", VERIFIER_CLASS_FILTER, calls.size());
 
 		// 2. ClassPrepareRequests for classes with breakpoints
 		for (TargetPoint tp : plan.targetPoints()) {
@@ -311,27 +313,24 @@ public final class EventLoop {
 			MethodEntryEvent event) {
 		String className = event.method().declaringType().name();
 		String methodName = event.method().name();
-		String key = className + "." + methodName;
-		// TODO: remote this hardcoded check.
-		if (!methodName.startsWith("nondet")) {
+		if (!methodName.startsWith("nondet") || methodName.equals("nondetObject")) {
 			return Optional.empty(); // e.g. Verifier.assume
 		}
 
-		Queue<Interception> interceptions = interceptMap.get(key);
-		Interception ix = interceptions == null ? null : interceptions.peek();
-
-		if (ix != null && ix.count() == 1) {
-			interceptions.remove();
+		Interception ix = null;
+		try {
+			ix = calls.match(event.thread().frame(1).location()).orElse(null);
+		} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
+			ValidatorLogger.warn("[EVENT]  no caller frame for {}.{}(): {}", className, methodName, e.getMessage());
 		}
-		if (ix == null || !ix.hasRemaining()) {
+
+		if (ix == null || !ix.fixesValue()) {
 			// Not fixed by the witness: any value is consistent with it, but
-			// the run can no
-			// longer reject it. Strings get a short default:
-			// Verifier.nondetString() picks a
-			// random size, which halts in assume() when negative and allocates
-			// up to 2 GB otherwise.
+			// the run can no longer reject it. Strings get a short default:
+			// Verifier.nondetString() picks a random size, which halts in
+			// assume() when negative and allocates up to 2 GB otherwise.
 			freeNondetCalls++;
-			RunSummary.count("nondet.free");
+			RunSummary.count(ix == null ? "nondet.free" : "nondet.not-single-value");
 			if (event.method().returnTypeName().equals("java.lang.String")) {
 				try {
 					ForceReturnSteerer.steer(event.thread(), DEFAULT_STRING, event.method().signature());
@@ -343,16 +342,16 @@ public final class EventLoop {
 							e.getMessage());
 				}
 			}
-			ValidatorLogger.event("MethodEntry: {}.{}() — no witness value, runs freely",
-					className, methodName);
+			ValidatorLogger.event("MethodEntry: {}.{}() — no witness value{}, runs freely",
+					className, methodName, ix == null ? "" : " (" + ix.constraint() + ")");
 			return Optional.empty();
 		}
 
 		ValidatorLogger.event("MethodEntry: {}.{}() — forcing return value: {}",
-				className, methodName, ix.returnValue());
+				className, methodName, ix.value());
 
 		try {
-			ForceReturnSteerer.steer(event.thread(), ix.returnValue());
+			ForceReturnSteerer.steer(event.thread(), ix.value(), event.method().signature());
 		} catch (Exception e) {
 			ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
 					e.getMessage());
@@ -548,7 +547,7 @@ public final class EventLoop {
 	 * witness path.
 	 */
 	private void recordUnusedValues() {
-		int unused = interceptMap.size();
+		int unused = calls.unused();
 		RunSummary.set("witness.values-unused", unused);
 	}
 
