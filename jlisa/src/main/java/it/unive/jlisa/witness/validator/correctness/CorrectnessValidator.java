@@ -64,6 +64,14 @@ public final class CorrectnessValidator {
 	}
 
 	/**
+	 * Mocks the validation step, returning an unknown
+	 */
+	public static void validateMock() {
+		ValidatorLogger.warn("[CORRECTNESS] mock run — unknown");
+		printVerdict(VERDICT_UNKNOWN);
+	}
+
+	/**
 	 * Validates all invariants in the correctness witness and prints the
 	 * verdict to stdout.
 	 *
