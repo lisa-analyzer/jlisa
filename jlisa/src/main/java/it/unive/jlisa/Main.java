@@ -8,6 +8,7 @@ import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.analysis.value.JavaFPFlags;
 import it.unive.jlisa.analysis.value.JavaNumericInterval;
 import it.unive.jlisa.analysis.value.JavaTarsis;
+import it.unive.jlisa.analysis.value.JavaUpperBounds;
 import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
@@ -369,12 +370,23 @@ public class Main {
 		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
 			break;
-		case "ConstantPropagation":
 		case "JavaWholeValueTarsis":
 			// the participants of ConstantPropagationWithTarsis (plus the kinds
 			// of floating point values), combined by the whole-value analysis
 			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
 					new JavaTarsis());
+			break;
+		case "JavaWholeValueUB":
+			// JavaWholeValueTarsis with the upper bounds of the Pentagons (x <
+			// y): with the intervals, the Pentagons of Logozzo and Fähndrich
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
+					new JavaUpperBounds(), new JavaTarsis());
+			break;
+		case "ConstantPropagation":
+		case "JavaWholeValueUBLE":
+			// JavaWholeValueUB with the relations x <= y too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
+					new JavaUpperBounds(true), new JavaTarsis());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
