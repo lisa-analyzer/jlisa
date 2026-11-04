@@ -111,6 +111,12 @@ public final class ViolationValidatorV2 {
 		// Find the main class
 		String mainClass = findMainClass(task.benchmark());
 		ValidatorLogger.jdi("Main class: {}", mainClass);
+		// Without its classes the program does not start, and its end would
+		// be taken for a run without the violation
+		if (!new File(task.classesDir(), mainClass.replace('.', File.separatorChar) + ".class").isFile()) {
+			throw new ValidationException("The main class " + mainClass + " is not compiled in "
+					+ task.classesDir().getAbsolutePath());
+		}
 
 		// Launch the target JVM
 		VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
