@@ -207,6 +207,12 @@ public class JavaFieldSensitivePointBasedHeap
 			} else if (bin.getOperator() == ComparisonEq.INSTANCE) {
 				SymbolicExpression leftExpr = bin.getLeft();
 				SymbolicExpression rightExpr = bin.getRight();
+				if (!mightBeReference(leftExpr.getStaticType()) || !mightBeReference(rightExpr.getStaticType()))
+					// a comparison between primitive values (e.g., two int
+					// fields) is not about pointers: the rewriting of a field
+					// of a possibly-null receiver contains null, that must not
+					// be compared as a pointer
+					return Satisfiability.UNKNOWN;
 
 				ExpressionSet rhsExps;
 				ExpressionSet lhsExps;
@@ -287,5 +293,10 @@ public class JavaFieldSensitivePointBasedHeap
 		}
 
 		return Satisfiability.UNKNOWN;
+	}
+
+	private static boolean mightBeReference(
+			Type type) {
+		return type.isPointerType() || type.isReferenceType() || type.isNullType() || type.isUntyped();
 	}
 }
