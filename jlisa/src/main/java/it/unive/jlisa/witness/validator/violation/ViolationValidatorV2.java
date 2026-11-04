@@ -7,6 +7,9 @@ import it.unive.jlisa.witness.validator.model.*;
 import it.unive.jlisa.witness.validator.search.InputSearch;
 import it.unive.jlisa.witness.validator.violation.EventLoop.ValidationResult;
 import it.unive.lisa.witness.v2.ViolationWitness;
+import it.unive.lisa.witness.v2.violation.Segment;
+import it.unive.lisa.witness.v2.violation.Waypoint;
+import it.unive.lisa.witness.v2.violation.WaypointType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -92,7 +95,7 @@ public final class ViolationValidatorV2 {
 
 		if (plan.isEmpty()) {
 			RunSummary.count("plan.empty");
-			ValidatorLogger.warn("[VALIDATE] Violation plan is empty — cannot steer execution");
+			ValidatorLogger.warn("[VALIDATE] No segments in witness — cannot steer execution");
 			// printVerdict(VERDICT_UNKNOWN);
 			// return;
 		}
@@ -115,8 +118,7 @@ public final class ViolationValidatorV2 {
 		// The witness values, as they are before the first run consumes them
 		// (for the search)
 		List<Interception> witnessValues = plan.interceptions().stream()
-				.map(ix -> new Interception(ix.className(), ix.methodName(), ix.descriptor(), ix.returnValue(),
-						ix.count()))
+				.map(ix -> new Interception(ix.className(), ix.lineNumber(), ix.returnValue()))
 				.toList();
 
 		// Run the event loop
@@ -154,6 +156,22 @@ public final class ViolationValidatorV2 {
 		List<TargetPoint> targetPoints = new ArrayList<>();
 
 		// TODO: parse the actual witness plan
+
+		for (Segment segment : model.getSequence().getSegments()) {
+			for (Waypoint wpt : segment.getWaypoints()) {
+				if (wpt.getType() == WaypointType.TARGET) {
+					targetPoints.add(
+							new TargetPoint(
+									wpt.getLocation().getFileName(),
+									wpt.getLocation().getLine()));
+				} else if (wpt.getType() == WaypointType.FUNCTION_RETURN) {
+					interceptions.add(
+							new Interception(wpt.getLocation().getClass().getName(), wpt.getLocation().getLine(),
+									wpt.getConstraint().getValue()));
+				}
+
+			}
+		}
 
 		return new ViolationPlan(
 				interceptions,

@@ -1,7 +1,5 @@
 package it.unive.jlisa.witness.validator.model;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * Describes a JDI method interception: when the target JVM enters
  * {@code className.methodName}, we call
@@ -18,22 +16,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Interception {
 
 	private final String className;
-	private final String methodName;
-	private final String descriptor;
+	private final int lineNumber;
 	private final String returnValue;
-	private final AtomicInteger remainingFires;
 
 	public Interception(
 			String className,
-			String methodName,
-			String descriptor,
-			String returnValue,
-			int count) {
+			int lineNumber,
+			String returnValue) {
 		this.className = className;
-		this.methodName = methodName;
-		this.descriptor = descriptor;
+		this.lineNumber = lineNumber;
 		this.returnValue = returnValue;
-		this.remainingFires = new AtomicInteger(count);
 	}
 
 	/**
@@ -45,20 +37,10 @@ public final class Interception {
 	}
 
 	/**
-	 * @return simple method name (e.g. {@code nondetInt})
+	 * @return line number
 	 */
-	public String methodName() {
-		return methodName;
-	}
-
-	/**
-	 * @return JVM method descriptor suffix, starting with {@code (} (e.g.
-	 *             {@code ()I} for {@code int nondetInt()}). Used by
-	 *             {@code ForceReturnSteerer} to select the correct
-	 *             {@code VirtualMachine.mirrorOf()} overload.
-	 */
-	public String descriptor() {
-		return descriptor;
+	public int lineNumber() {
+		return lineNumber;
 	}
 
 	/**
@@ -69,33 +51,8 @@ public final class Interception {
 		return returnValue;
 	}
 
-	/**
-	 * Decrements the remaining-fires counter and returns the new value. When it
-	 * reaches zero the caller should disable the method-entry request.
-	 */
-	public int decrementAndGet() {
-		return remainingFires.decrementAndGet();
-	}
-
-	/**
-	 * Returns the current remaining-fires count (snapshot — may change
-	 * concurrently).
-	 */
-	public int count() {
-		return remainingFires.get();
-	}
-
-	/**
-	 * Returns {@code true} if this interception should still fire at least
-	 * once.
-	 */
-	public boolean hasRemaining() {
-		return remainingFires.get() > 0;
-	}
-
 	@Override
 	public String toString() {
-		return className + "." + methodName + descriptor + " → return " + returnValue
-				+ " (" + remainingFires.get() + " remaining)";
+		return className + "." + lineNumber + " → return " + returnValue;
 	}
 }

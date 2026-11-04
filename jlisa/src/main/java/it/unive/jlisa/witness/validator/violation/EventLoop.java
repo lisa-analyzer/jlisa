@@ -169,14 +169,7 @@ public final class EventLoop {
 
 		// 1. MethodEntryRequests for all Verifier.nondet* interceptions
 		for (Interception ix : plan.interceptions()) {
-			if (ix.descriptor().isBlank()) {
-				// v2 variable-assignment path — handled via breakpoints, not
-				// method entry
-				RunSummary.count("witness.assignments");
-				continue;
-			}
-			RunSummary.add("witness.values", ix.count());
-			String key = ix.className() + "." + ix.methodName();
+			String key = ix.className() + "." + ix.lineNumber();
 			ValidatorLogger.jdi("SETTING KEY: " + key);
 			interceptMap.computeIfAbsent(key, s -> new ArrayDeque<>()).offer(ix);
 		}
@@ -359,7 +352,7 @@ public final class EventLoop {
 				className, methodName, ix.returnValue());
 
 		try {
-			ForceReturnSteerer.steer(event.thread(), ix.returnValue(), ix.descriptor());
+			ForceReturnSteerer.steer(event.thread(), ix.returnValue());
 		} catch (Exception e) {
 			ValidatorLogger.warn("[EVENT]  forceEarlyReturn failed: {} — letting method run normally",
 					e.getMessage());
@@ -369,13 +362,6 @@ public final class EventLoop {
 			return Optional.empty();
 		}
 		RunSummary.count("nondet.fixed");
-
-		int remaining = ix.decrementAndGet();
-		if (remaining <= 0) {
-			// All expected occurrences consumed — disable the request
-			ValidatorLogger.event("MethodEntry: {}.{}() — all interceptions consumed, request disabled",
-					className, methodName);
-		}
 
 		return Optional.empty();
 	}
@@ -562,10 +548,7 @@ public final class EventLoop {
 	 * witness path.
 	 */
 	private void recordUnusedValues() {
-		int unused = interceptMap.values().stream()
-				.flatMap(Collection::stream)
-				.mapToInt(Interception::count)
-				.sum();
+		int unused = interceptMap.size();
 		RunSummary.set("witness.values-unused", unused);
 	}
 

@@ -6,9 +6,7 @@ import it.unive.jlisa.witness.validator.correctness.CorrectnessValidator;
 import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.TaskSources;
 import it.unive.jlisa.witness.validator.parser.WitnessModel;
-import it.unive.jlisa.witness.validator.parser.WitnessParserV1;
 import it.unive.jlisa.witness.validator.violation.BugFinder;
-import it.unive.jlisa.witness.validator.violation.ViolationValidatorV1;
 import it.unive.jlisa.witness.validator.violation.ViolationValidatorV2;
 import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import it.unive.lisa.witness.v2.ViolationWitness;
@@ -139,19 +137,7 @@ public final class Main {
 				LOG.info("Parsed witness: {}", witnessEither);
 
 				if (witnessEither.isLeft()) {
-					WitnessModel model = witnessEither.getLeft();
-					switch (model.type()) {
-					case VIOLATION -> ViolationValidatorV1.validate(model, task.property(), task.sources(), java8Exec,
-							cmd.hasOption("input-search"));
-					case CORRECTNESS -> {
-						if (task.taskFile() == null) {
-							RunSummary.couldNotValidate("correctness-witness",
-									"correctness witnesses are only validated with --benchmark");
-						} else {
-							CorrectnessValidator.validate(model, task.taskFile());
-						}
-					}
-					}
+					throw new ValidationException("Witness format V1 not supported anymore");
 				} else {
 					Witness witness = witnessEither.getRight();
 					if (witness instanceof ViolationWitness violationWitness) {
