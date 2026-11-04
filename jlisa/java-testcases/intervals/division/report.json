@@ -1,0 +1,60 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':16:51-16:63] on 'void Main::literalPos()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':17:52-17:64] on 'void Main::literalNeg()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':18:61-18:73] on 'void Main::varPos()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':19:67-19:79] on 'void Main::varNegWrong()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':20:67-20:79] on 'void Main::varNegRight()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':21:44-21:57] on 'void Main::nan()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':22:54-22:66] on 'void Main::negNumerator()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':23:91-23:137] on 'void Main::unknownNumerator()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':24:47-24:60] on 'void Main::remNan()': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "double_org.sosy_lab.sv_benchmarks.Verifier.nondetDouble()_ec7eb4ed78fb6656143d89d6aad91add.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "report.json", "void_Main.literalNeg()_cf534772a8b935104c2149f3db3b768f.graph.json", "void_Main.literalPos()_86fa2d6d5579c5144fb038bf68404196.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.nan()_be774f2ae1c23e30eec802a5c4302fce.graph.json", "void_Main.negNumerator()_9c9998b801b4763f092ca39bbed7367f.graph.json", "void_Main.remNan()_28e678330aa6519031541bbd35f565ed.graph.json", "void_Main.unknownNumerator()_6a681b1e28525692eb1438bbe370a58c.graph.json", "void_Main.varNegRight()_5bb7cf06e212a70b6b1731765d436674.graph.json", "void_Main.varNegWrong()_03f962637be9d28a3b68e799d29bef71.graph.json", "void_Main.varPos()_54c7daf39c07f4c07355239e1177ea51.graph.json" ],
+  "info" : {
+    "cfgs" : "24",
+    "duration" : "33ms",
+    "end" : "2026-10-31T17:19:25.137+01:00",
+    "expressions" : "138",
+    "files" : "12",
+    "globals" : "50",
+    "members" : "301",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-10-31T17:19:25.104+01:00",
+    "statements" : "73",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "9"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/intervals/division"
+  }
+}
