@@ -150,7 +150,12 @@ public final class EventLoop {
 
 			Optional<ValidationResult> result;
 			for (Event event : eventSet) {
-				result = processEvent(event);
+				try {
+					result = processEvent(event);
+				} catch (VMDisconnectedException e) {
+					ValidatorLogger.event("VM disconnected while handling {}", event);
+					return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
+				}
 
 				if (result.isPresent()) {
 					try {
