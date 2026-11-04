@@ -15,6 +15,7 @@ import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.JavaReturn;
 import it.unive.jlisa.program.cfg.statement.JavaThrow;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
@@ -370,7 +371,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (e == null) {
 			ret = new Ret(getScope().getCFG(), getSourceCodeLocation(node));
 		} else {
-			ret = new Return(getScope().getCFG(), getSourceCodeLocation(node), e);
+			ret = new JavaReturn(getScope().getCFG(), getSourceCodeLocation(node), e);
 		}
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());

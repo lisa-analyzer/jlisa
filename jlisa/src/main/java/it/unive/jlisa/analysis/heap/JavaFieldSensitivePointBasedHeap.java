@@ -133,7 +133,7 @@ public class JavaFieldSensitivePointBasedHeap
 			boolean rhsIsReceiver)
 			throws SemanticException {
 
-		if (JavaTypeSystem.isPrimitive(id.getStaticType()) || JavaTypeSystem.isPrimitive(rhs.getStaticType()))
+		if (JavaTypeSystem.isPrimitive(id.getStaticType()) && JavaTypeSystem.isPrimitive(rhs.getStaticType()))
 			return sss;
 
 		if (rhs instanceof AllocationSite) {
