@@ -122,6 +122,10 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 	
+	instance method toCharArray: it.unive.jlisa.program.java.constructs.string.StringToCharArray
+		type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param this libtype java.lang.String*
+	
 	method valueOf: it.unive.jlisa.program.java.constructs.string.StringValueOf
 		libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE

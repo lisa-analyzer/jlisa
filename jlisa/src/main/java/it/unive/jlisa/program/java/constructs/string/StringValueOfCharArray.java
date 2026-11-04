@@ -21,7 +21,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -66,13 +65,13 @@ public class StringValueOfCharArray extends UnaryExpression implements Pluggable
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 
-		String constantValue;
+		SymbolicExpression constantValue;
 		try {
 			Integer length = CharArrayConstantSupport.extractArrayLength(interprocedural, state, expr, getLocation(),
 					this);
 			constantValue = length == null
 					? null
-					: CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, expr, 0, length,
+					: CharArrayConstantSupport.computeSubstring(stringType, interprocedural, state, expr, 0, length,
 							getLocation(), this);
 		} catch (SemanticException e) {
 			throw e;
@@ -85,7 +84,7 @@ public class StringValueOfCharArray extends UnaryExpression implements Pluggable
 		}
 
 		SymbolicExpression value = constantValue != null
-				? new Constant(stringType, constantValue, getLocation())
+				? constantValue
 				: new PushAny(stringType, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
