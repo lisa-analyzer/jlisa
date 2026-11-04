@@ -3,6 +3,7 @@ package it.unive.jlisa;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
@@ -82,7 +83,7 @@ public class Main {
 		Option numericalDomainOption = Option.builder("n")
 				.longOpt("numericalDomain")
 				.hasArg()
-				.desc("Numerical domain: (ConstantPropagation)")
+				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals)")
 				.required(false)
 				.build();
 
@@ -99,9 +100,15 @@ public class Main {
 				.required(false)
 				.build();
 
-		Option noHtmlOutput = Option.builder()
-				.longOpt("no-html")
-				.desc("Disable HTML output (enabled by default)")
+		Option htmlOutput = Option.builder()
+				.longOpt("dump-html")
+				.desc("Write the HTML pages of the analysed methods (disabled by default)")
+				.required(false)
+				.build();
+
+		Option graphOutput = Option.builder()
+				.longOpt("dump-graphs")
+				.desc("Write the JSON graphs of the analysed methods (disabled by default); the report is always written")
 				.required(false)
 				.build();
 
@@ -124,8 +131,6 @@ public class Main {
 				.required(false)
 				.build();
 
-		options.addOption(noHtmlOutput);
-
 		options.addOption(helpOption);
 		options.addOption(sourceOption);
 		options.addOption(outdirOption);
@@ -134,7 +139,8 @@ public class Main {
 		options.addOption(numericalDomainOption);
 		options.addOption(mode);
 		options.addOption(version);
-		options.addOption(noHtmlOutput);
+		options.addOption(htmlOutput);
+		options.addOption(graphOutput);
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
 		options.addOption(svcompProperty);
@@ -144,7 +150,8 @@ public class Main {
 		String[] sources = new String[0];
 		String outdir = "";
 		String checkerName = "", numericalDomain = "", executionMode = "Debug";
-		boolean htmlOutput = true;
+		boolean html = false;
+		boolean graphs = false;
 		boolean dumpExceptions = false;
 		boolean debug = false;
 		String[] propertyFiles = null;
@@ -181,8 +188,12 @@ public class Main {
 				LogManager.setLogLevel(level);
 			}
 
-			if (cmd.hasOption("no-html")) {
-				htmlOutput = false;
+			if (cmd.hasOption("dump-html")) {
+				html = true;
+			}
+
+			if (cmd.hasOption("dump-graphs")) {
+				graphs = true;
 			}
 
 			if (cmd.hasOption("e")) {
@@ -222,10 +233,10 @@ public class Main {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, htmlOutput, debug, propertyFiles);
+			runDebug(sources, outdir, checkerName, numericalDomain, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, htmlOutput, dumpExceptions, debug,
+			runStatistics(sources, outdir, checkerName, numericalDomain, html, graphs, dumpExceptions, debug,
 					propertyFiles);
 			break;
 		default:
@@ -240,13 +251,15 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
+			boolean graphOutput,
 			boolean debug,
 			String[] propertyFiles)
 			throws IOException,
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFiles);
+		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+				propertyFiles);
 	}
 
 	private static void runStatistics(
@@ -255,6 +268,7 @@ public class Main {
 			String checkerName,
 			String numericalDomain,
 			boolean htmlOutput,
+			boolean graphOutput,
 			boolean dumpExceptions,
 			boolean debug,
 			String[] propertyFiles) {
@@ -273,7 +287,8 @@ public class Main {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, debug, propertyFiles);
+			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+					propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
 			while (root.getCause() != null)
@@ -303,6 +318,7 @@ public class Main {
 			String numericalDomain,
 			JavaFrontend frontend,
 			boolean htmlOutput,
+			boolean graphOutput,
 			boolean debug,
 			String[] propertyFiles)
 			throws ParseException {
@@ -318,9 +334,10 @@ public class Main {
 			}
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
-		conf.outputs.add(new JSONResults<>());
+		if (graphOutput)
+			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new InliningAnalysis<>(150, false);
+		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
@@ -342,6 +359,10 @@ public class Main {
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagation":
+		case "ConstantPropagationWithTarsis":
+			domain = new ConstantPropagationWithTarsis();
+			break;
+		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
 			break;
 		default:

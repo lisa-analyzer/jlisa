@@ -109,7 +109,7 @@ Or via Gradle without packaging:
 ./gradlew run --args="-s path/to/File.java -o out/ -n ConstantPropagation"
 ```
 
-Results are written to the output directory as JSON files (one per CFG) and a `report.json` summary.
+Results are written to the output directory as a `report.json` summary. With `--dump-graphs`, the JSON graphs of the analysed methods (one per CFG) are written too, and with `--dump-html`, their HTML pages.
 
 ---
 
@@ -125,7 +125,8 @@ Results are written to the output directory as JSON files (one per CFG) and a `r
 | `-m`   | `--mode`            | `mode`    | Execution mode: `Debug` (default), `Statistics`        |
 | `-v`   | `--version`         | —         | Print the tool version                                 |
 | `-h`   | `--help`            | —         | Print the help message                                 |
-| N/A    | `--no-html`         | —         | Disable HTML output (enabled by default)               |
+| N/A    | `--dump-html`       | —         | Write the HTML pages (disabled by default)             |
+| N/A    | `--dump-graphs`     | —         | Write the JSON graphs (disabled by default)            |
 
 ---
 

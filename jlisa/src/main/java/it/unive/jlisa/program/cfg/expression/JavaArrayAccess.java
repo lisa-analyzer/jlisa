@@ -28,6 +28,7 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
@@ -37,6 +38,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JavaArrayAccess extends BinaryExpression {
+
+	/**
+	 * The maximum number of cells joined when reading an array element with a
+	 * non-constant index.
+	 */
+	private static final int MAX_ENUMERATED_CELLS = 64;
 
 	public JavaArrayAccess(
 			CFG cfg,
@@ -182,6 +189,16 @@ public class JavaArrayAccess extends BinaryExpression {
 						new AccessChild(accessType, container, idx, getLocation()), context, this));
 			return result;
 		}
+
+		// if the length might be larger than MAX_ENUMERATED_CELLS, the cell is
+		// read through the non-constant index
+		it.unive.lisa.symbolic.value.BinaryExpression small = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE, lenAccess, new Constant(JavaIntType.INSTANCE, MAX_ENUMERATED_CELLS,
+						getLocation()),
+				ComparisonLe.INSTANCE, getLocation());
+		if (analysis.satisfies(state, small, context, this) != Satisfiability.SATISFIED)
+			return analysis.smallStepSemantics(state, new AccessChild(accessType, container, right, getLocation()),
+					context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (int i = 0;; i++) {

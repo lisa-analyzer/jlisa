@@ -8,6 +8,11 @@ class java.lang.StringBuilder extends java.lang.Object:
 		param this libtype java.lang.StringBuilder*
 		param val libtype java.lang.String*
 
+	instance method StringBuilder: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderCapacityConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param capacity type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
 	instance method toString: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderToString
 		libtype java.lang.String*
 		param this libtype java.lang.StringBuilder*

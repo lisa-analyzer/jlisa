@@ -10,9 +10,53 @@ class java.util.AbstractMap extends java.util.Map:
 
 class java.util.HashMap extends java.util.Map:
 
+	instance method HashMap: it.unive.jlisa.program.java.constructs.map.MapEmptyConstructor
+		libtype java.util.HashMap*
+		param this libtype java.util.HashMap*
+
+	instance method put: it.unive.jlisa.program.java.constructs.map.MapPut
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param value type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method get: it.unive.jlisa.program.java.constructs.map.MapGet
+		libtype java.lang.Object*
+		param this libtype java.util.HashMap*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method clear: it.unive.jlisa.program.java.constructs.map.MapClear
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Map*
+
+	instance method size: it.unive.jlisa.program.java.constructs.map.MapSize
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.util.Map*
+
 class java.util.TreeMap extends java.util.Map:
 
 class java.util.Map.Entry extends java.lang.Object:
 
 class java.util.Hashtable extends java.lang.Object:
+
+class java.util.concurrent.ConcurrentMap extends java.util.Map:
+
+class java.util.concurrent.ConcurrentHashMap extends java.util.concurrent.ConcurrentMap:
+
+	instance method ConcurrentHashMap: it.unive.jlisa.program.java.constructs.map.ConcurrentMapEmptyConstructor
+		libtype java.util.concurrent.ConcurrentHashMap*
+		param this libtype java.util.concurrent.ConcurrentHashMap*
+
+	instance method get: it.unive.jlisa.program.java.constructs.map.ConcurrentMapGet
+		libtype java.lang.Object*
+		param this libtype java.util.concurrent.ConcurrentMap*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method clear: it.unive.jlisa.program.java.constructs.map.MapClear
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Map*
+
+	instance method size: it.unive.jlisa.program.java.constructs.map.ConcurrentMapSize
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.util.Map*
 
