@@ -35,14 +35,13 @@ import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.TargetPoint;
 import it.unive.jlisa.witness.validator.violation.ForceReturnSteerer;
 import it.unive.jlisa.witness.validator.violation.JdiLauncher;
-import java.util.ArrayDeque;
+import it.unive.jlisa.witness.validator.violation.WitnessCalls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -110,7 +109,7 @@ final class SearchRun {
 	private final ProgramText text;
 	private final Property property;
 	private final List<TargetPoint> targets;
-	private final Map<String, Queue<Interception>> witness = new HashMap<>();
+	private final WitnessCalls witness;
 	private final boolean tracing;
 
 	private SearchRun(
@@ -123,20 +122,12 @@ final class SearchRun {
 		this.text = text;
 		this.property = property;
 		this.targets = targets;
-		for (Interception ix : witnessValues) {
-			if (ix.descriptor().isBlank()) {
-				continue; // v2 variable assignments are not steered at method
-							// entry
-			}
-			witness.computeIfAbsent(ix.className() + "." + ix.methodName(), k -> new ArrayDeque<>())
-					.offer(new Interception(ix.className(), ix.methodName(), ix.descriptor(), ix.returnValue(),
-							ix.count()));
-		}
+		this.witness = new WitnessCalls(witnessValues, text.locations());
 	}
 
 	/**
-	 * Runs the program once; {@code witnessValues} are fresh copies for this
-	 * run.
+	 * Runs the program once; {@code witnessValues} are the witness's waypoints,
+	 * passed again from the first in each run run.
 	 */
 	static SearchRun run(
 			String mainClass,
@@ -286,15 +277,15 @@ final class SearchRun {
 							// itself)
 		}
 		ThreadReference thread = m.thread();
-		Queue<Interception> fromWitness = witness.get(m.method().declaringType().name() + "." + name);
-		Interception ix = fromWitness == null ? null : fromWitness.peek();
-		if (ix != null && ix.hasRemaining()) {
-			if (ix.count() == 1) {
-				fromWitness.remove();
-			}
+		Interception ix = null;
+		try {
+			ix = witness.match(thread.frame(1).location()).orElse(null);
+		} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
+			// no caller: not a call of the witness
+		}
+		if (ix != null && ix.fixesValue()) {
 			try {
-				ForceReturnSteerer.steer(thread, ix.returnValue(), ix.descriptor());
-				ix.decrementAndGet();
+				ForceReturnSteerer.steer(thread, ix.value(), m.method().signature());
 				return true;
 			} catch (ValidationException e) {
 				outcome = Outcome.WITNESS_VALUE_NOT_APPLIED;

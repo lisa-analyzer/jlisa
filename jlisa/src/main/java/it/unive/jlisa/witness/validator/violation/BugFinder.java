@@ -47,8 +47,8 @@ public final class BugFinder {
 		long deadline = System.currentTimeMillis() + timeLimitMillis;
 		List<File> sources = task.inputs();
 		JdiLauncher.compileIfNeeded(task.benchmark(), task.classesDir(), null, sources);
-		String classpath = ViolationValidator.buildClasspath(task.classesDir());
-		String mainClass = ViolationValidator.findMainClass(task.benchmark());
+		String classpath = ViolationValidatorV2.buildClasspath(task.classesDir());
+		String mainClass = ViolationValidatorV2.findMainClass(task.benchmark());
 
 		InputSearch search;
 		try {
