@@ -41,6 +41,8 @@ public class TestHelpers {
 		for (String pf : programFiles)
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
+		// the values of reproducing inputs depend on the solver
+		conf.reportComparer = new InputValuesIgnoringComparer();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		// conf.forceUpdate = true;
 		// conf.outputs.add(new HtmlResults<>(true));
