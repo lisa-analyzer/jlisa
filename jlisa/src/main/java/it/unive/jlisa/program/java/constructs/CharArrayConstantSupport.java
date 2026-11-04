@@ -24,6 +24,7 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.List;
@@ -118,6 +119,9 @@ public final class CharArrayConstantSupport {
 
 		Object value = null;
 		for (BinaryExpression constraint : list) {
+			if (constraint.getOperator() != ComparisonEq.INSTANCE)
+				// a bound (e.g., 0 <= c.length from the intervals), not a value
+				continue;
 			if (!(constraint.getLeft() instanceof Constant c))
 				return null;
 			if (value == null)

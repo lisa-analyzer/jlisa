@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.BaseNonRelationalValueDomain;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -26,6 +27,7 @@ import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.ComparisonOperator;
 import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.RemainderOperator;
@@ -54,6 +56,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -622,10 +625,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			ConstantValue left,
 			ConstantValue right,
 			ProgramPoint pp,
-			SemanticOracle oracle) {
-		// if left or right is top, top is returned
+			SemanticOracle oracle)
+			throws SemanticException {
 		if (left.isTop() || right.isTop())
-			return top();
+			return evalWithUnknownOperand(expression, left, right, pp, oracle);
 
 		BinaryOperator operator = expression.getOperator();
 		if (operator instanceof AdditionOperator) {
@@ -2034,5 +2037,84 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 	@Override
 	public ConstantValue bottom() {
 		return ConstantValue.BOTTOM;
+	}
+
+	/**
+	 * Returns the value of a binary expression with an unknown operand. A
+	 * conjunction with a false operand is false, and a disjunction with a true
+	 * operand is true. Otherwise, a comparison or a connective may be decided
+	 * by the other participants of a whole-value analysis through their
+	 * constraints (e.g., the intervals decide {@code mode != 3} with
+	 * {@code mode} in [0, 1]). Everything else is top.
+	 *
+	 * @param expression the expression
+	 * @param left       the value of its left operand
+	 * @param right      the value of its right operand
+	 * @param pp         the program point of the expression
+	 * @param oracle     the oracle for inter-domain communication
+	 *
+	 * @return the value of the expression
+	 *
+	 * @throws SemanticException if the constraints cannot be computed
+	 */
+	private ConstantValue evalWithUnknownOperand(
+			BinaryExpression expression,
+			ConstantValue left,
+			ConstantValue right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		BinaryOperator operator = expression.getOperator();
+		if (operator instanceof LogicalAnd && (isBoolean(left, false) || isBoolean(right, false)))
+			return new ConstantValue(false);
+		if (operator instanceof LogicalOr && (isBoolean(left, true) || isBoolean(right, true)))
+			return new ConstantValue(true);
+		if (oracle.hasWholeValueAnlysis()
+				&& (operator instanceof ComparisonOperator || operator instanceof LogicalAnd
+						|| operator instanceof LogicalOr)) {
+			Set<BinaryExpression> constraints = oracle.constraints(this, expression, pp);
+			if (constraints != null)
+				for (BinaryExpression constraint : constraints)
+					if (constraint.getOperator() == ComparisonEq.INSTANCE
+							&& constraint.getLeft() instanceof Constant c && c.getValue() instanceof Boolean b)
+						return new ConstantValue(b);
+		}
+		return top();
+	}
+
+	private static boolean isBoolean(
+			ConstantValue value,
+			boolean b) {
+		return !value.isTop() && !value.isBottom() && Boolean.valueOf(b).equals(value.getValue());
+	}
+
+	@Override
+	public Set<BinaryExpression> constraints(
+			ValueDomain<?> requesting,
+			ValueEnvironment<ConstantValue> state,
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (state.isBottom())
+			return null;
+		if (state.isTop() || e instanceof BinaryExpression b && (b.getOperator() instanceof ComparisonOperator
+				|| b.getOperator() instanceof LogicalAnd || b.getOperator() instanceof LogicalOr))
+			// comparisons and connectives are decided by asking the other
+			// participants: answering here would ask them again
+			return Collections.emptySet();
+		ConstantValue value = eval(state, e, pp, oracle);
+		if (value.isBottom())
+			return null;
+		if (value.isTop())
+			return Collections.emptySet();
+		// the type of the constant follows its value, not the static type of
+		// the expression (which may be untyped)
+		Object v = value.getValue();
+		Type type = v instanceof Double ? JavaDoubleType.INSTANCE
+				: v instanceof Float ? JavaFloatType.INSTANCE
+						: v instanceof Long ? JavaLongType.INSTANCE
+								: v instanceof Integer ? JavaIntType.INSTANCE : e.getStaticType();
+		return ValueDomain.makeEqConstraint(type, v, e, pp);
 	}
 }

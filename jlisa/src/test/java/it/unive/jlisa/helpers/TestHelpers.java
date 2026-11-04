@@ -5,6 +5,10 @@ import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
+import it.unive.jlisa.analysis.value.JavaFPFlags;
+import it.unive.jlisa.analysis.value.JavaNumericInterval;
+import it.unive.jlisa.analysis.value.JavaTarsis;
+import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -101,6 +105,24 @@ public class TestHelpers {
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		JavaInferredTypes type = new JavaInferredTypes();
 		ConstantPropagationWithTarsis domain = new ConstantPropagationWithTarsis();
+		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
+
+		conf.semanticChecks.add(new AssertChecker<>());
+
+		return conf;
+	}
+
+	public static CronConfiguration assertCheckerWithWholeValue(
+			String testDir,
+			String subDir,
+			String... programFiles) {
+		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
+
+		// the abstract domain
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+		JavaInferredTypes type = new JavaInferredTypes();
+		JavaWholeValueAnalysis domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+				new JavaFPFlags(), new JavaTarsis());
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
 		conf.semanticChecks.add(new AssertChecker<>());
