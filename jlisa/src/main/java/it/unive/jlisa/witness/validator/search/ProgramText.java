@@ -1,5 +1,6 @@
 package it.unive.jlisa.witness.validator.search;
 
+import it.unive.jlisa.witness.validator.violation.WitnessLocations;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,10 +36,13 @@ final class ProgramText {
 	 */
 	private final Map<String, List<String>> lines = new HashMap<>();
 	private final Map<String, List<Integer>> watched = new HashMap<>();
+	/** The places of the program text, for the columns of the calls. */
+	private final WitnessLocations locations;
 
 	ProgramText(
 			Collection<File> dirs)
 			throws IOException {
+		this.locations = new WitnessLocations(dirs);
 		for (File d : dirs) {
 			if (d == null || !d.isDirectory()) {
 				continue;
@@ -146,5 +150,10 @@ final class ProgramText {
 			out.add(Val.of(v.num() + 1));
 			out.add(Val.of(v.num() - 1));
 		}
+	}
+
+	/** Returns the places of the program text. */
+	WitnessLocations locations() {
+		return locations;
 	}
 }
