@@ -28,6 +28,7 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
@@ -189,13 +190,18 @@ public class JavaArrayAccess extends BinaryExpression {
 			return result;
 		}
 
+		// if the length might be larger than MAX_ENUMERATED_CELLS, the cell is
+		// read through the non-constant index
+		it.unive.lisa.symbolic.value.BinaryExpression small = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE, lenAccess, new Constant(JavaIntType.INSTANCE, MAX_ENUMERATED_CELLS,
+						getLocation()),
+				ComparisonLe.INSTANCE, getLocation());
+		if (analysis.satisfies(state, small, context, this) != Satisfiability.SATISFIED)
+			return analysis.smallStepSemantics(state, new AccessChild(accessType, container, right, getLocation()),
+					context, this);
+
 		AnalysisState<A> result = state.bottomExecution();
 		for (int i = 0;; i++) {
-			if (i == MAX_ENUMERATED_CELLS)
-				// the length is unbounded or too large: the cell is read
-				// through the non-constant index
-				return result.lub(analysis.smallStepSemantics(state,
-						new AccessChild(accessType, container, right, getLocation()), context, this));
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, getLocation());
 			it.unive.lisa.symbolic.value.BinaryExpression inBounds = new it.unive.lisa.symbolic.value.BinaryExpression(
 					JavaBooleanType.INSTANCE, idx, lenAccess, ComparisonLt.INSTANCE, getLocation());
