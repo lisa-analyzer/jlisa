@@ -7,9 +7,9 @@ import it.unive.jlisa.witness.validator.model.*;
 import it.unive.jlisa.witness.validator.search.InputSearch;
 import it.unive.jlisa.witness.validator.violation.EventLoop.ValidationResult;
 import it.unive.lisa.witness.v2.ViolationWitness;
+import it.unive.lisa.witness.v2.violation.Action;
 import it.unive.lisa.witness.v2.violation.Segment;
 import it.unive.lisa.witness.v2.violation.Waypoint;
-import it.unive.lisa.witness.v2.violation.WaypointType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,7 +77,7 @@ public final class ViolationValidatorV2 {
 
 		long start = System.currentTimeMillis();
 
-		ViolationPlan plan = generateViolationPlan(model);
+		ViolationPlan plan = generateViolationPlan(model, task.inputs());
 
 		ValidatorLogger.plan("Plan: {}", plan);
 		for (var ix : plan.interceptions()) {
@@ -145,36 +145,81 @@ public final class ViolationValidatorV2 {
 		printVerdict(verdict);
 	}
 
-	private static ViolationPlan generateViolationPlan(
-			ViolationWitness model) {
+	/**
+	 * Returns the plan of the witness. The segments are passed in order:
+	 * <ul>
+	 * <li>a {@code function_return} waypoint on a {@code Verifier.nondet*()}
+	 * call becomes an {@link Interception}: the call returns the value of the
+	 * constraint (a constraint that fixes no single value lets the call run
+	 * freely, but still passes the waypoint);</li>
+	 * <li>a {@code target} becomes a {@link TargetPoint}, where the violation
+	 * must happen;</li>
+	 * <li>a {@code branching} becomes a {@link BranchDecision};</li>
+	 * <li>a {@code function_enter} says nothing more than the next
+	 * waypoints;</li>
+	 * <li>waypoints to avoid, cycles, assumptions and {@code function_return}
+	 * waypoints on other calls cannot be followed: they are counted as skipped
+	 * steps, and a run without the violation then says nothing about the
+	 * witness unless the witness fixed every nondet call.</li>
+	 * </ul>
+	 *
+	 * @param model  the witness
+	 * @param inputs the input files and directories of the task, where the
+	 *                   files of the witness are looked for
+	 */
+	static ViolationPlan generateViolationPlan(
+			ViolationWitness model,
+			List<File> inputs) {
 		List<Interception> interceptions = new ArrayList<>();
 		List<BranchDecision> branchDecisions = new ArrayList<>();
 		List<AvoidPoint> avoidPoints = new ArrayList<>();
 		List<TargetPoint> targetPoints = new ArrayList<>();
-
-		// TODO: parse the actual witness plan
+		int skipped = 0;
 
 		for (Segment segment : model.getSequence().getSegments()) {
 			for (Waypoint wpt : segment.getWaypoints()) {
-				if (wpt.getType() == WaypointType.TARGET) {
-					targetPoints.add(
-							new TargetPoint(
-									wpt.getLocation().getFileName(),
-									wpt.getLocation().getLine()));
-				} else if (wpt.getType() == WaypointType.FUNCTION_RETURN) {
-					String constraint = wpt.getConstraint().getValue();
-					interceptions.add(new Interception(wpt.getLocation().getFileName(), wpt.getLocation().getLine(),
-							wpt.getLocation().getColumn(), ReturnConstraint.value(constraint), constraint));
+				it.unive.lisa.witness.v2.Location at = wpt.getLocation();
+				if (wpt.getAction() != Action.FOLLOW) {
+					skipped++;
+					ValidatorLogger.plan("  Skipped ({} waypoint): {}", wpt.getAction(), wpt);
+					continue;
 				}
-
+				switch (wpt.getType()) {
+				case TARGET -> targetPoints.add(new TargetPoint(at.getFileName(), at.getLine()));
+				case FUNCTION_RETURN -> {
+					if (WitnessLocations.nondetCallAt(inputs, at.getFileName(), at.getLine()) == Boolean.FALSE) {
+						skipped++;
+						ValidatorLogger.plan("  Skipped (not a nondet call): {}", wpt);
+						continue;
+					}
+					String constraint = wpt.getConstraint().getValue();
+					Object value = ReturnConstraint.value(constraint);
+					if (value == null) {
+						RunSummary.count("plan.values-not-single");
+					}
+					interceptions.add(new Interception(at.getFileName(), at.getLine(), at.getColumn(), value,
+							constraint));
+				}
+				case BRANCHING -> branchDecisions.add(new BranchDecision(at.getFileName(), at.getLine(),
+						Boolean.parseBoolean(wpt.getConstraint().getValue())));
+				case FUNCTION_ENTER -> {
+					// nothing to steer
+				}
+				case ASSUMPTION -> {
+					skipped++;
+					ValidatorLogger.plan("  Skipped (assumption): {}", wpt);
+				}
+				}
 			}
 		}
+		RunSummary.add("plan.skipped", skipped);
 
 		return new ViolationPlan(
 				interceptions,
 				branchDecisions,
 				avoidPoints,
-				targetPoints);
+				targetPoints,
+				skipped);
 	}
 
 	// ------------------------------------------------------------------

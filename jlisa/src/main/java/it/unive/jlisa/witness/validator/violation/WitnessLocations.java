@@ -125,6 +125,63 @@ public final class WitnessLocations {
 	}
 
 	/**
+	 * Returns whether the given line of a file of a witness has a
+	 * {@code Verifier.nondet*()} invocation, or null if the file cannot be
+	 * found: the file is the path of the witness if it exists, else the only
+	 * file of the task inputs with its name.
+	 *
+	 * @param inputs   the input files and directories of the task
+	 * @param fileName the file name of the witness
+	 * @param line     the line
+	 */
+	public static Boolean nondetCallAt(
+			Collection<File> inputs,
+			String fileName,
+			int line) {
+		File file = new File(fileName);
+		if (!file.isFile()) {
+			String name = file.getName();
+			List<File> found = new ArrayList<>();
+			for (File in : inputs) {
+				if (in == null) {
+					continue;
+				}
+				if (in.isFile() && in.getName().equals(name)) {
+					found.add(in);
+				} else if (in.isDirectory()) {
+					try (java.util.stream.Stream<java.nio.file.Path> s = Files.walk(in.toPath())) {
+						s.filter(f -> f.getFileName().toString().equals(name)).forEach(f -> found.add(f.toFile()));
+					} catch (IOException | java.io.UncheckedIOException e) {
+						return null;
+					}
+				}
+			}
+			if (found.stream().map(File::getAbsoluteFile).distinct().count() != 1) {
+				return null;
+			}
+			file = found.get(0);
+		}
+		CompilationUnit unit;
+		try {
+			unit = parse(Files.readString(file.toPath(), StandardCharsets.ISO_8859_1));
+		} catch (IOException e) {
+			return null;
+		}
+		boolean[] any = new boolean[1];
+		unit.accept(new ASTVisitor() {
+			@Override
+			public boolean visit(
+					MethodInvocation node) {
+				if (isNondet(node) && unit.getLineNumber(node.getName().getStartPosition()) == line) {
+					any[0] = true;
+				}
+				return true;
+			}
+		});
+		return any[0];
+	}
+
+	/**
 	 * Returns the {@code Verifier.nondet*()} invocations of the given line of a
 	 * task file, in source order, each as its first and last column (from 1);
 	 * an empty list if the file is not a task file.
