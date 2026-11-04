@@ -392,7 +392,7 @@ public class ConstantPropagationWithIntervals implements BaseNonRelationalValueD
 			throws SemanticException {
 		// a variable compared with itself, if it is integral (a floating point
 		// variable may be NaN, which differs from itself)
-		if (expression.getLeft() instanceof Identifier id && id.equals(expression.getRight())
+		if (expression.getLeft() instanceof Identifier id && id.equals(expression.getRight()) && !id.isWeak()
 				&& JavaNumericInterval.isIntegral(id, pp, oracle)) {
 			BinaryOperator operator = expression.getOperator();
 			if (operator == ComparisonEq.INSTANCE || operator == ComparisonLe.INSTANCE
