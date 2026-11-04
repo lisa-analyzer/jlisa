@@ -1,17 +1,14 @@
 package it.unive.jlisa.witness.validator;
 
 import it.unive.jlisa.svcomp.SVCOMPProperty;
-import it.unive.jlisa.utils.Either;
 import it.unive.jlisa.witness.validator.correctness.CorrectnessValidator;
 import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.TaskSources;
-import it.unive.jlisa.witness.validator.parser.WitnessModel;
 import it.unive.jlisa.witness.validator.violation.BugFinder;
 import it.unive.jlisa.witness.validator.violation.ViolationValidatorV2;
 import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import it.unive.lisa.witness.v2.ViolationWitness;
 import it.unive.lisa.witness.v2.Witness;
-import it.unive.lisa.witness.v2.WitnessReadException;
 import it.unive.lisa.witness.v2.WitnessReader;
 import java.io.File;
 import java.io.IOException;
@@ -133,20 +130,14 @@ public final class Main {
 				}
 				BugFinder.find(task.property(), task.sources(), java8Exec, millis, witnessOutput);
 			} else {
-				Either<WitnessModel, Witness> witnessEither = parseWitness(new File(witnessPath));
-				LOG.info("Parsed witness: {}", witnessEither);
-
-				if (witnessEither.isLeft()) {
-					throw new ValidationException("Witness format V1 not supported anymore");
+				Witness witness = WitnessReader.read(Paths.get(witnessPath));
+				LOG.info("Parsed witness: {}", witness);
+				if (witness instanceof ViolationWitness violationWitness) {
+					ViolationValidatorV2.validate(violationWitness, task.property(), task.sources(), java8Exec,
+							cmd.hasOption("input-search"));
 				} else {
-					Witness witness = witnessEither.getRight();
-					if (witness instanceof ViolationWitness violationWitness) {
-						ViolationValidatorV2.validate(violationWitness, task.property(), task.sources(), java8Exec,
-								cmd.hasOption("input-search"));
-					} else {
-						// just linting
-						CorrectnessValidator.validateMock();
-					}
+					// just linting
+					CorrectnessValidator.validateMock();
 				}
 			}
 		} catch (ValidationException e) {
@@ -233,48 +224,6 @@ public final class Main {
 		new HelpFormatter().printHelp("jlisa-witness-validator", options);
 		RunSummary.couldNotValidate("usage", message);
 		System.exit(0);
-	}
-
-	// ------------------------------------------------------------------
-	// witness parsing — format detection by extension and content
-	// ------------------------------------------------------------------
-
-	/**
-	 * Selects the appropriate parser based on the witness file extension.
-	 * <ul>
-	 * <li>{@code .graphml} → {@link WitnessParserV1}</li>
-	 * <li>{@code .yaml} / {@code .yml} → {@link WitnessReader}</li>
-	 * </ul>
-	 */
-	private static Either<WitnessModel, Witness> parseWitness(
-			File witnessFile)
-			throws ValidationException,
-			IOException,
-			WitnessReadException {
-		String name = witnessFile.getName().toLowerCase();
-		if (name.endsWith(".graphml") || name.endsWith(".xml")) {
-			return Either.left(WitnessParserV1.parse(witnessFile));
-		}
-		if (name.endsWith(".yaml") || name.endsWith(".yml")) {
-			return Either.right(WitnessReader.read(witnessFile.toPath()));
-		}
-		// Unknown extension — peek at the first line to decide
-		try {
-			String firstLine = java.nio.file.Files.lines(witnessFile.toPath())
-					.filter(l -> !l.isBlank())
-					.findFirst()
-					.orElse("");
-			if (firstLine.contains("<graphml") || firstLine.startsWith("<?xml")) {
-				return Either.left(WitnessParserV1.parse(witnessFile));
-			}
-			if (firstLine.startsWith("format_version") || firstLine.startsWith("---")) {
-				return Either.right(WitnessReader.read(witnessFile.toPath()));
-			}
-		} catch (java.io.IOException e) {
-			throw new ValidationException("Cannot read witness file: " + e.getMessage(), e);
-		}
-		throw new ValidationException(
-				"Cannot determine witness format from extension or content of: " + witnessFile.getName());
 	}
 
 	// ------------------------------------------------------------------
