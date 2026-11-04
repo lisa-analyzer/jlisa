@@ -29,6 +29,9 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.heap.NullConstant;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.HashSet;
@@ -156,7 +159,8 @@ public class JavaAccessInstanceGlobal
 					JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
 					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 							npeType.getReference(), new Expression[0]);
-					AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural, state,
+					AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural,
+							whenNull(analysis, state, expr, context),
 							new ExpressionSet[0], expressions);
 
 					// assign exception to variable thrower
@@ -221,5 +225,22 @@ public class JavaAccessInstanceGlobal
 		HeapDereference container = new HeapDereference(rectype, expr, getLocation());
 		AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
 		return analysis.smallStepSemantics(state, access, context, this);
+	}
+
+	/**
+	 * Yields the given state, where the given receiver is null: the
+	 * {@link NullPointerException} is only raised in that case. If the domain
+	 * cannot represent the condition, the state is returned unchanged.
+	 */
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> whenNull(
+			Analysis<A, D> analysis,
+			AnalysisState<A> state,
+			SymbolicExpression receiver,
+			ScopeId<A> context)
+			throws SemanticException {
+		BinaryExpression isNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), receiver,
+				new NullConstant(getLocation()), ComparisonEq.INSTANCE, getLocation());
+		AnalysisState<A> assumed = analysis.assume(state, isNull, context, this, this);
+		return assumed.getExecutionState().isBottom() ? state : assumed;
 	}
 }
