@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 19 steps through [data = 0.0, data = -(1.0), socket = (java.net.Socket*) null, readerBuffered = (testcasesupport.BufferedReader*) null, readerInputStream = (java.io.InputStreamReader*) null, socket = new java.net.Socket(\"host.example.org\", 39544), readerInputStream = new java.io.InputStreamReader(getInputStream(socket), \"UTF-8\"), readerBuffered = new testcasesupport.BufferedReader(readerInputStream), stringNumber = readLine(readerBuffered), !=(stringNumber, null), data = java.lang.Float::parseFloat(trim(stringNumber)), !=(readerBuffered, null), close(readerBuffered), !=(readerInputStream, null), close(readerInputStream), !=(socket, null), close(socket), result = (int) /(100.0, data), ||(<(1, data), <=(data, 0)), assert <(result, 100)], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, call results, comparisons of non-integers): Constant; ReferenceRead; JavaStringTrimOperator; JavaIsFloatParsableOperator; JavaFloatParseFloatOperator"
+    "explanation" : "the solver could not decide a query: state of the most recent check-sat command is not known"
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.String__testcasesupport.BufferedReader.readLine(testcasesupport.BufferedReader__this)_04f3ddc1d4cba3a6c7785dd9a4c94065.graph.json", "report.json", "void_Main.Main(Main__this)_84cb588ba5e5d9bc40e09c187285953b.graph.json", "void_Main.bad(Main__this)_57cf180d5f3842aab01a8fc77876b9c1.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_testcasesupport.BufferedReader.BufferedReader(testcasesupport.BufferedReader__this,_java.io.InputStreamReader__reader)_296f7f70a9c9a25a000d4c857c4ddb50.graph.json", "void_testcasesupport.BufferedReader.close(testcasesupport.BufferedReader__this)_055694f4f3c3db9940af0bf093e748c6.graph.json", "void_testcasesupport.IO.IO_clinit()_cafd3f386440fe5223ba9158e72e234d.graph.json", "void_testcasesupport.IO.IO_clinit()_cf716daf0d890033c801639bdecfbe69.graph.json", "void_testcasesupport.IO.writeLine(int_intNumber)_cf716daf0d890033c801639bdecfbe69.graph.json", "void_testcasesupport.IO.writeLine(java.lang.String__line)_cafd3f386440fe5223ba9158e72e234d.graph.json" ],
@@ -19,7 +19,7 @@
     "expressions" : "224",
     "files" : "10",
     "globals" : "60",
-    "members" : "317",
+    "members" : "437",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-11-03T14:29:59.777+01:00",

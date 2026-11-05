@@ -149,6 +149,9 @@ tasks.named<org.gradle.api.plugins.antlr.AntlrTask>("generateGrammarSource") {
 // TEST CONFIGURATION
 tasks.test {
     useJUnitPlatform()
+    // the programs analyzed by the tests (with their library models) do not
+    // fit the default heap of the test JVM
+    maxHeapSize = "2g"
 
     testLogging {
         showStandardStreams = false

@@ -19,7 +19,7 @@
     "message" : "the assertion might not hold",
     "definite" : false,
     "refuted" : true,
-    "explanation" : "inductive invariant found: {!=(o1, o2)=[![o1 != o2]], assert false=[!true]}"
+    "explanation" : "inductive invariant found: {assert false=[!true], !=(o1, o2)=[![o1 != o2]]}"
   }, {
     "location" : "'Sub2.java':18:4-18:53",
     "cfg" : "void svcomp.objects.Sub2::Sub2(svcomp.objects.Sub2* this, int z)",
@@ -40,7 +40,7 @@
     "expressions" : "206",
     "files" : "38",
     "globals" : "63",
-    "members" : "325",
+    "members" : "445",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-11-03T14:29:48.953+01:00",

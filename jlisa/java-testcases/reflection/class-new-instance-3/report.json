@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 5 steps through [s = null, ==(args::length, 1), s = \"A\", c = java.lang.Class::forName(s), o = newInstance(c), assert instanceof(o,A*)], relying on values that are not computed precisely (operations on values of other kinds, comparisons of non-integers, type tests, merged values): ReferenceRead; ComparisonEq; A*; merged value of __A; merged value of __java.lang.Object"
+    "explanation" : "violation reached in 9 steps through [s = null, ==(args::length, 1), s = \"B\", c = java.lang.Class::forName(s), o = newInstance(c), [main > B] java.lang.Object::Object(this), [main > B] this::s = \"hello\", [main > B] ret, o = newInstance(c) (after [1 targets] B::B($rec@'Main.java':11:13-11:27)), assert instanceof(o,A*)], relying on values that are not computed precisely (operations on values of other kinds, heap values, type tests, merged values): ReferenceRead; contents of $field:length not written by the model; A*; merged value of __A; merged value of __java.lang.Object"
   }, {
     "location" : "'Main.java':14:2-14:24",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -18,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 6 steps through [s = null, ==(args::length, 1), s = \"A\", c = java.lang.Class::forName(s), o = newInstance(c), assert instanceof(o,A*), assert instanceof(o,B*)], relying on values that are not computed precisely (operations on values of other kinds, comparisons of non-integers, type tests, merged values): ReferenceRead; ComparisonEq; A*; B*; merged value of __A"
+    "explanation" : "violation reached in 10 steps through [s = null, ==(args::length, 1), s = \"A\", c = java.lang.Class::forName(s), o = newInstance(c), [main > A] java.lang.Object::Object(this), [main > A] this::x = 42, [main > A] ret, o = newInstance(c) (after [1 targets] A::A($rec@'Main.java':11:13-11:27)), assert instanceof(o,A*), assert instanceof(o,B*)], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers, type tests, merged values): ReferenceRead; contents of $field:length not written by the model; ComparisonEq; A*; B*"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_2c760cd2affc261091696f136b12e42f.graph.json", "void_B.B(B__this)_2c760cd2affc261091696f136b12e42f.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
@@ -29,7 +29,7 @@
     "expressions" : "32",
     "files" : "3",
     "globals" : "53",
-    "members" : "275",
+    "members" : "395",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-11-03T14:22:58.886+01:00",
