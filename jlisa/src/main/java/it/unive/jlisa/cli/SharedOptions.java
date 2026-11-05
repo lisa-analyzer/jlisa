@@ -71,7 +71,7 @@ public final class SharedOptions {
 				.longOpt(LOG_LEVEL)
 				.hasArg()
 				.argName("LEVEL")
-				.desc("Log level on standard error: OFF, FATAL, ERROR, WARN (default), INFO, DEBUG, TRACE, ALL")
+				.desc("Log level: OFF, FATAL, ERROR, WARN, INFO, DEBUG (default), TRACE, ALL")
 				.build());
 		return options;
 	}

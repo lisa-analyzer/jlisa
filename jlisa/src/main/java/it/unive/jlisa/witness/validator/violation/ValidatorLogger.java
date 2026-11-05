@@ -6,14 +6,13 @@ import org.apache.logging.log4j.Logger;
 /**
  * Structured logging helper for the witness validator.
  * <p>
- * All output goes to {@code stderr} via Log4j2, leaving {@code stdout}
- * available exclusively for the BenchExec verdict line. Log lines are prefixed
- * with bracketed tags to allow easy grepping during interactive debugging (e.g.
+ * All output goes through Log4j2. Log lines are prefixed with bracketed tags to
+ * allow easy grepping during interactive debugging (e.g.
  * {@code grep '\[JDI\]'}).
  * <p>
  * The log level is controlled externally: {@code -l}/{@code --log-level} sets
- * it (e.g. {@code -l INFO} or {@code -l DEBUG}); the default is {@code WARN},
- * so that BenchExec runs produce minimal stderr noise.
+ * it (e.g. {@code -l ERROR}, as the SV-COMP wrapper does to keep the output of
+ * BenchExec runs small).
  */
 public final class ValidatorLogger {
 

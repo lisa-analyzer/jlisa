@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
  * Why a run ended with its verdict, and what happened to the witness on the
  * way.
  * <p>
- * At the end of every run two lines go to {@code stderr}, whatever the log
+ * At the end of every run two lines go to {@code stdout}, whatever the log
  * level (also with {@code -l OFF}), for example:
  * 
  * <pre>
@@ -19,10 +19,15 @@ import java.util.stream.Collectors;
  * The reason is {@code <verdict>/<code>: <detail>}. The codes are fixed, so
  * logs of many runs can be grouped by them (e.g.
  * {@code grep -h '\[REASON\]' *.log | cut -d: -f1 | sort | uniq -c}).
- * {@code stdout} still carries only the verdict line, which is what BenchExec
- * reads.
+ * The verdict follows, on a line of its own after {@link #VERDICT_PREFIX}
+ * (e.g. {@code [VERDICT] Witness Correct}).
  */
 public final class RunSummary {
+
+	/**
+	 * The prefix of the line with the verdict of the run.
+	 */
+	public static final String VERDICT_PREFIX = "[VERDICT] ";
 
 	private static final Map<String, Integer> COUNTS = new LinkedHashMap<>();
 	private static String reasonCode;
@@ -69,7 +74,7 @@ public final class RunSummary {
 			String detail) {
 		reason(code, detail);
 		print("unknown");
-		System.out.println("Could not validate");
+		printVerdict("Could not validate");
 	}
 
 	/**
@@ -81,7 +86,7 @@ public final class RunSummary {
 			String detail) {
 		reason("parse-error", detail);
 		print("error");
-		System.out.println("Parsing failed");
+		printVerdict("Parsing failed");
 	}
 
 	/**
@@ -93,7 +98,7 @@ public final class RunSummary {
 			String detail) {
 		reason("invalid-witness-format", detail);
 		print("error");
-		System.out.println("Invalid witness format");
+		printVerdict("Invalid witness format");
 	}
 
 	/**
@@ -106,7 +111,7 @@ public final class RunSummary {
 			String detail) {
 		reason("invalid-witness-type", detail);
 		print("error");
-		System.out.println("Invalid witness type");
+		printVerdict("Invalid witness type");
 	}
 
 	/**
@@ -122,8 +127,21 @@ public final class RunSummary {
 		String stats = COUNTS.entrySet().stream()
 				.map(e -> e.getKey() + "=" + e.getValue())
 				.collect(Collectors.joining(" "));
-		System.err.println("[STATS]  " + (stats.isEmpty() ? "-" : stats));
-		System.err.println("[REASON] " + verdict + "/" + (reasonCode == null ? "not-recorded" : reasonCode) + ": "
+		System.out.println("[STATS]  " + (stats.isEmpty() ? "-" : stats));
+		System.out.println("[REASON] " + verdict + "/" + (reasonCode == null ? "not-recorded" : reasonCode) + ": "
 				+ (reasonDetail == null ? "-" : reasonDetail));
+	}
+
+	/**
+	 * Prints the verdict of the run on {@code stdout}, after
+	 * {@link #VERDICT_PREFIX}: among the logs, the SV-COMP wrapper finds it by
+	 * that prefix.
+	 *
+	 * @param verdict the verdict (e.g. {@code Witness Correct})
+	 */
+	public static void printVerdict(
+			String verdict) {
+		System.out.println(VERDICT_PREFIX + verdict);
+		System.out.flush();
 	}
 }

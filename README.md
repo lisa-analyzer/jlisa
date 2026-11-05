@@ -117,7 +117,7 @@ jlisa validate -s common/ task/ --svcomp-property valid-assert.prp -w witness.ym
 jlisa find-bug -s common/ task/ --svcomp-property valid-assert.prp --witness-output witness.yml
 ```
 
-`validate` and `find-bug` run the program under JDI: they need the modules `jdk.compiler` and `jdk.jdi`, which a JDK has (on Debian and Ubuntu, `openjdk-N-jre-headless` has them too). The logs of all sub-commands go to standard error; `validate` and `find-bug` print their verdict on standard output.
+`validate` and `find-bug` run the program under JDI: they need the modules `jdk.compiler` and `jdk.jdi`, which a JDK has (on Debian and Ubuntu, `openjdk-N-jre-headless` has them too). `validate` and `find-bug` print their verdict on a line of its own, after `[VERDICT] ` (e.g. `[VERDICT] Witness Correct`).
 
 ---
 
@@ -129,7 +129,7 @@ jlisa find-bug -s common/ task/ --svcomp-property valid-assert.prp --witness-out
 | ------ | ------------------- | --------- | ------------------------------------------------------ |
 | `-s`   | `--source`          | `file...` | Java source files and directories to analyze           |
 | N/A    | `--svcomp-property` | `prp`     | SV-COMP property file of the task                      |
-| `-l`   | `--log-level`       | `level`   | Log level on standard error: `OFF`, `ERROR`, `WARN` (default), `INFO`, `DEBUG` |
+| `-l`   | `--log-level`       | `level`   | Log level: `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG` (default) |
 | `-v`   | `--version`         | —         | Print the tool version                                 |
 | `-h`   | `--help`            | —         | Print the help message                                 |
 

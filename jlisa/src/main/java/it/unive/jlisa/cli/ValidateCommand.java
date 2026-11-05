@@ -29,7 +29,9 @@ import org.apache.logging.log4j.Logger;
  * directories, and its property file. The kind of witness (violation or
  * correctness) is read from the witness; with {@code --type}, a witness of the
  * other kind is not validated.
- * <h3>Output (stdout)</h3>
+ * <h3>Verdict</h3>
+ * <p>
+ * Printed on a line of its own after {@code [VERDICT] }, among the logs:
  * <ul>
  * <li>{@code Witness Correct} — the witness is valid (violation
  * reproduced)</li>
@@ -45,8 +47,8 @@ import org.apache.logging.log4j.Logger;
  * {@code --type}</li>
  * </ul>
  * <p>
- * The logs go to stderr. The exit code is always 0 so that BenchExec does not
- * misinterpret a non-zero exit as a validator crash.
+ * The exit code is always 0 so that BenchExec does not misinterpret a non-zero
+ * exit as a validator crash.
  */
 public final class ValidateCommand {
 

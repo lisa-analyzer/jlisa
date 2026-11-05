@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- The logging of all the sub-commands of jlisa: on stderr, since stdout is for the results
-     (e.g. the verdict of validate, which the SV-COMP wrapper reads); -l/log-level sets the level of
-     it.unive.lisa and it.unive.jlisa -->
 <Configuration status="WARN" name="DefaultLoggingConf">
 	<Appenders>
-		<Console name="console" target="SYSTEM_ERR">
+		<Console name="console">
 			<PatternLayout pattern="%d %5level %c - %m %ex%n"/>
 		</Console>
 	</Appenders>
 
 	<Loggers>
-		<Logger name="it.unive.lisa" level="WARN" />
-		<Logger name="it.unive.jlisa" level="WARN" />
+		<Logger name="it.unive.lisa" level="DEBUG" />
+		<Logger name="it.unive.jlisa" level="DEBUG" />
 		<Logger name="org.reflections" level="WARN" />
 		<Logger name="org.thymeleaf" level="WARN" />
 		
-		<Root level="WARN">
-			<AppenderRef ref="console"/>
+		<Root level="DEBUG">
+			<AppenderRef ref="console" level="DEBUG"/>
 		</Root>
 	</Loggers>
 </Configuration>

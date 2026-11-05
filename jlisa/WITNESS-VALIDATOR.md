@@ -164,7 +164,7 @@ Both:
 | `-s`, `--source <inputs...>` | The input files and directories of the task, as SV-COMP gives them. |
 | `--svcomp-property <file.prp>` | The property file of the task. |
 | `-j`, `--java <path>` | Java executable used to run the program (default: `java` on the `PATH`). |
-| `-l`, `--log-level <level>` | Log level on standard error (default: `WARN`; `INFO` or `DEBUG` for details). |
+| `-l`, `--log-level <level>` | Log level (default: `DEBUG`; `WARN` for the warnings only). |
 | `-h`, `--help` | Print the usage. |
 | `-v`, `--version` | Print the version. |
 
@@ -172,7 +172,8 @@ Both:
 
 ## Output
 
-The verdict is printed as the only line on standard output:
+The verdict is printed on a line of its own, after `[VERDICT] ` (e.g.
+`[VERDICT] Witness Correct`), so that it can be found among the logs:
 
 | Verdict | Meaning | BenchExec result |
 | --- | --- | --- |
@@ -190,8 +191,8 @@ metadata are those of JLiSA, with the description "Found with bug-finding mode".
 locations cannot be told apart (e.g., two candidates on the same line), no witness is written and the
 summary says why.
 
-The exit code is always `0`. The logs go to standard error, by default only the warnings (`-l` sets
-the level). Every run also prints a summary on standard error, whatever the log level:
+The exit code is always `0`. Before the verdict, every run prints a summary, whatever the log level
+(`-l` sets the level of the logs):
 
 ```
 [STATS]  witness.values=1 plan.targets=0 plan.avoid-points=0 plan.branches=0 nondet.fixed=1 witness.values-unused=0
