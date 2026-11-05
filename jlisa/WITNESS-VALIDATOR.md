@@ -151,7 +151,7 @@ mapping").
 
 | Option | Description |
 | --- | --- |
-| `--witness <file>` | Witness to validate: `.graphml` (format 1.0) or `.yml` (format 2.x). |
+| `--witness <file>` | Witness to validate: `.yml` (format 2.4). |
 | `--source <inputs...>` | The input files and directories of the task, as SV-COMP gives them (with `--svcomp-property`). |
 | `--svcomp-property <file.prp>` | The property file of the task (with `--source`). |
 | `--benchmark <task.yml>` | Verification task file (with `--property`, instead of `--source`). |
@@ -175,7 +175,8 @@ The verdict is printed as the only line on standard output:
 | --- | --- | --- |
 | `Witness Correct` | The violation is reproduced (or the invariants hold). | `false` — witness confirmed |
 | `Witness Spurious` | The execution described by the witness does not violate the property. | `true` — witness rejected |
-| `Could not validate` | No verdict: unsupported input, parse error or timeout. | `unknown` |
+| `Could not validate` | No verdict: unsupported input or timeout. A correctness witness that parses gives this verdict (it is not validated). | `unknown` |
+| `Parsing failed` | The witness is not a YAML witness of format 2.4: another version, a GraphML witness, an empty or malformed file. | `ERROR (parsing failed)` |
 | `Violation found` | `--find-bug` only: an execution violates the property. | — |
 
 With `--witness-output`, the witness of the violation found has one `function_return` waypoint for
