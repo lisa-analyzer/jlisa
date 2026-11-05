@@ -1,0 +1,48 @@
+{
+  "warnings" : [ {
+    "message" : "['$Main.java':1] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+  }, {
+    "message" : "['Main.java':14:2-14:20] on 'void Main::writePast64(int i)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  }, {
+    "message" : "['Main.java':26:2-26:21] on 'void Main::references(int size, int n)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.references(int_size,_int_n)_cbf626c2e3c5228ccedf2f2c92ca0f6e.graph.json", "void_Main.writePast64(int_i)_039498cc6bd2c9a946775162cdb9c667.graph.json" ],
+  "info" : {
+    "cfgs" : "4",
+    "duration" : "296ms",
+    "end" : "2026-11-01T10:35:53.246+01:00",
+    "expressions" : "51",
+    "files" : "3",
+    "globals" : "50",
+    "members" : "274",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-11-01T10:35:52.950+01:00",
+    "statements" : "19",
+    "units" : "52",
+    "version" : "1.0",
+    "warnings" : "3"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/array-cells"
+  }
+}
