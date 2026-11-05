@@ -10,6 +10,10 @@ class java.util.AbstractMap extends java.util.Map:
 
 class java.util.HashMap extends java.util.Map:
 
+	instance method HashMap: it.unive.jlisa.program.java.constructs.map.HashMapEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.HashMap*
+
 class java.util.TreeMap extends java.util.Map:
 
 class java.util.Map.Entry extends java.lang.Object:
