@@ -11,9 +11,9 @@ import org.apache.logging.log4j.Logger;
  * with bracketed tags to allow easy grepping during interactive debugging (e.g.
  * {@code grep '\[JDI\]'}).
  * <p>
- * The log level is controlled externally: {@code Main} sets it to {@code DEBUG}
- * when {@code --verbose} is passed, and leaves it at {@code WARN} otherwise so
- * that BenchExec runs produce minimal stderr noise.
+ * The log level is controlled externally: {@code -l}/{@code --log-level} sets
+ * it (e.g. {@code -l INFO} or {@code -l DEBUG}); the default is {@code WARN},
+ * so that BenchExec runs produce minimal stderr noise.
  */
 public final class ValidatorLogger {
 

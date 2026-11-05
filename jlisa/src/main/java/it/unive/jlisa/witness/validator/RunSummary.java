@@ -3,19 +3,17 @@ package it.unive.jlisa.witness.validator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Why a run ended with its verdict, and what happened to the witness on the
  * way.
  * <p>
- * At the end of every run two lines go to {@code stderr}, also without
- * {@code --verbose}:
+ * At the end of every run two lines go to {@code stderr}, whatever the log
+ * level (also with {@code -l OFF}), for example:
  * 
  * <pre>
- * WARN  [STATS]  witness.values=4 nondet.fixed=3 nondet.free=1 edges.unparseable-scope=2 ...
- * WARN  [REASON] unknown/program-exited: program ended without the violation; 1 nondet call(s) not fixed by the witness
+ * [STATS]  witness.values=4 nondet.fixed=3 nondet.free=1 edges.unparseable-scope=2 ...
+ * [REASON] unknown/program-exited: program ended without the violation; 1 nondet call(s) not fixed by the witness
  * </pre>
  * 
  * The reason is {@code <verdict>/<code>: <detail>}. The codes are fixed, so
@@ -25,8 +23,6 @@ import org.apache.logging.log4j.Logger;
  * reads.
  */
 public final class RunSummary {
-
-	private static final Logger LOG = LogManager.getLogger(RunSummary.class);
 
 	private static final Map<String, Integer> COUNTS = new LinkedHashMap<>();
 	private static String reasonCode;
@@ -101,9 +97,8 @@ public final class RunSummary {
 		String stats = COUNTS.entrySet().stream()
 				.map(e -> e.getKey() + "=" + e.getValue())
 				.collect(Collectors.joining(" "));
-		LOG.warn("[STATS]  {}", stats.isEmpty() ? "-" : stats);
-		LOG.warn("[REASON] {}/{}: {}", verdict,
-				reasonCode == null ? "not-recorded" : reasonCode,
-				reasonDetail == null ? "-" : reasonDetail);
+		System.err.println("[STATS]  " + (stats.isEmpty() ? "-" : stats));
+		System.err.println("[REASON] " + verdict + "/" + (reasonCode == null ? "not-recorded" : reasonCode) + ": "
+				+ (reasonDetail == null ? "-" : reasonDetail));
 	}
 }
