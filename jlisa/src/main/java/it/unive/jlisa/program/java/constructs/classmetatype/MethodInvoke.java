@@ -165,12 +165,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		AccessChild accessModifiers = new AccessChild(JavaIntType.INSTANCE, derefMethod, modifiersVar,
 				location);
 
-		// FIXME: this shouldn't be needed but as of now the modifiers field is
-		// tracked by the heap domain (despite being of primitive type)
-		HeapDereference derefModifiers = new HeapDereference(JavaIntType.INSTANCE, accessModifiers, location);
-
 		it.unive.lisa.symbolic.value.UnaryExpression isStaticExpr = new it.unive.lisa.symbolic.value.UnaryExpression(
-				JavaBooleanType.INSTANCE, derefModifiers, IsMemberStaticOperator.INSTANCE, location);
+				JavaBooleanType.INSTANCE, accessModifiers, IsMemberStaticOperator.INSTANCE, location);
 
 		Satisfiability isStaticSat = Satisfiability.NOT_SATISFIED;
 		isStaticSat = analysis.satisfies(state, isStaticExpr, context, this);

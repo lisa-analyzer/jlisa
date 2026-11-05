@@ -3,16 +3,17 @@ package it.unive.jlisa.witness.validator.violation;
 import com.sun.jdi.VirtualMachine;
 import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
-import it.unive.jlisa.witness.validator.model.Interception;
-import it.unive.jlisa.witness.validator.model.Property;
-import it.unive.jlisa.witness.validator.model.TaskSources;
-import it.unive.jlisa.witness.validator.model.ViolationPlan;
-import it.unive.jlisa.witness.validator.parser.WitnessModel;
+import it.unive.jlisa.witness.validator.model.*;
 import it.unive.jlisa.witness.validator.search.InputSearch;
 import it.unive.jlisa.witness.validator.violation.EventLoop.ValidationResult;
+import it.unive.lisa.witness.v2.ViolationWitness;
+import it.unive.lisa.witness.v2.violation.Action;
+import it.unive.lisa.witness.v2.violation.Segment;
+import it.unive.lisa.witness.v2.violation.Waypoint;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +34,7 @@ import java.util.Optional;
  * to stdout</li>
  * </ol>
  */
-public final class ViolationValidator {
+public final class ViolationValidatorV2 {
 
 	private static final String VERDICT_CORRECT = "Witness Correct";
 	private static final String VERDICT_SPURIOUS = "Witness Spurious";
@@ -46,7 +47,7 @@ public final class ViolationValidator {
 	 */
 	private static final long TIME_BUDGET_MILLIS = 75_000;
 
-	private ViolationValidator() {
+	private ViolationValidatorV2() {
 	}
 
 	/**
@@ -67,7 +68,7 @@ public final class ViolationValidator {
 	 *                                 {@code Tool Error}
 	 */
 	public static void validate(
-			WitnessModel model,
+			ViolationWitness model,
 			Property property,
 			TaskSources task,
 			String java8Exec,
@@ -75,7 +76,8 @@ public final class ViolationValidator {
 			throws ValidationException {
 
 		long start = System.currentTimeMillis();
-		ViolationPlan plan = model.violationPlan();
+
+		ViolationPlan plan = generateViolationPlan(model, task.inputs());
 
 		ValidatorLogger.plan("Plan: {}", plan);
 		for (var ix : plan.interceptions()) {
@@ -93,7 +95,7 @@ public final class ViolationValidator {
 
 		if (plan.isEmpty()) {
 			RunSummary.count("plan.empty");
-			ValidatorLogger.warn("[VALIDATE] Violation plan is empty — cannot steer execution");
+			ValidatorLogger.warn("[VALIDATE] No segments in witness — cannot steer execution");
 			// printVerdict(VERDICT_UNKNOWN);
 			// return;
 		}
@@ -109,19 +111,21 @@ public final class ViolationValidator {
 		// Find the main class
 		String mainClass = findMainClass(task.benchmark());
 		ValidatorLogger.jdi("Main class: {}", mainClass);
+		// Without its classes the program does not start, and its end would
+		// be taken for a run without the violation
+		if (!new File(task.classesDir(), mainClass.replace('.', File.separatorChar) + ".class").isFile()) {
+			throw new ValidationException("The main class " + mainClass + " is not compiled in "
+					+ task.classesDir().getAbsolutePath());
+		}
 
 		// Launch the target JVM
 		VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
 
-		// The witness values, as they are before the first run consumes them
-		// (for the search)
-		List<Interception> witnessValues = plan.interceptions().stream()
-				.map(ix -> new Interception(ix.className(), ix.methodName(), ix.descriptor(), ix.returnValue(),
-						ix.count()))
-				.toList();
+		// The witness values (each run passes them again from the first)
+		List<Interception> witnessValues = plan.interceptions();
 
 		// Run the event loop
-		EventLoop loop = new EventLoop(vm, plan, property);
+		EventLoop loop = new EventLoop(vm, plan, property, new WitnessLocations(extraSources));
 		ValidationResult result = loop.run();
 
 		// No violation, but the run chose values of its own for calls the
@@ -145,6 +149,83 @@ public final class ViolationValidator {
 		ValidatorLogger.result(verdict);
 		RunSummary.print(result.name().toLowerCase());
 		printVerdict(verdict);
+	}
+
+	/**
+	 * Returns the plan of the witness. The segments are passed in order:
+	 * <ul>
+	 * <li>a {@code function_return} waypoint on a {@code Verifier.nondet*()}
+	 * call becomes an {@link Interception}: the call returns the value of the
+	 * constraint (a constraint that fixes no single value lets the call run
+	 * freely, but still passes the waypoint);</li>
+	 * <li>a {@code target} becomes a {@link TargetPoint}, where the violation
+	 * must happen;</li>
+	 * <li>a {@code branching} becomes a {@link BranchDecision};</li>
+	 * <li>a {@code function_enter} says nothing more than the next
+	 * waypoints;</li>
+	 * <li>waypoints to avoid, cycles, assumptions and {@code function_return}
+	 * waypoints on other calls cannot be followed: they are counted as skipped
+	 * steps, and a run without the violation then says nothing about the
+	 * witness unless the witness fixed every nondet call.</li>
+	 * </ul>
+	 *
+	 * @param model  the witness
+	 * @param inputs the input files and directories of the task, where the
+	 *                   files of the witness are looked for
+	 */
+	static ViolationPlan generateViolationPlan(
+			ViolationWitness model,
+			List<File> inputs) {
+		List<Interception> interceptions = new ArrayList<>();
+		List<BranchDecision> branchDecisions = new ArrayList<>();
+		List<AvoidPoint> avoidPoints = new ArrayList<>();
+		List<TargetPoint> targetPoints = new ArrayList<>();
+		int skipped = 0;
+
+		for (Segment segment : model.getSequence().getSegments()) {
+			for (Waypoint wpt : segment.getWaypoints()) {
+				it.unive.lisa.witness.v2.Location at = wpt.getLocation();
+				if (wpt.getAction() != Action.FOLLOW) {
+					skipped++;
+					ValidatorLogger.plan("  Skipped ({} waypoint): {}", wpt.getAction(), wpt);
+					continue;
+				}
+				switch (wpt.getType()) {
+				case TARGET -> targetPoints.add(new TargetPoint(at.getFileName(), at.getLine()));
+				case FUNCTION_RETURN -> {
+					if (WitnessLocations.nondetCallAt(inputs, at.getFileName(), at.getLine()) == Boolean.FALSE) {
+						skipped++;
+						ValidatorLogger.plan("  Skipped (not a nondet call): {}", wpt);
+						continue;
+					}
+					String constraint = wpt.getConstraint().getValue();
+					Object value = ReturnConstraint.value(constraint);
+					if (value == null) {
+						RunSummary.count("plan.values-not-single");
+					}
+					interceptions.add(new Interception(at.getFileName(), at.getLine(), at.getColumn(), value,
+							constraint));
+				}
+				case BRANCHING -> branchDecisions.add(new BranchDecision(at.getFileName(), at.getLine(),
+						Boolean.parseBoolean(wpt.getConstraint().getValue())));
+				case FUNCTION_ENTER -> {
+					// nothing to steer
+				}
+				case ASSUMPTION -> {
+					skipped++;
+					ValidatorLogger.plan("  Skipped (assumption): {}", wpt);
+				}
+				}
+			}
+		}
+		RunSummary.add("plan.skipped", skipped);
+
+		return new ViolationPlan(
+				interceptions,
+				branchDecisions,
+				avoidPoints,
+				targetPoints,
+				skipped);
 	}
 
 	// ------------------------------------------------------------------
@@ -278,7 +359,6 @@ public final class ViolationValidator {
 	 */
 	private static void printVerdict(
 			String verdict) {
-		System.out.println(verdict);
-		System.out.flush();
+		RunSummary.printVerdict(verdict);
 	}
 }

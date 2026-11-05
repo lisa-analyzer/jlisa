@@ -58,6 +58,7 @@ public class ViolationWitnessProducerTest {
 			SVCOMPProperty... properties)
 			throws Exception {
 		List<String> args = new ArrayList<>(List.of(
+				"check",
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
 				"-o", outdir.toString(),
 				"-n", "ConstantPropagation"));

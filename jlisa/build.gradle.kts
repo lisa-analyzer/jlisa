@@ -40,6 +40,9 @@ version = "0.1"
 
 application {
     mainClass.set("it.unive.jlisa.Main")
+    // validate and find-bug run the programs under JDI: jdk.jdi is not in the default module graph of
+    // classpath applications (bin/jlisa and ./gradlew run)
+    applicationDefaultJvmArgs = listOf("--add-modules", "jdk.jdi")
 }
 
 // the Gradle tasks run the compiled classes, without the manifest of the jar: they give the version of jlisa
@@ -81,52 +84,9 @@ dependencies {
 
 // WITNESS VALIDATOR
 // The validator runs the programs under JDI: jdk.jdi is not in the default module graph of
-// classpath applications, both when compiling and when running.
+// classpath applications, both when compiling and when running (see application above).
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("--add-modules", "jdk.jdi"))
-}
-
-// bin/jlisa-wit next to bin/jlisa in the distribution, on the same lib folder
-val jlisaWitStartScripts by tasks.registering(CreateStartScripts::class) {
-    applicationName = "jlisa-wit"
-    mainClass.set("it.unive.jlisa.witness.validator.Main")
-    defaultJvmOpts = listOf("--add-modules", "jdk.jdi")
-    outputDir = layout.buildDirectory.dir("jlisa-wit-scripts").get().asFile
-    classpath = tasks.startScripts.get().classpath
-}
-
-distributions {
-    main {
-        contents {
-            into("bin") {
-                from(jlisaWitStartScripts)
-                filePermissions { unix("rwxr-xr-x") }
-            }
-        }
-    }
-}
-
-// ./gradlew runWitnessValidator --args="..." runs jlisa-wit from the sources, as ./gradlew run does for jlisa
-tasks.register<JavaExec>("runWitnessValidator") {
-    group = "application"
-    description = "Runs the witness validator (jlisa-wit)"
-    classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("it.unive.jlisa.witness.validator.Main")
-    jvmArgs("--add-modules", "jdk.jdi")
-}
-
-// ./gradlew runBugFinder --args="..." runs the bug-finding mode of jlisa-wit (no witness). --find-bug goes
-// first, since --source takes all the arguments after it
-tasks.register<JavaExec>("runBugFinder") {
-    group = "application"
-    description = "Runs the bug-finding mode of the witness validator (jlisa-wit --find-bug)"
-    classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("it.unive.jlisa.witness.validator.Main")
-    jvmArgs("--add-modules", "jdk.jdi")
-    val exec = this
-    doFirst {
-        exec.args = listOf("--find-bug") + exec.args.orEmpty()
-    }
 }
 
 // ANTLR

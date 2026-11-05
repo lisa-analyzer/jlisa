@@ -6,6 +6,7 @@ import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
 import it.unive.jlisa.witness.validator.correctness.InductionChecker.CheckResult;
 import it.unive.jlisa.witness.validator.correctness.InvariantParser.ParsedInvariant;
@@ -61,6 +62,14 @@ public final class CorrectnessValidator {
 	private static final String VERDICT_UNKNOWN = "Could not validate";
 
 	private CorrectnessValidator() {
+	}
+
+	/**
+	 * Mocks the validation step, returning an unknown
+	 */
+	public static void validateMock() {
+		ValidatorLogger.warn("[CORRECTNESS] mock run — unknown");
+		printVerdict(VERDICT_UNKNOWN);
 	}
 
 	/**
@@ -212,7 +221,6 @@ public final class CorrectnessValidator {
 
 	private static void printVerdict(
 			String verdict) {
-		System.out.println(verdict);
-		System.out.flush();
+		RunSummary.printVerdict(verdict);
 	}
 }
