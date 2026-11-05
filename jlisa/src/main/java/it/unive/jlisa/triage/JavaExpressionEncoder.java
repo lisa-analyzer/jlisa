@@ -43,6 +43,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntFunction;
 
@@ -668,8 +669,19 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		}
 		if (!(sample instanceof Boolean || sample instanceof Number || sample instanceof Character))
 			return null;
-		return table(f.toString(), f::apply, Character.MAX_CODE_POINT, coerce(arg, Sort.INT, e), e);
+		// functions over chars are only applied to chars
+		int max = CHAR_FUNCTIONS.contains(f) ? Character.MAX_VALUE : Character.MAX_CODE_POINT;
+		return table(f.toString(), f::apply, max, coerce(arg, Sort.INT, e), e);
 	}
+
+	/**
+	 * The functions of the library over characters whose parameter is a char.
+	 */
+	private static final Set<JavaLibraryFunction> CHAR_FUNCTIONS = Set.of(
+			JavaLibraryFunction.CHARACTER_TO_TITLE_CASE_CHAR,
+			JavaLibraryFunction.CHARACTER_IS_JAVA_LETTER,
+			JavaLibraryFunction.CHARACTER_IS_JAVA_LETTER_OR_DIGIT,
+			JavaLibraryFunction.CHARACTER_IS_SPACE);
 
 	/**
 	 * Encodes the given function over chars through its table over all chars.
@@ -695,7 +707,11 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			ValueExpression e) {
 		List<Segment> segments = TABLES.computeIfAbsent(name + "/" + max, k -> segments(f, max));
 		boolean bool = segments.get(0).value instanceof Boolean;
-		return guarded(between(c, 0, max), tree(segments, 0, segments.size() - 1, c, bool), List.of(c), e);
+		// the code point is used by every node of the tree: an auxiliary
+		// constant equal to it keeps the encoding small
+		Term x = auxiliary(Sort.INT, e);
+		getSymbols().require(Term.eq(x, c));
+		return guarded(between(x, 0, max), tree(segments, 0, segments.size() - 1, x, bool), List.of(x), e);
 	}
 
 	/**

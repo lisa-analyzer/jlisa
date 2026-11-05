@@ -121,7 +121,11 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					for (SymbolicExpression rightStr : tmp.getExecutionExpressions()) {
 						partialResult = partialResult
 								.lub(concatStrings(interprocedural, tmp, actualLeft, rightStr, expressions));
-						partialResult = partialResult.forgetIdentifier((Identifier) rightStr, this);
+						// the result of the call is an identifier if the call
+						// is open (and modeled by a meta variable), while
+						// models of toString yield the string they create
+						if (rightStr instanceof Identifier)
+							partialResult = partialResult.forgetIdentifier((Identifier) rightStr, this);
 					}
 
 				} else if (rType.isStringType()) {
