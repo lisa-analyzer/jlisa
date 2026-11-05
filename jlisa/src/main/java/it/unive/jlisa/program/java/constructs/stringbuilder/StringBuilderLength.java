@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -59,7 +60,7 @@ public class StringBuilderLength extends UnaryExpression implements PluggableSta
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
+		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), expr, getLocation());
 		AccessChild access = new AccessChild(stringType, deref, var, getLocation());
 		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaIntType.INSTANCE,

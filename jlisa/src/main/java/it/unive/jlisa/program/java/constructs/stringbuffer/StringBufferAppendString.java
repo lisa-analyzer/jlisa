@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuffer;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -65,7 +66,7 @@ public class StringBufferAppendString extends BinaryExpression implements Plugga
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuffer"), left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
 		HeapDereference derefRight = new HeapDereference(stringType, right, getLocation());

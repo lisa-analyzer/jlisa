@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -58,7 +59,7 @@ public class StringBuilderCapacity extends UnaryExpression implements PluggableS
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
-		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
+		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), expr, getLocation());
 		AccessChild access = new AccessChild(JavaIntType.INSTANCE, deref, capVar, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, access, interprocedural.getCurrentContext(),
 				originating);
