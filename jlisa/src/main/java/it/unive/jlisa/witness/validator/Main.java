@@ -9,6 +9,7 @@ import it.unive.jlisa.witness.validator.violation.ViolationValidatorV2;
 import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import it.unive.lisa.witness.v2.ViolationWitness;
 import it.unive.lisa.witness.v2.Witness;
+import it.unive.lisa.witness.v2.WitnessReadException;
 import it.unive.lisa.witness.v2.WitnessReader;
 import java.io.File;
 import java.io.IOException;
@@ -41,8 +42,10 @@ import org.apache.logging.log4j.core.config.Configurator;
  * invariants verified)</li>
  * <li>{@code Witness Spurious} — the witness path does not lead to the property
  * violation</li>
- * <li>{@code Could not validate} — parse error, timeout, or unsupported witness
- * type</li>
+ * <li>{@code Could not validate} — timeout, unsupported witness, or a
+ * correctness witness (only parsed, not validated)</li>
+ * <li>{@code Parsing failed} — the witness is not a valid YAML witness of format
+ * 2.4 (e.g. another version, a GraphML witness, an empty file)</li>
  * <li>{@code Violation found} — ({@code --find-bug}) a run violates the
  * property</li>
  * </ul>
@@ -130,7 +133,15 @@ public final class Main {
 				}
 				BugFinder.find(task.property(), task.sources(), java8Exec, millis, witnessOutput);
 			} else {
-				Witness witness = WitnessReader.read(Paths.get(witnessPath));
+				Witness witness;
+				try {
+					witness = WitnessReader.read(Paths.get(witnessPath));
+				} catch (WitnessReadException e) {
+					LOG.error("Parsing failed: {}", e.getMessage());
+					RunSummary.parsingFailed(e.getMessage());
+					System.exit(0);
+					return;
+				}
 				LOG.info("Parsed witness: {}", witness);
 				if (witness instanceof ViolationWitness violationWitness) {
 					ViolationValidatorV2.validate(violationWitness, task.property(), task.sources(), java8Exec,

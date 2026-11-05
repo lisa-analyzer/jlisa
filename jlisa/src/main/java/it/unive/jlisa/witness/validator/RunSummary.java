@@ -77,6 +77,18 @@ public final class RunSummary {
 	}
 
 	/**
+	 * Ends a run whose witness cannot be parsed (wrong format version, GraphML,
+	 * empty or malformed file): prints the summary with this reason, then the
+	 * verdict {@code Parsing failed} on {@code stdout}.
+	 */
+	public static void parsingFailed(
+			String detail) {
+		reason("parse-error", detail);
+		print("error");
+		System.out.println("Parsing failed");
+	}
+
+	/**
 	 * Prints {@code [STATS]} and {@code [REASON]} once; {@code verdict} is
 	 * correct, spurious, unknown or error.
 	 */
