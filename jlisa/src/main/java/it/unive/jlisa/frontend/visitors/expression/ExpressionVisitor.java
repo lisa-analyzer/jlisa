@@ -27,7 +27,9 @@ import it.unive.jlisa.program.cfg.expression.JavaComparisonEqual;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonGE;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonNotEqual;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaDecrement;
 import it.unive.jlisa.program.cfg.expression.JavaDivision;
+import it.unive.jlisa.program.cfg.expression.JavaIncrement;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -36,11 +38,7 @@ import it.unive.jlisa.program.cfg.expression.JavaRemainder;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
-import it.unive.jlisa.program.cfg.expression.PostfixAddition;
-import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
-import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
-import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaCompoundAssignment;
@@ -713,10 +711,10 @@ public class ExpressionVisitor
 			return false;
 		}
 		if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
-			expression = new PostfixAddition(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaIncrement(getScope().getCFG(), getSourceCodeLocation(node), false, expr);
 		}
 		if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
-			expression = new PostfixSubtraction(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaDecrement(getScope().getCFG(), getSourceCodeLocation(node), false, expr);
 		}
 		return false;
 	}
@@ -731,10 +729,10 @@ public class ExpressionVisitor
 		}
 
 		if (node.getOperator() == PrefixExpression.Operator.INCREMENT) {
-			expression = new PrefixAddition(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaIncrement(getScope().getCFG(), getSourceCodeLocation(node), true, expr);
 		}
 		if (node.getOperator() == PrefixExpression.Operator.DECREMENT) {
-			expression = new PrefixSubtraction(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaDecrement(getScope().getCFG(), getSourceCodeLocation(node), true, expr);
 		}
 		if (node.getOperator() == PrefixExpression.Operator.MINUS) {
 			expression = new Negation(getScope().getCFG(), getSourceCodeLocation(node), expr);

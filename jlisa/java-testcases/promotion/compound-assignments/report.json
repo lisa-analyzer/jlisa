@@ -1,0 +1,108 @@
+{
+  "warnings" : [ {
+    "message" : "['Main.java':41:57-41:70] on 'void Main::m1()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':42:57-42:74] on 'void Main::m2()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':43:57-43:74] on 'void Main::m3()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':44:57-44:74] on 'void Main::m4()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':45:57-45:70] on 'void Main::m5()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':46:57-46:70] on 'void Main::m6()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':47:57-47:74] on 'void Main::m7()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':48:57-48:74] on 'void Main::m8()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':49:58-49:75] on 'void Main::m9()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':50:59-50:76] on 'void Main::m10()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':51:60-51:77] on 'void Main::m11()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':52:70-52:86] on 'void Main::m12()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':53:70-53:85] on 'void Main::m13()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':54:70-54:84] on 'void Main::m14()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':55:70-55:84] on 'void Main::m15()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':56:70-56:83] on 'void Main::m16()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':57:70-57:83] on 'void Main::m17()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':58:70-58:85] on 'void Main::m18()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':59:70-59:85] on 'void Main::m19()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':60:71-60:85] on 'void Main::m20()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':61:71-61:85] on 'void Main::m21()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':62:72-62:86] on 'void Main::m22()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':63:76-63:94] on 'void Main::m23()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':64:76-64:93] on 'void Main::m24()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':65:76-65:90] on 'void Main::m25()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':66:76-66:93] on 'void Main::m26()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':67:76-67:89] on 'void Main::m27()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':68:76-68:89] on 'void Main::m28()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':69:76-69:93] on 'void Main::m29()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':70:76-70:93] on 'void Main::m30()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':71:77-71:91] on 'void Main::m31()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':72:77-72:93] on 'void Main::m32()': [EXPRESSION] DEFINITE: the assertion holds"
+  }, {
+    "message" : "['Main.java':73:78-73:94] on 'void Main::m33()': [EXPRESSION] DEFINITE: the assertion holds"
+  } ],
+  "notices" : [ ],
+  "files" : [ "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "report.json", "void_Main.m1()_52e98481e526ec0260bbdb54aee069e1.graph.json", "void_Main.m10()_8f3f48537c941662ce8273e21a08d1d3.graph.json", "void_Main.m11()_1e77d7ded860c67476220d0e79e0ec19.graph.json", "void_Main.m12()_d41d1b63d1c8fc81abe9f7b7ce11f30c.graph.json", "void_Main.m13()_daddf27b4bf2f5a0a37e0dac3987c42d.graph.json", "void_Main.m14()_ae2f0b4df824c710de1187d5ae1ffc3e.graph.json", "void_Main.m15()_b79d652cb23447087c15512ef9667774.graph.json", "void_Main.m16()_2c48ace3ce8f3952e9ebe3813a5ffbe5.graph.json", "void_Main.m17()_48d396b4472ef0bf7ddb256e7c4775d1.graph.json", "void_Main.m18()_6a50ad4785fab1c3ec3c1a6482cc509e.graph.json", "void_Main.m19()_be791a096516cebd6b6d783362c41caa.graph.json", "void_Main.m2()_bddfcc1ab57e17150d073e619bc41dae.graph.json", "void_Main.m20()_749c1f4b9b638f6a0b8a3da7222c35f6.graph.json", "void_Main.m21()_69efeda7d0ef0dbe3fc1b81f1f809a1c.graph.json", "void_Main.m22()_eaa2504a580cf4da8151bbe193f19159.graph.json", "void_Main.m23()_5b8a2668e3bc6edafa60eb7f040a0e68.graph.json", "void_Main.m24()_23bf22f8e50ae025450ebc0bc4a3f4d4.graph.json", "void_Main.m25()_f580dcba04593f8a6ff7aa764af67b93.graph.json", "void_Main.m26()_1b84b97c02af89eba17051eafa2eb732.graph.json", "void_Main.m27()_26d4224b55f0fab581e48549eb2167d1.graph.json", "void_Main.m28()_1c342b8284f7d13f69d4c45bf134f76c.graph.json", "void_Main.m29()_b5b0bea6c5be1a8ae08167e090277eeb.graph.json", "void_Main.m3()_a0e1cea2036ce5736ded80279ab24676.graph.json", "void_Main.m30()_a385852e9b25ca284049c1a222daf5f5.graph.json", "void_Main.m31()_e2f70d686d3e0ac5cddc95136b3cb09e.graph.json", "void_Main.m32()_36b61e55e51d7dac71c224fd02296a80.graph.json", "void_Main.m33()_3e500259a5e637c1d6f935d72cb806e1.graph.json", "void_Main.m4()_6981b040e26cca542c848226eaf2662b.graph.json", "void_Main.m5()_f7fdb3140e22445ca5007e37391c84e5.graph.json", "void_Main.m6()_9ec2dda6e4df153cfe41bcd6b363c590.graph.json", "void_Main.m7()_e73d7282dc61721a5d6c788117207cc3.graph.json", "void_Main.m8()_ffba546155abc28ea6ae446640164b83.graph.json", "void_Main.m9()_54f9fe806fbf07669c26c8a61d90c151.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "48",
+    "duration" : "403ms",
+    "end" : "2026-10-31T15:11:31.238+01:00",
+    "expressions" : "480",
+    "files" : "35",
+    "globals" : "50",
+    "members" : "325",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-10-31T15:11:30.835+01:00",
+    "statements" : "257",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "33"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/promotion/compound-assignments"
+  }
+}
