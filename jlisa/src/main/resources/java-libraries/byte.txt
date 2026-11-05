@@ -15,9 +15,6 @@ class java.lang.Byte extends java.lang.Number:
 		param this libtype java.lang.Byte*
 		param other libtype java.lang.Byte*
 		
-	method toString: it.unive.jlisa.program.java.constructs.bytew.ByteStaticToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaByteType::INSTANCE
 		
 	method toUnsignedLong: it.unive.jlisa.program.java.constructs.bytew.ByteToUnsignedLong
 		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
@@ -31,3 +28,11 @@ class java.lang.Byte extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Byte*
 		param other libtype java.lang.Byte*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$ByteToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaByteType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$ByteToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Byte*

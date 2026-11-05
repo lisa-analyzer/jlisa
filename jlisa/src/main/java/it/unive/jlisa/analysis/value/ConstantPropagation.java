@@ -1171,6 +1171,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		TernaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, left.getValue(), middle.getValue(), right.getValue());
+
 		if (operator instanceof JavaStringInsertCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());

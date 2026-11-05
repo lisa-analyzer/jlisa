@@ -3,10 +3,12 @@ package it.unive.jlisa.program.operator;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
@@ -25,9 +27,11 @@ import java.util.function.Function;
  * <br>
  * Arguments are given as the values of constants of the analysis, and are
  * converted to the types of the parameters of the function (e.g., characters
- * might be represented as {@link Character}s or {@link Integer}s).
+ * might be represented as {@link Character}s or {@link Integer}s). Functions
+ * returning strings ({@link #returnsString()}) yield the contents of the
+ * strings, that models of the library store in new string objects.
  */
-public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator {
+public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator, TernaryOperator {
 
 	// Integer
 
@@ -263,6 +267,93 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 	public static final JavaLibraryFunction CHARACTER_IS_SPACE = unary("Character.isSpace",
 			JavaBooleanType.INSTANCE, a -> Character.isSpace(c(a)));
 
+	// conversions to strings
+
+	public static final JavaLibraryFunction INTEGER_TO_STRING = string1("Integer.toString",
+			a -> Integer.toString(i(a)));
+
+	public static final JavaLibraryFunction INTEGER_TO_STRING_RADIX = string2("Integer.toString(radix)",
+			(a, b) -> Integer.toString(i(a), i(b)));
+
+	public static final JavaLibraryFunction INTEGER_TO_UNSIGNED_STRING = string1("Integer.toUnsignedString",
+			a -> Integer.toUnsignedString(i(a)));
+
+	public static final JavaLibraryFunction INTEGER_TO_UNSIGNED_STRING_RADIX = string2(
+			"Integer.toUnsignedString(radix)", (a, b) -> Integer.toUnsignedString(i(a), i(b)));
+
+	public static final JavaLibraryFunction INTEGER_TO_HEX_STRING = string1("Integer.toHexString",
+			a -> Integer.toHexString(i(a)));
+
+	public static final JavaLibraryFunction INTEGER_TO_BINARY_STRING = string1("Integer.toBinaryString",
+			a -> Integer.toBinaryString(i(a)));
+
+	public static final JavaLibraryFunction INTEGER_TO_OCTAL_STRING = string1("Integer.toOctalString",
+			a -> Integer.toOctalString(i(a)));
+
+	public static final JavaLibraryFunction LONG_TO_STRING = string1("Long.toString", a -> Long.toString(l(a)));
+
+	public static final JavaLibraryFunction LONG_TO_STRING_RADIX = string2("Long.toString(radix)",
+			(a, b) -> Long.toString(l(a), i(b)));
+
+	public static final JavaLibraryFunction LONG_TO_UNSIGNED_STRING = string1("Long.toUnsignedString",
+			a -> Long.toUnsignedString(l(a)));
+
+	public static final JavaLibraryFunction LONG_TO_UNSIGNED_STRING_RADIX = string2("Long.toUnsignedString(radix)",
+			(a, b) -> Long.toUnsignedString(l(a), i(b)));
+
+	public static final JavaLibraryFunction LONG_TO_HEX_STRING = string1("Long.toHexString",
+			a -> Long.toHexString(l(a)));
+
+	public static final JavaLibraryFunction LONG_TO_BINARY_STRING = string1("Long.toBinaryString",
+			a -> Long.toBinaryString(l(a)));
+
+	public static final JavaLibraryFunction LONG_TO_OCTAL_STRING = string1("Long.toOctalString",
+			a -> Long.toOctalString(l(a)));
+
+	public static final JavaLibraryFunction SHORT_TO_STRING = string1("Short.toString", a -> Short.toString(s(a)));
+
+	public static final JavaLibraryFunction BYTE_TO_STRING = string1("Byte.toString", a -> Byte.toString(by(a)));
+
+	public static final JavaLibraryFunction BOOLEAN_TO_STRING = string1("Boolean.toString",
+			a -> Boolean.toString(b(a)));
+
+	public static final JavaLibraryFunction CHARACTER_TO_STRING = string1("Character.toString",
+			a -> Character.toString(c(a)));
+
+	public static final JavaLibraryFunction DOUBLE_TO_STRING = string1("Double.toString",
+			a -> Double.toString(((Number) a).doubleValue()));
+
+	public static final JavaLibraryFunction FLOAT_TO_STRING = string1("Float.toString",
+			a -> Float.toString(((Number) a).floatValue()));
+
+	// String (the first argument is the value of the receiver)
+
+	public static final JavaLibraryFunction STRING_IS_EMPTY = unary("String.isEmpty", JavaBooleanType.INSTANCE,
+			a -> str(a).isEmpty());
+
+	public static final JavaLibraryFunction STRING_INDEX_OF_CHAR = binary("String.indexOf(int)",
+			JavaIntType.INSTANCE, (a, b) -> str(a).indexOf(i(b)));
+
+	public static final JavaLibraryFunction STRING_INDEX_OF_CHAR_FROM = ternary("String.indexOf(int, int)",
+			JavaIntType.INSTANCE, args -> str(args[0]).indexOf(i(args[1]), i(args[2])));
+
+	public static final JavaLibraryFunction STRING_LAST_INDEX_OF_CHAR = binary("String.lastIndexOf(int)",
+			JavaIntType.INSTANCE, (a, b) -> str(a).lastIndexOf(i(b)));
+
+	public static final JavaLibraryFunction STRING_LAST_INDEX_OF_CHAR_FROM = ternary("String.lastIndexOf(int, int)",
+			JavaIntType.INSTANCE, args -> str(args[0]).lastIndexOf(i(args[1]), i(args[2])));
+
+	public static final JavaLibraryFunction STRING_COMPARE_TO_IGNORE_CASE = binary("String.compareToIgnoreCase",
+			JavaIntType.INSTANCE, (a, b) -> str(a).compareToIgnoreCase(str(b)));
+
+	// Double and Float
+
+	public static final JavaLibraryFunction DOUBLE_COMPARE = binary("Double.compare", JavaIntType.INSTANCE,
+			(a, b) -> Double.compare(((Number) a).doubleValue(), ((Number) b).doubleValue()));
+
+	public static final JavaLibraryFunction FLOAT_COMPARE = binary("Float.compare", JavaIntType.INSTANCE,
+			(a, b) -> Float.compare(((Number) a).floatValue(), ((Number) b).floatValue()));
+
 	// Math
 
 	public static final JavaLibraryFunction MATH_GET_EXPONENT_DOUBLE = unary("Math.getExponent(double)",
@@ -275,14 +366,18 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 
 	private final Type result;
 
+	private final boolean string;
+
 	private final Function<Object[], Object> function;
 
 	private JavaLibraryFunction(
 			String name,
 			Type result,
+			boolean string,
 			Function<Object[], Object> function) {
 		this.name = name;
 		this.result = result;
+		this.string = string;
 		this.function = function;
 	}
 
@@ -290,14 +385,33 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 			String name,
 			Type result,
 			Function<Object, Object> function) {
-		return new JavaLibraryFunction(name, result, args -> function.apply(args[0]));
+		return new JavaLibraryFunction(name, result, false, args -> function.apply(args[0]));
 	}
 
 	private static JavaLibraryFunction binary(
 			String name,
 			Type result,
 			BiFunction<Object, Object, Object> function) {
-		return new JavaLibraryFunction(name, result, args -> function.apply(args[0], args[1]));
+		return new JavaLibraryFunction(name, result, false, args -> function.apply(args[0], args[1]));
+	}
+
+	private static JavaLibraryFunction ternary(
+			String name,
+			Type result,
+			Function<Object[], Object> function) {
+		return new JavaLibraryFunction(name, result, false, function);
+	}
+
+	private static JavaLibraryFunction string1(
+			String name,
+			Function<Object, Object> function) {
+		return new JavaLibraryFunction(name, null, true, args -> function.apply(args[0]));
+	}
+
+	private static JavaLibraryFunction string2(
+			String name,
+			BiFunction<Object, Object, Object> function) {
+		return new JavaLibraryFunction(name, null, true, args -> function.apply(args[0], args[1]));
 	}
 
 	private static JavaLibraryFunction predicate(
@@ -312,7 +426,16 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 	 * @return the type
 	 */
 	public Type getResultType() {
-		return result;
+		return string ? JavaClassType.getStringType() : result;
+	}
+
+	/**
+	 * Yields {@code true} if this function returns strings.
+	 *
+	 * @return whether or not this function returns strings
+	 */
+	public boolean returnsString() {
+		return string;
 	}
 
 	/**
@@ -336,7 +459,7 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 	public Set<Type> typeInference(
 			TypeSystem types,
 			Set<Type> argument) {
-		return argument.isEmpty() ? Collections.emptySet() : Collections.singleton(result);
+		return argument.isEmpty() ? Collections.emptySet() : Collections.singleton(getResultType());
 	}
 
 	@Override
@@ -344,7 +467,18 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 			TypeSystem types,
 			Set<Type> left,
 			Set<Type> right) {
-		return left.isEmpty() || right.isEmpty() ? Collections.emptySet() : Collections.singleton(result);
+		return left.isEmpty() || right.isEmpty() ? Collections.emptySet()
+				: Collections.singleton(getResultType());
+	}
+
+	@Override
+	public Set<Type> typeInference(
+			TypeSystem types,
+			Set<Type> left,
+			Set<Type> middle,
+			Set<Type> right) {
+		return left.isEmpty() || middle.isEmpty() || right.isEmpty() ? Collections.emptySet()
+				: Collections.singleton(getResultType());
 	}
 
 	@Override
@@ -383,6 +517,13 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator 
 	private static char c(
 			Object value) {
 		return (char) i(value);
+	}
+
+	private static String str(
+			Object value) {
+		if (value instanceof String)
+			return (String) value;
+		throw new IllegalArgumentException("Not a string: " + value);
 	}
 
 	private static boolean b(

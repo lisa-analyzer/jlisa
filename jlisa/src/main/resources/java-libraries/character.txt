@@ -260,3 +260,11 @@ class java.lang.Character extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Character*
 		param other libtype java.lang.Character*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$CharacterToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaCharType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$CharacterToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Character*

@@ -16,21 +16,9 @@ class java.lang.Integer extends java.lang.Number:
 		libtype java.lang.Integer* 
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE 
 
-	method toString: it.unive.jlisa.program.java.constructs.integer.IntegerStaticToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-	method toHexString: it.unive.jlisa.program.java.constructs.integer.IntegerToHexString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	method toBinaryString: it.unive.jlisa.program.java.constructs.integer.IntegerToBinaryString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	method toOctalString: it.unive.jlisa.program.java.constructs.integer.IntegerToOctalString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	method compare: it.unive.jlisa.program.java.constructs.integer.IntegerCompare
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
@@ -107,3 +95,47 @@ class java.lang.Integer extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Integer*
 		param other libtype java.lang.Integer*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToStringRadix
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToUnsignedString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToUnsignedStringRadix
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toHexString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toBinaryString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToBinaryString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toOctalString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToOctalString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Integer*
+
+	method getInteger: it.unive.jlisa.program.java.constructs.library.PropertyLookup$IntegerWithInt
+		libtype java.lang.Integer*
+		param nm libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method getInteger: it.unive.jlisa.program.java.constructs.library.PropertyLookup$IntegerWithInteger
+		libtype java.lang.Integer*
+		param nm libtype java.lang.String*
+		param val libtype java.lang.Integer*

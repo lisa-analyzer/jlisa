@@ -39,6 +39,17 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 	private final WarningVerifier<A, D> verifier;
 
 	/**
+	 * The default time, in milliseconds from the creation of the verifier
+	 * (that happens, for SV-COMP tasks, after parsing the program and before
+	 * analyzing it), by which the verification must end: the analyses of
+	 * SV-COMP tasks are stopped after 300 seconds, and the time left is needed
+	 * to start the analysis and to produce the results.
+	 */
+	public static final long DEFAULT_BUDGET = 230_000;
+
+	private long deadline = System.currentTimeMillis() + DEFAULT_BUDGET;
+
+	/**
 	 * Builds the verifier, verifying each kind of warnings with a
 	 * {@link FirstViolationVerifier} with default parameters, encoding the
 	 * operators of the Java frontend through a {@link JavaExpressionEncoder}.
@@ -57,6 +68,19 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 		this.verifier = verifier;
 	}
 
+	/**
+	 * Sets the time by which the verification must end (by default,
+	 * {@link #DEFAULT_BUDGET} milliseconds after the creation of this
+	 * verifier). Warnings that are not verified by then are left possible.
+	 *
+	 * @param deadline the time, as given by {@link System#currentTimeMillis()}
+	 */
+	@Override
+	public void setDeadline(
+			long deadline) {
+		this.deadline = deadline;
+	}
+
 	@Override
 	public Map<StatementMessage, VerificationResult> verify(
 			SemanticTool<A, D> tool,
@@ -70,11 +94,20 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 			else
 				asserts.add(warning);
 
+		// each kind of warnings gets half of the time left, and the one left
+		// by the other kind: uncaught exceptions are verified first, since
+		// all their warnings must be refuted to prove their property, while
+		// assertions only need a confirmed warning to disprove theirs
 		Map<StatementMessage, VerificationResult> results = new LinkedHashMap<>();
-		if (!asserts.isEmpty())
-			results.putAll(verifier.verify(tool, asserts));
-		if (!exceptions.isEmpty())
+		if (!exceptions.isEmpty()) {
+			long now = System.currentTimeMillis();
+			verifier.setDeadline(asserts.isEmpty() ? deadline : now + Math.max(0, deadline - now) / 2);
 			results.putAll(verifier.verify(tool, exceptions));
+		}
+		if (!asserts.isEmpty()) {
+			verifier.setDeadline(deadline);
+			results.putAll(verifier.verify(tool, asserts));
+		}
 		return results;
 	}
 }

@@ -34,9 +34,6 @@ class java.lang.Long extends java.lang.Number:
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Integer*
 
-	method toString: it.unive.jlisa.program.java.constructs.longw.LongStaticToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
 
 	method compareUnsigned: it.unive.jlisa.program.java.constructs.library.LongFunctions$CompareUnsigned
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
@@ -95,3 +92,47 @@ class java.lang.Long extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Long*
 		param other libtype java.lang.Long*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToStringRadix
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToUnsignedString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToUnsignedStringRadix
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toHexString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method toBinaryString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToBinaryString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method toOctalString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToOctalString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$LongToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Long*
+
+	method getLong: it.unive.jlisa.program.java.constructs.library.PropertyLookup$LongWithLong
+		libtype java.lang.Long*
+		param nm libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method getLong: it.unive.jlisa.program.java.constructs.library.PropertyLookup$LongWithBoxed
+		libtype java.lang.Long*
+		param nm libtype java.lang.String*
+		param val libtype java.lang.Long*

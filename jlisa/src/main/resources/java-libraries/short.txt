@@ -16,9 +16,6 @@ class java.lang.Short extends java.lang.Number:
 		libtype java.lang.Short* 
 		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE 
 		
-	method toString: it.unive.jlisa.program.java.constructs.shortw.ShortStaticToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
 		
 	method parseShort: it.unive.jlisa.program.java.constructs.shortw.ShortParseShort
 		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
@@ -45,3 +42,11 @@ class java.lang.Short extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Short*
 		param other libtype java.lang.Short*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$ShortToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$ShortToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Short*

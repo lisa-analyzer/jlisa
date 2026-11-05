@@ -35,3 +35,15 @@ class java.lang.Boolean extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Boolean*
 		param other libtype java.lang.Boolean*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$BooleanToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$BooleanToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Boolean*
+
+	method valueOf: it.unive.jlisa.program.java.constructs.booleanw.BooleanValueOf
+		libtype java.lang.Boolean*
+		param v type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
