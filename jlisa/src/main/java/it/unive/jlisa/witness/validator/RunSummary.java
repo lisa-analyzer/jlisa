@@ -85,6 +85,31 @@ public final class RunSummary {
 	}
 
 	/**
+	 * Ends a run whose witness has a version of the witness format that is not
+	 * supported: prints the summary with this reason, then the verdict
+	 * {@code Invalid witness format} on {@code stdout}.
+	 */
+	public static void invalidFormat(
+			String detail) {
+		reason("invalid-witness-format", detail);
+		print("error");
+		System.out.println("Invalid witness format");
+	}
+
+	/**
+	 * Ends a run whose witness is not of the kind expected with {@code --type}
+	 * (e.g. a correctness witness in the validation of violation witnesses):
+	 * prints the summary with this reason, then the verdict
+	 * {@code Invalid witness type} on {@code stdout}.
+	 */
+	public static void invalidType(
+			String detail) {
+		reason("invalid-witness-type", detail);
+		print("error");
+		System.out.println("Invalid witness type");
+	}
+
+	/**
 	 * Prints {@code [STATS]} and {@code [REASON]} once; {@code verdict} is
 	 * correct, spurious, unknown or error.
 	 */
