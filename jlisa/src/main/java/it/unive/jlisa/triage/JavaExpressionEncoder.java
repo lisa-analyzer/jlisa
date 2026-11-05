@@ -167,6 +167,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return null;
 
 		JavaLibraryFunction f = (JavaLibraryFunction) op;
+		Term exact = exactCodePointFunction(f, arg, e);
+		if (exact != null)
+			return exact;
 		if (f.toString().startsWith("Character.") && !f.returnsString()) {
 			Term table = codePointTable(f, arg, e);
 			if (table != null)
@@ -220,8 +223,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return signed(reverse(unsigned(x, 64), 64, 8), 64);
 		if (f == JavaLibraryFunction.SHORT_REVERSE_BYTES)
 			return signed(reverse(unsigned(x, 16), 16, 8), 16);
-		if (f == JavaLibraryFunction.CHARACTER_CHAR_COUNT)
-			return Term.ite(ge(x, num(Character.MIN_SUPPLEMENTARY_CODE_POINT)), num(2), num(1));
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING || f == JavaLibraryFunction.LONG_TO_STRING
 				|| f == JavaLibraryFunction.SHORT_TO_STRING || f == JavaLibraryFunction.BYTE_TO_STRING)
 			return decimal(x);
@@ -241,6 +242,32 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return digits(unsigned(x, 64), 2, 64);
 		if (f == JavaLibraryFunction.LONG_TO_OCTAL_STRING)
 			return digits(unsigned(x, 64), 8, 64);
+		return null;
+	}
+
+	/**
+	 * Encodes the functions over code points that can be expressed exactly
+	 * for all integers (including the ones that are not valid code points),
+	 * or yields {@code null} for the other functions.
+	 */
+	private Term exactCodePointFunction(
+			JavaLibraryFunction f,
+			Term arg,
+			UnaryExpression e) {
+		if (f == JavaLibraryFunction.CHARACTER_CHAR_COUNT)
+			return Term.ite(ge(coerce(arg, Sort.INT, e), num(Character.MIN_SUPPLEMENTARY_CODE_POINT)), num(2),
+					num(1));
+		if (f == JavaLibraryFunction.CHARACTER_IS_BMP_CODE_POINT)
+			return between(coerce(arg, Sort.INT, e), 0, Character.MAX_VALUE);
+		if (f == JavaLibraryFunction.CHARACTER_IS_VALID_CODE_POINT)
+			return between(coerce(arg, Sort.INT, e), 0, Character.MAX_CODE_POINT);
+		if (f == JavaLibraryFunction.CHARACTER_IS_SUPPLEMENTARY_CODE_POINT)
+			return between(coerce(arg, Sort.INT, e), Character.MIN_SUPPLEMENTARY_CODE_POINT,
+					Character.MAX_CODE_POINT);
+		if (f == JavaLibraryFunction.CHARACTER_IS_ISO_CONTROL) {
+			Term x = coerce(arg, Sort.INT, e);
+			return Term.or(between(x, 0, 0x1F), between(x, 0x7F, 0x9F));
+		}
 		return null;
 	}
 
