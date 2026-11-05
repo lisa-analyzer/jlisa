@@ -3,30 +3,31 @@ package it.unive.jlisa.witness.validator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Why a run ended with its verdict, and what happened to the witness on the
  * way.
  * <p>
- * At the end of every run two lines go to {@code stderr}, also without
- * {@code --verbose}:
+ * At the end of every run two lines go to {@code stdout}, whatever the log
+ * level (also with {@code -l OFF}), for example:
  * 
  * <pre>
- * WARN  [STATS]  witness.values=4 nondet.fixed=3 nondet.free=1 edges.unparseable-scope=2 ...
- * WARN  [REASON] unknown/program-exited: program ended without the violation; 1 nondet call(s) not fixed by the witness
+ * [STATS]  witness.values=4 nondet.fixed=3 nondet.free=1 edges.unparseable-scope=2 ...
+ * [REASON] unknown/program-exited: program ended without the violation; 1 nondet call(s) not fixed by the witness
  * </pre>
  * 
  * The reason is {@code <verdict>/<code>: <detail>}. The codes are fixed, so
  * logs of many runs can be grouped by them (e.g.
  * {@code grep -h '\[REASON\]' *.log | cut -d: -f1 | sort | uniq -c}).
- * {@code stdout} still carries only the verdict line, which is what BenchExec
- * reads.
+ * The verdict follows, on a line of its own after {@link #VERDICT_PREFIX}
+ * (e.g. {@code [VERDICT] Witness Correct}).
  */
 public final class RunSummary {
 
-	private static final Logger LOG = LogManager.getLogger(RunSummary.class);
+	/**
+	 * The prefix of the line with the verdict of the run.
+	 */
+	public static final String VERDICT_PREFIX = "[VERDICT] ";
 
 	private static final Map<String, Integer> COUNTS = new LinkedHashMap<>();
 	private static String reasonCode;
@@ -73,7 +74,44 @@ public final class RunSummary {
 			String detail) {
 		reason(code, detail);
 		print("unknown");
-		System.out.println("Could not validate");
+		printVerdict("Could not validate");
+	}
+
+	/**
+	 * Ends a run whose witness cannot be parsed (wrong format version, GraphML,
+	 * empty or malformed file): prints the summary with this reason, then the
+	 * verdict {@code Parsing failed} on {@code stdout}.
+	 */
+	public static void parsingFailed(
+			String detail) {
+		reason("parse-error", detail);
+		print("error");
+		printVerdict("Parsing failed");
+	}
+
+	/**
+	 * Ends a run whose witness has a version of the witness format that is not
+	 * supported: prints the summary with this reason, then the verdict
+	 * {@code Invalid witness format} on {@code stdout}.
+	 */
+	public static void invalidFormat(
+			String detail) {
+		reason("invalid-witness-format", detail);
+		print("error");
+		printVerdict("Invalid witness format");
+	}
+
+	/**
+	 * Ends a run whose witness is not of the kind expected with {@code --type}
+	 * (e.g. a correctness witness in the validation of violation witnesses):
+	 * prints the summary with this reason, then the verdict
+	 * {@code Invalid witness type} on {@code stdout}.
+	 */
+	public static void invalidType(
+			String detail) {
+		reason("invalid-witness-type", detail);
+		print("error");
+		printVerdict("Invalid witness type");
 	}
 
 	/**
@@ -89,9 +127,21 @@ public final class RunSummary {
 		String stats = COUNTS.entrySet().stream()
 				.map(e -> e.getKey() + "=" + e.getValue())
 				.collect(Collectors.joining(" "));
-		LOG.warn("[STATS]  {}", stats.isEmpty() ? "-" : stats);
-		LOG.warn("[REASON] {}/{}: {}", verdict,
-				reasonCode == null ? "not-recorded" : reasonCode,
-				reasonDetail == null ? "-" : reasonDetail);
+		System.out.println("[STATS]  " + (stats.isEmpty() ? "-" : stats));
+		System.out.println("[REASON] " + verdict + "/" + (reasonCode == null ? "not-recorded" : reasonCode) + ": "
+				+ (reasonDetail == null ? "-" : reasonDetail));
+	}
+
+	/**
+	 * Prints the verdict of the run on {@code stdout}, after
+	 * {@link #VERDICT_PREFIX}: among the logs, the SV-COMP wrapper finds it by
+	 * that prefix.
+	 *
+	 * @param verdict the verdict (e.g. {@code Witness Correct})
+	 */
+	public static void printVerdict(
+			String verdict) {
+		System.out.println(VERDICT_PREFIX + verdict);
+		System.out.flush();
 	}
 }
