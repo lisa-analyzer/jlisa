@@ -42,7 +42,9 @@ import org.apache.logging.log4j.Logger;
  * performed after the checks, if a verifier has been selected. For uncaught
  * runtime exceptions, the checker also records the statement raising the
  * exception ({@link #runtimeExceptionTarget(Message)}), the target of the
- * violation witness of a confirmed warning.
+ * violation witness of a confirmed warning. The checker can be restricted to
+ * one of the two kinds of violations (e.g., when only one property is of
+ * interest), skipping the checks of the other kind.
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
@@ -61,6 +63,32 @@ public class AssertChecker<V extends ValueLattice<V>>
 	 * context (in textual form) it has been analyzed in.
 	 */
 	private final Map<Statement, Map<String, Statement>> exceptionTargets = new ConcurrentHashMap<>();
+
+	private final boolean assertions;
+
+	private final boolean runtimeExceptions;
+
+	/**
+	 * Builds the checker, checking both failing assertions and uncaught
+	 * runtime exceptions.
+	 */
+	public AssertChecker() {
+		this(true, true);
+	}
+
+	/**
+	 * Builds the checker, checking only the given kinds of violations.
+	 *
+	 * @param assertions        whether or not failing assertions are checked
+	 * @param runtimeExceptions whether or not uncaught runtime exceptions are
+	 *                              checked
+	 */
+	public AssertChecker(
+			boolean assertions,
+			boolean runtimeExceptions) {
+		this.assertions = assertions;
+		this.runtimeExceptions = runtimeExceptions;
+	}
 
 	/**
 	 * Yields the statement raising the runtime exception reported by the given
@@ -91,7 +119,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			Statement node) {
 
 		// RuntimeException property checker
-		if (graph.getProgram().getEntryPoints().contains(graph) && graph.getAllExitpoints().contains(node))
+		if (runtimeExceptions && graph.getProgram().getEntryPoints().contains(graph)
+				&& graph.getAllExitpoints().contains(node))
 			try {
 				checkRuntimeException(tool, graph, node);
 			} catch (SemanticException e) {
@@ -99,7 +128,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			}
 
 		// assert checker
-		if (node instanceof AssertStatement)
+		if (assertions && node instanceof AssertStatement)
 			try {
 				checkAssert(tool, graph, (AssertStatement) node);
 			} catch (SemanticException e) {

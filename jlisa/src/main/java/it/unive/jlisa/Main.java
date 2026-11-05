@@ -12,6 +12,7 @@ import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
+import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
@@ -372,7 +373,14 @@ public class Main {
 		AssertChecker<?> checker = null;
 		switch (checkerName) {
 		case "Assert":
-			checker = new AssertChecker<>();
+			// with no property, or if the properties are unknown, both kinds
+			// of violations are checked; otherwise, only the ones of the
+			// given properties, since the others are not looked at
+			boolean assertions = witnesses.isEmpty()
+					|| witnesses.stream().anyMatch(w -> w.getProperty() == SVCOMPProperty.ASSERT);
+			boolean exceptions = witnesses.isEmpty()
+					|| witnesses.stream().anyMatch(w -> w.getProperty() == SVCOMPProperty.RUNTIME_EXCEPTION);
+			checker = new AssertChecker<>(assertions, exceptions);
 			conf.semanticChecks.add(checker);
 			break;
 		case "":
