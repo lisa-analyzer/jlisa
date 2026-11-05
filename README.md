@@ -23,18 +23,6 @@ In its **first participation** at [SV-COMP 2026](https://sv-comp.sosy-lab.org/20
 
 Further details in the press releases from [Ca' Foscari University](https://www.unive.it/web/en/15205/article/7827) and [University of Parma](https://www.unipr.it/en/node/111091).
 
-### The Team
-
-| Name              | Institution                      |
-| ----------------- | -------------------------------- |
-| Vincenzo Arceri   | University of Parma              |
-| Luca Negrini      | Ca' Foscari University of Venice |
-| Giacomo Zanatta   | Ca' Foscari University of Venice |
-| Filippo Bianchi   | University of Parma              |
-| Teodors Lisovenko | Ca' Foscari University of Venice |
-| Luca Olivieri     | Ca' Foscari University of Venice |
-| Pietro Ferrara    | Ca' Foscari University of Venice |
-
 ---
 
 ## Table of Contents
@@ -97,36 +85,85 @@ The archive is written to `build/distributions/jlisa-0.1.zip`.
 
 ## Usage
 
+JLiSA has three sub-commands:
+
+| Sub-command | What it does |
+| ----------- | ------------ |
+| `check`     | Analyses a program and checks its properties (the verifier) |
+| `validate`  | Validates a witness of an SV-COMP task (see [WITNESS-VALIDATOR.md](jlisa/WITNESS-VALIDATOR.md)) |
+| `find-bug`  | Looks for inputs that violate the property of an SV-COMP task, by running the program |
+
+`jlisa <sub-command> -h` prints the options of a sub-command, and `jlisa -v` the version.
+
 After building the distribution, run JLiSA directly:
 
 ```bash
-./build/distributions/jlisa-0.1/bin/jlisa -s path/to/File.java -o out/
+./build/distributions/jlisa-0.1/bin/jlisa check -s path/to/File.java -o out/ -n ConstantPropagation
 ```
 
 Or via Gradle without packaging:
 
 ```bash
-./gradlew run --args="-s path/to/File.java -o out/ -n ConstantPropagation"
+./gradlew run --args="check -s path/to/File.java -o out/ -n ConstantPropagation"
 ```
 
-Results are written to the output directory as a `report.json` summary. With `--dump-graphs`, the JSON graphs of the analysed methods (one per CFG) are written too, and with `--dump-html`, their HTML pages.
+Results are written to the output directory as a `report.json` summary. With `--dump-graphs`, the JSON graphs of the analysed methods (one per CFG) are written too, and with `--dump-html`, their HTML pages. With `--svcomp-property`, a violation witness is written for a definite violation of the property.
+
+On an SV-COMP task (its input files and directories, and its property file):
+
+```bash
+jlisa check    -s common/ task/ -o out/ -n ConstantPropagation --svcomp-property valid-assert.prp
+jlisa validate -s common/ task/ --svcomp-property valid-assert.prp -w witness.yml
+jlisa find-bug -s common/ task/ --svcomp-property valid-assert.prp --witness-output witness.yml
+```
+
+`validate` and `find-bug` run the program under JDI: they need the modules `jdk.compiler` and `jdk.jdi`, which a JDK has (on Debian and Ubuntu, `openjdk-N-jre-headless` has them too). `validate` and `find-bug` print their verdict on a line of its own, after `[VERDICT] ` (e.g. `[VERDICT] Witness Correct`).
 
 ---
 
 ## Command-Line Options
 
+### Shared by all sub-commands
+
 | Option | Long Option         | Argument  | Description                                            |
 | ------ | ------------------- | --------- | ------------------------------------------------------ |
-| `-s`   | `--source`          | `file...` | Java source files to analyze (space-separated)         |
-| `-o`   | `--outdir`          | `path`    | Output directory for analysis results                  |
-| `-n`   | `--numericalDomain` | `domain`  | Numerical domain: `ConstantPropagation`                |
-| `-c`   | `--checker`         | `checker` | Semantic checker: `Assert`                             |
-| `-l`   | `--log-level`       | `level`   | Log verbosity: `INFO`, `DEBUG`, `WARN`, `ERROR`, `OFF` |
-| `-m`   | `--mode`            | `mode`    | Execution mode: `Debug` (default), `Statistics`        |
+| `-s`   | `--source`          | `file...` | Java source files and directories to analyze           |
+| N/A    | `--svcomp-property` | `prp`     | SV-COMP property file of the task                      |
+| `-l`   | `--log-level`       | `level`   | Log level: `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG` (default) |
 | `-v`   | `--version`         | —         | Print the tool version                                 |
 | `-h`   | `--help`            | —         | Print the help message                                 |
+
+### `check`
+
+| Option | Long Option         | Argument  | Description                                            |
+| ------ | ------------------- | --------- | ------------------------------------------------------ |
+| `-o`   | `--outdir`          | `path`    | Output directory for analysis results                  |
+| `-n`   | `--numericalDomain` | `domain`  | Numerical domain: `ConstantPropagation`, `ConstantPropagationWithTarsis`, `ConstantPropagationWithIntervals` |
+| `-c`   | `--checker`         | `checker` | Semantic checker: `Assert`                             |
+| `-m`   | `--mode`            | `mode`    | Execution mode: `Debug` (default), `Statistics`        |
+| `-d`   | `--debug-information` | —       | Write debug information (open calls, bottom states)    |
+| `-e`   | `--dump-exceptions` | —         | In statistics mode, print the exceptions on standard output |
 | N/A    | `--dump-html`       | —         | Write the HTML pages (disabled by default)             |
 | N/A    | `--dump-graphs`     | —         | Write the JSON graphs (disabled by default)            |
+
+`--svcomp-property` can be repeated: one witness for each property.
+
+### `validate`
+
+| Option | Long Option      | Argument | Description                                              |
+| ------ | ---------------- | -------- | -------------------------------------------------------- |
+| `-w`   | `--witness`      | `file`   | Witness to validate (YAML, format 2.4)                   |
+| N/A    | `--type`         | `type`   | Kind of witness expected: `violation` or `correctness`; a witness of the other kind gives `Invalid witness type` |
+| N/A    | `--input-search` | —        | Search for values of the nondet calls the witness does not fix (off by default) |
+| `-j`   | `--java`         | `path`   | Java executable used to run the program (default: `java` on the `PATH`) |
+
+### `find-bug`
+
+| Option | Long Option        | Argument  | Description                                           |
+| ------ | ------------------ | --------- | ----------------------------------------------------- |
+| `-t`   | `--time-limit`     | `seconds` | Time for the search (default 60)                      |
+| N/A    | `--witness-output` | `file`    | Write the violation witness of the violation found    |
+| `-j`   | `--java`           | `path`    | Java executable used to run the program (default: `java` on the `PATH`) |
 
 ---
 

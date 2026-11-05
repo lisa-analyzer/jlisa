@@ -89,7 +89,6 @@ public final class BugFinder {
 
 	private static void print(
 			String verdict) {
-		System.out.println(verdict);
-		System.out.flush();
+		RunSummary.printVerdict(verdict);
 	}
 }
