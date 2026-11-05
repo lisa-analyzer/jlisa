@@ -1,0 +1,3 @@
+interface java.lang.AutoCloseable:
+
+interface java.io.Closeable:

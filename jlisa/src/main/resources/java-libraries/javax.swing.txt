@@ -11,3 +11,9 @@ class javax.swing.plaf.ColorUIResource extends java.lang.Object:
         param green type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param blue type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
+
+class javax.swing.JTree extends java.lang.Object:
+
+class javax.swing.tree.DefaultMutableTreeNode extends java.lang.Object:
+
+class javax.swing.tree.TreePath extends java.lang.Object:
