@@ -6,8 +6,9 @@
 **JLiSA-Wit** validates verification witnesses for Java programs. Given a program, a property and a
 violation witness produced by a verifier, it executes the program under the Java Debug Interface
 (JDI), drives every nondeterministic input with the value recorded in the witness, and reports
-whether the described execution really violates the property. JLiSA-Wit takes part in the Java
-witness-validation track of [SV-COMP](https://sv-comp.sosy-lab.org/).
+whether the described execution really violates the property. Correctness witnesses are read and
+checked against the format, but not validated yet. JLiSA-Wit takes part in the Java witness-validation
+tracks of [SV-COMP](https://sv-comp.sosy-lab.org/).
 
 JLiSA-Wit is developed by the **[Software and Systems Verification (SSV) Research Group](https://unive-ssv.github.io/)**
 at [Ca' Foscari University of Venice](https://www.unive.it).
@@ -41,18 +42,18 @@ at [Ca' Foscari University of Venice](https://www.unive.it).
 - **Input search** *(optional, `--input-search`)*. When a witness leaves some nondeterministic
   calls unspecified, a lightweight, feedback-guided search looks for values of those calls that
   reproduce the violation described by the witness.
-- **Bug finding** *(`--find-bug`)*. Without a witness, the same search looks for any execution that
+- **Bug finding** *(`jlisa find-bug`)*. Without a witness, the same search looks for any execution that
   violates the property. The SV-COMP wrapper of [JLiSA](https://github.com/lisa-analyzer/jlisa) uses
   this mode when the static analysis cannot reach a verdict.
-- **Correctness witnesses** *(experimental)*. Loop invariants are checked with JLiSA's abstract
-  interpretation.
+- **Correctness witnesses** *(not validated yet)*. They are read and checked against the format, and
+  give `Could not validate`.
 
 Supported properties:
 
-| Property file | `--property` | Violated when |
-| --- | --- | --- |
-| `valid-assert.prp` | `assert` | an `assert` statement fails (the program runs with `-ea`) |
-| `no-runtime-exception.prp` | `runtime` | a `java.lang.RuntimeException` is not caught |
+| Property file | Violated when |
+| --- | --- |
+| `valid-assert.prp` | an `assert` statement fails (the program runs with `-ea`) |
+| `no-runtime-exception.prp` | a `java.lang.RuntimeException` is not caught |
 
 ---
 
@@ -71,7 +72,8 @@ gpr.key=<github-token>
 ./gradlew installDist
 ```
 
-The launchers of both tools are generated in `build/install/jlisa/bin/`: `jlisa` and `jlisa-wit`.
+The launcher is generated in `build/install/jlisa/bin/jlisa`: the validator is its sub-command
+`validate`, and the bug finding its sub-command `find-bug`.
 
 For SV-COMP, the validator ships inside the JLiSA archive, as `jlisa validate` (and as the bug-finding
 fallback of `jlisa check`), built by `build_jlisa.sh` in https://github.com/lisa-analyzer/sv-comp.
@@ -83,38 +85,28 @@ fallback of `jlisa check`), built by `build_jlisa.sh` in https://github.com/lisa
 The task is given as SV-COMP gives it to the tool, its input files and its property file:
 
 ```bash
-# validate a violation witness
-build/install/jlisa/bin/jlisa-wit \
-    --witness witness.yml \
-    --svcomp-property valid-assert.prp --source common/ task/
+# validate a witness (violation or correctness: the kind is read from the witness)
+build/install/jlisa/bin/jlisa validate \
+    -w witness.yml \
+    --svcomp-property valid-assert.prp -s common/ task/
 
 # search for a violation without a witness, and write the witness of the violation found
-build/install/jlisa/bin/jlisa-wit \
-    --find-bug --time-limit 60 --witness-output witness.yml \
-    --svcomp-property valid-assert.prp --source common/ task/
+build/install/jlisa/bin/jlisa find-bug \
+    -t 60 --witness-output witness.yml \
+    --svcomp-property valid-assert.prp -s common/ task/
 ```
 
-The task is compiled into a temporary directory: its files are only read. `--source` takes all the
-following arguments, hence it comes last.
+The task is compiled into a temporary directory: its files are only read. `-s` takes all the
+following arguments up to the next option.
 
-The same runs from the sources, without building the launchers, with the Gradle tasks
-`runWitnessValidator` and `runBugFinder` (which adds `--find-bug`):
+The same runs from the sources, without building the launcher, with `./gradlew run`:
 
 ```bash
-./gradlew runWitnessValidator --args="--witness witness.yml --svcomp-property valid-assert.prp --source common/ task/"
-./gradlew runBugFinder --args="--witness-output witness.yml --svcomp-property valid-assert.prp --source common/ task/"
+./gradlew run --args="validate -w witness.yml --svcomp-property valid-assert.prp -s common/ task/"
+./gradlew run --args="find-bug --witness-output witness.yml --svcomp-property valid-assert.prp -s common/ task/"
 ```
 
 Gradle runs them in the `jlisa` folder: relative paths start from there.
-
-The task can also be given by a task file, with the property by name; the task is then compiled into
-its own directory:
-
-```bash
-build/install/jlisa/bin/jlisa-wit \
-    --witness witness.yml \
-    --benchmark task.yml --property assert
-```
 
 ### Examples
 
@@ -129,41 +121,52 @@ SVB=../../sv-benchmarks/java
 SVW=../../sv-witnesses
 
 # validate a violation witness (format 2.4)
-./gradlew runWitnessValidator --args="--witness $SVW/examples/java/ExDarko_false.witness-2.4.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_false"
+./gradlew run --args="validate -w $SVW/examples/java/ExDarko_false.witness-2.4.yml --svcomp-property $SVB/properties/valid-assert.prp -s $SVB/common $SVB/jpf-regression/ExDarko_false"
 
 # validate a correctness witness (format 2.4)
-./gradlew runWitnessValidator --args="--witness $SVW/examples/java/ExDarko_true.witness-2.4.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_true"
+./gradlew run --args="validate -w $SVW/examples/java/ExDarko_true.witness-2.4.yml --svcomp-property $SVB/properties/valid-assert.prp -s $SVB/common $SVB/jpf-regression/ExDarko_true"
 
 # bug finding: look for a violation and write its witness
-./gradlew runBugFinder --args="--witness-output build/witness.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_false"
+./gradlew run --args="find-bug --witness-output build/witness.yml --svcomp-property $SVB/properties/valid-assert.prp -s $SVB/common $SVB/jpf-regression/ExDarko_false"
 
 # validate the witness just written
-./gradlew runWitnessValidator --args="--witness build/witness.yml --svcomp-property $SVB/properties/valid-assert.prp --source $SVB/common $SVB/jpf-regression/ExDarko_false"
+./gradlew run --args="validate -w build/witness.yml --svcomp-property $SVB/properties/valid-assert.prp -s $SVB/common $SVB/jpf-regression/ExDarko_false"
 ```
 
-Bug finding prints `Violation found`. The validator does not read the format 2.x yet (a list of
-entries): for now the three validations give `Could not validate` ("YAML witness root is not a
-mapping").
+Bug finding prints `Violation found`, and the validation of the witness it writes `Witness Correct`.
+The correctness witness gives `Could not validate`: correctness witnesses are only parsed. The
+violation example of SV-Witnesses also gives `Could not validate` on the current `ExDarko_false`:
+its lines are those of an older version of the program (shifted by two).
 
 ---
 
 ## Command-Line Options
 
+`jlisa validate`:
+
 | Option | Description |
 | --- | --- |
-| `--witness <file>` | Witness to validate: `.yml` (format 2.4). |
-| `--source <inputs...>` | The input files and directories of the task, as SV-COMP gives them (with `--svcomp-property`). |
-| `--svcomp-property <file.prp>` | The property file of the task (with `--source`). |
-| `--benchmark <task.yml>` | Verification task file (with `--property`, instead of `--source`). |
-| `--property <assert\|runtime>` | Property to check (with `--benchmark`). |
-| `--extra-sources <dir>` | Additional sources compiled with the benchmark, e.g. SV-COMP's `common/` (with `--benchmark`). |
+| `-w`, `--witness <file>` | Witness to validate: `.yml` (format 2.4). |
+| `--type <violation\|correctness>` | The kind of witness expected; a witness of the other kind gives `Invalid witness type`. Without it, any kind (read from the witness). |
 | `--input-search` | Search for values of the nondeterministic calls the witness does not specify. Off by default. |
-| `--find-bug` | Bug-finding mode: no witness, search for a violating execution. |
-| `--time-limit <seconds>` | Time budget for `--find-bug` (default: 60). |
-| `--witness-output <file>` | With `--find-bug`: write the violation witness (format 2.4) of the violation found (needs `--source`). |
-| `--java <path>` | Java executable used to run the benchmark (default: `java` on the `PATH`). |
-| `--verbose` | Detailed logging on standard error. |
-| `--help` | Print the usage. |
+
+`jlisa find-bug`:
+
+| Option | Description |
+| --- | --- |
+| `-t`, `--time-limit <seconds>` | Time budget of the search (default: 60). |
+| `--witness-output <file>` | Write the violation witness (format 2.4) of the violation found. |
+
+Both:
+
+| Option | Description |
+| --- | --- |
+| `-s`, `--source <inputs...>` | The input files and directories of the task, as SV-COMP gives them. |
+| `--svcomp-property <file.prp>` | The property file of the task. |
+| `-j`, `--java <path>` | Java executable used to run the program (default: `java` on the `PATH`). |
+| `-l`, `--log-level <level>` | Log level on standard error (default: `WARN`; `INFO` or `DEBUG` for details). |
+| `-h`, `--help` | Print the usage. |
+| `-v`, `--version` | Print the version. |
 
 ---
 
@@ -173,11 +176,13 @@ The verdict is printed as the only line on standard output:
 
 | Verdict | Meaning | BenchExec result |
 | --- | --- | --- |
-| `Witness Correct` | The violation is reproduced (or the invariants hold). | `false` — witness confirmed |
+| `Witness Correct` | The violation is reproduced. | `false` — witness confirmed |
 | `Witness Spurious` | The execution described by the witness does not violate the property. | `true` — witness rejected |
 | `Could not validate` | No verdict: unsupported input or timeout. A correctness witness that parses gives this verdict (it is not validated). | `unknown` |
-| `Parsing failed` | The witness is not a YAML witness of format 2.4: another version, a GraphML witness, an empty or malformed file. | `ERROR (parsing failed)` |
-| `Violation found` | `--find-bug` only: an execution violates the property. | — |
+| `Invalid witness format` | The witness has a version of the witness format that is not supported (only 2.4 is), e.g. 2.3. | `ERROR (invalid witness format)` |
+| `Parsing failed` | The witness cannot be read: a GraphML witness, an empty or malformed file. | `ERROR (parsing failed)` |
+| `Invalid witness type` | The witness is not of the kind given with `--type` (e.g. a correctness witness with `--type violation`). | `ERROR (invalid witness type)` |
+| `Violation found` | `find-bug` only: an execution violates the property. | — |
 
 With `--witness-output`, the witness of the violation found has one `function_return` waypoint for
 each `Verifier.nondet*()` call of the execution, with the value it returned, then the target. Its
@@ -185,12 +190,12 @@ metadata are those of JLiSA, with the description "Found with bug-finding mode".
 locations cannot be told apart (e.g., two candidates on the same line), no witness is written and the
 summary says why.
 
-The exit code is always `0`. Diagnostic output goes to standard error; by default only warnings are
-printed, including a one-line summary of each run:
+The exit code is always `0`. The logs go to standard error, by default only the warnings (`-l` sets
+the level). Every run also prints a summary on standard error, whatever the log level:
 
 ```
-WARN  [STATS]  witness.values=1 plan.targets=0 plan.avoid-points=0 plan.branches=0 nondet.fixed=1 witness.values-unused=0
-WARN  [REASON] correct/assertion-error: java.lang.AssertionError at Main.java:7
+[STATS]  witness.values=1 plan.targets=0 plan.avoid-points=0 plan.branches=0 nondet.fixed=1 witness.values-unused=0
+[REASON] correct/assertion-error: java.lang.AssertionError at Main.java:7
 ```
 
 ---
@@ -229,35 +234,41 @@ verdict of the first execution is kept.
 
 ### Correctness witnesses
 
-The program is analyzed with JLiSA, and each loop invariant is checked for initiation,
-inductiveness and safety. Only the initiation check is currently implemented.
+Correctness witnesses are not validated yet: once the witness is read, `validate` answers
+`Could not validate`.
+
+### Reading the witness
+
+The witness is read by LiSA (`it.unive.lisa.witness.v2.WitnessReader`), which also checks it against
+the rules of the format. The kind of witness (violation or correctness) comes from its `entry_type`.
+A version other than 2.4 gives `Invalid witness format`; a file that cannot be read gives
+`Parsing failed`.
 
 ---
 
 ## Architecture
 
 ```
-src/main/java/it/unive/jlisa/witness/validator/
-├── Main.java          command-line interface
-├── Logging.java       logging configuration
-├── RunSummary.java    per-run summary ([STATS], [REASON])
-├── parser/            witness formats 1.0 (GraphML) and 2.x (YAML), task definitions
-├── model/             internal witness model: execution plan, interceptions, waypoints, invariants
-├── filter/            scopes and values of witness assumptions
-├── violation/         JDI launch, event loop, value injection, bug finding
-├── search/            input search
-└── correctness/       correctness witnesses (JLiSA)
-tools/                 scripts for local benchmark runs
+src/main/java/it/unive/jlisa/
+├── Main.java               jlisa: dispatches to the sub-commands
+├── cli/                    command line of check, validate and find-bug, shared options
+└── witness/validator/
+    ├── RunSummary.java     per-run summary ([STATS], [REASON])
+    ├── parser/             witness model and task properties
+    ├── model/              internal witness model: execution plan, interceptions, waypoints, invariants
+    ├── filter/             scopes and values of witness assumptions
+    ├── violation/          JDI launch, event loop, value injection, bug finding
+    ├── search/             input search
+    └── correctness/        correctness witnesses
 ```
 
 ---
 
 ## Limitations
 
-- **Format 2.x:** the reader expects a mapping at the top level, while the official format is a
-  list of entries. Witnesses in the official 2.x layout are not supported yet.
+- **Format:** only version 2.4 of the YAML format; GraphML witnesses (format 1.0) are not read.
 - **String values** in witnesses are not supported yet.
-- **Correctness witnesses:** initiation check only, linear arithmetic only, no format 1.0.
+- **Correctness witnesses** are only read, not validated.
 - **Multi-threaded programs** are not supported.
 
 ---
