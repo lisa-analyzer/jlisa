@@ -1,5 +1,6 @@
 package it.unive.jlisa.svcomp;
 
+import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.SemanticException;
@@ -39,10 +40,11 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 
 	/**
 	 * Builds the verifier, verifying each kind of warnings with a
-	 * {@link FirstViolationVerifier} with default parameters.
+	 * {@link FirstViolationVerifier} with default parameters, encoding the
+	 * operators of the Java frontend through a {@link JavaExpressionEncoder}.
 	 */
 	public SVCOMPVerifier() {
-		this(new FirstViolationVerifier<>());
+		this(new FirstViolationVerifier<>(JavaExpressionEncoder::new));
 	}
 
 	/**
