@@ -28,3 +28,20 @@ class java.lang.Short extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Short*
 		param other libtype java.lang.Short*
+
+	method reverseBytes: it.unive.jlisa.program.java.constructs.library.ShortFunctions$ReverseBytes
+		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	method toUnsignedInt: it.unive.jlisa.program.java.constructs.library.ShortFunctions$ToUnsignedInt
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	method toUnsignedLong: it.unive.jlisa.program.java.constructs.library.ShortFunctions$ToUnsignedLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.ShortFunctions$CompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Short*
+		param other libtype java.lang.Short*

@@ -10,3 +10,28 @@ class java.lang.Boolean extends java.lang.Object:
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.Boolean*
 		param value type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	method compare: it.unive.jlisa.program.java.constructs.library.BooleanFunctions$Compare
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	method logicalAnd: it.unive.jlisa.program.java.constructs.library.BooleanFunctions$LogicalAnd
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	method logicalOr: it.unive.jlisa.program.java.constructs.library.BooleanFunctions$LogicalOr
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	method logicalXor: it.unive.jlisa.program.java.constructs.library.BooleanFunctions$LogicalXor
+		type it.unive.lisa.program.type.BoolType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.BooleanFunctions$CompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Boolean*
+		param other libtype java.lang.Boolean*

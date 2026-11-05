@@ -37,3 +37,61 @@ class java.lang.Long extends java.lang.Number:
 	method toString: it.unive.jlisa.program.java.constructs.longw.LongStaticToString
 		libtype java.lang.String*
 		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method compareUnsigned: it.unive.jlisa.program.java.constructs.library.LongFunctions$CompareUnsigned
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method highestOneBit: it.unive.jlisa.program.java.constructs.library.LongFunctions$HighestOneBit
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method lowestOneBit: it.unive.jlisa.program.java.constructs.library.LongFunctions$LowestOneBit
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method max: it.unive.jlisa.program.java.constructs.library.LongFunctions$Max
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method min: it.unive.jlisa.program.java.constructs.library.LongFunctions$Min
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method numberOfLeadingZeros: it.unive.jlisa.program.java.constructs.library.LongFunctions$NumberOfLeadingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method numberOfTrailingZeros: it.unive.jlisa.program.java.constructs.library.LongFunctions$NumberOfTrailingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method reverse: it.unive.jlisa.program.java.constructs.library.LongFunctions$Reverse
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method reverseBytes: it.unive.jlisa.program.java.constructs.library.LongFunctions$ReverseBytes
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method rotateLeft: it.unive.jlisa.program.java.constructs.library.LongFunctions$RotateLeft
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method signum: it.unive.jlisa.program.java.constructs.library.LongFunctions$Signum
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	method sum: it.unive.jlisa.program.java.constructs.library.LongFunctions$Sum
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.LongFunctions$CompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Long*
+		param other libtype java.lang.Long*

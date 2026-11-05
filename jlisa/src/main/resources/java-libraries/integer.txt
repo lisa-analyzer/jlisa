@@ -36,3 +36,74 @@ class java.lang.Integer extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Integer*
 		param other libtype java.lang.Integer*
+
+	method bitCount: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$BitCount
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method compareUnsigned: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$CompareUnsigned
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method highestOneBit: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$HighestOneBit
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method lowestOneBit: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$LowestOneBit
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method max: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Max
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method min: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Min
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method numberOfLeadingZeros: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$NumberOfLeadingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method numberOfTrailingZeros: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$NumberOfTrailingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method reverse: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Reverse
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method reverseBytes: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$ReverseBytes
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method rotateLeft: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$RotateLeft
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method rotateRight: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$RotateRight
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method signum: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Signum
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method sum: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Sum
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedLong: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$ToUnsignedLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$CompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Integer*
+		param other libtype java.lang.Integer*
