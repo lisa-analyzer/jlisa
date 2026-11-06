@@ -109,8 +109,12 @@ public final class ViolationWitnessWriter {
 	 * value, a Java expression (e.g. {@code \result == 11L},
 	 * {@code \result == 'B'}, {@code \result.equals("abc")}), or null for a
 	 * value of another type.
+	 *
+	 * @param value the value
+	 *
+	 * @return the constraint, or null
 	 */
-	static String constraint(
+	public static String constraint(
 			Object value) {
 		return switch (value) {
 		case Integer i -> "\\result == " + i;

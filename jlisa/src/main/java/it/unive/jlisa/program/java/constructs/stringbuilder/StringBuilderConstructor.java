@@ -20,7 +20,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
+import it.unive.lisa.symbolic.value.operator.binary.Numeric32BitAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -79,7 +79,7 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 				JavaIntType.INSTANCE, rightAccess, JavaStringLengthOperator.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression capacityValue = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaIntType.INSTANCE, rightLength, new Constant(JavaIntType.INSTANCE, 16, getLocation()),
-				NumericNonOverflowingAdd.INSTANCE, getLocation());
+				Numeric32BitAdd.INSTANCE, getLocation());
 
 		return analysis.assign(tmp, capAccess, capacityValue, context, originating);
 	}

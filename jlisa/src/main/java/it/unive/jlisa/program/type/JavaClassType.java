@@ -231,6 +231,10 @@ public class JavaClassType
 		return lookup("java.lang.Exception");
 	}
 
+	public static JavaClassType getAssertionErrorType() {
+		return lookup("java.lang.AssertionError");
+	}
+
 	public static JavaClassType getClassCastExceptionType() {
 		return lookup("java.lang.ClassCastException");
 	}

@@ -359,7 +359,6 @@ public final class ViolationValidatorV2 {
 	 */
 	private static void printVerdict(
 			String verdict) {
-		System.out.println(verdict);
-		System.out.flush();
+		RunSummary.printVerdict(verdict);
 	}
 }

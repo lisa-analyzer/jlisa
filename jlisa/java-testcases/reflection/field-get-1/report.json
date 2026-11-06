@@ -1,46 +1,22 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':12:2-12:36] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':13:2-13:49] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':18:2-18:35] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':22:2-22:25] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:2-23:36] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':26:2-26:45] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':27:2-27:35] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':30:2-30:44] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':33:2-33:41] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':34:2-34:48] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':38:2-38:39] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':39:2-39:47] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "java.lang.Object__ReflectionTest.getFieldValue(java.lang.Object__o,_java.lang.reflect.Field__f)_3bde99278fb773958d33697289a9f7a5.graph.json", "java.lang.Object__ReflectionTest.getFieldValue(java.lang.Object__o,_java.lang.reflect.Field__f)_4f40e1a204da9bb1e41864cbd6c609c5.graph.json", "java.lang.Object__ReflectionTest.getFieldValue(java.lang.Object__o,_java.lang.reflect.Field__f)_7fd43885d18a69547c40a63d12a23983.graph.json", "report.json", "void_Cat.Cat(Cat__this)_428805b3c66092a136ec09b04b9161ae.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "209ms",
-    "end" : "2026-10-29T11:19:31.175+01:00",
+    "duration" : "57ms",
+    "end" : "2026-11-05T17:50:01.472+01:00",
     "expressions" : "101",
     "files" : "5",
-    "globals" : "53",
-    "members" : "274",
+    "globals" : "54",
+    "members" : "394",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-29T11:19:30.966+01:00",
+    "start" : "2026-11-05T17:50:01.415+01:00",
     "statements" : "35",
     "units" : "53",
     "version" : "1.0",
-    "warnings" : "12"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

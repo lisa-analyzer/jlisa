@@ -2,13 +2,13 @@ package it.unive.jlisa.program.operator;
 
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaShortType;
-import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaShortCompareOperator extends StringConcat {
+public class JavaShortCompareOperator implements BinaryOperator {
 
 	/**
 	 * The singleton instance of this class.
@@ -38,12 +38,6 @@ public class JavaShortCompareOperator extends StringConcat {
 		if (right.stream().noneMatch(t -> t.equals(JavaShortType.INSTANCE)))
 			return Collections.emptySet();
 		return Collections.singleton(JavaIntType.INSTANCE);
-	}
-
-	@Override
-	protected Type resultType(
-			TypeSystem types) {
-		return JavaIntType.INSTANCE;
 	}
 
 }

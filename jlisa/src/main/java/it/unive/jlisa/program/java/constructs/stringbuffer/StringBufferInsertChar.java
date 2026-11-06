@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.stringbuffer;
 
 import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -67,7 +68,8 @@ public class StringBufferInsertChar extends TernaryExpression implements Pluggab
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuffer"), left,
+				getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
 		it.unive.lisa.symbolic.value.TernaryExpression append = new it.unive.lisa.symbolic.value.TernaryExpression(

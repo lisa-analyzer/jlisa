@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.operator.JavaArithmeticOperators;
 import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -28,6 +29,8 @@ import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import java.util.Collections;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * The increment and decrement operators of Java ({@code ++} and {@code --},
@@ -39,7 +42,7 @@ import java.util.Collections;
  */
 abstract class JavaIncrementOrDecrement extends UnaryExpression implements MetaVariableCreator {
 
-	private final BinaryOperator operator;
+	private final Function<Type, BinaryOperator> operator;
 
 	private final boolean prefix;
 
@@ -58,7 +61,7 @@ abstract class JavaIncrementOrDecrement extends UnaryExpression implements MetaV
 			CFG cfg,
 			CodeLocation location,
 			String constructName,
-			BinaryOperator operator,
+			Function<Type, BinaryOperator> operator,
 			boolean prefix,
 			Expression subExpression) {
 		super(cfg, location, constructName, subExpression);
@@ -83,18 +86,19 @@ abstract class JavaIncrementOrDecrement extends UnaryExpression implements MetaV
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isNumericType))
+		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
+		if (types.stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
 
 		if (prefix) {
-			state = analysis.assign(state, expr, next(expr), context, this);
+			state = analysis.assign(state, expr, next(expr, types), context, this);
 			return analysis.smallStepSemantics(state, expr, context, this);
 		}
 
 		// the value of x++ is the one of x before the increment
 		Identifier meta = getMetaVariable();
 		state = analysis.assign(state, meta, expr, context, this);
-		state = analysis.assign(state, expr, next(expr), context, this);
+		state = analysis.assign(state, expr, next(expr, types), context, this);
 		getMetaVariables().add(meta);
 		return analysis.smallStepSemantics(state, meta, context, this);
 	}
@@ -102,14 +106,22 @@ abstract class JavaIncrementOrDecrement extends UnaryExpression implements MetaV
 	// x + 1 or x - 1, converted back to the type of x when it is byte, short or
 	// char (e.g., the char 65535 incremented is 0, not 65536)
 	private SymbolicExpression next(
-			SymbolicExpression expr) {
+			SymbolicExpression expr,
+			Set<Type> types) {
 		CodeLocation location = getLocation();
 		Type type = expr.getStaticType();
 		Constant one = new Constant(JavaIntType.INSTANCE, 1, location);
-		if (!(type instanceof JavaByteType || type instanceof JavaShortType || type instanceof JavaCharType))
-			return new BinaryExpression(type, expr, one, operator, location);
+		if (!(type instanceof JavaByteType || type instanceof JavaShortType || type instanceof JavaCharType)) {
+			// the operation has the type of the value (see
+			// JavaArithmeticOperators#operandType)
+			Type operation = JavaArithmeticOperators.operandType(types);
+			if (operation.isUntyped())
+				operation = getStaticType();
+			return new BinaryExpression(operation, expr, one, operator.apply(operation), location);
+		}
 		// byte, short and char are promoted to int
-		BinaryExpression result = new BinaryExpression(JavaIntType.INSTANCE, expr, one, operator, location);
+		BinaryExpression result = new BinaryExpression(JavaIntType.INSTANCE, expr, one,
+				operator.apply(JavaIntType.INSTANCE), location);
 		Constant token = new Constant(new TypeTokenType(Collections.singleton(type)), type, location);
 		return new BinaryExpression(type, result, token, TypeConv.INSTANCE, location);
 	}

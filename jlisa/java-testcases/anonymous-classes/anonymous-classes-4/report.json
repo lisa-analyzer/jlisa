@@ -1,13 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':11:8-11:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':12:8-12:37] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':6:8-6:31] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':7:8-7:38] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "int_Worker.baseScore1(Worker__this)_b6ffa30b8c2cf127271df460836af648.graph.json", "int_execute$545.baseScore(execute$545__this)_6c43fa9549d4f60f4e0005dc3081213e.graph.json", "int_execute$545.baseScore2(execute$545__this)_4c9e317d575e42ffc8932d8d4240e9fb.graph.json", "report.json", "void_Context.Context(Context__this)_bb63e8ae851af8de430ff274ee02e42f.graph.json", "void_Context.execute(Context__this)_51811af6593fb9ea38c258c1c11bfe78.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Worker.Worker(Worker__this)_1f63826e632cb4bbf4b2a35f99f79664.graph.json", "void_execute$545.execute$545(execute$545__this,_Context__$enclosing)_0644a8db78ede400b2c0610e7e7a33c9.graph.json" ],
   "info" : {
@@ -16,15 +8,15 @@
     "end" : "2026-10-29T11:19:04.207+01:00",
     "expressions" : "54",
     "files" : "8",
-    "globals" : "53",
-    "members" : "280",
+    "globals" : "54",
+    "members" : "400",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-10-29T11:19:04.116+01:00",
     "statements" : "27",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "4"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

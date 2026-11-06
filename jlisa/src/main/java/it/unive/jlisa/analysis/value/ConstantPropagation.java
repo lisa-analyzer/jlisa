@@ -95,6 +95,21 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return new ConstantValue(constant.getValue());
 	}
 
+	/**
+	 * Applies a function of the Java library to the given values of constants,
+	 * yielding top if they are not suitable arguments for the function.
+	 */
+	private ConstantValue apply(
+			JavaLibraryFunction function,
+			Object... args) {
+		try {
+			Object result = function.apply(args);
+			return result == null ? top() : new ConstantValue(result);
+		} catch (RuntimeException e) {
+			return top();
+		}
+	}
+
 	@Override
 	public ConstantValue evalUnaryExpression(
 			UnaryExpression expression,
@@ -107,6 +122,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		UnaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, arg.getValue());
+
 		// char
 		if (operator instanceof JavaCharacterIsLetterOperator)
 			if (arg.getValue() instanceof Integer v)
@@ -628,6 +646,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		BinaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, left.getValue(), right.getValue());
+
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
@@ -1162,6 +1183,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		TernaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, left.getValue(), middle.getValue(), right.getValue());
+
 		if (operator instanceof JavaStringInsertCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
