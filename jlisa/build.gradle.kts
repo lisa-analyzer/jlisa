@@ -107,7 +107,11 @@ tasks.named<org.gradle.api.plugins.antlr.AntlrTask>("generateGrammarSource") {
 }
 
 // TEST CONFIGURATION
-tasks.test {
+// the svcomp tests run whole analyses of the benchmarks: they are excluded
+// from test and run with the cron task instead
+val cronTests = "it.unive.jlisa.svcomp.*"
+
+fun Test.configureJLiSATests() {
     useJUnitPlatform()
     // the programs analyzed by the tests (with their library models) do not
     // fit the default heap of the test JVM
@@ -147,6 +151,24 @@ tasks.test {
             }
         }
     })
+}
+
+tasks.test {
+    configureJLiSATests()
+    filter {
+        excludeTestsMatching(cronTests)
+    }
+}
+
+tasks.register<Test>("cron") {
+    description = "Runs cron tests"
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    configureJLiSATests()
+    filter {
+        includeTestsMatching(cronTests)
+    }
 }
 
 // JAR (FAT JAR)
