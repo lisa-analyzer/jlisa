@@ -1,16 +1,19 @@
 package it.unive.jlisa.triage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.type.StringType;
@@ -20,6 +23,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.triage.encoding.SortPolicy;
 import it.unive.lisa.triage.encoding.SymbolTable;
 import it.unive.lisa.triage.encoding.ValueSort;
@@ -30,12 +34,14 @@ import it.unive.lisa.triage.smt.SmtSolver;
 import it.unive.lisa.triage.smt.Sort;
 import it.unive.lisa.triage.smt.Term;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -366,6 +372,35 @@ public class JavaExpressionEncoderTest {
 				assertTrue(check(JavaLibraryFunction.FLOAT_COMPARE, (float) (double) d, (float) (double) other),
 						"compare " + d + " " + other);
 			}
+		}
+	}
+
+	@Test
+	public void narrowingConversions() throws SemanticException {
+		// as Java's casts, conversions keep the lowest bits (chars are
+		// unsigned)
+		Object[][] cases = {
+				{ JavaCharType.INSTANCE, -1, 65535 },
+				{ JavaCharType.INSTANCE, 65536 + 'a', (int) 'a' },
+				{ JavaByteType.INSTANCE, 200, -56 },
+				{ JavaShortType.INSTANCE, 40000, -25536 },
+				{ JavaIntType.INSTANCE, 1L << 32, 0 } };
+		for (Object[] c : cases) {
+			Type target = (Type) c[0];
+			Symbols symbols = new Symbols();
+			JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(new HashMap<>()), symbols);
+			BinaryExpression conversion = new BinaryExpression(target, constant(c[1]),
+					new Constant(new TypeTokenType(Set.of(target)), target, LOC), TypeConv.INSTANCE, LOC);
+			Term term = conversion.accept(encoder);
+			assertFalse(symbols.havoc, "(" + target + ") " + c[1] + " is not precise");
+			solver.push();
+			for (Term r : symbols.requirements)
+				solver.assertTerm(r);
+			for (Term g : symbols.guards)
+				solver.assertTerm(g);
+			solver.assertTerm(Term.not(Term.eq(term, expected(c[2]))));
+			assertEquals(SmtResult.UNSAT, solver.check(), "(" + target + ") " + c[1] + " should be " + c[2]);
+			solver.pop();
 		}
 	}
 
