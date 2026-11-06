@@ -34,6 +34,7 @@ import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.triage.reachability.ReachabilityVerifier;
 import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -102,6 +103,15 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 
+		Option verifierOption = Option.builder("t")
+				.longOpt("verifier")
+				.hasArg()
+				.argName("VERIFIER")
+				.desc("Verifier of the warnings: (Reachability [DEFAULT], verifying them through the results of "
+						+ "the analysis; Combined, the SV-COMP verifier, falling back to model checking with z3)")
+				.required(false)
+				.build();
+
 		Option mode = Option.builder("m")
 				.longOpt("mode")
 				.hasArg()
@@ -137,6 +147,7 @@ public final class CheckCommand {
 		options.addOption(outdirOption);
 		options.addOption(checker);
 		options.addOption(numericalDomainOption);
+		options.addOption(verifierOption);
 		options.addOption(mode);
 		options.addOption(htmlOutput);
 		options.addOption(graphOutput);
@@ -154,7 +165,7 @@ public final class CheckCommand {
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
 		String outdir = "";
-		String checkerName = "", numericalDomain = "", executionMode = "Debug";
+		String checkerName = "", numericalDomain = "", verifierName = "Reachability", executionMode = "Debug";
 		boolean html = false;
 		boolean graphs = false;
 		boolean dumpExceptions = false;
@@ -201,6 +212,9 @@ public final class CheckCommand {
 
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
+			verifierName = cmd.getOptionValue("t", "Reachability");
+			if (!verifierName.equals("Reachability") && !verifierName.equals("Combined"))
+				throw new ParseException("Invalid verifier name: " + verifierName);
 
 			sources = cmd.getOptionValues("s");
 			outdir = cmd.getOptionValue("o");
@@ -231,10 +245,10 @@ public final class CheckCommand {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, html, graphs, debug, propertyFiles);
+			runDebug(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, html, graphs, dumpExceptions, debug,
+			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions, debug,
 					propertyFiles);
 			break;
 		default:
@@ -248,6 +262,7 @@ public final class CheckCommand {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			String verifierName,
 			boolean htmlOutput,
 			boolean graphOutput,
 			boolean debug,
@@ -256,7 +271,7 @@ public final class CheckCommand {
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
 				propertyFiles);
 	}
 
@@ -265,6 +280,7 @@ public final class CheckCommand {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			String verifierName,
 			boolean htmlOutput,
 			boolean graphOutput,
 			boolean dumpExceptions,
@@ -285,7 +301,7 @@ public final class CheckCommand {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
 					propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
@@ -314,6 +330,7 @@ public final class CheckCommand {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			String verifierName,
 			JavaFrontend frontend,
 			boolean htmlOutput,
 			boolean graphOutput,
@@ -344,10 +361,19 @@ public final class CheckCommand {
 		// result for a recursive call
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
-		// warnings are verified after the checks, stopping at the first one
-		// that
-		// is confirmed for each property
-		conf.warningVerifier = new SVCOMPVerifier<>();
+		// warnings are verified after the checks
+		switch (verifierName) {
+		case "Reachability":
+			conf.warningVerifier = new ReachabilityVerifier<>();
+			break;
+		case "Combined":
+			// stopping at the first warning that is confirmed for each
+			// property
+			conf.warningVerifier = new SVCOMPVerifier<>();
+			break;
+		default:
+			throw new ParseException("Invalid verifier name: " + verifierName);
+		}
 		AssertChecker<?> checker = null;
 		switch (checkerName) {
 		case "Assert":
