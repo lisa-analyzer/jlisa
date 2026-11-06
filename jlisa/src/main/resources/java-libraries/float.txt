@@ -1,9 +1,9 @@
 class java.lang.Float extends java.lang.Number:
-	field NaN type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
-	field POSITIVE_INFINITY type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
-	field NEGATIVE_INFINITY type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	final field NaN type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	final field POSITIVE_INFINITY type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+	final field NEGATIVE_INFINITY type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 	
-    instance field value type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+    instance final field value type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
 	
 	method Float_clinit: it.unive.jlisa.program.java.constructs.floatw.FloatClassInitializer
     	type it.unive.lisa.type.VoidType::INSTANCE
@@ -62,6 +62,16 @@ class java.lang.Float extends java.lang.Number:
 		param this libtype java.lang.Float*
 		param other libtype java.lang.Float*
 		
-	method toString: it.unive.jlisa.program.java.constructs.floatw.FloatStaticToString
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$FloatToString
 		libtype java.lang.String*
 		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$FloatToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Float*
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.LibraryCalls$FloatCompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Float*
+		param other libtype java.lang.Float*

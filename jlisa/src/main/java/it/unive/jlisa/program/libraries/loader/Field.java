@@ -4,6 +4,7 @@ import it.unive.jlisa.program.libraries.loader.extensions.CompileTimeGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
+import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.symbolic.value.Constant;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.Objects;
 public class Field {
 
 	private final boolean instance;
+	private final boolean isFinal;
 	private final String name;
 	private final Type type;
 	private final Value value;
@@ -19,7 +21,15 @@ public class Field {
 			boolean instance,
 			String name,
 			Type type) {
-		this(instance, name, type, null);
+		this(instance, false, name, type, null);
+	}
+
+	public Field(
+			boolean instance,
+			boolean isFinal,
+			String name,
+			Type type) {
+		this(instance, isFinal, name, type, null);
 	}
 
 	public Field(
@@ -27,7 +37,17 @@ public class Field {
 			String name,
 			Type type,
 			Value value) {
+		this(instance, false, name, type, value);
+	}
+
+	public Field(
+			boolean instance,
+			boolean isFinal,
+			String name,
+			Type type,
+			Value value) {
 		this.instance = instance;
+		this.isFinal = isFinal;
 		this.name = name;
 		this.type = type;
 		this.value = value;
@@ -35,6 +55,10 @@ public class Field {
 
 	public boolean isInstance() {
 		return instance;
+	}
+
+	public boolean isFinal() {
+		return isFinal;
 	}
 
 	public String getName() {
@@ -51,7 +75,7 @@ public class Field {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(instance, name, type, value);
+		return Objects.hash(instance, isFinal, name, type, value);
 	}
 
 	@Override
@@ -64,13 +88,15 @@ public class Field {
 		if (getClass() != obj.getClass())
 			return false;
 		Field other = (Field) obj;
-		return instance == other.instance && Objects.equals(name, other.name) && Objects.equals(type, other.type)
+		return instance == other.instance && isFinal == other.isFinal && Objects.equals(name, other.name)
+				&& Objects.equals(type, other.type)
 				&& Objects.equals(value, other.value);
 	}
 
 	@Override
 	public String toString() {
-		return "Field [instance=" + instance + ", name=" + name + ", type=" + type + ", value=" + value + "]";
+		return "Field [instance=" + instance + ", final=" + isFinal + ", name=" + name + ", type=" + type + ", value="
+				+ value + "]";
 	}
 
 	public Global toLiSAObject(
@@ -81,10 +107,10 @@ public class Field {
 
 		Constant defValue;
 		if (this.value == null) {
-			return new Global(location, container, name, this.instance, type);
+			return new Global(location, container, name, this.instance, type, new Annotations(), isFinal);
 		} else {
 			defValue = new Constant(type, getRawValue(this.value), location);
-			return new CompileTimeGlobal(location, container, name, this.instance, type, defValue);
+			return new CompileTimeGlobal(location, container, name, this.instance, type, defValue, isFinal);
 		}
 	}
 

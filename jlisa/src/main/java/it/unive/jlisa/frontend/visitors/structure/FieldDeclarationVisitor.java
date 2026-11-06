@@ -53,9 +53,12 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 			type = typeVisitor.liftToArray(type, fragment);
 			boolean isStatic = Modifier.isStatic(modifiers)
 					|| (getScope().getLiSACompilationUnit() instanceof InterfaceUnit);
+			// fields of interfaces are implicitly final
+			boolean isFinal = Modifier.isFinal(modifiers)
+					|| (getScope().getLiSACompilationUnit() instanceof InterfaceUnit);
 			Global global = new Global(getSourceCodeLocation(fragment), getScope().getLiSACompilationUnit(), identifier,
 					!isStatic, type,
-					annotations);
+					annotations, isFinal);
 			if (isStatic) {
 				getScope().getLiSACompilationUnit().addGlobal(global);
 			} else {

@@ -1,12 +1,12 @@
 package it.unive.jlisa.program.operator;
 
-import it.unive.lisa.symbolic.value.operator.binary.StringEquals;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaStringEqualsIgnoreCaseOperator extends StringEquals {
+public class JavaStringEqualsIgnoreCaseOperator implements BinaryOperator {
 
 	/**
 	 * The singleton instance of this class.
@@ -38,9 +38,4 @@ public class JavaStringEqualsIgnoreCaseOperator extends StringEquals {
 		return Collections.singleton(types.getBooleanType());
 	}
 
-	@Override
-	protected Type resultType(
-			TypeSystem types) {
-		return types.getBooleanType();
-	}
 }
