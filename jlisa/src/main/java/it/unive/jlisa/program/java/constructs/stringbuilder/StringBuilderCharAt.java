@@ -79,7 +79,8 @@ public class StringBuilderCharAt extends BinaryExpression implements PluggableSt
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left,
+				getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
 		// check for IndexOutOfBoundException

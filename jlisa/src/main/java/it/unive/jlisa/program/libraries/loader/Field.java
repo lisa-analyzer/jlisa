@@ -95,7 +95,8 @@ public class Field {
 
 	@Override
 	public String toString() {
-		return "Field [instance=" + instance + ", final=" + isFinal + ", name=" + name + ", type=" + type + ", value=" + value + "]";
+		return "Field [instance=" + instance + ", final=" + isFinal + ", name=" + name + ", type=" + type + ", value="
+				+ value + "]";
 	}
 
 	public Global toLiSAObject(

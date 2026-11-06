@@ -102,10 +102,10 @@ public final class JavaArithmeticOperators {
 	 * runtime types: the primitive numeric type of the value (see
 	 * {@link #unbox(Type)}) after unary numeric promotion (JLS 5.6), if all its
 	 * numeric runtime types agree on it, or {@link Untyped} otherwise.
-	 * Increments and decrements of {@code byte}, {@code short} and
-	 * {@code char} values are thus modeled as {@code int} operations, without
-	 * the narrowing conversion that Java applies to their result: this is
-	 * consistent with the value domains, that do not narrow them either.
+	 * Increments and decrements of {@code byte}, {@code short} and {@code char}
+	 * values are thus modeled as {@code int} operations, without the narrowing
+	 * conversion that Java applies to their result: this is consistent with the
+	 * value domains, that do not narrow them either.
 	 *
 	 * @param types the runtime types of the value
 	 *

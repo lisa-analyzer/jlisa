@@ -44,9 +44,9 @@ import org.junit.jupiter.api.Test;
  * Checks the encodings of the functions of the Java library produced by
  * {@link JavaExpressionEncoder} against the functions themselves: for each
  * function and each tested combination of arguments, the encoding of the
- * function applied to the arguments must denote the value computed by the
- * Java library, whenever the encoding claims to be precise. Tests are skipped
- * if z3 is not available.
+ * function applied to the arguments must denote the value computed by the Java
+ * library, whenever the encoding claims to be precise. Tests are skipped if z3
+ * is not available.
  */
 public class JavaExpressionEncoderTest {
 
@@ -152,8 +152,8 @@ public class JavaExpressionEncoderTest {
 	}
 
 	/**
-	 * Checks the encoding of the given function applied to the given
-	 * arguments, yielding whether the encoding is precise for them.
+	 * Checks the encoding of the given function applied to the given arguments,
+	 * yielding whether the encoding is precise for them.
 	 */
 	private static boolean check(
 			JavaLibraryFunction f,
@@ -238,8 +238,8 @@ public class JavaExpressionEncoderTest {
 	}
 
 	/**
-	 * Narrows the given integer to the type of the parameters of the
-	 * function with the given name.
+	 * Narrows the given integer to the type of the parameters of the function
+	 * with the given name.
 	 */
 	private static int narrow(
 			String name,
@@ -373,7 +373,8 @@ public class JavaExpressionEncoderTest {
 	public void floatingPointLiterals() {
 		for (double d : new double[] { 0.0, -0.0, 1.5, Double.NaN, Double.NEGATIVE_INFINITY, Double.MIN_VALUE })
 			assertEquals(Double.doubleToRawLongBits(d) == Double.doubleToRawLongBits(Double.NaN)
-					? Double.NaN : d,
+					? Double.NaN
+					: d,
 					FloatingPoints.parse(evaluate(FloatingPoints.literal(d)), Sort.FLOAT64));
 	}
 

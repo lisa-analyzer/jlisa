@@ -109,7 +109,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 						tmp = strValueOf.forwardSemanticsAux(interprocedural, state,
 								new ExpressionSet[] { param }, expressions);
 					} else {
-						// the call is at the location of the operand (as the one
+						// the call is at the location of the operand (as the
+						// one
 						// to String::valueOf above): its result must not be
 						// confused with the one of this expression
 						UnresolvedCall call = new UnresolvedCall(getCFG(), getRight().getLocation(), CallType.INSTANCE,

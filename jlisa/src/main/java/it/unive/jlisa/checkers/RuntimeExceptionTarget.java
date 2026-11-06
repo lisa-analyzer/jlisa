@@ -106,9 +106,9 @@ public final class RuntimeExceptionTarget {
 	 * each statement throwing an error of the given state, that is, the
 	 * statement where the error is raised (following the calls, as in
 	 * {@link #of(SemanticTool, AnalysisState)}). This is used when the errors
-	 * of the state are raised at different statements, but the verification
-	 * of the violation tells which error is raised by the reproduced
-	 * execution: throwers whose target is not known are not in the map.
+	 * of the state are raised at different statements, but the verification of
+	 * the violation tells which error is raised by the reproduced execution:
+	 * throwers whose target is not known are not in the map.
 	 *
 	 * @param <A>   the type of the abstract states
 	 * @param <D>   the type of the abstract domain

@@ -22,7 +22,8 @@ public final class ByteFunctions {
 				CodeLocation location,
 				Expression receiver,
 				Expression other) {
-			super(cfg, location, "java.lang.Byte", JavaByteType.INSTANCE, JavaLibraryFunction.BYTE_COMPARE, receiver, other);
+			super(cfg, location, "java.lang.Byte", JavaByteType.INSTANCE, JavaLibraryFunction.BYTE_COMPARE, receiver,
+					other);
 		}
 
 		public static CompareTo build(

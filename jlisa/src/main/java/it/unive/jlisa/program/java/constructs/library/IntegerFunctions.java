@@ -283,7 +283,8 @@ public final class IntegerFunctions {
 				CodeLocation location,
 				Expression receiver,
 				Expression other) {
-			super(cfg, location, "java.lang.Integer", JavaIntType.INSTANCE, JavaLibraryFunction.INTEGER_COMPARE, receiver, other);
+			super(cfg, location, "java.lang.Integer", JavaIntType.INSTANCE, JavaLibraryFunction.INTEGER_COMPARE,
+					receiver, other);
 		}
 
 		public static CompareTo build(

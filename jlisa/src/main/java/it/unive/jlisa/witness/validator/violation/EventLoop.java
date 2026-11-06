@@ -575,7 +575,8 @@ public final class EventLoop {
 			ObjectReference exception,
 			ThreadReference thread) {
 		try {
-			List<Method> methods = exception.referenceType().methodsByName("getStackTrace", "()[Ljava/lang/StackTraceElement;");
+			List<Method> methods = exception.referenceType().methodsByName("getStackTrace",
+					"()[Ljava/lang/StackTraceElement;");
 			if (methods.isEmpty()) {
 				return false;
 			}

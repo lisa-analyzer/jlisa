@@ -39,5 +39,4 @@ public class JavaIntegerCompareOperator implements BinaryOperator {
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
-
 }

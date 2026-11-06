@@ -372,7 +372,8 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				.map(ex -> (ValueExpression) ex)
 				.flatMap(vex -> {
 					try {
-						Set<it.unive.lisa.symbolic.value.BinaryExpression> c = vdom.constraints(null, env, vex, this, oracle);
+						Set<it.unive.lisa.symbolic.value.BinaryExpression> c = vdom.constraints(null, env, vex, this,
+								oracle);
 						// a null result means the value is bottom
 						return c == null ? Stream.<it.unive.lisa.symbolic.value.BinaryExpression>empty() : c.stream();
 					} catch (SemanticException e) {

@@ -59,7 +59,8 @@ public class StringBuilderCapacity extends UnaryExpression implements PluggableS
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
-		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), expr, getLocation());
+		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), expr,
+				getLocation());
 		AccessChild access = new AccessChild(JavaIntType.INSTANCE, deref, capVar, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, access, interprocedural.getCurrentContext(),
 				originating);

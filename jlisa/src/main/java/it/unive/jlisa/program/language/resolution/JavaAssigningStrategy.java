@@ -150,7 +150,8 @@ public class JavaAssigningStrategy
 
 					JavaNewArrayWithInitializer newArr = new JavaNewArrayWithInitializer(call.getCFG(),
 							call.getLocation(), gatheredParameters, formal.getStaticType());
-					// the synthetic array is not part of the cfg: it is attached
+					// the synthetic array is not part of the cfg: it is
+					// attached
 					// to the call, so that the errors it raises are attributed
 					// to the statement containing the call (the arguments keep
 					// the call as their parent, as parents cannot change)

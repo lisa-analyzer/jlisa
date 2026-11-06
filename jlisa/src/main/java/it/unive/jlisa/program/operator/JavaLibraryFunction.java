@@ -39,10 +39,14 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			a -> Integer.bitCount(i(a)));
 
 	public static final JavaLibraryFunction INTEGER_COMPARE = binary("Integer.compare", JavaIntType.INSTANCE,
-			(a, b) -> Integer.compare(i(a), i(b)));
+			(
+					a,
+					b) -> Integer.compare(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_COMPARE_UNSIGNED = binary("Integer.compareUnsigned",
-			JavaIntType.INSTANCE, (a, b) -> Integer.compareUnsigned(i(a), i(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> Integer.compareUnsigned(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_HIGHEST_ONE_BIT = unary("Integer.highestOneBit",
 			JavaIntType.INSTANCE, a -> Integer.highestOneBit(i(a)));
@@ -51,10 +55,14 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			JavaIntType.INSTANCE, a -> Integer.lowestOneBit(i(a)));
 
 	public static final JavaLibraryFunction INTEGER_MAX = binary("Integer.max", JavaIntType.INSTANCE,
-			(a, b) -> Integer.max(i(a), i(b)));
+			(
+					a,
+					b) -> Integer.max(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_MIN = binary("Integer.min", JavaIntType.INSTANCE,
-			(a, b) -> Integer.min(i(a), i(b)));
+			(
+					a,
+					b) -> Integer.min(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_NUMBER_OF_LEADING_ZEROS = unary("Integer.numberOfLeadingZeros",
 			JavaIntType.INSTANCE, a -> Integer.numberOfLeadingZeros(i(a)));
@@ -69,16 +77,22 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			JavaIntType.INSTANCE, a -> Integer.reverseBytes(i(a)));
 
 	public static final JavaLibraryFunction INTEGER_ROTATE_LEFT = binary("Integer.rotateLeft", JavaIntType.INSTANCE,
-			(a, b) -> Integer.rotateLeft(i(a), i(b)));
+			(
+					a,
+					b) -> Integer.rotateLeft(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_ROTATE_RIGHT = binary("Integer.rotateRight",
-			JavaIntType.INSTANCE, (a, b) -> Integer.rotateRight(i(a), i(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> Integer.rotateRight(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_SIGNUM = unary("Integer.signum", JavaIntType.INSTANCE,
 			a -> Integer.signum(i(a)));
 
 	public static final JavaLibraryFunction INTEGER_SUM = binary("Integer.sum", JavaIntType.INSTANCE,
-			(a, b) -> Integer.sum(i(a), i(b)));
+			(
+					a,
+					b) -> Integer.sum(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_TO_UNSIGNED_LONG = unary("Integer.toUnsignedLong",
 			JavaLongType.INSTANCE, a -> Integer.toUnsignedLong(i(a)));
@@ -86,10 +100,14 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 	// Long
 
 	public static final JavaLibraryFunction LONG_COMPARE = binary("Long.compare", JavaIntType.INSTANCE,
-			(a, b) -> Long.compare(l(a), l(b)));
+			(
+					a,
+					b) -> Long.compare(l(a), l(b)));
 
 	public static final JavaLibraryFunction LONG_COMPARE_UNSIGNED = binary("Long.compareUnsigned",
-			JavaIntType.INSTANCE, (a, b) -> Long.compareUnsigned(l(a), l(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> Long.compareUnsigned(l(a), l(b)));
 
 	public static final JavaLibraryFunction LONG_HIGHEST_ONE_BIT = unary("Long.highestOneBit", JavaLongType.INSTANCE,
 			a -> Long.highestOneBit(l(a)));
@@ -98,10 +116,14 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			a -> Long.lowestOneBit(l(a)));
 
 	public static final JavaLibraryFunction LONG_MAX = binary("Long.max", JavaLongType.INSTANCE,
-			(a, b) -> Long.max(l(a), l(b)));
+			(
+					a,
+					b) -> Long.max(l(a), l(b)));
 
 	public static final JavaLibraryFunction LONG_MIN = binary("Long.min", JavaLongType.INSTANCE,
-			(a, b) -> Long.min(l(a), l(b)));
+			(
+					a,
+					b) -> Long.min(l(a), l(b)));
 
 	public static final JavaLibraryFunction LONG_NUMBER_OF_LEADING_ZEROS = unary("Long.numberOfLeadingZeros",
 			JavaIntType.INSTANCE, a -> Long.numberOfLeadingZeros(l(a)));
@@ -116,18 +138,24 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			a -> Long.reverseBytes(l(a)));
 
 	public static final JavaLibraryFunction LONG_ROTATE_LEFT = binary("Long.rotateLeft", JavaLongType.INSTANCE,
-			(a, b) -> Long.rotateLeft(l(a), i(b)));
+			(
+					a,
+					b) -> Long.rotateLeft(l(a), i(b)));
 
 	public static final JavaLibraryFunction LONG_SIGNUM = unary("Long.signum", JavaIntType.INSTANCE,
 			a -> Long.signum(l(a)));
 
 	public static final JavaLibraryFunction LONG_SUM = binary("Long.sum", JavaLongType.INSTANCE,
-			(a, b) -> Long.sum(l(a), l(b)));
+			(
+					a,
+					b) -> Long.sum(l(a), l(b)));
 
 	// Short and Byte
 
 	public static final JavaLibraryFunction SHORT_COMPARE = binary("Short.compare", JavaIntType.INSTANCE,
-			(a, b) -> Short.compare(s(a), s(b)));
+			(
+					a,
+					b) -> Short.compare(s(a), s(b)));
 
 	public static final JavaLibraryFunction SHORT_REVERSE_BYTES = unary("Short.reverseBytes",
 			JavaShortType.INSTANCE, a -> Short.reverseBytes(s(a)));
@@ -139,35 +167,51 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			JavaLongType.INSTANCE, a -> Short.toUnsignedLong(s(a)));
 
 	public static final JavaLibraryFunction BYTE_COMPARE = binary("Byte.compare", JavaIntType.INSTANCE,
-			(a, b) -> Byte.compare(by(a), by(b)));
+			(
+					a,
+					b) -> Byte.compare(by(a), by(b)));
 
 	// Boolean
 
 	public static final JavaLibraryFunction BOOLEAN_COMPARE = binary("Boolean.compare", JavaIntType.INSTANCE,
-			(a, b) -> Boolean.compare(b(a), b(b)));
+			(
+					a,
+					b) -> Boolean.compare(b(a), b(b)));
 
 	public static final JavaLibraryFunction BOOLEAN_LOGICAL_AND = binary("Boolean.logicalAnd",
-			JavaBooleanType.INSTANCE, (a, b) -> Boolean.logicalAnd(b(a), b(b)));
+			JavaBooleanType.INSTANCE, (
+					a,
+					b) -> Boolean.logicalAnd(b(a), b(b)));
 
 	public static final JavaLibraryFunction BOOLEAN_LOGICAL_OR = binary("Boolean.logicalOr",
-			JavaBooleanType.INSTANCE, (a, b) -> Boolean.logicalOr(b(a), b(b)));
+			JavaBooleanType.INSTANCE, (
+					a,
+					b) -> Boolean.logicalOr(b(a), b(b)));
 
 	public static final JavaLibraryFunction BOOLEAN_LOGICAL_XOR = binary("Boolean.logicalXor",
-			JavaBooleanType.INSTANCE, (a, b) -> Boolean.logicalXor(b(a), b(b)));
+			JavaBooleanType.INSTANCE, (
+					a,
+					b) -> Boolean.logicalXor(b(a), b(b)));
 
 	// Character (code points)
 
 	public static final JavaLibraryFunction CHARACTER_COMPARE = binary("Character.compare", JavaIntType.INSTANCE,
-			(a, b) -> Character.compare(c(a), c(b)));
+			(
+					a,
+					b) -> Character.compare(c(a), c(b)));
 
 	public static final JavaLibraryFunction CHARACTER_CHAR_COUNT = unary("Character.charCount", JavaIntType.INSTANCE,
 			a -> Character.charCount(i(a)));
 
 	public static final JavaLibraryFunction CHARACTER_TO_CODE_POINT = binary("Character.toCodePoint",
-			JavaIntType.INSTANCE, (a, b) -> Character.toCodePoint(c(a), c(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> Character.toCodePoint(c(a), c(b)));
 
 	public static final JavaLibraryFunction CHARACTER_DIGIT = binary("Character.digit", JavaIntType.INSTANCE,
-			(a, b) -> Character.digit(i(a), i(b)));
+			(
+					a,
+					b) -> Character.digit(i(a), i(b)));
 
 	public static final JavaLibraryFunction CHARACTER_GET_DIRECTIONALITY = unary("Character.getDirectionality",
 			JavaByteType.INSTANCE, a -> Character.getDirectionality(i(a)));
@@ -273,13 +317,17 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			a -> Integer.toString(i(a)));
 
 	public static final JavaLibraryFunction INTEGER_TO_STRING_RADIX = string2("Integer.toString(radix)",
-			(a, b) -> Integer.toString(i(a), i(b)));
+			(
+					a,
+					b) -> Integer.toString(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_TO_UNSIGNED_STRING = string1("Integer.toUnsignedString",
 			a -> Integer.toUnsignedString(i(a)));
 
 	public static final JavaLibraryFunction INTEGER_TO_UNSIGNED_STRING_RADIX = string2(
-			"Integer.toUnsignedString(radix)", (a, b) -> Integer.toUnsignedString(i(a), i(b)));
+			"Integer.toUnsignedString(radix)", (
+					a,
+					b) -> Integer.toUnsignedString(i(a), i(b)));
 
 	public static final JavaLibraryFunction INTEGER_TO_HEX_STRING = string1("Integer.toHexString",
 			a -> Integer.toHexString(i(a)));
@@ -293,13 +341,17 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 	public static final JavaLibraryFunction LONG_TO_STRING = string1("Long.toString", a -> Long.toString(l(a)));
 
 	public static final JavaLibraryFunction LONG_TO_STRING_RADIX = string2("Long.toString(radix)",
-			(a, b) -> Long.toString(l(a), i(b)));
+			(
+					a,
+					b) -> Long.toString(l(a), i(b)));
 
 	public static final JavaLibraryFunction LONG_TO_UNSIGNED_STRING = string1("Long.toUnsignedString",
 			a -> Long.toUnsignedString(l(a)));
 
 	public static final JavaLibraryFunction LONG_TO_UNSIGNED_STRING_RADIX = string2("Long.toUnsignedString(radix)",
-			(a, b) -> Long.toUnsignedString(l(a), i(b)));
+			(
+					a,
+					b) -> Long.toUnsignedString(l(a), i(b)));
 
 	public static final JavaLibraryFunction LONG_TO_HEX_STRING = string1("Long.toHexString",
 			a -> Long.toHexString(l(a)));
@@ -332,27 +384,37 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 			a -> str(a).isEmpty());
 
 	public static final JavaLibraryFunction STRING_INDEX_OF_CHAR = binary("String.indexOf(int)",
-			JavaIntType.INSTANCE, (a, b) -> str(a).indexOf(i(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> str(a).indexOf(i(b)));
 
 	public static final JavaLibraryFunction STRING_INDEX_OF_CHAR_FROM = ternary("String.indexOf(int, int)",
 			JavaIntType.INSTANCE, args -> str(args[0]).indexOf(i(args[1]), i(args[2])));
 
 	public static final JavaLibraryFunction STRING_LAST_INDEX_OF_CHAR = binary("String.lastIndexOf(int)",
-			JavaIntType.INSTANCE, (a, b) -> str(a).lastIndexOf(i(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> str(a).lastIndexOf(i(b)));
 
 	public static final JavaLibraryFunction STRING_LAST_INDEX_OF_CHAR_FROM = ternary("String.lastIndexOf(int, int)",
 			JavaIntType.INSTANCE, args -> str(args[0]).lastIndexOf(i(args[1]), i(args[2])));
 
 	public static final JavaLibraryFunction STRING_COMPARE_TO_IGNORE_CASE = binary("String.compareToIgnoreCase",
-			JavaIntType.INSTANCE, (a, b) -> str(a).compareToIgnoreCase(str(b)));
+			JavaIntType.INSTANCE, (
+					a,
+					b) -> str(a).compareToIgnoreCase(str(b)));
 
 	// Double and Float
 
 	public static final JavaLibraryFunction DOUBLE_COMPARE = binary("Double.compare", JavaIntType.INSTANCE,
-			(a, b) -> Double.compare(((Number) a).doubleValue(), ((Number) b).doubleValue()));
+			(
+					a,
+					b) -> Double.compare(((Number) a).doubleValue(), ((Number) b).doubleValue()));
 
 	public static final JavaLibraryFunction FLOAT_COMPARE = binary("Float.compare", JavaIntType.INSTANCE,
-			(a, b) -> Float.compare(((Number) a).floatValue(), ((Number) b).floatValue()));
+			(
+					a,
+					b) -> Float.compare(((Number) a).floatValue(), ((Number) b).floatValue()));
 
 	// Math
 

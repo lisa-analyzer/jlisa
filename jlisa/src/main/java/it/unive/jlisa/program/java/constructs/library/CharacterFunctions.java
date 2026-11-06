@@ -807,7 +807,8 @@ public final class CharacterFunctions {
 				CodeLocation location,
 				Expression receiver,
 				Expression other) {
-			super(cfg, location, "java.lang.Character", JavaCharType.INSTANCE, JavaLibraryFunction.CHARACTER_COMPARE, receiver, other);
+			super(cfg, location, "java.lang.Character", JavaCharType.INSTANCE, JavaLibraryFunction.CHARACTER_COMPARE,
+					receiver, other);
 		}
 
 		public static CompareTo build(

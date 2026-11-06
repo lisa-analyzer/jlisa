@@ -19,8 +19,8 @@ import java.util.Map;
 /**
  * The {@link WarningVerifier} used for SV-COMP tasks. Each task has a single
  * property, either the validity of assertions or the absence of uncaught
- * runtime exceptions, and a violation witness is needed for the property of
- * the task. Hence, the warnings about failing assertions and the ones about
+ * runtime exceptions, and a violation witness is needed for the property of the
+ * task. Hence, the warnings about failing assertions and the ones about
  * uncaught runtime exceptions (that is, the ones reporting an
  * {@link ErrorViolation}) are verified separately, each with a
  * {@link FirstViolationVerifier}: the verification of each kind of warnings

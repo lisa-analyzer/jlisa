@@ -21,10 +21,10 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
@@ -69,7 +69,8 @@ public class JavaCastExpression extends UnaryExpression {
 			BinaryExpression instanceOf = new BinaryExpression(Untyped.INSTANCE, expr,
 					new Constant(new TypeTokenType(Collections.singleton(type)), 0, getLocation()),
 					TypeCheck.INSTANCE, getLocation());
-			it.unive.lisa.symbolic.value.UnaryExpression notInstanceOf = new it.unive.lisa.symbolic.value.UnaryExpression(getProgram().getTypes().getBooleanType(),
+			it.unive.lisa.symbolic.value.UnaryExpression notInstanceOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					getProgram().getTypes().getBooleanType(),
 					instanceOf, LogicalNegation.INSTANCE, getLocation());
 			AnalysisState<A> failing = null;
 

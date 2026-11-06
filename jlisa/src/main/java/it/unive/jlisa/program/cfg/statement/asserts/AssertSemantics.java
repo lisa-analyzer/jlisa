@@ -21,8 +21,8 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 
 /**
  * The semantics shared by assertions, as executed with assertions enabled:
- * execution continues after the assertion only if its condition holds, while
- * an {@link java.lang.AssertionError} is thrown if it does not.
+ * execution continues after the assertion only if its condition holds, while an
+ * {@link java.lang.AssertionError} is thrown if it does not.
  *
  * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
  */
@@ -32,9 +32,9 @@ final class AssertSemantics {
 	}
 
 	/**
-	 * Yields the state where the condition of an assertion holds, and the
-	 * state where an {@link java.lang.AssertionError} is thrown since the
-	 * condition does not hold.
+	 * Yields the state where the condition of an assertion holds, and the state
+	 * where an {@link java.lang.AssertionError} is thrown since the condition
+	 * does not hold.
 	 *
 	 * @param <A>             the kind of {@link AbstractLattice} produced by
 	 *                            the domain {@code D}

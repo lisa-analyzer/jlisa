@@ -40,5 +40,4 @@ public class JavaShortCompareOperator implements BinaryOperator {
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
-
 }

@@ -344,7 +344,8 @@ public final class CheckCommand {
 		// result for a recursive call
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
-		// warnings are verified after the checks, stopping at the first one that
+		// warnings are verified after the checks, stopping at the first one
+		// that
 		// is confirmed for each property
 		conf.warningVerifier = new SVCOMPVerifier<>();
 		AssertChecker<?> checker = null;

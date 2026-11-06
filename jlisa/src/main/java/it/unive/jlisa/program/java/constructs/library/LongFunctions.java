@@ -231,7 +231,8 @@ public final class LongFunctions {
 				CodeLocation location,
 				Expression receiver,
 				Expression other) {
-			super(cfg, location, "java.lang.Long", JavaLongType.INSTANCE, JavaLibraryFunction.LONG_COMPARE, receiver, other);
+			super(cfg, location, "java.lang.Long", JavaLongType.INSTANCE, JavaLibraryFunction.LONG_COMPARE, receiver,
+					other);
 		}
 
 		public static CompareTo build(

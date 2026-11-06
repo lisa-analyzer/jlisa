@@ -48,8 +48,8 @@ public final class Violation {
 	 *
 	 * @param kind   the kind of the violation
 	 * @param target the statement where the violation happens
-	 * @param inputs the inputs reproducing the violation, in the order they
-	 *                   are consumed (can be {@code null} if none are known)
+	 * @param inputs the inputs reproducing the violation, in the order they are
+	 *                   consumed (can be {@code null} if none are known)
 	 */
 	public Violation(
 			ViolationKind kind,

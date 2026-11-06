@@ -16,9 +16,9 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 
 /**
  * The constructor {@code HashMap()} of {@code java.util.HashMap}: maps are not
- * modeled, so the construction of an empty map has no effect, and in
- * particular it does not modify other objects (without a model, the call
- * would be an open call, whose effects on the heap are unknown).
+ * modeled, so the construction of an empty map has no effect, and in particular
+ * it does not modify other objects (without a model, the call would be an open
+ * call, whose effects on the heap are unknown).
  */
 public class HashMapEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;

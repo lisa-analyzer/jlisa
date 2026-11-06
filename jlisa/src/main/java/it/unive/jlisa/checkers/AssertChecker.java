@@ -1,9 +1,9 @@
 package it.unive.jlisa.checkers;
 
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -36,16 +36,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Assert Checker It checks whether an assertion's condition might not hold,
- * and whether the main method might terminate with an uncaught runtime
- * exception. All warnings are possible, and report the violation they refer
- * to: they can be confirmed or refuted by the verification of warnings
- * performed after the checks, if a verifier has been selected. For uncaught
- * runtime exceptions, the checker also records the statement raising the
- * exception ({@link #runtimeExceptionTarget(Message)}), the target of the
- * violation witness of a confirmed warning. The checker can be restricted to
- * one of the two kinds of violations (e.g., when only one property is of
- * interest), skipping the checks of the other kind.
+ * Assert Checker It checks whether an assertion's condition might not hold, and
+ * whether the main method might terminate with an uncaught runtime exception.
+ * All warnings are possible, and report the violation they refer to: they can
+ * be confirmed or refuted by the verification of warnings performed after the
+ * checks, if a verifier has been selected. For uncaught runtime exceptions, the
+ * checker also records the statement raising the exception
+ * ({@link #runtimeExceptionTarget(Message)}), the target of the violation
+ * witness of a confirmed warning. The checker can be restricted to one of the
+ * two kinds of violations (e.g., when only one property is of interest),
+ * skipping the checks of the other kind.
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
@@ -59,18 +59,18 @@ public class AssertChecker<V extends ValueLattice<V>>
 	private static final String POSSIBLE_FAILURE = "the assertion might not hold";
 
 	/**
-	 * The statements raising the runtime exceptions reported by the warnings
-	 * of this checker, for each exit point of a main method and each
-	 * context (in textual form) it has been analyzed in.
+	 * The statements raising the runtime exceptions reported by the warnings of
+	 * this checker, for each exit point of a main method and each context (in
+	 * textual form) it has been analyzed in.
 	 */
 	private final Map<Statement, Map<String, Statement>> exceptionTargets = new ConcurrentHashMap<>();
 
 	/**
-	 * The statements raising the runtime exceptions reported by the warnings
-	 * of this checker, as {@link #exceptionTargets}, for each statement
-	 * throwing one of the exceptions: used when the exceptions are raised at
-	 * different statements, and the verification of a warning tells which one
-	 * raises the confirmed exception.
+	 * The statements raising the runtime exceptions reported by the warnings of
+	 * this checker, as {@link #exceptionTargets}, for each statement throwing
+	 * one of the exceptions: used when the exceptions are raised at different
+	 * statements, and the verification of a warning tells which one raises the
+	 * confirmed exception.
 	 */
 	private final Map<Statement, Map<String, Map<Statement, Statement>>> throwerTargets = new ConcurrentHashMap<>();
 
@@ -79,8 +79,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 	private final boolean runtimeExceptions;
 
 	/**
-	 * Builds the checker, checking both failing assertions and uncaught
-	 * runtime exceptions.
+	 * Builds the checker, checking both failing assertions and uncaught runtime
+	 * exceptions.
 	 */
 	public AssertChecker() {
 		this(true, true);
@@ -102,15 +102,15 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 	/**
 	 * Yields the statement raising the runtime exception reported by the given
-	 * warning of this checker, that is the target of its violation witness.
-	 * If the exceptions reaching the end of the main method are raised at
+	 * warning of this checker, that is the target of its violation witness. If
+	 * the exceptions reaching the end of the main method are raised at
 	 * different statements, the one raising the exception of a confirmed
 	 * warning is used (see {@link StatementMessage#getThrower()}).
 	 * 
 	 * @param warning the warning
 	 * 
-	 * @return the statement, or nothing if the warning is not about an
-	 *             uncaught runtime exception, or if the statement could not be
+	 * @return the statement, or nothing if the warning is not about an uncaught
+	 *             runtime exception, or if the statement could not be
 	 *             determined
 	 */
 	public Optional<Statement> runtimeExceptionTarget(
@@ -191,7 +191,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 							!state.getSmashedErrors().isTop() &&
 							state.getSmashedErrors().function.keySet().stream().anyMatch(t -> !isAssertionError(t)));
 
-			// if exceptions might have been thrown, we raise a possible warning.
+			// if exceptions might have been thrown, we raise a possible
+			// warning.
 			// Its violation concerns exceptions only: errors (e.g., the
 			// AssertionError of a failed assertion) are not runtime
 			// exceptions, and they can neither confirm nor prevent the
@@ -200,7 +201,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			// of Exception (e.g., Throwable) do not
 			if (hasExceptionState) {
 				tool.warnOn(node, result.getId(),
-						it.unive.lisa.checks.verification.Violation.error(JavaClassType.getExceptionType().getReference()),
+						it.unive.lisa.checks.verification.Violation
+								.error(JavaClassType.getExceptionType().getReference()),
 						"uncaught runtime exception in main method");
 				Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
 				if (target.isPresent())

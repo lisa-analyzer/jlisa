@@ -40,5 +40,4 @@ public class JavaLongCompareOperator implements BinaryOperator {
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
-
 }

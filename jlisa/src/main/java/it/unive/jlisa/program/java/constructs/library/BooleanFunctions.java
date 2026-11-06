@@ -94,7 +94,8 @@ public final class BooleanFunctions {
 				CodeLocation location,
 				Expression receiver,
 				Expression other) {
-			super(cfg, location, "java.lang.Boolean", JavaBooleanType.INSTANCE, JavaLibraryFunction.BOOLEAN_COMPARE, receiver, other);
+			super(cfg, location, "java.lang.Boolean", JavaBooleanType.INSTANCE, JavaLibraryFunction.BOOLEAN_COMPARE,
+					receiver, other);
 		}
 
 		public static CompareTo build(

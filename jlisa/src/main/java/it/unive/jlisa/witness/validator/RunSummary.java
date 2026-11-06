@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
  * 
  * The reason is {@code <verdict>/<code>: <detail>}. The codes are fixed, so
  * logs of many runs can be grouped by them (e.g.
- * {@code grep -h '\[REASON\]' *.log | cut -d: -f1 | sort | uniq -c}).
- * The verdict follows, on a line of its own after {@link #VERDICT_PREFIX}
- * (e.g. {@code [VERDICT] Witness Correct}).
+ * {@code grep -h '\[REASON\]' *.log | cut -d: -f1 | sort | uniq -c}). The
+ * verdict follows, on a line of its own after {@link #VERDICT_PREFIX} (e.g.
+ * {@code [VERDICT] Witness Correct}).
  */
 public final class RunSummary {
 

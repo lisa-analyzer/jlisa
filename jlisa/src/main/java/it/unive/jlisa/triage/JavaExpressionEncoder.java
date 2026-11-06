@@ -53,18 +53,18 @@ import java.util.function.IntFunction;
  * of the Java library ({@link JavaLibraryFunction}, and the operators of the
  * frontend modeling methods of the library) are encoded:
  * <ul>
- * <li>exactly over integers, booleans, strings and floating point numbers,
- * when they can be expressed with the operations of the SMT theories (e.g.,
+ * <li>exactly over integers, booleans, strings and floating point numbers, when
+ * they can be expressed with the operations of the SMT theories (e.g.,
  * comparisons, bit manipulations through the bits of the integers, conversions
  * of numbers to strings through their digits, searches in strings);</li>
  * <li>through tables over all code points, for the functions over characters
  * (e.g., {@link Character#getType(int)}): the tables are computed by running
- * the functions of the Java library on each code point, so that they agree
- * with the library by construction;</li>
- * <li>exactly only for some of their arguments, when no exact encoding is
- * known (e.g., {@link Double#toString(double)} is encoded only for integral
- * numbers and special values), the result being an unknown function of the
- * arguments otherwise.</li>
+ * the functions of the Java library on each code point, so that they agree with
+ * the library by construction;</li>
+ * <li>exactly only for some of their arguments, when no exact encoding is known
+ * (e.g., {@link Double#toString(double)} is encoded only for integral numbers
+ * and special values), the result being an unknown function of the arguments
+ * otherwise.</li>
  * </ul>
  * Other functions yield unconstrained values, as any other operator unknown to
  * this encoder.
@@ -72,8 +72,8 @@ import java.util.function.IntFunction;
 public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
-	 * The tables built so far, shared by all encoders since they only depend
-	 * on the functions.
+	 * The tables built so far, shared by all encoders since they only depend on
+	 * the functions.
 	 */
 	private static final Map<String, List<Segment>> TABLES = new ConcurrentHashMap<>();
 
@@ -246,9 +246,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Encodes the functions over code points that can be expressed exactly
-	 * for all integers (including the ones that are not valid code points),
-	 * or yields {@code null} for the other functions.
+	 * Encodes the functions over code points that can be expressed exactly for
+	 * all integers (including the ones that are not valid code points), or
+	 * yields {@code null} for the other functions.
 	 */
 	private Term exactCodePointFunction(
 			JavaLibraryFunction f,
@@ -584,9 +584,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Compares two floating point numbers as {@link Double#compare(double,
-	 * double)}: NaN is greater than any other number, and {@code 0.0} is
-	 * greater than {@code -0.0}.
+	 * Compares two floating point numbers as
+	 * {@link Double#compare(double, double)}: NaN is greater than any other
+	 * number, and {@code 0.0} is greater than {@code -0.0}.
 	 */
 	private static Term floatCompare(
 			Term a,
@@ -607,9 +607,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * The unbiased exponent of a floating point number, as
-	 * {@link Math#getExponent(double)}: it is read from the bits of the
-	 * number, given by an auxiliary bit-vector whose interpretation as a
-	 * floating point number is the number.
+	 * {@link Math#getExponent(double)}: it is read from the bits of the number,
+	 * given by an auxiliary bit-vector whose interpretation as a floating point
+	 * number is the number.
 	 */
 	private Term exponent(
 			Term arg,
@@ -658,8 +658,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	// characters
 
 	/**
-	 * A range of code points where a function has the same value, or the
-	 * same difference from the code point.
+	 * A range of code points where a function has the same value, or the same
+	 * difference from the code point.
 	 */
 	private static final class Segment {
 
@@ -681,8 +681,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * Encodes the given function over code points (a function of the library
-	 * over characters with a single parameter) through its table over all
-	 * code points, or yields {@code null} if it is not such a function.
+	 * over characters with a single parameter) through its table over all code
+	 * points, or yields {@code null} if it is not such a function.
 	 */
 	private Term codePointTable(
 			JavaLibraryFunction f,
@@ -897,8 +897,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Selects the representation for the given radix, using radix
-	 * {@code 10} for radixes that are not valid, as Java does.
+	 * Selects the representation for the given radix, using radix {@code 10}
+	 * for radixes that are not valid, as Java does.
 	 */
 	private static Term withRadix(
 			Term radix,
@@ -926,9 +926,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * The last index of the given char in the given string, as
-	 * {@link String#lastIndexOf(int)}: an auxiliary index such that the char
-	 * is there, and not in the rest of the string (or {@code -1} if the char
-	 * is not in the string). Precise only for chars.
+	 * {@link String#lastIndexOf(int)}: an auxiliary index such that the char is
+	 * there, and not in the rest of the string (or {@code -1} if the char is
+	 * not in the string). Precise only for chars.
 	 */
 	private Term lastIndexOf(
 			Term s,
@@ -947,8 +947,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * Compares two strings lexicographically, as
-	 * {@link String#compareTo(String)}: through an auxiliary index, the
-	 * length of their longest common prefix.
+	 * {@link String#compareTo(String)}: through an auxiliary index, the length
+	 * of their longest common prefix.
 	 */
 	private Term compareStrings(
 			Term a,

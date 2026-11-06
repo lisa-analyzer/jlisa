@@ -6,10 +6,10 @@ import it.unive.lisa.outputs.json.JsonReport.JsonMessage;
 import it.unive.lisa.outputs.json.JsonReport.JsonReproducingInput;
 
 /**
- * A {@link ResultComparer} that ignores the values of the reproducing inputs
- * of warnings: several inputs might reproduce the same violation, and the
- * solver might find different ones in different executions. The sources,
- * locations, contexts and occurrences of the inputs are still compared.
+ * A {@link ResultComparer} that ignores the values of the reproducing inputs of
+ * warnings: several inputs might reproduce the same violation, and the solver
+ * might find different ones in different executions. The sources, locations,
+ * contexts and occurrences of the inputs are still compared.
  */
 public class InputValuesIgnoringComparer extends ResultComparer {
 

@@ -3,8 +3,8 @@ package it.unive.jlisa.svcomp;
 import it.unive.jlisa.checkers.Violation;
 import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import it.unive.lisa.checks.verification.ReproducingInput;
-import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.witness.v2.InvalidWitnessException;
 import it.unive.lisa.witness.v2.Location;
 import it.unive.lisa.witness.v2.ViolationWitness;
@@ -18,8 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,8 +27,8 @@ import org.apache.logging.log4j.Logger;
  * A producer of the violation witness of an SV-COMP task. It receives the
  * definite violations found by the analysis, keeps the first one of the
  * property of the task, and writes a witness ending with the target, where the
- * violation happens. If the violation comes with the inputs reproducing it,
- * the values returned by nondeterministic calls are given as function return
+ * violation happens. If the violation comes with the inputs reproducing it, the
+ * values returned by nondeterministic calls are given as function return
  * waypoints before the target, in the order they are consumed; otherwise, the
  * witness only claims that an execution violates the property at the target,
  * hence it needs no other waypoint.
@@ -340,12 +340,12 @@ public final class ViolationWitnessProducer
 	}
 
 	/**
-	 * Returns the location of the witness for the given code location, that
-	 * is, its start. The location is the one of the target of the violation,
-	 * the innermost statement or full expression where it happens, or of a
-	 * call returning a nondeterministic value. Its file is the input file of
-	 * the task with the same name as its source file, which must be unique.
-	 * Columns of LiSA start from 0, while those of witnesses start from 1.
+	 * Returns the location of the witness for the given code location, that is,
+	 * its start. The location is the one of the target of the violation, the
+	 * innermost statement or full expression where it happens, or of a call
+	 * returning a nondeterministic value. Its file is the input file of the
+	 * task with the same name as its source file, which must be unique. Columns
+	 * of LiSA start from 0, while those of witnesses start from 1.
 	 *
 	 * @param codeLocation the code location
 	 *

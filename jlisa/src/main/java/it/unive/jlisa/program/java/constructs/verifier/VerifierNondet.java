@@ -126,8 +126,7 @@ public class VerifierNondet extends NaryExpression implements PluggableStatement
 	}
 
 	/**
-	 * Builds the construct, as {@link it.unive.lisa.program.cfg.NativeCFG}s
-	 * do.
+	 * Builds the construct, as {@link it.unive.lisa.program.cfg.NativeCFG}s do.
 	 *
 	 * @param cfg      the {@link CFG} where this construct lies
 	 * @param location the location where this construct is defined

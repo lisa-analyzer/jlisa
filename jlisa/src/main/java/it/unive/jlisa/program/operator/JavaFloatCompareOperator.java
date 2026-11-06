@@ -40,5 +40,4 @@ public class JavaFloatCompareOperator implements BinaryOperator {
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
-
 }

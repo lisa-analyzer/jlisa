@@ -85,7 +85,8 @@ public final class LibraryCalls {
 				CodeLocation location,
 				Expression p0,
 				Expression p1) {
-			super(cfg, location, JavaLibraryFunction.INTEGER_TO_UNSIGNED_STRING_RADIX, new Arg[] { Arg.VALUE, Arg.VALUE },
+			super(cfg, location, JavaLibraryFunction.INTEGER_TO_UNSIGNED_STRING_RADIX,
+					new Arg[] { Arg.VALUE, Arg.VALUE },
 					p0, p1);
 		}
 
@@ -393,7 +394,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.INTEGER_TO_STRING, new Arg[] { Arg.boxed("java.lang.Integer", JavaIntType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.INTEGER_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Integer", JavaIntType.INSTANCE) },
 					p0);
 		}
 
@@ -411,7 +413,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.LONG_TO_STRING, new Arg[] { Arg.boxed("java.lang.Long", JavaLongType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.LONG_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Long", JavaLongType.INSTANCE) },
 					p0);
 		}
 
@@ -429,7 +432,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.SHORT_TO_STRING, new Arg[] { Arg.boxed("java.lang.Short", JavaShortType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.SHORT_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Short", JavaShortType.INSTANCE) },
 					p0);
 		}
 
@@ -447,7 +451,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.BYTE_TO_STRING, new Arg[] { Arg.boxed("java.lang.Byte", JavaByteType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.BYTE_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Byte", JavaByteType.INSTANCE) },
 					p0);
 		}
 
@@ -465,7 +470,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.BOOLEAN_TO_STRING, new Arg[] { Arg.boxed("java.lang.Boolean", JavaBooleanType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.BOOLEAN_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Boolean", JavaBooleanType.INSTANCE) },
 					p0);
 		}
 
@@ -483,7 +489,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.CHARACTER_TO_STRING, new Arg[] { Arg.boxed("java.lang.Character", JavaCharType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.CHARACTER_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Character", JavaCharType.INSTANCE) },
 					p0);
 		}
 
@@ -501,7 +508,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.DOUBLE_TO_STRING, new Arg[] { Arg.boxed("java.lang.Double", JavaDoubleType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.DOUBLE_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Double", JavaDoubleType.INSTANCE) },
 					p0);
 		}
 
@@ -519,7 +527,8 @@ public final class LibraryCalls {
 				CFG cfg,
 				CodeLocation location,
 				Expression p0) {
-			super(cfg, location, JavaLibraryFunction.FLOAT_TO_STRING, new Arg[] { Arg.boxed("java.lang.Float", JavaFloatType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.FLOAT_TO_STRING,
+					new Arg[] { Arg.boxed("java.lang.Float", JavaFloatType.INSTANCE) },
 					p0);
 		}
 
@@ -538,7 +547,9 @@ public final class LibraryCalls {
 				CodeLocation location,
 				Expression p0,
 				Expression p1) {
-			super(cfg, location, JavaLibraryFunction.DOUBLE_COMPARE, new Arg[] { Arg.boxed("java.lang.Double", JavaDoubleType.INSTANCE), Arg.boxed("java.lang.Double", JavaDoubleType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.DOUBLE_COMPARE,
+					new Arg[] { Arg.boxed("java.lang.Double", JavaDoubleType.INSTANCE),
+							Arg.boxed("java.lang.Double", JavaDoubleType.INSTANCE) },
 					p0, p1);
 		}
 
@@ -557,7 +568,9 @@ public final class LibraryCalls {
 				CodeLocation location,
 				Expression p0,
 				Expression p1) {
-			super(cfg, location, JavaLibraryFunction.FLOAT_COMPARE, new Arg[] { Arg.boxed("java.lang.Float", JavaFloatType.INSTANCE), Arg.boxed("java.lang.Float", JavaFloatType.INSTANCE) },
+			super(cfg, location, JavaLibraryFunction.FLOAT_COMPARE,
+					new Arg[] { Arg.boxed("java.lang.Float", JavaFloatType.INSTANCE),
+							Arg.boxed("java.lang.Float", JavaFloatType.INSTANCE) },
 					p0, p1);
 		}
 
@@ -614,7 +627,8 @@ public final class LibraryCalls {
 				Expression p0,
 				Expression p1,
 				Expression p2) {
-			super(cfg, location, JavaLibraryFunction.STRING_INDEX_OF_CHAR_FROM, new Arg[] { Arg.STRING, Arg.VALUE, Arg.VALUE },
+			super(cfg, location, JavaLibraryFunction.STRING_INDEX_OF_CHAR_FROM,
+					new Arg[] { Arg.STRING, Arg.VALUE, Arg.VALUE },
 					p0, p1, p2);
 		}
 
@@ -653,7 +667,8 @@ public final class LibraryCalls {
 				Expression p0,
 				Expression p1,
 				Expression p2) {
-			super(cfg, location, JavaLibraryFunction.STRING_LAST_INDEX_OF_CHAR_FROM, new Arg[] { Arg.STRING, Arg.VALUE, Arg.VALUE },
+			super(cfg, location, JavaLibraryFunction.STRING_LAST_INDEX_OF_CHAR_FROM,
+					new Arg[] { Arg.STRING, Arg.VALUE, Arg.VALUE },
 					p0, p1, p2);
 		}
 
@@ -672,7 +687,8 @@ public final class LibraryCalls {
 				CodeLocation location,
 				Expression p0,
 				Expression p1) {
-			super(cfg, location, JavaLibraryFunction.STRING_COMPARE_TO_IGNORE_CASE, new Arg[] { Arg.STRING, Arg.STRING },
+			super(cfg, location, JavaLibraryFunction.STRING_COMPARE_TO_IGNORE_CASE,
+					new Arg[] { Arg.STRING, Arg.STRING },
 					p0, p1);
 		}
 

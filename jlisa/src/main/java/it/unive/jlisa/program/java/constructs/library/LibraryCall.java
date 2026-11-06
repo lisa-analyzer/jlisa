@@ -34,12 +34,11 @@ import java.util.List;
 
 /**
  * A method of the Java library whose result is computed by a
- * {@link JavaLibraryFunction} over its arguments, that can be primitive
- * values, strings (whose contents are passed to the function), or instances of
- * wrapper classes (whose wrapped values are passed to the function). If the
- * function returns strings, the result is a new string object holding the
- * computed contents. Subclasses only choose the function and the kinds of the
- * arguments.
+ * {@link JavaLibraryFunction} over its arguments, that can be primitive values,
+ * strings (whose contents are passed to the function), or instances of wrapper
+ * classes (whose wrapped values are passed to the function). If the function
+ * returns strings, the result is a new string object holding the computed
+ * contents. Subclasses only choose the function and the kinds of the arguments.
  */
 public abstract class LibraryCall extends NaryExpression implements PluggableStatement {
 

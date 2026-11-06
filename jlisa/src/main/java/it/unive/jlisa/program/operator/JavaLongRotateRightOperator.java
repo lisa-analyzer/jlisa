@@ -39,5 +39,4 @@ public class JavaLongRotateRightOperator implements BinaryOperator {
 		return Collections.singleton(JavaLongType.INSTANCE);
 	}
 
-
 }

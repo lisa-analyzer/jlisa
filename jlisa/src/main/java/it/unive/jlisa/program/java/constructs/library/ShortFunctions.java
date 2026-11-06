@@ -73,7 +73,8 @@ public final class ShortFunctions {
 				CodeLocation location,
 				Expression receiver,
 				Expression other) {
-			super(cfg, location, "java.lang.Short", JavaShortType.INSTANCE, JavaLibraryFunction.SHORT_COMPARE, receiver, other);
+			super(cfg, location, "java.lang.Short", JavaShortType.INSTANCE, JavaLibraryFunction.SHORT_COMPARE, receiver,
+					other);
 		}
 
 		public static CompareTo build(

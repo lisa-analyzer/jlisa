@@ -40,5 +40,4 @@ public class JavaDoubleCompareOperator implements BinaryOperator {
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
-
 }

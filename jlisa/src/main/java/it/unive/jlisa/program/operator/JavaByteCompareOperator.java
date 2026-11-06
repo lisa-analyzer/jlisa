@@ -40,5 +40,4 @@ public class JavaByteCompareOperator implements BinaryOperator {
 		return Collections.singleton(JavaIntType.INSTANCE);
 	}
 
-
 }

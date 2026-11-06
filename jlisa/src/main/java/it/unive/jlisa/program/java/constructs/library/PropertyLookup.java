@@ -34,15 +34,14 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
 /**
- * The methods of {@link Integer} and {@link Long} reading a system property
- * as a number, with a default value (e.g.,
- * {@link Integer#getInteger(String, int)}). System properties are not
- * modeled, but the names of the properties defined by Java runtimes contain
- * dots (e.g., {@code java.version}): if the name contains no dot, the
- * property is assumed not to be defined (as it happens also when the name is
- * empty), and the result is the default value. Otherwise, the result is either
- * the default value or an unknown number (that is never a precise value,
- * see {@link SummaryMarker}).
+ * The methods of {@link Integer} and {@link Long} reading a system property as
+ * a number, with a default value (e.g.,
+ * {@link Integer#getInteger(String, int)}). System properties are not modeled,
+ * but the names of the properties defined by Java runtimes contain dots (e.g.,
+ * {@code java.version}): if the name contains no dot, the property is assumed
+ * not to be defined (as it happens also when the name is empty), and the result
+ * is the default value. Otherwise, the result is either the default value or an
+ * unknown number (that is never a precise value, see {@link SummaryMarker}).
  */
 public abstract class PropertyLookup extends BinaryExpression implements PluggableStatement {
 

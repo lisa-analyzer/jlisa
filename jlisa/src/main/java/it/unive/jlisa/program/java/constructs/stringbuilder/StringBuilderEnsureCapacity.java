@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -73,7 +73,8 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
-		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left,
+				getLocation());
 		AccessChild capacityRead = new AccessChild(JavaIntType.INSTANCE, derefLeft, capVar, getLocation());
 		AccessChild capacityWrite = new AccessChild(JavaIntType.INSTANCE, left, capVar, getLocation());
 
