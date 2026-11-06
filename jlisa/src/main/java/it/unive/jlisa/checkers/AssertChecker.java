@@ -22,6 +22,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
@@ -64,6 +65,15 @@ public class AssertChecker<V extends ValueLattice<V>>
 	 */
 	private final Map<Statement, Map<String, Statement>> exceptionTargets = new ConcurrentHashMap<>();
 
+	/**
+	 * The statements raising the runtime exceptions reported by the warnings
+	 * of this checker, as {@link #exceptionTargets}, for each statement
+	 * throwing one of the exceptions: used when the exceptions are raised at
+	 * different statements, and the verification of a warning tells which one
+	 * raises the confirmed exception.
+	 */
+	private final Map<Statement, Map<String, Map<Statement, Statement>>> throwerTargets = new ConcurrentHashMap<>();
+
 	private final boolean assertions;
 
 	private final boolean runtimeExceptions;
@@ -93,6 +103,9 @@ public class AssertChecker<V extends ValueLattice<V>>
 	/**
 	 * Yields the statement raising the runtime exception reported by the given
 	 * warning of this checker, that is the target of its violation witness.
+	 * If the exceptions reaching the end of the main method are raised at
+	 * different statements, the one raising the exception of a confirmed
+	 * warning is used (see {@link StatementMessage#getThrower()}).
 	 * 
 	 * @param warning the warning
 	 * 
@@ -104,10 +117,25 @@ public class AssertChecker<V extends ValueLattice<V>>
 			Message warning) {
 		if (!(warning instanceof StatementMessage))
 			return Optional.empty();
-		Map<String, Statement> targets = exceptionTargets.get(((StatementMessage) warning).getStatement());
-		if (targets == null)
+		StatementMessage message = (StatementMessage) warning;
+		String context = String.valueOf(warning.getContext());
+		Map<String, Statement> targets = exceptionTargets.get(message.getStatement());
+		if (targets != null && targets.containsKey(context))
+			return Optional.of(targets.get(context));
+		// the exceptions are raised at different statements: the one raising
+		// the confirmed exception is used, if known
+		Statement thrower = message.getThrower();
+		if (thrower == null)
 			return Optional.empty();
-		return Optional.ofNullable(targets.get(String.valueOf(warning.getContext())));
+		Map<String, Map<Statement, Statement>> byThrower = throwerTargets.get(message.getStatement());
+		if (byThrower != null && byThrower.containsKey(context) && byThrower.get(context).containsKey(thrower))
+			return Optional.of(byThrower.get(context).get(thrower));
+		// the thrower might be a statement of a called method, when the
+		// verification followed the error inside it: unless it is a call
+		// (whose error might be raised by its callees), it raises the error
+		if (!(thrower instanceof Call))
+			return Optional.of(RuntimeExceptionTarget.ofThrower(thrower));
+		return Optional.empty();
 	}
 
 	@Override
@@ -178,6 +206,9 @@ public class AssertChecker<V extends ValueLattice<V>>
 				if (target.isPresent())
 					exceptionTargets.computeIfAbsent(node, n -> new ConcurrentHashMap<>())
 							.put(String.valueOf(result.getId()), target.get());
+				else
+					throwerTargets.computeIfAbsent(node, n -> new ConcurrentHashMap<>())
+							.put(String.valueOf(result.getId()), RuntimeExceptionTarget.byThrower(tool, state));
 			}
 		}
 	}

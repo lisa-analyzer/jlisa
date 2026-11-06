@@ -542,7 +542,8 @@ public final class EventLoop {
 			ExceptionEvent event,
 			String code,
 			String detail) {
-		if (plan.targetPoints().isEmpty() || atTarget(event.thread())) {
+		if (plan.targetPoints().isEmpty() || atTarget(event.thread())
+				|| createdAtTarget(event.exception(), event.thread())) {
 			ValidatorLogger.event("Violation at the target — CORRECT");
 			return correct(code, detail);
 		}
@@ -560,6 +561,56 @@ public final class EventLoop {
 		RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints() + "; "
 				+ freeNondetCalls + " nondet call(s) not fixed by the witness");
 		return ValidationResult.UNKNOWN;
+	}
+
+	/**
+	 * True if the given exception was created at the target, according to its
+	 * stack trace. An exception caught and rethrown (e.g., by the handler of a
+	 * {@code finally} block, at the end of the block) is uncaught only at the
+	 * rethrow, where the frames of the thread no longer reach the statement
+	 * raising it: its stack trace, filled when it is created, still does. The
+	 * thread must be suspended by the event of the exception.
+	 */
+	private boolean createdAtTarget(
+			ObjectReference exception,
+			ThreadReference thread) {
+		try {
+			List<Method> methods = exception.referenceType().methodsByName("getStackTrace", "()[Ljava/lang/StackTraceElement;");
+			if (methods.isEmpty()) {
+				return false;
+			}
+			Value trace = exception.invokeMethod(thread, methods.getFirst(), List.of(),
+					ObjectReference.INVOKE_SINGLE_THREADED);
+			if (!(trace instanceof ArrayReference elements)) {
+				return false;
+			}
+			for (Value value : elements.getValues()) {
+				if (!(value instanceof ObjectReference element)) {
+					continue;
+				}
+				ReferenceType type = element.referenceType();
+				Field fileField = type.fieldByName("fileName");
+				Field lineField = type.fieldByName("lineNumber");
+				if (fileField == null || lineField == null) {
+					continue;
+				}
+				Value file = element.getValue(fileField);
+				Value line = element.getValue(lineField);
+				if (!(file instanceof StringReference fileName) || !(line instanceof IntegerValue lineNumber)) {
+					continue;
+				}
+				for (TargetPoint t : plan.targetPoints()) {
+					if (lineNumber.value() == t.line()
+							&& WitnessCalls.baseName(t.fileName()).equals(fileName.value())) {
+						return true;
+					}
+				}
+			}
+		} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException
+				| InvocationException | RuntimeException e) {
+			ValidatorLogger.event("Cannot read the stack trace of the exception: {}", e.toString());
+		}
+		return false;
 	}
 
 	private boolean atTarget(

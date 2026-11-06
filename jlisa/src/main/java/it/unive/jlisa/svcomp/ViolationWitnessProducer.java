@@ -1,6 +1,7 @@
 package it.unive.jlisa.svcomp;
 
 import it.unive.jlisa.checkers.Violation;
+import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import it.unive.lisa.checks.verification.ReproducingInput;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -215,7 +216,8 @@ public final class ViolationWitnessProducer
 	/**
 	 * Returns the constraint of the function return waypoint for the given
 	 * input, if it is the value returned by a call and it can be written in a
-	 * witness (integers and booleans).
+	 * witness (values of primitive types and strings, see
+	 * {@link ViolationWitnessWriter#constraint(Object)}).
 	 *
 	 * @param input the input
 	 *
@@ -226,12 +228,115 @@ public final class ViolationWitnessProducer
 		if (!input.getSource().startsWith(CALL_RESULT))
 			// e.g., parameters of the main method
 			return null;
-		String value = input.getValue();
-		if (value == null || !(INTEGER.matcher(value).matches() || value.equals("true") || value.equals("false"))) {
+		Object value = javaValue(input);
+		if (value == null) {
 			LOG.debug("The value of {} cannot be written in the witness", input);
 			return null;
 		}
-		return "\\result == " + value;
+		return ViolationWitnessWriter.constraint(value);
+	}
+
+	/**
+	 * Returns the Java value of the given input, returned by a call, of the
+	 * return type of the call, or {@code null} if it is not a value of a
+	 * primitive type or a string. The source of the input starts with the
+	 * return type (e.g., {@code return of int ...}); its value is printed as
+	 * the verification of the warnings does: integers (also for characters),
+	 * booleans, numbers as printed by Java for floating point types, and
+	 * strings as SMT-LIB string literals.
+	 *
+	 * @param input the input
+	 *
+	 * @return the value, or {@code null}
+	 */
+	private static Object javaValue(
+			ReproducingInput input) {
+		String value = input.getValue();
+		String[] source = input.getSource().substring(CALL_RESULT.length()).split(" ", 2);
+		if (value == null || source.length == 0)
+			return null;
+		try {
+			switch (source[0]) {
+			case "bool":
+			case "boolean":
+				return value.equals("true") ? Boolean.TRUE : value.equals("false") ? Boolean.FALSE : null;
+			case "byte":
+				return INTEGER.matcher(value).matches() ? Byte.valueOf(value) : null;
+			case "short":
+				return INTEGER.matcher(value).matches() ? Short.valueOf(value) : null;
+			case "int":
+				return INTEGER.matcher(value).matches() ? Integer.valueOf(value) : null;
+			case "long":
+				return INTEGER.matcher(value).matches() ? Long.valueOf(value) : null;
+			case "char":
+				if (!INTEGER.matcher(value).matches())
+					return null;
+				int code = Integer.parseInt(value);
+				return code >= Character.MIN_VALUE && code <= Character.MAX_VALUE ? Character.valueOf((char) code)
+						: null;
+			case "float":
+				return Float.valueOf(value);
+			case "double":
+				return Double.valueOf(value);
+			case "java.lang.String*":
+			case "java.lang.String":
+				return smtString(value);
+			default:
+				return null;
+			}
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns the string denoted by the given SMT-LIB string literal: two
+	 * double quotes stand for one, and {@code \\u{h}}, {@code \\ud{h}} and
+	 * {@code \\udddd} escapes for the character with the given hexadecimal
+	 * code. Returns {@code null} if the text is not such a literal.
+	 *
+	 * @param literal the literal
+	 *
+	 * @return the string, or {@code null}
+	 */
+	private static String smtString(
+			String literal) {
+		if (literal.length() < 2 || !literal.startsWith("\"") || !literal.endsWith("\""))
+			return null;
+		String body = literal.substring(1, literal.length() - 1);
+		StringBuilder result = new StringBuilder();
+		for (int i = 0; i < body.length(); i++) {
+			char c = body.charAt(i);
+			if (c == '"') {
+				// a quote is written twice inside the literal
+				if (i + 1 >= body.length() || body.charAt(i + 1) != '"')
+					return null;
+				result.append('"');
+				i++;
+			} else if (c == '\\' && i + 1 < body.length() && body.charAt(i + 1) == 'u') {
+				int end;
+				String hex;
+				if (i + 2 < body.length() && body.charAt(i + 2) == '{') {
+					end = body.indexOf('}', i + 3);
+					if (end < 0)
+						return null;
+					hex = body.substring(i + 3, end);
+				} else {
+					end = i + 5;
+					if (end >= body.length())
+						return null;
+					hex = body.substring(i + 2, end + 1);
+				}
+				try {
+					result.appendCodePoint(Integer.parseInt(hex, 16));
+				} catch (IllegalArgumentException e) {
+					return null;
+				}
+				i = end;
+			} else
+				result.append(c);
+		}
+		return result.toString();
 	}
 
 	/**

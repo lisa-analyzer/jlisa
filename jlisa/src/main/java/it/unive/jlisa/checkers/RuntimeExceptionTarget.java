@@ -25,8 +25,10 @@ import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.type.Type;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -83,6 +85,66 @@ public final class RuntimeExceptionTarget {
 		if (origins.size() != 1)
 			return Optional.empty();
 		return Optional.of(fullExpression(origins.iterator().next()));
+	}
+
+	/**
+	 * Returns the target of the violation of an uncaught runtime exception
+	 * raised by the given statement, that is not a call: its innermost
+	 * statement or full expression.
+	 *
+	 * @param thrower the statement raising the exception
+	 *
+	 * @return the target
+	 */
+	public static Statement ofThrower(
+			Statement thrower) {
+		return fullExpression(thrower);
+	}
+
+	/**
+	 * Returns the targets of the violations of uncaught runtime exceptions for
+	 * each statement throwing an error of the given state, that is, the
+	 * statement where the error is raised (following the calls, as in
+	 * {@link #of(SemanticTool, AnalysisState)}). This is used when the errors
+	 * of the state are raised at different statements, but the verification
+	 * of the violation tells which error is raised by the reproduced
+	 * execution: throwers whose target is not known are not in the map.
+	 *
+	 * @param <A>   the type of the abstract states
+	 * @param <D>   the type of the abstract domain
+	 * @param tool  the tool of the check
+	 * @param state the state at the end of the main method
+	 *
+	 * @return the targets, for each thrower of the errors of the state
+	 *
+	 * @throws SemanticException if a call cannot be resolved
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Map<Statement, Statement> byThrower(
+			SemanticTool<A, D> tool,
+			AnalysisState<A> state)
+			throws SemanticException {
+		Map<Statement, Statement> targets = new HashMap<>();
+		if (state.getErrors().isTop() || state.getErrors().isBottom())
+			return targets;
+		Set<Statement> ambiguous = new HashSet<>();
+		for (var error : state.getErrors()) {
+			Statement thrower = error.getKey().getThrower();
+			if (isAssertionError(error.getKey().getType()) || !isRuntimeException(error.getKey().getType()))
+				continue;
+			Set<Statement> origins = new HashSet<>();
+			if (!collectOrigins(tool, error.getKey(), origins, new HashSet<>()) || origins.size() != 1) {
+				ambiguous.add(thrower);
+				continue;
+			}
+			Statement target = fullExpression(origins.iterator().next());
+			// errors of different types raised by the same thrower must have
+			// the same target
+			if (targets.containsKey(thrower) && !targets.get(thrower).equals(target))
+				ambiguous.add(thrower);
+			targets.put(thrower, target);
+		}
+		targets.keySet().removeAll(ambiguous);
+		return targets;
 	}
 
 	/**
