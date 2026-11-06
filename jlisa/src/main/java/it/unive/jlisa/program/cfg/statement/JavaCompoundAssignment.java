@@ -4,6 +4,7 @@ import it.unive.jlisa.program.cfg.expression.JavaBitwiseAnd;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaDivision;
+import it.unive.jlisa.program.cfg.expression.JavaMultiplication;
 import it.unive.jlisa.program.cfg.expression.JavaRemainder;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
@@ -19,7 +20,6 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.symbolic.SymbolicExpression;
 
 /**
@@ -128,7 +128,7 @@ public class JavaCompoundAssignment
 		case "-=":
 			return new JavaSubtraction(cfg, location, left, right);
 		case "*=":
-			return new Multiplication(cfg, location, left, right);
+			return new JavaMultiplication(cfg, location, left, right);
 		case "/=":
 			return new JavaDivision(cfg, location, left, right);
 		case "%=":

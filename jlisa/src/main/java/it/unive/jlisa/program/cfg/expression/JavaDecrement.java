@@ -1,9 +1,9 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.operator.JavaArithmeticOperators;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
 
 /**
  * The decrement operator of Java, {@code --x} or {@code x--}.
@@ -25,6 +25,6 @@ public class JavaDecrement extends JavaIncrementOrDecrement {
 			CodeLocation location,
 			boolean prefix,
 			Expression subExpression) {
-		super(cfg, location, "--", NumericNonOverflowingSub.INSTANCE, prefix, subExpression);
+		super(cfg, location, "--", JavaArithmeticOperators::sub, prefix, subExpression);
 	}
 }

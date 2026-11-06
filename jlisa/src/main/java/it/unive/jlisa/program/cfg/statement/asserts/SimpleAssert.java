@@ -58,7 +58,7 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isBooleanType))
 			return state.bottomExecution();
 
-		return analysis.smallStepSemantics(
+		AnalysisState<A> evaluated = analysis.smallStepSemantics(
 				state,
 				new it.unive.lisa.symbolic.value.UnaryExpression(VoidType.INSTANCE, expr, new UnaryOperator() {
 					@Override
@@ -72,6 +72,7 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 						return "assert";
 					}
 				}, getLocation()), context, this);
+		return AssertSemantics.check(interprocedural, state, evaluated, expr, this, expressions);
 	}
 
 	@Override

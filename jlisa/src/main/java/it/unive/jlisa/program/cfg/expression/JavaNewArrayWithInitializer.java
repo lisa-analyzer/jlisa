@@ -59,7 +59,12 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 	}
 
 	/**
-	 * Yields a copy of {@this} with static type {@code type}.
+	 * Yields a copy of {@this} with static type {@code type}, sharing its
+	 * sub-expressions. Since the parent of an expression cannot change once
+	 * set, the sub-expressions keep {@code this} as their parent: {@code this}
+	 * is thus attached to the copy, so that the sub-expressions still reach the
+	 * statement containing the copy through their parents (e.g., when
+	 * attributing to it the errors they raise).
 	 * 
 	 * @param type the type
 	 * 
@@ -67,7 +72,10 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 	 */
 	public JavaNewArrayWithInitializer withStaticType(
 			Type type) {
-		return new JavaNewArrayWithInitializer(getCFG(), getLocation(), getSubExpressions(), type);
+		JavaNewArrayWithInitializer copy = new JavaNewArrayWithInitializer(getCFG(), getLocation(),
+				getSubExpressions(), type);
+		setParentStatement(copy);
+		return copy;
 	}
 
 	@Override

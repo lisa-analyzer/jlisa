@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -49,7 +50,8 @@ final class StringBuilderMutationSupport {
 			Function<SymbolicExpression, SymbolicExpression> newValue)
 			throws SemanticException {
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", location);
-		HeapDereference deref = new HeapDereference(stringType, receiver, location);
+		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), receiver,
+				location);
 		AccessChild currentAccess = new AccessChild(stringType, deref, var, location);
 		AccessChild writeTarget = new AccessChild(stringType, receiver, var, location);
 

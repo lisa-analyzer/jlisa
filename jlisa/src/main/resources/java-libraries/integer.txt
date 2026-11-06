@@ -1,11 +1,11 @@
 class java.lang.Integer extends java.lang.Number:
-	field MAX_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
-	field MIN_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	final field MAX_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	final field MIN_VALUE type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	method Integer_clinit: it.unive.jlisa.program.java.constructs.integer.IntegerClassInitializer
 		type it.unive.lisa.type.VoidType::INSTANCE
 
-	instance field value type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+	instance final field value type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	instance method Integer: it.unive.jlisa.program.java.constructs.integer.IntegerConstructor
 		libtype java.lang.Integer*
@@ -16,23 +16,126 @@ class java.lang.Integer extends java.lang.Number:
 		libtype java.lang.Integer* 
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE 
 
-	method toString: it.unive.jlisa.program.java.constructs.integer.IntegerStaticToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
-	method toHexString: it.unive.jlisa.program.java.constructs.integer.IntegerToHexString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	method toBinaryString: it.unive.jlisa.program.java.constructs.integer.IntegerToBinaryString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
-	method toOctalString: it.unive.jlisa.program.java.constructs.integer.IntegerToOctalString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 
 	method compare: it.unive.jlisa.program.java.constructs.integer.IntegerCompare
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Integer*
 		param other libtype java.lang.Integer*
+
+	method bitCount: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$BitCount
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method compareUnsigned: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$CompareUnsigned
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method highestOneBit: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$HighestOneBit
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method lowestOneBit: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$LowestOneBit
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method max: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Max
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method min: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Min
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method numberOfLeadingZeros: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$NumberOfLeadingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method numberOfTrailingZeros: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$NumberOfTrailingZeros
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method reverse: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Reverse
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method reverseBytes: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$ReverseBytes
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method rotateLeft: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$RotateLeft
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method rotateRight: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$RotateRight
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method signum: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Signum
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method sum: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$Sum
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param a type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param b type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedLong: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$ToUnsignedLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.IntegerFunctions$CompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Integer*
+		param other libtype java.lang.Integer*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToStringRadix
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToUnsignedString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toUnsignedString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToUnsignedStringRadix
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param radix type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toHexString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToHexString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toBinaryString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToBinaryString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method toOctalString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToOctalString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$IntegerToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Integer*
+
+	method getInteger: it.unive.jlisa.program.java.constructs.library.PropertyLookup$IntegerWithInt
+		libtype java.lang.Integer*
+		param nm libtype java.lang.String*
+		param val type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	method getInteger: it.unive.jlisa.program.java.constructs.library.PropertyLookup$IntegerWithInteger
+		libtype java.lang.Integer*
+		param nm libtype java.lang.String*
+		param val libtype java.lang.Integer*

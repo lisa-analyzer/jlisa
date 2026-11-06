@@ -1,23 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':10:2-10:18] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':11:2-11:18] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':17:2-17:27] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':18:2-18:29] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':19:2-19:30] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':21:2-21:30] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':22:2-22:30] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':24:2-24:32] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':25:2-25:30] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Cat.Cat(Cat__this)_a327173d8db04457dd4ac3ef4f53bfd3.graph.json", "void_Felid.Felid(Felid__this)_37f4ab702d6976ae076042a5344fc971.graph.json", "void_Felid.Felid(Felid__this)_40f1152175263d8010a0394d0dba7365.graph.json", "void_Mammal.Mammal(Mammal__this)_42936665b015932b193e2bf3b441b573.graph.json", "void_Mammal.Mammal(Mammal__this)_79c9b1d227420928f675883f7b082d2f.graph.json", "void_Mammal.Mammal(Mammal__this)_c0ffa73aea7faf74e130d5fa765144fe.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -26,15 +8,15 @@
     "end" : "2026-10-29T11:19:18.502+01:00",
     "expressions" : "57",
     "files" : "7",
-    "globals" : "53",
-    "members" : "275",
+    "globals" : "54",
+    "members" : "395",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-10-29T11:19:18.343+01:00",
     "statements" : "28",
     "units" : "56",
     "version" : "1.0",
-    "warnings" : "9"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",
