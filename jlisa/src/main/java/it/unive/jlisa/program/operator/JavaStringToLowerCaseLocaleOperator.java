@@ -1,12 +1,12 @@
 package it.unive.jlisa.program.operator;
 
-import it.unive.lisa.symbolic.value.operator.binary.StringEquals;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaStringToLowerCaseLocaleOperator extends StringEquals {
+public class JavaStringToLowerCaseLocaleOperator implements BinaryOperator {
 
 	/**
 	 * The singleton instance of this class.
@@ -34,13 +34,7 @@ public class JavaStringToLowerCaseLocaleOperator extends StringEquals {
 		if (left.stream().noneMatch(t -> t.equals(types.getStringType())))
 			return Collections.emptySet();
 		// TODO: implement chech for "Locale" type
-		return Collections.singleton(types.getBooleanType());
+		return Collections.singleton(types.getStringType());
 	}
 
-	@Override
-	protected Type resultType(
-			TypeSystem types) {
-		// TODO: understant how to type "Locale"
-		return types.getBooleanType();
-	}
 }

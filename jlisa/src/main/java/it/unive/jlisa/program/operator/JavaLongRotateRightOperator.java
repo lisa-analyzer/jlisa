@@ -1,13 +1,13 @@
 package it.unive.jlisa.program.operator;
 
 import it.unive.jlisa.program.type.JavaLongType;
-import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import java.util.Collections;
 import java.util.Set;
 
-public class JavaLongRotateRightOperator extends StringConcat {
+public class JavaLongRotateRightOperator implements BinaryOperator {
 
 	/**
 	 * The singleton instance of this class.
@@ -37,12 +37,6 @@ public class JavaLongRotateRightOperator extends StringConcat {
 		if (right.stream().noneMatch(t -> t.equals(types.getIntegerType())))
 			return Collections.emptySet();
 		return Collections.singleton(JavaLongType.INSTANCE);
-	}
-
-	@Override
-	protected Type resultType(
-			TypeSystem types) {
-		return JavaLongType.INSTANCE;
 	}
 
 }

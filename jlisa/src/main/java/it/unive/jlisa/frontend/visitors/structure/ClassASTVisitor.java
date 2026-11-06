@@ -21,6 +21,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.java.constructs.verifier.VerifierNondet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
@@ -97,6 +98,11 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
+			if (Modifier.isStatic(md.getModifiers())
+					&& VerifierNondet.replaces(getScope().getLiSACompilationUnit().getName(),
+							md.getName().getIdentifier(), md.parameters().size()))
+				// replaced by a native code member, without a body
+				continue;
 			CFG cfg = getParserContext().evaluate(
 					md,
 					new MethodASTVisitor(getEnvironment(), getScope()));

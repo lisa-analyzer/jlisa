@@ -12,7 +12,6 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
@@ -20,7 +19,6 @@ import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -165,16 +163,14 @@ public class JavaNewArray extends UnaryExpression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		if (analysis.domain instanceof SimpleAbstractDomain<?, ?, ?> innerDomain) {
+		// the value domain and its state are retrieved without depending on how
+		// the domain of the analysis is built (e.g., it might be wrapped by
+		// another domain)
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom != null && env != null) {
 
-			assert (innerDomain != null);
-			ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-			SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
-
-			ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-			SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
+			SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
 
 			ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 

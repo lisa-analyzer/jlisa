@@ -1,6 +1,7 @@
 package it.unive.jlisa.analysis.heap;
 
 import it.unive.jlisa.program.operator.NaryExpression;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
@@ -131,6 +132,10 @@ public class JavaFieldSensitivePointBasedHeap
 			List<HeapReplacement> replacements,
 			boolean rhsIsReceiver)
 			throws SemanticException {
+
+		if (JavaTypeSystem.isPrimitive(id.getStaticType()) && JavaTypeSystem.isPrimitive(rhs.getStaticType()))
+			return sss;
+
 		if (rhs instanceof AllocationSite) {
 			// this whole branch is custom just for java
 			// we have x = y, where y is a pointer to an allocation site

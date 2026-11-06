@@ -150,6 +150,12 @@ public class JavaAssigningStrategy
 
 					JavaNewArrayWithInitializer newArr = new JavaNewArrayWithInitializer(call.getCFG(),
 							call.getLocation(), gatheredParameters, formal.getStaticType());
+					// the synthetic array is not part of the cfg: it is
+					// attached
+					// to the call, so that the errors it raises are attributed
+					// to the statement containing the call (the arguments keep
+					// the call as their parent, as parents cannot change)
+					newArr.setParentStatement(call);
 
 					AnalysisState<A> arrInitialized = newArr.forwardSemanticsAux(interprocedural, prepared,
 							symbolicParams, expressions);
@@ -215,6 +221,10 @@ public class JavaAssigningStrategy
 								call.getLocation(),
 								(JavaReferenceType) formalType,
 								new Expression[] { call.getSubExpressions()[i] });
+						// the synthetic object creation is not part of the cfg:
+						// it is attached to the call, so that the errors it
+						// raises are attributed to the statement containing it
+						wrap.setParentStatement(call);
 						AnalysisState<A> wrapState = wrap.forwardSemantics(prepared, interprocedural, expressions);
 						if (assignFormals) {
 							for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())

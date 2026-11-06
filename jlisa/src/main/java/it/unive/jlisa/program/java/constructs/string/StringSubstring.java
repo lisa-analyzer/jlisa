@@ -128,7 +128,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 
 			it.unive.lisa.symbolic.value.BinaryExpression substring = new it.unive.lisa.symbolic.value.BinaryExpression(
-					getProgram().getTypes().getBooleanType(),
+					getProgram().getTypes().getStringType(),
 					accessLeft,
 					right,
 					JavaStringSubstringOperator.INSTANCE,
@@ -158,7 +158,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			AnalysisState<A> koState = analysis.assume(state, or, context, this, this);
 
 			it.unive.lisa.symbolic.value.BinaryExpression substring = new it.unive.lisa.symbolic.value.BinaryExpression(
-					getProgram().getTypes().getBooleanType(),
+					getProgram().getTypes().getStringType(),
 					accessLeft,
 					right,
 					JavaStringSubstringOperator.INSTANCE,

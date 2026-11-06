@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
 import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -24,8 +25,8 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingMul;
+import it.unive.lisa.symbolic.value.operator.binary.Numeric32BitAdd;
+import it.unive.lisa.symbolic.value.operator.binary.Numeric32BitMul;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -72,7 +73,8 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable capVar = new GlobalVariable(Untyped.INSTANCE, "capacity", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left,
+				getLocation());
 		AccessChild capacityRead = new AccessChild(JavaIntType.INSTANCE, derefLeft, capVar, getLocation());
 		AccessChild capacityWrite = new AccessChild(JavaIntType.INSTANCE, left, capVar, getLocation());
 
@@ -80,10 +82,10 @@ public class StringBuilderEnsureCapacity extends BinaryExpression implements Plu
 		// spec
 		it.unive.lisa.symbolic.value.BinaryExpression doubled = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaIntType.INSTANCE, capacityRead, new Constant(JavaIntType.INSTANCE, 2, getLocation()),
-				NumericNonOverflowingMul.INSTANCE, getLocation());
+				Numeric32BitMul.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression doubledPlus2 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaIntType.INSTANCE, doubled, new Constant(JavaIntType.INSTANCE, 2, getLocation()),
-				NumericNonOverflowingAdd.INSTANCE, getLocation());
+				Numeric32BitAdd.INSTANCE, getLocation());
 
 		it.unive.lisa.symbolic.value.BinaryExpression growNeeded = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE, right, capacityRead, ComparisonGt.INSTANCE, getLocation());

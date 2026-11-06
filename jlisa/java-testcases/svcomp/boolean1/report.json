@@ -1,24 +1,22 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':19:4-19:16] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
-  "files" : [ "bool_org.sosy_lab.sv_benchmarks.Verifier.nondetBoolean()_a5a7e07697ace31c058f13fcd325925d.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "15",
-    "duration" : "6ms",
-    "end" : "2026-10-29T11:20:28.744+01:00",
-    "expressions" : "48",
-    "files" : "2",
-    "globals" : "50",
-    "members" : "292",
+    "cfgs" : "6",
+    "duration" : "4ms",
+    "end" : "2026-11-03T14:30:10.845+01:00",
+    "expressions" : "14",
+    "files" : "1",
+    "globals" : "51",
+    "members" : "405",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-29T11:20:28.738+01:00",
-    "statements" : "29",
-    "units" : "55",
+    "start" : "2026-11-03T14:30:10.841+01:00",
+    "statements" : "15",
+    "units" : "54",
     "version" : "1.0",
-    "warnings" : "1"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",
