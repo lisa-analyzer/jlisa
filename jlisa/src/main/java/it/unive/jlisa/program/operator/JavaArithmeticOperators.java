@@ -1,11 +1,18 @@
 package it.unive.jlisa.program.operator;
 
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaNumericType;
+import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.lisa.program.cfg.CodeLocation;
+import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.Numeric16BitAdd;
 import it.unive.lisa.symbolic.value.operator.binary.Numeric16BitMul;
@@ -22,8 +29,11 @@ import it.unive.lisa.symbolic.value.operator.binary.Numeric8BitSub;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingMul;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
+import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -103,9 +113,9 @@ public final class JavaArithmeticOperators {
 	 * {@link #unbox(Type)}) after unary numeric promotion (JLS 5.6), if all its
 	 * numeric runtime types agree on it, or {@link Untyped} otherwise.
 	 * Increments and decrements of {@code byte}, {@code short} and {@code char}
-	 * values are thus modeled as {@code int} operations, without the narrowing
-	 * conversion that Java applies to their result: this is consistent with the
-	 * value domains, that do not narrow them either.
+	 * values are thus {@code int} operations, whose result is then narrowed to
+	 * the type of the value (see {@link #narrowed(Set, SymbolicExpression,
+	 * CodeLocation)}).
 	 *
 	 * @param types the runtime types of the value
 	 *
@@ -123,6 +133,39 @@ public final class JavaArithmeticOperators {
 			result = u;
 		}
 		return result == null ? Untyped.INSTANCE : result;
+	}
+
+	/**
+	 * Yields the given result of an increment or decrement of a value with the
+	 * given runtime types, converted back to the type of the value if it is
+	 * {@code byte}, {@code short} or {@code char} (JLS 15.14.2, 15.15.1: the
+	 * result is narrowed to the type of the variable), when all the numeric
+	 * runtime types of the value agree on it. Otherwise, the result is yielded
+	 * as it is.
+	 *
+	 * @param types    the runtime types of the value
+	 * @param result   the result of the operation
+	 * @param location the location of the operation
+	 *
+	 * @return the narrowed result
+	 */
+	public static SymbolicExpression narrowed(
+			Set<Type> types,
+			SymbolicExpression result,
+			CodeLocation location) {
+		Type target = null;
+		for (Type t : types) {
+			if (!t.isNumericType())
+				continue;
+			if (target != null && !target.equals(t))
+				return result;
+			target = t;
+		}
+		if (!(target instanceof JavaByteType || target instanceof JavaShortType || target instanceof JavaCharType))
+			return result;
+		return new BinaryExpression(target, result,
+				new Constant(new TypeTokenType(Collections.singleton(target)), target, location), TypeConv.INSTANCE,
+				location);
 	}
 
 	/**

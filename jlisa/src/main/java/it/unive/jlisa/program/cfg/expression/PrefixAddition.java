@@ -58,11 +58,14 @@ public class PrefixAddition extends UnaryExpression implements MetaVariableCreat
 		state = analysis.assign(
 				state,
 				expr,
-				new BinaryExpression(
-						type,
-						expr,
-						new Constant(JavaIntType.INSTANCE, 1, getLocation()),
-						JavaArithmeticOperators.add(type),
+				// the result is narrowed to the type of the value
+				JavaArithmeticOperators.narrowed(analysis.getRuntimeTypesOf(state, expr, context, this),
+						new BinaryExpression(
+								type,
+								expr,
+								new Constant(JavaIntType.INSTANCE, 1, getLocation()),
+								JavaArithmeticOperators.add(type),
+								getLocation()),
 						getLocation()),
 				context, this);
 

@@ -1,6 +1,7 @@
 package it.unive.jlisa.triage;
 
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
@@ -1000,16 +1001,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return Term.and(ge(from, num(0)), le(add(from, len(p)), len(s)),
 					Term.app("str.prefixof", Sort.BOOL, p, substr(s, from, len(p))));
 		}
-		if (op instanceof JavaStringReplaceOperator) {
-			// characters or sequences of characters
-			Term s = asString(left, e);
-			Term target = middle.getSort().equals(Sort.INT) ? fromChar(middle) : asString(middle, e);
-			Term replacement = right.getSort().equals(Sort.INT) ? fromChar(right) : asString(right, e);
-			// an empty target is replaced between all the characters in Java
-			return guarded(Term.not(Term.eq(target, Term.string(""))),
-					Term.app("str.replace_all", Sort.STRING, s, target, replacement), List.of(s, target, replacement),
-					e);
-		}
+		if (op instanceof JavaStringReplaceOperator && e.getMiddle().getStaticType() instanceof JavaCharType
+				&& e.getRight().getStaticType() instanceof JavaCharType)
+			// replacing characters: the sequences of characters are passed as
+			// references to the strings (not their contents), that cannot be
+			// encoded
+			return Term.app("str.replace_all", Sort.STRING, asString(left, e), fromChar(coerce(middle, Sort.INT, e)),
+					fromChar(coerce(right, Sort.INT, e)));
 		return null;
 	}
 

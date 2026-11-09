@@ -58,11 +58,14 @@ public class PrefixSubtraction extends UnaryExpression implements MetaVariableCr
 		state = analysis.assign(
 				state,
 				expr,
-				new BinaryExpression(
-						type,
-						expr,
-						new Constant(JavaIntType.INSTANCE, 1, getLocation()),
-						JavaArithmeticOperators.sub(type),
+				// the result is narrowed to the type of the value
+				JavaArithmeticOperators.narrowed(analysis.getRuntimeTypesOf(state, expr, context, this),
+						new BinaryExpression(
+								type,
+								expr,
+								new Constant(JavaIntType.INSTANCE, 1, getLocation()),
+								JavaArithmeticOperators.sub(type),
+								getLocation()),
 						getLocation()),
 				context, this);
 		return analysis.smallStepSemantics(state, expr, context, this);

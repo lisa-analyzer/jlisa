@@ -330,12 +330,12 @@ public final class EventLoop {
 
 		Interception ix = null;
 		String site = "unknown caller";
-		try {
-			Location caller = event.thread().frame(1).location();
+		Location caller = callerOf(event.thread());
+		if (caller == null)
+			ValidatorLogger.warn("[EVENT]  no caller frame for {}.{}()", className, methodName);
+		else {
 			site = describe(caller);
 			ix = calls.match(caller).orElse(null);
-		} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
-			ValidatorLogger.warn("[EVENT]  no caller frame for {}.{}(): {}", className, methodName, e.getMessage());
 		}
 		if (ix == null && freeCallSites.size() < MAX_REPORTED_SITES) {
 			freeCallSites.add(methodName + " at " + site);
@@ -715,6 +715,37 @@ public final class EventLoop {
 			base = base.substring(0, base.length() - 5);
 		}
 		return "*" + base + "*";
+	}
+
+	/**
+	 * The number of attempts at reading the frame of the caller of a method
+	 * that has just been entered.
+	 */
+	private static final int CALLER_ATTEMPTS = 5;
+
+	/**
+	 * Yields the location of the caller of the method the given thread has
+	 * just entered, or {@code null} if it cannot be read. The frames of the
+	 * thread are read a few times, as they might not be available right away
+	 * (e.g., when the target JVM is under load).
+	 */
+	private Location callerOf(
+			ThreadReference thread) {
+		for (int attempt = 1; attempt <= CALLER_ATTEMPTS; attempt++) {
+			try {
+				return thread.frame(1).location();
+			} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
+				ValidatorLogger.warn("[EVENT]  cannot read the caller frame (attempt {}): {}", attempt, e);
+				RunSummary.count("caller-frame." + e.getClass().getSimpleName());
+				try {
+					Thread.sleep(10L * attempt);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**

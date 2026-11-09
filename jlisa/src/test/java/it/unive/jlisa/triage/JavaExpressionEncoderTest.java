@@ -475,8 +475,6 @@ public class JavaExpressionEncoderTest {
 				checkOperator(JavaStringLastIndexOfStringOperator.INSTANCE, integer, () -> s.lastIndexOf(t), s, t);
 				checkOperator(JavaStringEqualsIgnoreCaseOperator.INSTANCE, bool, () -> s.equalsIgnoreCase(t), s, t);
 				checkOperator(JavaStringAppendStringOperator.INSTANCE, str, () -> s + t, s, t);
-				if (!t.isEmpty())
-					checkOperator(JavaStringReplaceOperator.INSTANCE, str, () -> s.replace(t, "XY"), s, t, "XY");
 				for (int from : List.of(-1, 0, 1, 3, 100)) {
 					checkOperator(JavaStringIndexOfStringFromIndexOperator.INSTANCE, integer,
 							() -> s.indexOf(t, from), s, t, from);
