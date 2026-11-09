@@ -281,7 +281,7 @@ public final class EventLoop {
 		// Find pending breakpoints for this class (matched by file name)
 		for (Map.Entry<String, List<PendingBreakpoint>> entry : pendingBreakpoints.entrySet()) {
 			String fileName = entry.getKey();
-			if (!classMatchesFile(className, fileName)) {
+			if (!SourceFiles.defines(fileName, refType)) {
 				continue;
 			}
 			for (PendingBreakpoint pb : entry.getValue()) {
@@ -592,6 +592,7 @@ public final class EventLoop {
 				ReferenceType type = element.referenceType();
 				Field fileField = type.fieldByName("fileName");
 				Field lineField = type.fieldByName("lineNumber");
+				Field classField = type.fieldByName("declaringClass");
 				if (fileField == null || lineField == null) {
 					continue;
 				}
@@ -600,9 +601,12 @@ public final class EventLoop {
 				if (!(file instanceof StringReference fileName) || !(line instanceof IntegerValue lineNumber)) {
 					continue;
 				}
+				Value declaring = classField == null ? null : element.getValue(classField);
 				for (TargetPoint t : plan.targetPoints()) {
 					if (lineNumber.value() == t.line()
-							&& WitnessCalls.baseName(t.fileName()).equals(fileName.value())) {
+							&& (declaring instanceof StringReference className
+									? SourceFiles.contains(t.fileName(), className.value(), fileName.value())
+									: WitnessCalls.baseName(t.fileName()).equals(fileName.value()))) {
 						return true;
 					}
 				}
@@ -627,8 +631,7 @@ public final class EventLoop {
 					path = null;
 				}
 				for (TargetPoint t : plan.targetPoints()) {
-					if (l.lineNumber() == t.line()
-							&& WitnessCalls.baseName(t.fileName()).equals(safeSourceName(l))) {
+					if (l.lineNumber() == t.line() && SourceFiles.contains(t.fileName(), l)) {
 						return true;
 					}
 				}
@@ -646,8 +649,7 @@ public final class EventLoop {
 			return false;
 		}
 		for (TargetPoint t : plan.targetPoints()) {
-			if (p.line() == t.line() && WitnessCalls.baseName(t.fileName())
-					.equals(WitnessCalls.baseName(p.sourcePath()))) {
+			if (p.line() == t.line() && SourceFiles.matches(t.fileName(), p.sourcePath())) {
 				return true;
 			}
 		}
@@ -683,29 +685,6 @@ public final class EventLoop {
 	private static String where(
 			Location loc) {
 		return safeSourceName(loc) + ":" + loc.lineNumber();
-	}
-
-	/**
-	 * Heuristically checks if a JVM class name corresponds to a source file
-	 * name. E.g. {@code "Main"} matches {@code "Main.java"},
-	 * {@code "org.example.Foo"} matches {@code "Foo.java"} or
-	 * {@code "org/example/Foo.java"}.
-	 */
-	private static boolean classMatchesFile(
-			String className,
-			String fileName) {
-		String simple = className.contains(".") ? className.substring(className.lastIndexOf('.') + 1)
-				: className;
-		// Strip inner class suffix (e.g. "Outer$Inner" → "Outer")
-		if (simple.contains("$")) {
-			simple = simple.substring(0, simple.indexOf('$'));
-		}
-		String baseFile = fileName.replace('/', '.').replace('\\', '.');
-		if (baseFile.endsWith(".java")) {
-			baseFile = baseFile.substring(0, baseFile.length() - 5);
-		}
-		// baseFile may be "Main" or "org.example.Main"
-		return baseFile.endsWith(simple) || simple.equals(baseFile);
 	}
 
 	/**
