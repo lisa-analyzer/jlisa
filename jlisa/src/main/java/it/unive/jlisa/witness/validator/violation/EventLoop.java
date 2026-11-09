@@ -724,10 +724,10 @@ public final class EventLoop {
 	private static final int CALLER_ATTEMPTS = 5;
 
 	/**
-	 * Yields the location of the caller of the method the given thread has
-	 * just entered, or {@code null} if it cannot be read. The frames of the
-	 * thread are read a few times, as they might not be available right away
-	 * (e.g., when the target JVM is under load).
+	 * Yields the location of the caller of the method the given thread has just
+	 * entered, or {@code null} if it cannot be read. The frames of the thread
+	 * are read a few times, as they might not be available right away (e.g.,
+	 * when the target JVM is under load).
 	 */
 	private Location callerOf(
 			ThreadReference thread) {

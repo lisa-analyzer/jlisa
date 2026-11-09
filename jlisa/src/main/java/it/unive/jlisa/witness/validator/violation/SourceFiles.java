@@ -18,8 +18,8 @@ import java.util.regex.Pattern;
  * Tells whether the code run by the program comes from a file named by a
  * witness. JDI tells the source of a location or a class by its path relative
  * to the root of the sources, that is, the folders of its package followed by
- * the name of the file (e.g., {@code svcomp/objects/A.java}). For a file of
- * the task (as resolved through the hashes of the witness, see
+ * the name of the file (e.g., {@code svcomp/objects/A.java}). For a file of the
+ * task (as resolved through the hashes of the witness, see
  * {@link it.unive.jlisa.witness.validator.model.WitnessFiles}), the same path
  * is built from the package it declares, so that files with the same name in
  * different packages are told apart, whatever the folders they are in. A path

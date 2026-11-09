@@ -15,8 +15,8 @@ import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
-import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
+import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.LiSAReport;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -292,7 +292,8 @@ public final class CheckCommand {
 			runDebug(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions, debug,
+			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions,
+					debug,
 					propertyFiles);
 			break;
 		default:
@@ -315,7 +316,8 @@ public final class CheckCommand {
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
+		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
+				debug,
 				propertyFiles);
 	}
 
@@ -345,7 +347,8 @@ public final class CheckCommand {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
+			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
+					debug,
 					propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;

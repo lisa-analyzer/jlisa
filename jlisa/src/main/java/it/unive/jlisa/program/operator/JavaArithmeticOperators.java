@@ -114,8 +114,8 @@ public final class JavaArithmeticOperators {
 	 * numeric runtime types agree on it, or {@link Untyped} otherwise.
 	 * Increments and decrements of {@code byte}, {@code short} and {@code char}
 	 * values are thus {@code int} operations, whose result is then narrowed to
-	 * the type of the value (see {@link #narrowed(Set, SymbolicExpression,
-	 * CodeLocation)}).
+	 * the type of the value (see
+	 * {@link #narrowed(Set, SymbolicExpression, CodeLocation)}).
 	 *
 	 * @param types the runtime types of the value
 	 *

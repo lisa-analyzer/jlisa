@@ -1,8 +1,8 @@
 package it.unive.jlisa.triage;
 
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
-import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierPartOperator;
@@ -26,8 +26,6 @@ import it.unive.jlisa.program.operator.JavaShortCompareOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathGetExponentOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathMax;
 import it.unive.jlisa.program.operator.JavaStrictMathMin;
-import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
-import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
@@ -36,6 +34,7 @@ import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendLongOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
 import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
@@ -67,6 +66,7 @@ import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.TernaryExpression;
@@ -869,8 +869,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	// strings
 
 	/**
-	 * Encodes the operators over strings with one operand of the Java
-	 * frontend, or yields {@code null} for the other operators.
+	 * Encodes the operators over strings with one operand of the Java frontend,
+	 * or yields {@code null} for the other operators.
 	 */
 	private Term stringUnary(
 			UnaryOperator op,
@@ -900,9 +900,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Encodes the operators over strings with two operands of the Java
-	 * frontend (including the ones appending to the contents of string
-	 * builders), or yields {@code null} for the other operators.
+	 * Encodes the operators over strings with two operands of the Java frontend
+	 * (including the ones appending to the contents of string builders), or
+	 * yields {@code null} for the other operators.
 	 */
 	private Term stringBinary(
 			BinaryOperator op,
@@ -952,8 +952,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * Encodes the operators over strings with three operands of the Java
-	 * frontend (including the ones inserting in, deleting from and changing
-	 * the contents of string builders), or yields {@code null} for the other
+	 * frontend (including the ones inserting in, deleting from and changing the
+	 * contents of string builders), or yields {@code null} for the other
 	 * operators.
 	 */
 	private Term stringTernary(
@@ -1012,8 +1012,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Yields the string representation of the value appended or inserted by
-	 * the given operator of string builders, as {@link String#valueOf}, or
+	 * Yields the string representation of the value appended or inserted by the
+	 * given operator of string builders, as {@link String#valueOf}, or
 	 * {@code null} if the operator does not append nor insert a value whose
 	 * representation can be encoded.
 	 */
@@ -1039,8 +1039,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * The given string without its leading and trailing characters up to
-	 * {@code '\u0020'}, as {@link String#trim()}: an auxiliary string such
-	 * that the given one is made of a prefix of such characters, the auxiliary
+	 * {@code '\u0020'}, as {@link String#trim()}: an auxiliary string such that
+	 * the given one is made of a prefix of such characters, the auxiliary
 	 * string, and a suffix of such characters, where the auxiliary string is
 	 * empty or starts and ends with other characters.
 	 */
@@ -1065,8 +1065,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	/**
 	 * The last index of the given string in the given one, as
 	 * {@link String#lastIndexOf(String)}: an auxiliary index where the string
-	 * is found, and after which it is not (or {@code -1} if it is not found,
-	 * or the length of the string if the searched one is empty).
+	 * is found, and after which it is not (or {@code -1} if it is not found, or
+	 * the length of the string if the searched one is empty).
 	 */
 	private Term lastIndexOfString(
 			Term s,
