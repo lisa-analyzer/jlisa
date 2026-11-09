@@ -18,9 +18,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
@@ -52,44 +51,31 @@ public class InstanceOf extends UnaryExpression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
-		AnalysisState<A> result = state.bottomExecution();
-		boolean mayBeNull = types.stream()
-				.anyMatch(t -> t.isReferenceType() && t.asReferenceType().getInnerType().isNullType());
-
+		boolean mayBeNull = false, mayBeObject = false;
 		for (Type t : types)
 			if (t.isReferenceType() && t.asReferenceType().getInnerType().isNullType())
-				// a null value is not an instance of any type
-				result = result.lub(analysis.smallStepSemantics(when(analysis, state, expr, ComparisonEq.INSTANCE, context),
-						new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), context, this));
-			else {
-				TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
-				BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
-						new Constant(typeToken, 0, getLocation()),
-						TypeCheck.INSTANCE, getLocation());
-				// the type is checked only if the value is not null
-				AnalysisState<A> notNull = mayBeNull ? when(analysis, state, expr, ComparisonNe.INSTANCE, context) : state;
-				result = result.lub(analysis.smallStepSemantics(notNull, tc, context, this));
-			}
+				mayBeNull = true;
+			else
+				mayBeObject = true;
+		if (!mayBeObject)
+			// a null value is not an instance of any type
+			return mayBeNull
+					? analysis.smallStepSemantics(state,
+							new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), context, this)
+					: state.bottomExecution();
 
-		return result;
-	}
-
-	/**
-	 * Yields the given state, where the given value is compared with null
-	 * through the given operator (equality or inequality). If the domain cannot
-	 * represent the condition, the state is returned unchanged.
-	 */
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> when(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression value,
-			BinaryOperator operator,
-			ScopeId<A> context)
-			throws SemanticException {
-		BinaryExpression comparison = new BinaryExpression(getProgram().getTypes().getBooleanType(), value,
-				new NullConstant(getLocation()), operator, getLocation());
-		AnalysisState<A> assumed = analysis.assume(state, comparison, context, this, this);
-		return assumed.getExecutionState().isBottom() ? state : assumed;
+		TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
+		BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
+				new Constant(typeToken, 0, getLocation()),
+				TypeCheck.INSTANCE, getLocation());
+		if (!mayBeNull)
+			return analysis.smallStepSemantics(state, tc, context, this);
+		// a single expression, rather than a different one for null values:
+		// the alternatives would lose the condition telling which one holds
+		BinaryExpression notNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), expr,
+				new NullConstant(getLocation()), ComparisonNe.INSTANCE, getLocation());
+		return analysis.smallStepSemantics(state, new BinaryExpression(getProgram().getTypes().getBooleanType(),
+				notNull, tc, LogicalAnd.INSTANCE, getLocation()), context, this);
 	}
 
 	@Override
