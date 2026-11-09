@@ -4,26 +4,37 @@ import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
+import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
+import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.literal.JavaNullLiteral;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.ErrorEdge;
+import it.unive.lisa.program.cfg.edge.FalseEdge;
 import it.unive.lisa.program.cfg.edge.SequentialEdge;
+import it.unive.lisa.program.cfg.edge.TrueEdge;
 import it.unive.lisa.program.cfg.protection.CatchBlock;
 import it.unive.lisa.program.cfg.protection.ProtectedBlock;
 import it.unive.lisa.program.cfg.protection.ProtectionBlock;
+import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.VariableRef;
+import it.unive.lisa.program.cfg.statement.call.Call;
+import it.unive.lisa.program.cfg.statement.comparison.NotEqual;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TryStatement;
@@ -49,18 +60,78 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		// to use it as unique exit point in the returned triple
 		Collection<Statement> normalExits = new LinkedList<>();
 
+		// the resources of a try-with-resources are declared before the body,
+		// in a scope of their own, and are protected as the body is (an
+		// exception while initializing them reaches the catch blocks)
+		Statement firstResource = null, lastResource = null;
+		List<VariableRef> resources = new LinkedList<>();
+		Collection<Statement> protectedNodes = new LinkedList<>();
+		boolean withResources = !node.resources().isEmpty();
+		if (withResources)
+			getScope().getTracker().enterScope();
+		for (Object resource : node.resources()) {
+			Expression declaration = getParserContext().evaluate((ASTNode) resource,
+					new ExpressionVisitor(getEnvironment(), getScope()));
+			trycatch.addNode(declaration);
+			protectedNodes.add(declaration);
+			if (declaration instanceof JavaAssignment assignment && assignment.getLeft() instanceof VariableRef ref)
+				resources.add(ref);
+			else if (declaration instanceof VariableRef ref)
+				// try (r) on a variable declared before
+				resources.add(ref);
+			if (lastResource == null)
+				firstResource = declaration;
+			else
+				trycatch.addEdge(new SequentialEdge(lastResource, declaration));
+			lastResource = declaration;
+		}
 		// we parse the body of the try block normally
 		// body of the try
 		ParsedBlock body = getParserContext().evaluate(
 				node.getBody(),
 				new StatementASTVisitor(getEnvironment(), getScope()));
 		trycatch.mergeWith(body.getBody());
-		ProtectedBlock tryBlock = new ProtectedBlock(body.getBegin(), body.getEnd(), body.getBody().getNodes());
+		if (lastResource != null)
+			trycatch.addEdge(new SequentialEdge(lastResource, body.getBegin()));
+		protectedNodes.addAll(body.getBody().getNodes());
+		// normal exit: the resources are closed in reverse order (if not null)
+		// exceptional exit: no closing, its exception would be suppressed (JLS
+		// 14.20.3)
+		Statement tryEnd = body.getEnd();
+		if (body.canBeContinued() && !resources.isEmpty()) {
+			SyntheticCodeLocationManager synth = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+			CFG cfg = getScope().getCFG();
+			for (int i = resources.size() - 1; i >= 0; i--) {
+				VariableRef resource = resources.get(i);
+				Statement notNull = new NotEqual(cfg, synth.nextLocation(),
+						new VariableRef(cfg, synth.nextLocation(), resource.getName(), resource.getStaticType()),
+						new JavaNullLiteral(cfg, synth.nextLocation()));
+				Statement close = new JavaUnresolvedCall(cfg, synth.nextLocation(), Call.CallType.INSTANCE, null,
+						"close", new VariableRef(cfg, synth.nextLocation(), resource.getName(),
+								resource.getStaticType()));
+				Statement closed = new NoOp(cfg, synth.nextLocation());
+				trycatch.addNode(notNull);
+				trycatch.addNode(close);
+				trycatch.addNode(closed);
+				trycatch.addEdge(new SequentialEdge(tryEnd, notNull));
+				trycatch.addEdge(new TrueEdge(notNull, close));
+				trycatch.addEdge(new FalseEdge(notNull, closed));
+				trycatch.addEdge(new SequentialEdge(close, closed));
+				protectedNodes.add(notNull);
+				protectedNodes.add(close);
+				protectedNodes.add(closed);
+				tryEnd = closed;
+			}
+		}
+		if (withResources)
+			getScope().getTracker().exitScope(tryEnd);
+		Statement tryBegin = firstResource != null ? firstResource : body.getBegin();
+		ProtectedBlock tryBlock = new ProtectedBlock(tryBegin, tryEnd, protectedNodes);
 
 		// we add the the end of the try block *only* if it does not end with a
 		// return/throw (as it would be deadcode)
 		if (body.canBeContinued())
-			normalExits.add(body.getEnd());
+			normalExits.add(tryEnd);
 
 		// we then parse each catch block, and we connect *every* instruction
 		// that can end the try block to the beginning of each catch block
@@ -77,9 +148,9 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 
 			if (body.canBeContinued())
 				trycatch.addEdge(
-						new ErrorEdge(body.getEnd(), visit.getBegin(), catchBlock.getIdentifier(), tryBlock,
+						new ErrorEdge(tryEnd, visit.getBegin(), catchBlock.getIdentifier(), tryBlock,
 								catchBlock.getExceptions()));
-			for (Statement st : body.getBody().getNodes())
+			for (Statement st : protectedNodes)
 				if (st.stopsExecution())
 					trycatch.addEdge(new ErrorEdge(st, visit.getBegin(), catchBlock.getIdentifier(), tryBlock,
 							catchBlock.getExceptions()));
@@ -117,20 +188,22 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 						trycatch.addEdge(new SequentialEdge(st, noop));
 		}
 
-		// build protection block
-		getScope().getCFG().getDescriptor().addProtectionBlock(
-				new ProtectionBlock(
-						tryBlock,
-						catches,
-						null,
-						finallyBlock == null ? null
-								: new ProtectedBlock(
-										finallyBlock.getBegin(),
-										finallyBlock.getEnd(),
-										finallyBlock.getBody().getNodes()),
-						usedNoop ? noop : null));
+		// build protection block (a try-with-resources may have neither catch
+		// blocks nor a finally block: nothing is protected)
+		if (!catches.isEmpty() || finallyBlock != null)
+			getScope().getCFG().getDescriptor().addProtectionBlock(
+					new ProtectionBlock(
+							tryBlock,
+							catches,
+							null,
+							finallyBlock == null ? null
+									: new ProtectedBlock(
+											finallyBlock.getBegin(),
+											finallyBlock.getEnd(),
+											finallyBlock.getBody().getNodes()),
+							usedNoop ? noop : null));
 
-		this.block = new ParsedBlock(body.getBegin(), trycatch, usedNoop ? noop : null);
+		this.block = new ParsedBlock(tryBegin, trycatch, usedNoop ? noop : null);
 		return false;
 	}
 
