@@ -764,6 +764,105 @@ public class JavaTarsis extends Tarsis {
 	}
 
 	/**
+	 * Returns whether the strings of {@code small} are surely strings of
+	 * {@code big}, as {@link #included(RegexAutomaton, RegexAutomaton)}, also
+	 * for bottom automata. It is the order of the automata of string values,
+	 * kept only if they recognize finite languages (see the constructor of
+	 * {@link ConstantValueIntIntervalAutomaton}): the inclusion of LiSA would
+	 * complement and determinize them.
+	 *
+	 * @param small the first automaton
+	 * @param big   the second automaton
+	 *
+	 * @return {@code true} if the inclusion surely holds
+	 */
+	public static boolean leqAutomata(
+			RegexAutomaton small,
+			RegexAutomaton big) {
+		if (small.isBottom())
+			return true;
+		if (big.isBottom())
+			return false;
+		return included(small, big);
+	}
+
+	/**
+	 * Returns the least upper bound of two automata of string values: the top
+	 * automaton if one of them is top, their least upper bound otherwise (as
+	 * {@link ConstantValueIntIntervalAutomaton}).
+	 *
+	 * @param a the first automaton
+	 * @param b the second automaton
+	 *
+	 * @return the least upper bound
+	 *
+	 * @throws SemanticException if the least upper bound fails
+	 */
+	public static RegexAutomaton lubAutomata(
+			RegexAutomaton a,
+			RegexAutomaton b)
+			throws SemanticException {
+		if (a.isBottom())
+			return b;
+		if (b.isBottom())
+			return a;
+		if (a == RegexAutomaton.TOP || b == RegexAutomaton.TOP)
+			return RegexAutomaton.TOP;
+		return a.lub(b);
+	}
+
+	/**
+	 * Returns an over-approximation of the intersection of two automata of
+	 * string values: the intersection of their languages when they are finite,
+	 * one of them otherwise (as {@link ConstantValueIntIntervalAutomaton}).
+	 *
+	 * @param a the first automaton
+	 * @param b the second automaton
+	 *
+	 * @return the over-approximation of the intersection
+	 */
+	public static RegexAutomaton glbAutomata(
+			RegexAutomaton a,
+			RegexAutomaton b) {
+		if (a.isBottom() || b.isBottom())
+			return a.isBottom() ? a : b;
+		if (a == RegexAutomaton.TOP)
+			return b;
+		if (b == RegexAutomaton.TOP)
+			return a;
+		SortedSet<String> la = language(a);
+		SortedSet<String> lb = language(b);
+		if (la == null || lb == null)
+			return la == null ? b : a;
+		if (la.stream().anyMatch(JavaTarsis::hasUnknown) || lb.stream().anyMatch(JavaTarsis::hasUnknown))
+			return a;
+		SortedSet<String> common = new TreeSet<>(la);
+		common.retainAll(lb);
+		return fromLanguage(common);
+	}
+
+	/**
+	 * Returns the widening of two automata of string values: a language that
+	 * keeps growing goes to top (as {@link ConstantValueIntIntervalAutomaton}).
+	 *
+	 * @param previous the automaton of the previous iteration
+	 * @param next     the automaton of the current iteration
+	 *
+	 * @return the widening
+	 */
+	public static RegexAutomaton wideningAutomata(
+			RegexAutomaton previous,
+			RegexAutomaton next) {
+		if (previous.isBottom())
+			return next;
+		if (next.isBottom())
+			return previous;
+		return previous == RegexAutomaton.TOP || next == RegexAutomaton.TOP || !included(next, previous)
+				? RegexAutomaton.TOP
+				: previous;
+	}
+
+	/**
 	 * Yields the strings of the given automaton whose length is in the given
 	 * interval: the strings with an unknown part are kept, and the unknown part
 	 * of a string with a single one is made long enough (up to
@@ -1157,6 +1256,67 @@ public class JavaTarsis extends Tarsis {
 					if (!kept(entry.getValue()))
 						function = function.put(entry.getKey(), RegexAutomaton.TOP);
 			return new Strings(lattice, function);
+		}
+
+		// the operations of the automata follow the ones of
+		// ConstantValueIntIntervalAutomaton (see leqAutomata, lubAutomata,
+		// glbAutomata, wideningAutomata), the other parts are the ones of
+		// FunctionalLattice
+
+		@Override
+		public boolean lessOrEqualAux(
+				ValueEnvironment<RegexAutomaton> other)
+				throws SemanticException {
+			if (function != null)
+				for (Identifier key : function.keySet()) {
+					RegexAutomaton state = getState(key);
+					if (state != null && !leqAutomata(state, other.getState(key)))
+						return false;
+				}
+			return true;
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> lubAux(
+				ValueEnvironment<RegexAutomaton> other)
+				throws SemanticException {
+			return functionalLift(other, lattice.bottom(), this::lubKeys,
+					(
+							a,
+							b) -> a == null ? b : lubAutomata(a, b));
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> wideningAux(
+				ValueEnvironment<RegexAutomaton> other)
+				throws SemanticException {
+			return functionalLift(other, lattice.bottom(), this::lubKeys,
+					(
+							a,
+							b) -> a == null ? b : wideningAutomata(a, b));
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> glbAux(
+				ValueEnvironment<RegexAutomaton> other)
+				throws SemanticException {
+			return functionalLift(other, lattice.top(), this::glbKeys,
+					(
+							a,
+							b) -> a == null ? b : glbAutomata(a, b));
+		}
+
+		@Override
+		public ValueEnvironment<RegexAutomaton> narrowingAux(
+				ValueEnvironment<RegexAutomaton> other)
+				throws SemanticException {
+			// the automaton is kept: narrowing it through the intersection of
+			// automata would not be sound (as
+			// ConstantValueIntIntervalAutomaton)
+			return functionalLift(other, lattice.top(), this::glbKeys,
+					(
+							a,
+							b) -> a == null ? b : a);
 		}
 
 		// as the constructor of ConstantValueIntIntervalAutomaton
