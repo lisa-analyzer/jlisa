@@ -1,4 +1,4 @@
-package it.unive.jlisa.springed.p1;
+package it.unive.jlisa.springed.webmvc.p1;
 import java.util.Set;
 
 public class RequestMapping {

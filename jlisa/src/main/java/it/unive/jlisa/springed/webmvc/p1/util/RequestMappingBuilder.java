@@ -1,6 +1,6 @@
-package it.unive.jlisa.springed.p1.util;
+package it.unive.jlisa.springed.webmvc.p1.util;
 
-import it.unive.jlisa.springed.p1.RequestMapping;
+import it.unive.jlisa.springed.webmvc.p1.RequestMapping;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.annotations.AnnotationMember;
 import it.unive.lisa.program.annotations.values.ArrayAnnotationValue;

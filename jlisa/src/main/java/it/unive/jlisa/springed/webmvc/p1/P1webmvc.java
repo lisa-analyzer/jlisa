@@ -1,4 +1,4 @@
-package it.unive.jlisa.springed.p1;
+package it.unive.jlisa.springed.webmvc.p1;
 
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
@@ -8,7 +8,7 @@ import it.unive.lisa.program.cfg.CodeMember;
 import java.util.Collection;
 import java.util.List;
 
-public interface P1 {
+public interface P1webmvc {
 	Registry p1(
 			Unit[] p);
 

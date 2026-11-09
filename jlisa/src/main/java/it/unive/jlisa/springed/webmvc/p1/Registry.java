@@ -1,7 +1,7 @@
-package it.unive.jlisa.springed.p1;
+package it.unive.jlisa.springed.webmvc.p1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import it.unive.jlisa.springed.p1.output.RegistryJsonSerializer;
+import it.unive.jlisa.springed.webmvc.p1.output.RegistryJsonSerializer;
 import it.unive.lisa.program.cfg.CodeMember;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +15,12 @@ public class Registry {
 	}
 
 	public List<RegistryRecord> getMappings() {
-		return mappings;
+		return this.mappings;
 	}
 
 	public void insert(
 			RegistryRecord mapping) {
-		mappings.add(mapping);
+		this.mappings.add(mapping);
 	}
 
 	public CodeMember getMethod(

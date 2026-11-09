@@ -18,6 +18,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Stream;
+
+import it.unive.jlisa.springed.webmvc.p1.P1webmvc;
+import it.unive.jlisa.springed.webmvc.p1.P1webmvcImpl;
+import it.unive.jlisa.springed.webmvc.p1.RequestMapping;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,7 +34,7 @@ public class PathPatternCombineTest {
 
 	private static final Map<Integer, String> TABLE_ROWS = new TreeMap<>();
 
-	private static final P1 P1_IMPL = new P1Impl(new SpringFrontend().getParserContext());
+	private static final P1webmvc P1_IMPL = new P1webmvcImpl(new SpringFrontend().getParserContext());
 
 	private static Stream<Arguments> instances() {
 		return Stream.of(

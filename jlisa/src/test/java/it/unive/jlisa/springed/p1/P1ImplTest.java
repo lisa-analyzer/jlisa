@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import it.unive.jlisa.springed.SpringTestHelper;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
+import it.unive.jlisa.springed.webmvc.p1.P1webmvcImpl;
+import it.unive.jlisa.springed.webmvc.p1.Registry;
+import it.unive.jlisa.springed.webmvc.p1.RequestMapping;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -87,7 +90,7 @@ public class P1ImplTest {
 		SpringFrontend frontend = new SpringFrontend();
 		Unit[] units = frontend.parse(SpringTestHelper.sourceRoot(name, cases).toString());
 
-		Set<String> controllers = new P1Impl(frontend.getParserContext()).getControllers(units).stream()
+		Set<String> controllers = new P1webmvcImpl(frontend.getParserContext()).getControllers(units).stream()
 				.map(Unit::getName)
 				.collect(Collectors.toSet());
 
@@ -103,7 +106,7 @@ public class P1ImplTest {
 		SpringFrontend frontend = new SpringFrontend();
 		Unit[] units = frontend.parse(SpringTestHelper.sourceRoot(name, cases).toString());
 
-		Registry registry = new P1Impl(frontend.getParserContext()).p1(units);
+		Registry registry = new P1webmvcImpl(frontend.getParserContext()).p1(units);
 
 		assertEquals(lines(expected.stream()), lines(registry.getMappings().stream()
 				.map(record -> record.getJsonFieldName() + " " + render(record.getAnnotation()))));

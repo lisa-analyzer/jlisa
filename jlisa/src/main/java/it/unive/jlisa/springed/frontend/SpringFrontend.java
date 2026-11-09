@@ -88,7 +88,7 @@ public class SpringFrontend extends JavaFrontend {
 			UnitScope[] scopes,
 			BiFunction<ParsingEnvironment, UnitScope, ASTVisitor> factory) {
 		for (int i = 0; i < cus.length; i++) {
-			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
+			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i], cus);
 
 			try {
 				cus[i].accept(factory.apply(env, scopes[i]));

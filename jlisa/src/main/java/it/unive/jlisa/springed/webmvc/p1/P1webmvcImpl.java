@@ -1,9 +1,9 @@
-package it.unive.jlisa.springed.p1;
+package it.unive.jlisa.springed.webmvc.p1;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.springed.exceptions.PathMergeException;
-import it.unive.jlisa.springed.p1.util.RequestMappingBuilder;
-import it.unive.jlisa.springed.p1.util.RequestMappingMerger;
+import it.unive.jlisa.springed.webmvc.p1.util.RequestMappingBuilder;
+import it.unive.jlisa.springed.webmvc.p1.util.RequestMappingMerger;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotation;
@@ -11,7 +11,7 @@ import it.unive.lisa.program.cfg.CodeMember;
 
 import java.util.*;
 
-public final class P1Impl implements P1 {
+public final class P1webmvcImpl implements P1webmvc {
 
 	private final List<String> controllerAnnotationNames = List.of(
 			"RestController",
@@ -27,7 +27,7 @@ public final class P1Impl implements P1 {
 
 	private final ParserContext parserContext;
 
-	public P1Impl(ParserContext parserContext) {
+	public P1webmvcImpl(ParserContext parserContext) {
 		this.parserContext = parserContext;
 	}
 

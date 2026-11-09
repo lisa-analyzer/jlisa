@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import it.unive.jlisa.springed.exceptions.SpringCSVExceptionWriter;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
 import it.unive.jlisa.springed.frontend.SpringProjectVisitor;
-import it.unive.jlisa.springed.p1.P1Impl;
-import it.unive.jlisa.springed.p1.Registry;
-import it.unive.jlisa.springed.p1.output.P1Output;
+import it.unive.jlisa.springed.security.p1.P1securityImpl;
+import it.unive.jlisa.springed.security.p1.SecurityChains;
+import it.unive.jlisa.springed.webmvc.p1.P1webmvcImpl;
+import it.unive.jlisa.springed.webmvc.p1.Registry;
+import it.unive.jlisa.springed.webmvc.p1.output.P1webmvcOutput;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
 import java.nio.file.*;
@@ -32,7 +34,7 @@ public class Main {
 		Path rootPath = Paths.get(args[0]).normalize();
 		List<Path> springProjects = detectSpringProjects(rootPath);
 
-		P1Output p1Output = new P1Output();
+		P1webmvcOutput p1Output = new P1webmvcOutput();
 		for (Path project : springProjects) {
 			String projectName = projectName(project);
 			SpringFrontend springFrontend = new SpringFrontend();
@@ -40,7 +42,8 @@ public class Main {
 			Path sourceRoot = project.resolve("src/main/java");
 			Unit[] projectUnits = springFrontend.parse(sourceRoot.toString());
 
-			Registry registry = new P1Impl(springFrontend.getParserContext()).p1(projectUnits);
+			Registry registry = new P1webmvcImpl(springFrontend.getParserContext()).p1(projectUnits);
+			SecurityChains securityChains = new P1securityImpl(springFrontend.getParserContext()).p1(projectUnits);
 
 			p1Output.addRegistry(projectName, registry);
 			dumpCollectedErrors(springFrontend, projectName);
@@ -64,7 +67,7 @@ public class Main {
 	}
 
 	private static void writeOutput(
-			P1Output output)
+			P1webmvcOutput output)
 			throws IOException {
 		Path out = Paths.get(OUTPUT_DIR, OUTPUT_FILE_NAME);
 		Files.createDirectories(out.getParent());
@@ -81,6 +84,7 @@ public class Main {
 
 	private static boolean isInputOk(
 			String[] args) {
+
 		if (args.length == 0) {
 			LOG.error("usage: <spring-boot-source-path>");
 			return false;
