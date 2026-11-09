@@ -62,18 +62,18 @@ public class MathAbs extends it.unive.lisa.program.cfg.statement.UnaryExpression
 		AnalysisState<A> result = state.bottomExecution();
 
 		for (Type t : types) {
-			Type primType;
+			Type primType = t;
 			SymbolicExpression exprToAbs = expr;
 			if (t.isReferenceType()
 					&& (primType = JavaClassType.getUnwrappedType(t.asReferenceType().getInnerType())) != null) {
 				// unboxing
 				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-				HeapDereference derefLeft = new HeapDereference(primType, expr, getLocation());
+				HeapDereference derefLeft = new HeapDereference(t.asReferenceType().getInnerType(), expr, getLocation());
 				exprToAbs = new AccessChild(primType, derefLeft, var, getLocation());
 			}
 
 			UnaryExpression abs = new UnaryExpression(
-					Untyped.INSTANCE,
+					primType,
 					exprToAbs,
 					JavaMathAbsOperator.INSTANCE,
 					getLocation());
