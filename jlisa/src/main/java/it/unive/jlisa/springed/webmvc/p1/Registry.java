@@ -1,7 +1,7 @@
 package it.unive.jlisa.springed.webmvc.p1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import it.unive.jlisa.springed.webmvc.p1.output.RegistryJsonSerializer;
+import it.unive.jlisa.springed.webmvc.p1.serialization.RegistryJsonSerializer;
 import it.unive.lisa.program.cfg.CodeMember;
 import java.util.ArrayList;
 import java.util.List;

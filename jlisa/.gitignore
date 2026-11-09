@@ -50,5 +50,6 @@ bin/
 sv-comp-benchmark
 
 ### Spring Boot testcases (unziped ones) ###
-/spring-testcases/*
-!/spring-testcases/*.zip
+/spring-testcases/**
+!/spring-testcases/**/
+!/spring-testcases/**/*.zip

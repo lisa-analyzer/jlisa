@@ -9,7 +9,7 @@ import it.unive.jlisa.springed.security.p1.P1securityImpl;
 import it.unive.jlisa.springed.security.p1.SecurityChains;
 import it.unive.jlisa.springed.webmvc.p1.P1webmvcImpl;
 import it.unive.jlisa.springed.webmvc.p1.Registry;
-import it.unive.jlisa.springed.webmvc.p1.output.P1webmvcOutput;
+import it.unive.jlisa.springed.webmvc.p1.serialization.P1webmvcOutput;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
 import java.nio.file.*;

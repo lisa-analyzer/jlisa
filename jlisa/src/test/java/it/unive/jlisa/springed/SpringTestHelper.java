@@ -9,7 +9,7 @@ import java.util.zip.ZipInputStream;
 
 public final class SpringTestHelper {
 
-	public static final Path ROOT = Path.of("spring-testcases");
+	public static final Path ROOT = Path.of("spring-testcases", "webmvc");
 
 	private SpringTestHelper() {
 	}
