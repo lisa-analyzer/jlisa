@@ -7,6 +7,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
+import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
@@ -68,6 +72,9 @@ import it.unive.lisa.triage.smt.Sort;
 import it.unive.lisa.triage.smt.Term;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -76,9 +83,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 /**
  * Checks the encodings of the functions of the Java library produced by
@@ -427,7 +431,9 @@ public class JavaExpressionEncoderTest {
 			for (Term g : symbols.guards)
 				solver.assertTerm(g);
 			assertEquals(SmtResult.SAT, solver.check(), what + " is not precise");
-			solver.assertTerm(Term.not(Term.eq(term, expected(value))));
+			Term exp = value instanceof Double ? FloatingPoints.literal((Double) value)
+					: value instanceof Float ? FloatingPoints.literal((Float) value) : expected(value);
+			solver.assertTerm(Term.not(Term.eq(term, exp)));
 			assertEquals(SmtResult.UNSAT, solver.check(), what + " should be " + value);
 		} finally {
 			solver.pop();
@@ -494,6 +500,26 @@ public class JavaExpressionEncoderTest {
 		checkOperator(JavaStringValueOfBooleanOperator.INSTANCE, str, () -> String.valueOf(false), false);
 		checkOperator(JavaCharacterEqualsOperator.INSTANCE, bool, () -> 'a' == 'a', 'a', 'a');
 		checkOperator(JavaCharacterEqualsOperator.INSTANCE, bool, () -> 'a' == 'b', 'a', 'b');
+	}
+
+	@Test
+	public void mathFunctions() throws Exception {
+		Type dbl = JavaDoubleType.INSTANCE;
+		for (int i : List.of(0, 5, -5, Integer.MAX_VALUE, Integer.MIN_VALUE))
+			checkOperator(JavaMathAbsOperator.INSTANCE, JavaIntType.INSTANCE, () -> Math.abs(i), i);
+		for (long l : List.of(0L, 7L, -7L, Long.MAX_VALUE, Long.MIN_VALUE))
+			checkOperator(JavaMathAbsOperator.INSTANCE, JavaLongType.INSTANCE, () -> Math.abs(l), l);
+		List<Double> doubles = List.of(0.0, -0.0, 0.5, -0.5, 1.5, -1.5, 2.5, -2.5, 3.7, -3.7, 1e300, -1e300, 9.3e18,
+				-9.3e18, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.MIN_VALUE, 2.0);
+		for (double d : doubles) {
+			checkOperator(JavaMathAbsOperator.INSTANCE, dbl, () -> Math.abs(d), d);
+			checkOperator(JavaMathFloorOperator.INSTANCE, dbl, () -> Math.floor(d), d);
+			checkOperator(JavaMathSqrtOperator.INSTANCE, dbl, () -> Math.sqrt(d), d);
+			checkOperator(JavaMathRoundOperator.INSTANCE, dbl, () -> Math.round(d), d);
+			float f = (float) d;
+			checkOperator(JavaMathRoundOperator.INSTANCE, dbl, () -> Math.round(f), f);
+			checkOperator(JavaMathAbsOperator.INSTANCE, JavaFloatType.INSTANCE, () -> Math.abs(f), f);
+		}
 	}
 
 	@Test

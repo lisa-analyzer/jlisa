@@ -20,12 +20,20 @@ import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
 import it.unive.jlisa.program.operator.JavaLongCompareOperator;
 import it.unive.jlisa.program.operator.JavaLongRotateRightOperator;
+import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathFloorOperator;
 import it.unive.jlisa.program.operator.JavaMathMax;
 import it.unive.jlisa.program.operator.JavaMathMin;
+import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaShortCompareOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathFloorOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathGetExponentOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathMax;
 import it.unive.jlisa.program.operator.JavaStrictMathMin;
+import it.unive.jlisa.program.operator.JavaStrictMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
@@ -66,7 +74,11 @@ import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
+import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.TernaryExpression;
@@ -81,6 +93,7 @@ import it.unive.lisa.triage.encoding.SymbolTable;
 import it.unive.lisa.triage.smt.FloatingPoints;
 import it.unive.lisa.triage.smt.Sort;
 import it.unive.lisa.triage.smt.Term;
+import it.unive.lisa.type.Type;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,6 +101,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntFunction;
+
 
 /**
  * An {@link ExpressionEncoder} that also encodes the operators of the Java
@@ -211,6 +225,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term string = stringUnary(op, arg, e);
 		if (string != null)
 			return string;
+		Term math = mathUnary(op, arg, e);
+		if (math != null)
+			return math;
 		if (!(op instanceof JavaLibraryFunction))
 			return null;
 
@@ -864,6 +881,64 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term value = table("digit36", x -> Character.digit(x, Character.MAX_RADIX), Character.MAX_CODE_POINT, c, e);
 		return Term.ite(Term.and(between(r, Character.MIN_RADIX, Character.MAX_RADIX), ge(value, num(0)),
 				lt(value, r)), value, num(-1));
+	}
+
+	// math
+
+	/**
+	 * Encodes the functions of {@link Math} and {@link StrictMath} that are
+	 * specified exactly (absolute value, floor, square root, rounding), or
+	 * yields {@code null} for the other operators, or if the kind of the
+	 * operand is not known (the functions are overloaded).
+	 */
+	private Term mathUnary(
+			UnaryOperator op,
+			Term arg,
+			UnaryExpression e) {
+		Sort sort = arg.getSort();
+		if (op instanceof JavaMathAbsOperator || op instanceof JavaStrictMathAbsOperator) {
+			if (sort.isFloatingPoint())
+				return Term.app("fp.abs", sort, arg);
+			Type type = e.getExpression().getStaticType();
+			int bits = type instanceof JavaLongType ? 64
+					: type instanceof JavaIntType || type instanceof JavaShortType || type instanceof JavaByteType
+							|| type instanceof JavaCharType ? 32 : 0;
+			if (bits == 0 || !sort.equals(Sort.INT))
+				return null;
+			// the absolute value of the minimum integer is the minimum integer
+			return wrap(Term.ite(lt(arg, num(0)), Term.app("-", Sort.INT, arg), arg), bits, false);
+		}
+		if (!sort.isFloatingPoint())
+			return null;
+		if (op instanceof JavaMathFloorOperator || op instanceof JavaStrictMathFloorOperator)
+			return Term.app("fp.roundToIntegral", sort, Term.value("RTN", Sort.ROUNDING_MODE), arg);
+		if (op instanceof JavaMathSqrtOperator || op instanceof JavaStrictMathSqrtOperator)
+			// correctly rounded, as specified
+			return Term.app("fp.sqrt", sort, Term.value("RNE", Sort.ROUNDING_MODE), arg);
+		if (op instanceof JavaMathRoundOperator || op instanceof JavaStrictMathRoundOperator)
+			return round(arg, sort.equals(Sort.FLOAT64) ? 64 : 32);
+		return null;
+	}
+
+	/**
+	 * Rounds the given floating point number to the closest integer of the
+	 * given bit width, with ties rounding up, as {@link Math#round(double)}:
+	 * {@code 0} for NaN, and the minimum or maximum integer for the numbers
+	 * (and infinities) out of the range of the integers.
+	 */
+	private static Term round(
+			Term f,
+			int bits) {
+		BigInteger max = BigInteger.ONE.shiftLeft(bits - 1).subtract(BigInteger.ONE);
+		BigInteger min = BigInteger.ONE.shiftLeft(bits - 1).negate();
+		// the floor of the exact value plus one half
+		Term value = Term.app("to_int", Sort.INT, Term.app("+", Sort.REAL, Term.app("fp.to_real", Sort.REAL, f),
+				Term.value("0.5", Sort.REAL)));
+		Term saturated = Term.ite(Term.app(">", Sort.BOOL, value, num(max)), num(max),
+				Term.ite(lt(value, num(min)), num(min), value));
+		return Term.ite(Term.app("fp.isNaN", Sort.BOOL, f), num(0),
+				Term.ite(Term.app("fp.isInfinite", Sort.BOOL, f),
+						Term.ite(Term.app("fp.isNegative", Sort.BOOL, f), num(min), num(max)), saturated));
 	}
 
 	// strings
