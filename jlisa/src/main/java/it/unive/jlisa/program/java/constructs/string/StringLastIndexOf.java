@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -62,6 +63,7 @@ public class StringLastIndexOf extends BinaryExpression implements PluggableStat
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
@@ -73,6 +75,6 @@ public class StringLastIndexOf extends BinaryExpression implements PluggableStat
 				JavaStringLastIndexOfOperator.INSTANCE,
 				getLocation());
 
-		return analysis.smallStepSemantics(state, lastIndexOf, originating);
+		return analysis.smallStepSemantics(state, lastIndexOf, context, originating);
 	}
 }

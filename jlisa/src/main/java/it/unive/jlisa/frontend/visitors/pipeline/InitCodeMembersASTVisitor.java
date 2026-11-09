@@ -10,6 +10,8 @@ import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.frontend.visitors.structure.VariableDeclarationASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.JavaParameter;
+import it.unive.jlisa.program.java.constructs.verifier.VerifierNondet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -17,6 +19,7 @@ import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
+import it.unive.lisa.program.cfg.NativeCFG;
 import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.type.VoidType;
 import java.util.ArrayList;
@@ -73,6 +76,18 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 			}
 			boolean isMain = isMain(methodsDecl);
 			int modifiers = methodsDecl.getModifiers();
+			if (Modifier.isStatic(modifiers) && VerifierNondet.replaces(name, methodsDecl.getName().getIdentifier(),
+					methodsDecl.parameters().size())) {
+				// the nondeterministic values of SV-COMP benchmarks are
+				// inputs, not the results of their approximated bodies
+				NativeCFG stub = new NativeCFG(codeMemberDescriptor, VerifierNondet.class);
+				if (!lisaCU.addCodeMember(stub))
+					throw new ParsingException("duplicated_method_descriptor",
+							ParsingException.Type.MALFORMED_SOURCE,
+							"Duplicate descriptor " + stub.getDescriptor() + " in unit " + lisaCU.getName(),
+							getSourceCodeLocation(methodsDecl));
+				continue;
+			}
 			CFG cfg = new CFG(codeMemberDescriptor);
 			boolean added;
 			if (!Modifier.isStatic(modifiers)) {
@@ -177,7 +192,6 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 				initCodeMembersInEnum(unit, (EnumDeclaration) decl, newOuter, processed);
 	}
 
-	@SuppressWarnings("unchecked")
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
 			MethodDeclaration node,
 			it.unive.lisa.program.CompilationUnit lisaCU) {
@@ -212,7 +226,7 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		List<Parameter> parameters = new ArrayList<>();
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
-			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type)));
+			parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type)));
 		}
 
 		for (Object o : node.parameters()) {
@@ -250,11 +264,12 @@ public class InitCodeMembersASTVisitor extends ScopedVisitor<UnitScope> {
 		it.unive.lisa.type.Type type = getProgram().getTypes().getType(lisaCU.getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+		parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
 		if (enclosing != null)
-			parameters.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+			parameters.add(new JavaParameter(
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "$enclosing",
 					enclosing.getReference(),
 					null, new Annotations()));
 

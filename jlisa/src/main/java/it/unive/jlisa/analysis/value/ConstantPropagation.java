@@ -6,6 +6,7 @@ import it.unive.jlisa.program.type.JavaByteType;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
+import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
@@ -26,8 +27,8 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
 import it.unive.lisa.symbolic.value.operator.DivisionOperator;
-import it.unive.lisa.symbolic.value.operator.ModuloOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
+import it.unive.lisa.symbolic.value.operator.RemainderOperator;
 import it.unive.lisa.symbolic.value.operator.SubtractionOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.BitwiseAnd;
@@ -49,7 +50,10 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Set;
 
 public class ConstantPropagation implements BaseNonRelationalValueDomain<ConstantValue> {
@@ -91,6 +95,21 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 		return new ConstantValue(constant.getValue());
 	}
 
+	/**
+	 * Applies a function of the Java library to the given values of constants,
+	 * yielding top if they are not suitable arguments for the function.
+	 */
+	private ConstantValue apply(
+			JavaLibraryFunction function,
+			Object... args) {
+		try {
+			Object result = function.apply(args);
+			return result == null ? top() : new ConstantValue(result);
+		} catch (RuntimeException e) {
+			return top();
+		}
+	}
+
 	@Override
 	public ConstantValue evalUnaryExpression(
 			UnaryExpression expression,
@@ -103,6 +122,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		UnaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, arg.getValue());
+
 		// char
 		if (operator instanceof JavaCharacterIsLetterOperator)
 			if (arg.getValue() instanceof Integer v)
@@ -624,6 +646,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		BinaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, left.getValue(), right.getValue());
+
 		if (operator instanceof AdditionOperator) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
@@ -802,7 +827,7 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			}
 		}
 
-		if (operator instanceof ModuloOperator) {
+		if (operator instanceof RemainderOperator) {
 			Object lVal = left.getValue();
 			if (lVal instanceof Character)
 				lVal = (int) ((Character) lVal).charValue();
@@ -881,11 +906,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
-
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
-				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
-			}
+			if (lVal instanceof Number l && rVal instanceof Number r)
+				return new ConstantValue(minMax(l, r, true));
 		}
 
 		if (operator instanceof JavaMathMin) {
@@ -895,11 +917,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			Object rVal = right.getValue();
 			if (rVal instanceof Character)
 				rVal = (int) ((Character) rVal).charValue();
-
-			if (lVal instanceof Double || rVal instanceof Double || lVal instanceof Integer || rVal instanceof Integer
-					|| lVal instanceof Float || rVal instanceof Float) {
-				return new ConstantValue(Math.max(((Number) lVal).doubleValue(), ((Number) rVal).doubleValue()));
-			}
+			if (lVal instanceof Number l && rVal instanceof Number r)
+				return new ConstantValue(minMax(l, r, false));
 		}
 
 		if (operator instanceof JavaMathAtan2Operator) {
@@ -1152,6 +1171,9 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return top();
 
 		TernaryOperator operator = expression.getOperator();
+		if (operator instanceof JavaLibraryFunction function)
+			return apply(function, left.getValue(), middle.getValue(), right.getValue());
+
 		if (operator instanceof JavaStringInsertCharOperator) {
 			String lv = ((String) left.getValue());
 			Integer mv = ((Integer) middle.getValue());
@@ -1515,6 +1537,28 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return Satisfiability.SATISFIED;
 		}
 
+		if (operator instanceof JavaIsValidEncoding) {
+			if (arg.getValue() instanceof String v) {
+				try {
+					URLEncoder.encode("", v);
+				} catch (UnsupportedEncodingException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+				return Satisfiability.SATISFIED;
+			}
+		}
+
+		if (operator instanceof JavaURLDecoderIsIllegalArg) {
+			if (arg.getValue() instanceof String v) {
+				try {
+					URLDecoder.decode(v, "UTF-8");
+				} catch (Exception e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+				return Satisfiability.SATISFIED;
+			}
+		}
+
 		// used by `Class.forName`
 		if (operator instanceof JavaIsClassDefinedOperator && arg.getValue() instanceof String v) {
 
@@ -1641,7 +1685,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonEq) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Number && rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
@@ -1667,9 +1715,13 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonNe) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
-			if (lVal instanceof Number || rVal instanceof Number)
+			if (lVal instanceof Number && rVal instanceof Number)
 				if (lVal instanceof Double || rVal instanceof Double) {
 					return ((Number) lVal).doubleValue() != ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
 							: Satisfiability.NOT_SATISFIED;
@@ -1693,7 +1745,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonLt) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() < ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1712,7 +1768,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonLe) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() <= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1731,7 +1791,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonGt) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() > ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1750,7 +1814,11 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 
 		if (operator instanceof ComparisonGe) {
 			Object lVal = left.getValue();
+			if (lVal instanceof Character)
+				lVal = (int) ((Character) lVal).charValue();
 			Object rVal = right.getValue();
+			if (rVal instanceof Character)
+				rVal = (int) ((Character) rVal).charValue();
 
 			if (lVal instanceof Double || rVal instanceof Double) {
 				return ((Number) lVal).doubleValue() >= ((Number) rVal).doubleValue() ? Satisfiability.SATISFIED
@@ -1851,6 +1919,8 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 				return new ConstantValue(((Number) left.getValue()).longValue());
 			else if (right.getValue() instanceof JavaDoubleType)
 				return new ConstantValue(((Number) left.getValue()).doubleValue());
+			else if (right.getValue() instanceof JavaFloatType)
+				return new ConstantValue(((Number) left.getValue()).floatValue());
 			else if (right.getValue() instanceof JavaCharType)
 				return new ConstantValue((int) (char) ((Number) left.getValue()).longValue());
 
@@ -1863,6 +1933,37 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			BinaryExpression expression,
 			ProgramPoint src,
 			ProgramPoint dest,
+			SemanticOracle oracle)
+			throws SemanticException {
+		ValueEnvironment<ConstantValue> result = assumeOneSide(environment, expression, src, oracle);
+		// only one identifier is refined: when both operands are identifiers,
+		// the right one is refined too, with the value of the left one
+		// (equality and inequality are symmetric)
+		if (!result.isBottom() && expression.getLeft() instanceof Identifier
+				&& expression.getRight() instanceof Identifier right)
+			result = assumeOneSide(result, new BinaryExpression(expression.getStaticType(), right,
+					expression.getLeft(), expression.getOperator(), expression.getCodeLocation()), src, oracle);
+		return result;
+	}
+
+	/**
+	 * Returns the given environment assuming that the given binary expression
+	 * holds, refining its left operand if it is an identifier, or otherwise its
+	 * right operand.
+	 *
+	 * @param environment the environment
+	 * @param expression  the binary expression
+	 * @param src         the program point of the expression
+	 * @param oracle      the oracle for inter-domain communication
+	 *
+	 * @return the refined environment
+	 *
+	 * @throws SemanticException if the expression cannot be evaluated
+	 */
+	private ValueEnvironment<ConstantValue> assumeOneSide(
+			ValueEnvironment<ConstantValue> environment,
+			BinaryExpression expression,
+			ProgramPoint src,
 			SemanticOracle oracle)
 			throws SemanticException {
 		Identifier id;
@@ -1912,6 +2013,29 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			return environment.bottom();
 		else
 			return environment.putState(id, update);
+	}
+
+	/**
+	 * Returns the maximum or the minimum of the given numbers, with the type of
+	 * the binary numeric promotion of Java (double, float, long or int).
+	 *
+	 * @param l   the first number
+	 * @param r   the second number
+	 * @param max whether the maximum is returned, otherwise the minimum
+	 *
+	 * @return the maximum or the minimum
+	 */
+	private static Number minMax(
+			Number l,
+			Number r,
+			boolean max) {
+		if (l instanceof Double || r instanceof Double)
+			return max ? Math.max(l.doubleValue(), r.doubleValue()) : Math.min(l.doubleValue(), r.doubleValue());
+		if (l instanceof Float || r instanceof Float)
+			return max ? Math.max(l.floatValue(), r.floatValue()) : Math.min(l.floatValue(), r.floatValue());
+		if (l instanceof Long || r instanceof Long)
+			return max ? Math.max(l.longValue(), r.longValue()) : Math.min(l.longValue(), r.longValue());
+		return max ? Math.max(l.intValue(), r.intValue()) : Math.min(l.intValue(), r.intValue());
 	}
 
 	@Override

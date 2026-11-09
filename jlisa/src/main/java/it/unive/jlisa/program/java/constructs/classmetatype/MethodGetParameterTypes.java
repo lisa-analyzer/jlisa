@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -57,6 +58,7 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		Type methodMetaType = JavaClassType.getMethodType();
 		JavaReferenceType reftype = JavaArrayType.CLASS_ARRAY;
@@ -70,7 +72,7 @@ public class MethodGetParameterTypes extends it.unive.lisa.program.cfg.statement
 
 		HeapReference ref = new HeapReference(reftype, accessThisMethodParamTypes, getLocation());
 
-		return analysis.smallStepSemantics(state, ref, this);
+		return analysis.smallStepSemantics(state, ref, context, this);
 	}
 
 	@Override

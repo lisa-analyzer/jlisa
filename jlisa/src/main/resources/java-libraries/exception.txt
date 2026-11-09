@@ -1,8 +1,16 @@
 class java.lang.Throwable extends java.lang.Object:
 
+	instance method getMessage: it.unive.jlisa.program.java.constructs.throwable.ThrowableGetMessage
+		libtype java.lang.String*
+		param this libtype java.lang.Throwable*
+
 class java.lang.Exception extends java.lang.Throwable:
 
 class java.io.IOException extends java.lang.Exception:
+
+	instance method IOException: it.unive.jlisa.program.java.constructs.exceptions.IOExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.io.IOException*
 
 class java.text.ParseException extends java.lang.Exception:
 
@@ -98,6 +106,10 @@ class java.lang.NegativeArraySizeException extends java.lang.RuntimeException:
 		param this libtype java.lang.NegativeArraySizeException*
 
 class java.lang.UnsupportedOperationException extends java.lang.RuntimeException:
+
+	instance method UnsupportedOperationException: it.unive.jlisa.program.java.constructs.exceptions.UnsupportedOperationExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.UnsupportedOperationException*
 
 class java.io.UnsupportedEncodingException extends java.io.IOException:
 	

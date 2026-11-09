@@ -52,7 +52,8 @@ public class StrictMathLog extends it.unive.lisa.program.cfg.statement.UnaryExpr
 				JavaStrictMathLogOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, log, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, log, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

@@ -69,7 +69,8 @@ public class DoubleIsFiniteInstance extends UnaryExpression implements Pluggable
 				access,
 				JavaDoubleIsFiniteOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

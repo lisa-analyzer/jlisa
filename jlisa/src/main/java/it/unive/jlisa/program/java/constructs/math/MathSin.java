@@ -52,7 +52,8 @@ public class MathSin extends it.unive.lisa.program.cfg.statement.UnaryExpression
 				JavaMathSinOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, sin, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, sin, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

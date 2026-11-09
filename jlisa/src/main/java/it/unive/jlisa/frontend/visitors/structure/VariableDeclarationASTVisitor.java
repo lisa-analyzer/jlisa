@@ -6,6 +6,7 @@ import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.annotations.Annotations;
@@ -54,7 +55,7 @@ public class VariableDeclarationASTVisitor extends ScopedVisitor<UnitScope> impl
 			}
 		}
 
-		this.parameter = new Parameter(getSourceCodeLocation(node), identifier, type, null, annotations);
+		this.parameter = new JavaParameter(getSourceCodeLocation(node), identifier, type, null, annotations);
 		return false;
 	}
 

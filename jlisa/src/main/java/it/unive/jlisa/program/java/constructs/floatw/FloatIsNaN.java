@@ -59,6 +59,7 @@ public class FloatIsNaN extends UnaryExpression implements PluggableStatement {
 				expr,
 				JavaFloatIsNaNOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

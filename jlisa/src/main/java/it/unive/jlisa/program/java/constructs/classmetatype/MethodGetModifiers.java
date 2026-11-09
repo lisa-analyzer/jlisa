@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -55,6 +56,7 @@ public class MethodGetModifiers extends it.unive.lisa.program.cfg.statement.Unar
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		Type methodMetaType = JavaClassType.getMethodType();
 		Type intType = JavaIntType.INSTANCE;
@@ -65,7 +67,7 @@ public class MethodGetModifiers extends it.unive.lisa.program.cfg.statement.Unar
 		HeapDereference derefThisMethod = new HeapDereference(methodMetaType, expr, getLocation());
 		AccessChild accessThisMethodModifiers = new AccessChild(intType, derefThisMethod, modifiersVar, getLocation());
 
-		return analysis.smallStepSemantics(state, accessThisMethodModifiers, this);
+		return analysis.smallStepSemantics(state, accessThisMethodModifiers, context, this);
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
@@ -29,6 +30,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -72,8 +74,10 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left,
+				getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
 		// check for IndexOutOfBoundException
@@ -82,7 +86,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 				JavaBooleanType.INSTANCE,
 				right, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, idxCheck1, this);
+		Satisfiability sat = analysis.satisfies(state, idxCheck1, context, this);
 
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
@@ -95,7 +99,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
@@ -103,16 +107,23 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+						new Error(oonExc.getReference(), originating), context, this));
 			}
 
 			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
-			AnalysisState<A> sem = truncate(analysis, state, left, accessLeft, right, stringType);
+			AnalysisState<A> sem = truncate(analysis, context, state, left, accessLeft, right, stringType);
 
 			return sem.withExecutionExpression(new Skip(getLocation()));
 		} else {
-			AnalysisState<A> sem = truncate(analysis, state, left, accessLeft, right, stringType);
+			// restrict each half to the executions it describes
+			AnalysisState<A> okState = analysis.assume(state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, idxCheck1,
+							LogicalNegation.INSTANCE, getLocation()),
+					context, this, this);
+			AnalysisState<A> koState = analysis.assume(state, idxCheck1, context, this, this);
+
+			AnalysisState<A> sem = truncate(analysis, context, okState, left, accessLeft, right, stringType);
 
 			AnalysisState<A> noExceptionState = sem.withExecutionExpression(new Skip(getLocation()));
 
@@ -120,24 +131,24 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
+			AnalysisState<A> erroneousState = koState.bottomExecution();
 
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
+			for (SymbolicExpression th : koState.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+				AnalysisState<A> tmp = analysis.assign(koState, throwVar, th, context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
 
-			return exceptionState.lub(noExceptionState);
+			return analysis.moveExecutionToError(noExceptionState, erroneousState,
+					new Error(oonExc.getReference(), originating), context, this);
 		}
 	}
 
@@ -151,6 +162,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 	// instead
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> truncate(
 			Analysis<A, D> analysis,
+			ScopeId<?> context,
 			AnalysisState<A> state,
 			SymbolicExpression left,
 			AccessChild accessLeft,
@@ -162,7 +174,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 
 		it.unive.lisa.symbolic.value.Variable oldValue = new it.unive.lisa.symbolic.value.Variable(
 				stringType, "old_value@" + getLocation(), getLocation());
-		AnalysisState<A> snapshot = analysis.assign(state, oldValue, accessLeft, this);
+		AnalysisState<A> snapshot = analysis.assign(state, oldValue, accessLeft, context, this);
 
 		it.unive.lisa.symbolic.value.TernaryExpression substring = new it.unive.lisa.symbolic.value.TernaryExpression(
 				stringType,
@@ -171,7 +183,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 				right,
 				JavaStringSubstringFromToOperator.INSTANCE,
 				getLocation());
-		AnalysisState<A> result = analysis.assign(snapshot, writeTarget, substring, this);
+		AnalysisState<A> result = analysis.assign(snapshot, writeTarget, substring, context, this);
 
 		getMetaVariables().add(oldValue);
 		return result.forgetIdentifier(oldValue, this);

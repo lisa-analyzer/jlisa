@@ -53,7 +53,8 @@ public class CharacterIsJavaIdentifierPart extends it.unive.lisa.program.cfg.sta
 				JavaCharacterIsJavaIdentifierPartOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

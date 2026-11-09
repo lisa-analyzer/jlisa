@@ -55,6 +55,7 @@ public class DoubleToRawLongBits extends UnaryExpression implements PluggableSta
 					throws SemanticException {
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE, expr, JavaDoubleToRawLongBitsOperator.INSTANCE, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

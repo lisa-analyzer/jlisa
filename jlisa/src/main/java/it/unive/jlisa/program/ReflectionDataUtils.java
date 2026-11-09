@@ -5,6 +5,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
@@ -22,7 +23,6 @@ public class ReflectionDataUtils {
 			CodeLocation location) {
 
 		assert (t != null);
-		String clazzName = t.toString();
 		GlobalVariable clazzId = new GlobalVariable(Untyped.INSTANCE, "__" + t.toString(), location);
 		return state.knowsIdentifier(clazzId);
 	}
@@ -37,7 +37,6 @@ public class ReflectionDataUtils {
 		JavaReferenceType wrappedFieldType = new JavaReferenceType(JavaClassType.getFieldMetaType());
 		JavaClassType classMetaType = JavaClassType.getClassMetaType();
 		JavaArrayType fieldArrType = JavaArrayType.lookup(wrappedFieldType, 1);
-		JavaReferenceType refFieldArrType = new JavaReferenceType(fieldArrType);
 
 		if (clazz instanceof GlobalVariable)
 			clazz = new HeapDereference(classMetaType, clazz, pp.getLocation());
@@ -48,7 +47,8 @@ public class ReflectionDataUtils {
 				pp.getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Type type = analysis.getDynamicTypeOf(state, accessFields, pp);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Type type = analysis.getDynamicTypeOf(state, accessFields, context, pp);
 		assert (type != null);
 		// either null* or java.lang.reflect.Field*[]*
 		assert (type instanceof JavaReferenceType);

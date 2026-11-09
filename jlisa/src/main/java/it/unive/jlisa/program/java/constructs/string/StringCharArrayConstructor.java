@@ -83,6 +83,7 @@ public class StringCharArrayConstructor extends BinaryExpression implements Plug
 		SymbolicExpression value = constantValue != null
 				? new Constant(stringType, constantValue, getLocation())
 				: new PushAny(stringType, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, value, originating);
+		return interprocedural.getAnalysis().assign(state, leftAccess, value, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

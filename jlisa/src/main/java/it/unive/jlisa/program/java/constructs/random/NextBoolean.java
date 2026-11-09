@@ -13,10 +13,11 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
+import it.unive.lisa.program.cfg.statement.UserInput;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.PushAny;
 
-public class NextBoolean extends UnaryExpression implements PluggableStatement {
+public class NextBoolean extends UnaryExpression implements PluggableStatement, UserInput {
 	protected Statement originating;
 
 	public NextBoolean(
@@ -48,7 +49,7 @@ public class NextBoolean extends UnaryExpression implements PluggableStatement {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(JavaBooleanType.INSTANCE, getLocation()), originating);
+				new PushAny(JavaBooleanType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), originating);
 	}
 
 	@Override

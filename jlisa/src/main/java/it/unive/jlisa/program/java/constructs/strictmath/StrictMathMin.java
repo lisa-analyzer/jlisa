@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -63,8 +64,9 @@ public class StrictMathMin extends it.unive.lisa.program.cfg.statement.BinaryExp
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, originating);
-		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, originating);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, context, originating);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, originating);
 
 		AnalysisState<A> result = state.bottomExecution();
 
@@ -72,7 +74,8 @@ public class StrictMathMin extends it.unive.lisa.program.cfg.statement.BinaryExp
 			for (Type rType : rightTypes) {
 				Type lPrimeType;
 				SymbolicExpression leftExpr = left;
-				if ((lPrimeType = JavaClassType.getUnwrappedType(lType.asReferenceType().getInnerType())) != null) {
+				if (lType.isReferenceType() && (lPrimeType = JavaClassType
+						.getUnwrappedType(lType.asReferenceType().getInnerType())) != null) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 					HeapDereference derefLeft = new HeapDereference(lPrimeType, left, getLocation());
@@ -80,8 +83,9 @@ public class StrictMathMin extends it.unive.lisa.program.cfg.statement.BinaryExp
 				}
 
 				Type rPrimeType;
-				SymbolicExpression rightExpr = left;
-				if ((rPrimeType = JavaClassType.getUnwrappedType(rType.asReferenceType().getInnerType())) != null) {
+				SymbolicExpression rightExpr = right;
+				if (rType.isReferenceType() && (rPrimeType = JavaClassType
+						.getUnwrappedType(rType.asReferenceType().getInnerType())) != null) {
 					// unboxing
 					GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 					HeapDereference derefRight = new HeapDereference(rPrimeType, right, getLocation());
@@ -94,7 +98,7 @@ public class StrictMathMin extends it.unive.lisa.program.cfg.statement.BinaryExp
 						rightExpr,
 						JavaStrictMathMin.INSTANCE,
 						getLocation());
-				result = result.lub(analysis.smallStepSemantics(state, min, originating));
+				result = result.lub(analysis.smallStepSemantics(state, min, context, originating));
 			}
 		}
 

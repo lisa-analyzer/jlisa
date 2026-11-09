@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.operator.JavaArithmeticOperators;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -8,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -18,7 +20,6 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.Variable;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
 import it.unive.lisa.type.Type;
 
 public class PostfixSubtraction extends UnaryExpression {
@@ -45,24 +46,28 @@ public class PostfixSubtraction extends UnaryExpression {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		if (analysis.getRuntimeTypesOf(state, expr, this).stream().noneMatch(Type::isNumericType))
+		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
+		Type type = JavaArithmeticOperators.operandType(analysis.getRuntimeTypesOf(state, expr, context, this));
+		if (type.isUntyped())
+			type = getStaticType();
 
 		Identifier meta = getMetaVariable();
-		state = analysis.assign(state, meta, expr, this);
+		state = analysis.assign(state, meta, expr, context, this);
 		state = analysis.assign(
 				state,
 				expr,
 				new BinaryExpression(
-						getStaticType(),
+						type,
 						expr,
 						new Constant(JavaIntType.INSTANCE, 1, getLocation()),
-						NumericNonOverflowingSub.INSTANCE,
+						JavaArithmeticOperators.sub(type),
 						getLocation()),
-				this);
+				context, this);
 		getMetaVariables().add(getMetaVariable());
-		return analysis.smallStepSemantics(state, meta, this);
+		return analysis.smallStepSemantics(state, meta, context, this);
 	}
 
 	@Override

@@ -54,7 +54,8 @@ public class StrictMathGetExponent extends it.unive.lisa.program.cfg.statement.U
 				JavaStrictMathGetExponentOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, expo, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, expo, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

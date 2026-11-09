@@ -64,7 +64,7 @@ public class FieldInitializationVisitor extends ScopedVisitor<MethodScope>
 
 			JavaAssignment assignment = new JavaAssignment(getScope().getCFG(), locationManager.nextLocation(),
 					new AccessInstanceGlobal(getScope().getCFG(), locationManager.nextLocation(), thisExpr, identifier),
-					initializer);
+					initializer, fragment.getInitializer() != null);
 			block.addNode(assignment);
 			if (first == null) {
 				first = assignment;

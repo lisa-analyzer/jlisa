@@ -53,7 +53,8 @@ public class CharacterIsLowerCase extends it.unive.lisa.program.cfg.statement.Un
 				JavaCharacterIsLowerCaseOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

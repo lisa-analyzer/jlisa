@@ -61,7 +61,8 @@ public class MathPow extends it.unive.lisa.program.cfg.statement.BinaryExpressio
 				JavaMathPowOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, pow, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, pow, interprocedural.getCurrentContext(),
+				originating);
 
 	}
 }

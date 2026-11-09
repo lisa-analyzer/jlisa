@@ -11,6 +11,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.ConstantGlobal;
@@ -143,6 +144,7 @@ public class JavaAccessGlobal extends Expression {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		// we need to check whether to call the clinit of the container unit or
 		// to call the one of its ancestors (a superclass for a ClassUnit, or a
@@ -166,7 +168,7 @@ public class JavaAccessGlobal extends Expression {
 		state = InitializedClassSet.initialize(state, definingUnitType, this, interprocedural);
 
 		if (target instanceof ConstantGlobal)
-			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), this);
+			return analysis.smallStepSemantics(state, ((ConstantGlobal) target).getConstant(), context, this);
 
 		// unit globals are unique, we can directly access those
 
@@ -176,6 +178,6 @@ public class JavaAccessGlobal extends Expression {
 				target.getAnnotations(),
 				getLocation());
 
-		return analysis.smallStepSemantics(state, access, this);
+		return analysis.smallStepSemantics(state, access, context, this);
 	}
 }

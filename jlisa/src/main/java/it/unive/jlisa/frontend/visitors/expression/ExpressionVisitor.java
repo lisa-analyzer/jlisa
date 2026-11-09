@@ -13,7 +13,7 @@ import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.frontend.visitors.structure.ClassASTVisitor;
 import it.unive.jlisa.frontend.visitors.structure.FieldDeclarationVisitor;
 import it.unive.jlisa.frontend.visitors.structure.MethodASTVisitor;
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.JavaLocation;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.expression.BitwiseNot;
 import it.unive.jlisa.program.cfg.expression.InstanceOf;
@@ -24,13 +24,16 @@ import it.unive.jlisa.program.cfg.expression.JavaBitwiseExclusiveOr;
 import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonEqual;
+import it.unive.jlisa.program.cfg.expression.JavaComparisonGE;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonNotEqual;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
 import it.unive.jlisa.program.cfg.expression.JavaDivision;
+import it.unive.jlisa.program.cfg.expression.JavaMultiplication;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaOr;
+import it.unive.jlisa.program.cfg.expression.JavaRemainder;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
@@ -41,6 +44,7 @@ import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.JavaCompoundAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaSubtraction;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -61,16 +65,12 @@ import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
 import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
 import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.Not;
-import it.unive.lisa.program.cfg.statement.numeric.Addition;
-import it.unive.lisa.program.cfg.statement.numeric.Modulo;
-import it.unive.lisa.program.cfg.statement.numeric.Multiplication;
 import it.unive.lisa.program.cfg.statement.numeric.Negation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -135,9 +135,9 @@ public class ExpressionVisitor
 	}
 
 	private static final Map<InfixExpression.Operator, BinaryFactory> INFIX_OPS = Map.ofEntries(
-			Map.entry(InfixExpression.Operator.TIMES, Multiplication::new),
+			Map.entry(InfixExpression.Operator.TIMES, JavaMultiplication::new),
 			Map.entry(InfixExpression.Operator.DIVIDE, JavaDivision::new),
-			Map.entry(InfixExpression.Operator.REMAINDER, Modulo::new),
+			Map.entry(InfixExpression.Operator.REMAINDER, JavaRemainder::new),
 			Map.entry(InfixExpression.Operator.PLUS, JavaAddition::new),
 			Map.entry(InfixExpression.Operator.MINUS, JavaSubtraction::new),
 			Map.entry(InfixExpression.Operator.RIGHT_SHIFT_SIGNED, JavaShiftRight::new),
@@ -146,7 +146,7 @@ public class ExpressionVisitor
 			Map.entry(InfixExpression.Operator.LESS, LessThan::new),
 			Map.entry(InfixExpression.Operator.GREATER, GreaterThan::new),
 			Map.entry(InfixExpression.Operator.LESS_EQUALS, LessOrEqual::new),
-			Map.entry(InfixExpression.Operator.GREATER_EQUALS, GreaterOrEqual::new),
+			Map.entry(InfixExpression.Operator.GREATER_EQUALS, JavaComparisonGE::new),
 			Map.entry(InfixExpression.Operator.EQUALS, JavaComparisonEqual::new),
 			Map.entry(InfixExpression.Operator.NOT_EQUALS, JavaComparisonNotEqual::new),
 			Map.entry(InfixExpression.Operator.AND, JavaBitwiseAnd::new),
@@ -176,7 +176,7 @@ public class ExpressionVisitor
 						: Untyped.INSTANCE;
 		expression = new JavaArrayAccess(getScope().getCFG(),
 				staticType,
-				getSourceCodeLocationManager(node.getArray(), true).getCurrentLocation(),
+				getSourceCodeLocation(node),
 				left, right);
 		return false;
 	}
@@ -193,7 +193,9 @@ public class ExpressionVisitor
 					new ExpressionVisitor(getEnvironment(), getScope()));
 			parameters.add(expr);
 			contentType = getArrayInitializerType(node);
-			if (contentType == null) {
+			if (contentType == null || !contentType.isArrayType()) {
+				// e.g., String keys[] = { ... }, where the brackets follow the
+				// name: the type of the field is the one of the elements
 				contentType = expr.getStaticType();
 			} else {
 				contentType = contentType.asArrayType().getBaseType();
@@ -285,55 +287,15 @@ public class ExpressionVisitor
 				new ExpressionVisitor(getEnvironment(), getScope()));
 		Expression right = getParserContext().evaluate(node.getRightHandSide(),
 				new ExpressionVisitor(getEnvironment(), getScope()));
-		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node.getLeftHandSide(), true);
+		JavaLocation location = getSourceCodeLocation(node);
+		CFG cfg = getScope().getCFG();
 
 		switch (operator.toString()) {
 		case "=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.nextColumn(), left, right);
+			expression = new JavaAssignment(cfg, location, left, right);
 			break;
-		case "+=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new Addition(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "-=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaSubtraction(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "*=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new Multiplication(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "/=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaDivision(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "%=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new Modulo(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "&=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaBitwiseAnd(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "|=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaBitwiseOr(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "^=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaBitwiseExclusiveOr(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case "<<=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaShiftLeft(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case ">>=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaShiftRight(getScope().getCFG(), locationManager.nextColumn(), left, right));
-			break;
-		case ">>>=":
-			expression = new JavaAssignment(getScope().getCFG(), locationManager.getCurrentLocation(), left,
-					new JavaUnsignedShiftRight(getScope().getCFG(), locationManager.nextColumn(), left, right));
+		case "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=", ">>>=":
+			expression = new JavaCompoundAssignment(cfg, location, operator.toString(), left, right);
 			break;
 		default:
 			throw new RuntimeException(new UnsupportedStatementException("Unknown assignment operator: " + operator));
@@ -515,8 +477,7 @@ public class ExpressionVisitor
 
 		expression = new JavaNewObj(
 				getScope().getCFG(),
-				node.getExpression() != null ? getSourceCodeLocationManager(node.getExpression()).nextColumn()
-						: getSourceCodeLocation(node),
+				getSourceCodeLocation(node),
 				new JavaReferenceType(type),
 				parameters.toArray(new Expression[0]));
 		return false;
@@ -552,8 +513,7 @@ public class ExpressionVisitor
 					getSourceCodeLocation(node));
 
 		expression = new JavaConditionalExpression(getScope().getCFG(),
-				getSourceCodeLocationManager(node.getExpression(), true).getCurrentLocation(), conditionExpr, thenExpr,
-				elseExpr);
+				getSourceCodeLocation(node), conditionExpr, thenExpr, elseExpr);
 
 		return false;
 	}
@@ -583,7 +543,7 @@ public class ExpressionVisitor
 		Expression expr = getParserContext().evaluate(node.getExpression(),
 				new ExpressionVisitor(getEnvironment(), getScope()));
 		expression = new JavaAccessInstanceGlobal(getScope().getCFG(),
-				getSourceCodeLocationManager(node.getExpression(), true).nextColumn(), expr,
+				getSourceCodeLocation(node), expr,
 				node.getName().getIdentifier());
 		return false;
 	}
@@ -631,10 +591,13 @@ public class ExpressionVisitor
 		if (operands.isEmpty())
 			throw new IllegalArgumentException("No operands for expression");
 
+		// the i-th operation spans from the first operand to the i-th one
+		JavaLocation first = getSourceCodeLocation(jdtOperands.getFirst());
 		Expression result = operands.getFirst();
 		for (int i = 1; i < operands.size(); i++) {
-			result = opBuilder.apply(result, operands.get(i),
-					getSourceCodeLocationManager(jdtOperands.get(i - 1), true).getCurrentLocation());
+			JavaLocation last = getSourceCodeLocation(jdtOperands.get(i));
+			result = opBuilder.apply(result, operands.get(i), new JavaLocation(getSource(), first.getLine(),
+					first.getCol(), last.getEndLine(), last.getEndCol()));
 		}
 		return result;
 	}
@@ -647,8 +610,7 @@ public class ExpressionVisitor
 		Type right = getParserContext().evaluate(node.getRightOperand(),
 				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
-		expression = new InstanceOf(getScope().getCFG(), getSourceCodeLocationManager(node, true).nextColumn(), left,
-				right);
+		expression = new InstanceOf(getScope().getCFG(), getSourceCodeLocation(node), left, right);
 
 		return false;
 	}
@@ -753,14 +715,10 @@ public class ExpressionVisitor
 			return false;
 		}
 		if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
-			expression = new PostfixAddition(getScope().getCFG(),
-					getSourceCodeLocationManager(node.getOperand(), true).nextColumn(),
-					expr);
+			expression = new PostfixAddition(getScope().getCFG(), getSourceCodeLocation(node), expr);
 		}
 		if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
-			expression = new PostfixSubtraction(getScope().getCFG(),
-					getSourceCodeLocationManager(node.getOperand(), true).nextColumn(),
-					expr);
+			expression = new PostfixSubtraction(getScope().getCFG(), getSourceCodeLocation(node), expr);
 		}
 		return false;
 	}
@@ -943,7 +901,7 @@ public class ExpressionVisitor
 			varType = visitor.liftToArray(varType, fragment);
 
 			VariableRef ref = new VariableRef(getScope().getCFG(),
-					getSourceCodeLocation(fragment),
+					getSourceCodeLocation(fragment.getName()),
 					variableName, varType);
 
 			if (getScope().getTracker() != null && getScope().getTracker().hasVariable(variableName))
@@ -961,8 +919,8 @@ public class ExpressionVisitor
 			org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 			Expression initializer = getParserContext().evaluate(expr,
 					new ExpressionVisitor(getEnvironment(), getScope()));
-			expression = new JavaAssignment(getScope().getCFG(),
-					getSourceCodeLocationManager(fragment.getName(), true).getCurrentLocation(), ref, initializer);
+			expression = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment), ref,
+					initializer, true);
 		}
 		return false;
 	}

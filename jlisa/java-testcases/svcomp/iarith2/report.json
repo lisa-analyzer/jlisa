@@ -1,28 +1,22 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':40:4] on 'void Main::s()': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':44:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':45:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
-  "files" : [ "int_Main.i()_1707429877.graph.json", "long_Main.l()_1707429908.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.s()_1707423212.graph.json" ],
+  "files" : [ "int_Main.i()_301dcdca99b71902e638c575eedf2846.graph.json", "long_Main.l()_83570f1f3e0ab09edf8509df857fa33d.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.s()_b9ba7b92820c933a775a7402a6f09780.graph.json" ],
   "info" : {
-    "cfgs" : "18",
-    "duration" : "4ms",
-    "end" : "2026-08-27T13:15:32.039+02:00",
-    "expressions" : "114",
+    "cfgs" : "9",
+    "duration" : "12ms",
+    "end" : "2026-11-09T07:42:34.159+01:00",
+    "expressions" : "56",
     "files" : "4",
-    "globals" : "50",
-    "members" : "291",
+    "globals" : "51",
+    "members" : "408",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-27T13:15:32.035+02:00",
-    "statements" : "50",
+    "start" : "2026-11-09T07:42:34.147+01:00",
+    "statements" : "36",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

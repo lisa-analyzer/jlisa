@@ -52,7 +52,8 @@ public class MathLog extends it.unive.lisa.program.cfg.statement.UnaryExpression
 				JavaMathLogOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, log, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, log, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

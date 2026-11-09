@@ -72,6 +72,7 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 				accessRight,
 				JavaStringEqualsOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

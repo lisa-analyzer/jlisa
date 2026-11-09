@@ -57,7 +57,7 @@ public class SwitchEqualityCheck extends it.unive.lisa.program.cfg.statement.Bin
 						right,
 						ComparisonEq.INSTANCE,
 						getLocation()),
-				this); // case with ==
+				interprocedural.getCurrentContext(), this); // case with ==
 	}
 
 	@Override

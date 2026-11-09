@@ -4,13 +4,14 @@ import it.unive.jlisa.antlr.LibraryDefinitionParser;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ClassDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FieldContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.FileContext;
+import it.unive.jlisa.antlr.LibraryDefinitionParser.InterfaceDefContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.LibtypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.LisatypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.MethodContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.ParamContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParser.TypeContext;
 import it.unive.jlisa.antlr.LibraryDefinitionParserBaseVisitor;
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.libraries.loader.BooleanValue;
 import it.unive.jlisa.program.libraries.loader.ClassDef;
 import it.unive.jlisa.program.libraries.loader.Field;
@@ -24,17 +25,18 @@ import it.unive.jlisa.program.libraries.loader.Runtime;
 import it.unive.jlisa.program.libraries.loader.StringValue;
 import it.unive.jlisa.program.libraries.loader.Type;
 import it.unive.jlisa.program.libraries.loader.Value;
+import org.antlr.v4.runtime.Token;
 
 public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisitor<Object> {
 
 	private final String file;
-	private final SourceCodeLocationManager locationManager;
+	private final SyntheticCodeLocationManager locationManager;
 
 	public LibrarySpecificationParser(
 			String file) {
 		this.file = file;
-		this.locationManager = new SourceCodeLocationManager(
-				"$java_runtime" + file.substring(0, file.lastIndexOf('.')));
+		this.locationManager = new SyntheticCodeLocationManager(
+				"java_runtime" + file.substring(0, file.lastIndexOf('.')));
 	}
 
 	@Override
@@ -46,7 +48,35 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 				ctx.SEALED() != null,
 				ctx.type_name == null ? null : ctx.type_name.getText(),
 				ctx.name.getText(),
-				ctx.base == null ? null : ctx.base.getText());
+				ctx.base == null ? null : ctx.base.getText(),
+				false);
+
+		for (Token i : ctx.interfaces)
+			cls.getInterfaces().add(i.getText());
+
+		for (MethodContext mtd : ctx.method())
+			cls.getMethods().add(visitMethod(mtd));
+
+		for (FieldContext fld : ctx.field())
+			cls.getFields().add(visitField(fld));
+		return cls;
+	}
+
+	@Override
+	public ClassDef visitInterfaceDef(
+			InterfaceDefContext ctx) {
+		ClassDef cls = new ClassDef(
+				locationManager,
+				false,
+				ctx.SEALED() != null,
+				null,
+				ctx.name.getText(),
+				null,
+				true);
+
+		for (Token i : ctx.bases)
+			cls.getInterfaces().add(i.getText());
+
 		for (MethodContext mtd : ctx.method())
 			cls.getMethods().add(visitMethod(mtd));
 
@@ -59,16 +89,17 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	public Field visitField(
 			FieldContext ctx) {
 		boolean instance = ctx.INSTANCE() != null;
+		boolean isFinal = ctx.FINAL() != null;
 		String name = ctx.name.getText();
 		Type type = visitType(ctx.type());
 		if (ctx.DEFAULT() == null)
-			return new Field(instance, name, type);
+			return new Field(instance, isFinal, name, type);
 
 		Value def = getDefaultValue(ctx.val);
 		if (def == null)
 			throw new LibraryParsingException(file, "Unsupported default field type: " + type);
 
-		return new Field(instance, name, type, def);
+		return new Field(instance, isFinal, name, type, def);
 	}
 
 	@Override
@@ -76,14 +107,15 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 			ParamContext ctx) {
 		Type type = visitType(ctx.type());
 		String name = ctx.name.getText();
+		boolean isVararg = ctx.ELLIPSIS() != null;
 		if (ctx.DEFAULT() == null)
-			return new Parameter(name, type);
+			return new Parameter(name, type, isVararg);
 
 		Value def = getDefaultValue(ctx.val);
 		if (def == null)
 			throw new LibraryParsingException(file, "Unsupported default parameter type: " + type);
 
-		return new Parameter(name, type, def);
+		return new Parameter(name, type, def, isVararg);
 	}
 
 	@Override
@@ -118,6 +150,13 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 				visitType(ctx.type()));
 		for (int i = 0; i < ctx.param().size(); i++)
 			mtd.getParams().add(visitParam(ctx.param(i)));
+
+		if (ctx.throwsList() != null) {
+			for (LibtypeContext lt : ctx.throwsList().libtype()) {
+				mtd.getExceptions().add((LibType) visitLibtype(lt));
+			}
+		}
+
 		return mtd;
 	}
 
@@ -128,6 +167,8 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 
 		for (ClassDefContext cls : ctx.classDef())
 			runtime.getClasses().add(visitClassDef(cls));
+		for (InterfaceDefContext cls : ctx.interfaceDef())
+			runtime.getClasses().add(visitInterfaceDef(cls));
 		for (FieldContext fld : ctx.field())
 			runtime.getFields().add(visitField(fld));
 		for (MethodContext meth : ctx.method())

@@ -8,7 +8,6 @@ import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
-import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
@@ -16,6 +15,7 @@ import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
+import it.unive.jlisa.program.cfg.statement.JavaReturn;
 import it.unive.jlisa.program.cfg.statement.JavaThrow;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
@@ -36,7 +36,6 @@ import it.unive.lisa.program.cfg.edge.TrueEdge;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Ret;
-import it.unive.lisa.program.cfg.statement.Return;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.Throw;
 import it.unive.lisa.program.cfg.statement.VariableRef;
@@ -207,7 +206,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			}
 		}
 		JavaUnresolvedCall call = new JavaUnresolvedCall(getScope().getCFG(),
-				getSourceCodeLocationManager(node, true).nextColumn(),
+				getSourceCodeLocation(node),
 				Call.CallType.INSTANCE, null, getScope().getCFG().getDescriptor().getName(),
 				parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
@@ -371,7 +370,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		if (e == null) {
 			ret = new Ret(getScope().getCFG(), getSourceCodeLocation(node));
 		} else {
-			ret = new Return(getScope().getCFG(), getSourceCodeLocation(node), e);
+			ret = new JavaReturn(getScope().getCFG(), getSourceCodeLocation(node), e);
 		}
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
@@ -399,7 +398,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 				? superclassName.substring(superclassName.lastIndexOf(".") + 1)
 				: superclassName;
 
-		Expression thisExpression = new VariableRef(getScope().getCFG(), getSourceCodeLocation(node), "this",
+		Expression thisExpression = new VariableRef(getScope().getCFG(),
+				getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), "this",
 				getParserContext().getVariableStaticTypeFromUnitAndGlobals(getScope().getCFG(), "this"));
 		List<Expression> parameters = new ArrayList<>();
 		parameters.add(thisExpression);
@@ -414,7 +414,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		}
 
 		JavaUnresolvedCall call = new JavaUnresolvedCall(getScope().getCFG(),
-				getSourceCodeLocationManager(node, true).nextColumn(),
+				getSourceCodeLocation(node),
 				Call.CallType.INSTANCE, superclassName, simpleName, parameters.toArray(new Expression[0]));
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(call);
@@ -462,7 +462,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		}
 
 		JavaClassType npeType = JavaClassType.lookup("java.lang.NullPointerException");
-		Statement nullPointerTrigger = new JavaThrow(getScope().getCFG(), syntheticLocMan.nextLocation(),
+		// the exception is raised by the synchronized statement itself
+		Statement nullPointerTrigger = new JavaThrow(getScope().getCFG(), getSourceCodeLocation(node),
 				new JavaNewObj(getScope().getCFG(), syntheticLocMan.nextLocation(),
 						new JavaReferenceType(npeType),
 						new JavaStringLiteral(getScope().getCFG(),
@@ -513,7 +514,7 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 			type = visitor.liftToArray(type, fragment);
 
 			VariableRef ref = new VariableRef(getScope().getCFG(),
-					getSourceCodeLocation(fragment),
+					getSourceCodeLocation(fragment.getName()),
 					variableName, type);
 			Expression initializer;
 
@@ -526,7 +527,6 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), ref,
 						initializer);
 			} else {
-				SourceCodeLocationManager loc = getSourceCodeLocationManager(fragment.getName(), true);
 				org.eclipse.jdt.core.dom.Expression expr = fragment.getInitializer();
 				initializer = getParserContext().evaluate(expr,
 						new ExpressionVisitor(getEnvironment(), getScope()));
@@ -537,8 +537,9 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(), ref,
 							initializer);
 				} else if (initializer instanceof JavaNewArrayWithInitializer) {
-					assignment = new JavaAssignment(getScope().getCFG(), loc.getCurrentLocation(), ref,
-							((JavaNewArrayWithInitializer) initializer).withStaticType(type));
+					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment),
+							ref,
+							((JavaNewArrayWithInitializer) initializer).withStaticType(type), true);
 				} else if (initializer.getStaticType().canBeAssignedTo(type)
 						&& !type.equals(initializer.getStaticType())) {
 					// implicit cast
@@ -546,9 +547,12 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
 							initializer,
 							type);
-					assignment = new JavaAssignment(getScope().getCFG(), loc.getCurrentLocation(), ref, cast);
+					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment),
+							ref, cast, true);
 				} else
-					assignment = new JavaAssignment(getScope().getCFG(), loc.getCurrentLocation(), ref, initializer);
+					assignment = new JavaAssignment(getScope().getCFG(), getSourceCodeLocation(fragment),
+							ref,
+							initializer, true);
 			}
 
 			adj.addNode(assignment);

@@ -52,7 +52,8 @@ public class MathSqrt extends it.unive.lisa.program.cfg.statement.UnaryExpressio
 				JavaMathSqrtOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, sqrt, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, sqrt, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

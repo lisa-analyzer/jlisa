@@ -73,6 +73,7 @@ public class StringEqualsIgnoreCase extends BinaryExpression implements Pluggabl
 				JavaStringEqualsIgnoreCaseOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

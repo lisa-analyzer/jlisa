@@ -5,7 +5,7 @@ import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForEachLoop;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
@@ -47,14 +47,17 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		Expression collection = getParserContext().evaluate(node.getExpression(),
 				new ExpressionVisitor(getEnvironment(), getScope()));
 
-		SourceCodeLocationManager locationManager = getSourceCodeLocationManager(node);
-		Expression condition = new Equal(getScope().getCFG(), locationManager.nextColumn(),
-				new TrueLiteral(getScope().getCFG(), locationManager.nextColumn()),
-				new HasNextForEach(getScope().getCFG(), locationManager.nextColumn(), collection));
+		// the condition of the loop is located at the whole statement, while
+		// the expressions built around the collection and the loop variable
+		// have no source code of their own
+		SyntheticCodeLocationManager synth = getParserContext().getCurrentSyntheticCodeLocationManager(getSource());
+		Expression condition = new Equal(getScope().getCFG(), getSourceCodeLocation(node),
+				new TrueLiteral(getScope().getCFG(), synth.nextLocation()),
+				new HasNextForEach(getScope().getCFG(), synth.nextLocation(), collection));
 		block.addNode(condition);
 
-		JavaAssignment assignment = new JavaAssignment(getScope().getCFG(), locationManager.nextColumn(), item,
-				new GetNextForEach(getScope().getCFG(), locationManager.nextColumn(), collection));
+		JavaAssignment assignment = new JavaAssignment(getScope().getCFG(), synth.nextLocation(), item,
+				new GetNextForEach(getScope().getCFG(), synth.nextLocation(), collection));
 		block.addNode(assignment);
 		block.addEdge(new TrueEdge(condition, assignment));
 

@@ -10,18 +10,15 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.cfg.CFG;
@@ -33,15 +30,14 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.ValueExpression;
+import it.unive.lisa.symbolic.value.*;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -77,6 +73,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 		TypeSystem typeSystem = getProgram().getTypes();
@@ -94,22 +91,26 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 				JavaIsClassDefinedOperator.INSTANCE,
 				location);
 
-		Satisfiability sat = analysis.satisfies(state, isClassDefined, originating);
+		Satisfiability sat = analysis.satisfies(state, isClassDefined, context, originating);
 
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> exceptionState = state.bottomExecution();
 
 		// populate the "no exception" path
 		if (sat != Satisfiability.NOT_SATISFIED) {
+			AnalysisState<A> okState = sat == Satisfiability.SATISFIED ? state
+					: analysis.assume(state, isClassDefined, context, originating, originating);
 
-			Stream<BinaryExpression> constraints = extractConstraints(interprocedural, state, accessExpr);
-			if (constraints == null)
-				return state.topExecution();
+			List<BinaryExpression> constraints = extractConstraints(interprocedural, okState, accessExpr).toList();
 
-			AnalysisState<A> tmp = state;
+			if (constraints.isEmpty())
+				return interprocedural.getAnalysis().smallStepSemantics(okState,
+						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), context, this);
+
+			AnalysisState<A> tmp = okState;
 			ExpressionSet execExpressions = new ExpressionSet();
 
-			for (BinaryExpression constraint : constraints.toList()) {
+			for (BinaryExpression constraint : constraints) {
 
 				String clazzName = (String) ((Constant) constraint.getLeft()).getValue();
 				UnitType t = getTypeFromStr(clazzName);
@@ -142,40 +143,41 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 				ExpressionSet clazz = callState.getExecutionExpressions();
 
-				InternalInitClassMetaObject initClazz = new InternalInitClassMetaObject(cfg, location, t, this);
-				AnalysisState<A> initState = initClazz.forwardSemanticsAux(interprocedural, callState,
-						new ExpressionSet[] { clazz }, expressions);
-
-				tmp = initState;
+				tmp = callState;
 
 				execExpressions = execExpressions.lub(clazz);
 			}
 
-			if (tmp != state)
+			if (tmp != okState)
 				noExceptionState = tmp.withExecutionExpressions(execExpressions);
 		}
 
 		// `ClassNotFoundException to be thrown
 		if (sat != Satisfiability.SATISFIED) {
+			AnalysisState<A> koState = sat == Satisfiability.NOT_SATISFIED ? state
+					: analysis.assume(state,
+							new it.unive.lisa.symbolic.value.UnaryExpression(typeSystem.getBooleanType(),
+									isClassDefined, LogicalNegation.INSTANCE, location),
+							context, originating, originating);
 
 			JavaClassType classNotFoundType = JavaClassType.getClassNotFoundException();
 
 			JavaNewObj call = new JavaNewObj(cfg, location,
 					classNotFoundType.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(cfg, classNotFoundType.getReference(), location);
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			koState = analysis.assign(koState, throwVar,
+					koState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+			koState = koState.forgetIdentifiers(call.getMetaVariables(), this);
+			koState = koState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
-			exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(classNotFoundType.getReference(), originating), this);
+			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
+					new Error(classNotFoundType.getReference(), originating), context, this);
 		}
 
 		return exceptionState.lub(noExceptionState);
@@ -202,7 +204,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 		return (UnitType) t;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Stream<BinaryExpression> extractConstraints(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
@@ -210,40 +212,28 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		// the value domain and its state are retrieved without depending on
+		// how the domain of the analysis is built (e.g., it might be wrapped by
+		// another domain)
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom == null || env == null)
+			return Stream.empty();
 
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
+		SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
 
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
-			return null;
-		}
-
-		assert (innerDomain != null);
-		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)
 				.flatMap(vex -> {
 					try {
-						return vdom.constraints(null, env, vex, this, oracle).stream();
+						Set<BinaryExpression> c = vdom.constraints(null, env, vex, this, oracle);
+						// a null result means the value is bottom
+						return c == null ? Stream.<BinaryExpression>empty() : c.stream();
 					} catch (SemanticException e) {
-						return null;
+						return Stream.<BinaryExpression>empty();
 					}
 				});
 	}

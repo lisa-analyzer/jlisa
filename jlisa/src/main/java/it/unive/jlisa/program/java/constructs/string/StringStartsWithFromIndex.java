@@ -77,7 +77,8 @@ public class StringStartsWithFromIndex extends TernaryExpression implements Plug
 				JavaStringStartsWithFromIndexOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, startsWith, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, startsWith, interprocedural.getCurrentContext(),
+				originating);
 
 	}
 }

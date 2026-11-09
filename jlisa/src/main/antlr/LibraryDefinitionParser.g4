@@ -27,22 +27,30 @@ value
    ;
 
 param
-   : PARAM (STAR? | POWER? | AMP?) name = IDENTIFIER type (DEFAULT val = value)?
+   : PARAM (STAR? | POWER? | AMP?) name = IDENTIFIER type (ELLIPSIS | DEFAULT val = value)?
    ;
 
 field
-   : INSTANCE? FIELD name = IDENTIFIER type (DEFAULT val = value)?
+   : INSTANCE? FINAL? FIELD name = IDENTIFIER type (DEFAULT val = value)?
+   ;
+
+throwsList
+   : THROWS libtype (COMMA libtype)*
    ;
 
 method
-   : INSTANCE? SEALED? METHOD name = IDENTIFIER COLON implementation = IDENTIFIER type param*
+   : INSTANCE? SEALED? METHOD name = IDENTIFIER COLON implementation = IDENTIFIER type param* throwsList?
    ;
 
 classDef
-   : ROOT? SEALED? CLASS name = IDENTIFIER (EXTENDS base = IDENTIFIER)? (COLON (type_name = IDENTIFIER)? (method | field)*)?
+   : ROOT? SEALED? CLASS name = IDENTIFIER (EXTENDS base = IDENTIFIER)? (IMPLEMENTS interfaces += IDENTIFIER (COMMA interfaces += IDENTIFIER)*)? (COLON (type_name = IDENTIFIER)? (method | field)*)?
+   ;
+
+interfaceDef
+   : SEALED? INTERFACE name = IDENTIFIER (EXTENDS bases += IDENTIFIER (COMMA bases += IDENTIFIER)*)? (COLON (method | field)*)?
    ;
 
 file
-   : (method | field | classDef)*
+   : (method | field | classDef | interfaceDef)*
    ;
 

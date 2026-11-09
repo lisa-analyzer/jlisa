@@ -13,6 +13,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -71,6 +72,7 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 		JavaReferenceType stringArrayType = JavaArrayType.getStringArray();
 		JavaClassType stringType = JavaClassType.getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		String src = ((SourceCodeLocation) getLocation()).getSourceFile();
 		Expression unknown = stringArrayType.unknownValue(getCFG(), originating.getLocation());
@@ -93,10 +95,11 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 					.get();
 			AccessChild access = new AccessChild(stringType, topStringRef, var, getLocation());
 			AnalysisState<
-					A> sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), this);
+					A> sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context,
+							this);
 
 			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, originating));
+					topStringRef, context, originating));
 
 			// second
 			ch = new AccessChild(stringType, spl,
@@ -107,10 +110,10 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 			unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
 			topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny().get();
 			access = new AccessChild(stringType, topStringRef, var, getLocation());
-			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), this);
+			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context, this);
 
 			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, originating));
+					topStringRef, context, originating));
 
 			// third
 			ch = new AccessChild(stringType, spl,
@@ -121,10 +124,10 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 			unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
 			topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny().get();
 			access = new AccessChild(stringType, topStringRef, var, getLocation());
-			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), this);
+			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context, this);
 
 			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, originating));
+					topStringRef, context, originating));
 
 			// forth
 			ch = new AccessChild(stringType, spl,
@@ -135,10 +138,10 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 			unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
 			topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny().get();
 			access = new AccessChild(stringType, topStringRef, var, getLocation());
-			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), this);
+			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context, this);
 
 			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, originating));
+					topStringRef, context, originating));
 
 		}
 

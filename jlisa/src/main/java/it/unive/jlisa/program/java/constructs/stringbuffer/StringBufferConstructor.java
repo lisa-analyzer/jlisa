@@ -60,6 +60,7 @@ public class StringBufferConstructor extends BinaryExpression implements Pluggab
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, rightAccess, originating);
+		return interprocedural.getAnalysis().assign(state, leftAccess, rightAccess, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

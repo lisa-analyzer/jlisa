@@ -7,7 +7,6 @@ import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
-import it.unive.jlisa.program.SourceCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.switches.DefaultSwitchCase;
 import it.unive.jlisa.program.cfg.controlflow.switches.Switch;
 import it.unive.jlisa.program.cfg.controlflow.switches.instrumentations.SwitchDefault;
@@ -263,15 +262,14 @@ class SwitchStatementASTVisitor extends ScopedVisitor<MethodScope> implements Re
 						ParsingException.Type.UNSUPPORTED_STATEMENT,
 						"Enum switch case " + name.getIdentifier() + " not found in enum " + switchType.getName(),
 						getSourceCodeLocation(node));
-			expr = new JavaAccessGlobal(getScope().getCFG(), getSourceCodeLocation(node), switchType, global);
+			expr = new JavaAccessGlobal(getScope().getCFG(), getSourceCodeLocation(name), switchType, global);
 		} else {
 			expr = getParserContext().evaluate(node, new ExpressionVisitor(getEnvironment(), getScope()));
 		}
 
-		SourceCodeLocationManager mgr = getSourceCodeLocationManager(node);
 		Statement st = expr != null
-				? new SwitchEqualityCheck(getScope().getCFG(), mgr.nextColumn(), switchExpression, expr)
-				: new SwitchDefault(getScope().getCFG(), mgr.nextColumn());
+				? new SwitchEqualityCheck(getScope().getCFG(), getSourceCodeLocation(node), switchExpression, expr)
+				: new SwitchDefault(getScope().getCFG(), getSourceCodeLocation(node));
 
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		adj.addNode(st);

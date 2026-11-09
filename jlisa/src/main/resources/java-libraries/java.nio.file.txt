@@ -1,0 +1,4 @@
+class java.nio.file.Files extends java.lang.Object:
+
+class java.nio.file.Path extends java.lang.Object:
+

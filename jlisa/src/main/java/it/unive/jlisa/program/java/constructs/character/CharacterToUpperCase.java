@@ -53,7 +53,8 @@ public class CharacterToUpperCase extends it.unive.lisa.program.cfg.statement.Un
 				JavaCharacterToUpperCaseOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, toUpper, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, toUpper, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

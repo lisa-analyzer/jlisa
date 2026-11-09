@@ -24,7 +24,6 @@ public class JavaInferredTypes extends InferredTypes {
 			SemanticOracle oracle)
 			throws SemanticException {
 		TypeSystem types = pp.getProgram().getTypes();
-		@SuppressWarnings("unchecked")
 		Set<Type>[] result = (Set<Type>[]) new Set[subExpressions.length];
 		for (int i = 0; i < subExpressions.length; ++i) {
 			result[i] = subExpressions[i].isTop ? types.getTypes() : subExpressions[i].elements;

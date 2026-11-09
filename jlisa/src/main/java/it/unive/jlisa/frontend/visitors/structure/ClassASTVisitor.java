@@ -13,6 +13,7 @@ import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.frontend.visitors.statement.BlockStatementASTVisitor;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
@@ -20,6 +21,7 @@ import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.cfg.statement.literal.JavaStringLiteral;
+import it.unive.jlisa.program.java.constructs.verifier.VerifierNondet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
@@ -96,6 +98,11 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 
 		boolean createDefaultConstructor = true;
 		for (MethodDeclaration md : node.getMethods()) {
+			if (Modifier.isStatic(md.getModifiers())
+					&& VerifierNondet.replaces(getScope().getLiSACompilationUnit().getName(),
+							md.getName().getIdentifier(), md.parameters().size()))
+				// replaced by a native code member, without a body
+				continue;
 			CFG cfg = getParserContext().evaluate(
 					md,
 					new MethodASTVisitor(getEnvironment(), getScope()));
@@ -165,9 +172,9 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		SyntheticCodeLocationManager locationManager = getParserContext()
 				.getCurrentSyntheticCodeLocationManager(getSource());
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
+		parameters.add(new JavaParameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
-		parameters.add(new Parameter(locationManager.nextLocation(), "name",
+		parameters.add(new JavaParameter(locationManager.nextLocation(), "name",
 				new JavaReferenceType(getProgram().getTypes().getStringType()), null, new Annotations()));
 
 		Annotations annotations = new Annotations();
@@ -301,7 +308,8 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 							new Annotations());
 					JavaAccessGlobal accessGlobal = new JavaAccessGlobal(cfg, locationManager.nextLocation(), unit,
 							global);
-					JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init);
+					JavaAssignment asg = new JavaAssignment(cfg, locationManager.nextLocation(), accessGlobal, init,
+							fragment.getInitializer() != null);
 					cfg.addNode(asg);
 					if (last == null)
 						cfg.getEntrypoints().add(asg);
@@ -355,11 +363,11 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 		List<Parameter> parameters = new ArrayList<>();
 		SyntheticCodeLocationManager locationManager = getParserContext()
 				.getCurrentSyntheticCodeLocationManager(getSource());
-		parameters.add(new Parameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
+		parameters.add(new JavaParameter(locationManager.nextLocation(), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
 		if (getScope().getEnclosingClass() != null)
-			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing",
+			parameters.add(new JavaParameter(locationManager.nextLocation(), "$enclosing",
 					getScope().getEnclosingClass().getReference(),
 					null, new Annotations()));
 
@@ -510,19 +518,19 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				.getCurrentSyntheticCodeLocationManager(getSource());
 
 		// this param
-		parameters.add(new Parameter(locationManager.nextLocation(), "this",
+		parameters.add(new JavaParameter(locationManager.nextLocation(), "this",
 				new JavaReferenceType(type), null, new Annotations()));
 
 		// $enclosing param
 		if (getScope().getEnclosingClass() != null) {
-			parameters.add(new Parameter(locationManager.nextLocation(), "$enclosing",
+			parameters.add(new JavaParameter(locationManager.nextLocation(), "$enclosing",
 					getScope().getEnclosingClass().getReference(), null, new Annotations()));
 		}
 
 		// super constructor arguments
 		for (int i = 0; i < argTypes.size(); i++) {
 			it.unive.lisa.type.Type argType = argTypes.get(i);
-			parameters.add(new Parameter(locationManager.nextLocation(), "$arg" + i,
+			parameters.add(new JavaParameter(locationManager.nextLocation(), "$arg" + i,
 					argType, null, new Annotations()));
 		}
 

@@ -7,6 +7,7 @@ import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
+import it.unive.jlisa.program.JavaLocation;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
@@ -104,7 +105,7 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 
 			Expression access = new JavaAccessGlobal(
 					getScope().getCFG(),
-					getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+					accessLocation(tentative.getMiddle()),
 					candidate,
 					global);
 
@@ -116,7 +117,7 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 			for (SimpleName f : tentative.getRight()) {
 				try {
 					access = new JavaAccessInstanceGlobal(getScope().getCFG(),
-							getSourceCodeLocationManager(f).nextColumn(),
+							accessLocation(f),
 							access,
 							f.getIdentifier());
 				} catch (ParsingException e) {
@@ -131,6 +132,21 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 				ParsingException.Type.UNSUPPORTED_STATEMENT,
 				"Missing unit " + node,
 				getSourceCodeLocation(node));
+	}
+
+	/**
+	 * Yields the location of the access to the given field of a qualified name,
+	 * that is, the location of the qualified name ending with it.
+	 *
+	 * @param field the field
+	 *
+	 * @return the location
+	 */
+	private JavaLocation accessLocation(
+			SimpleName field) {
+		if (field.getParent() instanceof QualifiedName qualified && qualified.getName() == field)
+			return getSourceCodeLocation(qualified);
+		return getSourceCodeLocation(field);
 	}
 
 	private Expression solveAsFieldAccess(
@@ -162,13 +178,13 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 			if (global != null && !global.isInstance())
 				return new JavaAccessGlobal(
 						getScope().getCFG(),
-						getSourceCodeLocationManager(node.getQualifier(), true).getCurrentLocation(),
+						getSourceCodeLocation(node),
 						unitType.getUnit(),
 						global);
 		}
 
 		return new JavaAccessInstanceGlobal(getScope().getCFG(),
-				getSourceCodeLocationManager(node.getQualifier(), true).nextColumn(),
+				getSourceCodeLocation(node),
 				receiver,
 				targetName);
 	}
@@ -199,13 +215,13 @@ class NameResolverASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 					type = JavaInterfaceType.lookup(getScope().getCFG().getUnit().getName()).getReference();
 
 				expression = new JavaAccessInstanceGlobal(getScope().getCFG(),
-						getSourceCodeLocationManager(node).getCurrentLocation(),
+						getSourceCodeLocation(node),
 						new VariableRef(getScope().getCFG(), synth.nextLocation(), "this", type),
 						identifier);
 			} else
 				expression = new JavaAccessGlobal(
 						getScope().getCFG(),
-						getSourceCodeLocationManager(node).getCurrentLocation(),
+						getSourceCodeLocation(node),
 						getScope().getCFG().getUnit(),
 						global);
 

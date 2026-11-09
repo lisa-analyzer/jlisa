@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -61,6 +62,7 @@ public class StringBuilderAppendCharArray extends BinaryExpression implements Pl
 
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		String constantValue;
 		try {
@@ -83,11 +85,11 @@ public class StringBuilderAppendCharArray extends BinaryExpression implements Pl
 				? new Constant(stringType, constantValue, getLocation())
 				: new PushAny(stringType, getLocation());
 
-		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, context, state, left, stringType,
 				getLocation(), this,
 				oldValue -> new it.unive.lisa.symbolic.value.BinaryExpression(
 						stringType, oldValue, appendedValue, JavaStringAppendStringOperator.INSTANCE, getLocation()));
 
-		return analysis.smallStepSemantics(result, left, originating);
+		return analysis.smallStepSemantics(result, left, context, originating);
 	}
 }

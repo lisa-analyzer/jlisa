@@ -61,7 +61,8 @@ public class NumberIntValue extends UnaryExpression implements PluggableStatemen
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type type = interprocedural.getAnalysis().getDynamicTypeOf(state, expr, originating);
+		Type type = interprocedural.getAnalysis().getDynamicTypeOf(state, expr, interprocedural.getCurrentContext(),
+				originating);
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference deref = new HeapDereference(type, expr, getLocation());
 		AccessChild access = new AccessChild(type, deref, var, getLocation());
@@ -77,6 +78,7 @@ public class NumberIntValue extends UnaryExpression implements PluggableStatemen
 				TypeConv.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, castExpression, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, castExpression,
+				interprocedural.getCurrentContext(), originating);
 	}
 }

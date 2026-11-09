@@ -25,17 +25,14 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
@@ -61,7 +58,6 @@ import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -101,9 +97,10 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		ExpressionSet classes = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
-				this);
+				context, this);
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression clazz : classes) {
@@ -121,6 +118,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
@@ -160,6 +158,9 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 			return state.topExecution();
 		List<it.unive.lisa.symbolic.value.BinaryExpression> clazzNameConstraints = clazzNameStream.toList();
 
+		if (clazzNameConstraints.isEmpty())
+			return state;
+
 		AnalysisState<A> result = state.bottomExecution();
 
 		for (it.unive.lisa.symbolic.value.BinaryExpression clazzNameConstraint : clazzNameConstraints) {
@@ -198,12 +199,14 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				if (reflectedGlobal.isInstance()) {
 
 					// get the runtime types of the target object
-					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, right, this);
+					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 
 					// remove null, if present
 					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
 
 					AnalysisState<A> accessState = state.bottomExecution();
+					AnalysisState<A> npeState = null;
+					Error npeError = null;
 
 					if (mightBeNull) {
 						// create NullPointerException for the null case
@@ -216,16 +219,15 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), location);
 						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
-								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(), this);
+								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(),
+								context, this);
 
 						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
 						nullAnalysisState = nullAnalysisState
 								.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-						AnalysisState<A> npeState = analysis.moveExecutionToError(
-								nullAnalysisState.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), originating), this);
-						accessState = accessState.lub(npeState);
+						npeState = nullAnalysisState.withExecutionExpression(throwVar);
+						npeError = new Error(npeType.getReference(), originating);
 					}
 
 					// if there are non-null targets, proceed normally
@@ -242,12 +244,14 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 							access = new HeapReference(reflectedFieldType, access, location);
 						}
 
-						AnalysisState<A> okState = analysis.smallStepSemantics(state, access, this);
+						AnalysisState<A> okState = analysis.smallStepSemantics(state, access, context, this);
 						AnalysisState<A> boxedState = getBoxedState(interprocedural, okState, reflectedFieldType,
 								expressions);
 						accessState = accessState.lub(boxedState);
 					}
 
+					if (npeError != null)
+						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, context, this);
 					result = result.lub(accessState);
 				} else {
 					access = new GlobalVariable(
@@ -260,7 +264,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						access = new HeapReference(reflectedFieldType, access, location);
 					}
 
-					AnalysisState<A> accessedFieldState = analysis.smallStepSemantics(state, access, this);
+					AnalysisState<A> accessedFieldState = analysis.smallStepSemantics(state, access, context, this);
 					AnalysisState<A> boxedState = getBoxedState(interprocedural, accessedFieldState,
 							reflectedFieldType, expressions);
 					result = result.lub(boxedState);
@@ -342,7 +346,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		return null;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -351,40 +355,29 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		// the value domain and its state are retrieved without depending on
+		// how the domain of the analysis is built (e.g., it might be wrapped by
+		// another domain)
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom == null || env == null)
+			return Stream.empty();
 
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
+		SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
 
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
-			return null;
-		}
-
-		assert (innerDomain != null);
-		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)
 				.flatMap(vex -> {
 					try {
-						return vdom.constraints(null, env, vex, this, oracle).stream();
+						Set<it.unive.lisa.symbolic.value.BinaryExpression> c = vdom.constraints(null, env, vex, this,
+								oracle);
+						// a null result means the value is bottom
+						return c == null ? Stream.<it.unive.lisa.symbolic.value.BinaryExpression>empty() : c.stream();
 					} catch (SemanticException e) {
-						return null;
+						return Stream.<it.unive.lisa.symbolic.value.BinaryExpression>empty();
 					}
 				});
 	}

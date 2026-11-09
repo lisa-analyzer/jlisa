@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.CFG;
@@ -103,11 +104,12 @@ public class DoubleClassInitializer extends NativeCFG implements PluggableStatem
 			Constant nanConst = new Constant(JavaDoubleType.INSTANCE, Double.NaN, getLocation());
 
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
-			state = analysis.assign(state, maxId, maxConst, this);
-			state = analysis.assign(state, minId, minConst, this);
-			state = analysis.assign(state, posInfId, posInfConst, this);
-			state = analysis.assign(state, negInfId, negInfConst, this);
-			state = analysis.assign(state, nanId, nanConst, this);
+			ScopeId<A> context = interprocedural.getCurrentContext();
+			state = analysis.assign(state, maxId, maxConst, context, this);
+			state = analysis.assign(state, minId, minConst, context, this);
+			state = analysis.assign(state, posInfId, posInfConst, context, this);
+			state = analysis.assign(state, negInfId, negInfConst, context, this);
+			state = analysis.assign(state, nanId, nanConst, context, this);
 			return state;
 		}
 	}

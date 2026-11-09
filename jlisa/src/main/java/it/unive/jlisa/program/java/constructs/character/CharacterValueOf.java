@@ -69,7 +69,8 @@ public class CharacterValueOf extends it.unive.lisa.program.cfg.statement.UnaryE
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(charType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, expr, this);
+			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, expr,
+					interprocedural.getCurrentContext(), this);
 			tmp = tmp.lub(sem);
 		}
 

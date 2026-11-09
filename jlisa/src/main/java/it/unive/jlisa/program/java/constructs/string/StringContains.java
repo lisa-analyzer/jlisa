@@ -72,6 +72,7 @@ public class StringContains extends BinaryExpression implements PluggableStateme
 				accessRight,
 				JavaStringContainsOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, contains, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, contains, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

@@ -43,7 +43,8 @@ public class Assume extends it.unive.lisa.program.cfg.statement.UnaryExpression 
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().assume(state, expr, originating, originating);
+		return interprocedural.getAnalysis().assume(state, expr, interprocedural.getCurrentContext(), originating,
+				originating);
 	}
 
 	@Override

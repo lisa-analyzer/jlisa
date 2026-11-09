@@ -1,28 +1,222 @@
-// SPDX-FileCopyrightText: 2021 Falk Howar falk.howar@tu-dortmund.de
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 1999, 2004, Oracle and/or its affiliates
+// SPDX-License-Identifier: GPL-2.0-only WITH Classpath-exception-2.0
+// SPDX-FileCopyrightText: Copyright (C) 2026 The ARG-V Project
 
-// This file is part of the SV-Benchmarks collection of verification tasks:
-// https://gitlab.com/sosy-lab/benchmarking/sv-benchmarks
+/** filtered and transformed by ARG-V */
 
-import java.io.IOException;
-import mockx.servlet.http.HttpServletRequest;
-import mockx.servlet.http.HttpServletResponse;
+/*
+ * Copyright (c) 1999, 2004, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+import javax.naming.CompositeName;
+import javax.naming.Name;
 import org.sosy_lab.sv_benchmarks.Verifier;
-import securibench.micro.reflection.Refl1;
 
+/**
+ * This class represents the result of resolution of a name. It contains the object to which name
+ * was resolved, and the portion of the name that has not been resolved.
+ *
+ * <p>A ResolveResult instance is not synchronized against concurrent multithreaded access. Multiple
+ * threads trying to access and modify a single ResolveResult instance should lock the object.
+ *
+ * @author Rosanna Lee
+ * @author Scott Seligman
+ * @since 1.3
+ */
+/** filtered by ARG-V */
 public class Main {
+  /**
+   * Field containing the Object that was resolved to successfully. It can be null only when
+   * constructed using a subclass. Constructors should always initialize this.
+   *
+   * @serial
+   */
+  protected Object resolvedObj = null;
+  /**
+   * Field containing the remaining name yet to be resolved. It can be null only when constructed
+   * using a subclass. Constructors should always initialize this.
+   *
+   * @serial
+   */
+  protected Name remainingName = null;
 
-  public static void main(String[] args) {
-    String s1 = Verifier.nondetString();
-    HttpServletRequest req = new HttpServletRequest();
-    HttpServletResponse res = new HttpServletResponse();
-    req.setTaintedValue(s1);
+  /**
+   * Constructs an instance of ResolveResult with the resolved object and remaining name both
+   * initialized to null.
+   */
+  /** ARG-V: suitable */
+  protected Main() {
+    resolvedObj = null;
+    remainingName = null;
+  }
 
-    Refl1 sut = new Refl1();
+  /**
+   * Constructs a new instance of ResolveResult consisting of the resolved object and the remaining
+   * unresolved component.
+   *
+   * @param robj The non-null object resolved to.
+   * @param rcomp The single remaining name component that has yet to be resolved. Cannot be null
+   *     (but can be empty).
+   */
+  /** ARG-V: suitable */
+  public Main(Object robj, String rcomp) {
+    resolvedObj = robj;
     try {
-      sut.doGet(req, res);
-    } catch (IOException e) {
-
+      remainingName = new CompositeName(rcomp);
+      //          remainingName.appendComponent(rcomp);
+    } catch (Exception e) {
+      // ignore; shouldn't happen
     }
+  }
+
+  /**
+   * Constructs a new instance of ResolveResult consisting of the resolved Object and the remaining
+   * name.
+   *
+   * @param robj The non-null Object resolved to.
+   * @param rname The non-null remaining name that has yet to be resolved.
+   */
+  /** ARG-V: suitable */
+  public Main(Object robj, Name rname) {
+    resolvedObj = robj;
+    setRemainingName(rname);
+  }
+
+  /**
+   * Retrieves the remaining unresolved portion of the name.
+   *
+   * @return The remaining unresolved portion of the name. Cannot be null but empty OK.
+   * @see #appendRemainingName
+   * @see #appendRemainingComponent
+   * @see #setRemainingName
+   */
+  /** ARG-V: suitable */
+  public Name getRemainingName() {
+    return this.remainingName;
+  }
+
+  /**
+   * Retrieves the Object to which resolution was successful.
+   *
+   * @return The Object to which resolution was successful. Cannot be null.
+   * @see #setResolvedObj
+   */
+  /** ARG-V: suitable */
+  public Object getResolvedObj() {
+    return this.resolvedObj;
+  }
+
+  /**
+   * Sets the remaining name field of this result to name. A copy of name is made so that modifying
+   * the copy within this ResolveResult does not affect <code>name</code> and vice versa.
+   *
+   * @param name The name to set remaining name to. Cannot be null.
+   * @see #getRemainingName
+   * @see #appendRemainingName
+   * @see #appendRemainingComponent
+   */
+  /** ARG-V: suitable */
+  public void setRemainingName(Name name) {
+    if (name != null) {
+      this.remainingName = (Name) (name.clone());
+    } else {
+      // ??? should throw illegal argument exception
+      this.remainingName = null;
+    }
+  }
+
+  /**
+   * Adds components to the end of remaining name.
+   *
+   * @param name The components to add. Can be null.
+   * @see #getRemainingName
+   * @see #setRemainingName
+   * @see #appendRemainingComponent
+   */
+  /** ARG-V: suitable */
+  public void appendRemainingName(Name name) {
+    //      System.out.println("appendingRemainingName: " + name.toString());
+    //      Exception e = new Exception();
+    //      e.printStackTrace();
+    if (name != null) {
+      if (this.remainingName != null) {
+        try {
+          this.remainingName.addAll(name);
+        } catch (Exception e) {
+          // ignore; shouldn't happen for composite name
+        }
+      } else {
+        this.remainingName = (Name) (name.clone());
+      }
+    }
+  }
+
+  /**
+   * Adds a single component to the end of remaining name.
+   *
+   * @param name The component to add. Can be null.
+   * @see #getRemainingName
+   * @see #appendRemainingName
+   */
+  /** ARG-V: suitable */
+  public void appendRemainingComponent(String name) {
+    if (name != null) {
+      CompositeName rname = new CompositeName();
+      try {
+        rname.add(name);
+      } catch (Exception e) {
+        // ignore; shouldn't happen for empty composite name
+      }
+      appendRemainingName(rname);
+    }
+  }
+
+  /**
+   * Sets the resolved Object field of this result to obj.
+   *
+   * @param obj The object to use for setting the resolved obj field. Cannot be null.
+   * @see #getResolvedObj
+   */
+  /** ARG-V: suitable */
+  public void setResolvedObj(Object obj) {
+    this.resolvedObj = obj;
+    // ??? should check for null?
+  }
+
+  private static long serialVersionUID = -4552108072002407559L;
+
+  /** This main was generated by ARG-V */
+  public static void main(String[] args) throws Exception {
+    Object obj = new Object();
+    String stringName = Verifier.nondetString();
+    Main instance = new Main(obj, stringName);
+    Name name =
+        instance.getRemainingName() == null ? null : (Name) (instance.getRemainingName().clone());
+    Main nameInstance = new Main(obj, name);
+    nameInstance.appendRemainingComponent(stringName);
+    instance.appendRemainingComponent(stringName);
+    Name name2 = instance.getRemainingName();
+    Name name3 = nameInstance.getRemainingName();
+    assert (name2 == null && name3 == null) || name2 == name3;
   }
 }

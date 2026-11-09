@@ -12,6 +12,7 @@ import it.unive.jlisa.frontend.visitors.expression.TypeASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import it.unive.jlisa.frontend.visitors.statement.BlockStatementASTVisitor;
 import it.unive.jlisa.program.cfg.JavaCodeMemberDescriptor;
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessInstanceGlobal;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -40,9 +41,7 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements ResultHolder<CFG> {
@@ -202,7 +201,6 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
 	private JavaCodeMemberDescriptor buildJavaCodeMemberDescriptor(
 			MethodDeclaration node) {
 		CodeLocation loc = getSourceCodeLocation(node);
@@ -236,7 +234,7 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		if (instance) {
 			it.unive.lisa.type.Type type = getProgram().getTypes()
 					.getType(getScope().getLiSACompilationUnit().getName());
-			parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+			parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 					new Annotations()));
 		}
 
@@ -271,12 +269,14 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		it.unive.lisa.type.Type type = getProgram().getTypes().getType(getScope().getLiSACompilationUnit().getName());
 
 		List<Parameter> parameters = new ArrayList<>();
-		parameters.add(new Parameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
+		parameters.add(new JavaParameter(getSourceCodeLocation(node), "this", new JavaReferenceType(type), null,
 				new Annotations()));
 
 		if (getScope().getEnclosingClass() != null)
 			parameters
-					.add(new Parameter(getSourceCodeLocationManager(node).nextColumn(), "$enclosing",
+					.add(new JavaParameter(
+							getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
+							"$enclosing",
 							getScope().getEnclosingClass().getReference(),
 							null, new Annotations()));
 
@@ -299,33 +299,6 @@ public class MethodASTVisitor extends ScopedVisitor<ClassScope> implements Resul
 		}
 
 		return codeMemberDescriptor;
-	}
-
-	private boolean isMain(
-			MethodDeclaration node) {
-		if (!Modifier.isStatic(node.getModifiers())) {
-			return false;
-		}
-		if (!node.getName().getIdentifier().equals("main")) {
-			return false;
-		}
-		if (node.getReceiverType() != null) {
-			return false;
-		}
-		if (node.parameters().size() != 1) {
-			return false;
-		}
-		SingleVariableDeclaration parameter = (SingleVariableDeclaration) node.parameters().getFirst();
-		Type type = parameter.getType();
-		if (parameter.getType().toString().equals("String[]")) {
-			return true;
-		}
-		if (type instanceof SimpleType && ((SimpleType) type).getName().toString().equals("String")
-				&& parameter.getExtraDimensions() == 1) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override

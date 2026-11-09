@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.libraries.loader;
 
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.annotations.Annotations;
 import it.unive.lisa.program.cfg.CFG;
@@ -12,11 +13,12 @@ public class Parameter {
 	private final String name;
 	private final Type type;
 	private final Value value;
+	private boolean isVararg = false;
 
 	public Parameter(
 			String name,
 			Type type) {
-		this(name, type, null);
+		this(name, type, null, false);
 	}
 
 	public Parameter(
@@ -26,6 +28,24 @@ public class Parameter {
 		this.name = name;
 		this.type = type;
 		this.value = value;
+	}
+
+	public Parameter(
+			String name,
+			Type type,
+			boolean isVararg) {
+		this(name, type, null, isVararg);
+	}
+
+	public Parameter(
+			String name,
+			Type type,
+			Value value,
+			boolean isVararg) {
+		this.name = name;
+		this.type = type;
+		this.value = value;
+		this.isVararg = isVararg;
 	}
 
 	public String getName() {
@@ -42,7 +62,7 @@ public class Parameter {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, type, value);
+		return Objects.hash(name, type, value, isVararg);
 	}
 
 	@Override
@@ -56,15 +76,15 @@ public class Parameter {
 			return false;
 		Parameter other = (Parameter) obj;
 		return Objects.equals(name, other.name) && Objects.equals(type, other.type)
-				&& Objects.equals(value, other.value);
+				&& Objects.equals(value, other.value) && isVararg == other.isVararg;
 	}
 
 	@Override
 	public String toString() {
-		return "Parameter [name=" + name + ", type=" + type + ", value=" + value + "]";
+		return "Parameter [name=" + name + ", type=" + type + ", value=" + value + ", isVararg=" + isVararg + "]";
 	}
 
-	public it.unive.lisa.program.cfg.Parameter toLiSAParameter(
+	public JavaParameter toLiSAParameter(
 			Program program,
 			CodeLocation location,
 			CFG init) {
@@ -73,7 +93,7 @@ public class Parameter {
 			defValue = this.value.toLiSAExpression(init);
 		}
 
-		return new it.unive.lisa.program.cfg.Parameter(location, this.name, this.type.toLiSAType(program), defValue,
-				new Annotations());
+		return new JavaParameter(location, this.name, this.type.toLiSAType(program), defValue,
+				new Annotations(), this.isVararg);
 	}
 }

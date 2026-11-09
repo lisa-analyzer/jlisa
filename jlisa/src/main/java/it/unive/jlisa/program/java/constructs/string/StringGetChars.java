@@ -71,6 +71,7 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		// TODO: implements semantics
 		AccessChild leftAccess = new AccessChild(JavaArrayType.CHAR_ARRAY, exprs[3], var, getLocation());
 		PushAny top = new PushAny(JavaArrayType.CHAR_ARRAY, getLocation());
-		return interprocedural.getAnalysis().assign(state, leftAccess, top, originating);
+		return interprocedural.getAnalysis().assign(state, leftAccess, top, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

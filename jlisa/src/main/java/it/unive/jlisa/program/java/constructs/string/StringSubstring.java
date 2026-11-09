@@ -15,6 +15,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -33,6 +34,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -76,6 +78,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
@@ -97,7 +100,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 				JavaBooleanType.INSTANCE,
 				idxCheck1, idxCheck2, LogicalOr.INSTANCE, getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, or, this);
+		Satisfiability sat = analysis.satisfies(state, or, context, this);
 
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
@@ -110,7 +113,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
@@ -118,14 +121,14 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+						new Error(oonExc.getReference(), originating), context, this));
 			}
 
 			return exceptionState;
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 
 			it.unive.lisa.symbolic.value.BinaryExpression substring = new it.unive.lisa.symbolic.value.BinaryExpression(
-					getProgram().getTypes().getBooleanType(),
+					getProgram().getTypes().getStringType(),
 					accessLeft,
 					right,
 					JavaStringSubstringOperator.INSTANCE,
@@ -140,16 +143,22 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			AnalysisState<A> tmp = state.bottomExecution();
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-				AnalysisState<A> sem = analysis.assign(callState, access, substring, this);
+				AnalysisState<A> sem = analysis.assign(callState, access, substring, context, this);
 				tmp = tmp.lub(sem);
 			}
 
 			getMetaVariables().addAll(call.getMetaVariables());
 			return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 		} else {
+			// restrict each half to the executions it describes
+			AnalysisState<A> okState = analysis.assume(state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, or,
+							LogicalNegation.INSTANCE, getLocation()),
+					context, this, this);
+			AnalysisState<A> koState = analysis.assume(state, or, context, this, this);
 
 			it.unive.lisa.symbolic.value.BinaryExpression substring = new it.unive.lisa.symbolic.value.BinaryExpression(
-					getProgram().getTypes().getBooleanType(),
+					getProgram().getTypes().getStringType(),
 					accessLeft,
 					right,
 					JavaStringSubstringOperator.INSTANCE,
@@ -159,12 +168,13 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
 					new JavaReferenceType(stringType), new Expression[0]);
 			AnalysisState<
-					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+					A> callState = call.forwardSemanticsAux(interprocedural, okState, new ExpressionSet[0],
+							expressions);
 
-			AnalysisState<A> tmp = state.bottomExecution();
+			AnalysisState<A> tmp = okState.bottomExecution();
 			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-				AnalysisState<A> sem = analysis.assign(callState, access, substring, this);
+				AnalysisState<A> sem = analysis.assign(callState, access, substring, context, this);
 				tmp = tmp.lub(sem);
 			}
 
@@ -175,24 +185,24 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
 			call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
+			AnalysisState<A> erroneousState = koState.bottomExecution();
 
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
+			for (SymbolicExpression th : koState.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				tmp = analysis.assign(state, throwVar, th, this);
+				tmp = analysis.assign(koState, throwVar, th, context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getLeft().getMetaVariables(), this)
 						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), this));
+				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
 			}
 
-			return exceptionState.lub(noExceptionState);
+			return analysis.moveExecutionToError(noExceptionState, erroneousState,
+					new Error(oonExc.getReference(), originating), context, this);
 		}
 	}
 }

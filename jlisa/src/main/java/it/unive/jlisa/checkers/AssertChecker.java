@@ -1,13 +1,10 @@
 package it.unive.jlisa.checkers;
 
-import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
-import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
-import it.unive.jlisa.witness.WitnessWriter;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.nonrelational.heap.HeapEnvironment;
@@ -15,100 +12,143 @@ import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.checks.semantic.SemanticTool;
-import it.unive.lisa.lattices.ReachLattice;
-import it.unive.lisa.lattices.ReachLattice.ReachabilityStatus;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
 import it.unive.lisa.lattices.types.TypeSet;
-import it.unive.lisa.program.SourceCodeLocation;
+import it.unive.lisa.outputs.messages.Message;
+import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.statement.Expression;
-import it.unive.lisa.program.cfg.statement.Ret;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.program.cfg.statement.call.Call;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
+import it.unive.lisa.type.Type;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Assert Checker It checks whether an assertion's condition holds.
+ * Assert Checker It checks whether an assertion's condition might not hold, and
+ * whether the main method might terminate with an uncaught runtime exception.
+ * All warnings are possible, and report the violation they refer to: they can
+ * be confirmed or refuted by the verification of warnings performed after the
+ * checks, if a verifier has been selected. For uncaught runtime exceptions, the
+ * checker also records the statement raising the exception
+ * ({@link #runtimeExceptionTarget(Message)}), the target of the violation
+ * witness of a confirmed warning. The checker can be restricted to one of the
+ * two kinds of violations (e.g., when only one property is of interest),
+ * skipping the checks of the other kind.
  * 
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
 public class AssertChecker<V extends ValueLattice<V>>
 		implements
 		SemanticCheck<
-				ReachabilityProduct<
-						SimpleAbstractState<
-								HeapEnvironment<AllocationSites>,
-								V,
-								TypeEnvironment<TypeSet>>>,
-				Reachability<
-						SimpleAbstractDomain<
-								HeapEnvironment<AllocationSites>,
-								V,
-								TypeEnvironment<TypeSet>>,
-						SimpleAbstractState<
-								HeapEnvironment<AllocationSites>,
-								V,
-								TypeEnvironment<TypeSet>>>> {
-	private record VariableInfo(
-			String variableName,
-			String type,
-			String originFile,
-			String startLine,
-			String assumptionScope) {
-	}
-
-	private List<VariableInfo> nonDetVariables = new ArrayList<>();
+				SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+				SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> {
 	private static final Logger LOG = LogManager.getLogger(AssertChecker.class);
 
-	private boolean minimalWitnessGenerated = false;
-	private boolean witnessGenerated = false;
-	private WitnessWriter witness;
-	private String workDir;
+	private static final String POSSIBLE_FAILURE = "the assertion might not hold";
+
+	/**
+	 * The statements raising the runtime exceptions reported by the warnings of
+	 * this checker, for each exit point of a main method and each context (in
+	 * textual form) it has been analyzed in.
+	 */
+	private final Map<Statement, Map<String, Statement>> exceptionTargets = new ConcurrentHashMap<>();
+
+	/**
+	 * The statements raising the runtime exceptions reported by the warnings of
+	 * this checker, as {@link #exceptionTargets}, for each statement throwing
+	 * one of the exceptions: used when the exceptions are raised at different
+	 * statements, and the verification of a warning tells which one raises the
+	 * confirmed exception.
+	 */
+	private final Map<Statement, Map<String, Map<Statement, Statement>>> throwerTargets = new ConcurrentHashMap<>();
+
+	private final boolean assertions;
+
+	private final boolean runtimeExceptions;
+
+	/**
+	 * Builds the checker, checking both failing assertions and uncaught runtime
+	 * exceptions.
+	 */
+	public AssertChecker() {
+		this(true, true);
+	}
+
+	/**
+	 * Builds the checker, checking only the given kinds of violations.
+	 *
+	 * @param assertions        whether or not failing assertions are checked
+	 * @param runtimeExceptions whether or not uncaught runtime exceptions are
+	 *                              checked
+	 */
+	public AssertChecker(
+			boolean assertions,
+			boolean runtimeExceptions) {
+		this.assertions = assertions;
+		this.runtimeExceptions = runtimeExceptions;
+	}
+
+	/**
+	 * Yields the statement raising the runtime exception reported by the given
+	 * warning of this checker, that is the target of its violation witness. If
+	 * the exceptions reaching the end of the main method are raised at
+	 * different statements, the one raising the exception of a confirmed
+	 * warning is used (see {@link StatementMessage#getThrower()}).
+	 * 
+	 * @param warning the warning
+	 * 
+	 * @return the statement, or nothing if the warning is not about an uncaught
+	 *             runtime exception, or if the statement could not be
+	 *             determined
+	 */
+	public Optional<Statement> runtimeExceptionTarget(
+			Message warning) {
+		if (!(warning instanceof StatementMessage))
+			return Optional.empty();
+		StatementMessage message = (StatementMessage) warning;
+		String context = String.valueOf(warning.getContext());
+		Map<String, Statement> targets = exceptionTargets.get(message.getStatement());
+		if (targets != null && targets.containsKey(context))
+			return Optional.of(targets.get(context));
+		// the exceptions are raised at different statements: the one raising
+		// the confirmed exception is used, if known
+		Statement thrower = message.getThrower();
+		if (thrower == null)
+			return Optional.empty();
+		Map<String, Map<Statement, Statement>> byThrower = throwerTargets.get(message.getStatement());
+		if (byThrower != null && byThrower.containsKey(context) && byThrower.get(context).containsKey(thrower))
+			return Optional.of(byThrower.get(context).get(thrower));
+		// the thrower might be a statement of a called method, when the
+		// verification followed the error inside it: unless it is a call
+		// (whose error might be raised by its callees), it raises the error
+		if (!(thrower instanceof Call))
+			return Optional.of(RuntimeExceptionTarget.ofThrower(thrower));
+		return Optional.empty();
+	}
 
 	@Override
 	public boolean visit(
 			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>>> tool,
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node) {
 
-		if (node instanceof JavaUnresolvedStaticCall unresolvedCall
-				&& unresolvedCall.getQualifier().equals("org.sosy_lab.sv_benchmarks.Verifier")) {
-			if (unresolvedCall.getParentStatement() instanceof JavaAssignment assignment
-					&& unresolvedCall.getTargetName().startsWith("nondet")) {
-				String type = unresolvedCall.getTargetName().substring(6);
-				String variableName = assignment.getLeft().toString();
-				String assumptionScope = "java::LMain;.main([Ljava/lang/String;)V";
-				// TODO: we should extract this from the cfg signature.
-				if (assignment.getLocation() instanceof SourceCodeLocation sc) {
-					String originFile = sc.getSourceFile();
-					String startLine = String.valueOf(sc.getLine());
-
-					nonDetVariables.add(new VariableInfo(variableName, type, originFile, startLine, assumptionScope));
-				}
-			}
-		}
 		// RuntimeException property checker
-		if (graph.getProgram().getEntryPoints().contains(graph) && node instanceof Ret)
+		if (runtimeExceptions && graph.getProgram().getEntryPoints().contains(graph)
+				&& graph.getAllExitpoints().contains(node))
 			try {
 				checkRuntimeException(tool, graph, node);
 			} catch (SemanticException e) {
@@ -116,7 +156,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 			}
 
 		// assert checker
-		if (node instanceof AssertStatement)
+		if (assertions && node instanceof AssertStatement)
 			try {
 				checkAssert(tool, graph, (AssertStatement) node);
 			} catch (SemanticException e) {
@@ -128,263 +168,143 @@ public class AssertChecker<V extends ValueLattice<V>>
 
 	private void checkRuntimeException(
 			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			Statement node)
 			throws SemanticException {
 
 		for (var result : tool.getResultOf(graph)) {
+			// errors caught by the error edges leaving the node (e.g., a throw
+			// inside a try block) do not escape the method
 			AnalysisState<
-					ReachabilityProduct<
-							SimpleAbstractState<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>>> state = result.getAnalysisStateAfter(node);
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = tool
+							.getAnalysis().removeCaughtErrors(result.getAnalysisStateAfter(node), node);
 
-			// checking if there exists at least one exception state
+			// checking if there exists at least one exception state, ignoring
+			// the AssertionErrors of failed assertions (reported by the
+			// assert checker)
 			boolean hasExceptionState = !state.getErrors().isBottom() &&
 					!state.getErrors().isTop() &&
-					!state.getErrors().function.isEmpty() ||
+					state.getErrors().function.keySet().stream().anyMatch(e -> !isAssertionError(e.getType())) ||
 					(!state.getSmashedErrors().isBottom() &&
 							!state.getSmashedErrors().isTop() &&
-							!state.getSmashedErrors().function.isEmpty());
+							state.getSmashedErrors().function.keySet().stream().anyMatch(t -> !isAssertionError(t)));
 
-			ReachabilityProduct<
-					SimpleAbstractState<
-							HeapEnvironment<AllocationSites>,
-							V,
-							TypeEnvironment<TypeSet>>> normaleState = state.getExecutionState();
-
-			// if exceptions had been thrown, we raise a warning
-			if (hasExceptionState)
-				// if the normal state is bottom, we raise a definite error
-				if (normaleState.second.isBottom())
-					tool.warnOn((Statement) node, "DEFINITE: uncaught runtime exception in main method");
-				// otherwise, we raise a possible error (both normal and
-				// exception states are not bottom)
+			// if exceptions might have been thrown, we raise a possible
+			// warning.
+			// Its violation concerns exceptions only: errors (e.g., the
+			// AssertionError of a failed assertion) are not runtime
+			// exceptions, and they can neither confirm nor prevent the
+			// refutation of the warning. Checked exceptions also match
+			// Exception, while thrown values whose static type is a supertype
+			// of Exception (e.g., Throwable) do not
+			if (hasExceptionState) {
+				tool.warnOn(node, result.getId(),
+						it.unive.lisa.checks.verification.Violation
+								.error(JavaClassType.getExceptionType().getReference()),
+						"uncaught runtime exception in main method");
+				Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
+				if (target.isPresent())
+					exceptionTargets.computeIfAbsent(node, n -> new ConcurrentHashMap<>())
+							.put(String.valueOf(result.getId()), target.get());
 				else
-					tool.warnOn((Statement) node, "POSSIBLE: uncaught runtime exception in main method");
+					throwerTargets.computeIfAbsent(node, n -> new ConcurrentHashMap<>())
+							.put(String.valueOf(result.getId()), RuntimeExceptionTarget.byThrower(tool, state));
+			}
 		}
+	}
+
+	private static boolean isAssertionError(
+			Type type) {
+		return type.canBeAssignedTo(JavaClassType.getAssertionErrorType().getReference());
 	}
 
 	private void checkAssert(
 			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool,
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool,
 			CFG graph,
 			AssertStatement node)
 			throws SemanticException {
+		Expression expr;
+		if (node instanceof SimpleAssert)
+			expr = ((SimpleAssert) node).getSubExpression();
+		else if (node instanceof AssertionStatement)
+			expr = ((AssertionStatement) node).getLeft();
+		else
+			return;
+		boolean isAssertFalse = expr.toString().equals("false");
+
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
-					ReachabilityProduct<
-							SimpleAbstractState<
-									HeapEnvironment<AllocationSites>,
-									V,
-									TypeEnvironment<TypeSet>>>> state = null;
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result
+							.getAnalysisStateAfter(expr);
 
-			boolean isAssertFalse = false;
-			if (node instanceof SimpleAssert) {
-				Expression expr = ((SimpleAssert) node).getSubExpression();
-				state = result.getAnalysisStateAfter(expr);
-				isAssertFalse = expr.toString().equals("false");
-			} else if (node instanceof AssertionStatement) {
-				Expression expr = ((AssertionStatement) node).getLeft();
-				state = result.getAnalysisStateAfter(expr);
-				isAssertFalse = expr.toString().equals("false");
-			}
-
-			V values = state.getExecutionState().second.valueState;
-			ReachabilityStatus reach = state.getExecutionState().first.lattice;
-
-			if (reach == ReachabilityStatus.UNREACHABLE || state.getExecutionState().second.isBottom()) {
-				// if the assertion is not reachable, it won't fail
-				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
+			if (state.getExecutionState().isBottom())
+				// the assertion is never evaluated in this result: it cannot
+				// fail
 				continue;
-			}
+
+			// the violation of the assertion: reaching it if it is an assert
+			// false, or its condition not holding otherwise
+			it.unive.lisa.checks.verification.Violation violation = isAssertFalse
+					? it.unive.lisa.checks.verification.Violation.reach()
+					: failure(expr, state);
 
 			if (isAssertFalse) {
-				// we do not need to query the satisfiability of of the
-				// expression:
-				// we rely on reachability to determine its status
-				if (reach == ReachabilityStatus.REACHABLE) {
-					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-					if (!minimalWitnessGenerated) {
-						generateMinimalViolationWitness();
-						minimalWitnessGenerated = true;
-					}
-				} else if (reach == ReachabilityStatus.POSSIBLY_REACHABLE) {
-					if (!minimalWitnessGenerated && !witnessGenerated) {
-						generateViolationWitness();
-						witnessGenerated = true;
-					}
-					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				}
+				// we do not need to query the satisfiability of the expression:
+				// the assertion fails whenever it is evaluated
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 				continue;
 			}
 
+			V values = state.getExecutionState().valueState;
 			if (values.isBottom()) {
-				// the statement is (possibly) reachable, is not an assert
-				// false,
-				// but we have a bottom value state
-				// we cannot do much other than being conservative and
-				// say that the assertion might not hold
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				// We don't know the values here, so it's hard to produce a
-				// witness. First attempt: try with a table of values.
-				if (!minimalWitnessGenerated && !witnessGenerated) {
-					generateViolationWitness();
-					witnessGenerated = true;
-				}
+				// the assertion is evaluated, but we have a bottom value state:
+				// we cannot do much other than being conservative and say that
+				// the assertion might not hold
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 				LOG.error("The abstract state of assert's expression is BOTTOM");
 				continue;
 			}
 
 			if (values.isTop()) {
-				// the statement is (possibly) reachable, is not an assert
-				// false,
-				// but we have a top value state
-				// we cannot do much other than being conservative and
-				// say that the assertion might not hold
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				// We don't know the values here, so it's hard to produce a
-				// witness. First attempt: try with a table of values.
-				if (!minimalWitnessGenerated && !witnessGenerated) {
-					generateViolationWitness();
-					witnessGenerated = true;
-				}
+				// the assertion is evaluated, but we have a top value state:
+				// we cannot do much other than being conservative and say that
+				// the assertion might not hold
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 				continue;
 			}
 
 			Satisfiability overall = Satisfiability.BOTTOM;
-			for (SymbolicExpression expr : state.getExecutionExpressions())
-				overall = overall.lub(tool.getAnalysis().satisfies(state, expr, (ProgramPoint) node));
+			for (SymbolicExpression e : state.getExecutionExpressions())
+				overall = overall.lub(tool.getAnalysis().satisfies(state, e, result.getId(), (ProgramPoint) node));
 
-			if (overall == Satisfiability.SATISFIED)
-				tool.warnOn((Statement) node, "DEFINITE: the assertion holds");
-			else if (overall == Satisfiability.NOT_SATISFIED) {
-				if (reach == ReachLattice.ReachabilityStatus.REACHABLE) {
-					tool.warnOn((Statement) node, "DEFINITE: the assertion DOES NOT hold");
-					if (!minimalWitnessGenerated) {
-						generateMinimalViolationWitness();
-						minimalWitnessGenerated = true;
-					}
-				} else if (reach == ReachLattice.ReachabilityStatus.POSSIBLY_REACHABLE) {
-					tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-					if (!minimalWitnessGenerated && !witnessGenerated) {
-						generateViolationWitness();
-						witnessGenerated = true;
-					}
-				}
-			} else {
-				tool.warnOn((Statement) node, "POSSIBLE: the assertion MAY (NOT) BE hold");
-				if (!minimalWitnessGenerated && !witnessGenerated) {
-					generateViolationWitness();
-					witnessGenerated = true;
-				}
-			}
+			// only assertions that surely hold do not raise warnings
+			if (overall != Satisfiability.SATISFIED)
+				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
 		}
 	}
 
-	private void generateMinimalViolationWitness() {
-		try {
-			witness = new WitnessWriter();
-			Map<String, String> violationAttrs = Map.of("violation", "true");
-			witness.addNode("sink", null);
-			witness.addNode("n0", violationAttrs);
-			String witnessFilePath = workDir + "/witness/witness.graphml";
-			File outputFile = new File(witnessFilePath);
-			outputFile.getParentFile().mkdirs();
-			witness.writeToFile(witnessFilePath);
-			LOG.info("Minimal violation witness produced.");
-		} catch (Exception e) {
-			LOG.warn("Failed to produce witness: {}", e);
-		}
-	}
-
-	/*
-	 * This method provides non determinstic values for Verifier's methods.
-	 * Ideally, these values should be determine by looking at the analysis
-	 * state. However, if the analysis state is TOP, we should "guess" a number.
+	/**
+	 * Yields the violation of the assertion whose condition is the given
+	 * expression: after its evaluation, one of the values it might evaluate to
+	 * is false. If the values of the expression are unknown, the violation is
+	 * reaching the assertion.
 	 */
-	private String getNonDetDefaultValue(
-			String type) {
-		switch (type) {
-		case "Boolean":
-			return "false";
-		case "Byte":
-			return "-128";
-		case "Char":
-			return "Ж";
-		case "Short":
-			return "32767";
-		case "Int":
-			return "1000000000";
-		case "Long":
-			return "2036854775808";
-		case "Float":
-			return "2036854775808";
-		case "Double":
-			return "0.998877665544";
-		case "String":
-			return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-		default:
-			return "0";
+	private static it.unive.lisa.checks.verification.Violation failure(
+			Expression expr,
+			AnalysisState<?> state) {
+		Type bool = expr.getProgram().getTypes().getBooleanType();
+		SymbolicExpression condition = null;
+		for (SymbolicExpression e : state.getExecutionExpressions()) {
+			SymbolicExpression negated = new UnaryExpression(bool, e, LogicalNegation.INSTANCE, expr.getLocation());
+			condition = condition == null ? negated
+					: new BinaryExpression(bool, condition, negated, LogicalOr.INSTANCE, expr.getLocation());
 		}
-	}
-
-	private void generateViolationWitness() {
-		try {
-			if (!nonDetVariables.isEmpty()) {
-				witness = new WitnessWriter();
-				Map<String, String> violationAttrs = Map.of("violation", "true");
-				Map<String, String> entryAttributes = Map.of("entry", "true");
-				witness.addNode("sink", null);
-				witness.addNode("n0", entryAttributes);
-				for (int i = 1; i < nonDetVariables.size(); i++) {
-					witness.addNode("n" + i, null);
-				}
-				witness.addNode("n" + nonDetVariables.size(), violationAttrs);
-				// generate edges
-				for (int i = 0; i < nonDetVariables.size(); i++) {
-					VariableInfo variable = nonDetVariables.get(i);
-					Map<String, String> edgeAttrs = Map.of(
-							"originfile", variable.originFile,
-							"startline", variable.startLine,
-							"threadId", "0",
-							"assumption", variable.variableName + " = " + getNonDetDefaultValue(variable.type),
-							"assumption.scope", variable.assumptionScope);
-					witness.addEdge("n" + i, "n" + (i + 1), edgeAttrs);
-				}
-				String witnessFilePath = workDir + "/witness/witness.graphml";
-				File outputFile = new File(witnessFilePath);
-				outputFile.getParentFile().mkdirs();
-				witness.writeToFile(witnessFilePath);
-				LOG.info("Violation witness produced.");
-			} else {
-				// the least we can do is to generate an minimal witness
-				generateMinimalViolationWitness();
-			}
-		} catch (Exception e) {
-			LOG.warn("Failed to produce witness: {}", e);
-		}
-	}
-
-	@Override
-	public void beforeExecution(
-			SemanticTool<
-					ReachabilityProduct<
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>,
-					Reachability<
-							SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
-							SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>>> tool) {
-		this.workDir = tool.getConfiguration().workdir;
-		SemanticCheck.super.beforeExecution(tool);
+		if (condition == null)
+			return it.unive.lisa.checks.verification.Violation.reach();
+		return it.unive.lisa.checks.verification.Violation.condition(expr, condition);
 	}
 }

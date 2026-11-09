@@ -1,9 +1,11 @@
 package it.unive.jlisa.interprocedural.callgraph;
 
+import it.unive.jlisa.program.cfg.JavaParameter;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaNumericType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.symbols.Aliases;
 import it.unive.lisa.analysis.symbols.NameSymbol;
 import it.unive.lisa.analysis.symbols.QualifiedNameSymbol;
@@ -17,6 +19,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeMember;
 import it.unive.lisa.program.cfg.CodeMemberDescriptor;
 import it.unive.lisa.program.cfg.NativeCFG;
+import it.unive.lisa.program.cfg.Parameter;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
@@ -368,16 +371,25 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 		int startIdx = instance ? 1 : 0;
 		Expression[] params = call.getParameters();
 		CodeMemberDescriptor descriptor = cm.getDescriptor();
+
+		Parameter[] formals = descriptor.getFormals();
+
 		for (int i = startIdx; i < params.length; i++) {
+
+			int againstFormal = Math.min(i, formals.length - 1);
+
 			Expression parameter = params[i];
 			Type paramType = parameter.getStaticType();
-			Type formalType = descriptor.getFormals()[i].getStaticType();
+			Type formalType = descriptor.getFormals()[againstFormal].getStaticType();
+
+			JavaParameter formal = (JavaParameter) formals[againstFormal];
+
 			if (formalType instanceof Untyped)
 				return 0;
 			if (paramType instanceof Untyped) {
 				boolean allIncomparable = true;
 				for (Type runtimeType : types[i]) {
-					int dist = distanceBetweenParameters(formalType, runtimeType);
+					int dist = distanceBetweenParameters(formalType, runtimeType, formal.isVarargs());
 					if (dist >= 0) {
 						allIncomparable = false;
 						distance += dist;
@@ -387,39 +399,59 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 					return -1;
 				continue;
 			}
-			int dist = distanceBetweenParameters(formalType, paramType);
+
+			int dist = distanceBetweenParameters(formalType, paramType, formal.isVarargs());
 			if (dist < 0)
 				return -1;
 			distance += dist;
 		}
+
+		// TODO: missing penalty for varargs matches.
+		// f(String x) should always be preferred over f(String... x)
+
 		return distance;
 	}
 
 	private int distanceBetweenParameters(
 			Type formalType,
-			Type paramType) {
+			Type paramType,
+			boolean isFormalVarargs) {
 		if (formalType instanceof Untyped)
 			return 0;
 		if (paramType instanceof Untyped)
 			return 0;
-		if (JavaClassType.isWrapperOf(formalType, paramType))
+
+		Type formalTypeNoVarargs = formalType;
+		if (isFormalVarargs) {
+
+			if ((paramType.isReferenceType() && !paramType.asReferenceType().getInnerType().isArrayType())
+					|| !paramType.isReferenceType()) {
+
+				assert (formalType instanceof JavaReferenceType);
+				JavaArrayType arrType = (JavaArrayType) ((JavaReferenceType) formalType).getInnerType();
+				Type base = arrType.getBaseType();
+				formalTypeNoVarargs = base;
+			}
+		}
+
+		if (JavaClassType.isWrapperOf(formalTypeNoVarargs, paramType))
 			// boxing
 			return 10;
-		else if (JavaClassType.isWrapperOf(paramType, formalType))
+		else if (JavaClassType.isWrapperOf(paramType, formalTypeNoVarargs))
 			// unboxing
 			return 10;
 		else if (paramType instanceof JavaNumericType numericParam) {
-			if (formalType instanceof JavaNumericType numericFormal) {
+			if (formalTypeNoVarargs instanceof JavaNumericType numericFormal) {
 				int paramDist = numericParam.distance(numericFormal);
 				if (paramDist < 0)
 					return -1; // incomparable
 				return paramDist;
 			} else
 				return -1;
-		} else if (paramType.isBooleanType() && formalType.isBooleanType())
+		} else if (paramType.isBooleanType() && formalTypeNoVarargs.isBooleanType())
 			return 0;
 		else if (paramType instanceof ReferenceType refTypeParam
-				&& formalType instanceof ReferenceType refTypeFormal) {
+				&& formalTypeNoVarargs instanceof ReferenceType refTypeFormal) {
 			if (refTypeParam.getInnerType().isNullType())
 				return 0;
 			else if (refTypeParam.getInnerType() instanceof JavaArrayType actualInner

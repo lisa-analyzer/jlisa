@@ -1,8 +1,8 @@
 class java.lang.Short extends java.lang.Number:
-	field MIN_VALUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
-	field MAX_VALUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+	final field MIN_VALUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+	final field MAX_VALUE type it.unive.jlisa.program.type.JavaShortType::INSTANCE
 	
-    instance field value type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+    instance final field value type it.unive.jlisa.program.type.JavaShortType::INSTANCE
 	
 	method Short_clinit: it.unive.jlisa.program.java.constructs.shortw.ShortClassInitializer
     	type it.unive.lisa.type.VoidType::INSTANCE
@@ -16,9 +16,6 @@ class java.lang.Short extends java.lang.Number:
 		libtype java.lang.Short* 
 		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE 
 		
-	method toString: it.unive.jlisa.program.java.constructs.shortw.ShortStaticToString
-		libtype java.lang.String*
-		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
 		
 	method parseShort: it.unive.jlisa.program.java.constructs.shortw.ShortParseShort
 		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
@@ -28,3 +25,28 @@ class java.lang.Short extends java.lang.Number:
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Short*
 		param other libtype java.lang.Short*
+
+	method reverseBytes: it.unive.jlisa.program.java.constructs.library.ShortFunctions$ReverseBytes
+		type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	method toUnsignedInt: it.unive.jlisa.program.java.constructs.library.ShortFunctions$ToUnsignedInt
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	method toUnsignedLong: it.unive.jlisa.program.java.constructs.library.ShortFunctions$ToUnsignedLong
+		type it.unive.jlisa.program.type.JavaLongType::INSTANCE
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	instance method compareTo: it.unive.jlisa.program.java.constructs.library.ShortFunctions$CompareTo
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.lang.Short*
+		param other libtype java.lang.Short*
+
+	method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$ShortToString
+		libtype java.lang.String*
+		param v type it.unive.jlisa.program.type.JavaShortType::INSTANCE
+
+	instance method toString: it.unive.jlisa.program.java.constructs.library.LibraryCalls$ShortToStringInstance
+		libtype java.lang.String*
+		param this libtype java.lang.Short*

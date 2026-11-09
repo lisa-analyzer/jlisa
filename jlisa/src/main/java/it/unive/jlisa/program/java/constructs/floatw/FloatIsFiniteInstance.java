@@ -69,7 +69,8 @@ public class FloatIsFiniteInstance extends UnaryExpression implements PluggableS
 				access,
 				JavaFloatIsFiniteOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

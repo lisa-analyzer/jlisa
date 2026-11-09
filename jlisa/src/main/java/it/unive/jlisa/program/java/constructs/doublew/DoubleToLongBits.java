@@ -55,6 +55,7 @@ public class DoubleToLongBits extends UnaryExpression implements PluggableStatem
 					throws SemanticException {
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaLongType.INSTANCE, expr, JavaDoubleToLongBitsOperator.INSTANCE, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, un, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, un, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

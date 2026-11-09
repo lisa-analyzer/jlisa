@@ -55,7 +55,7 @@ public class BitSetConstructor extends BinaryExpression implements PluggableStat
 			throws SemanticException {
 		// TODO: fix semantics
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 
 	}
 }

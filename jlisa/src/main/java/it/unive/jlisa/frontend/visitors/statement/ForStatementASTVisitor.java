@@ -38,7 +38,6 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean visit(
 			ForStatement node) {
 		NodeList<CFG, Statement, Edge> block = new NodeList<>(new SequentialEdge());

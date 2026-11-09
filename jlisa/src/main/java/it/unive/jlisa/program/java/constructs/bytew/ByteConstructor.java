@@ -59,6 +59,7 @@ public class ByteConstructor extends BinaryExpression implements PluggableStatem
 					throws SemanticException {
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild access = new AccessChild(JavaByteType.INSTANCE, left, var, getLocation());
-		return interprocedural.getAnalysis().assign(state, access, right, originating);
+		return interprocedural.getAnalysis().assign(state, access, right, interprocedural.getCurrentContext(),
+				originating);
 	}
 }

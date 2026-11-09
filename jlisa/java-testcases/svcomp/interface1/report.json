@@ -1,21 +1,28 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':15:4] on 'void B::f(B* this)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
+    "location" : "'Main.java':15:4-15:16",
+    "cfg" : "void B::f(B* this)",
+    "text" : "assert false",
+    "context" : "['Main.java':27:4-27:8]",
+    "contextHash" : "9de002f0abd40ab4685a514ed9473ccf",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true
   } ],
   "notices" : [ ],
-  "files" : [ "report.json", "void_B.B(B__this)_1707427366.graph.json", "void_B.f(B__this)_1707424545.graph.json", "void_C.C(C__this)_1707427397.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "report.json", "void_B.B(B__this)_eb919492e1049d4659dd8d21e1f39822.graph.json", "void_B.f(B__this)_9de002f0abd40ab4685a514ed9473ccf.graph.json", "void_C.C(C__this)_7bb61c5db0e340df212623ff09ef2622.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "20",
-    "duration" : "4ms",
-    "end" : "2026-08-27T13:15:33.785+02:00",
-    "expressions" : "51",
+    "cfgs" : "11",
+    "duration" : "5ms",
+    "end" : "2026-11-09T07:48:53.122+01:00",
+    "expressions" : "17",
     "files" : "4",
-    "globals" : "50",
-    "members" : "293",
+    "globals" : "51",
+    "members" : "410",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-27T13:15:33.781+02:00",
-    "statements" : "33",
+    "start" : "2026-11-09T07:48:53.117+01:00",
+    "statements" : "19",
     "units" : "58",
     "version" : "1.0",
     "warnings" : "1"

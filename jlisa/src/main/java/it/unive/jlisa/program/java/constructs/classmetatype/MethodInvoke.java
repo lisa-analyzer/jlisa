@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -28,18 +29,15 @@ import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
-import it.unive.lisa.analysis.Reachability;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
-import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.ReachabilityProduct;
 import it.unive.lisa.lattices.Satisfiability;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -68,11 +66,7 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -92,6 +86,11 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			CFG cfg,
 			CodeLocation location,
 			Expression... params) {
+		if (params.length == 2) {
+			JavaNewArrayWithInitializer dummy = new JavaNewArrayWithInitializer(cfg, location, new Expression[0],
+					JavaArrayType.OBJECT_ARRAY);
+			return new MethodInvoke(cfg, location, params[0], params[1], dummy);
+		}
 		return new MethodInvoke(cfg, location, params[0], params[1], params[2]);
 	}
 
@@ -111,12 +110,17 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		ExpressionSet methods = analysis.rewrite(state, new HeapDereference(Untyped.INSTANCE, left, getLocation()),
-				this);
+				context, this);
+
+		Collection<SymbolicExpression> innerMethods = methods.elements().stream()
+				.sorted(Comparator.comparing((SymbolicExpression::getCodeLocation)))
+				.toList();
 
 		AnalysisState<A> result = state.bottomExecution();
-		for (SymbolicExpression method : methods) {
+		for (SymbolicExpression method : innerMethods) {
 			result = result.lub(invoke(interprocedural, state, method, middle, right, expressions));
 		}
 		return result;
@@ -131,6 +135,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		CFG cfg = getCFG();
 
@@ -150,7 +155,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		AccessChild accessValue = new AccessChild(stringType, derefName, valueVar, location);
 
 		// if this is just null, throw a null pointer exception
-		Set<Type> receiverMethodTypes = analysis.getRuntimeTypesOf(state, left, this);
+		Set<Type> receiverMethodTypes = analysis.getRuntimeTypesOf(state, left, context, this);
 		if (receiverMethodTypes.size() == 1 && receiverMethodTypes.contains(NullType.INSTANCE)) {
 			return throwNullPointerException(interprocedural, state, expressions);
 		}
@@ -164,29 +169,40 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				JavaBooleanType.INSTANCE, accessModifiers, IsMemberStaticOperator.INSTANCE, location);
 
 		Satisfiability isStaticSat = Satisfiability.NOT_SATISFIED;
-		isStaticSat = analysis.satisfies(state, isStaticExpr, this);
+		isStaticSat = analysis.satisfies(state, isStaticExpr, context, this);
 
 		// we don't know whether the method is static or not
 		if (isStaticSat == Satisfiability.UNKNOWN)
-			return state.topExecution();
+			return state;
 
 		AnalysisState<A> exceptionState = state.bottomExecution();
 		AnalysisState<A> noExceptionState = state.bottomExecution();
+		AnalysisState<A> npeState = state.bottom();
+		Error npeError = null;
+		AnalysisState<A> iaeState = state.bottom();
+		Error iaeError = null;
 
-		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, this);
+		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, context, this);
 		// throw a NullPointerException if the method is not static and the
 		// runtime type
 		// of the receiver could be null
 		if (isStaticSat == Satisfiability.NOT_SATISFIED
 				&& thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
-			exceptionState = throwNullPointerException(interprocedural, state, expressions);
+			npeState = prepareNullPointerException(interprocedural, state, expressions);
+			npeError = new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating);
 		}
 
 		// if the receiver is certainly null, stop immediately
 		if (thisObjTypes.isEmpty())
-			return exceptionState;
+			if (npeError == null)
+				return exceptionState;
+			else
+				return analysis.moveExecutionToError(npeState, npeError, context, this);
 
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
+
+		if (clazzNameConstraints.isEmpty())
+			return withPendingExceptions(analysis, context, state, npeState, npeError, iaeState, iaeError);
 
 		// check the types of the receiver against the type of the declaring
 		// class.
@@ -195,7 +211,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			boolean mayThrowIA = checkMayThrowIllegalArgumentReceiver(interprocedural, state, thisObjTypes,
 					clazzNameConstraints, derefMethod);
 			if (mayThrowIA) {
-				exceptionState = exceptionState.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+				iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			}
 		}
 
@@ -215,7 +232,13 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		Satisfiability nArgsMatch = isNArgsEq(interprocedural, state, derefMethod, lenAccess);
 		if (nArgsMatch != Satisfiability.SATISFIED) {
-			return throwIllegalArgumentException(interprocedural, state, expressions);
+			iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+			iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
+			// if the number of arguments certainly does not match, no
+			// execution reaches the call
+			if (nArgsMatch != Satisfiability.UNKNOWN)
+				return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, iaeState,
+						iaeError);
 		}
 
 		boolean outOfBoundsMethodArr = false;
@@ -230,7 +253,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 					JavaBooleanType.INSTANCE,
 					idx, lenAccess, ComparisonLt.INSTANCE, location);
 
-			Satisfiability sat = analysis.satisfies(state, withinBounds, this);
+			Satisfiability sat = analysis.satisfies(state, withinBounds, context, this);
 			if (sat == Satisfiability.NOT_SATISFIED) {
 				outOfBoundsMethodArr = true;
 				break;
@@ -250,7 +273,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			ExpressionSet exprSet = new ExpressionSet();
 
 			// NOTE: this is probably not needed
-			for (Type t : analysis.getRuntimeTypesOf(state, accessExpr, this)) {
+			for (Type t : analysis.getRuntimeTypesOf(state, accessExpr, context, this)) {
 				accessExpr = new AccessChild(t, derefArr, idx, location);
 				exprSet = exprSet.lub(new ExpressionSet(accessExpr));
 			}
@@ -268,7 +291,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				accessValue);
 		assert (constraints != null);
 		if (constraints == null)
-			return state.bottomExecution();
+			return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, iaeState,
+					iaeError);
 
 		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
 
@@ -307,8 +331,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				// if open call, it's a stray call. Throw an illegal argument
 				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
-					exceptionState = exceptionState
-							.lub(throwIllegalArgumentException(interprocedural, state, expressions));
+					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+					iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(),
+							originating);
 					continue;
 				}
 
@@ -328,21 +353,40 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 					BinaryExpression castAs = new BinaryExpression(refObjectType, nc, castTo, TypeCast.INSTANCE,
 							location);
-					return analysis.smallStepSemantics(sem, castAs, this);
+					noExceptionState = noExceptionState.lub(analysis.smallStepSemantics(sem, castAs, context, this));
+				} else {
+					// if the return value(s) is of primitive type, we need to
+					// box it
+					AnalysisState<A> boxedState = getBoxedState(interprocedural, sem, derefMethod, expressions);
+
+					noExceptionState = noExceptionState.lub(boxedState);
 				}
-
-				// if the return value(s) is of primitive type, we need to box
-				// it
-				AnalysisState<A> boxedState = getBoxedState(interprocedural, sem, derefMethod, expressions);
-
-				noExceptionState = noExceptionState.lub(boxedState);
 
 				if (callType == CallType.INSTANCE)
 					break;
 			}
 		}
 
-		return noExceptionState.lub(exceptionState);
+		return withPendingExceptions(analysis, context, noExceptionState.lub(exceptionState), npeState, npeError,
+				iaeState,
+				iaeError);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> withPendingExceptions(
+			Analysis<A, D> analysis,
+			ScopeId<?> context,
+			AnalysisState<A> normal,
+			AnalysisState<A> npeState,
+			Error npeError,
+			AnalysisState<A> iaeState,
+			Error iaeError)
+			throws SemanticException {
+		AnalysisState<A> result = normal;
+		if (npeError != null)
+			result = analysis.moveExecutionToError(result, npeState, npeError, context, this);
+		if (iaeError != null)
+			result = analysis.moveExecutionToError(result, iaeState, iaeError, context, this);
+		return result;
 	}
 
 	@Override
@@ -375,7 +419,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return null;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	private <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> Stream<it.unive.lisa.symbolic.value.BinaryExpression> extractConstraints(
 					InterproceduralAnalysis<A, D> interprocedural,
@@ -384,40 +428,29 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		SimpleAbstractDomain<?, ?, ?> innerDomain;
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		// the value domain and its state are retrieved without depending on
+		// how the domain of the analysis is built (e.g., it might be wrapped by
+		// another domain)
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom == null || env == null)
+			return Stream.empty();
 
-		try {
-			Class<?> c = Reachability.class;
-			Field f = c.getDeclaredField("domain");
+		SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
 
-			f.setAccessible(true);
-
-			innerDomain = (SimpleAbstractDomain<?, ?, ?>) f.get(analysis.domain);
-		} catch (Exception e) {
-			return null;
-		}
-
-		assert (innerDomain != null);
-		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-		Object executionState = state.getExecutionState();
-		ReachabilityProduct<?> reachabilityProduct = (ReachabilityProduct<?>) executionState;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) reachabilityProduct.second;
-
-		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState);
-
-		ExpressionSet rewritten = analysis.rewrite(state, expr, this);
+		ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
 
 		return StreamSupport.stream(rewritten.spliterator(), false)
 				.map(ex -> (ValueExpression) ex)
 				.flatMap(vex -> {
 					try {
-						return vdom.constraints(null, env, vex, this, oracle).stream();
+						Set<it.unive.lisa.symbolic.value.BinaryExpression> c = vdom.constraints(null, env, vex, this,
+								oracle);
+						// a null result means the value is bottom
+						return c == null ? Stream.<it.unive.lisa.symbolic.value.BinaryExpression>empty() : c.stream();
 					} catch (SemanticException e) {
-						return null;
+						return Stream.<it.unive.lisa.symbolic.value.BinaryExpression>empty();
 					}
 				});
 	}
@@ -431,6 +464,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		CodeLocation location = getLocation();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		Type classMetaType = JavaClassType.getClassMetaType();
 		JavaReferenceType refClassMetaType = new JavaReferenceType(classMetaType);
@@ -449,17 +483,18 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				JavaBooleanType.INSTANCE,
 				accessLen, right, ComparisonEq.INSTANCE, location);
 
-		Satisfiability sat = analysis.satisfies(state, eq, this);
+		Satisfiability sat = analysis.satisfies(state, eq, context, this);
 		return sat;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> prepareNullPointerException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			StatementStore<A> expressions)
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaClassType nullPointerExceptionType = JavaClassType.getNullPointerExceptionType();
 
@@ -470,7 +505,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// assign exception to variable thrower
 		CFGThrow throwVar = new CFGThrow(getCFG(), nullPointerExceptionType.getReference(), getLocation());
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		// deletes the receiver of the constructor
 		// and all the metavariables from subexpressions
@@ -480,8 +515,18 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		assert (!state.isBottom());
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(nullPointerExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		return interprocedural.getAnalysis().moveExecutionToError(
+				prepareNullPointerException(interprocedural, state, expressions),
+				new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating),
+				interprocedural.getCurrentContext(), this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> List<BinaryExpression> getClassNameConstraints(
@@ -558,13 +603,15 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return (UnitType) t;
 	}
 
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwIllegalArgumentException(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			StatementStore<A> expressions)
-			throws SemanticException {
+	private <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> AnalysisState<A> prepareIllegalArgumentException(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					StatementStore<A> expressions)
+					throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaClassType illegalArgumentExceptionType = JavaClassType.getIllegalArgumentExceptionType();
 
@@ -575,7 +622,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// assign exception to variable thrower
 		CFGThrow throwVar = new CFGThrow(getCFG(), illegalArgumentExceptionType.getReference(), getLocation());
 		state = analysis.assign(state, throwVar,
-				state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+				state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 		// deletes the receiver of the constructor
 		// and all the metavariables from subexpressions
@@ -583,8 +630,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
-		return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-				new Error(illegalArgumentExceptionType.getReference(), originating), this);
+		return state.withExecutionExpression(throwVar);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> getBoxedState(

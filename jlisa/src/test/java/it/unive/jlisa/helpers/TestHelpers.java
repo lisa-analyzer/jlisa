@@ -4,9 +4,10 @@ import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
+import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
-import it.unive.lisa.analysis.Reachability;
+import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
 import it.unive.lisa.analysis.numeric.Interval;
@@ -40,6 +41,8 @@ public class TestHelpers {
 		for (String pf : programFiles)
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
+		// the values of reproducing inputs depend on the solver
+		conf.reportComparer = new InputValuesIgnoringComparer();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		// conf.forceUpdate = true;
 		// conf.outputs.add(new HtmlResults<>(true));
@@ -84,9 +87,32 @@ public class TestHelpers {
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		JavaInferredTypes type = new JavaInferredTypes();
 		ConstantPropagationWithIntervals domain = new ConstantPropagationWithIntervals();
-		conf.analysis = new Reachability<>(new SimpleAbstractDomain<>(heap, domain, type));
+		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
 		conf.semanticChecks.add(new AssertChecker<>());
+		// warnings are verified after the checks, stopping at the first one
+		// that is confirmed for each property
+		conf.warningVerifier = new SVCOMPVerifier<>();
+
+		return conf;
+	}
+
+	public static CronConfiguration assertCheckerWithTarsis(
+			String testDir,
+			String subDir,
+			String... programFiles) {
+		CronConfiguration conf = createConfiguration(testDir, subDir, programFiles);
+
+		// the abstract domain
+		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
+		JavaInferredTypes type = new JavaInferredTypes();
+		ConstantPropagationWithTarsis domain = new ConstantPropagationWithTarsis();
+		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
+
+		conf.semanticChecks.add(new AssertChecker<>());
+		// warnings are verified after the checks, stopping at the first one
+		// that is confirmed for each property
+		conf.warningVerifier = new SVCOMPVerifier<>();
 
 		return conf;
 	}

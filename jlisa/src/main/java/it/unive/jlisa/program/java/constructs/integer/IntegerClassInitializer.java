@@ -10,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.cfg.CFG;
@@ -86,8 +87,9 @@ public class IntegerClassInitializer extends NativeCFG implements PluggableState
 			Constant maxConst = new Constant(JavaIntType.INSTANCE, 0x7fffffff, getLocation());
 			Constant minConst = new Constant(JavaIntType.INSTANCE, 0x80000000, getLocation());
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
-			state = analysis.assign(state, maxId, maxConst, this);
-			state = analysis.assign(state, minId, minConst, this);
+			ScopeId<A> context = interprocedural.getCurrentContext();
+			state = analysis.assign(state, maxId, maxConst, context, this);
+			state = analysis.assign(state, minId, minConst, context, this);
 			return state;
 		}
 	}

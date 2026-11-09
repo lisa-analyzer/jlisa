@@ -55,6 +55,6 @@ public class UnsupportedEncodingExceptionConstructor extends NaryExpression impl
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

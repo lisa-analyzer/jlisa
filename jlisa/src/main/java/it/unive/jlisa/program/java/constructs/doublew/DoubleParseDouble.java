@@ -3,6 +3,7 @@ package it.unive.jlisa.program.java.constructs.doublew;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaDoubleParseDoubleOperator;
 import it.unive.jlisa.program.operator.JavaIsDoubleParsableOperator;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -13,6 +14,7 @@ import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
@@ -26,6 +28,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -81,8 +84,9 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 				getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		Satisfiability sat = analysis.satisfies(state, isParsable, originating);
+		Satisfiability sat = analysis.satisfies(state, isParsable, context, originating);
 		if (sat == Satisfiability.SATISFIED) {
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
@@ -90,7 +94,7 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 					JavaDoubleParseDoubleOperator.INSTANCE,
 					getLocation());
 
-			return analysis.smallStepSemantics(state, un, originating);
+			return analysis.smallStepSemantics(state, un, context, originating);
 		} else if (sat == Satisfiability.NOT_SATISFIED) {
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
@@ -101,41 +105,47 @@ public class DoubleParseDouble extends UnaryExpression implements PluggableState
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), nfeType.getReference(), getLocation());
 			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+					state.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
 			state = state.forgetIdentifiers(call.getMetaVariables(), this);
 			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), originating), this);
+					new Error(nfeType.getReference(), originating), context, this);
 		} else {
+			// restrict each half to the executions it describes
+			AnalysisState<A> okState = analysis.assume(state, isParsable, context, originating, originating);
+			AnalysisState<A> koState = analysis.assume(state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, isParsable,
+							LogicalNegation.INSTANCE, getLocation()),
+					context, originating, originating);
+
 			it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaLongType.INSTANCE,
 					accessExpr,
 					JavaDoubleParseDoubleOperator.INSTANCE,
 					getLocation());
 
-			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, un, originating);
+			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(okState, un, context, originating);
 
 			// builds the exception
 			JavaClassType nfeType = JavaClassType.getNumberFormatException();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					nfeType.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
 
 			// assign exception to variable thrower
 			CFGThrow throwVar = new CFGThrow(getCFG(), nfeType.getReference(), getLocation());
-			state = analysis.assign(state, throwVar,
-					state.getExecutionExpressions().elements.stream().findFirst().get(), this);
+			koState = analysis.assign(koState, throwVar,
+					koState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
 
 			// deletes the receiver of the constructor
 			// and all the metavariables from subexpressions
-			state = state.forgetIdentifiers(call.getMetaVariables(), this);
-			state = state.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-			AnalysisState<A> exceptionState = analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(nfeType.getReference(), originating), this);
-			return exceptionState.lub(noExceptionState);
+			koState = koState.forgetIdentifiers(call.getMetaVariables(), this);
+			koState = koState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
+			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
+					new Error(nfeType.getReference(), originating), context, this);
 		}
 	}
 }

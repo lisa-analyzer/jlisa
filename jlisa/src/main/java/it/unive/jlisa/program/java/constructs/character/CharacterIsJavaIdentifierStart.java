@@ -53,7 +53,8 @@ public class CharacterIsJavaIdentifierStart extends it.unive.lisa.program.cfg.st
 				JavaCharacterIsJavaIdentifierStartOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, isJavaId, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

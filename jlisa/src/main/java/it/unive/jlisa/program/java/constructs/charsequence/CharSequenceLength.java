@@ -52,6 +52,6 @@ public class CharSequenceLength extends BinaryExpression implements PluggableSta
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(JavaIntType.INSTANCE, getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

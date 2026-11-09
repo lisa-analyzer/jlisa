@@ -87,7 +87,8 @@ public class StringReplace extends TernaryExpression implements PluggableStateme
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
 			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, replaceAll, this);
+			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, replaceAll,
+					interprocedural.getCurrentContext(), this);
 			tmp = tmp.lub(sem);
 		}
 

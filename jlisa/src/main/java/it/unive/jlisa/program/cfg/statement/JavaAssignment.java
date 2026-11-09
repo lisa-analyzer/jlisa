@@ -2,6 +2,7 @@ package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.*;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -9,6 +10,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Assignment;
@@ -31,12 +33,49 @@ import java.util.Set;
 
 public class JavaAssignment extends Assignment {
 
+	/**
+	 * Whether this assignment is the initializer of a local variable or field
+	 * in its declaration ({@code int x = e;}).
+	 */
+	private final boolean initializer;
+
 	public JavaAssignment(
 			CFG cfg,
 			CodeLocation location,
 			Expression target,
 			Expression expression) {
+		this(cfg, location, target, expression, false);
+	}
+
+	/**
+	 * Builds the assignment.
+	 *
+	 * @param cfg         the {@link CFG} where this assignment lies
+	 * @param location    the location where this assignment is defined
+	 * @param target      the target of the assignment
+	 * @param expression  the assigned expression
+	 * @param initializer whether this assignment is the initializer of a local
+	 *                        variable or field in its declaration
+	 */
+	public JavaAssignment(
+			CFG cfg,
+			CodeLocation location,
+			Expression target,
+			Expression expression,
+			boolean initializer) {
 		super(cfg, location, RightToLeftEvaluation.INSTANCE, target.getStaticType(), target, expression);
+		this.initializer = initializer;
+	}
+
+	/**
+	 * Returns whether this assignment is the initializer of a local variable or
+	 * field in its declaration ({@code int x = e;}). In this case, the assigned
+	 * expression is a full expression on its own.
+	 *
+	 * @return {@code true} if this assignment is an initializer
+	 */
+	public boolean isInitializer() {
+		return initializer;
 	}
 
 	@Override
@@ -49,10 +88,11 @@ public class JavaAssignment extends Assignment {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state.bottomExecution();
 		Type targetType = left.getStaticType();
-		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, this);
+		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 
 		if (targetType instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaArrayType arrType) {
 			if (arrType.getDimensions() > 1) {
@@ -106,9 +146,18 @@ public class JavaAssignment extends Assignment {
 						TypeConv.INSTANCE, loc);
 				result = result
 						.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
-			} else if (JavaClassType.isWrapperOf(targetType, rType)) {
+			} else if (JavaClassType.isWrapperOf(targetType, rType)
+					|| (targetType.isReferenceType()
+							&& targetType.asReferenceType().getInnerType().equals(JavaClassType.getObjectType())
+							&& JavaTypeSystem.isPrimitive(rType))) {
+
+				Type boxedType = new JavaReferenceType(JavaClassType.getWrappedType(rType));
+				if (JavaClassType.isWrapperType(targetType)) {
+					boxedType = targetType;
+				}
+
 				// boxing
-				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) targetType,
+				JavaNewObj wrap = new JavaNewObj(getCFG(), this.getLocation(), (JavaReferenceType) boxedType,
 						new Expression[] { getRight() });
 				AnalysisState<A> wrapState = wrap.forwardSemantics(state, interprocedural, expressions);
 				for (SymbolicExpression wrapExp : wrapState.getExecutionExpressions())
@@ -120,13 +169,14 @@ public class JavaAssignment extends Assignment {
 									wrapExp,
 									expressions)
 											.forgetIdentifiers(wrap.getMetaVariables(), this));
+
 			} else if (JavaClassType.isWrapperOf(rType, targetType)) {
 				// unboxing
 				GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 				HeapDereference derefRight = new HeapDereference(rType.asReferenceType().getInnerType(), rhs,
 						getLocation());
 				AccessChild rightExpr = new AccessChild(targetType, derefRight, var, getLocation());
-				result = result.lub(analysis.assign(state, lhs, rightExpr, this));
+				result = result.lub(analysis.assign(state, lhs, rightExpr, context, this));
 			}
 		}
 		return result;

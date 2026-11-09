@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
 import it.unive.jlisa.program.operator.JavaStringInsertObjectOperator;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -8,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -64,22 +66,26 @@ public class StringBuilderInsertObject extends TernaryExpression implements Plug
 
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
+		HeapDereference derefLeft = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), left,
+				getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		HeapDereference derefRight = new HeapDereference(analysis.getDynamicTypeOf(state, accessLeft, originating),
+		HeapDereference derefRight = new HeapDereference(
+				analysis.getDynamicTypeOf(state, accessLeft, context, originating),
 				right, getLocation());
-		AccessChild accessRight = new AccessChild(analysis.getDynamicTypeOf(state, accessLeft, originating), derefRight,
+		AccessChild accessRight = new AccessChild(analysis.getDynamicTypeOf(state, accessLeft, context, originating),
+				derefRight,
 				var, getLocation());
 
-		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, left, stringType,
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, context, state, left, stringType,
 				getLocation(), this,
 				oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
 						stringType, oldValue, middle, accessRight, JavaStringInsertObjectOperator.INSTANCE,
 						getLocation()));
 
-		return analysis.smallStepSemantics(result, left, originating);
+		return analysis.smallStepSemantics(result, left, context, originating);
 	}
 }

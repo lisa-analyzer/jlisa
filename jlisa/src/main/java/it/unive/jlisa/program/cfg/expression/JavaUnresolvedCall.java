@@ -4,6 +4,7 @@ import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -13,6 +14,9 @@ import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
 import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.NullConstant;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.Set;
@@ -63,10 +67,13 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		// get receiver
 		ExpressionSet receiver = params[0];
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> erroneousState = state.bottom();
+		Error error = null;
 
 		for (SymbolicExpression rec : receiver) {
-			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, this);
+			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, context, this);
 			for (Type recType : types) {
 				if (recType.isPointerType()) {
 					Type inner = recType.asPointerType().getInnerType();
@@ -75,17 +82,19 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
 						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 								npeType.getReference(), new Expression[0]);
-						state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+						AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural,
+								whenNull(analysis, state, rec, context),
+								new ExpressionSet[0], expressions);
 
 						// assign exception to variable thrower
-						for (SymbolicExpression th : state.getExecutionExpressions()) {
+						for (SymbolicExpression th : npeState.getExecutionExpressions()) {
 							CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-							state = analysis.assign(state, throwVar, th, this);
+							AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, context, this);
 
 							// deletes the receiver of the constructor
-							state = state.forgetIdentifiers(call.getMetaVariables(), this);
-							result = result.lub(analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-									new Error(npeType.getReference(), this), this));
+							thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
+							erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
+							error = new Error(npeType.getReference(), this);
 						}
 						continue;
 					} else if (!inner.isUnitType())
@@ -95,6 +104,26 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 				}
 			}
 		}
-		return result;
+
+		if (error == null)
+			return result;
+		return analysis.moveExecutionToError(result, erroneousState, error, context, this);
+	}
+
+	/**
+	 * Yields the given state, where the given receiver is null: the
+	 * {@link NullPointerException} is only raised in that case. If the domain
+	 * cannot represent the condition, the state is returned unchanged.
+	 */
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> whenNull(
+			Analysis<A, D> analysis,
+			AnalysisState<A> state,
+			SymbolicExpression receiver,
+			ScopeId<A> context)
+			throws SemanticException {
+		BinaryExpression isNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), receiver,
+				new NullConstant(getLocation()), ComparisonEq.INSTANCE, getLocation());
+		AnalysisState<A> assumed = analysis.assume(state, isNull, context, this, this);
+		return assumed.getExecutionState().isBottom() ? state : assumed;
 	}
 }

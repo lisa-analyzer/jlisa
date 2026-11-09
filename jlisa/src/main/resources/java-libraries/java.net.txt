@@ -6,6 +6,7 @@ class java.net.URLEncoder extends java.lang.Object:
 		libtype java.lang.String* 
 		param s libtype java.lang.String* 
 		param enc libtype java.lang.String* 
+		throws libtype java.io.UnsupportedEncodingException
 
 class java.net.URLDecoder extends java.lang.Object:
 

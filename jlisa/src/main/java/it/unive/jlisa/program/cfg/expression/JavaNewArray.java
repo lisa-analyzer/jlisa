@@ -11,8 +11,12 @@ import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.StatementStore;
+import it.unive.lisa.analysis.value.ValueDomain;
+import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
@@ -25,11 +29,14 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
+import java.util.Set;
 
 public class JavaNewArray extends UnaryExpression {
 
@@ -50,6 +57,7 @@ public class JavaNewArray extends UnaryExpression {
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		JavaReferenceType refType = (JavaReferenceType) getStaticType();
 
 		// check for negative size
@@ -58,7 +66,7 @@ public class JavaNewArray extends UnaryExpression {
 				new Constant(getProgram().getTypes().getIntegerType(), 0, getLocation()), ComparisonLt.INSTANCE,
 				getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, bin, this);
+		Satisfiability sat = analysis.satisfies(state, bin, context, this);
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
 			JavaClassType oonExc = JavaClassType.getNegativeArraySizeExceptionType();
@@ -70,14 +78,14 @@ public class JavaNewArray extends UnaryExpression {
 			for (SymbolicExpression th : state.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, this);
+				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this), this));
+						new Error(oonExc.getReference(), this), context, this));
 			}
 
 			return exceptionState;
@@ -88,11 +96,11 @@ public class JavaNewArray extends UnaryExpression {
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
 		HeapReference ref = new HeapReference(refType, created, getLocation());
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
 
-		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, this);
+		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, context, this);
 
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
 		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
@@ -101,11 +109,17 @@ public class JavaNewArray extends UnaryExpression {
 
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 
-		tmp = analysis.assign(tmp, lenAccess, expr, this);
+		tmp = analysis.assign(tmp, lenAccess, expr, context, this);
 
-		// first case: the size is constant
-		if (expr instanceof Constant) {
-			for (int i = 0; i < (Integer) ((Constant) expr).getValue(); i++) {
+		SymbolicExpression tmpExpr = expr;
+		if (!(tmpExpr instanceof Constant)) {
+			tmpExpr = getArrLen(interprocedural, state, expr);
+		}
+
+		// first case: the size is constant or an expression that can be
+		// rewritten into just one constant value
+		if (tmpExpr instanceof Constant) {
+			for (int i = 0; i < (Integer) ((Constant) tmpExpr).getValue(); i++) {
 				Constant var = new Constant(JavaIntType.INSTANCE, i, getLocation());
 				AccessChild access = new AccessChild(contentType, array, var, getLocation());
 
@@ -114,7 +128,7 @@ public class JavaNewArray extends UnaryExpression {
 				AnalysisState<A> init = state.bottomExecution();
 
 				for (SymbolicExpression v : tmp2.getExecutionExpressions()) {
-					init = init.lub(analysis.assign(tmp2, access, v, this));
+					init = init.lub(analysis.assign(tmp2, access, v, context, this));
 				}
 
 				tmp = init;
@@ -124,7 +138,7 @@ public class JavaNewArray extends UnaryExpression {
 		// FIXME: second case: the size is not constant, return the 'top' array
 		// this is a temporary solution
 		getMetaVariables().add(array);
-		return analysis.smallStepSemantics(tmp, array, this);
+		return analysis.smallStepSemantics(tmp, array, context, this);
 	}
 
 	@Override
@@ -136,5 +150,41 @@ public class JavaNewArray extends UnaryExpression {
 	@Override
 	public String toString() {
 		return "new " + getStaticType() + "[" + getSubExpression() + "]";
+	}
+
+	@SuppressWarnings({ "rawtypes" })
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Constant getArrLen(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr)
+			throws SemanticException {
+
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+
+		// the value domain and its state are retrieved without depending on how
+		// the domain of the analysis is built (e.g., it might be wrapped by
+		// another domain)
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom != null && env != null) {
+
+			SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
+
+			ExpressionSet rewritten = analysis.rewrite(state, expr, context, this);
+
+			if (rewritten.size() == 1) {
+				ValueExpression first = (ValueExpression) rewritten.iterator().next();
+				Set<BinaryExpression> constraints = vdom.constraints(null, env, first, this, oracle);
+
+				if (constraints == null || constraints.size() != 1)
+					return null;
+
+				Constant value = (Constant) ((BinaryExpression) constraints.iterator().next()).getLeft();
+				return value;
+			}
+		}
+
+		return null;
 	}
 }

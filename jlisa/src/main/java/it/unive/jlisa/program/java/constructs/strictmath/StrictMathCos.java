@@ -52,7 +52,8 @@ public class StrictMathCos extends it.unive.lisa.program.cfg.statement.UnaryExpr
 				JavaStrictMathCosOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, cos, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, cos, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

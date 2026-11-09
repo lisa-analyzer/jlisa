@@ -51,6 +51,6 @@ public class PrintStreamPrint extends NaryExpression implements PluggableStateme
 					throws SemanticException {
 		// nothing to do
 		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(VoidType.INSTANCE, getLocation()),
-				originating);
+				interprocedural.getCurrentContext(), originating);
 	}
 }

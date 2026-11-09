@@ -52,7 +52,8 @@ public class MathAtan extends it.unive.lisa.program.cfg.statement.UnaryExpressio
 				JavaMathAtanOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, atan, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, atan, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

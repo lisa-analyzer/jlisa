@@ -54,7 +54,8 @@ public class CharacterIsDefined extends it.unive.lisa.program.cfg.statement.Unar
 				JavaCharacterIsDefinedOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, isDefined, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, isDefined, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

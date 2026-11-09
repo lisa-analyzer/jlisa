@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -53,10 +54,11 @@ public class JavaShiftLeft extends it.unive.lisa.program.cfg.statement.BinaryExp
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		if (analysis.getRuntimeTypesOf(state, right, this).stream().noneMatch(t -> t.isNumericType()))
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(t -> t.isNumericType()))
 			return state.bottomExecution();
 
-		if (analysis.getRuntimeTypesOf(state, left, this).stream()
+		if (analysis.getRuntimeTypesOf(state, left, context, this).stream()
 				.noneMatch(t -> t.canBeAssignedTo(getProgram().getTypes().getIntegerType())
 						|| t.canBeAssignedTo(JavaLongType.INSTANCE)))
 			return state.bottomExecution();
@@ -69,7 +71,7 @@ public class JavaShiftLeft extends it.unive.lisa.program.cfg.statement.BinaryExp
 						right,
 						it.unive.lisa.symbolic.value.operator.binary.BitwiseShiftLeft.INSTANCE,
 						getLocation()),
-				this);
+				context, this);
 	}
 
 	@Override

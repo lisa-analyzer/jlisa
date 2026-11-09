@@ -1,42 +1,51 @@
 package it.unive.jlisa.program.libraries.loader;
 
-import it.unive.jlisa.program.SourceCodeLocationManager;
+import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
+import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.NativeCFG;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ClassDef {
-	private final SourceCodeLocationManager locationManager;
+	private final SyntheticCodeLocationManager locationManager;
 	private final boolean root;
 	private final boolean sealed;
 	private final String typeName;
 	private final String name;
 	private final String base;
+	private final boolean isInterface;
+	private final List<String> interfaces;
 	private final Collection<Method> methods = new HashSet<>();
 	private final Collection<Field> fields = new HashSet<>();
 
 	public ClassDef(
-			SourceCodeLocationManager locationManager,
+			SyntheticCodeLocationManager locationManager,
 			boolean root,
 			boolean sealed,
 			String typeName,
 			String name,
-			String base) {
+			String base,
+			boolean isInterface) {
 		this.locationManager = locationManager;
 		this.root = root;
 		this.sealed = sealed;
 		this.typeName = typeName;
 		this.name = name;
 		this.base = base;
+		this.isInterface = isInterface;
+		this.interfaces = new ArrayList<String>();
 	}
 
 	public boolean isRoot() {
@@ -53,6 +62,14 @@ public class ClassDef {
 
 	public String getBase() {
 		return base;
+	}
+
+	public boolean isInterface() {
+		return isInterface;
+	}
+
+	public List<String> getInterfaces() {
+		return interfaces;
 	}
 
 	public String getTypeName() {
@@ -93,23 +110,34 @@ public class ClassDef {
 				+ base + ", methods=" + methods + ", fields=" + fields + "]";
 	}
 
-	public ClassUnit toLiSAUnit(
+	public CompilationUnit toLiSAUnit(
 			Program program,
 			AtomicReference<CompilationUnit> rootHolder) {
-		ClassUnit unit = new ClassUnit(locationManager.nextRow(), program, name, this.sealed);
-		if (this.root)
-			if (rootHolder.get() != null)
-				throw new IllegalStateException("More than one root class defined as hierarchy root");
-			else
-				rootHolder.set(unit);
+		CompilationUnit unit;
+		if (this.isInterface) {
+			unit = new InterfaceUnit(locationManager.nextLocation(), program, name, this.sealed);
+		} else {
+			unit = new ClassUnit(locationManager.nextLocation(), program, name, this.sealed);
+			if (this.root)
+				if (rootHolder.get() != null)
+					throw new IllegalStateException("More than one root class defined as hierarchy root");
+				else
+					rootHolder.set(unit);
+		}
 		return unit;
 	}
 
-	public ClassUnit populateUnit(
+	public CompilationUnit populateUnit(
 			Program program,
 			CFG init,
 			CompilationUnit root) {
-		ClassUnit unit = (ClassUnit) JavaClassType.lookup(this.name).getUnit();
+
+		CompilationUnit unit;
+		if (this.isInterface) {
+			unit = JavaInterfaceType.lookup(this.name).getUnit();
+		} else {
+			unit = JavaClassType.lookup(this.name).getUnit();
+		}
 
 		if (this.base != null) {
 			LibrarySpecificationProvider.importClass(program, this.base);
@@ -117,8 +145,18 @@ public class ClassDef {
 		} else if (root != null && unit != root)
 			unit.addAncestor(root);
 
+		for (String interf : this.interfaces) {
+			LibrarySpecificationProvider.importClass(program, interf);
+			JavaInterfaceType interfType = JavaInterfaceType.lookup(interf);
+			assert (interfType != null);
+			CompilationUnit interfUnit = interfType.getUnit();
+			if (!unit.getImmediateAncestors().contains(interfUnit)) {
+				unit.addAncestor(interfUnit);
+			}
+		}
+
 		for (Method mtd : this.methods) {
-			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextRow(), init, unit);
+			NativeCFG construct = mtd.toLiSACfg(program, locationManager.nextLocation(), init, unit);
 			if (construct.getDescriptor().isInstance())
 				unit.addInstanceCodeMember(construct);
 			else
@@ -126,7 +164,7 @@ public class ClassDef {
 		}
 
 		for (Field fld : this.fields) {
-			Global field = fld.toLiSAObject(program, locationManager.nextRow(), unit);
+			Global field = fld.toLiSAObject(program, locationManager.nextLocation(), unit);
 			if (field.isInstance())
 				unit.addInstanceGlobal(field);
 			else

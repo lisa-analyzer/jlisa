@@ -1,21 +1,42 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:4] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':14:4-14:32",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert java.lang.Character::isLetter(c)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':12:26-12:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"!1!\""
+    }, {
+      "location" : "'Main.java':13:13-13:33",
+      "source" : "return of char org.sosy_lab.sv_benchmarks.Verifier::nondetChar()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "65501"
+    } ],
+    "explanation" : "violation reached in 1 steps through [c = org.sosy_lab.sv_benchmarks.Verifier::nondetChar(), assert java.lang.Character::isLetter(c)] (not yet certified by execution)"
   } ],
   "notices" : [ ],
-  "files" : [ "char_org.sosy_lab.sv_benchmarks.Verifier.nondetChar()_1707439487.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "15",
-    "duration" : "4ms",
-    "end" : "2026-08-27T13:15:31.176+02:00",
-    "expressions" : "45",
-    "files" : "2",
-    "globals" : "50",
-    "members" : "288",
+    "cfgs" : "6",
+    "duration" : "101ms",
+    "end" : "2026-11-09T07:42:31.561+01:00",
+    "expressions" : "11",
+    "files" : "1",
+    "globals" : "51",
+    "members" : "405",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-27T13:15:31.172+02:00",
-    "statements" : "25",
+    "start" : "2026-11-09T07:42:31.460+01:00",
+    "statements" : "11",
     "units" : "55",
     "version" : "1.0",
     "warnings" : "1"

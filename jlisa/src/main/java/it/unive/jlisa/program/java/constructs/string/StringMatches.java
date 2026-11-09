@@ -74,7 +74,8 @@ public class StringMatches extends BinaryExpression implements PluggableStatemen
 				JavaStringMatchesOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, matches, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, matches, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

@@ -8,6 +8,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -55,12 +56,13 @@ public class StringBuilderReverse extends UnaryExpression implements PluggableSt
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, state, arg, stringType,
+		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, context, state, arg, stringType,
 				getLocation(), this,
 				oldValue -> new it.unive.lisa.symbolic.value.UnaryExpression(
 						stringType, oldValue, JavaStringReverseOperator.INSTANCE, getLocation()));
 
-		return analysis.smallStepSemantics(result, arg, originating);
+		return analysis.smallStepSemantics(result, arg, context, originating);
 	}
 }

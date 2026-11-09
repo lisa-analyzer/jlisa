@@ -74,7 +74,8 @@ public class StringEndsWith extends BinaryExpression implements PluggableStateme
 				JavaStringEndsWithOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, endsWith, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, endsWith, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 }

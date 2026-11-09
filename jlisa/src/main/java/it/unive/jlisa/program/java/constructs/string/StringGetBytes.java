@@ -50,9 +50,9 @@ public class StringGetBytes extends UnaryExpression implements PluggableStatemen
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
 		// TODO: implement semantics, include in "string.txt",
 		// Problem: understand how to correctly type arrays.
-		return state.top();
+		// return state.top();
+		return state.topExecution();
 	}
 }

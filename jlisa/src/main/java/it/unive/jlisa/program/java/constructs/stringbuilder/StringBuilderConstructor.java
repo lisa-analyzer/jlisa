@@ -9,6 +9,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
@@ -19,7 +20,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
+import it.unive.lisa.symbolic.value.operator.binary.Numeric32BitAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -67,7 +68,8 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 		AccessChild rightAccess = new AccessChild(stringType, right, var, getLocation());
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		AnalysisState<A> tmp = analysis.assign(state, leftAccess, rightAccess, originating);
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		AnalysisState<A> tmp = analysis.assign(state, leftAccess, rightAccess, context, originating);
 
 		// capacity of a StringBuilder(String) is initialValue.length() + 16,
 		// as per the Java spec
@@ -77,8 +79,8 @@ public class StringBuilderConstructor extends BinaryExpression implements Plugga
 				JavaIntType.INSTANCE, rightAccess, JavaStringLengthOperator.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression capacityValue = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaIntType.INSTANCE, rightLength, new Constant(JavaIntType.INSTANCE, 16, getLocation()),
-				NumericNonOverflowingAdd.INSTANCE, getLocation());
+				Numeric32BitAdd.INSTANCE, getLocation());
 
-		return analysis.assign(tmp, capAccess, capacityValue, originating);
+		return analysis.assign(tmp, capAccess, capacityValue, context, originating);
 	}
 }

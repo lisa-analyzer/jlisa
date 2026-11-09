@@ -1,6 +1,7 @@
 package it.unive.jlisa.analysis.heap;
 
 import it.unive.jlisa.program.operator.NaryExpression;
+import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.heap.pointbased.AllocationSiteBasedAnalysis;
@@ -47,6 +48,25 @@ import java.util.Set;
 public class JavaFieldSensitivePointBasedHeap
 		extends
 		FieldSensitivePointBasedHeap {
+
+	/**
+	 * Builds a context-insensitive, field-sensitive heap domain.
+	 */
+	public JavaFieldSensitivePointBasedHeap() {
+		super();
+	}
+
+	/**
+	 * Builds a field-sensitive heap domain.
+	 *
+	 * @param contextSensitive whether or not allocation sites should be
+	 *                             qualified by the interprocedural context
+	 *                             where the allocation happens
+	 */
+	public JavaFieldSensitivePointBasedHeap(
+			boolean contextSensitive) {
+		super(contextSensitive);
+	}
 
 	@Override
 	public ExpressionSet rewritePushAny(
@@ -112,6 +132,10 @@ public class JavaFieldSensitivePointBasedHeap
 			List<HeapReplacement> replacements,
 			boolean rhsIsReceiver)
 			throws SemanticException {
+
+		if (JavaTypeSystem.isPrimitive(id.getStaticType()) && JavaTypeSystem.isPrimitive(rhs.getStaticType()))
+			return sss;
+
 		if (rhs instanceof AllocationSite) {
 			// this whole branch is custom just for java
 			// we have x = y, where y is a pointer to an allocation site
@@ -130,10 +154,10 @@ public class JavaFieldSensitivePointBasedHeap
 					// initialized (eg with a constructor call) so we
 					// perform normal aliasing as there is nothing to copy
 					&& !rhsIsReceiver
-					&& !getAllocatedAt(sss, ((StackAllocationSite) rhs_ref).getLocationName()).isEmpty())
+					&& !getAllocatedAt(sss, rhs_ref.getLocationName(), rhs_ref.getContext()).isEmpty())
 				// for stack elements, assignment works as a shallow copy
 				// since there are no pointers to alias
-				return shallowCopy(sss, id, (StackAllocationSite) rhs_ref, replacements);
+				return shallowCopy(sss, id, (StackAllocationSite) rhs_ref, contextOf(oracle), replacements);
 			else {
 				// aliasing: id and star_y points to the same object
 				if (!sss.knowsIdentifier(rhs_ref))
@@ -188,6 +212,12 @@ public class JavaFieldSensitivePointBasedHeap
 			} else if (bin.getOperator() == ComparisonEq.INSTANCE) {
 				SymbolicExpression leftExpr = bin.getLeft();
 				SymbolicExpression rightExpr = bin.getRight();
+				if (!mightBeReference(leftExpr.getStaticType()) || !mightBeReference(rightExpr.getStaticType()))
+					// a comparison between primitive values (e.g., two int
+					// fields) is not about pointers: the rewriting of a field
+					// of a possibly-null receiver contains null, that must not
+					// be compared as a pointer
+					return Satisfiability.UNKNOWN;
 
 				ExpressionSet rhsExps;
 				ExpressionSet lhsExps;
@@ -268,5 +298,10 @@ public class JavaFieldSensitivePointBasedHeap
 		}
 
 		return Satisfiability.UNKNOWN;
+	}
+
+	private static boolean mightBeReference(
+			Type type) {
+		return type.isPointerType() || type.isReferenceType() || type.isNullType() || type.isUntyped();
 	}
 }

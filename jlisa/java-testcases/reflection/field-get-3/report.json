@@ -1,40 +1,42 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':13:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':24:3-24:30",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert instanceof(o,java.lang.Double*)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "the verification failed: null"
   }, {
-    "message" : "['Main.java':15:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':18:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':24:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':26:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':29:3] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion DOES NOT hold"
-  }, {
-    "message" : "['Main.java':45:2] on 'java.lang.Object* B::getSomeField(java.lang.Object* o, java.lang.String* fieldName)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':8:2] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':9:2] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':26:3-26:32",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(doubleValue(d), 12)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "the verification failed: null"
   } ],
   "notices" : [ ],
-  "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_1707433690.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_1707434031.graph.json", "report.json", "void_A.A(A__this)_318432871.graph.json", "void_B.B(B__this)_1707424855.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_4b90900dfba7655ffd97438e2add1ac5.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_bb035935c1d6d6fedb470a9a559561f0.graph.json", "report.json", "void_A.A(A__this)_3cd489dd0f89ac56471d2a949e1854f7.graph.json", "void_B.B(B__this)_3a89ef35a06f0cb145102446759a7a35.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "35ms",
-    "end" : "2026-08-27T13:15:06.505+02:00",
+    "duration" : "47s 462ms",
+    "end" : "2026-11-05T19:54:36.405+01:00",
     "expressions" : "64",
     "files" : "5",
-    "globals" : "54",
-    "members" : "271",
+    "globals" : "55",
+    "members" : "395",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-08-27T13:15:06.470+02:00",
+    "start" : "2026-11-05T19:53:48.943+01:00",
     "statements" : "28",
-    "units" : "54",
+    "units" : "55",
     "version" : "1.0",
-    "warnings" : "9"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

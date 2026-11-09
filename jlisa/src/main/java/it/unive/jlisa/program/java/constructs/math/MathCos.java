@@ -52,7 +52,8 @@ public class MathCos extends it.unive.lisa.program.cfg.statement.UnaryExpression
 				JavaMathCosOperator.INSTANCE,
 				getLocation());
 
-		return interprocedural.getAnalysis().smallStepSemantics(state, cos, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, cos, interprocedural.getCurrentContext(),
+				originating);
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.cfg.CFG;
@@ -64,6 +65,16 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		return loadAndStore(interprocedural, state, expr, null, expressions);
+	}
+
+	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> loadAndStore(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			AccessChild destAccessIdx,
+			StatementStore<A> expressions)
+			throws SemanticException {
 
 		Type thisFieldType = fieldData.getStaticType();
 		if (thisFieldType instanceof JavaReferenceType jrt)
@@ -72,6 +83,7 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		SymbolicExpression clazz = expr;
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 
 		Type intType = JavaIntType.INSTANCE;
@@ -93,19 +105,24 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		MemoryAllocation created = new MemoryAllocation(fieldMetaType, synGen.nextLocation(), false);
 		HeapReference ref = new HeapReference(refFieldMetaType, created, getLocation());
 
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, this);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 
 		InstrumentedReceiver field = new InstrumentedReceiver(refFieldMetaType, false, synGen.nextLocation());
-		AnalysisState<A> fieldAllocated = analysis.assign(allocated, field, ref, this);
+		AnalysisState<A> fieldAllocated = analysis.assign(allocated, field, ref, context, this);
 
-		HeapDereference derefThisField = new HeapDereference(fieldMetaType, field, getLocation());
+		if (destAccessIdx != null)
+			fieldAllocated = analysis.assign(fieldAllocated, destAccessIdx, ref, context, this);
+
+		HeapDereference derefThisField = destAccessIdx != null
+				? new HeapDereference(fieldMetaType, destAccessIdx, location)
+				: new HeapDereference(fieldMetaType, field, location);
 
 		AnalysisState<A> tmp = fieldAllocated.bottomExecution();
 
 		// assign field clazz
 		AccessChild accessThisFieldClazz = new AccessChild(refClassMetaType, derefThisField, clazzVar, getLocation());
 
-		AnalysisState<A> sem = analysis.assign(fieldAllocated, accessThisFieldClazz, clazz, this);
+		AnalysisState<A> sem = analysis.assign(fieldAllocated, accessThisFieldClazz, clazz, context, this);
 
 		// assign field name
 		sem = allocateSubField(interprocedural, sem, derefThisField, nameVar, refStringType, expressions);
@@ -116,7 +133,7 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		AccessChild dst = new AccessChild(stringType, derefFieldName, valueVar, getLocation());
 
 		Constant fieldNameConstant = new Constant(stringType, fieldData.getName(), location);
-		sem = analysis.assign(sem, dst, fieldNameConstant, this);
+		sem = analysis.assign(sem, dst, fieldNameConstant, context, this);
 
 		// assign field type
 		AccessChild accessThisFieldType = new AccessChild(refClassMetaType, derefThisField, typeVar, getLocation());
@@ -124,7 +141,7 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 
 		assert (sem.getExecutionExpressions().size() == 1);
 		SymbolicExpression fieldClazzExpr = sem.getExecutionExpressions().iterator().next();
-		sem = analysis.assign(sem, accessThisFieldType, fieldClazzExpr, this);
+		sem = analysis.assign(sem, accessThisFieldType, fieldClazzExpr, context, this);
 
 		// assign field modifiers
 		AccessChild accessThisFieldModifiers = new AccessChild(intType, derefThisField, modifiersVar, getLocation());
@@ -132,11 +149,13 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		boolean isInstance = fieldData.isInstance();
 		int modifiers = (isInstance) ? 0 : Modifier.STATIC;
 		Constant modifiersConstant = new Constant(JavaIntType.INSTANCE, modifiers, location);
-		sem = analysis.assign(sem, accessThisFieldModifiers, modifiersConstant, this);
+		sem = analysis.assign(sem, accessThisFieldModifiers, modifiersConstant, context, this);
 
 		tmp = tmp.lub(sem);
 
-		resultState = tmp.forgetIdentifier(field, this).withExecutionExpression(ref);
+		resultState = destAccessIdx != null
+				? tmp.forgetIdentifier(field, this).withExecutionExpression(ref)
+				: tmp.withExecutionExpression(field);
 
 		return resultState;
 	}
@@ -157,6 +176,7 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		JavaNewObj call = new JavaNewObj(getCFG(), synGen.nextLocation(),
 				type,
@@ -169,7 +189,7 @@ public class LoadField extends UnaryExpression implements PluggableStatement {
 		AnalysisState<A> tmp = state.bottomExecution();
 
 		for (SymbolicExpression allocatedTypeExpr : callState.getExecutionExpressions()) {
-			AnalysisState<A> t = analysis.assign(callState, accessThisFieldName, allocatedTypeExpr, this);
+			AnalysisState<A> t = analysis.assign(callState, accessThisFieldName, allocatedTypeExpr, context, this);
 			tmp = tmp.lub(t);
 		}
 

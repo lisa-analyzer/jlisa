@@ -36,6 +36,14 @@ EXTENDS
    : 'extends'
    ;
 
+INTERFACE
+   : 'interface'
+   ;
+
+IMPLEMENTS
+   : 'implements'
+   ;
+
 ROOT
    : 'root'
    ;
@@ -64,12 +72,28 @@ SEALED
    : 'sealed'
    ;
 
+FINAL
+   : 'final'
+   ;
+
+THROWS
+   : 'throws'
+   ;
+
+COMMA
+   : ','
+   ;
+
 COLON
    : ':'
    ;
 
 DOUBLE_COLON
    : '::'
+   ;
+
+ELLIPSIS
+   : '...'
    ;
 
 DOT

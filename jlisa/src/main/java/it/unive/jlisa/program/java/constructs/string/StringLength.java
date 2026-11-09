@@ -66,6 +66,7 @@ public class StringLength extends UnaryExpression implements PluggableStatement 
 				access,
 				JavaStringLengthOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, length, originating);
+		return interprocedural.getAnalysis().smallStepSemantics(state, length, interprocedural.getCurrentContext(),
+				originating);
 	}
 }
