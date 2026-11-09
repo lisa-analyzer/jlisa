@@ -5,7 +5,6 @@ import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
-import it.unive.jlisa.analysis.value.JavaFPFlags;
 import it.unive.jlisa.analysis.value.JavaNumericInterval;
 import it.unive.jlisa.analysis.value.JavaTarsis;
 import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
@@ -131,7 +130,7 @@ public class TestHelpers {
 		FieldSensitivePointBasedHeap heap = new JavaFieldSensitivePointBasedHeap();
 		JavaInferredTypes type = new JavaInferredTypes();
 		JavaWholeValueAnalysis domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
-				new JavaFPFlags(), new JavaTarsis());
+				new JavaTarsis());
 		conf.analysis = new SimpleAbstractDomain<>(heap, domain, type);
 
 		conf.semanticChecks.add(new AssertChecker<>());
