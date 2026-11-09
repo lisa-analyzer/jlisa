@@ -168,6 +168,9 @@ public final class ViolationValidatorV2 {
 	 * steps, and a run without the violation then says nothing about the
 	 * witness unless the witness fixed every nondet call.</li>
 	 * </ul>
+	 * The files named by the locations of the witness are the input files of
+	 * the task with the hashes the metadata of the witness give for them (see
+	 * {@link WitnessFiles}), whatever their paths.
 	 *
 	 * @param model  the witness
 	 * @param inputs the input files and directories of the task, where the
@@ -181,19 +184,23 @@ public final class ViolationValidatorV2 {
 		List<AvoidPoint> avoidPoints = new ArrayList<>();
 		List<TargetPoint> targetPoints = new ArrayList<>();
 		int skipped = 0;
+		// the files of the witness are the input files with the same hashes
+		WitnessFiles files = WitnessFiles.of(model.getSequence().getMetadata().getTask().getInputFileHashes(),
+				inputs);
 
 		for (Segment segment : model.getSequence().getSegments()) {
 			for (Waypoint wpt : segment.getWaypoints()) {
 				it.unive.lisa.witness.v2.Location at = wpt.getLocation();
+				String file = files.resolve(at.getFileName());
 				if (wpt.getAction() != Action.FOLLOW) {
 					skipped++;
 					ValidatorLogger.plan("  Skipped ({} waypoint): {}", wpt.getAction(), wpt);
 					continue;
 				}
 				switch (wpt.getType()) {
-				case TARGET -> targetPoints.add(new TargetPoint(at.getFileName(), at.getLine()));
+				case TARGET -> targetPoints.add(new TargetPoint(file, at.getLine()));
 				case FUNCTION_RETURN -> {
-					if (WitnessLocations.nondetCallAt(inputs, at.getFileName(), at.getLine()) == Boolean.FALSE) {
+					if (WitnessLocations.nondetCallAt(inputs, file, at.getLine()) == Boolean.FALSE) {
 						skipped++;
 						ValidatorLogger.plan("  Skipped (not a nondet call): {}", wpt);
 						continue;
@@ -203,10 +210,10 @@ public final class ViolationValidatorV2 {
 					if (value == null) {
 						RunSummary.count("plan.values-not-single");
 					}
-					interceptions.add(new Interception(at.getFileName(), at.getLine(), at.getColumn(), value,
+					interceptions.add(new Interception(file, at.getLine(), at.getColumn(), value,
 							constraint));
 				}
-				case BRANCHING -> branchDecisions.add(new BranchDecision(at.getFileName(), at.getLine(),
+				case BRANCHING -> branchDecisions.add(new BranchDecision(file, at.getLine(),
 						Boolean.parseBoolean(wpt.getConstraint().getValue())));
 				case FUNCTION_ENTER -> {
 					// nothing to steer

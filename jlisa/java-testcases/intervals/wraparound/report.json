@@ -1,36 +1,61 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:72-17:101] on 'void Main::byteBlock()': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':18:72-18:85",
+    "cfg" : "void Main::byteCross()",
+    "text" : "assert >=(b, 0)",
+    "context" : "['Main.java':7:21-7:31]",
+    "contextHash" : "a559ee8b265315e28b0c565fc4f22de5",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':4:26-4:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\""
+    }, {
+      "location" : "'Main.java':5:12-5:31",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "2"
+    }, {
+      "location" : "'Main.java':14:45-14:64",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "['Main.java':7:21-7:31, 'Main.java':18:36-18:50]",
+      "occurrence" : 0,
+      "value" : "128"
+    } ],
+    "explanation" : "violation reached in 10 steps through [k = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), ==(k, 1), ==(k, 2), Main::byteCross(), [main > byteCross] x = Main::range(126, 129), [main > byteCross > range] i = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > byteCross > range] ||(<(i, lo), >(i, hi)), [main > byteCross > range] return i, [main > byteCross] x = Main::range(126, 129) (after [1 targets] Main::range(126, 129)), [main > byteCross] b = (byte) x, [main > byteCross] assert >=(b, 0)] (not yet certified by execution)"
   }, {
-    "message" : "['Main.java':18:72-18:85] on 'void Main::byteCross()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':19:79-19:102] on 'void Main::shortBlock()': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':20:87-20:110] on 'void Main::intBlock()': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':21:87-21:99] on 'void Main::intCross()': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':22:68-22:92] on 'void Main::byteFits()': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:77-23:92] on 'void Main::byteBlockLow()': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':21:87-21:99",
+    "cfg" : "void Main::intCross()",
+    "text" : "assert >(i, 0)",
+    "context" : "['Main.java':10:21-10:30]",
+    "contextHash" : "af892198bb6de96c8b7b5dda84048692",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "not verified: the verification stopped at the first confirmed warning"
   } ],
   "notices" : [ ],
-  "files" : [ "int_Main.range(int_lo,_int_hi)_424f92ab9b9a9d30d6a9a7b9e1fe6ad6.graph.json", "int_Main.range(int_lo,_int_hi)_68962475aa7419e4036006623c6de61b.graph.json", "int_Main.range(int_lo,_int_hi)_9c7a256ec58dba01485ff72cc5f24efb.graph.json", "int_Main.range(int_lo,_int_hi)_9d899c257fa154c57b739ed26130f750.graph.json", "int_Main.range(int_lo,_int_hi)_c91edaaf35653a2ba89c619e12f449fd.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_12ef85763c3c80c954c1ef2881d33c58.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_62b1cee521eda4a169eda67891e4a896.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_70182ca9d74cbfeace3aeb38b28f1243.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_b80723cb0451561e8906f8debc951ac0.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_d638a100ce67f7f2f091d9cfa647582d.graph.json", "long_Main.lrange(long_lo,_long_hi)_bed0869fb7cd39cef8ce9d25f230166c.graph.json", "long_Main.lrange(long_lo,_long_hi)_c1b75e22a70950d7210e82bf6e2506f0.graph.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_057dbb9fd86ded6a80c01b94051ef706.graph.json", "long_org.sosy_lab.sv_benchmarks.Verifier.nondetLong()_edeb3238233e1cff495d23ac0ac16247.graph.json", "report.json", "void_Main.byteBlock()_974ddd50bd274ae5f9649844d7fd8a4f.graph.json", "void_Main.byteBlockLow()_9c9998b801b4763f092ca39bbed7367f.graph.json", "void_Main.byteCross()_a559ee8b265315e28b0c565fc4f22de5.graph.json", "void_Main.byteFits()_1f2f39d2bb9354f0e596f9d6ca6b34fe.graph.json", "void_Main.intBlock()_7be6efe71e31fb1e8c49afb171a44adb.graph.json", "void_Main.intCross()_af892198bb6de96c8b7b5dda84048692.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.shortBlock()_8b37c7a335664b04f74957a9727433b3.graph.json" ],
+  "files" : [ "int_Main.range(int_lo,_int_hi)_424f92ab9b9a9d30d6a9a7b9e1fe6ad6.graph.json", "int_Main.range(int_lo,_int_hi)_68962475aa7419e4036006623c6de61b.graph.json", "int_Main.range(int_lo,_int_hi)_9c7a256ec58dba01485ff72cc5f24efb.graph.json", "int_Main.range(int_lo,_int_hi)_9d899c257fa154c57b739ed26130f750.graph.json", "int_Main.range(int_lo,_int_hi)_c91edaaf35653a2ba89c619e12f449fd.graph.json", "long_Main.lrange(long_lo,_long_hi)_bed0869fb7cd39cef8ce9d25f230166c.graph.json", "long_Main.lrange(long_lo,_long_hi)_c1b75e22a70950d7210e82bf6e2506f0.graph.json", "report.json", "void_Main.byteBlock()_974ddd50bd274ae5f9649844d7fd8a4f.graph.json", "void_Main.byteBlockLow()_9c9998b801b4763f092ca39bbed7367f.graph.json", "void_Main.byteCross()_a559ee8b265315e28b0c565fc4f22de5.graph.json", "void_Main.byteFits()_1f2f39d2bb9354f0e596f9d6ca6b34fe.graph.json", "void_Main.intBlock()_7be6efe71e31fb1e8c49afb171a44adb.graph.json", "void_Main.intCross()_af892198bb6de96c8b7b5dda84048692.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.shortBlock()_8b37c7a335664b04f74957a9727433b3.graph.json" ],
   "info" : {
-    "cfgs" : "24",
-    "duration" : "322ms",
-    "end" : "2026-10-31T14:40:45.685+01:00",
-    "expressions" : "166",
-    "files" : "23",
-    "globals" : "50",
-    "members" : "301",
+    "cfgs" : "15",
+    "duration" : "614ms",
+    "end" : "2026-11-09T18:46:20.570+01:00",
+    "expressions" : "132",
+    "files" : "15",
+    "globals" : "51",
+    "members" : "414",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-10-31T14:40:45.363+01:00",
-    "statements" : "74",
+    "start" : "2026-11-09T18:46:19.956+01:00",
+    "statements" : "60",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "7"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",
