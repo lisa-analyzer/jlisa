@@ -72,6 +72,10 @@ public final class EventLoop {
 	private final WitnessLocations locations;
 	// Verifier.nondet* calls that returned a value not fixed by the witness
 	private int freeNondetCalls = 0;
+	// where the first nondet calls not fixed by the witness are, as JDI tells
+	// (reported with the verdict, to tell why they are not fixed)
+	private final List<String> freeCallSites = new ArrayList<>();
+	private static final int MAX_REPORTED_SITES = 3;
 	// a witness value that could not be returned (the run left the witness)
 	private boolean witnessValueNotApplied = false;
 
@@ -325,10 +329,16 @@ public final class EventLoop {
 		}
 
 		Interception ix = null;
+		String site = "unknown caller";
 		try {
-			ix = calls.match(event.thread().frame(1).location()).orElse(null);
+			Location caller = event.thread().frame(1).location();
+			site = describe(caller);
+			ix = calls.match(caller).orElse(null);
 		} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
 			ValidatorLogger.warn("[EVENT]  no caller frame for {}.{}(): {}", className, methodName, e.getMessage());
+		}
+		if (ix == null && freeCallSites.size() < MAX_REPORTED_SITES) {
+			freeCallSites.add(methodName + " at " + site);
 		}
 
 		if (ix == null || !ix.fixesValue()) {
@@ -524,7 +534,8 @@ public final class EventLoop {
 		if (freeNondetCalls > 0) {
 			ValidatorLogger.event("No violation, but {} nondet call(s) not fixed by the witness — unknown",
 					freeNondetCalls);
-			RunSummary.reason(code, detail + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness");
+			RunSummary.reason(code, detail + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness"
+					+ freeSites());
 			return ValidationResult.UNKNOWN;
 		}
 		RunSummary.reason(code, detail + "; every nondet call was fixed by the witness");
@@ -554,12 +565,13 @@ public final class EventLoop {
 		if (freeNondetCalls == 0 && !witnessValueNotApplied) {
 			ValidatorLogger.event("Violation, but not at the target {} — spurious", plan.targetPoints());
 			RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints()
-					+ "; every nondet call was fixed by the witness");
+					+ frames(event.thread()) + "; every nondet call was fixed by the witness");
 			return ValidationResult.SPURIOUS;
 		}
 		ValidatorLogger.event("Violation, but not at the target {} — unknown", plan.targetPoints());
-		RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints() + "; "
-				+ freeNondetCalls + " nondet call(s) not fixed by the witness");
+		RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints()
+				+ frames(event.thread()) + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness"
+				+ freeSites());
 		return ValidationResult.UNKNOWN;
 	}
 
@@ -703,6 +715,48 @@ public final class EventLoop {
 			base = base.substring(0, base.length() - 5);
 		}
 		return "*" + base + "*";
+	}
+
+	/**
+	 * Describes the given location as JDI tells it: the path of its source
+	 * relative to the root of the sources, and its line.
+	 */
+	private static String describe(
+			Location loc) {
+		String path;
+		try {
+			path = loc.sourcePath();
+		} catch (AbsentInformationException e) {
+			path = loc.declaringType().name() + " (no source information)";
+		}
+		return path + ":" + loc.lineNumber();
+	}
+
+	/**
+	 * Describes where the first nondet calls not fixed by the witness are, if
+	 * any.
+	 */
+	private String freeSites() {
+		return freeCallSites.isEmpty() ? "" : " (" + String.join(", ", freeCallSites) + ")";
+	}
+
+	/**
+	 * Describes the first frames of the given thread, as JDI tells them.
+	 */
+	private static String frames(
+			ThreadReference thread) {
+		try {
+			List<String> frames = new ArrayList<>();
+			for (StackFrame f : thread.frames()) {
+				if (frames.size() == MAX_REPORTED_SITES) {
+					break;
+				}
+				frames.add(describe(f.location()));
+			}
+			return " (frames: " + String.join(", ", frames) + ")";
+		} catch (IncompatibleThreadStateException e) {
+			return "";
+		}
 	}
 
 	private static String safeSourceName(
