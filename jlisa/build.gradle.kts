@@ -70,6 +70,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("junit:junit:4.13.1")
 
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.41.0")
     implementation("commons-cli:commons-cli:1.5.0")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
