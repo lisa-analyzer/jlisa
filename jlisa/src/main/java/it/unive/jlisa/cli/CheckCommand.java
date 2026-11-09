@@ -16,7 +16,6 @@ import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
-import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.LiSAReport;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -35,7 +34,6 @@ import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.triage.FirstViolationVerifier;
 import it.unive.lisa.triage.reachability.ReachabilityVerifier;
 import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
@@ -417,7 +415,7 @@ public final class CheckCommand {
 			// stopping at the first warning that is confirmed for each
 			// property
 			conf.warningVerifier = new SVCOMPVerifier<>(
-					new FirstViolationVerifier<>(JavaExpressionEncoder::new).withDeadline(verificationDeadline));
+					SVCOMPVerifier.firstViolation().withDeadline(verificationDeadline));
 			break;
 		default:
 			throw new ParseException("Invalid verifier name: " + verifierName);

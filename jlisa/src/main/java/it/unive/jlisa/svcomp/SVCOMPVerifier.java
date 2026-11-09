@@ -1,6 +1,7 @@
 package it.unive.jlisa.svcomp;
 
 import it.unive.jlisa.triage.JavaExpressionEncoder;
+import it.unive.jlisa.triage.JavaGlobalWrites;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.SemanticException;
@@ -10,11 +11,14 @@ import it.unive.lisa.checks.verification.VerificationResult;
 import it.unive.lisa.checks.verification.WarningVerifier;
 import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.triage.FirstViolationVerifier;
+import it.unive.lisa.triage.pdr.PdrVerifier;
+import it.unive.lisa.triage.reachability.ReachabilityVerifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * The {@link WarningVerifier} used for SV-COMP tasks. Each task has a single
@@ -39,12 +43,30 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 	private final WarningVerifier<A, D> verifier;
 
 	/**
-	 * Builds the verifier, verifying each kind of warnings with a
-	 * {@link FirstViolationVerifier} with default parameters, encoding the
-	 * operators of the Java frontend through a {@link JavaExpressionEncoder}.
+	 * Builds the verifier, verifying each kind of warnings with the verifier of
+	 * {@link #firstViolation()}.
 	 */
 	public SVCOMPVerifier() {
-		this(new FirstViolationVerifier<>(JavaExpressionEncoder::new));
+		this(firstViolation());
+	}
+
+	/**
+	 * Yields a {@link FirstViolationVerifier} with default parameters, whose
+	 * {@link PdrVerifier} encodes the operators of the Java frontend through a
+	 * {@link JavaExpressionEncoder}, and knows the static fields written by the
+	 * methods of the program ({@link JavaGlobalWrites}).
+	 *
+	 * @param <A> the kind of {@link AbstractLattice} produced by the domain
+	 *                {@code D}
+	 * @param <D> the kind of {@link AbstractDomain} ran during the analysis
+	 *
+	 * @return the verifier
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> FirstViolationVerifier<A,
+			D> firstViolation() {
+		return new FirstViolationVerifier<>(new ReachabilityVerifier<>(),
+				new PdrVerifier<A, D>().withFixpointCheck(false).withEncoder(JavaExpressionEncoder::new)
+						.withGlobalWrites(new JavaGlobalWrites()));
 	}
 
 	/**
