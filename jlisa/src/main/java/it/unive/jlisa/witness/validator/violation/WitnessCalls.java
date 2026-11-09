@@ -71,7 +71,7 @@ public final class WitnessCalls {
 		} catch (AbsentInformationException e) {
 			return false;
 		}
-		if (caller.lineNumber() != ix.line() || !baseName(ix.fileName()).equals(sourceName)) {
+		if (caller.lineNumber() != ix.line() || !SourceFiles.contains(ix.fileName(), caller)) {
 			return false;
 		}
 		if (ix.column() == null || locations == null) {

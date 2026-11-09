@@ -30,8 +30,21 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaStringCharAtOperator; ReferenceRead; contents of $field:value not written by the model"
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':12:26-12:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\""
+    }, {
+      "location" : "'Main.java':13:45-13:67",
+      "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\\u{109b}ABC\\u{231}\""
+    } ],
+    "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))] (not yet certified by execution)"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],

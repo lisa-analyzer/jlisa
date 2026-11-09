@@ -326,7 +326,15 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, state, symbolicExpressionsArgs,
 						callExpressions);
 
-				assert (!sem.getExecutionExpressions().isEmpty());
+				if (sem.getExecutionExpressions().isEmpty()) {
+					// no normal result (e.g., the call does not return, or the
+					// verification of the warnings follows the execution
+					// inside the callee): nothing to box
+					noExceptionState = noExceptionState.lub(sem);
+					if (callType == CallType.INSTANCE)
+						break;
+					continue;
+				}
 
 				// if open call, it's a stray call. Throw an illegal argument
 				// exception

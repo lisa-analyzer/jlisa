@@ -72,6 +72,10 @@ public final class EventLoop {
 	private final WitnessLocations locations;
 	// Verifier.nondet* calls that returned a value not fixed by the witness
 	private int freeNondetCalls = 0;
+	// where the first nondet calls not fixed by the witness are, as JDI tells
+	// (reported with the verdict, to tell why they are not fixed)
+	private final List<String> freeCallSites = new ArrayList<>();
+	private static final int MAX_REPORTED_SITES = 3;
 	// a witness value that could not be returned (the run left the witness)
 	private boolean witnessValueNotApplied = false;
 
@@ -281,7 +285,7 @@ public final class EventLoop {
 		// Find pending breakpoints for this class (matched by file name)
 		for (Map.Entry<String, List<PendingBreakpoint>> entry : pendingBreakpoints.entrySet()) {
 			String fileName = entry.getKey();
-			if (!classMatchesFile(className, fileName)) {
+			if (!SourceFiles.defines(fileName, refType)) {
 				continue;
 			}
 			for (PendingBreakpoint pb : entry.getValue()) {
@@ -325,10 +329,16 @@ public final class EventLoop {
 		}
 
 		Interception ix = null;
-		try {
-			ix = calls.match(event.thread().frame(1).location()).orElse(null);
-		} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
-			ValidatorLogger.warn("[EVENT]  no caller frame for {}.{}(): {}", className, methodName, e.getMessage());
+		String site = "unknown caller";
+		Location caller = callerOf(event.thread());
+		if (caller == null)
+			ValidatorLogger.warn("[EVENT]  no caller frame for {}.{}()", className, methodName);
+		else {
+			site = describe(caller);
+			ix = calls.match(caller).orElse(null);
+		}
+		if (ix == null && freeCallSites.size() < MAX_REPORTED_SITES) {
+			freeCallSites.add(methodName + " at " + site);
 		}
 
 		if (ix == null || !ix.fixesValue()) {
@@ -524,7 +534,8 @@ public final class EventLoop {
 		if (freeNondetCalls > 0) {
 			ValidatorLogger.event("No violation, but {} nondet call(s) not fixed by the witness — unknown",
 					freeNondetCalls);
-			RunSummary.reason(code, detail + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness");
+			RunSummary.reason(code, detail + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness"
+					+ freeSites());
 			return ValidationResult.UNKNOWN;
 		}
 		RunSummary.reason(code, detail + "; every nondet call was fixed by the witness");
@@ -554,12 +565,13 @@ public final class EventLoop {
 		if (freeNondetCalls == 0 && !witnessValueNotApplied) {
 			ValidatorLogger.event("Violation, but not at the target {} — spurious", plan.targetPoints());
 			RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints()
-					+ "; every nondet call was fixed by the witness");
+					+ frames(event.thread()) + "; every nondet call was fixed by the witness");
 			return ValidationResult.SPURIOUS;
 		}
 		ValidatorLogger.event("Violation, but not at the target {} — unknown", plan.targetPoints());
-		RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints() + "; "
-				+ freeNondetCalls + " nondet call(s) not fixed by the witness");
+		RunSummary.reason("violation-elsewhere", detail + ", not at the target " + plan.targetPoints()
+				+ frames(event.thread()) + "; " + freeNondetCalls + " nondet call(s) not fixed by the witness"
+				+ freeSites());
 		return ValidationResult.UNKNOWN;
 	}
 
@@ -592,6 +604,7 @@ public final class EventLoop {
 				ReferenceType type = element.referenceType();
 				Field fileField = type.fieldByName("fileName");
 				Field lineField = type.fieldByName("lineNumber");
+				Field classField = type.fieldByName("declaringClass");
 				if (fileField == null || lineField == null) {
 					continue;
 				}
@@ -600,9 +613,12 @@ public final class EventLoop {
 				if (!(file instanceof StringReference fileName) || !(line instanceof IntegerValue lineNumber)) {
 					continue;
 				}
+				Value declaring = classField == null ? null : element.getValue(classField);
 				for (TargetPoint t : plan.targetPoints()) {
 					if (lineNumber.value() == t.line()
-							&& WitnessCalls.baseName(t.fileName()).equals(fileName.value())) {
+							&& (declaring instanceof StringReference className
+									? SourceFiles.contains(t.fileName(), className.value(), fileName.value())
+									: WitnessCalls.baseName(t.fileName()).equals(fileName.value()))) {
 						return true;
 					}
 				}
@@ -627,8 +643,7 @@ public final class EventLoop {
 					path = null;
 				}
 				for (TargetPoint t : plan.targetPoints()) {
-					if (l.lineNumber() == t.line()
-							&& WitnessCalls.baseName(t.fileName()).equals(safeSourceName(l))) {
+					if (l.lineNumber() == t.line() && SourceFiles.contains(t.fileName(), l)) {
 						return true;
 					}
 				}
@@ -646,8 +661,7 @@ public final class EventLoop {
 			return false;
 		}
 		for (TargetPoint t : plan.targetPoints()) {
-			if (p.line() == t.line() && WitnessCalls.baseName(t.fileName())
-					.equals(WitnessCalls.baseName(p.sourcePath()))) {
+			if (p.line() == t.line() && SourceFiles.matches(t.fileName(), p.sourcePath())) {
 				return true;
 			}
 		}
@@ -686,29 +700,6 @@ public final class EventLoop {
 	}
 
 	/**
-	 * Heuristically checks if a JVM class name corresponds to a source file
-	 * name. E.g. {@code "Main"} matches {@code "Main.java"},
-	 * {@code "org.example.Foo"} matches {@code "Foo.java"} or
-	 * {@code "org/example/Foo.java"}.
-	 */
-	private static boolean classMatchesFile(
-			String className,
-			String fileName) {
-		String simple = className.contains(".") ? className.substring(className.lastIndexOf('.') + 1)
-				: className;
-		// Strip inner class suffix (e.g. "Outer$Inner" → "Outer")
-		if (simple.contains("$")) {
-			simple = simple.substring(0, simple.indexOf('$'));
-		}
-		String baseFile = fileName.replace('/', '.').replace('\\', '.');
-		if (baseFile.endsWith(".java")) {
-			baseFile = baseFile.substring(0, baseFile.length() - 5);
-		}
-		// baseFile may be "Main" or "org.example.Main"
-		return baseFile.endsWith(simple) || simple.equals(baseFile);
-	}
-
-	/**
 	 * Converts a source file name to a class-name filter prefix for
 	 * {@link ClassPrepareRequest#addClassFilter}. Uses wildcard {@code *}
 	 * suffix so that inner classes and package-prefixed names are matched.
@@ -724,6 +715,79 @@ public final class EventLoop {
 			base = base.substring(0, base.length() - 5);
 		}
 		return "*" + base + "*";
+	}
+
+	/**
+	 * The number of attempts at reading the frame of the caller of a method
+	 * that has just been entered.
+	 */
+	private static final int CALLER_ATTEMPTS = 5;
+
+	/**
+	 * Yields the location of the caller of the method the given thread has just
+	 * entered, or {@code null} if it cannot be read. The frames of the thread
+	 * are read a few times, as they might not be available right away (e.g.,
+	 * when the target JVM is under load).
+	 */
+	private Location callerOf(
+			ThreadReference thread) {
+		for (int attempt = 1; attempt <= CALLER_ATTEMPTS; attempt++) {
+			try {
+				return thread.frame(1).location();
+			} catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
+				ValidatorLogger.warn("[EVENT]  cannot read the caller frame (attempt {}): {}", attempt, e);
+				RunSummary.count("caller-frame." + e.getClass().getSimpleName());
+				try {
+					Thread.sleep(10L * attempt);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Describes the given location as JDI tells it: the path of its source
+	 * relative to the root of the sources, and its line.
+	 */
+	private static String describe(
+			Location loc) {
+		String path;
+		try {
+			path = loc.sourcePath();
+		} catch (AbsentInformationException e) {
+			path = loc.declaringType().name() + " (no source information)";
+		}
+		return path + ":" + loc.lineNumber();
+	}
+
+	/**
+	 * Describes where the first nondet calls not fixed by the witness are, if
+	 * any.
+	 */
+	private String freeSites() {
+		return freeCallSites.isEmpty() ? "" : " (" + String.join(", ", freeCallSites) + ")";
+	}
+
+	/**
+	 * Describes the first frames of the given thread, as JDI tells them.
+	 */
+	private static String frames(
+			ThreadReference thread) {
+		try {
+			List<String> frames = new ArrayList<>();
+			for (StackFrame f : thread.frames()) {
+				if (frames.size() == MAX_REPORTED_SITES) {
+					break;
+				}
+				frames.add(describe(f.location()));
+			}
+			return " (frames: " + String.join(", ", frames) + ")";
+		} catch (IncompatibleThreadStateException e) {
+			return "";
+		}
 	}
 
 	private static String safeSourceName(
