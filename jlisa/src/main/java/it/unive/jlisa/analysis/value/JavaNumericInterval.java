@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
+import it.unive.jlisa.lattices.JavaInterval;
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
@@ -24,7 +25,6 @@ import it.unive.jlisa.program.operator.JavaMathTanOperator;
 import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
-import it.unive.jlisa.lattices.JavaInterval;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
@@ -41,6 +41,7 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.*;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
@@ -66,15 +67,14 @@ import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.Set;
 import java.util.Map;
-import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
-import it.unive.lisa.symbolic.value.Identifier;
+import java.util.Set;
 import java.util.function.Function;
 
 public class JavaNumericInterval extends Interval {

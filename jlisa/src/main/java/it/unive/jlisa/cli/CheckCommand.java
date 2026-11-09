@@ -449,8 +449,8 @@ public final class CheckCommand {
 			break;
 		case "ConstantPropagation":
 		case "JavaWholeValueTarsis":
-			// the participants of ConstantPropagationWithTarsis, combined by the
-			// whole-value analysis
+			// the participants of ConstantPropagationWithTarsis, combined by
+			// the whole-value analysis
 			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaTarsis());
 			break;
