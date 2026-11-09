@@ -1,5 +1,39 @@
 package it.unive.jlisa.triage;
 
+import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendLongOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
+import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
+import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringFromToOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
+import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringTrimOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
+import java.util.function.Supplier;
+import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -353,6 +387,115 @@ public class JavaExpressionEncoderTest {
 				assertTrue(check(JavaLibraryFunction.STRING_COMPARE_TO_IGNORE_CASE, s, t) || !ascii);
 			}
 		}
+	}
+
+	/**
+	 * Checks the encoding of the given operator of the Java frontend applied
+	 * to the given arguments against the given value (computed by Java):
+	 * precise encodings must yield it.
+	 */
+	private static void checkOperator(
+			Object op,
+			Type type,
+			Supplier<Object> reference,
+			Object... args)
+			throws SemanticException {
+		Object value;
+		try {
+			value = reference.get();
+		} catch (RuntimeException e) {
+			// the operation throws for these arguments
+			return;
+		}
+		Symbols symbols = new Symbols();
+		JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(new HashMap<>()), symbols);
+		SymbolicExpression expr;
+		if (args.length == 1)
+			expr = new UnaryExpression(type, constant(args[0]), (UnaryOperator) op, LOC);
+		else if (args.length == 2)
+			expr = new BinaryExpression(type, constant(args[0]), constant(args[1]), (BinaryOperator) op, LOC);
+		else
+			expr = new TernaryExpression(type, constant(args[0]), constant(args[1]), constant(args[2]),
+					(TernaryOperator) op, LOC);
+		Term term = expr.accept(encoder);
+		String what = op + " on " + java.util.Arrays.toString(args);
+		assertFalse(symbols.havoc, what + " is not precise");
+		solver.push();
+		try {
+			for (Term r : symbols.requirements)
+				solver.assertTerm(r);
+			for (Term g : symbols.guards)
+				solver.assertTerm(g);
+			assertEquals(SmtResult.SAT, solver.check(), what + " is not precise");
+			solver.assertTerm(Term.not(Term.eq(term, expected(value))));
+			assertEquals(SmtResult.UNSAT, solver.check(), what + " should be " + value);
+		} finally {
+			solver.pop();
+		}
+	}
+
+	@Test
+	public void stringOperators() throws Exception {
+		Type str = StringType.INSTANCE;
+		Type integer = JavaIntType.INSTANCE;
+		Type bool = JavaBooleanType.INSTANCE;
+		List<String> strings = List.of("", "a", "abc", "abcabc", "  Hello World \t", "hELLO", "\n\t ", "a-b-c");
+		for (String s : strings) {
+			checkOperator(JavaStringTrimOperator.INSTANCE, str, () -> s.trim(), s);
+			checkOperator(JavaStringToLowerCaseOperator.INSTANCE, str, () -> s.toLowerCase(), s);
+			checkOperator(JavaStringToUpperCaseOperator.INSTANCE, str, () -> s.toUpperCase(), s);
+			for (int i = -1; i <= s.length() + 1; i++) {
+				int k = i;
+				checkOperator(JavaStringCharAtOperator.INSTANCE, JavaCharType.INSTANCE, () -> s.charAt(k), s, k);
+				checkOperator(JavaStringSubstringOperator.INSTANCE, str, () -> s.substring(k), s, k);
+				checkOperator(JavaStringDeleteCharAtOperator.INSTANCE, str,
+						() -> new StringBuilder(s).deleteCharAt(k).toString(), s, k);
+				checkOperator(JavaStringInsertStringOperator.INSTANCE, str,
+						() -> new StringBuilder(s).insert(k, "xy").toString(), s, k, "xy");
+				checkOperator(JavaStringInsertCharOperator.INSTANCE, str,
+						() -> new StringBuilder(s).insert(k, 'q').toString(), s, k, 'q');
+				checkOperator(JavaStringInsertIntOperator.INSTANCE, str,
+						() -> new StringBuilder(s).insert(k, -42).toString(), s, k, -42);
+				checkOperator(JavaStringSetCharAtOperator.INSTANCE, str, () -> {
+					StringBuilder sb = new StringBuilder(s);
+					sb.setCharAt(k, 'z');
+					return sb.toString();
+				}, s, k, 'z');
+				for (int j = k; j <= s.length() + 2; j++) {
+					int l = j;
+					checkOperator(JavaStringSubstringFromToOperator.INSTANCE, str, () -> s.substring(k, l), s, k, l);
+					checkOperator(JavaStringDeleteOperator.INSTANCE, str,
+							() -> new StringBuilder(s).delete(k, l).toString(), s, k, l);
+				}
+			}
+			for (String t : List.of("", "a", "bc", "abc", "ell", "-")) {
+				checkOperator(JavaStringStartsWithOperator.INSTANCE, bool, () -> s.startsWith(t), s, t);
+				checkOperator(JavaStringEndsWithOperator.INSTANCE, bool, () -> s.endsWith(t), s, t);
+				checkOperator(JavaStringIndexOfOperator.INSTANCE, integer, () -> s.indexOf(t), s, t);
+				checkOperator(JavaStringLastIndexOfStringOperator.INSTANCE, integer, () -> s.lastIndexOf(t), s, t);
+				checkOperator(JavaStringEqualsIgnoreCaseOperator.INSTANCE, bool, () -> s.equalsIgnoreCase(t), s, t);
+				checkOperator(JavaStringAppendStringOperator.INSTANCE, str, () -> s + t, s, t);
+				if (!t.isEmpty())
+					checkOperator(JavaStringReplaceOperator.INSTANCE, str, () -> s.replace(t, "XY"), s, t, "XY");
+				for (int from : List.of(-1, 0, 1, 3, 100)) {
+					checkOperator(JavaStringIndexOfStringFromIndexOperator.INSTANCE, integer,
+							() -> s.indexOf(t, from), s, t, from);
+					checkOperator(JavaStringStartsWithFromIndexOperator.INSTANCE, bool, () -> s.startsWith(t, from),
+							s, t, from);
+				}
+			}
+			checkOperator(JavaStringReplaceOperator.INSTANCE, str, () -> s.replace('a', 'b'), s, 'a', 'b');
+			checkOperator(JavaStringAppendCharOperator.INSTANCE, str, () -> s + 'c', s, 'c');
+			checkOperator(JavaStringAppendIntOperator.INSTANCE, str, () -> s + -7, s, -7);
+			checkOperator(JavaStringAppendLongOperator.INSTANCE, str, () -> s + 123456789012L, s, 123456789012L);
+			checkOperator(JavaStringAppendBooleanOperator.INSTANCE, str, () -> s + true, s, true);
+		}
+		checkOperator(JavaStringValueOfIntOperator.INSTANCE, str, () -> String.valueOf(-15), -15);
+		checkOperator(JavaStringValueOfLongOperator.INSTANCE, str, () -> String.valueOf(1L << 40), 1L << 40);
+		checkOperator(JavaStringValueOfCharOperator.INSTANCE, str, () -> String.valueOf('x'), 'x');
+		checkOperator(JavaStringValueOfBooleanOperator.INSTANCE, str, () -> String.valueOf(false), false);
+		checkOperator(JavaCharacterEqualsOperator.INSTANCE, bool, () -> 'a' == 'a', 'a', 'a');
+		checkOperator(JavaCharacterEqualsOperator.INSTANCE, bool, () -> 'a' == 'b', 'a', 'b');
 	}
 
 	@Test

@@ -26,12 +26,53 @@ import it.unive.jlisa.program.operator.JavaStrictMathGetExponentOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathMax;
 import it.unive.jlisa.program.operator.JavaStrictMathMin;
 import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
+import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendLongOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
+import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertLongOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
+import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringFromToOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
+import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringTrimOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.triage.encoding.ExpressionEncoder;
 import it.unive.lisa.triage.encoding.SortPolicy;
@@ -129,6 +170,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term prefix = substr(s, num(0), Term.ite(ge(from, len), len, add(from, num(1))));
 			return lastIndexOf(prefix, coerce(middle, Sort.INT, expression), expression);
 		}
+		Term string = stringTernary(expression.getOperator(), left, middle, right, expression);
+		if (string != null)
+			return string;
 		return super.encodeTernary(expression, left, middle, right);
 	}
 
@@ -163,6 +207,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return exponent(arg, e);
 		if (op instanceof JavaLongBitCountOperator)
 			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64);
+		Term string = stringUnary(op, arg, e);
+		if (string != null)
+			return string;
 		if (!(op instanceof JavaLibraryFunction))
 			return null;
 
@@ -296,6 +343,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false), 64);
 		if (op instanceof JavaStringCompareToOperator)
 			return compareStrings(asString(left, e), asString(right, e), e);
+		Term string = stringBinary(op, left, right, e);
+		if (string != null)
+			return string;
 		if (!(op instanceof JavaLibraryFunction))
 			return null;
 
@@ -636,7 +686,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 */
 	private Term floatToString(
 			Term f,
-			UnaryExpression e) {
+			ValueExpression e) {
 		Sort fp = f.getSort();
 		Term rounded = Term.app("fp.roundToIntegral", fp, Term.value("RTZ", Sort.ROUNDING_MODE), f);
 		Term limit = fp.equals(Sort.FLOAT64) ? FloatingPoints.literal(1e7d) : FloatingPoints.literal(1e7f);
@@ -817,6 +867,247 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	// strings
 
+	/**
+	 * Encodes the operators over strings with one operand of the Java
+	 * frontend, or yields {@code null} for the other operators.
+	 */
+	private Term stringUnary(
+			UnaryOperator op,
+			Term arg,
+			UnaryExpression e) {
+		if (op instanceof JavaStringToLowerCaseOperator) {
+			Term s = asString(arg, e);
+			return guarded(ascii(s), lower(s), List.of(s), e);
+		}
+		if (op instanceof JavaStringToUpperCaseOperator) {
+			Term s = asString(arg, e);
+			return guarded(ascii(s), upper(s), List.of(s), e);
+		}
+		if (op instanceof JavaStringTrimOperator)
+			return trim(asString(arg, e), e);
+		if (op instanceof JavaStringValueOfIntOperator || op instanceof JavaStringValueOfLongOperator)
+			return decimal(coerce(arg, Sort.INT, e));
+		if (op instanceof JavaStringValueOfBooleanOperator)
+			return Term.ite(coerce(arg, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+		if (op instanceof JavaStringValueOfCharOperator)
+			return fromChar(coerce(arg, Sort.INT, e));
+		if (op instanceof JavaStringValueOfDoubleOperator)
+			return floatToString(toFloat(arg, Sort.FLOAT64, e), e);
+		if (op instanceof JavaStringValueOfFloatOperator)
+			return floatToString(toFloat(arg, Sort.FLOAT32, e), e);
+		return null;
+	}
+
+	/**
+	 * Encodes the operators over strings with two operands of the Java
+	 * frontend (including the ones appending to the contents of string
+	 * builders), or yields {@code null} for the other operators.
+	 */
+	private Term stringBinary(
+			BinaryOperator op,
+			Term left,
+			Term right,
+			BinaryExpression e) {
+		if (op instanceof JavaCharacterEqualsOperator)
+			return Term.eq(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
+		Term appended = representation(op, right, e);
+		if (appended != null)
+			return concat(asString(left, e), appended);
+		if (op instanceof JavaStringCharAtOperator) {
+			Term c = code(at(asString(left, e), coerce(right, Sort.INT, e)));
+			// chars beyond the basic multilingual plane are two chars in Java
+			return guarded(le(c, num(Character.MAX_VALUE)), c, List.of(asString(left, e), coerce(right, Sort.INT, e)),
+					e);
+		}
+		if (op instanceof JavaStringStartsWithOperator)
+			return Term.app("str.prefixof", Sort.BOOL, asString(right, e), asString(left, e));
+		if (op instanceof JavaStringEndsWithOperator)
+			return Term.app("str.suffixof", Sort.BOOL, asString(right, e), asString(left, e));
+		if (op instanceof JavaStringIndexOfOperator)
+			return Term.app("str.indexof", Sort.INT, asString(left, e), asString(right, e), num(0));
+		if (op instanceof JavaStringIndexOfCharOperator)
+			return indexOf(asString(left, e), coerce(right, Sort.INT, e), num(0), e);
+		if (op instanceof JavaStringLastIndexOfOperator)
+			return lastIndexOf(asString(left, e), coerce(right, Sort.INT, e), e);
+		if (op instanceof JavaStringLastIndexOfStringOperator)
+			return lastIndexOfString(asString(left, e), asString(right, e), e);
+		if (op instanceof JavaStringSubstringOperator) {
+			Term s = asString(left, e);
+			Term from = coerce(right, Sort.INT, e);
+			return substr(s, from, sub(len(s), from));
+		}
+		if (op instanceof JavaStringDeleteCharAtOperator) {
+			Term s = asString(left, e);
+			Term i = coerce(right, Sort.INT, e);
+			return concat(substr(s, num(0), i), substr(s, add(i, num(1)), sub(sub(len(s), i), num(1))));
+		}
+		if (op instanceof JavaStringEqualsIgnoreCaseOperator) {
+			Term a = asString(left, e);
+			Term b = asString(right, e);
+			return guarded(Term.and(ascii(a), ascii(b)), Term.eq(lower(a), lower(b)), List.of(a, b), e);
+		}
+		return null;
+	}
+
+	/**
+	 * Encodes the operators over strings with three operands of the Java
+	 * frontend (including the ones inserting in, deleting from and changing
+	 * the contents of string builders), or yields {@code null} for the other
+	 * operators.
+	 */
+	private Term stringTernary(
+			TernaryOperator op,
+			Term left,
+			Term middle,
+			Term right,
+			TernaryExpression e) {
+		Term inserted = representation(op, right, e);
+		if (inserted != null) {
+			Term s = asString(left, e);
+			Term offset = coerce(middle, Sort.INT, e);
+			return concat(concat(substr(s, num(0), offset), inserted), substr(s, offset, sub(len(s), offset)));
+		}
+		if (op instanceof JavaStringDeleteOperator) {
+			// the end is at most the length
+			Term s = asString(left, e);
+			Term start = coerce(middle, Sort.INT, e);
+			Term end = coerce(right, Sort.INT, e);
+			Term last = Term.ite(le(end, len(s)), end, len(s));
+			return concat(substr(s, num(0), start), substr(s, last, sub(len(s), last)));
+		}
+		if (op instanceof JavaStringSetCharAtOperator) {
+			Term s = asString(left, e);
+			Term i = coerce(middle, Sort.INT, e);
+			return concat(concat(substr(s, num(0), i), fromChar(coerce(right, Sort.INT, e))),
+					substr(s, add(i, num(1)), sub(sub(len(s), i), num(1))));
+		}
+		if (op instanceof JavaStringSubstringFromToOperator) {
+			Term from = coerce(middle, Sort.INT, e);
+			return substr(asString(left, e), from, sub(coerce(right, Sort.INT, e), from));
+		}
+		if (op instanceof JavaStringIndexOfStringFromIndexOperator) {
+			Term s = asString(left, e);
+			Term t = asString(middle, e);
+			Term from = coerce(right, Sort.INT, e);
+			// an empty string is found at any index up to the length
+			return Term.ite(Term.and(Term.eq(t, Term.string("")), Term.app(">", Sort.BOOL, from, len(s))), len(s),
+					Term.app("str.indexof", Sort.INT, s, t, Term.ite(lt(from, num(0)), num(0), from)));
+		}
+		if (op instanceof JavaStringStartsWithFromIndexOperator) {
+			Term s = asString(left, e);
+			Term p = asString(middle, e);
+			Term from = coerce(right, Sort.INT, e);
+			return Term.and(ge(from, num(0)), le(add(from, len(p)), len(s)),
+					Term.app("str.prefixof", Sort.BOOL, p, substr(s, from, len(p))));
+		}
+		if (op instanceof JavaStringReplaceOperator) {
+			// characters or sequences of characters
+			Term s = asString(left, e);
+			Term target = middle.getSort().equals(Sort.INT) ? fromChar(middle) : asString(middle, e);
+			Term replacement = right.getSort().equals(Sort.INT) ? fromChar(right) : asString(right, e);
+			// an empty target is replaced between all the characters in Java
+			return guarded(Term.not(Term.eq(target, Term.string(""))),
+					Term.app("str.replace_all", Sort.STRING, s, target, replacement), List.of(s, target, replacement),
+					e);
+		}
+		return null;
+	}
+
+	/**
+	 * Yields the string representation of the value appended or inserted by
+	 * the given operator of string builders, as {@link String#valueOf}, or
+	 * {@code null} if the operator does not append nor insert a value whose
+	 * representation can be encoded.
+	 */
+	private Term representation(
+			Object op,
+			Term value,
+			ValueExpression e) {
+		if (op instanceof JavaStringAppendStringOperator || op instanceof JavaStringInsertStringOperator)
+			return asString(value, e);
+		if (op instanceof JavaStringAppendCharOperator || op instanceof JavaStringInsertCharOperator)
+			return fromChar(coerce(value, Sort.INT, e));
+		if (op instanceof JavaStringAppendIntOperator || op instanceof JavaStringInsertIntOperator
+				|| op instanceof JavaStringAppendLongOperator || op instanceof JavaStringInsertLongOperator)
+			return decimal(coerce(value, Sort.INT, e));
+		if (op instanceof JavaStringAppendBooleanOperator || op instanceof JavaStringInsertBooleanOperator)
+			return Term.ite(coerce(value, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+		if (op instanceof JavaStringAppendDoubleOperator || op instanceof JavaStringInsertDoubleOperator)
+			return floatToString(toFloat(value, Sort.FLOAT64, e), e);
+		if (op instanceof JavaStringAppendFloatOperator || op instanceof JavaStringInsertFloatOperator)
+			return floatToString(toFloat(value, Sort.FLOAT32, e), e);
+		return null;
+	}
+
+	/**
+	 * The given string without its leading and trailing characters up to
+	 * {@code '\u0020'}, as {@link String#trim()}: an auxiliary string such
+	 * that the given one is made of a prefix of such characters, the auxiliary
+	 * string, and a suffix of such characters, where the auxiliary string is
+	 * empty or starts and ends with other characters.
+	 */
+	private Term trim(
+			Term s,
+			UnaryExpression e) {
+		Term blanks = Term.value("(re.* (re.range \"\\u{0}\" \"\\u{20}\"))", Sort.STRING);
+		Term prefix = auxiliary(Sort.STRING, e);
+		Term trimmed = auxiliary(Sort.STRING, e);
+		Term suffix = auxiliary(Sort.STRING, e);
+		Term last = sub(len(trimmed), num(1));
+		getSymbols().require(Term.and(
+				Term.eq(s, concat(concat(prefix, trimmed), suffix)),
+				Term.app("str.in_re", Sort.BOOL, prefix, blanks),
+				Term.app("str.in_re", Sort.BOOL, suffix, blanks),
+				Term.or(Term.eq(trimmed, Term.string("")),
+						Term.and(Term.app(">", Sort.BOOL, code(at(trimmed, num(0))), num(0x20)),
+								Term.app(">", Sort.BOOL, code(at(trimmed, last)), num(0x20))))));
+		return trimmed;
+	}
+
+	/**
+	 * The last index of the given string in the given one, as
+	 * {@link String#lastIndexOf(String)}: an auxiliary index where the string
+	 * is found, and after which it is not (or {@code -1} if it is not found,
+	 * or the length of the string if the searched one is empty).
+	 */
+	private Term lastIndexOfString(
+			Term s,
+			Term t,
+			BinaryExpression e) {
+		Term i = auxiliary(Sort.INT, e);
+		Term len = len(s);
+		Term rest = substr(s, add(i, num(1)), sub(sub(len, i), num(1)));
+		getSymbols().require(Term.ite(Term.eq(t, Term.string("")), Term.eq(i, len),
+				Term.ite(Term.app("str.contains", Sort.BOOL, s, t),
+						Term.and(ge(i, num(0)), le(add(i, len(t)), len), Term.eq(substr(s, i, len(t)), t),
+								Term.not(Term.app("str.contains", Sort.BOOL, rest, t))),
+						Term.eq(i, num(-1)))));
+		return i;
+	}
+
+	/**
+	 * Whether the given string is made of ASCII characters only.
+	 */
+	private static Term ascii(
+			Term s) {
+		return Term.app("str.in_re", Sort.BOOL, s,
+				Term.value("(re.* (re.range \"\\u{0}\" \"\\u{7f}\"))", Sort.STRING));
+	}
+
+	private static Term concat(
+			Term a,
+			Term b) {
+		return Term.app("str.++", Sort.STRING, a, b);
+	}
+
+	/**
+	 * The string made of the given char.
+	 */
+	private static Term fromChar(
+			Term c) {
+		return Term.app("str.from_code", Sort.STRING, c);
+	}
+
 	private static Term len(
 			Term s) {
 		return Term.app("str.len", Sort.INT, s);
@@ -977,6 +1268,18 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term ascii = Term.value("(re.* (re.range \"\\u{0}\" \"\\u{7f}\"))", Sort.STRING);
 		Term guard = Term.and(Term.app("str.in_re", Sort.BOOL, a, ascii), Term.app("str.in_re", Sort.BOOL, b, ascii));
 		return guarded(guard, compareStrings(lower(a), lower(b), e), List.of(a, b), e);
+	}
+
+	/**
+	 * Converts the ASCII lowercase letters of the given string to uppercase.
+	 */
+	private static Term upper(
+			Term s) {
+		Term result = s;
+		for (char c = 'a'; c <= 'z'; c++)
+			result = Term.app("str.replace_all", Sort.STRING, result, Term.string(String.valueOf(c)),
+					Term.string(String.valueOf(Character.toUpperCase(c))));
+		return result;
 	}
 
 	/**
