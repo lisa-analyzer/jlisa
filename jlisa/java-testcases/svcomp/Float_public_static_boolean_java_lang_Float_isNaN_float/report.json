@@ -8,23 +8,23 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 4 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), output_1 = java.lang.Float::isNaN(input_1_0), output_2 = java.lang.Float::isNaN(input_2_0), assert !(&&(==(output_1, false), ==(output_2, true)))], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaFloatIsNaNOperator; ReferenceRead; contents of $field:java.lang.Float::value not written by the model; contents of $field:java.lang.Boolean::value not written by the model"
+    "explanation" : "violation reached in 4 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), output_1 = java.lang.Float::isNaN(input_1_0), output_2 = java.lang.Float::isNaN(input_2_0), assert !(&&(==(output_1, false), ==(output_2, true)))], relying on values that are not computed precisely (unsupported operations, unprojected values, operations on values of other kinds, heap values): JavaFloatIsNaNOperator; fresh values left unconstrained by the projection; ReferenceRead; contents of $field:java.lang.Boolean::value not written by the model"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "96ms",
-    "end" : "2026-11-03T14:30:05.862+01:00",
+    "duration" : "72ms",
+    "end" : "2026-11-09T07:42:32.910+01:00",
     "expressions" : "25",
     "files" : "1",
     "globals" : "51",
     "members" : "405",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-03T14:30:05.766+01:00",
+    "start" : "2026-11-09T07:42:32.838+01:00",
     "statements" : "14",
-    "units" : "54",
+    "units" : "55",
     "version" : "1.0",
     "warnings" : "1"
   },
