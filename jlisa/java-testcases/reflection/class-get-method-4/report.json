@@ -8,23 +8,23 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 5 steps through [s = null, ==(args::length, 1), s = \"foo\", c = java.lang.Class::forName(\"A\"), m1 = getMethod(c, s, new java.lang.Class*[]*[0]), assert ==(getDeclaringClass(m1), c)], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers, merged values): ReferenceRead; contents of $field:length not written by the model; ComparisonEq; merged value of __A; merged value of __java.lang.Object"
+    "explanation" : "violation reached in 5 steps through [s = null, ==(args::length, 1), s = \"baz\", c = java.lang.Class::forName(\"A\"), m1 = getMethod(c, s, new java.lang.Class*[]*[0]), assert ==(getDeclaringClass(m1), c)], relying on values that are not computed precisely (operations on values of other kinds, heap values, merged values): ReferenceRead; contents of $field:length not written by the model; merged value of __A; merged value of __java.lang.Object; ReferenceStore"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "423ms",
-    "end" : "2026-11-03T14:24:03.465+01:00",
+    "duration" : "79ms",
+    "end" : "2026-11-09T07:26:09.449+01:00",
     "expressions" : "29",
     "files" : "1",
     "globals" : "51",
     "members" : "395",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-03T14:24:03.042+01:00",
+    "start" : "2026-11-09T07:26:09.370+01:00",
     "statements" : "15",
-    "units" : "53",
+    "units" : "54",
     "version" : "1.0",
     "warnings" : "1"
   },
