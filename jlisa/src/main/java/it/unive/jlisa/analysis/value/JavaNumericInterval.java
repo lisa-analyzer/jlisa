@@ -206,8 +206,12 @@ public class JavaNumericInterval extends Interval {
 			if (comparison == ComparisonNe.INSTANCE)
 				return Satisfiability.SATISFIED;
 		}
-		if (!left.isTop() && expression.getLeft().equals(expression.getRight())) {
-			// a value that is not NaN is equal to itself
+		if (!left.isTop() && expression.getLeft() instanceof Identifier id && !id.isWeak()
+				&& id.equals(expression.getRight())) {
+			// a value that is not NaN is equal to itself: only for an
+			// identifier that stands for a single value (a weak one, e.g., the
+			// elements or the lengths of the arrays of an allocation site, may
+			// stand for different values on the two sides)
 			if (comparison == ComparisonEq.INSTANCE || comparison == ComparisonLe.INSTANCE
 					|| comparison == ComparisonGe.INSTANCE)
 				return Satisfiability.SATISFIED;
