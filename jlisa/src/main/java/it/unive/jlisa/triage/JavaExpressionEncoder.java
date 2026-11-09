@@ -2,6 +2,12 @@ package it.unive.jlisa.triage;
 
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierPartOperator;
@@ -13,7 +19,13 @@ import it.unive.jlisa.program.operator.JavaCharacterIsUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsNaNOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsNaNOperator;
 import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
@@ -163,6 +175,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return exponent(arg, e);
 		if (op instanceof JavaLongBitCountOperator)
 			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64);
+		if (op instanceof JavaStringValueOfIntOperator || op instanceof JavaStringValueOfLongOperator)
+		    return decimal(coerce(arg, Sort.INT, e));
+		if (op instanceof JavaStringValueOfBooleanOperator)
+		    return Term.ite(coerce(arg, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+		if (op instanceof JavaStringValueOfCharOperator)
+		    return Term.app("str.from_code", Sort.STRING, coerce(arg, Sort.INT, e));
+		if (op instanceof JavaStringValueOfDoubleOperator)
+		    return floatToString(toFloat(arg, Sort.FLOAT64, e), e);
+		if (op instanceof JavaStringValueOfFloatOperator)
+		    return floatToString(toFloat(arg, Sort.FLOAT32, e), e);
+
 		if (!(op instanceof JavaLibraryFunction))
 			return null;
 
