@@ -1,46 +1,52 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':14:2-14:41] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':26:2-26:32",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert ==(getModifiers(f1), 0)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "violation reached in 15 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.String::value; merged value of $field:java.lang.reflect.Method::name; merged value of $written:java.lang.reflect.Method::name; merged value of $cells; merged value of $written-cells"
   }, {
-    "message" : "['Main.java':15:2-15:36] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':27:2-27:32",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert ==(getModifiers(f2), 0)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "violation reached in 16 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.String::value; merged value of $field:java.lang.reflect.Method::name; merged value of $written:java.lang.reflect.Method::name; merged value of $cells; merged value of $written-cells"
   }, {
-    "message" : "['Main.java':16:2-16:35] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':18:2-18:37] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':19:2-19:38] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':20:2-20:38] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':22:2-22:59] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:2-23:46] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':24:2-24:49] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':26:2-26:32] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':27:2-27:32] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':28:2-28:32] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':28:2-28:32",
+    "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
+    "text" : "assert !=(getModifiers(f3), 0)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "violation reached in 17 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0), assert !=(getModifiers(f3), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.String::value; merged value of $field:java.lang.reflect.Method::name; merged value of $written:java.lang.reflect.Method::name; merged value of $cells; merged value of $written-cells"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Animal.Animal_clinit()_3b8fb22400a1a40580b7fc168d58da76.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "46ms",
-    "end" : "2026-11-05T17:49:59.764+01:00",
+    "duration" : "3m 559ms",
+    "end" : "2026-11-05T19:53:39.897+01:00",
     "expressions" : "98",
     "files" : "2",
-    "globals" : "53",
-    "members" : "276",
+    "globals" : "54",
+    "members" : "396",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-05T17:49:59.718+01:00",
+    "start" : "2026-11-05T19:50:39.338+01:00",
     "statements" : "37",
     "units" : "55",
     "version" : "1.0",
-    "warnings" : "12"
+    "warnings" : "3"
   },
   "configuration" : {
     "asynchronousListeners" : "",

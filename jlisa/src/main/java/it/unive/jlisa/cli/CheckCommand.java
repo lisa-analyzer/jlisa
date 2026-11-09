@@ -6,15 +6,21 @@ import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
 import it.unive.jlisa.checkers.AssertChecker;
+import it.unive.jlisa.checkers.Violation;
+import it.unive.jlisa.checkers.ViolationKind;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
+import it.unive.jlisa.svcomp.SVCOMPProperty;
+import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
 import it.unive.lisa.LiSA;
+import it.unive.lisa.LiSAReport;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.value.ValueDomain;
+import it.unive.lisa.checks.verification.ErrorViolation;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
 import it.unive.lisa.interprocedural.inlining.InliningAnalysis;
@@ -23,8 +29,13 @@ import it.unive.lisa.listeners.CallResolutionListener;
 import it.unive.lisa.outputs.HtmlResults;
 import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
+import it.unive.lisa.outputs.messages.Message;
+import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
+import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.triage.reachability.ReachabilityVerifier;
+import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,6 +103,15 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 
+		Option verifierOption = Option.builder("t")
+				.longOpt("verifier")
+				.hasArg()
+				.argName("VERIFIER")
+				.desc("Verifier of the warnings: (Reachability [DEFAULT], verifying them through the results of "
+						+ "the analysis; Combined, the SV-COMP verifier, falling back to model checking with z3)")
+				.required(false)
+				.build();
+
 		Option mode = Option.builder("m")
 				.longOpt("mode")
 				.hasArg()
@@ -127,16 +147,25 @@ public final class CheckCommand {
 		options.addOption(outdirOption);
 		options.addOption(checker);
 		options.addOption(numericalDomainOption);
+		options.addOption(verifierOption);
 		options.addOption(mode);
 		options.addOption(htmlOutput);
 		options.addOption(graphOutput);
 		options.addOption(dumpExcs);
 		options.addOption(debugInfo);
+		Option z3Path = Option.builder()
+				.longOpt("z3")
+				.hasArg()
+				.argName("PATH")
+				.desc("Path to the z3 executable used to verify warnings (by default, z3 is searched in the PATH; without it, warnings that cannot be verified through the results of the analysis stay possible)")
+				.required(false)
+				.build();
+		options.addOption(z3Path);
 		SharedOptions.markRequired(options, SharedOptions.SOURCE, "outdir", "numericalDomain");
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
 		String outdir = "";
-		String checkerName = "", numericalDomain = "", executionMode = "Debug";
+		String checkerName = "", numericalDomain = "", verifierName = "Reachability", executionMode = "Debug";
 		boolean html = false;
 		boolean graphs = false;
 		boolean dumpExceptions = false;
@@ -183,6 +212,9 @@ public final class CheckCommand {
 
 			checkerName = cmd.getOptionValue("c", "Assert");
 			numericalDomain = cmd.getOptionValue("n");
+			verifierName = cmd.getOptionValue("t", "Reachability");
+			if (!verifierName.equals("Reachability") && !verifierName.equals("Combined"))
+				throw new ParseException("Invalid verifier name: " + verifierName);
 
 			sources = cmd.getOptionValues("s");
 			outdir = cmd.getOptionValue("o");
@@ -202,6 +234,9 @@ public final class CheckCommand {
 
 			propertyFiles = cmd.getOptionValues(SharedOptions.SVCOMP_PROPERTY);
 
+			if (cmd.hasOption("z3"))
+				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
+
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
 			SharedOptions.printHelp("check", options, System.err);
@@ -210,10 +245,10 @@ public final class CheckCommand {
 
 		switch (executionMode) {
 		case "Debug":
-			runDebug(sources, outdir, checkerName, numericalDomain, html, graphs, debug, propertyFiles);
+			runDebug(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, html, graphs, dumpExceptions, debug,
+			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions, debug,
 					propertyFiles);
 			break;
 		default:
@@ -227,6 +262,7 @@ public final class CheckCommand {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			String verifierName,
 			boolean htmlOutput,
 			boolean graphOutput,
 			boolean debug,
@@ -235,7 +271,7 @@ public final class CheckCommand {
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
 				propertyFiles);
 	}
 
@@ -244,6 +280,7 @@ public final class CheckCommand {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			String verifierName,
 			boolean htmlOutput,
 			boolean graphOutput,
 			boolean dumpExceptions,
@@ -264,7 +301,7 @@ public final class CheckCommand {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, frontend, htmlOutput, graphOutput, debug,
+			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
 					propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
@@ -293,6 +330,7 @@ public final class CheckCommand {
 			String outdir,
 			String checkerName,
 			String numericalDomain,
+			String verifierName,
 			JavaFrontend frontend,
 			boolean htmlOutput,
 			boolean graphOutput,
@@ -323,10 +361,31 @@ public final class CheckCommand {
 		// result for a recursive call
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
+		// warnings are verified after the checks
+		switch (verifierName) {
+		case "Reachability":
+			conf.warningVerifier = new ReachabilityVerifier<>();
+			break;
+		case "Combined":
+			// stopping at the first warning that is confirmed for each
+			// property
+			conf.warningVerifier = new SVCOMPVerifier<>();
+			break;
+		default:
+			throw new ParseException("Invalid verifier name: " + verifierName);
+		}
+		AssertChecker<?> checker = null;
 		switch (checkerName) {
 		case "Assert":
-			conf.semanticChecks.add(witnesses.isEmpty() ? new AssertChecker<>()
-					: new AssertChecker<>(violation -> witnesses.forEach(witness -> witness.accept(violation))));
+			// with no property, or if the properties are unknown, both kinds
+			// of violations are checked; otherwise, only the ones of the
+			// given properties, since the others are not looked at
+			boolean assertions = witnesses.isEmpty()
+					|| witnesses.stream().anyMatch(w -> w.getProperty() == SVCOMPProperty.ASSERT);
+			boolean exceptions = witnesses.isEmpty()
+					|| witnesses.stream().anyMatch(w -> w.getProperty() == SVCOMPProperty.RUNTIME_EXCEPTION);
+			checker = new AssertChecker<>(assertions, exceptions);
+			conf.semanticChecks.add(checker);
 			break;
 		case "":
 			break;
@@ -360,10 +419,49 @@ public final class CheckCommand {
 		}
 
 		LiSA lisa = new LiSA(conf);
-		lisa.run(p);
+		LiSAReport report = lisa.run(p);
+
+		// the violations confirmed by the verification of the warnings
+		if (checker != null && !witnesses.isEmpty())
+			for (Violation violation : confirmedViolations(report, checker))
+				witnesses.forEach(witness -> witness.accept(violation));
 
 		// write the witnesses
 		for (ViolationWitnessProducer witness : witnesses)
 			witness.write(outdir);
+	}
+
+	/**
+	 * Yields the violations reported by the warnings of the given checker that
+	 * have been confirmed by the verification of the warnings, with the inputs
+	 * reproducing them, if known. The target of an uncaught runtime exception
+	 * is the statement raising it, as recorded by the checker; the target of a
+	 * failing assertion is the assertion itself.
+	 *
+	 * @param report  the report of the analysis
+	 * @param checker the checker that issued the warnings
+	 *
+	 * @return the violations
+	 */
+	private static List<Violation> confirmedViolations(
+			LiSAReport report,
+			AssertChecker<?> checker) {
+		List<Violation> violations = new ArrayList<>();
+		for (Message warning : report.getWarnings()) {
+			if (!warning.isDefinite() || warning.getViolation() == null || !(warning instanceof StatementMessage))
+				continue;
+			Statement target;
+			ViolationKind kind;
+			if (warning.getViolation() instanceof ErrorViolation) {
+				kind = ViolationKind.RUNTIME_EXCEPTION;
+				target = checker.runtimeExceptionTarget(warning).orElse(null);
+			} else {
+				kind = ViolationKind.ASSERT;
+				target = ((StatementMessage) warning).getStatement();
+			}
+			if (target != null)
+				violations.add(new Violation(kind, target, warning.getReproducingInputs()));
+		}
+		return violations;
 	}
 }

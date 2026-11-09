@@ -1,42 +1,43 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':17:2-17:27] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':31:2-31:38",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert equals(Holder::label, \"right\")",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "violation reached in 20 steps through [clazz = java.lang.Class::forName(\"Holder\"), [main > Holder_clinit] java.lang.Object::Object_clinit(), [main > Holder_clinit] Holder::count = 0, [main > Holder_clinit] Holder::label = null, [main > Holder_clinit] Holder::branchCount = 0, [main > Holder_clinit] ret, clazz = java.lang.Class::forName(\"Holder\") (after [1 targets] Holder::Holder_clinit()), assert ==(Holder::count, 0), assert ==(Holder::label, null), assert ==(Holder::branchCount, 0), count = getField(clazz, \"count\"), label = getField(clazz, \"label\"), branchCount = getField(clazz, \"branchCount\"), set(count, null, java.lang.Integer::valueOf(7)), assert ==(Holder::count, 7), >(args::length, 0), set(label, null, \"left\"), set(branchCount, null, java.lang.Integer::valueOf(1)), assert equals(Holder::label, \"left\"), assert ==(Holder::branchCount, 1), assert equals(Holder::label, \"right\")], relying on values that are not computed precisely (merged values, unsupported operations, operations on values of other kinds, heap values, unprojected values): merged value of $field:java.lang.String::value; merged value of $field:java.lang.reflect.Method::name; merged value of $written:java.lang.reflect.Method::name; merged value of $cells; merged value of $field:declaredMethods"
   }, {
-    "message" : "['Main.java':22:3-22:38] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:3-23:34] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':27:3-27:39] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':28:3-28:34] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':31:2-31:38] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':32:2-32:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
-  }, {
-    "message" : "['Main.java':7:2-7:27] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':8:2-8:30] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':9:2-9:33] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
+    "location" : "'Main.java':32:2-32:33",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(Holder::branchCount, 2)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "refuted" : true,
+    "explanation" : "inductive invariant found: {assert ==(Holder::branchCount, 2)=[![! Holder::branchCount == 2]], assert equals(Holder::label, \"right\")=[![$field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), Holder::label) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), ref $alloc), ! Holder::branchCount == 2]], assert ==(Holder::branchCount, 1)=[![$field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), Holder::label) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), ref $alloc)]], assert equals(Holder::label, \"left\")=[![$field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"left\") store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true) store(ref $alloc + 1, true) store(ref $alloc + 1, true), Holder::label) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"left\") store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true) store(ref $alloc + 1, true) store(ref $alloc + 1, true), ref $alloc + 1)]], set(branchCount, null, java.lang.Integer::valueOf(1))=[![$field:java.lang.String::value store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"left\") store(ref $alloc + 2, \"\") store(ref $alloc + 2, \"right\") read($written:java.lang.String::value store(ref $alloc + 1, true) store(ref $alloc + 1, true) store(ref $alloc + 2, true) store(ref $alloc + 2, true), Holder::label) strequals $field:java.lang.String::value store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"left\") store(ref $alloc + 2, \"\") store(ref $alloc + 2, \"right\") read($written:java.lang.String::value store(ref $alloc + 1, true) store(ref $alloc + 1, true) store(ref $alloc + 2, true) store(ref $alloc + 2, true), ref $alloc + 2)]]}"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Holder.Holder_clinit()_22eecd1edbfd571a3ff497017693103a.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "36ms",
-    "end" : "2026-11-05T17:50:02.484+01:00",
+    "duration" : "5s 939ms",
+    "end" : "2026-11-05T19:54:43.077+01:00",
     "expressions" : "74",
     "files" : "2",
-    "globals" : "53",
-    "members" : "274",
+    "globals" : "54",
+    "members" : "394",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-05T17:50:02.448+01:00",
+    "start" : "2026-11-05T19:54:37.138+01:00",
     "statements" : "30",
     "units" : "54",
     "version" : "1.0",
-    "warnings" : "10"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

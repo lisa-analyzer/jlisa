@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.operator.JavaArithmeticOperators;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -19,7 +20,6 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.Variable;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 
 public class PostfixAddition extends UnaryExpression {
@@ -49,6 +49,9 @@ public class PostfixAddition extends UnaryExpression {
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isNumericType))
 			return state.bottomExecution();
+		Type type = JavaArithmeticOperators.operandType(analysis.getRuntimeTypesOf(state, expr, context, this));
+		if (type.isUntyped())
+			type = getStaticType();
 
 		Identifier meta = getMetaVariable();
 		state = analysis.assign(state, meta, expr, context, this);
@@ -56,10 +59,10 @@ public class PostfixAddition extends UnaryExpression {
 				state,
 				expr,
 				new BinaryExpression(
-						getStaticType(),
+						type,
 						expr,
 						new Constant(JavaIntType.INSTANCE, 1, getLocation()),
-						NumericNonOverflowingAdd.INSTANCE,
+						JavaArithmeticOperators.add(type),
 						getLocation()),
 				context, this);
 

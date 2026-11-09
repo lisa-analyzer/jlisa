@@ -1,28 +1,43 @@
 {
   "warnings" : [ {
-    "message" : "['$Main.java':4] on 'void Main::main(java.lang.String*[]* args)': [STATEMENT] POSSIBLE: uncaught runtime exception in main method"
+    "location" : "'$Main.java':4",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false,
+    "refuted" : true,
+    "explanation" : "inductive invariant found: {c = charAt(arg, 0)=[![0 < 0 || 0 >= strlen $field:java.lang.String::value read($written:java.lang.String::value, arg)]]}"
   }, {
-    "message" : "['Main.java':22:6-22:17] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':25:6-25:18] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':25:6-25:18",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert false",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "violation reached in 7 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), <(length(arg), 1), c = charAt(arg, 0), c1 = c, c2 = c, equals(c1, c2), println(java.lang.System::out, \"c1 and c2 are not equal\n\"), assert false], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaStringCharAtOperator; JavaCharacterEqualsOperator; LogicalNegation; ReferenceRead; contents of $field:java.lang.String::value not written by the model"
   } ],
   "notices" : [ ],
-  "files" : [ "java.lang.String__org.sosy_lab.sv_benchmarks.Verifier.nondetString()_88f4419dc04a81ee19731069b8ac760d.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "15",
-    "duration" : "5ms",
-    "end" : "2026-11-01T14:08:13.418+01:00",
-    "expressions" : "62",
-    "files" : "2",
-    "globals" : "50",
-    "members" : "292",
+    "cfgs" : "6",
+    "duration" : "147ms",
+    "end" : "2026-11-03T14:30:05.456+01:00",
+    "expressions" : "28",
+    "files" : "1",
+    "globals" : "51",
+    "members" : "405",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-01T14:08:13.413+01:00",
-    "statements" : "34",
-    "units" : "56",
+    "start" : "2026-11-03T14:30:05.309+01:00",
+    "statements" : "20",
+    "units" : "54",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

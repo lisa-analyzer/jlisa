@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.cfg.statement;
 
 import it.unive.jlisa.program.java.constructs.string.StringValueOf;
+import it.unive.jlisa.program.operator.JavaArithmeticOperators;
 import it.unive.jlisa.program.type.*;
 import it.unive.jlisa.type.JavaTypeSystem;
 import it.unive.lisa.analysis.*;
@@ -21,7 +22,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.StringConcat;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.ReferenceType;
@@ -109,9 +109,12 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 						tmp = strValueOf.forwardSemanticsAux(interprocedural, state,
 								new ExpressionSet[] { param }, expressions);
 					} else {
-						UnresolvedCall call = new UnresolvedCall(getCFG(), getLocation(), CallType.INSTANCE, null,
-								"toString",
-								rType, getRight());
+						// the call is at the location of the operand (as the
+						// one
+						// to String::valueOf above): its result must not be
+						// confused with the one of this expression
+						UnresolvedCall call = new UnresolvedCall(getCFG(), getRight().getLocation(), CallType.INSTANCE,
+								null, "toString", rType, getRight());
 						ExpressionSet[] args = new ExpressionSet[1];
 						args[0] = new ExpressionSet(actualRight);
 						tmp = call.forwardSemanticsAux(interprocedural, state, args, expressions);
@@ -121,7 +124,11 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 					for (SymbolicExpression rightStr : tmp.getExecutionExpressions()) {
 						partialResult = partialResult
 								.lub(concatStrings(interprocedural, tmp, actualLeft, rightStr, expressions));
-						partialResult = partialResult.forgetIdentifier((Identifier) rightStr, this);
+						// the result of the call is an identifier if the call
+						// is open (and modeled by a meta variable), while
+						// models of toString yield the string they create
+						if (rightStr instanceof Identifier)
+							partialResult = partialResult.forgetIdentifier((Identifier) rightStr, this);
 					}
 
 				} else if (rType.isStringType()) {
@@ -175,8 +182,8 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 						continue;
 					}
 
-					op = NumericNonOverflowingAdd.INSTANCE;
-					type = lType.commonSupertype(rType);
+					type = JavaArithmeticOperators.promote(lType, rType);
+					op = JavaArithmeticOperators.add(type);
 					partialResult = analysis.smallStepSemantics(
 							state,
 							new BinaryExpression(

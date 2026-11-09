@@ -21,9 +21,8 @@ import org.apache.logging.log4j.Logger;
  *                [-j <java>] [-l <level>]
  * }</pre>
  * <p>
- * It prints {@code [VERDICT] Violation found} when a run violates the
- * property, otherwise {@code [VERDICT] Could not validate}. The exit code
- * is always 0.
+ * It prints {@code [VERDICT] Violation found} when a run violates the property,
+ * otherwise {@code [VERDICT] Could not validate}. The exit code is always 0.
  */
 public final class FindBugCommand {
 

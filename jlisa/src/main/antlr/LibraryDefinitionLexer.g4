@@ -72,6 +72,10 @@ SEALED
    : 'sealed'
    ;
 
+FINAL
+   : 'final'
+   ;
+
 THROWS
    : 'throws'
    ;

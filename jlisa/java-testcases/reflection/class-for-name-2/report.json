@@ -1,21 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':10:2-10:47] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':11:2-11:17] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':15:2-15:47] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':16:2-16:18] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':21:2-21:18] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':23:2-23:36] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':24:2-24:39] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':9:2-9:66] on 'void ReflectionTest::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -24,15 +8,15 @@
     "end" : "2026-11-01T14:07:39.069+01:00",
     "expressions" : "52",
     "files" : "1",
-    "globals" : "53",
-    "members" : "273",
+    "globals" : "54",
+    "members" : "393",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-11-01T14:07:39.054+01:00",
     "statements" : "21",
     "units" : "54",
     "version" : "1.0",
-    "warnings" : "8"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

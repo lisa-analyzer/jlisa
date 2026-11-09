@@ -22,9 +22,12 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCast;
+import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.type.Untyped;
 import java.util.Collections;
 import java.util.Set;
 
@@ -59,6 +62,18 @@ public class JavaCastExpression extends UnaryExpression {
 			AnalysisState<A> erroneousState = state.bottom();
 			Error error = null;
 
+			// the cast fails only if the value is not an instance of the type
+			// (null is never an instance, but its cast succeeds: the check
+			// can only be assumed when the cast fails), built as instanceof
+			// does
+			BinaryExpression instanceOf = new BinaryExpression(Untyped.INSTANCE, expr,
+					new Constant(new TypeTokenType(Collections.singleton(type)), 0, getLocation()),
+					TypeCheck.INSTANCE, getLocation());
+			it.unive.lisa.symbolic.value.UnaryExpression notInstanceOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+					getProgram().getTypes().getBooleanType(),
+					instanceOf, LogicalNegation.INSTANCE, getLocation());
+			AnalysisState<A> failing = null;
+
 			for (Type t : types) {
 				boolean safe = t.isReferenceType() && t.asReferenceType().getInnerType().isNullType()
 						|| t.canBeAssignedTo(type);
@@ -72,8 +87,15 @@ public class JavaCastExpression extends UnaryExpression {
 					JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
 					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
 							new Expression[0]);
-					AnalysisState<A> excState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
-							expressions);
+					if (failing == null) {
+						failing = analysis.assume(state, notInstanceOf, context, this, this);
+						if (failing.getExecutionState().isBottom())
+							// the domain cannot represent the failure of the
+							// check: keep the original state
+							failing = state;
+					}
+					AnalysisState<A> excState = call.forwardSemanticsAux(interprocedural, failing,
+							new ExpressionSet[0], expressions);
 
 					// assign exception to variable thrower
 					CFGThrow throwVar = new CFGThrow(getCFG(), ccExc.getReference(), getLocation());

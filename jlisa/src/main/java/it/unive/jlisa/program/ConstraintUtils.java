@@ -7,7 +7,6 @@ import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -28,18 +27,15 @@ public class ConstraintUtils {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		if (!(analysis.domain instanceof SimpleAbstractDomain))
-			return null;
-		SimpleAbstractDomain<?, ?, ?> innerDomain = (SimpleAbstractDomain<?, ?, ?>) analysis.domain;
+		// the domain and the state are not necessarily the ones of a
+		// SimpleAbstractDomain (e.g., they might be wrapped): their value
+		// components are looked up instead
+		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
+		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		if (vdom == null || env == null)
+			return Stream.empty();
 
-		assert (innerDomain != null);
-		ValueDomain vdom = (ValueDomain) innerDomain.valueDomain;
-
-		SimpleAbstractState simpleAbstractState = (SimpleAbstractState) state.getExecutionState();
-
-		ValueLattice env = (ValueLattice) simpleAbstractState.valueState;
-
-		SemanticOracle oracle = innerDomain.makeOracle(simpleAbstractState, context);
+		SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
 
 		ExpressionSet rewritten = analysis.rewrite(state, expr, context, pp);
 

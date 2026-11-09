@@ -1,26 +1,75 @@
 {
   "warnings" : [ {
-    "message" : "['Main.java':34:8-34:25] on 'int Main::read(byte[]* b, int count)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':56:8-56:28] on 'int Main::read(byte[]* b, int count)': [EXPRESSION] POSSIBLE: the assertion MAY (NOT) BE hold"
+    "location" : "'Main.java':56:8-56:28",
+    "cfg" : "int Main::read(byte[]* b, int count)",
+    "text" : "assert >=(copied, 0)",
+    "context" : "['Main.java':72:23-72:36]",
+    "contextHash" : "d3762e9d572e83bf49d2c0ef8fb58837",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':65:26-65:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"!1!\""
+    }, {
+      "location" : "'Main.java':66:12-66:31",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "0"
+    }, {
+      "location" : "'Main.java':69:18-69:37",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "1073741825"
+    }, {
+      "location" : "'Main.java':26:16-26:35",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "['Main.java':72:23-72:36]",
+      "occurrence" : 0,
+      "value" : "0"
+    }, {
+      "location" : "'Main.java':29:16-29:35",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "['Main.java':72:23-72:36]",
+      "occurrence" : 0,
+      "value" : "2147483647"
+    }, {
+      "location" : "'Main.java':36:26-36:45",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "['Main.java':72:23-72:36]",
+      "occurrence" : 0,
+      "value" : "1073741824"
+    }, {
+      "location" : "'Main.java':42:23-42:42",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "['Main.java':72:23-72:36]",
+      "occurrence" : 0,
+      "value" : "1"
+    } ],
+    "explanation" : "violation reached in 25 steps through [n = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), >=(n, 0), b = new byte[]*[n], count = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), >(count, 0), copies = Main::read(b, count), [main > read] windowUpdateThreshold = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] unacknowledgedBytes = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] limit = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] >=(limit, 0), [main > read] pos = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] ==(pos, -(1)), [main > read] >=(pos, 0), [main > read] assert >=(pos, 0), [main > read] copied = 0, [main > read] bytesToCopy = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] >=(bytesToCopy, 0), [main > read] <=(limit, pos), [main > read] +=(pos, bytesToCopy), [main > read] +=(copied, bytesToCopy), [main > read] ==(pos, org.sosy_lab.sv_benchmarks.Verifier::nondetInt()), [main > read] <(copied, count), [main > read] +=(pos, bytesToCopy), [main > read] +=(copied, bytesToCopy), [main > read] ==(pos, limit), [main > read] assert >=(copied, 0)] (not yet certified by execution)"
   } ],
   "notices" : [ ],
-  "files" : [ "int_Main.read(byte[]__b,_int_count)_d3762e9d572e83bf49d2c0ef8fb58837.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_0ce62176ff04b15d2316bd5da68e9201.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_2ac9ed78b8a660164d2a3080520cb609.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_5140ec564853e0e16e53a40aa4296eab.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_7c307795ffc692cc62fba2047bd0390d.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_8e3c710fbac15b0ee84e132e6562fd16.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_9b42efa7400cb3ba17f6156f23aa98c6.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_c612d2be786d4da8af2e8fa2f9cf2d56.graph.json", "int_org.sosy_lab.sv_benchmarks.Verifier.nondetInt()_fc3d3e27df3442dfae5fd75c2cf7446d.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "files" : [ "int_Main.read(byte[]__b,_int_count)_d3762e9d572e83bf49d2c0ef8fb58837.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
-    "cfgs" : "16",
-    "duration" : "12ms",
-    "end" : "2026-11-01T14:08:03.002+01:00",
-    "expressions" : "115",
-    "files" : "10",
-    "globals" : "50",
-    "members" : "293",
+    "cfgs" : "7",
+    "duration" : "2s 240ms",
+    "end" : "2026-11-04T11:17:02.485+01:00",
+    "expressions" : "81",
+    "files" : "2",
+    "globals" : "51",
+    "members" : "406",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-01T14:08:02.990+01:00",
-    "statements" : "57",
-    "units" : "56",
+    "start" : "2026-11-04T11:17:00.245+01:00",
+    "statements" : "43",
+    "units" : "54",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "1"
   },
   "configuration" : {
     "asynchronousListeners" : "",

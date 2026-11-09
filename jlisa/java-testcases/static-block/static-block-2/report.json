@@ -1,9 +1,5 @@
 {
-  "warnings" : [ {
-    "message" : "['Main.java':15:8-15:35] on 'int LoggerConfig::validateAndScaleBuffer(int size, int factor)': [EXPRESSION] DEFINITE: the assertion holds"
-  }, {
-    "message" : "['Main.java':4:8-4:35] on 'void Main::main(java.lang.String*[]* args)': [EXPRESSION] DEFINITE: the assertion holds"
-  } ],
+  "warnings" : [ ],
   "notices" : [ ],
   "files" : [ "int_LoggerConfig.validateAndScaleBuffer(int_size,_int_factor)_fbbcc63c03285ae3dc1c69dc01ff5536.graph.json", "report.json", "void_LoggerConfig.LoggerConfig_clinit()_efa2505b1b083dc11662ac4c208d2ec4.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
@@ -12,15 +8,15 @@
     "end" : "2026-11-01T14:07:59.887+01:00",
     "expressions" : "31",
     "files" : "3",
-    "globals" : "52",
-    "members" : "275",
+    "globals" : "53",
+    "members" : "395",
     "notices" : "0",
     "programs" : "1",
     "start" : "2026-11-01T14:07:59.880+01:00",
     "statements" : "19",
     "units" : "54",
     "version" : "1.0",
-    "warnings" : "2"
+    "warnings" : "0"
   },
   "configuration" : {
     "asynchronousListeners" : "",

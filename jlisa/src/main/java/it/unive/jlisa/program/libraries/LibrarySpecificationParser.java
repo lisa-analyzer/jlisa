@@ -89,16 +89,17 @@ public class LibrarySpecificationParser extends LibraryDefinitionParserBaseVisit
 	public Field visitField(
 			FieldContext ctx) {
 		boolean instance = ctx.INSTANCE() != null;
+		boolean isFinal = ctx.FINAL() != null;
 		String name = ctx.name.getText();
 		Type type = visitType(ctx.type());
 		if (ctx.DEFAULT() == null)
-			return new Field(instance, name, type);
+			return new Field(instance, isFinal, name, type);
 
 		Value def = getDefaultValue(ctx.val);
 		if (def == null)
 			throw new LibraryParsingException(file, "Unsupported default field type: " + type);
 
-		return new Field(instance, name, type, def);
+		return new Field(instance, isFinal, name, type, def);
 	}
 
 	@Override

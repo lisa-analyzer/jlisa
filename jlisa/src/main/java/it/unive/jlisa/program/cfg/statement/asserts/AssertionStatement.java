@@ -92,7 +92,7 @@ public class AssertionStatement extends BinaryExpression implements AssertStatem
 					}
 				}, getLocation()), context, this));
 
-		return result;
+		return AssertSemantics.check(interprocedural, state, result, left, this, expressions);
 	}
 
 	@Override
