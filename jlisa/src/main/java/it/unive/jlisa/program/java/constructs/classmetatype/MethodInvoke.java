@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -326,7 +327,15 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				AnalysisState<A> sem = call.forwardSemanticsAux(interprocedural, state, symbolicExpressionsArgs,
 						callExpressions);
 
-				assert (!sem.getExecutionExpressions().isEmpty());
+				if (sem.getExecutionExpressions().isEmpty()) {
+					// no normal result (e.g., the call does not return, or the
+					// verification of the warnings follows the execution
+					// inside the callee): nothing to box
+					noExceptionState = noExceptionState.lub(sem);
+					if (callType == CallType.INSTANCE)
+						break;
+					continue;
+				}
 
 				// if open call, it's a stray call. Throw an illegal argument
 				// exception
@@ -433,7 +442,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// how the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom == null || env == null)
 			return Stream.empty();
 

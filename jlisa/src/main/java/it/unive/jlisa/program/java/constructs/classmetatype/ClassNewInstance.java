@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -214,7 +215,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		// how the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom == null || env == null)
 			return Stream.empty();
 

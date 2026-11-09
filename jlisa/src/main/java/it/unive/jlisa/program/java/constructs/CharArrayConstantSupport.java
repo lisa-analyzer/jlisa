@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs;
 
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -146,7 +147,7 @@ public final class CharArrayConstantSupport {
 		// how the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom == null || env == null)
 			return Stream.empty();
 

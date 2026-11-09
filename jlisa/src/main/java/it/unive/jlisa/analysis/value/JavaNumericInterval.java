@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
+import it.unive.jlisa.lattices.JavaInterval;
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
@@ -40,6 +41,7 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.*;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
@@ -65,15 +67,82 @@ import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 public class JavaNumericInterval extends Interval {
+
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * Top is every value, NaN included (see {@link JavaInterval}).
+	 */
+	@Override
+	public IntInterval top() {
+		return JavaInterval.TOP;
+	}
+
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * The intervals are the ones of {@link JavaInterval}, where NaN is a value
+	 * of the lattice.
+	 */
+	@Override
+	public IntInterval eval(
+			ValueEnvironment<IntInterval> environment,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		return JavaInterval.of(super.eval(environment, expression, pp, oracle));
+	}
+
+	// the environment with the intervals of JavaInterval (the operations of
+	// Interval build intervals of IntInterval)
+	private static ValueEnvironment<IntInterval> asJavaIntervals(
+			ValueEnvironment<IntInterval> environment) {
+		if (environment.isBottom() || environment.isTop() || environment.function == null)
+			return environment;
+		PatriciaTrieMap<Identifier, IntInterval> function = environment.function;
+		for (Map.Entry<Identifier, IntInterval> entry : environment.function.entrySet())
+			if (!(entry.getValue() instanceof JavaInterval) && !entry.getValue().isBottom())
+				function = function.put(entry.getKey(), JavaInterval.of(entry.getValue()));
+		return function == environment.function ? environment : environment.mk(environment.lattice, function);
+	}
+
+	// after assuming that the given condition holds: the operands of the
+	// comparisons it surely contains (not under negations) are not NaN, since
+	// every comparison with NaN is false, except !=, which is true
+	private ValueEnvironment<IntInterval> notNaN(
+			ValueEnvironment<IntInterval> environment,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (environment.isBottom() || !(expression instanceof BinaryExpression b))
+			return environment;
+		BinaryOperator operator = b.getOperator();
+		if (operator == LogicalAnd.INSTANCE && b.getLeft() instanceof ValueExpression l
+				&& b.getRight() instanceof ValueExpression r)
+			return notNaN(notNaN(environment, l, pp, oracle), r, pp, oracle);
+		if (operator != ComparisonEq.INSTANCE && operator != ComparisonLt.INSTANCE
+				&& operator != ComparisonLe.INSTANCE && operator != ComparisonGt.INSTANCE
+				&& operator != ComparisonGe.INSTANCE)
+			return environment;
+		for (SymbolicExpression operand : new SymbolicExpression[] { b.getLeft(), b.getRight() })
+			if (operand instanceof Identifier id && environment.getState(id).isTop()
+					&& mayBeFloatingPoint(id, pp, oracle))
+				environment = environment.putState(id, JavaInterval.INFINITY);
+		return environment;
+	}
 
 	private static final Function<Double, Double> SIN = Math::sin;
 
@@ -125,10 +194,29 @@ public class JavaNumericInterval extends Interval {
 			IntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle) {
-		if (left.isTop() || right.isTop())
-			return Satisfiability.UNKNOWN;
 		if (left.isBottom() || right.isBottom())
 			return Satisfiability.BOTTOM;
+		BinaryOperator comparison = expression.getOperator();
+		boolean ordered = comparison == ComparisonLt.INSTANCE || comparison == ComparisonLe.INSTANCE
+				|| comparison == ComparisonGt.INSTANCE || comparison == ComparisonGe.INSTANCE;
+		if (JavaInterval.isNaN(left) || JavaInterval.isNaN(right)) {
+			// every comparison with NaN is false, except !=, which is true
+			if (comparison == ComparisonEq.INSTANCE || ordered)
+				return Satisfiability.NOT_SATISFIED;
+			if (comparison == ComparisonNe.INSTANCE)
+				return Satisfiability.SATISFIED;
+		}
+		if (!left.isTop() && expression.getLeft().equals(expression.getRight())) {
+			// a value that is not NaN is equal to itself
+			if (comparison == ComparisonEq.INSTANCE || comparison == ComparisonLe.INSTANCE
+					|| comparison == ComparisonGe.INSTANCE)
+				return Satisfiability.SATISFIED;
+			if (comparison == ComparisonNe.INSTANCE || comparison == ComparisonLt.INSTANCE
+					|| comparison == ComparisonGt.INSTANCE)
+				return Satisfiability.NOT_SATISFIED;
+		}
+		if (left.isTop() || right.isTop())
+			return Satisfiability.UNKNOWN;
 
 		BinaryOperator operator = expression.getOperator();
 		if (operator == ComparisonEq.INSTANCE) {
@@ -651,6 +739,13 @@ public class JavaNumericInterval extends Interval {
 			// rounds (e.g., Long.MAX_VALUE * 1.0f is 2^63)
 			left = asFloatingPointOperand(expression.getLeft(), left, expression, pp, oracle);
 			right = asFloatingPointOperand(expression.getRight(), right, expression, pp, oracle);
+			if (JavaInterval.isNaN(left) || JavaInterval.isNaN(right))
+				// every operation on NaN is NaN
+				return JavaInterval.NaN;
+			if ((operator instanceof AdditionOperator && oppositeInfinities(left, right, false))
+					|| (operator instanceof SubtractionOperator && oppositeInfinities(left, right, true)))
+				// +Inf - +Inf and +Inf + -Inf are NaN
+				return top();
 		}
 		if (!(operator instanceof AdditionOperator
 				|| operator instanceof SubtractionOperator
@@ -1226,7 +1321,21 @@ public class JavaNumericInterval extends Interval {
 			// may be NaN, that is, when its interval is top (NaN is only in
 			// top: every operation that may give NaN gives top)
 			return environment;
-		return super.assume(environment, expression, src, dest, oracle);
+		return notNaN(asJavaIntervals(super.assume(environment, expression, src, dest, oracle)), expression, src,
+				oracle);
+	}
+
+	// whether the sum (or the difference, if subtraction holds) of the given
+	// intervals may be the sum of infinities of opposite signs, that is NaN
+	private static boolean oppositeInfinities(
+			IntInterval left,
+			IntInterval right,
+			boolean subtraction) {
+		if (left.isBottom() || right.isBottom())
+			return false;
+		boolean rightMayBePlus = subtraction ? right.lowIsMinusInfinity() : right.highIsPlusInfinity();
+		boolean rightMayBeMinus = subtraction ? right.highIsPlusInfinity() : right.lowIsMinusInfinity();
+		return (left.highIsPlusInfinity() && rightMayBeMinus) || (left.lowIsMinusInfinity() && rightMayBePlus);
 	}
 
 	/**
@@ -1276,12 +1385,17 @@ public class JavaNumericInterval extends Interval {
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
-		if (isIntegral(operand, pp, oracle) || !eval(environment, operand, pp, oracle).isTop())
+		if (isIntegral(operand, pp, oracle))
+			return false;
+		IntInterval value = eval(environment, operand, pp, oracle);
+		if (JavaInterval.isNaN(value))
+			return true;
+		if (!value.isTop())
 			return false;
 		if (!oracle.hasWholeValueAnlysis())
 			return true;
 		// another domain may know that the operand is not NaN, that is, that
-		// operand == operand holds (e.g., JavaFPFlags)
+		// operand == operand holds
 		Set<BinaryExpression> constraints = oracle.constraints(this,
 				new BinaryExpression(pp.getProgram().getTypes().getBooleanType(), operand, operand,
 						ComparisonEq.INSTANCE, operand.getCodeLocation()),

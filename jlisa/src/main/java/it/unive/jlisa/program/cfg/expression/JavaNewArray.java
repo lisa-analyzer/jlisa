@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -35,6 +36,7 @@ import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import java.util.Set;
@@ -67,19 +69,24 @@ public class JavaNewArray extends UnaryExpression {
 				new Constant(getProgram().getTypes().getIntegerType(), 0, getLocation()), ComparisonLt.INSTANCE,
 				getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, bin, context, this);
-		if (sat == Satisfiability.SATISFIED) {
-			// builds the exception
+		// constant sizes are decided directly
+		Satisfiability sat = expr instanceof Constant && ((Constant) expr).getValue() instanceof Integer
+				? Satisfiability.fromBoolean((Integer) ((Constant) expr).getValue() < 0)
+				: analysis.satisfies(state, bin, context, this);
+		AnalysisState<A> exceptionState = state.bottomExecution();
+		if (sat != Satisfiability.NOT_SATISFIED) {
+			// builds the exception, raised when the size is negative
+			AnalysisState<A> negative = sat == Satisfiability.SATISFIED ? state
+					: analysis.assume(state, bin, context, this, this);
 			JavaClassType oonExc = JavaClassType.getNegativeArraySizeExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
+			negative = call.forwardSemanticsAux(interprocedural, negative, new ExpressionSet[0], expressions);
 
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
+			for (SymbolicExpression th : negative.getExecutionExpressions()) {
 				// assign exception to variable thrower
 				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, this);
+				AnalysisState<A> tmp = analysis.assign(negative, throwVar, th, context, this);
 
 				// deletes the receiver of the constructor
 				// and all the metavariables from subexpressions
@@ -89,9 +96,13 @@ public class JavaNewArray extends UnaryExpression {
 						new Error(oonExc.getReference(), this), context, this));
 			}
 
-			return exceptionState;
-		} else {
-			// TODO: UNKNOWN case
+			if (sat == Satisfiability.SATISFIED)
+				return exceptionState;
+			// otherwise, the array is created only if the size is not
+			// negative
+			state = analysis.assume(state, new BinaryExpression(JavaBooleanType.INSTANCE, expr,
+					new Constant(getProgram().getTypes().getIntegerType(), 0, getLocation()), ComparisonGe.INSTANCE,
+					getLocation()), context, this, this);
 		}
 
 		MemoryAllocation created = new MemoryAllocation(refType.getInnerType(), getLocation(), false);
@@ -139,7 +150,8 @@ public class JavaNewArray extends UnaryExpression {
 		// FIXME: second case: the size is not constant, return the 'top' array
 		// this is a temporary solution
 		getMetaVariables().add(array);
-		return analysis.smallStepSemantics(tmp, array, context, this);
+		AnalysisState<A> result = analysis.smallStepSemantics(tmp, array, context, this);
+		return sat == Satisfiability.NOT_SATISFIED ? result : result.lub(exceptionState);
 	}
 
 	@Override
@@ -167,7 +179,7 @@ public class JavaNewArray extends UnaryExpression {
 		// the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom != null && env != null) {
 
 			SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);

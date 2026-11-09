@@ -6,7 +6,6 @@ import it.unive.jlisa.analysis.type.JavaInferredTypes;
 import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
-import it.unive.jlisa.analysis.value.JavaFPFlags;
 import it.unive.jlisa.analysis.value.JavaNumericInterval;
 import it.unive.jlisa.analysis.value.JavaTarsis;
 import it.unive.jlisa.analysis.value.JavaUpperBounds;
@@ -22,6 +21,7 @@ import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
+import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.LiSAReport;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -40,9 +40,11 @@ import it.unive.lisa.outputs.messages.StatementMessage;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.fixpoints.forward.ForwardDescendingNarrowingFixpoint;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.triage.FirstViolationVerifier;
 import it.unive.lisa.triage.reachability.ReachabilityVerifier;
 import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,6 +64,23 @@ import org.apache.logging.log4j.Logger;
 public final class CheckCommand {
 
 	private static final Logger LOG = org.apache.logging.log4j.LogManager.getLogger(CheckCommand.class);
+
+	/**
+	 * The time by which the verification of the warnings must end (as
+	 * {@link System#currentTimeMillis()} gives it), when a time limit is given
+	 * ({@code --time-limit}), or {@code 0}.
+	 */
+	private static long verificationDeadline = 0;
+
+	/**
+	 * The time left, out of the time limit, for writing the results after the
+	 * verification of the warnings, in milliseconds: the fraction
+	 * {@value #RESULTS_FRACTION} of the limit, at most
+	 * {@value #MAX_RESULTS_MILLIS}.
+	 */
+	private static final long MAX_RESULTS_MILLIS = 30_000;
+
+	private static final double RESULTS_FRACTION = 0.1;
 
 	private CheckCommand() {
 	}
@@ -167,6 +186,15 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 		options.addOption(z3Path);
+		Option timeLimit = Option.builder()
+				.longOpt("time-limit")
+				.hasArg()
+				.argName("SECONDS")
+				.desc("Time limit of the whole run, in seconds: the verification of the warnings ends in time to "
+						+ "write the results (warnings not verified by then stay possible). No limit by default")
+				.required(false)
+				.build();
+		options.addOption(timeLimit);
 		SharedOptions.markRequired(options, SharedOptions.SOURCE, "outdir", "numericalDomain");
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
@@ -243,6 +271,21 @@ public final class CheckCommand {
 			if (cmd.hasOption("z3"))
 				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
 
+			if (cmd.hasOption("time-limit")) {
+				long limit;
+				try {
+					limit = Long.parseLong(cmd.getOptionValue("time-limit")) * 1000;
+				} catch (NumberFormatException e) {
+					throw new ParseException("Invalid time limit: " + cmd.getOptionValue("time-limit"));
+				}
+				if (limit <= 0)
+					throw new ParseException("Invalid time limit: " + cmd.getOptionValue("time-limit"));
+				// the limit counts from the start of the virtual machine
+				long start = ManagementFactory.getRuntimeMXBean().getStartTime();
+				verificationDeadline = start + limit
+						- Math.min(MAX_RESULTS_MILLIS, (long) (limit * RESULTS_FRACTION));
+			}
+
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
 			SharedOptions.printHelp("check", options, System.err);
@@ -254,8 +297,8 @@ public final class CheckCommand {
 			runDebug(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions, debug,
-					propertyFiles);
+			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions,
+					debug, propertyFiles);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -277,8 +320,8 @@ public final class CheckCommand {
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
-				propertyFiles);
+		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
+				debug, propertyFiles);
 	}
 
 	private static void runStatistics(
@@ -307,8 +350,8 @@ public final class CheckCommand {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
-					propertyFiles);
+			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
+					debug, propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
 			while (root.getCause() != null)
@@ -373,9 +416,8 @@ public final class CheckCommand {
 			conf.warningVerifier = new ReachabilityVerifier<>();
 			break;
 		case "Combined":
-			// stopping at the first warning that is confirmed for each
-			// property
-			conf.warningVerifier = new SVCOMPVerifier<>();
+			conf.warningVerifier = new SVCOMPVerifier<>(
+					new FirstViolationVerifier<>(JavaExpressionEncoder::new).withDeadline(verificationDeadline));
 			break;
 		default:
 			throw new ParseException("Invalid verifier name: " + verifierName);
@@ -407,21 +449,21 @@ public final class CheckCommand {
 			domain = new ConstantPropagationWithIntervals();
 			break;
 		case "JavaWholeValueTarsis":
-			// the participants of ConstantPropagationWithTarsis (plus the kinds
-			// of floating point values), combined by the whole-value analysis
-			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
+			// the participants of ConstantPropagationWithTarsis, combined by
+			// the whole-value analysis
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaTarsis());
 			break;
 		case "JavaWholeValueUB":
 			// JavaWholeValueTarsis with the upper bounds of the Pentagons (x <
 			// y): with the intervals, the Pentagons of Logozzo and Fähndrich
-			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaUpperBounds(), new JavaTarsis());
 			break;
 		case "ConstantPropagation":
 		case "JavaWholeValueUBLE":
 			// JavaWholeValueUB with the relations x <= y too
-			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(), new JavaFPFlags(),
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaUpperBounds(true), new JavaTarsis());
 			break;
 		default:

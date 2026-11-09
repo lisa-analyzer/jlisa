@@ -191,7 +191,9 @@ public class ExpressionVisitor
 					new ExpressionVisitor(getEnvironment(), getScope()));
 			parameters.add(expr);
 			contentType = getArrayInitializerType(node);
-			if (contentType == null) {
+			if (contentType == null || !contentType.isArrayType()) {
+				// e.g., String keys[] = { ... }, where the brackets follow the
+				// name: the type of the field is the one of the elements
 				contentType = expr.getStaticType();
 			} else {
 				contentType = contentType.asArrayType().getBaseType();
