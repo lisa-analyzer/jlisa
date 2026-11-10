@@ -27,6 +27,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
@@ -207,6 +208,11 @@ public class JavaArrayAccess extends BinaryExpression {
 					JavaBooleanType.INSTANCE, idx, lenAccess, ComparisonLt.INSTANCE, getLocation());
 			if (analysis.satisfies(state, inBounds, context, this) == Satisfiability.NOT_SATISFIED)
 				break;
+			// cells that the index cannot denote are not accessed
+			it.unive.lisa.symbolic.value.BinaryExpression denoted = new it.unive.lisa.symbolic.value.BinaryExpression(
+					JavaBooleanType.INSTANCE, right, idx, ComparisonEq.INSTANCE, getLocation());
+			if (analysis.satisfies(state, denoted, context, this) == Satisfiability.NOT_SATISFIED)
+				continue;
 			result = result.lub(analysis.smallStepSemantics(state,
 					new AccessChild(accessType, container, idx, getLocation()), context, this));
 		}

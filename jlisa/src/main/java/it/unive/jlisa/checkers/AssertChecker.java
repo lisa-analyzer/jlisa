@@ -203,11 +203,14 @@ public class AssertChecker<V extends ValueLattice<V>>
 			// exceptions, and they can neither confirm nor prevent the
 			// refutation of the warning. Checked exceptions also match
 			// Exception, while thrown values whose static type is a supertype
-			// of Exception (e.g., Throwable) do not
+			// of Exception (e.g., Throwable) do not. Only runtime exceptions
+			// confirm the warning: values thrown as instances of Exception
+			// might be runtime exceptions, but might also be checked ones
 			if (hasExceptionState) {
 				tool.warnOn(node, result.getId(),
 						it.unive.lisa.checks.verification.Violation
-								.error(JavaClassType.getExceptionType().getReference()),
+								.error(JavaClassType.getExceptionType().getReference(),
+										JavaClassType.getRuntimeExceptionType().getReference()),
 						"uncaught runtime exception in main method");
 				Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
 				if (target.isPresent())
