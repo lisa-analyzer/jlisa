@@ -1,10 +1,8 @@
 package it.unive.jlisa.triage;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
-import it.unive.jlisa.program.cfg.expression.PostfixAddition;
-import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
-import it.unive.jlisa.program.cfg.expression.PrefixAddition;
-import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
+import it.unive.jlisa.program.cfg.expression.JavaDecrement;
+import it.unive.jlisa.program.cfg.expression.JavaIncrement;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaCompoundAssignment;
 import it.unive.jlisa.program.cfg.statement.global.JavaAccessGlobal;
@@ -106,8 +104,7 @@ public class JavaGlobalWrites
 		Expression target = null;
 		if (st instanceof JavaAssignment || st instanceof JavaCompoundAssignment)
 			target = ((BinaryExpression) st).getLeft();
-		else if (st instanceof PrefixAddition || st instanceof PrefixSubtraction
-				|| st instanceof PostfixAddition || st instanceof PostfixSubtraction)
+		else if (st instanceof JavaIncrement || st instanceof JavaDecrement)
 			target = ((UnaryExpression) st).getSubExpression();
 		if (target instanceof JavaAccessGlobal)
 			written.add(((JavaAccessGlobal) target).getVariableName());

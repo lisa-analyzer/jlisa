@@ -114,8 +114,7 @@ public final class JavaArithmeticOperators {
 	 * numeric runtime types agree on it, or {@link Untyped} otherwise.
 	 * Increments and decrements of {@code byte}, {@code short} and {@code char}
 	 * values are thus {@code int} operations, whose result is then narrowed to
-	 * the type of the value (see
-	 * {@link #narrowed(Set, SymbolicExpression, CodeLocation)}).
+	 * the type of the value.
 	 *
 	 * @param types the runtime types of the value
 	 *
@@ -133,39 +132,6 @@ public final class JavaArithmeticOperators {
 			result = u;
 		}
 		return result == null ? Untyped.INSTANCE : result;
-	}
-
-	/**
-	 * Yields the given result of an increment or decrement of a value with the
-	 * given runtime types, converted back to the type of the value if it is
-	 * {@code byte}, {@code short} or {@code char} (JLS 15.14.2, 15.15.1: the
-	 * result is narrowed to the type of the variable), when all the numeric
-	 * runtime types of the value agree on it. Otherwise, the result is yielded
-	 * as it is.
-	 *
-	 * @param types    the runtime types of the value
-	 * @param result   the result of the operation
-	 * @param location the location of the operation
-	 *
-	 * @return the narrowed result
-	 */
-	public static SymbolicExpression narrowed(
-			Set<Type> types,
-			SymbolicExpression result,
-			CodeLocation location) {
-		Type target = null;
-		for (Type t : types) {
-			if (!t.isNumericType())
-				continue;
-			if (target != null && !target.equals(t))
-				return result;
-			target = t;
-		}
-		if (!(target instanceof JavaByteType || target instanceof JavaShortType || target instanceof JavaCharType))
-			return result;
-		return new BinaryExpression(target, result,
-				new Constant(new TypeTokenType(Collections.singleton(target)), target, location), TypeConv.INSTANCE,
-				location);
 	}
 
 	/**
