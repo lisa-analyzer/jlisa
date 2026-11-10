@@ -247,7 +247,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaStrictMathGetExponentOperator)
 			return exponent(arg, e);
 		if (op instanceof JavaLongBitCountOperator)
-			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64);
+			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64, e);
 		if (op instanceof JavaByteToUnsignedIntOperator || op instanceof JavaByteToUnsignedLongOperator)
 			return unsigned(coerce(arg, Sort.INT, e), 8);
 		Term floating = floatUnary(op, arg, e);
@@ -292,7 +292,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.SHORT_TO_UNSIGNED_INT || f == JavaLibraryFunction.SHORT_TO_UNSIGNED_LONG)
 			return unsigned(x, 16);
 		if (f == JavaLibraryFunction.INTEGER_BIT_COUNT)
-			return bitCount(unsigned(x, 32), 32);
+			return bitCount(unsigned(x, 32), 32, e);
 		if (f == JavaLibraryFunction.INTEGER_HIGHEST_ONE_BIT)
 			return signed(highestOneBit(unsigned(x, 32), 32), 32);
 		if (f == JavaLibraryFunction.LONG_HIGHEST_ONE_BIT)
@@ -310,15 +310,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_NUMBER_OF_TRAILING_ZEROS)
 			return trailingZeros(unsigned(x, 64), 64);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE)
-			return signed(reverse(unsigned(x, 32), 32, 1), 32);
+			return signed(reverse(unsigned(x, 32), 32, 1, e), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE)
-			return signed(reverse(unsigned(x, 64), 64, 1), 64);
+			return signed(reverse(unsigned(x, 64), 64, 1, e), 64);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 32), 32, 8), 32);
+			return signed(reverse(unsigned(x, 32), 32, 8, e), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 64), 64, 8), 64);
+			return signed(reverse(unsigned(x, 64), 64, 8, e), 64);
 		if (f == JavaLibraryFunction.SHORT_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 16), 16, 8), 16);
+			return signed(reverse(unsigned(x, 16), 16, 8, e), 16);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING || f == JavaLibraryFunction.LONG_TO_STRING
 				|| f == JavaLibraryFunction.SHORT_TO_STRING || f == JavaLibraryFunction.BYTE_TO_STRING)
 			return decimal(x);
@@ -575,12 +575,40 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		return mod(div(u, pow2(index)), pow2(width));
 	}
 
-	private static Term bitCount(
+	/**
+	 * Yields a bit-vector of the given width whose (unsigned) value is the
+	 * given unsigned integer: an auxiliary constant constrained to it, so that
+	 * the bits of the integer are extracted from the bit-vector rather than
+	 * computed through quotients and remainders, that solvers handle poorly.
+	 */
+	private Term bitVector(
 			Term u,
-			int bits) {
+			int bits,
+			SymbolicExpression e) {
+		Term b = auxiliary(Sort.bitVector(bits), e);
+		getSymbols().require(Term.eq(u, Term.app("bv2nat", Sort.INT, b)));
+		return b;
+	}
+
+	/**
+	 * The bits from {@code index} to {@code index + width - 1} of the given
+	 * bit-vector.
+	 */
+	private static Term extract(
+			Term b,
+			int index,
+			int width) {
+		return Term.app("(_ extract " + (index + width - 1) + " " + index + ")", Sort.bitVector(width), b);
+	}
+
+	private Term bitCount(
+			Term u,
+			int bits,
+			SymbolicExpression e) {
+		Term b = bitVector(u, bits, e);
 		Term[] sum = new Term[bits];
 		for (int i = 0; i < bits; i++)
-			sum[i] = bits(u, i, 1);
+			sum[i] = Term.app("bv2nat", Sort.INT, extract(b, i, 1));
 		return Term.app("+", Sort.INT, sum);
 	}
 
@@ -625,16 +653,24 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * integer {@code u} (single bits for {@code Integer.reverse}, bytes for
 	 * {@code Integer.reverseBytes}).
 	 */
-	private static Term reverse(
+	/**
+	 * Reverses the order of the groups of the given number of bits of the
+	 * unsigned integer {@code u} of the given width.
+	 */
+	private Term reverse(
 			Term u,
 			int bits,
-			int group) {
+			int group,
+			SymbolicExpression e) {
 		int groups = bits / group;
-		Term[] sum = new Term[groups];
+		if (groups == 1)
+			return u;
+		Term b = bitVector(u, bits, e);
+		// the lowest group becomes the most significant one
+		Term[] parts = new Term[groups];
 		for (int i = 0; i < groups; i++)
-			sum[i] = Term.app("*", Sort.INT, bits(u, i * group, group),
-					num(pow2((groups - 1 - i) * group)));
-		return groups == 1 ? sum[0] : Term.app("+", Sort.INT, sum);
+			parts[i] = extract(b, i * group, group);
+		return Term.app("bv2nat", Sort.INT, Term.app("concat", Sort.bitVector(bits), parts));
 	}
 
 	/**
