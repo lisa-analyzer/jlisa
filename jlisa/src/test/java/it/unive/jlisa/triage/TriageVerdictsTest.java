@@ -141,4 +141,15 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.REFUTED, verdict("instanceof-refuted", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * The results of recursive calls satisfy the summaries of their callees,
+	 * proved by induction on the depth of the recursion.
+	 */
+	@Test
+	public void assertionsOnRecursiveResultsAreRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("recursive-sum", SVCOMPProperty.ASSERT, dir));
+	}
 }
