@@ -2,7 +2,7 @@ package it.unive.jlisa.program.java.constructs.doublew;
 
 import it.unive.jlisa.program.operator.JavaDoubleIsNaNOperator;
 import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.jlisa.program.type.JavaFloatType;
+import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -62,7 +62,7 @@ public class DoubleIsNaNInstance extends UnaryExpression implements PluggableSta
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefRight = new HeapDereference(
 				expr.getStaticType().asReferenceType().getInnerType(), expr, getLocation());
-		AccessChild access = new AccessChild(JavaFloatType.INSTANCE, derefRight, var, getLocation());
+		AccessChild access = new AccessChild(JavaDoubleType.INSTANCE, derefRight, var, getLocation());
 
 		it.unive.lisa.symbolic.value.UnaryExpression un = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaBooleanType.INSTANCE,

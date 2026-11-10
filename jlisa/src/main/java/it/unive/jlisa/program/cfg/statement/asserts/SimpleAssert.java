@@ -1,5 +1,8 @@
 package it.unive.jlisa.program.cfg.statement.asserts;
 
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.*;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
@@ -9,9 +12,14 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.AccessChild;
+import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.heap.HeapReference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
+import it.unive.lisa.type.Untyped;
 import it.unive.lisa.type.VoidType;
 import java.util.Set;
 
@@ -55,24 +63,41 @@ public class SimpleAssert extends UnaryExpression implements AssertStatement {
 					throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		if (analysis.getRuntimeTypesOf(state, expr, context, this).stream().noneMatch(Type::isBooleanType))
-			return state.bottomExecution();
+		Type booleanwType = JavaClassType.getBooleanWrapperType();
+		Type booleanType = JavaBooleanType.INSTANCE;
 
-		AnalysisState<A> evaluated = analysis.smallStepSemantics(
-				state,
-				new it.unive.lisa.symbolic.value.UnaryExpression(VoidType.INSTANCE, expr, new UnaryOperator() {
-					@Override
-					public Set<Type> typeInference(
-							TypeSystem types,
-							Set<Type> argument) {
-						return Set.of(VoidType.INSTANCE);
-					}
+		GlobalVariable value = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		AnalysisState<A> res = state.bottomExecution();
+		for (Type t : analysis.getRuntimeTypesOf(state, expr, context, this)) {
 
-					public String toString() {
-						return "assert";
-					}
-				}, getLocation()), context, this);
-		return AssertSemantics.check(interprocedural, state, evaluated, expr, this, expressions);
+			SymbolicExpression e = expr;
+			if (t instanceof JavaReferenceType jrt) {
+				t = jrt.getInnerType();
+				HeapDereference deref = new HeapDereference(t, expr, getLocation());
+				AccessChild accessValue = new AccessChild(JavaBooleanType.INSTANCE, deref, value, getLocation());
+				e = accessValue;
+			}
+			if (!(t.equals(booleanType) || t.equals(booleanwType))) {
+				continue;
+			}
+
+			AnalysisState<A> evaluated = analysis.smallStepSemantics(
+					state,
+					new it.unive.lisa.symbolic.value.UnaryExpression(VoidType.INSTANCE, e, new UnaryOperator() {
+						@Override
+						public Set<Type> typeInference(
+								TypeSystem types,
+								Set<Type> argument) {
+							return Set.of(VoidType.INSTANCE);
+						}
+
+						public String toString() {
+							return "assert";
+						}
+					}, getLocation()), context, this);
+			res = res.lub(AssertSemantics.check(interprocedural, state, evaluated, e, this, expressions));
+		}
+		return res;
 	}
 
 	@Override
