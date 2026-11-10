@@ -1,0 +1,60 @@
+{
+  "warnings" : [ {
+    "location" : "'$Main.java':2",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false
+  }, {
+    "location" : "'Main.java':17:4-17:17",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "assert ==(n, 1)",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Main.Node.Node(Main.Node__this)_64e104e587fa6911518aa8e986bc8b6a.graph.json", "void_Main.Node.Node(Main.Node__this)_ad9eb64b0b7e20fb736b64d67cca4b66.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
+  "info" : {
+    "cfgs" : "7",
+    "duration" : "25ms",
+    "end" : "2026-11-09T19:14:02.405+01:00",
+    "expressions" : "29",
+    "files" : "3",
+    "globals" : "53",
+    "members" : "406",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-11-09T19:14:02.380+01:00",
+    "statements" : "21",
+    "units" : "56",
+    "version" : "1.0",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/wholevalue/loop-exit"
+  }
+}

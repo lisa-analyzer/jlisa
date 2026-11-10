@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
+import it.unive.jlisa.lattices.JavaInterval;
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
@@ -28,15 +29,23 @@ import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
+import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.*;
+import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.Identifier;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.AdditionOperator;
+import it.unive.lisa.symbolic.value.operator.ComparisonOperator;
 import it.unive.lisa.symbolic.value.operator.DivisionOperator;
 import it.unive.lisa.symbolic.value.operator.MultiplicationOperator;
 import it.unive.lisa.symbolic.value.operator.RemainderOperator;
@@ -51,16 +60,89 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
+import it.unive.lisa.symbolic.value.operator.unary.NumericNegation;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
 import it.unive.lisa.util.numeric.IntInterval;
 import it.unive.lisa.util.numeric.MathNumber;
 import it.unive.lisa.util.numeric.MathNumberConversionException;
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 public class JavaNumericInterval extends Interval {
+
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * Top is every value, NaN included (see {@link JavaInterval}).
+	 */
+	@Override
+	public IntInterval top() {
+		return JavaInterval.TOP;
+	}
+
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * The intervals are the ones of {@link JavaInterval}, where NaN is a value
+	 * of the lattice.
+	 */
+	@Override
+	public IntInterval eval(
+			ValueEnvironment<IntInterval> environment,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		return JavaInterval.of(super.eval(environment, expression, pp, oracle));
+	}
+
+	// the environment with the intervals of JavaInterval (the operations of
+	// Interval build intervals of IntInterval)
+	private static ValueEnvironment<IntInterval> asJavaIntervals(
+			ValueEnvironment<IntInterval> environment) {
+		if (environment.isBottom() || environment.isTop() || environment.function == null)
+			return environment;
+		PatriciaTrieMap<Identifier, IntInterval> function = environment.function;
+		for (Map.Entry<Identifier, IntInterval> entry : environment.function.entrySet())
+			if (!(entry.getValue() instanceof JavaInterval) && !entry.getValue().isBottom())
+				function = function.put(entry.getKey(), JavaInterval.of(entry.getValue()));
+		return function == environment.function ? environment : environment.mk(environment.lattice, function);
+	}
+
+	// after assuming that the given condition holds: the operands of the
+	// comparisons it surely contains (not under negations) are not NaN, since
+	// every comparison with NaN is false, except !=, which is true
+	private ValueEnvironment<IntInterval> notNaN(
+			ValueEnvironment<IntInterval> environment,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (environment.isBottom() || !(expression instanceof BinaryExpression b))
+			return environment;
+		BinaryOperator operator = b.getOperator();
+		if (operator == LogicalAnd.INSTANCE && b.getLeft() instanceof ValueExpression l
+				&& b.getRight() instanceof ValueExpression r)
+			return notNaN(notNaN(environment, l, pp, oracle), r, pp, oracle);
+		if (operator != ComparisonEq.INSTANCE && operator != ComparisonLt.INSTANCE
+				&& operator != ComparisonLe.INSTANCE && operator != ComparisonGt.INSTANCE
+				&& operator != ComparisonGe.INSTANCE)
+			return environment;
+		for (SymbolicExpression operand : new SymbolicExpression[] { b.getLeft(), b.getRight() })
+			if (operand instanceof Identifier id && environment.getState(id).isTop()
+					&& mayBeFloatingPoint(id, pp, oracle))
+				environment = environment.putState(id, JavaInterval.INFINITY);
+		return environment;
+	}
 
 	private static final Function<Double, Double> SIN = Math::sin;
 
@@ -85,14 +167,19 @@ public class JavaNumericInterval extends Interval {
 	public IntInterval fromConstant(
 			Constant constant) {
 
-		if (constant.getStaticType() == JavaFloatType.INSTANCE || constant.getStaticType() == JavaDoubleType.INSTANCE) {
+		// a floating point value is read as such whatever the static type of
+		// the constant (e.g., a constraint built on an untyped identifier)
+		if (constant.getStaticType() == JavaFloatType.INSTANCE || constant.getStaticType() == JavaDoubleType.INSTANCE
+				|| constant.getValue() instanceof Double || constant.getValue() instanceof Float) {
 			double valueD = ((Number) constant.getValue()).doubleValue();
 			if (Double.isNaN(valueD))
-				return IntInterval.BOTTOM; // not a number
+				// not a number, but a value of the type: no interval holds it,
+				// and bottom would make the state unreachable
+				return IntInterval.TOP;
 			if (Double.isInfinite(valueD))
 				return IntInterval.TOP;
 
-			return new IntInterval(new MathNumber(valueD), new MathNumber(valueD));
+			return new IntInterval(fromDouble(valueD), fromDouble(valueD));
 		} else {
 			// integer type
 			long valueL = ((Number) constant.getValue()).longValue();
@@ -107,10 +194,33 @@ public class JavaNumericInterval extends Interval {
 			IntInterval right,
 			ProgramPoint pp,
 			SemanticOracle oracle) {
-		if (left.isTop() || right.isTop())
-			return Satisfiability.UNKNOWN;
 		if (left.isBottom() || right.isBottom())
 			return Satisfiability.BOTTOM;
+		BinaryOperator comparison = expression.getOperator();
+		boolean ordered = comparison == ComparisonLt.INSTANCE || comparison == ComparisonLe.INSTANCE
+				|| comparison == ComparisonGt.INSTANCE || comparison == ComparisonGe.INSTANCE;
+		if (JavaInterval.isNaN(left) || JavaInterval.isNaN(right)) {
+			// every comparison with NaN is false, except !=, which is true
+			if (comparison == ComparisonEq.INSTANCE || ordered)
+				return Satisfiability.NOT_SATISFIED;
+			if (comparison == ComparisonNe.INSTANCE)
+				return Satisfiability.SATISFIED;
+		}
+		if (!left.isTop() && expression.getLeft() instanceof Identifier id && !id.isWeak()
+				&& id.equals(expression.getRight())) {
+			// a value that is not NaN is equal to itself: only for an
+			// identifier that stands for a single value (a weak one, e.g., the
+			// elements or the lengths of the arrays of an allocation site, may
+			// stand for different values on the two sides)
+			if (comparison == ComparisonEq.INSTANCE || comparison == ComparisonLe.INSTANCE
+					|| comparison == ComparisonGe.INSTANCE)
+				return Satisfiability.SATISFIED;
+			if (comparison == ComparisonNe.INSTANCE || comparison == ComparisonLt.INSTANCE
+					|| comparison == ComparisonGt.INSTANCE)
+				return Satisfiability.NOT_SATISFIED;
+		}
+		if (left.isTop() || right.isTop())
+			return Satisfiability.UNKNOWN;
 
 		BinaryOperator operator = expression.getOperator();
 		if (operator == ComparisonEq.INSTANCE) {
@@ -173,6 +283,9 @@ public class JavaNumericInterval extends Interval {
 			}
 			if (glb.isBottom())
 				return Satisfiability.SATISFIED;
+			// the same single value on both sides (as for ==)
+			if (left.isSingleton() && left.equals(right))
+				return Satisfiability.NOT_SATISFIED;
 			return Satisfiability.UNKNOWN;
 		}
 		return Satisfiability.UNKNOWN;
@@ -197,14 +310,15 @@ public class JavaNumericInterval extends Interval {
 		if (i.isBottom())
 			return i;
 		if (i.lowIsMinusInfinity() || i.highIsPlusInfinity())
-			return new IntInterval(-1, 1);
+			// the sine and the cosine of an infinity are NaN
+			return IntInterval.TOP;
 
 		double a, b;
 		try {
 			a = i.getLow().toDouble();
 			b = i.getHigh().toDouble();
 		} catch (MathNumberConversionException e) {
-			return new IntInterval(-1, 1);
+			return IntInterval.TOP;
 		}
 		if (Double.isNaN(a) || Double.isNaN(b) || b - a >= 2 * Math.PI)
 			return new IntInterval(-1, 1);
@@ -230,7 +344,7 @@ public class JavaNumericInterval extends Interval {
 			min = Math.min(min, value);
 			max = Math.max(max, value);
 		}
-		return new IntInterval(new MathNumber(min), new MathNumber(max));
+		return new IntInterval(fromDouble(min), fromDouble(max));
 	}
 
 	public static IntInterval trigonometric(
@@ -241,8 +355,8 @@ public class JavaNumericInterval extends Interval {
 			return i;
 
 		if (i.lowIsMinusInfinity() || i.highIsPlusInfinity())
-			// unbounded -> all values
-			return new IntInterval(-1, 1);
+			// the trigonometric functions of an infinity are NaN
+			return IntInterval.TOP;
 
 		double a, b;
 		try {
@@ -334,11 +448,32 @@ public class JavaNumericInterval extends Interval {
 			throws SemanticException {
 		UnaryOperator operator = expression.getOperator();
 
-		if (operator instanceof JavaStringLengthOperator)
-			return new IntInterval(MathNumber.ZERO, MathNumber.PLUS_INFINITY);
+		if (operator instanceof JavaStringLengthOperator) {
+			IntInterval length = new IntInterval(MathNumber.ZERO, MathNumber.PLUS_INFINITY);
+			if (oracle.hasWholeValueAnlysis())
+				// e.g., the constant propagation knows the string
+				length = length.glb(generate(oracle.constraints(this, expression, pp), pp, oracle));
+			return length;
+		}
 
 		if (arg.isTop() || arg.isBottom())
 			return arg;
+
+		if (operator == NumericNegation.INSTANCE) {
+			// exact on floating point values (the multiplication by -1 of
+			// LiSA rounds the bounds to integers); on integral values,
+			// -MIN_VALUE wraps around to MIN_VALUE
+			if (oracle == null)
+				return top();
+			// an unbounded integral interval stands for the values up to the
+			// bounds of the type (e.g., -x with x in [0, +Inf] is in [-Inf, 0])
+			IntInterval inType = withinType(expression.getExpression(), arg, pp, oracle);
+			if (mayWrapAround(new IntInterval(inType.getHigh().multiply(MathNumber.MINUS_ONE),
+					inType.getLow().multiply(MathNumber.MINUS_ONE)), oracle.getDynamicTypeOf(expression, pp)))
+				return top();
+			return new IntInterval(arg.getHigh().multiply(MathNumber.MINUS_ONE),
+					arg.getLow().multiply(MathNumber.MINUS_ONE));
+		}
 
 		Double l, h;
 		try {
@@ -372,49 +507,61 @@ public class JavaNumericInterval extends Interval {
 		if (operator instanceof JavaMathTanOperator)
 			return trigonometric(arg, Math::tan, Math.PI);
 
+		if ((operator instanceof JavaMathAsinOperator || operator instanceof JavaMathAcosOperator)
+				&& (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.MINUS_ONE) < 0
+						|| arg.highIsPlusInfinity() || arg.getHigh().compareTo(MathNumber.ONE) > 0))
+			// NaN outside [-1, 1]
+			return IntInterval.TOP;
+
 		if (operator instanceof JavaMathAsinOperator)
 			if (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.MINUS_ONE) <= 0)
 				if (arg.highIsPlusInfinity() || arg.getHigh().compareTo(MathNumber.ONE) >= 1)
-					return new IntInterval(new MathNumber(Math.asin(-1)), new MathNumber(Math.asin(1)));
+					return new IntInterval(fromDouble(Math.asin(-1)), fromDouble(Math.asin(1)));
 				else
-					return new IntInterval(new MathNumber(Math.asin(-1)), new MathNumber(Math.asin(h)));
+					return new IntInterval(fromDouble(Math.asin(-1)), fromDouble(Math.asin(h)));
 			else if (arg.highIsPlusInfinity() || arg.getHigh().compareTo(MathNumber.ONE) >= 1)
-				return new IntInterval(new MathNumber(Math.asin(l)), new MathNumber(Math.asin(1)));
+				return new IntInterval(fromDouble(Math.asin(l)), fromDouble(Math.asin(1)));
 			else
-				return new IntInterval(new MathNumber(Math.asin(l)), new MathNumber(Math.asin(h)));
+				return new IntInterval(fromDouble(Math.asin(l)), fromDouble(Math.asin(h)));
 
 		if (operator instanceof JavaMathAcosOperator)
 			if (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.MINUS_ONE) <= 0)
 				if (arg.highIsPlusInfinity() || arg.getHigh().compareTo(MathNumber.ONE) >= 1)
-					return new IntInterval(new MathNumber(Math.acos(1)), new MathNumber(Math.acos(-1)));
+					return new IntInterval(fromDouble(Math.acos(1)), fromDouble(Math.acos(-1)));
 				else
-					return new IntInterval(new MathNumber(Math.acos(h)), new MathNumber(Math.acos(-1)));
+					return new IntInterval(fromDouble(Math.acos(h)), fromDouble(Math.acos(-1)));
 			else if (arg.highIsPlusInfinity() || arg.getHigh().compareTo(MathNumber.ONE) >= 1)
-				return new IntInterval(new MathNumber(Math.acos(1)), new MathNumber(Math.acos(l)));
+				return new IntInterval(fromDouble(Math.acos(1)), fromDouble(Math.acos(l)));
 			else
-				return new IntInterval(new MathNumber(Math.acos(h)), new MathNumber(Math.acos(l)));
+				return new IntInterval(fromDouble(Math.acos(h)), fromDouble(Math.acos(l)));
 
 		if (operator instanceof JavaMathAtanOperator)
 			if (arg.lowIsMinusInfinity())
 				if (arg.highIsPlusInfinity())
 					return IntInterval.TOP;
 				else
-					return new IntInterval(MathNumber.MINUS_INFINITY, new MathNumber(Math.atan(h)));
+					return new IntInterval(MathNumber.MINUS_INFINITY, fromDouble(Math.atan(h)));
 			else if (arg.highIsPlusInfinity())
-				return new IntInterval(new MathNumber(Math.atan(l)), MathNumber.PLUS_INFINITY);
+				return new IntInterval(fromDouble(Math.atan(l)), MathNumber.PLUS_INFINITY);
 			else
-				return new IntInterval(new MathNumber(Math.atan(l)), new MathNumber(Math.atan(h)));
+				return new IntInterval(fromDouble(Math.atan(l)), fromDouble(Math.atan(h)));
 
 		if (operator instanceof JavaMathToRadiansOperator)
 			if (arg.lowIsMinusInfinity())
 				if (arg.highIsPlusInfinity())
 					return IntInterval.TOP;
 				else
-					return new IntInterval(MathNumber.MINUS_INFINITY, new MathNumber(Math.toRadians(h)));
+					return new IntInterval(MathNumber.MINUS_INFINITY, fromDouble(Math.toRadians(h)));
 			else if (arg.highIsPlusInfinity())
-				return new IntInterval(new MathNumber(Math.toRadians(l)), MathNumber.PLUS_INFINITY);
+				return new IntInterval(fromDouble(Math.toRadians(l)), MathNumber.PLUS_INFINITY);
 			else
-				return new IntInterval(new MathNumber(Math.toRadians(l)), new MathNumber(Math.toRadians(h)));
+				return new IntInterval(fromDouble(Math.toRadians(l)), fromDouble(Math.toRadians(h)));
+
+		if ((operator instanceof JavaMathSqrtOperator || operator instanceof JavaMathLogOperator
+				|| operator instanceof JavaMathLog10Operator)
+				&& (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.ZERO) < 0))
+			// NaN for negative values
+			return IntInterval.TOP;
 
 		if (operator instanceof JavaMathSqrtOperator)
 			if (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.ZERO) <= 0)
@@ -423,11 +570,11 @@ public class JavaNumericInterval extends Interval {
 				else if (arg.highIsPlusInfinity())
 					return new IntInterval(MathNumber.ZERO, MathNumber.PLUS_INFINITY);
 				else
-					return new IntInterval(MathNumber.ZERO, new MathNumber(Math.sqrt(h)));
+					return new IntInterval(MathNumber.ZERO, fromDouble(Math.sqrt(h)));
 			else if (arg.highIsPlusInfinity())
-				return new IntInterval(new MathNumber(Math.sqrt(l)), MathNumber.PLUS_INFINITY);
+				return new IntInterval(fromDouble(Math.sqrt(l)), MathNumber.PLUS_INFINITY);
 			else
-				return new IntInterval(new MathNumber(Math.sqrt(l)), new MathNumber(Math.sqrt(h)));
+				return new IntInterval(fromDouble(Math.sqrt(l)), fromDouble(Math.sqrt(h)));
 
 		if (operator instanceof JavaMathLogOperator)
 			if (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.ZERO) <= 0)
@@ -436,11 +583,11 @@ public class JavaNumericInterval extends Interval {
 				else if (arg.highIsPlusInfinity())
 					return IntInterval.TOP;
 				else
-					return new IntInterval(MathNumber.MINUS_INFINITY, new MathNumber(Math.log(h)));
+					return new IntInterval(MathNumber.MINUS_INFINITY, fromDouble(Math.log(h)));
 			else if (arg.highIsPlusInfinity())
-				return new IntInterval(new MathNumber(Math.log(l)), MathNumber.PLUS_INFINITY);
+				return new IntInterval(fromDouble(Math.log(l)), MathNumber.PLUS_INFINITY);
 			else
-				return new IntInterval(new MathNumber(Math.log(l)), new MathNumber(Math.log(h)));
+				return new IntInterval(fromDouble(Math.log(l)), fromDouble(Math.log(h)));
 
 		if (operator instanceof JavaMathLog10Operator)
 			if (arg.lowIsMinusInfinity() || arg.getLow().compareTo(MathNumber.ZERO) <= 0)
@@ -449,22 +596,22 @@ public class JavaNumericInterval extends Interval {
 				else if (arg.highIsPlusInfinity())
 					return IntInterval.TOP;
 				else
-					return new IntInterval(MathNumber.MINUS_INFINITY, new MathNumber(Math.log10(h)));
+					return new IntInterval(MathNumber.MINUS_INFINITY, fromDouble(Math.log10(h)));
 			else if (arg.highIsPlusInfinity())
-				return new IntInterval(new MathNumber(Math.log10(l)), MathNumber.PLUS_INFINITY);
+				return new IntInterval(fromDouble(Math.log10(l)), MathNumber.PLUS_INFINITY);
 			else
-				return new IntInterval(new MathNumber(Math.log10(l)), new MathNumber(Math.log10(h)));
+				return new IntInterval(fromDouble(Math.log10(l)), fromDouble(Math.log10(h)));
 
 		if (operator instanceof JavaMathExpOperator)
 			if (arg.lowIsMinusInfinity())
 				if (arg.highIsPlusInfinity())
 					return IntInterval.TOP;
 				else
-					return new IntInterval(MathNumber.MINUS_INFINITY, new MathNumber(Math.exp(h)));
+					return new IntInterval(MathNumber.MINUS_INFINITY, fromDouble(Math.exp(h)));
 			else if (arg.highIsPlusInfinity())
-				return new IntInterval(new MathNumber(Math.exp(l)), MathNumber.PLUS_INFINITY);
+				return new IntInterval(fromDouble(Math.exp(l)), MathNumber.PLUS_INFINITY);
 			else
-				return new IntInterval(new MathNumber(Math.exp(l)), new MathNumber(Math.exp(h)));
+				return new IntInterval(fromDouble(Math.exp(l)), fromDouble(Math.exp(h)));
 
 		if (operator instanceof JavaMathFloorOperator)
 			return arg;
@@ -498,9 +645,12 @@ public class JavaNumericInterval extends Interval {
 
 		Type targetType = conv.getStaticType();
 		if (!(targetType instanceof JavaNumericType numType) || !numType.isIntegral())
-			// no refinement for non-integral targets (e.g., float, double):
-			// fall back to the default behavior
-			return super.evalTypeConv(conv, left, right, pp, oracle);
+			// no refinement for non-integral targets (e.g., float, double),
+			// except that a converted integral value is never infinite; the
+			// conversion rounds (e.g., (float) Long.MAX_VALUE is 2^63)
+			return oracle == null ? super.evalTypeConv(conv, left, right, pp, oracle)
+					: roundOutward(super.evalTypeConv(conv, withinType(conv.getLeft(), left, pp, oracle),
+							right, pp, oracle), conv, pp, oracle);
 
 		IntInterval bounds = typeBounds(numType);
 		if (left.getLow().compareTo(bounds.getLow()) >= 0 && left.getHigh().compareTo(bounds.getHigh()) <= 0)
@@ -508,15 +658,25 @@ public class JavaNumericInterval extends Interval {
 			// exact, no truncation/wrap-around can occur
 			return left;
 
-		if (left.isSingleton()
+		if (!left.isInfinite()
 				&& left.getLow().compareTo(new MathNumber(Long.MIN_VALUE)) >= 0
-				&& left.getLow().compareTo(new MathNumber(Long.MAX_VALUE)) <= 0) {
-			// the value is exactly known: we can precisely replicate Java's
-			// narrowing conversion (JLS 5.1.3) instead of conservatively
-			// falling back to the whole range of the target type
+				&& left.getHigh().compareTo(new MathNumber(Long.MAX_VALUE)) <= 0) {
+			// the values are known up to a range: the narrowing conversion of
+			// Java (JLS 5.1.3) is replicated on the bounds. If the range has
+			// fewer values than the target type and its converted bounds stay
+			// in order, every value in between wraps around by the same amount
+			// (e.g., (char) [65536, 65538] is [0, 2]); otherwise the range
+			// crosses a wrap-around point (e.g., (char) [65534, 65537] is
+			// 65534, 65535, 0, 1) and an interval cannot hold it
 			try {
-				long truncated = truncate(left.getLow().toLong(), numType.getNBits(), numType.isUnsigned());
-				return new IntInterval(new MathNumber(truncated), new MathNumber(truncated));
+				long low = left.getLow().toLong(), high = left.getHigh().toLong();
+				int bits = numType.getNBits();
+				if (bits < 64 && high - low >= 0 && high - low < (1L << bits)) {
+					long first = truncate(low, bits, numType.isUnsigned());
+					long last = truncate(high, bits, numType.isUnsigned());
+					if (first <= last)
+						return new IntInterval(new MathNumber(first), new MathNumber(last));
+				}
 			} catch (MathNumberConversionException e) {
 				// should not happen given the bound checks above, but fall
 				// back to a sound over-approximation just in case
@@ -569,6 +729,215 @@ public class JavaNumericInterval extends Interval {
 
 	@Override
 	public IntInterval evalBinaryExpression(
+			BinaryExpression expression,
+			IntInterval left,
+			IntInterval right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		BinaryOperator operator = expression.getOperator();
+		if (oracle != null && mayBeFloatingPoint(expression, pp, oracle)) {
+			// an integral operand of a floating point operation is never
+			// infinite (e.g., 0.9f * w with w > 0 is positive and finite),
+			// and it is converted to the type of the operation first, which
+			// rounds (e.g., Long.MAX_VALUE * 1.0f is 2^63)
+			left = asFloatingPointOperand(expression.getLeft(), left, expression, pp, oracle);
+			right = asFloatingPointOperand(expression.getRight(), right, expression, pp, oracle);
+			if (JavaInterval.isNaN(left) || JavaInterval.isNaN(right))
+				// every operation on NaN is NaN
+				return JavaInterval.NaN;
+			if ((operator instanceof AdditionOperator && oppositeInfinities(left, right, false))
+					|| (operator instanceof SubtractionOperator && oppositeInfinities(left, right, true)))
+				// +Inf - +Inf and +Inf + -Inf are NaN
+				return top();
+		}
+		if (!(operator instanceof AdditionOperator
+				|| operator instanceof SubtractionOperator
+				|| operator instanceof MultiplicationOperator)) {
+			if (operator instanceof DivisionOperator
+					&& !left.isBottom() && !right.isBottom()
+					&& (right.includes(IntInterval.ZERO) || left.isInfinite())
+					&& mayBeFloatingPoint(expression, pp, oracle))
+				// 0.0 / 0.0 and inf / inf are NaN
+				return top();
+			if (operator instanceof RemainderOperator)
+				return remainder(left, right, oracle != null && !mayBeFloatingPoint(expression, pp, oracle));
+			IntInterval exact = evalExact(expression, left, right, pp, oracle);
+			if (operator instanceof DivisionOperator && oracle != null && isFloatingPoint(expression, pp, oracle))
+				exact = keepSign(exact, left, right, true);
+			return operator instanceof DivisionOperator ? roundOutward(exact, expression, pp, oracle) : exact;
+		}
+
+		// this covers potential overflows for +, -, *, ++, --
+		if (!left.isBottom() && !right.isBottom()
+				&& (left.isInfinite() || right.isInfinite())
+				&& (operator instanceof MultiplicationOperator || !mayBeFloatingPoint(expression, pp, oracle)))
+			// one of the operands is already unbounded: an integral result may
+			// wrap around, and a product may be 0 times an infinity. The sum
+			// and the difference of floating point values do not wrap around,
+			// and their interval is computed (e.g., [0, +Inf] + 0.2 is [0.2,
+			// +Inf])
+			return top();
+		IntInterval result = evalExact(expression, left, right, pp, oracle);
+		if (operator instanceof MultiplicationOperator && oracle != null && isFloatingPoint(expression, pp, oracle))
+			result = keepSign(result, left, right, false);
+		if (oracle != null && mayWrapAround(result, oracle.getDynamicTypeOf(expression, pp)))
+			// both operands are bounded, but their exact (arbitrary precision)
+			// result falls outside the range of the expression's type: Java
+			// would wrap it around via two's-complement truncation, which
+			// cannot be pinned down without the concrete values
+			return top();
+		return roundOutward(result, expression, pp, oracle);
+	}
+
+	/**
+	 * Returns the interval of {@code n % m}, as computed by Java: the result
+	 * has the sign of {@code n}, and its absolute value is at most the one of
+	 * {@code n} and smaller than the one of {@code m} (e.g., {@code n % 3} is
+	 * in [-2, 2] on integers). On floating point numbers, the result is NaN if
+	 * {@code m} is 0 or {@code n} is infinite, and it is not an integer (e.g.,
+	 * {@code 5.5 % 3.0} is 2.5).
+	 *
+	 * @param n        the interval of the dividend
+	 * @param m        the interval of the divisor
+	 * @param integral whether the operands are surely integers
+	 *
+	 * @return the interval of the remainder
+	 */
+	public static IntInterval remainder(
+			IntInterval n,
+			IntInterval m,
+			boolean integral) {
+		if (!integral && (m.includes(IntInterval.ZERO) || n.isInfinite()))
+			return IntInterval.TOP;
+		MathNumber low = n.lowIsMinusInfinity() ? MathNumber.MINUS_INFINITY : n.getLow().min(MathNumber.ZERO);
+		MathNumber high = n.highIsPlusInfinity() ? MathNumber.PLUS_INFINITY : n.getHigh().max(MathNumber.ZERO);
+		if (!m.isInfinite()) {
+			MathNumber largest = m.getLow().abs().max(m.getHigh().abs());
+			if (largest.isZero())
+				// only a divisor 0: an exception, raised by the statement
+				return IntInterval.BOTTOM;
+			MathNumber bound = integral ? largest.subtract(MathNumber.ONE) : largest;
+			low = low.max(bound.multiply(MathNumber.MINUS_ONE));
+			high = high.min(bound);
+		}
+		return new IntInterval(low, high);
+	}
+
+	/**
+	 * Returns the non-strict comparison equivalent to the given strict one
+	 * ({@code <} or {@code >}) on floating point values. When one side is a
+	 * constant, it is moved to the next double toward the other side (e.g.,
+	 * {@code x < 1.0} gives {@code x <= Math.nextDown(1.0)}, and {@code 0 < x}
+	 * gives {@code Double.MIN_VALUE <= x}), since no double lies between a
+	 * double and the next one. Otherwise, the strict comparison is weakened to
+	 * the non-strict one.
+	 *
+	 * @param expression the strict comparison
+	 *
+	 * @return the non-strict comparison
+	 */
+	private static BinaryExpression nonStrict(
+			BinaryExpression expression) {
+		boolean lt = expression.getOperator() == ComparisonLt.INSTANCE;
+		SymbolicExpression left = expression.getLeft();
+		SymbolicExpression right = expression.getRight();
+		// x < c gives x <= nextDown(c), c < x gives nextUp(c) <= x, and the
+		// same for > in the other direction
+		if (right instanceof Constant c && c.getValue() instanceof Number n && !(n instanceof Long))
+			right = new Constant(JavaDoubleType.INSTANCE, step(n.doubleValue(), !lt), c.getCodeLocation());
+		else if (left instanceof Constant c && c.getValue() instanceof Number n && !(n instanceof Long))
+			left = new Constant(JavaDoubleType.INSTANCE, step(n.doubleValue(), lt), c.getCodeLocation());
+		return new BinaryExpression(expression.getStaticType(), left, right,
+				lt ? ComparisonLe.INSTANCE : ComparisonGe.INSTANCE, expression.getCodeLocation());
+	}
+
+	// the next double up or down (infinities and NaN are left as they are)
+	private static double step(
+			double value,
+			boolean up) {
+		if (Double.isNaN(value) || Double.isInfinite(value))
+			return value;
+		return up ? Math.nextUp(value) : Math.nextDown(value);
+	}
+
+	/**
+	 * Returns the given exact result of a floating point operation, with each
+	 * bound rounded outward to a float or double: the low bound down, the high
+	 * bound up (a bound that is already a value of the type is kept). Java
+	 * rounds the exact result to the nearest float or double (e.g., 0.1 + 0.7
+	 * is 0.7999999999999999, below the exact sum), which the widened interval
+	 * contains. Results of integral operations are returned as they are.
+	 *
+	 * @param result     the exact result
+	 * @param expression the operation
+	 * @param pp         the program point of the operation
+	 * @param oracle     the oracle for inter-domain communication
+	 *
+	 * @return the widened result
+	 *
+	 * @throws SemanticException if the types cannot be computed
+	 */
+	private static IntInterval roundOutward(
+			IntInterval result,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (result.isTop() || result.isBottom() || oracle == null || !mayBeFloatingPoint(expression, pp, oracle))
+			return result;
+		// a float has larger units in the last place than a double
+		boolean isFloat = oracle.getRuntimeTypesOf(expression, pp).stream()
+				.anyMatch(type -> type == JavaFloatType.INSTANCE);
+		MathNumber low = result.getLow(), high = result.getHigh();
+		try {
+			if (!low.isMinusInfinity()) {
+				// the nearest value, moved down if it is above the bound
+				double d = isFloat ? (float) low.toDouble() : low.toDouble();
+				if (!Double.isInfinite(d) && fromDouble(d).compareTo(low) > 0)
+					d = isFloat ? Math.nextDown((float) d) : Math.nextDown(d);
+				low = Double.isInfinite(d) ? (d < 0 ? MathNumber.MINUS_INFINITY : fromDouble(Double.MAX_VALUE))
+						: fromDouble(d);
+			}
+			if (!high.isPlusInfinity()) {
+				// the nearest value, moved up if it is below the bound
+				double d = isFloat ? (float) high.toDouble() : high.toDouble();
+				if (!Double.isInfinite(d) && fromDouble(d).compareTo(high) < 0)
+					d = isFloat ? Math.nextUp((float) d) : Math.nextUp(d);
+				high = Double.isInfinite(d) ? (d > 0 ? MathNumber.PLUS_INFINITY : fromDouble(-Double.MAX_VALUE))
+						: fromDouble(d);
+			}
+		} catch (MathNumberConversionException e) {
+			return IntInterval.TOP;
+		}
+		return new IntInterval(low, high);
+	}
+
+	/**
+	 * Returns whether {@code result}, the exact (arbitrary precision) result of
+	 * an arithmetic operation, falls outside the range representable by
+	 * {@code type}, meaning that the actual Java computation would wrap around
+	 * instead of yielding {@code result}.
+	 *
+	 * @param result the exact result
+	 * @param type   the type of the operation
+	 *
+	 * @return whether the result may wrap around
+	 */
+	static boolean mayWrapAround(
+			IntInterval result,
+			Type type) {
+		if (result.isTop() || result.isBottom())
+			return false;
+		if (!(type instanceof JavaNumericType numType) || !numType.isIntegral())
+			return false;
+		IntInterval bounds = typeBounds(numType);
+		return result.getLow().compareTo(bounds.getLow()) < 0 || result.getHigh().compareTo(bounds.getHigh()) > 0;
+	}
+
+	// the result of the operation on the mathematical values, without the
+	// wrap-around of integral types (see evalBinaryExpression)
+	private IntInterval evalExact(
 			BinaryExpression expression,
 			IntInterval left,
 			IntInterval right,
@@ -636,44 +1005,7 @@ public class JavaNumericInterval extends Interval {
 		if (operator instanceof BitwiseUnsignedShiftRight)
 			return evalShiftRight(left, right, true);
 
-		if (operator instanceof RemainderOperator)
-			return remainder(left, right, oracle != null && !mayBeFloatingPoint(expression, pp, oracle));
-
 		return super.evalBinaryExpression(expression, left, right, pp, oracle);
-	}
-
-	/**
-	 * Returns the interval of {@code n % m}, as computed by Java: the result
-	 * has the sign of {@code n}, and its absolute value is at most the one of
-	 * {@code n} and smaller than the one of {@code m} (e.g., {@code n % 3} is
-	 * in [-2, 2] on integers). On floating point numbers, the result is NaN if
-	 * {@code m} is 0 or {@code n} is infinite, and it is not an integer (e.g.,
-	 * {@code 5.5 % 3.0} is 2.5).
-	 *
-	 * @param n        the interval of the dividend
-	 * @param m        the interval of the divisor
-	 * @param integral whether the operands are surely integers
-	 *
-	 * @return the interval of the remainder
-	 */
-	public static IntInterval remainder(
-			IntInterval n,
-			IntInterval m,
-			boolean integral) {
-		if (!integral && (m.includes(IntInterval.ZERO) || n.isInfinite()))
-			return IntInterval.TOP;
-		MathNumber low = n.lowIsMinusInfinity() ? MathNumber.MINUS_INFINITY : n.getLow().min(MathNumber.ZERO);
-		MathNumber high = n.highIsPlusInfinity() ? MathNumber.PLUS_INFINITY : n.getHigh().max(MathNumber.ZERO);
-		if (!m.isInfinite()) {
-			MathNumber largest = m.getLow().abs().max(m.getHigh().abs());
-			if (largest.isZero())
-				// only a divisor 0: an exception, raised by the statement
-				return IntInterval.BOTTOM;
-			MathNumber bound = integral ? largest.subtract(MathNumber.ONE) : largest;
-			low = low.max(bound.multiply(MathNumber.MINUS_ONE));
-			high = high.min(bound);
-		}
-		return new IntInterval(low, high);
 	}
 
 	private IntInterval evalShiftLeft(
@@ -864,7 +1196,10 @@ public class JavaNumericInterval extends Interval {
 			return MathNumber.PLUS_INFINITY;
 		if (value == Double.NEGATIVE_INFINITY)
 			return MathNumber.MINUS_INFINITY;
-		return new MathNumber(value);
+		// the exact binary value: the shortest decimal (BigDecimal.valueOf)
+		// differs from it (e.g., 0.1 is 0.1000000000000000055...), and the
+		// exact arithmetic on decimals differs from the one of Java
+		return new MathNumber(new BigDecimal(value));
 	}
 
 	private static MathNumber combine(
@@ -872,6 +1207,91 @@ public class JavaNumericInterval extends Interval {
 			MathNumber right,
 			boolean division) {
 		return division ? left.divide(right) : left.multiply(right);
+	}
+
+	// the product or quotient of two bounded ranges, with the bounds rounded
+	// to integers by the intervals of LiSA moved back to the exact ones when
+	// the rounding crosses zero (e.g., [0.9, 0.9] * [1, 10] is [0, 9] once
+	// rounded, while it is positive)
+	private static IntInterval keepSign(
+			IntInterval result,
+			IntInterval left,
+			IntInterval right,
+			boolean division) {
+		if (result.isBottom() || result.isTop() || left.isBottom() || right.isBottom()
+				|| left.isInfinite() || right.isInfinite() || (division && right.includes(IntInterval.ZERO)))
+			return result;
+		MathNumber ll = combine(left.getLow(), right.getLow(), division);
+		MathNumber lh = combine(left.getLow(), right.getHigh(), division);
+		MathNumber hl = combine(left.getHigh(), right.getLow(), division);
+		MathNumber hh = combine(left.getHigh(), right.getHigh(), division);
+		MathNumber min = ll.min(lh).min(hl).min(hh);
+		MathNumber max = ll.max(lh).max(hl).max(hh);
+		MathNumber low = result.getLow(), high = result.getHigh();
+		if (min.compareTo(MathNumber.ZERO) > 0 && low.compareTo(MathNumber.ZERO) <= 0)
+			low = min;
+		if (max.compareTo(MathNumber.ZERO) < 0 && high.compareTo(MathNumber.ZERO) >= 0)
+			high = max;
+		return new IntInterval(low, high);
+	}
+
+	// the interval of an expression with only integral values, cut to the
+	// values of their types: an unbounded int interval stands for the ints up
+	// to the largest one, not for an infinity
+	private static IntInterval withinType(
+			SymbolicExpression expression,
+			IntInterval interval,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (interval.isBottom() || !interval.isInfinite() || !(expression instanceof ValueExpression value))
+			return interval;
+		Set<Type> types = oracle.getRuntimeTypesOf(value, pp);
+		if (types.isEmpty()
+				|| !types.stream().allMatch(type -> type instanceof JavaNumericType numType && numType.isIntegral()))
+			return interval;
+		MathNumber low = null, high = null;
+		for (Type type : types) {
+			IntInterval bounds = typeBounds((JavaNumericType) type);
+			low = low == null ? bounds.getLow() : low.min(bounds.getLow());
+			high = high == null ? bounds.getHigh() : high.max(bounds.getHigh());
+		}
+		low = interval.getLow().max(low);
+		high = interval.getHigh().min(high);
+		return low.compareTo(high) > 0 ? interval : new IntInterval(low, high);
+	}
+
+	// whether the given finite number is an int (toInt truncates the others)
+	private static boolean fitsInt(
+			MathNumber n) {
+		return !n.isInfinite() && n.compareTo(new MathNumber(Integer.MIN_VALUE)) >= 0
+				&& n.compareTo(new MathNumber(Integer.MAX_VALUE)) <= 0 && n.roundDown().compareTo(n) == 0;
+	}
+
+	// whether the given finite number is a long
+	private static boolean fitsLong(
+			MathNumber n) {
+		return !n.isInfinite() && n.compareTo(new MathNumber(Long.MIN_VALUE)) >= 0
+				&& n.compareTo(new MathNumber(Long.MAX_VALUE)) <= 0 && n.roundDown().compareTo(n) == 0;
+	}
+
+	// the interval of an operand of the given floating point operation: an
+	// operand with only integral values is cut to the values of its types and
+	// rounded outward to the type of the operation, to which it is converted
+	private static IntInterval asFloatingPointOperand(
+			SymbolicExpression operand,
+			IntInterval interval,
+			BinaryExpression operation,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (interval.isBottom() || interval.isTop() || !(operand instanceof ValueExpression value))
+			return interval;
+		Set<Type> types = oracle.getRuntimeTypesOf(value, pp);
+		if (types.isEmpty()
+				|| !types.stream().allMatch(type -> type instanceof JavaNumericType numType && numType.isIntegral()))
+			return interval;
+		return roundOutward(withinType(operand, interval, pp, oracle), operation, pp, oracle);
 	}
 
 	private static JavaNumericType integralTypeOf(
@@ -898,7 +1318,163 @@ public class JavaNumericInterval extends Interval {
 			return environment.bottom();
 		if (sat == Satisfiability.SATISFIED)
 			return environment;
-		return super.assume(environment, expression, src, dest, oracle);
+		if (negatesFloatingPointComparison(environment, expression, false, src, oracle))
+			// NaN satisfies every negated ordered comparison (!(x <= 5) holds
+			// for NaN), but the intervals would assume the opposite comparison
+			// (x > 5), which excludes NaN: nothing is assumed when an operand
+			// may be NaN, that is, when its interval is top (NaN is only in
+			// top: every operation that may give NaN gives top)
+			return environment;
+		return notNaN(asJavaIntervals(super.assume(environment, expression, src, dest, oracle)), expression, src,
+				oracle);
+	}
+
+	// whether the sum (or the difference, if subtraction holds) of the given
+	// intervals may be the sum of infinities of opposite signs, that is NaN
+	private static boolean oppositeInfinities(
+			IntInterval left,
+			IntInterval right,
+			boolean subtraction) {
+		if (left.isBottom() || right.isBottom())
+			return false;
+		boolean rightMayBePlus = subtraction ? right.lowIsMinusInfinity() : right.highIsPlusInfinity();
+		boolean rightMayBeMinus = subtraction ? right.highIsPlusInfinity() : right.lowIsMinusInfinity();
+		return (left.highIsPlusInfinity() && rightMayBeMinus) || (left.lowIsMinusInfinity() && rightMayBePlus);
+	}
+
+	/**
+	 * Returns whether the given condition contains, under an odd number of
+	 * negations, an ordered comparison ({@code <}, {@code <=}, {@code >},
+	 * {@code >=}) with an operand that may be a floating point NaN.
+	 *
+	 * @param environment the environment where the condition is assumed
+	 * @param expression  the condition
+	 * @param negated     whether the condition is under an odd number of
+	 *                        negations
+	 * @param pp          the program point of the condition
+	 * @param oracle      the oracle for inter-domain communication
+	 *
+	 * @return whether such a comparison is in the condition
+	 *
+	 * @throws SemanticException if the types cannot be computed
+	 */
+	private boolean negatesFloatingPointComparison(
+			ValueEnvironment<IntInterval> environment,
+			ValueExpression expression,
+			boolean negated,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (expression instanceof UnaryExpression u && u.getOperator() == LogicalNegation.INSTANCE
+				&& u.getExpression() instanceof ValueExpression inner)
+			return negatesFloatingPointComparison(environment, inner, !negated, pp, oracle);
+		if (!(expression instanceof BinaryExpression b) || !(b.getLeft() instanceof ValueExpression left)
+				|| !(b.getRight() instanceof ValueExpression right))
+			return false;
+		BinaryOperator operator = b.getOperator();
+		if (operator == LogicalAnd.INSTANCE || operator == LogicalOr.INSTANCE)
+			return negatesFloatingPointComparison(environment, left, negated, pp, oracle)
+					|| negatesFloatingPointComparison(environment, right, negated, pp, oracle);
+		return negated
+				&& (operator == ComparisonLt.INSTANCE || operator == ComparisonLe.INSTANCE
+						|| operator == ComparisonGt.INSTANCE || operator == ComparisonGe.INSTANCE)
+				&& (mayBeNaN(environment, left, pp, oracle) || mayBeNaN(environment, right, pp, oracle));
+	}
+
+	// whether the operand may be a floating point NaN: only top intervals
+	// contain NaN
+	private boolean mayBeNaN(
+			ValueEnvironment<IntInterval> environment,
+			ValueExpression operand,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (isIntegral(operand, pp, oracle))
+			return false;
+		IntInterval value = eval(environment, operand, pp, oracle);
+		if (JavaInterval.isNaN(value))
+			return true;
+		if (!value.isTop())
+			return false;
+		if (!oracle.hasWholeValueAnlysis())
+			return true;
+		// another domain may know that the operand is not NaN, that is, that
+		// operand == operand holds
+		Set<BinaryExpression> constraints = oracle.constraints(this,
+				new BinaryExpression(pp.getProgram().getTypes().getBooleanType(), operand, operand,
+						ComparisonEq.INSTANCE, operand.getCodeLocation()),
+				pp);
+		if (constraints != null)
+			for (BinaryExpression constraint : constraints)
+				if (constraint.getOperator() == ComparisonEq.INSTANCE
+						&& constraint.getLeft() instanceof Constant c && Boolean.TRUE.equals(c.getValue()))
+					return false;
+		return true;
+	}
+
+	@Override
+	public Set<BinaryExpression> constraints(
+			ValueDomain<?> requesting,
+			ValueEnvironment<IntInterval> state,
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (state.isBottom())
+			return null;
+		if (!(e instanceof BinaryExpression b && b.getOperator() instanceof ComparisonOperator)
+				&& mayBeFloatingPoint(e, pp, oracle)) {
+			// the bounds of a floating point value are not integers, which
+			// the constraints of LiSA require: only a range with both bounds
+			// finite is given (a single bound is read in the opposite
+			// direction by Interval.generate)
+			IntInterval value = eval(state, e, pp, oracle);
+			if (value.isBottom() || value.isTop() || value.isInfinite())
+				return Collections.emptySet();
+			try {
+				return ValueDomain.makeRangeConstraints(JavaDoubleType.INSTANCE, value.getLow().toDouble(),
+						value.getHigh().toDouble(), e, pp);
+			} catch (MathNumberConversionException ex) {
+				return Collections.emptySet();
+			}
+		}
+		Set<Type> types = oracle.getRuntimeTypesOf(e, pp);
+		if (!types.isEmpty()
+				&& types.stream().allMatch(type -> type instanceof JavaNumericType numType && numType.isIntegral())
+				&& !(e instanceof BinaryExpression b && (b.getOperator() instanceof ComparisonOperator
+						|| b.getOperator() == LogicalAnd.INSTANCE || b.getOperator() == LogicalOr.INSTANCE))
+				&& !(e instanceof UnaryExpression u && u.getOperator() == LogicalNegation.INSTANCE)) {
+			// an integral value with one unbounded side: the range is cut to
+			// the values of its type, since a single bound is read in the
+			// opposite direction by Interval.generate (e.g., n >= 2 gives the
+			// range [2, 2147483647] of an int). The bounds are given as long
+			// constants when they do not fit in an int: the intervals of LiSA
+			// truncate them with toInt (e.g., the range of a long is read as
+			// [-1, 0])
+			IntInterval value = eval(state, e, pp, oracle);
+			if (value.isBottom())
+				return null;
+			if (value.isTop())
+				return Collections.emptySet();
+			if (value.isInfinite())
+				value = withinType(e, value, pp, oracle);
+			if (value.isInfinite())
+				return fitsInt(value.lowIsMinusInfinity() ? value.getHigh() : value.getLow())
+						? super.constraints(requesting, state, e, pp, oracle)
+						: Collections.emptySet();
+			try {
+				if (fitsInt(value.getLow()) && fitsInt(value.getHigh()))
+					return ValueDomain.makeRangeConstraints(pp.getProgram().getTypes().getIntegerType(),
+							value.getLow().toInt(), value.getHigh().toInt(), e, pp);
+				if (fitsLong(value.getLow()) && fitsLong(value.getHigh()))
+					return ValueDomain.makeRangeConstraints(JavaLongType.INSTANCE, value.getLow().toLong(),
+							value.getHigh().toLong(), e, pp);
+			} catch (MathNumberConversionException ex) {
+				// not reached: the bounds are finite and in range
+			}
+			return Collections.emptySet();
+		}
+		return super.constraints(requesting, state, e, pp, oracle);
 	}
 
 	@Override
@@ -910,6 +1486,12 @@ public class JavaNumericInterval extends Interval {
 			SemanticOracle oracle)
 			throws SemanticException {
 
+		if (eval(environment, (ValueExpression) expression.getLeft(), src, oracle).isBottom()
+				|| eval(environment, (ValueExpression) expression.getRight(), src, oracle).isBottom())
+			// an operand without an interval (e.g., a boolean constant): the
+			// condition says nothing about intervals
+			return environment;
+
 		Satisfiability sat = satisfies(environment, expression, src, oracle);
 		if (sat == Satisfiability.NOT_SATISFIED)
 			return environment.bottom();
@@ -917,7 +1499,16 @@ public class JavaNumericInterval extends Interval {
 			return environment;
 
 		if (expression.getOperator() != ComparisonNe.INSTANCE) {
-			ValueEnvironment<IntInterval> result = super.assumeBinaryExpression(environment, expression, src, dest,
+			BinaryExpression assumed = expression;
+			if ((expression.getOperator() == ComparisonLt.INSTANCE || expression.getOperator() == ComparisonGt.INSTANCE)
+					&& (!isIntegral((ValueExpression) expression.getLeft(), src, oracle)
+							|| !isIntegral((ValueExpression) expression.getRight(), src, oracle)))
+				// the interval domain of LiSA refines the strict comparisons
+				// by one (x < 1 gives x <= 0), which is wrong for floating
+				// point values (x < 1 holds for x = 0.5): they are assumed as
+				// non-strict ones (see nonStrict)
+				assumed = nonStrict(expression);
+			ValueEnvironment<IntInterval> result = super.assumeBinaryExpression(environment, assumed, src, dest,
 					oracle);
 			// the interval domain of LiSA refines only one identifier: when
 			// both operands are identifiers, the right one is refined too, with
@@ -959,6 +1550,12 @@ public class JavaNumericInterval extends Interval {
 			id = (Identifier) right;
 		} else
 			return environment;
+
+		if (eval.isBottom() || evalId.isBottom()) {
+			// an operand without an interval (e.g., a value that is not a
+			// number): the condition says nothing about intervals
+			return environment;
+		}
 
 		ValueEnvironment<IntInterval> updatedEnv = environment;
 		if (eval.isSingleton()) {
