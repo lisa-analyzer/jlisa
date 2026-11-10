@@ -310,15 +310,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_NUMBER_OF_TRAILING_ZEROS)
 			return trailingZeros(unsigned(x, 64), 64);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE)
-			return signed(reverse(unsigned(x, 32), 32, 1), 32);
+		    return signed(reverse(x, 32, 1), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE)
-			return signed(reverse(unsigned(x, 64), 64, 1), 64);
+		    return signed(reverse(x, 64, 1), 64);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 32), 32, 8), 32);
+		    return signed(reverse(x, 32, 8), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 64), 64, 8), 64);
+		    return signed(reverse(x, 64, 8), 64);
 		if (f == JavaLibraryFunction.SHORT_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 16), 16, 8), 16);
+		    return signed(reverse(x, 16, 8), 16);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING || f == JavaLibraryFunction.LONG_TO_STRING
 				|| f == JavaLibraryFunction.SHORT_TO_STRING || f == JavaLibraryFunction.BYTE_TO_STRING)
 			return decimal(x);
@@ -626,15 +626,21 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * {@code Integer.reverseBytes}).
 	 */
 	private static Term reverse(
-			Term u,
-			int bits,
-			int group) {
-		int groups = bits / group;
-		Term[] sum = new Term[groups];
-		for (int i = 0; i < groups; i++)
-			sum[i] = Term.app("*", Sort.INT, bits(u, i * group, group),
-					num(pow2((groups - 1 - i) * group)));
-		return groups == 1 ? sum[0] : Term.app("+", Sort.INT, sum);
+		Term x,
+		int bits,
+		int group) {
+		Term v = Term.app("(_ int2bv " + bits + ")", Sort.bitVector(bits), x);
+		Term result = null;
+		for (int i = 0; i < bits / group; i++) {
+
+			// the first operand of concat is the most significant one, so the
+			// lowest group of the input becomes the highest of the output
+			Term part = Term.app("(_ extract " + ((i + 1) * group - 1) + " " + (i * group) + ")",
+				Sort.bitVector(group), v);
+			result = result == null ? part
+				: Term.app("concat", Sort.bitVector((i + 1) * group), result, part);
+		}
+		return Term.app("bv2nat", Sort.INT, result);
 	}
 
 	/**
