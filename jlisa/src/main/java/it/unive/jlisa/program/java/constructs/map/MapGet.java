@@ -103,6 +103,23 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 		return res;
 	}
 
+	/**
+	 * Returns the access to the field of the given map that tells whether the
+	 * map has entries that are not tracked (e.g., copied from another map).
+	 *
+	 * @param map      the map
+	 * @param location the location of the access
+	 *
+	 * @return the access to the field
+	 */
+	public static AccessChild unknownKeys(
+			SymbolicExpression map,
+			CodeLocation location) {
+		HeapDereference derefMap = new HeapDereference(JavaClassType.lookup("java.util.Map"), map, location);
+		return new AccessChild(JavaBooleanType.INSTANCE, derefMap,
+				new GlobalVariable(Untyped.INSTANCE, "$unknownKeys", location), location);
+	}
+
 	@Override
 	protected int compareSameClassAndParams(
 			Statement o) {
@@ -179,8 +196,21 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			foundState = analysis.smallStepSemantics(state, accessMapKey, context, this);
 		}
 		if (anyUnknown) {
-			nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), context,
-					originating);
+			// a key that was never written is not in the map (null), unless the
+			// map has entries that are not tracked (e.g., copied from another
+			// map): then the value is unknown, and might be null
+			AccessChild unknownKeys = unknownKeys(left, location);
+			boolean untracked = false;
+			for (SymbolicExpression e : analysis.rewrite(state, unknownKeys, context, this))
+				if (e instanceof Identifier id && state.knowsIdentifier(id)
+						&& analysis.satisfies(state, unknownKeys, context, this) != Satisfiability.NOT_SATISFIED)
+					untracked = true;
+			if (untracked)
+				nullState = analysis.smallStepSemantics(state, new PushAny(Untyped.INSTANCE, location), context,
+						originating);
+			else
+				nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), context,
+						originating);
 		}
 		return foundState.lub(nullState);
 	}

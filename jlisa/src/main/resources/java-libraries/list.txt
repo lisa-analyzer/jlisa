@@ -42,7 +42,7 @@ class java.util.List extends java.util.Collection:
         param index type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param c type it.unive.lisa.type.Untyped::INSTANCE
 
-    instance method clear: it.unive.jlisa.program.java.constructs.lists.ListRemoveElements
+    instance method clear: it.unive.jlisa.program.java.constructs.lists.ListClear
         type it.unive.lisa.type.VoidType::INSTANCE
         param this libtype java.util.List*
 
@@ -91,6 +91,11 @@ class java.util.LinkedList extends java.util.List:
     instance method LinkedList: it.unive.jlisa.program.java.constructs.lists.LinkedListConstructor
         type it.unive.lisa.type.VoidType::INSTANCE
         param this libtype java.util.LinkedList*
+
+    instance method LinkedList: it.unive.jlisa.program.java.constructs.lists.ListCopyConstructor
+        type it.unive.lisa.type.VoidType::INSTANCE
+        param this libtype java.util.LinkedList*
+        param c libtype java.util.Collection*
 
     instance method addLast: it.unive.jlisa.program.java.constructs.lists.LinkedListAddLast
         type it.unive.lisa.type.VoidType::INSTANCE
@@ -168,4 +173,14 @@ class java.util.ArrayList extends java.util.List:
     instance method ArrayList: it.unive.jlisa.program.java.constructs.lists.ArrayListConstructor
         type it.unive.lisa.type.VoidType::INSTANCE
         param this libtype java.util.ArrayList*
+
+    instance method ArrayList: it.unive.jlisa.program.java.constructs.lists.ListCopyConstructor
+        type it.unive.lisa.type.VoidType::INSTANCE
+        param this libtype java.util.ArrayList*
+        param c libtype java.util.Collection*
+
+    instance method ArrayList: it.unive.jlisa.program.java.constructs.lists.ListCapacityConstructor
+        type it.unive.lisa.type.VoidType::INSTANCE
+        param this libtype java.util.ArrayList*
+        param capacity type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 	

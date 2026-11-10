@@ -1,3 +1,59 @@
 class java.util.Set extends java.util.Collection:
 
+	instance method add: it.unive.jlisa.program.java.constructs.sets.SetAdd
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param e type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method contains: it.unive.jlisa.program.java.constructs.sets.SetContains
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param o type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method size: it.unive.jlisa.program.java.constructs.lists.ListSize
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.util.Set*
+
+	instance method isEmpty: it.unive.jlisa.program.java.constructs.lists.ListIsEmpty
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+
+	instance method remove: it.unive.jlisa.program.java.constructs.lists.ListRemoveElements
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param o type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method clear: it.unive.jlisa.program.java.constructs.lists.ListClear
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Set*
+
+	instance method addAll: it.unive.jlisa.program.java.constructs.lists.ListAppendElements
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param c type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method removeAll: it.unive.jlisa.program.java.constructs.lists.ListRemoveElements
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param c type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method retainAll: it.unive.jlisa.program.java.constructs.lists.ListRemoveElements
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param c type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method removeIf: it.unive.jlisa.program.java.constructs.lists.ListRemoveElements
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Set*
+		param p type it.unive.lisa.type.Untyped::INSTANCE
+
 class java.util.HashSet extends java.util.Set:
+
+	instance method HashSet: it.unive.jlisa.program.java.constructs.sets.HashSetConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.HashSet*
+
+	instance method HashSet: it.unive.jlisa.program.java.constructs.sets.SetCopyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.HashSet*
+		param c libtype java.util.Collection*

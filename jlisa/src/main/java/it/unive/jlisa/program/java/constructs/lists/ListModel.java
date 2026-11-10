@@ -264,6 +264,90 @@ public class ListModel {
 	}
 
 	/**
+	 * Returns the state where the given collection is a copy of the given
+	 * source (e.g., {@code new ArrayList<>(c)}): it has its own array, with the
+	 * same elements (the same references, as the copy is shallow). If
+	 * {@code distinct}, the copy keeps only distinct elements (e.g.,
+	 * {@code new HashSet<>(c)}), so its size is between 1 and the one of the
+	 * source (0 for an empty source).
+	 *
+	 * @param <A>                 the kind of the abstract state
+	 * @param <D>                 the kind of the abstract domain
+	 * @param analysis            the analysis
+	 * @param context             the current context
+	 * @param state               the state
+	 * @param target              the copy
+	 * @param source              the source
+	 * @param elementDataLocation the location of the allocation of the array
+	 * @param distinct            whether the copy keeps only distinct elements
+	 * @param st                  the constructor
+	 *
+	 * @return the state where the collection is a copy of the source
+	 *
+	 * @throws SemanticException if the fields cannot be assigned
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> copy(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression target,
+			SymbolicExpression source,
+			CodeLocation elementDataLocation,
+			boolean distinct,
+			Statement st)
+			throws SemanticException {
+		CodeLocation location = st.getLocation();
+		AnalysisState<A> empty = init(analysis, context, state, target, elementDataLocation, st);
+		AccessChild size = size(target, location);
+		AnalysisState<A> result = empty.bottomExecution();
+		for (int k = 0; k <= MAX_TRACKED_ELEMENTS; k++) {
+			boolean beyond = k == MAX_TRACKED_ELEMENTS;
+			AnalysisState<A> before = analysis.assume(empty,
+					compareSize(source, beyond ? ComparisonGe.INSTANCE : ComparisonEq.INSTANCE, k, location), context,
+					st, st);
+			if (before.getExecutionState().isBottom())
+				continue;
+			AnalysisState<A> tmp = before;
+			if (!distinct)
+				for (int i = 0; i < Math.min(k, MAX_TRACKED_ELEMENTS); i++)
+					tmp = analysis.assign(tmp, element(target, i, location), element(source, i, location), context,
+							st);
+			if (beyond)
+				tmp = analysis.assign(tmp, size, size(source, location), context, st);
+			else if (!distinct || k == 0)
+				tmp = analysis.assign(tmp, size, new Constant(JavaIntType.INSTANCE, k, location), context, st);
+			else
+				tmp = analysis.assign(tmp, size, between(size, 1, k, location), context, st);
+			result = result.lub(tmp);
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a value that is unknown, but between the given bounds (that the
+	 * domains read as constraints on the given identifier).
+	 *
+	 * @param target   the identifier that receives the value
+	 * @param low      the lower bound
+	 * @param high     the upper bound
+	 * @param location the location of the value
+	 *
+	 * @return the value
+	 */
+	public static PushFromConstraints between(
+			SymbolicExpression target,
+			int low,
+			int high,
+			CodeLocation location) {
+		Set<BinaryExpression> bounds = new HashSet<>();
+		bounds.add(new BinaryExpression(JavaBooleanType.INSTANCE, new Constant(JavaIntType.INSTANCE, low, location),
+				target, ComparisonLe.INSTANCE, location));
+		bounds.add(new BinaryExpression(JavaBooleanType.INSTANCE, new Constant(JavaIntType.INSTANCE, high, location),
+				target, ComparisonGe.INSTANCE, location));
+		return new PushFromConstraints(JavaIntType.INSTANCE, location, bounds);
+	}
+
+	/**
 	 * Returns the state where the given element is appended to the given list.
 	 *
 	 * @param <A>      the kind of the abstract state
@@ -374,7 +458,11 @@ public class ListModel {
 		/**
 		 * The number of elements does not increase.
 		 */
-		SHRINKS
+		SHRINKS,
+		/**
+		 * There are no elements.
+		 */
+		EMPTIES
 	}
 
 	/**
@@ -414,6 +502,9 @@ public class ListModel {
 						new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location), context, st);
 		if (change == SizeChange.SAME)
 			return tmp;
+		if (change == SizeChange.EMPTIES)
+			return analysis.assign(tmp, size(list, location), new Constant(JavaIntType.INSTANCE, 0, location),
+					context, st);
 
 		// the new size is bounded by the old one, for each value of the old
 		// one (as for the cells of the arrays)
@@ -434,7 +525,7 @@ public class ListModel {
 			else {
 				bounds.add(new BinaryExpression(JavaBooleanType.INSTANCE, zero, size, ComparisonLe.INSTANCE, location));
 				if (!beyond)
-					bounds.add(new BinaryExpression(JavaBooleanType.INSTANCE, size, old, ComparisonLe.INSTANCE,
+					bounds.add(new BinaryExpression(JavaBooleanType.INSTANCE, old, size, ComparisonGe.INSTANCE,
 							location));
 			}
 			result = result.lub(analysis.assign(before, size,
@@ -508,7 +599,7 @@ public class ListModel {
 			String name,
 			Type type,
 			CodeLocation location) {
-		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.util.List"), list, location);
+		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.util.Collection"), list, location);
 		return new AccessChild(type, deref, new GlobalVariable(Untyped.INSTANCE, name, location), location);
 	}
 }

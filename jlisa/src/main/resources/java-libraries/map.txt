@@ -14,6 +14,11 @@ class java.util.HashMap extends java.util.Map:
 		libtype java.util.HashMap*
 		param this libtype java.util.HashMap*
 
+	instance method HashMap: it.unive.jlisa.program.java.constructs.map.MapCopyConstructor
+		libtype java.util.HashMap*
+		param this libtype java.util.HashMap*
+		param m libtype java.util.Map*
+
 	instance method put: it.unive.jlisa.program.java.constructs.map.MapPut
 		libtype java.lang.Object*
 		param this libtype java.util.Map*
@@ -31,6 +36,18 @@ class java.util.HashMap extends java.util.Map:
 
 	instance method size: it.unive.jlisa.program.java.constructs.map.MapSize
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param this libtype java.util.Map*
+
+	instance method isEmpty: it.unive.jlisa.program.java.constructs.map.MapIsEmpty
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Map*
+
+	instance method keySet: it.unive.jlisa.program.java.constructs.map.MapView
+		libtype java.util.Set*
+		param this libtype java.util.Map*
+
+	instance method values: it.unive.jlisa.program.java.constructs.map.MapView
+		libtype java.util.Collection*
 		param this libtype java.util.Map*
 
 class java.util.TreeMap extends java.util.Map:
