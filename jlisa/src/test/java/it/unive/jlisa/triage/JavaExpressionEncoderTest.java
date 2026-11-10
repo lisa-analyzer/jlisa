@@ -5,7 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import it.unive.jlisa.program.operator.JavaByteToUnsignedIntOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsNaNOperator;
+import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsNaNOperator;
+import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
+import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
@@ -26,6 +39,7 @@ import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
@@ -520,6 +534,47 @@ public class JavaExpressionEncoderTest {
 			checkOperator(JavaMathRoundOperator.INSTANCE, dbl, () -> Math.round(f), f);
 			checkOperator(JavaMathAbsOperator.INSTANCE, JavaFloatType.INSTANCE, () -> Math.abs(f), f);
 		}
+	}
+
+	@Test
+	public void floatingPointPredicatesAndBits() throws Exception {
+		Type bool = JavaBooleanType.INSTANCE;
+		List<Double> doubles = List.of(0.0, -0.0, 1.0, -1.5, 1e300, Double.MIN_VALUE, Double.MAX_VALUE, Double.NaN,
+				Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
+		for (double d : doubles) {
+			checkOperator(JavaDoubleIsNaNOperator.INSTANCE, bool, () -> Double.isNaN(d), d);
+			checkOperator(JavaDoubleIsInfiniteOperator.INSTANCE, bool, () -> Double.isInfinite(d), d);
+			checkOperator(JavaDoubleIsFiniteOperator.INSTANCE, bool, () -> Double.isFinite(d), d);
+			checkOperator(JavaDoubleToLongBitsOperator.INSTANCE, JavaLongType.INSTANCE,
+					() -> Double.doubleToLongBits(d), d);
+			checkOperator(JavaDoubleLongBitsToDoubleOperator.INSTANCE, JavaDoubleType.INSTANCE,
+					() -> Double.longBitsToDouble(Double.doubleToLongBits(d)), Double.doubleToLongBits(d));
+			if (!Double.isNaN(d))
+				checkOperator(JavaDoubleToRawLongBitsOperator.INSTANCE, JavaLongType.INSTANCE,
+						() -> Double.doubleToRawLongBits(d), d);
+			float f = (float) d;
+			checkOperator(JavaFloatIsNaNOperator.INSTANCE, bool, () -> Float.isNaN(f), f);
+			checkOperator(JavaFloatIsInfiniteOperator.INSTANCE, bool, () -> Float.isInfinite(f), f);
+			checkOperator(JavaFloatIsFiniteOperator.INSTANCE, bool, () -> Float.isFinite(f), f);
+			checkOperator(JavaFloatToIntBitsOperator.INSTANCE, JavaIntType.INSTANCE, () -> Float.floatToIntBits(f), f);
+			if (!Float.isNaN(f))
+				checkOperator(JavaFloatToRawIntBitsOperator.INSTANCE, JavaIntType.INSTANCE,
+						() -> Float.floatToRawIntBits(f), f);
+		}
+		for (int b : List.of(0, 1, 127, -1, -128))
+			checkOperator(JavaByteToUnsignedIntOperator.INSTANCE, JavaIntType.INSTANCE,
+					() -> Byte.toUnsignedInt((byte) b), b);
+		for (int radix : List.of(1, 2, 10, 16, 36, 37))
+			for (int digit : List.of(-1, 0, 1, 9, 10, 15, 35, 36))
+				checkOperator(JavaCharacterForDigitOperator.INSTANCE, JavaCharType.INSTANCE,
+						() -> Character.forDigit(digit, radix), digit, radix);
+		for (String s : List.of("", "a", "abcabc", "aaaa"))
+			for (String t : List.of("", "a", "bc", "abc", "z"))
+				for (int from = -1; from <= s.length() + 1; from++) {
+					int k = from;
+					checkOperator(JavaStringLastIndexOfStringFromIndexOperator.INSTANCE, JavaIntType.INSTANCE,
+							() -> s.lastIndexOf(t, k), s, t, k);
+				}
 	}
 
 	@Test

@@ -1,8 +1,11 @@
 package it.unive.jlisa.triage;
 
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
+import it.unive.jlisa.program.operator.JavaByteToUnsignedIntOperator;
+import it.unive.jlisa.program.operator.JavaByteToUnsignedLongOperator;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierPartOperator;
@@ -14,7 +17,18 @@ import it.unive.jlisa.program.operator.JavaCharacterIsUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsNaNOperator;
+import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsNaNOperator;
+import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
+import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
@@ -58,6 +72,7 @@ import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertLongOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
@@ -80,6 +95,7 @@ import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
@@ -90,6 +106,7 @@ import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.triage.encoding.ExpressionEncoder;
 import it.unive.lisa.triage.encoding.SortPolicy;
 import it.unive.lisa.triage.encoding.SymbolTable;
+import it.unive.lisa.triage.encoding.ValueSort;
 import it.unive.lisa.triage.smt.FloatingPoints;
 import it.unive.lisa.triage.smt.Sort;
 import it.unive.lisa.triage.smt.Term;
@@ -185,6 +202,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term prefix = substr(s, num(0), Term.ite(ge(from, len), len, add(from, num(1))));
 			return lastIndexOf(prefix, coerce(middle, Sort.INT, expression), expression);
 		}
+		if (expression.getOperator() instanceof JavaStringLastIndexOfStringFromIndexOperator) {
+			Term s = asString(left, expression);
+			Term t = asString(middle, expression);
+			Term from = coerce(right, Sort.INT, expression);
+			// the occurrences starting at most at the given index
+			Term end = add(from, len(t));
+			Term prefix = substr(s, num(0), Term.ite(Term.app(">", Sort.BOOL, end, len(s)), len(s), end));
+			return Term.ite(lt(from, num(0)), num(-1), lastIndexOfString(prefix, t, expression));
+		}
 		Term string = stringTernary(expression.getOperator(), left, middle, right, expression);
 		if (string != null)
 			return string;
@@ -222,10 +248,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return exponent(arg, e);
 		if (op instanceof JavaLongBitCountOperator)
 			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64);
+		if (op instanceof JavaByteToUnsignedIntOperator || op instanceof JavaByteToUnsignedLongOperator)
+			return unsigned(coerce(arg, Sort.INT, e), 8);
+		Term floating = floatUnary(op, arg, e);
+		if (floating != null)
+			return floating;
 		Term string = stringUnary(op, arg, e);
 		if (string != null)
 			return string;
-		Term math = mathUnary(op, arg, e);
+		Term math = mathUnary(op, typed(arg, e), e);
 		if (math != null)
 			return math;
 		if (!(op instanceof JavaLibraryFunction))
@@ -343,6 +374,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term left,
 			Term right,
 			BinaryExpression e) {
+		if (op instanceof JavaCharacterForDigitOperator)
+			return forDigit(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
 		if (op instanceof JavaIntegerCompareOperator || op instanceof JavaLongCompareOperator)
 			return compare(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
 		if (op instanceof JavaShortCompareOperator || op instanceof JavaByteCompareOperator)
@@ -883,6 +916,86 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 				lt(value, r)), value, num(-1));
 	}
 
+	/**
+	 * Yields the given operand, converted to the sort of its static type if it
+	 * is a value of unknown kind and its static type is numeric (e.g., the
+	 * value of a boxed number read from the heap): the conversion is precise
+	 * only if the value has that kind.
+	 */
+	private Term typed(
+			Term arg,
+			UnaryExpression e) {
+		Type type = e.getExpression().getStaticType();
+		if (!arg.getSort().equals(ValueSort.SORT) || !type.isNumericType())
+			return arg;
+		Sort sort = getSorts().sortOf(type);
+		return sort.equals(Sort.INT) || sort.isFloatingPoint() ? coerce(arg, sort, e) : arg;
+	}
+
+	/**
+	 * Encodes {@link Character#forDigit(int, int)}: the character
+	 * representing the given digit in the given radix, or the null character
+	 * if the digit or the radix are not valid.
+	 */
+	private static Term forDigit(
+			Term digit,
+			Term radix) {
+		Term valid = Term.and(between(radix, Character.MIN_RADIX, Character.MAX_RADIX), ge(digit, num(0)),
+				lt(digit, radix));
+		return Term.ite(valid, Term.ite(lt(digit, num(10)), add(digit, num('0')), add(digit, num('a' - 10))),
+				num(0));
+	}
+
+	// floating point numbers
+
+	/**
+	 * Encodes the predicates over floating point numbers of {@link Double} and
+	 * {@link Float}, and the conversions between them and their bit
+	 * representations, or yields {@code null} for the other operators (or if
+	 * floating point numbers are not encoded).
+	 */
+	private Term floatUnary(
+			UnaryOperator op,
+			Term arg,
+			UnaryExpression e) {
+		if (op instanceof JavaDoubleLongBitsToDoubleOperator) {
+			if (!getSorts().encodesFloats())
+				return null;
+			Term bits = Term.app("(_ int2bv 64)", Sort.bitVector(64), coerce(arg, Sort.INT, e));
+			return Term.app("(_ to_fp 11 53)", Sort.FLOAT64, bits);
+		}
+		Sort fp;
+		if (op instanceof JavaDoubleIsNaNOperator || op instanceof JavaDoubleIsInfiniteOperator
+				|| op instanceof JavaDoubleIsFiniteOperator || op instanceof JavaDoubleToLongBitsOperator
+				|| op instanceof JavaDoubleToRawLongBitsOperator)
+			fp = Sort.FLOAT64;
+		else if (op instanceof JavaFloatIsNaNOperator || op instanceof JavaFloatIsInfiniteOperator
+				|| op instanceof JavaFloatIsFiniteOperator || op instanceof JavaFloatToIntBitsOperator
+				|| op instanceof JavaFloatToRawIntBitsOperator)
+			fp = Sort.FLOAT32;
+		else
+			return null;
+		if (!getSorts().encodesFloats())
+			return null;
+		Term x = toFloat(arg, fp, e.getExpression(), e);
+		Term nan = Term.app("fp.isNaN", Sort.BOOL, x);
+		Term infinite = Term.app("fp.isInfinite", Sort.BOOL, x);
+		if (op instanceof JavaDoubleIsNaNOperator || op instanceof JavaFloatIsNaNOperator)
+			return nan;
+		if (op instanceof JavaDoubleIsInfiniteOperator || op instanceof JavaFloatIsInfiniteOperator)
+			return infinite;
+		if (op instanceof JavaDoubleIsFiniteOperator || op instanceof JavaFloatIsFiniteOperator)
+			return Term.not(Term.or(nan, infinite));
+		// the bit representation, where NaNs are represented by the canonical
+		// NaN (the raw representation of a NaN is not specified)
+		int width = fp.equals(Sort.FLOAT64) ? 64 : 32;
+		if (op instanceof JavaDoubleToRawLongBitsOperator || op instanceof JavaFloatToRawIntBitsOperator)
+			getSymbols().exactOnlyIf(Term.not(nan), e);
+		Term bits = Term.app("bv2int", Sort.INT, Term.app("fp.to_ieee_bv", Sort.bitVector(width), x));
+		long canonical = width == 64 ? Double.doubleToLongBits(Double.NaN) : Float.floatToIntBits(Float.NaN);
+		return Term.ite(nan, num(canonical), signed(bits, width));
+	}
+
 	// math
 
 	/**
@@ -924,21 +1037,23 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * Rounds the given floating point number to the closest integer of the
 	 * given bit width, with ties rounding up, as {@link Math#round(double)}:
 	 * {@code 0} for NaN, and the minimum or maximum integer for the numbers
-	 * (and infinities) out of the range of the integers.
+	 * (and infinities) out of the range of the integers. The floor of the
+	 * number is incremented if the fractional part, which is computed exactly,
+	 * is at least one half (numbers so large that they have no fractional part
+	 * are their own floor).
 	 */
-	private static Term round(
+	private Term round(
 			Term f,
 			int bits) {
-		BigInteger max = BigInteger.ONE.shiftLeft(bits - 1).subtract(BigInteger.ONE);
-		BigInteger min = BigInteger.ONE.shiftLeft(bits - 1).negate();
-		// the floor of the exact value plus one half
-		Term value = Term.app("to_int", Sort.INT, Term.app("+", Sort.REAL, Term.app("fp.to_real", Sort.REAL, f),
-				Term.value("0.5", Sort.REAL)));
-		Term saturated = Term.ite(Term.app(">", Sort.BOOL, value, num(max)), num(max),
-				Term.ite(lt(value, num(min)), num(min), value));
-		return Term.ite(Term.app("fp.isNaN", Sort.BOOL, f), num(0),
-				Term.ite(Term.app("fp.isInfinite", Sort.BOOL, f),
-						Term.ite(Term.app("fp.isNegative", Sort.BOOL, f), num(min), num(max)), saturated));
+		Sort sort = f.getSort();
+		Term rne = Term.value("RNE", Sort.ROUNDING_MODE);
+		Term floor = Term.app("fp.roundToIntegral", sort, Term.value("RTN", Sort.ROUNDING_MODE), f);
+		Term half = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(0.5) : FloatingPoints.literal(0.5f);
+		Term one = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(1.0) : FloatingPoints.literal(1.0f);
+		Term fraction = Term.app("fp.sub", sort, rne, f, floor);
+		Term rounded = Term.ite(Term.app("fp.geq", Sort.BOOL, fraction, half), Term.app("fp.add", sort, rne, floor, one),
+				floor);
+		return toIntegral(rounded, bits == 64 ? JavaLongType.INSTANCE : JavaIntType.INSTANCE);
 	}
 
 	// strings
@@ -1146,7 +1261,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	private Term lastIndexOfString(
 			Term s,
 			Term t,
-			BinaryExpression e) {
+			SymbolicExpression e) {
 		Term i = auxiliary(Sort.INT, e);
 		Term len = len(s);
 		Term rest = substr(s, add(i, num(1)), sub(sub(len, i), num(1)));
