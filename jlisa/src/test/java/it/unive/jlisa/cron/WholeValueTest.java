@@ -44,4 +44,12 @@ public class WholeValueTest extends JLiSAAnalysisExecutor {
 		// that exclude an infinity (e.g., x <= 3.4e38f excludes +Inf)
 		run("float");
 	}
+
+	@Test
+	public void weakSelfComparisonTest() throws IOException {
+		// a.length != b.length and a[0] != b[0] for two arrays of the same
+		// allocation site, whose lengths and elements are the same (weak)
+		// identifiers: x != x is not false for them
+		run("weak-self-comparison");
+	}
 }
