@@ -118,4 +118,27 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.REFUTED, verdict("field-increment", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * The runtime types of the objects allocated by the program are known, so
+	 * that tests of the types of the objects are precise: a violation depending
+	 * on the type of an object is confirmed...
+	 */
+	@Test
+	public void violationsOnRuntimeTypesAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("instanceof-confirmed", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * ... and one that cannot happen because of the type of an object is
+	 * refuted.
+	 */
+	@Test
+	public void violationsPreventedByRuntimeTypesAreRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("instanceof-refuted", SVCOMPProperty.ASSERT, dir));
+	}
 }
