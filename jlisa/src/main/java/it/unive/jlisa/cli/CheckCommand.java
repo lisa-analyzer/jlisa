@@ -3,8 +3,13 @@ package it.unive.jlisa.cli;
 import it.unive.jlisa.Main;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
+import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
+import it.unive.jlisa.analysis.value.JavaNumericInterval;
+import it.unive.jlisa.analysis.value.JavaTarsis;
+import it.unive.jlisa.analysis.value.JavaUpperBounds;
+import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.checkers.Violation;
 import it.unive.jlisa.checkers.ViolationKind;
@@ -119,7 +124,7 @@ public final class CheckCommand {
 				.longOpt("numericalDomain")
 				.hasArg()
 				.argName("DOMAIN")
-				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals)")
+				.desc("Numerical domain: (ConstantPropagation [the same as JavaWholeValueTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis)")
 				.required(false)
 				.build();
 
@@ -437,12 +442,29 @@ public final class CheckCommand {
 		}
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
-		case "ConstantPropagation":
 		case "ConstantPropagationWithTarsis":
 			domain = new ConstantPropagationWithTarsis();
 			break;
 		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
+			break;
+		case "JavaWholeValueTarsis":
+			// the participants of ConstantPropagationWithTarsis, combined by
+			// the whole-value analysis
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaTarsis());
+			break;
+		case "JavaWholeValueUB":
+			// JavaWholeValueTarsis with the upper bounds of the Pentagons (x <
+			// y): with the intervals, the Pentagons of Logozzo and Fähndrich
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(), new JavaTarsis());
+			break;
+		case "ConstantPropagation":
+		case "JavaWholeValueUBLE":
+			// JavaWholeValueUB with the relations x <= y too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(true), new JavaTarsis());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);

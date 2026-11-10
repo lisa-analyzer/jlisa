@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -441,7 +442,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// how the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom == null || env == null)
 			return Stream.empty();
 

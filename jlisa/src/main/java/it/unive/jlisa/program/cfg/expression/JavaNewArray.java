@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -34,6 +35,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
@@ -177,7 +179,7 @@ public class JavaNewArray extends UnaryExpression {
 		// the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom != null && env != null) {
 
 			SemanticOracle oracle = analysis.domain.makeOracle(state.getExecutionState(), context);
@@ -188,10 +190,22 @@ public class JavaNewArray extends UnaryExpression {
 				ValueExpression first = (ValueExpression) rewritten.iterator().next();
 				Set<BinaryExpression> constraints = vdom.constraints(null, env, first, this, oracle);
 
-				if (constraints == null || constraints.size() != 1)
+				if (constraints == null)
 					return null;
 
-				Constant value = (Constant) ((BinaryExpression) constraints.iterator().next()).getLeft();
+				// the length is the value of the == constraints, if they agree
+				// (the others are bounds, e.g., 1 <= c from the intervals)
+				Constant value = null;
+				for (BinaryExpression constraint : constraints) {
+					if (constraint.getOperator() != ComparisonEq.INSTANCE)
+						continue;
+					if (!(constraint.getLeft() instanceof Constant c) || !(c.getValue() instanceof Integer))
+						return null;
+					if (value == null)
+						value = c;
+					else if (!value.getValue().equals(c.getValue()))
+						return null;
+				}
 				return value;
 			}
 		}
