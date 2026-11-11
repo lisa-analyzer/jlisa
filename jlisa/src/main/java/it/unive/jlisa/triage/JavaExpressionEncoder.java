@@ -653,10 +653,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * integer {@code u} (single bits for {@code Integer.reverse}, bytes for
 	 * {@code Integer.reverseBytes}).
 	 */
-	/**
-	 * Reverses the order of the groups of the given number of bits of the
-	 * unsigned integer {@code u} of the given width.
-	 */
 	private Term reverse(
 			Term u,
 			int bits,
@@ -1168,11 +1164,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term i = coerce(right, Sort.INT, e);
 			return concat(substr(s, num(0), i), substr(s, add(i, num(1)), sub(sub(len(s), i), num(1))));
 		}
-		if (op instanceof JavaStringEqualsIgnoreCaseOperator) {
-			Term a = asString(left, e);
-			Term b = asString(right, e);
-			return guarded(Term.and(ascii(a), ascii(b)), Term.eq(lower(a), lower(b)), List.of(a, b), e);
-		}
+		if (op instanceof JavaStringEqualsIgnoreCaseOperator)
+			return equalsIgnoreCase(asString(left, e), asString(right, e), e);
 		return null;
 	}
 
@@ -1517,4 +1510,41 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 					Term.string(String.valueOf(Character.toLowerCase(c))));
 		return result;
 	}
+
+	/**
+	 * The code at position i of s, with the ASCII uppercase letters converted to
+	 * lowercase (-1 past the end of the string).
+	 */
+	private static Term foldedCode(
+		Term s,
+		int i) {
+		Term c = code(at(s, num(i)));
+		return Term.ite(between(c, 'A', 'Z'), add(c, num('a' - 'A')), c);
+	}
+
+	/**
+	 * String#equalsIgnoreCase: precise for strings of different length (false), and
+	 * for ASCII strings of at most CASE_BOUND chars.
+	 */
+	private Term equalsIgnoreCase(
+		Term a,
+		Term b,
+		ValueExpression e) {
+		int CASE_BOUND = 8;
+		Term sameLength = Term.eq(len(a), len(b));
+		Term[] same = new Term[CASE_BOUND + 1];
+		Term[] precise = new Term[2 * CASE_BOUND + 1];
+
+		for (int i = 0; i < CASE_BOUND; i++) {
+			same[i] = Term.eq(foldedCode(a, i), foldedCode(b, i));
+			precise[2 * i] = le(code(at(a, num(i))), num(0x7F));
+			precise[2 * i + 1] = le(code(at(b, num(i))), num(0x7F));
+		}
+		same[CASE_BOUND] = sameLength;
+		precise[2 * CASE_BOUND] = le(len(a), num(CASE_BOUND));
+		// different lengths: the result is false, whatever the chars are
+		Term guard = Term.or(Term.not(sameLength), Term.and(precise));
+		return guarded(guard, Term.and(same), List.of(a, b), e);
+	}
+
 }
