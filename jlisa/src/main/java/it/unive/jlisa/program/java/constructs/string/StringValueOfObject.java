@@ -87,66 +87,97 @@ public class StringValueOfObject extends UnaryExpression implements PluggableSta
 
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
 		AnalysisState<A> res = state.bottomExecution();
+		// whether the argument might be something else than a string or a
+		// boxed primitive value (e.g., null or an object of another class)
+		boolean other = types.isEmpty();
 
 		for (Type t : types) {
+			Type innerType = t.isReferenceType() ? t.asReferenceType().getInnerType() : null;
+			if (innerType == null) {
+				other = true;
+				continue;
+			}
 
-			assert(t instanceof JavaReferenceType);
-			Type innerType = t.asReferenceType().getInnerType();
 			if (innerType.equals(JavaClassType.getStringType())) {
 				res = res.lub(analysis.smallStepSemantics(state, expr, context, this));
 				continue;
 			}
-			// TODO: handle null case, if literal it's nullpointerexc, if not "null" string is returned
 
 			Type unwrappedType = JavaClassType.getUnwrappedType(innerType);
+			UnaryOperator op = operatorFor(unwrappedType);
+			if (op == null) {
+				other = true;
+				continue;
+			}
+
 			HeapDereference deref = new HeapDereference(innerType, expr, getLocation());
 			AccessChild accessExpr = new AccessChild(unwrappedType, deref, var, getLocation());
-
-			UnaryOperator op = JavaStringValueOfObjectOperator.INSTANCE;
-			if (unwrappedType instanceof JavaLongType) {
-				op = JavaStringValueOfLongOperator.INSTANCE;
-			}
-			else if (unwrappedType instanceof JavaCharType) {
-				op = JavaStringValueOfCharOperator.INSTANCE;
-			}
-			else if (unwrappedType instanceof JavaFloatType) {
-				op = JavaStringValueOfFloatOperator.INSTANCE;
-			}
-			else if (unwrappedType instanceof JavaIntType) {
-				op = JavaStringValueOfIntOperator.INSTANCE;
-			}
-			else if (unwrappedType instanceof JavaDoubleType) {
-				op = JavaStringValueOfDoubleOperator.INSTANCE;
-			}
-			else if (unwrappedType instanceof JavaBooleanType) {
-				op = JavaStringValueOfBooleanOperator.INSTANCE;
-			}
-
-			// TODO: short (not needed for svcomp)
-
-			it.unive.lisa.symbolic.value.UnaryExpression valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
-					stringType,
-					accessExpr,
-					op,
-					getLocation());
-
-			// allocate the string
-			JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
-					new JavaReferenceType(stringType), new Expression[0]);
-			AnalysisState<
-					A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-
-			AnalysisState<A> tmp = state.bottomExecution();
-			for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-				AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-				AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, valueOf,
-						interprocedural.getCurrentContext(), this);
-				tmp = tmp.lub(sem);
-			}
-
-			getMetaVariables().addAll(call.getMetaVariables());
-			res = res.lub(tmp.withExecutionExpressions(callState.getExecutionExpressions()));
+			res = res.lub(newString(interprocedural, state, expressions, accessExpr, op));
 		}
+
+		if (other) {
+			// the conversion of a generic object
+			HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
+			AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
+			res = res.lub(newString(interprocedural, state, expressions, accessExpr,
+					JavaStringValueOfObjectOperator.INSTANCE));
+		}
+
 		return res;
+	}
+
+	// the operator converting the values of the given primitive type, wrapped
+	// by an object, to strings, or null if there is none
+	private static UnaryOperator operatorFor(
+			Type unwrappedType) {
+		if (unwrappedType instanceof JavaLongType)
+			return JavaStringValueOfLongOperator.INSTANCE;
+		if (unwrappedType instanceof JavaCharType)
+			return JavaStringValueOfCharOperator.INSTANCE;
+		if (unwrappedType instanceof JavaFloatType)
+			return JavaStringValueOfFloatOperator.INSTANCE;
+		if (unwrappedType instanceof JavaIntType)
+			return JavaStringValueOfIntOperator.INSTANCE;
+		if (unwrappedType instanceof JavaDoubleType)
+			return JavaStringValueOfDoubleOperator.INSTANCE;
+		if (unwrappedType instanceof JavaBooleanType)
+			return JavaStringValueOfBooleanOperator.INSTANCE;
+		// TODO: short and byte (not needed for svcomp)
+		return null;
+	}
+
+	// a new string whose value is the given operator applied to the given
+	// expression
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> newString(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			StatementStore<A> expressions,
+			SymbolicExpression arg,
+			UnaryOperator op)
+			throws SemanticException {
+		Type stringType = getProgram().getTypes().getStringType();
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+		it.unive.lisa.symbolic.value.UnaryExpression valueOf = new it.unive.lisa.symbolic.value.UnaryExpression(
+				stringType,
+				arg,
+				op,
+				getLocation());
+
+		// allocate the string
+		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(),
+				new JavaReferenceType(stringType), new Expression[0]);
+		AnalysisState<
+				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
+
+		AnalysisState<A> tmp = state.bottomExecution();
+		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
+			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
+			AnalysisState<A> sem = interprocedural.getAnalysis().assign(callState, access, valueOf,
+					interprocedural.getCurrentContext(), this);
+			tmp = tmp.lub(sem);
+		}
+
+		getMetaVariables().addAll(call.getMetaVariables());
+		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 	}
 }

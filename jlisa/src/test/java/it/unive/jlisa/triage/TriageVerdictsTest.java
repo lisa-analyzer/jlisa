@@ -199,4 +199,27 @@ public class TriageVerdictsTest {
 		assertNotEquals(Verdict.DEFINITE, assertTimeoutPreemptively(Duration.ofMinutes(3),
 				() -> verdict("recursive-unrolling", SVCOMPProperty.ASSERT, dir)));
 	}
+
+	/**
+	 * The conversion to string of objects that are not boxed primitive values
+	 * does not prevent the analysis of the rest of the program (the violation
+	 * is not refuted, but not confirmed either, as the string of a generic
+	 * object is not modeled)...
+	 */
+	@Test
+	public void valueOfObjectsIsAnalyzed(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("valueof-object", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * ... and neither does the one of values that might be null.
+	 */
+	@Test
+	public void valueOfPossiblyNullValuesIsAnalyzed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("valueof-null", SVCOMPProperty.ASSERT, dir));
+	}
 }
