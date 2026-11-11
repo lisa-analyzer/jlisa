@@ -81,6 +81,11 @@ public final class CheckCommand {
 
 	private static final double RESULTS_FRACTION = 0.1;
 
+	/**
+	 * The maximum number of recursive calls unrolled for each recursive method
+	 * (by both interprocedural analyses), after which its recursion is solved
+	 * instead of unrolled further.
+	 */
 	private static final int MAX_RECURSIVE_FIXPOINTS = 1000;
 
 	// the default bound of the unrollings of a recursive call (see
@@ -430,7 +435,7 @@ public final class CheckCommand {
 		if (interprocedural.startsWith("EntryState"))
 			conf.interproceduralAnalysis = new JavaEntryStateContextBasedAnalysis<>(interprocedural.contains(":")
 					? Integer.parseInt(interprocedural.substring(interprocedural.indexOf(':') + 1))
-					: ENTRY_STATE_BOUND);
+					: ENTRY_STATE_BOUND, MAX_RECURSIVE_FIXPOINTS);
 		else
 			conf.interproceduralAnalysis = new InliningAnalysis<>(200, false, MAX_RECURSIVE_FIXPOINTS);
 

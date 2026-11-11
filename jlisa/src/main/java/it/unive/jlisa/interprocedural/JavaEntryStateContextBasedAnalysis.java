@@ -19,7 +19,9 @@ import it.unive.lisa.symbolic.value.Variable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -28,7 +30,10 @@ import org.apache.commons.lang3.tuple.Pair;
  * recursive call is solved with a fixpoint over the recursion only when the
  * entry state of its target, restricted to the parameters, is covered by the
  * one of a call to the same target already on the call stack, or when that
- * target is already on the call stack a given number of times. Calls are
+ * target is already on the call stack a given number of times, or when the
+ * recursive calls unrolled for that target exceed a given number (bounding the
+ * unrolling of recursions with several recursive calls entered with exact
+ * values, e.g. {@code fib(30)}, whose call trees grow exponentially). Calls are
  * distinguished by the full call stack. A recursion entered with exact values
  * (e.g. {@code fib(9)}) is thus computed call by call, as with inlining, while
  * one entered with approximated values (e.g. {@code fib(n)} with any {@code n})
@@ -47,6 +52,13 @@ public class JavaEntryStateContextBasedAnalysis<A extends AbstractLattice<A>,
 
 	private final int bound;
 
+	// the maximum number of recursive calls unrolled for each target, or a
+	// negative number for no limit
+	private final int maxUnrolled;
+
+	// the number of recursive calls unrolled for each target
+	private final Map<CFG, Integer> unrolled = new HashMap<>();
+
 	// the targets of the calls being evaluated, with the entry states of their
 	// parameters, innermost last
 	private final Deque<Pair<CFG, AnalysisState<A>>> stack = new ArrayDeque<>();
@@ -62,8 +74,25 @@ public class JavaEntryStateContextBasedAnalysis<A extends AbstractLattice<A>,
 	 */
 	public JavaEntryStateContextBasedAnalysis(
 			int bound) {
+		this(bound, -1);
+	}
+
+	/**
+	 * Builds the analysis.
+	 *
+	 * @param bound       the maximum number of times a target is unrolled on
+	 *                        the call stack
+	 * @param maxUnrolled the maximum number of recursive calls unrolled for
+	 *                        each target, after which its recursive calls are
+	 *                        solved with a fixpoint (a negative number means no
+	 *                        limit)
+	 */
+	public JavaEntryStateContextBasedAnalysis(
+			int bound,
+			int maxUnrolled) {
 		super(-1);
 		this.bound = bound;
+		this.maxUnrolled = maxUnrolled;
 	}
 
 	@Override
@@ -76,6 +105,7 @@ public class JavaEntryStateContextBasedAnalysis<A extends AbstractLattice<A>,
 			throws InterproceduralAnalysisException {
 		super.init(app, callgraph, policy, events, analysis);
 		stack.clear();
+		unrolled.clear();
 		unroll = false;
 	}
 
@@ -98,6 +128,9 @@ public class JavaEntryStateContextBasedAnalysis<A extends AbstractLattice<A>,
 		for (CFG cfg : call.getTargetedCFGs())
 			entries.add(Pair.of(cfg, parametersOf(call, entryState, parameters, expressions, cfg)));
 		unroll = entries.stream().allMatch(this::isNew);
+		if (unroll && maxUnrolled >= 0 && super.isRecursion(call, entryState, parameters, expressions))
+			for (CFG cfg : call.getTargetedCFGs())
+				unrolled.merge(cfg, 1, Integer::sum);
 		entries.forEach(stack::addLast);
 		try {
 			return super.getAbstractResultOf(call, entryState, parameters, expressions);
@@ -117,9 +150,12 @@ public class JavaEntryStateContextBasedAnalysis<A extends AbstractLattice<A>,
 	}
 
 	// whether the target is on the stack less than bound times, always with
-	// an entry state not covering the given one
+	// an entry state not covering the given one, and its unrolled recursive
+	// calls do not exceed the maximum
 	private boolean isNew(
 			Pair<CFG, AnalysisState<A>> entry) {
+		if (maxUnrolled >= 0 && unrolled.getOrDefault(entry.getLeft(), 0) >= maxUnrolled)
+			return false;
 		int count = 0;
 		for (Pair<CFG, AnalysisState<A>> other : stack)
 			if (other.getLeft().equals(entry.getLeft())) {

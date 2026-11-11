@@ -1,6 +1,8 @@
 package it.unive.jlisa.triage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import it.unive.jlisa.Main;
@@ -11,6 +13,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -183,5 +186,17 @@ public class TriageVerdictsTest {
 			@TempDir Path dir)
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("string-contents", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * Recursions with several recursive calls entered with exact values are
+	 * unrolled only up to a bound, and solved afterwards: unrolling fib(25)
+	 * call by call would take hundreds of thousands of calls.
+	 */
+	@Test
+	public void recursionsWithExactValuesAreUnrolledUpToABound(
+			@TempDir Path dir) {
+		assertNotEquals(Verdict.DEFINITE, assertTimeoutPreemptively(Duration.ofMinutes(3),
+				() -> verdict("recursive-unrolling", SVCOMPProperty.ASSERT, dir)));
 	}
 }
