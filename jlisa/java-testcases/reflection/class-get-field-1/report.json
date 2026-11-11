@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 15 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0)], relying on values that are not computed precisely (heap values, merged values, unsupported operations, operations on values of other kinds, unprojected values): contents of $field:java.lang.Class::name after unmodeled writes; contents of $written:java.lang.Class::name after unmodeled writes; merged value of __Cat; contents of $field:name after unmodeled writes; contents of $written:name after unmodeled writes"
+    "explanation" : "violation reached in 19 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), [main > Animal_clinit] java.lang.Object::Object_clinit(), [main > Animal_clinit] Animal::pi = 3.14, [main > Animal_clinit] ret, c = java.lang.Class::forName(s) (after [1 targets] Animal::Animal_clinit()), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.reflect.Field::modifiers; SummaryValue; merged value of $written:java.lang.reflect.Field::modifiers; merged value of $alloc; merged value of $types"
   }, {
     "location" : "'Main.java':27:2-27:32",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -18,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 16 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0)], relying on values that are not computed precisely (heap values, merged values, unsupported operations, operations on values of other kinds, unprojected values): contents of $field:java.lang.Class::name after unmodeled writes; contents of $written:java.lang.Class::name after unmodeled writes; merged value of __Cat; contents of $field:name after unmodeled writes; contents of $written:name after unmodeled writes"
+    "explanation" : "violation reached in 20 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), [main > Animal_clinit] java.lang.Object::Object_clinit(), [main > Animal_clinit] Animal::pi = 3.14, [main > Animal_clinit] ret, c = java.lang.Class::forName(s) (after [1 targets] Animal::Animal_clinit()), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.reflect.Field::modifiers; SummaryValue; merged value of $written:java.lang.reflect.Field::modifiers; merged value of $alloc; merged value of $types"
   }, {
     "location" : "'Main.java':28:2-28:32",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -28,23 +28,23 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 17 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0), assert !=(getModifiers(f3), 0)], relying on values that are not computed precisely (heap values, merged values, unsupported operations, operations on values of other kinds, unprojected values): contents of $field:java.lang.Class::name after unmodeled writes; contents of $written:java.lang.Class::name after unmodeled writes; merged value of __Cat; contents of $field:name after unmodeled writes; contents of $written:name after unmodeled writes"
+    "explanation" : "violation reached in 21 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), [main > Animal_clinit] java.lang.Object::Object_clinit(), [main > Animal_clinit] Animal::pi = 3.14, [main > Animal_clinit] ret, c = java.lang.Class::forName(s) (after [1 targets] Animal::Animal_clinit()), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0), assert !=(getModifiers(f3), 0)], relying on values that are not computed precisely (merged values, heap values, unsupported operations, operations on values of other kinds, unprojected values): merged value of $field:java.lang.reflect.Field::modifiers; merged value of $alloc; merged value of $written:java.lang.reflect.Field::modifiers; heap expression ref$*(heap[s]:pp@'$internal-load-class-Cat':1->declaredFields)->0; ReferenceStore"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Animal.Animal_clinit()_3b8fb22400a1a40580b7fc168d58da76.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "3m 1s 306ms",
-    "end" : "2026-11-09T18:51:42.547+01:00",
+    "duration" : "41s 185ms",
+    "end" : "2026-11-11T17:43:19.087+01:00",
     "expressions" : "98",
     "files" : "2",
-    "globals" : "54",
-    "members" : "396",
+    "globals" : "56",
+    "members" : "397",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-09T18:48:41.241+01:00",
+    "start" : "2026-11-11T17:42:37.902+01:00",
     "statements" : "37",
-    "units" : "55",
+    "units" : "56",
     "version" : "1.0",
     "warnings" : "3"
   },
