@@ -16,6 +16,7 @@ import it.unive.jlisa.checkers.ViolationKind;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.JavaEntryStateContextBasedAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
@@ -80,12 +81,14 @@ public final class CheckCommand {
 
 	private static final double RESULTS_FRACTION = 0.1;
 
-	/**
-	 * The maximum number of fixpoints computed for each recursive method by
-	 * recursive calls, after which its recursion is solved instead of unrolled
-	 * further.
-	 */
 	private static final int MAX_RECURSIVE_FIXPOINTS = 1000;
+
+	// the default bound of the unrollings of a recursive call (see
+	// JavaEntryStateContextBasedAnalysis)
+	private static final int ENTRY_STATE_BOUND = 200;
+
+	// the interprocedural analysis: Inlining, or EntryState[:bound]
+	private static String interprocedural = "EntryState";
 
 	private CheckCommand() {
 	}
@@ -142,6 +145,16 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 
+		Option interproceduralOption = Option.builder("i")
+				.longOpt("interprocedural")
+				.hasArg()
+				.argName("ANALYSIS")
+				.desc("Interprocedural analysis: (EntryState[:bound] [DEFAULT], unrolling recursive calls while their "
+						+ "entry state is new, up to bound times [DEFAULT " + ENTRY_STATE_BOUND + "], and solving them "
+						+ "with a fixpoint otherwise; Inlining, inlining calls up to a depth of 200)")
+				.required(false)
+				.build();
+
 		Option mode = Option.builder("m")
 				.longOpt("mode")
 				.hasArg()
@@ -178,6 +191,7 @@ public final class CheckCommand {
 		options.addOption(checker);
 		options.addOption(numericalDomainOption);
 		options.addOption(verifierOption);
+		options.addOption(interproceduralOption);
 		options.addOption(mode);
 		options.addOption(htmlOutput);
 		options.addOption(graphOutput);
@@ -275,6 +289,10 @@ public final class CheckCommand {
 
 			if (cmd.hasOption("z3"))
 				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
+
+			interprocedural = cmd.getOptionValue("i", "EntryState");
+			if (!interprocedural.equals("Inlining") && !interprocedural.matches("EntryState(:[1-9][0-9]*)?"))
+				throw new ParseException("Invalid interprocedural analysis: " + interprocedural);
 
 			if (cmd.hasOption("time-limit")) {
 				long limit;
@@ -406,9 +424,16 @@ public final class CheckCommand {
 		if (graphOutput)
 			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
+
 		// recursions are unrolled up to 200 frames, and solved when deeper or
 		// when their call trees grow too large (e.g., fib(n - 1) + fib(n - 2))
-		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false, MAX_RECURSIVE_FIXPOINTS);
+		if (interprocedural.startsWith("EntryState"))
+			conf.interproceduralAnalysis = new JavaEntryStateContextBasedAnalysis<>(interprocedural.contains(":")
+					? Integer.parseInt(interprocedural.substring(interprocedural.indexOf(':') + 1))
+					: ENTRY_STATE_BOUND);
+		else
+			conf.interproceduralAnalysis = new InliningAnalysis<>(200, false, MAX_RECURSIVE_FIXPOINTS);
+
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
