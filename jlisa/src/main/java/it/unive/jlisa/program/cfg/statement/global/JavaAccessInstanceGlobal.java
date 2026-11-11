@@ -68,6 +68,10 @@ public class JavaAccessInstanceGlobal
 		} else if (recType.isArrayType() && target.equals("length"))
 			// the only instance global of an array type is "length"
 			return JavaIntType.INSTANCE;
+		else if (recType.isUntyped())
+			// the type of the receiver is not known (e.g., the result of a
+			// call): the access is resolved on its runtime types
+			return Untyped.INSTANCE;
 
 		throw new ParsingException(
 				"missing-global",

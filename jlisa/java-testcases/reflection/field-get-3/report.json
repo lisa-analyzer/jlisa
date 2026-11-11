@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "the verification failed: null"
+    "explanation" : "violation reached in 28 steps through [a = new B(), [main > B] A::A(this), [main > B > A] java.lang.Object::Object(this), [main > B > A] this::name = \"ziggy\", [main > B > A] ret, [main > B] A::A(this) (after [1 targets] A::A(this)), [main > B] this::x = 10, [main > B] this::y = 11, [main > B] this::z = 12, [main > B] ret, a = new B() (after [1 targets] B::B($rec@'Main.java':6:8-6:14)), assert equals(a::name, \"ziggy\"), assert ==(a::z, 12), o = B::getSomeField(a, \"name\"), [main > getSomeField] assert instanceof(o,B*), [main > getSomeField] c = java.lang.Class::forName(\"B\"), [main > getSomeField] f = getField(c, fieldName), [main > getSomeField] return get(f, o), o = B::getSomeField(a, \"name\") (after [1 targets] B::getSomeField(a, \"name\")), assert instanceof(o,java.lang.String*), str = (java.lang.String*) o, assert equals(str, \"ziggy\"), o = B::getSomeField(a, \"z\"), [main > getSomeField] assert instanceof(o,B*), [main > getSomeField] c = java.lang.Class::forName(\"B\"), [main > getSomeField] f = getField(c, fieldName), [main > getSomeField] return get(f, o), o = B::getSomeField(a, \"z\") (after [1 targets] B::getSomeField(a, \"z\")), assert instanceof(o,java.lang.Double*)], relying on values that are not computed precisely (merged values, operations on values of other kinds, unsupported operations, heap values, unprojected values): merged value of __B; merged value of $defined:__B; merged value of __A; merged value of __java.lang.Object; merged value of $defined:__java.lang.Object"
   }, {
     "location" : "'Main.java':26:3-26:32",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -18,23 +18,23 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "the verification failed: null"
+    "explanation" : "budget exhausted after 241 queries, at level 2"
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_4b90900dfba7655ffd97438e2add1ac5.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_bb035935c1d6d6fedb470a9a559561f0.graph.json", "report.json", "void_A.A(A__this)_3cd489dd0f89ac56471d2a949e1854f7.graph.json", "void_B.B(B__this)_3a89ef35a06f0cb145102446759a7a35.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "24s 5ms",
-    "end" : "2026-11-09T18:52:31.972+01:00",
+    "duration" : "1m 30s 420ms",
+    "end" : "2026-11-11T17:44:53.037+01:00",
     "expressions" : "64",
     "files" : "5",
-    "globals" : "55",
-    "members" : "395",
+    "globals" : "57",
+    "members" : "396",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-09T18:52:07.967+01:00",
+    "start" : "2026-11-11T17:43:22.617+01:00",
     "statements" : "28",
-    "units" : "55",
+    "units" : "56",
     "version" : "1.0",
     "warnings" : "2"
   },

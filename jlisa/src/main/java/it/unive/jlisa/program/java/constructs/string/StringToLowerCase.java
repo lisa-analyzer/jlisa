@@ -62,31 +62,56 @@ public class StringToLowerCase extends UnaryExpression implements PluggableState
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		Type stringType = getProgram().getTypes().getStringType();
+		return lower(interprocedural, state, expr, this, expressions);
+	}
+
+	/**
+	 * Allocates the lowercase version of the given string.
+	 *
+	 * @param <A>             the kind of lattice
+	 * @param <D>             the kind of domain
+	 * @param interprocedural the interprocedural analysis
+	 * @param state           the current state
+	 * @param expr            the string to convert
+	 * @param st              the expression performing the conversion
+	 * @param expressions     the cache of the sub-expressions' states
+	 *
+	 * @return the state where the lowercase string has been allocated
+	 *
+	 * @throws SemanticException if the semantics fails
+	 */
+	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> lower(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression expr,
+			Expression st,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Type stringType = st.getProgram().getTypes().getStringType();
 		JavaReferenceType reftype = (JavaReferenceType) new JavaReferenceType(stringType);
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference deref = new HeapDereference(stringType, expr, getLocation());
-		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", st.getLocation());
+		HeapDereference deref = new HeapDereference(stringType, expr, st.getLocation());
+		AccessChild accessExpr = new AccessChild(stringType, deref, var, st.getLocation());
 		it.unive.lisa.symbolic.value.UnaryExpression lower = new it.unive.lisa.symbolic.value.UnaryExpression(
-				stringType, accessExpr, JavaStringToLowerCaseOperator.INSTANCE, getLocation());
+				stringType, accessExpr, JavaStringToLowerCaseOperator.INSTANCE, st.getLocation());
 
 		// allocate the string
-		JavaNewObj call = new JavaNewObj(getCFG(), (SourceCodeLocation) getLocation(), reftype,
+		JavaNewObj call = new JavaNewObj(st.getCFG(), (SourceCodeLocation) st.getLocation(), reftype,
 				new Expression[0]);
 		AnalysisState<
 				A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
 
 		AnalysisState<A> tmp = state.bottomExecution();
 		for (SymbolicExpression ref : callState.getExecutionExpressions()) {
-			AccessChild access = new AccessChild(stringType, ref, var, getLocation());
-			AnalysisState<A> sem = analysis.assign(callState, access, lower, context, this);
+			AccessChild access = new AccessChild(stringType, ref, var, st.getLocation());
+			AnalysisState<A> sem = analysis.assign(callState, access, lower, context, st);
 			tmp = tmp.lub(sem);
 		}
 
-		getMetaVariables().addAll(call.getMetaVariables());
+		st.getMetaVariables().addAll(call.getMetaVariables());
 		return tmp.withExecutionExpressions(callState.getExecutionExpressions());
 
 	}
