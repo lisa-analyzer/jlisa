@@ -36,6 +36,7 @@ import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
@@ -255,11 +256,14 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, context, this);
 					result = result.lub(accessState);
 				} else {
-					access = new GlobalVariable(
-							reflectedGlobal.getStaticType(),
-							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
-							reflectedGlobal.getAnnotations(),
-							location);
+					// constants have no variable: they are their values
+					access = reflectedGlobal instanceof ConstantGlobal
+							? ((ConstantGlobal) reflectedGlobal).getConstant()
+							: new GlobalVariable(
+									reflectedGlobal.getStaticType(),
+									reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
+									reflectedGlobal.getAnnotations(),
+									location);
 
 					if (reflectedFieldType.isReferenceType()) {
 						access = new HeapReference(reflectedFieldType, access, location);

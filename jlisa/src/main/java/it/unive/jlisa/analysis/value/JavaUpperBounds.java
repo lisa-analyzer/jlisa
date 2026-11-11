@@ -686,8 +686,8 @@ public class JavaUpperBounds
 			lo = hi = 0L;
 		else {
 			// bounds of y - x from the chains
-			int up = longestChain(env, x, y, MAX_CHAIN, new HashSet<>());
-			int down = longestChain(env, y, x, MAX_CHAIN, new HashSet<>());
+			int up = longestChain(env, x, y, MAX_CHAIN);
+			int down = longestChain(env, y, x, MAX_CHAIN);
 			lo = up > 0 ? (long) up : null; // y - x >= up
 			hi = down > 0 ? (long) -down : null; // y - x <= -down
 			if (lo == null && hi == null)
@@ -761,25 +761,37 @@ public class JavaUpperBounds
 	}
 
 	// the length of the longest chain from < ... < to of at most the given
-	// length, or 0 if there is none
-	private static int longestChain(
+	// length, or 0 if there is none; chains may repeat identifiers, as each
+	// step is still a strict relation (a cycle would make the state
+	// infeasible), so the lengths are computed by increasing number of steps
+	// in time linear in the relations, instead of enumerating simple paths
+	static int longestChain(
 			ValueEnvironment<DefiniteIdSet> env,
 			Identifier from,
 			Identifier to,
-			int max,
-			Set<Identifier> visited) {
-		if (max == 0 || !visited.add(from))
-			return 0;
-		int best = 0;
-		for (Identifier next : env.getState(from).elements) {
-			int length = next.equals(to) ? 1 : 0;
-			int rest = longestChain(env, next, to, max - 1, visited);
-			if (rest > 0)
-				length = Math.max(length, rest + 1);
-			best = Math.max(best, length);
+			int max) {
+		// the longest chain id < ... < to of at most k steps, for each id
+		// having one
+		Map<Identifier, Integer> lengths = new HashMap<>();
+		for (int k = 1; k <= max; k++) {
+			Map<Identifier, Integer> longer = new HashMap<>();
+			for (Identifier id : env.getKeys()) {
+				int best = 0;
+				for (Identifier next : env.getState(id).elements) {
+					if (next.equals(to))
+						best = Math.max(best, 1);
+					Integer rest = lengths.get(next);
+					if (rest != null)
+						best = Math.max(best, rest + 1);
+				}
+				if (best > 0)
+					longer.put(id, best);
+			}
+			if (longer.equals(lengths))
+				break;
+			lengths = longer;
 		}
-		visited.remove(from);
-		return best;
+		return lengths.getOrDefault(from, 0);
 	}
 
 	// the relations with x < id if the added value is at least 1

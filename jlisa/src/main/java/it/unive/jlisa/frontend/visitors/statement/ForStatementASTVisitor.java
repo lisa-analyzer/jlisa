@@ -7,6 +7,7 @@ import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.FalseEdge;
@@ -60,8 +61,8 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		}
 
 		Expression condition = node.getExpression() != null
-				? getParserContext().evaluate(node.getExpression(),
-						new ExpressionVisitor(getEnvironment(), getScope()))
+				? JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+						new ExpressionVisitor(getEnvironment(), getScope())))
 				: null;
 		Statement alwaysTrue = new Equal(getScope().getCFG(), syntheticLocationManager.nextLocation(),
 				new TrueLiteral(getScope().getCFG(), syntheticLocationManager.nextLocation()),

@@ -13,6 +13,7 @@ import it.unive.jlisa.program.cfg.controlflow.loops.SynchronizedBlock;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.program.cfg.expression.JavaUnresolvedCall;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaReturn;
@@ -285,8 +286,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 
 		getScope().getTracker().enterScope();
-		Expression condition = getParserContext().evaluate(node.getExpression(),
-				new ExpressionVisitor(getEnvironment(), getScope()));
+		Expression condition = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
 		nodeList.addNode(condition);
 
 		ParsedBlock trueBlock = getParserContext().evaluate(

@@ -210,15 +210,12 @@ public class JavaArrayAccess extends BinaryExpression {
 					JavaBooleanType.INSTANCE, idx, lenAccess, ComparisonLt.INSTANCE, getLocation());
 			if (analysis.satisfies(state, inBounds, context, this) == Satisfiability.NOT_SATISFIED)
 				break;
-			// read each cell i only where k == i: the cells k cannot
-			// reach are skipped (e.g., k == 1 reads only a[1]; unknown k
-			// reads every cell)
-			it.unive.lisa.symbolic.value.BinaryExpression isIdx = new it.unive.lisa.symbolic.value.BinaryExpression(
+			// cells that the index cannot denote are not accessed
+			it.unive.lisa.symbolic.value.BinaryExpression denoted = new it.unive.lisa.symbolic.value.BinaryExpression(
 					JavaBooleanType.INSTANCE, right, idx, ComparisonEq.INSTANCE, getLocation());
-			AnalysisState<A> cell = analysis.assume(state, isIdx, context, this, this);
-			if (cell.getExecutionState().isBottom())
+			if (analysis.satisfies(state, denoted, context, this) == Satisfiability.NOT_SATISFIED)
 				continue;
-			result = result.lub(analysis.smallStepSemantics(cell,
+			result = result.lub(analysis.smallStepSemantics(state,
 					new AccessChild(accessType, container, idx, getLocation()), context, this));
 		}
 		return result;

@@ -1,31 +1,33 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
-import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.comparison.GreaterOrEqual;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
+/**
+ * The greater-or-equal comparison of Java, unboxing its operands that are
+ * wrapper objects (see {@link JavaUnboxing}).
+ */
 public class JavaComparisonGE extends GreaterOrEqual {
 
+	/**
+	 * Builds the comparison.
+	 *
+	 * @param cfg      the cfg that this expression belongs to
+	 * @param location the location where this expression is defined
+	 * @param left     the left operand
+	 * @param right    the right operand
+	 */
 	public JavaComparisonGE(
 			CFG cfg,
 			CodeLocation location,
@@ -48,65 +50,8 @@ public class JavaComparisonGE extends GreaterOrEqual {
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		ScopeId<A> context = interprocedural.getCurrentContext();
-		boolean bothRef = (left.getStaticType().isReferenceType() || left.getStaticType().isNullType())
-				&& (right.getStaticType().isReferenceType() || right.getStaticType().isNullType());
-		boolean bothPrimitive = !left.getStaticType().isReferenceType() && !right.getStaticType().isReferenceType();
-
-		if (bothPrimitive || bothRef) {
-			return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
-		}
-
-		// try unboxing
-		AnalysisState<A> res = state.bottomExecution();
-		if (left.getStaticType().isReferenceType()) {
-			res = geWithUnbox(analysis, context, state, left, right, expressions);
-		} else {
-			res = geWithUnbox(analysis, context, state, right, left, expressions);
-		}
-		return res;
-	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> geWithUnbox(
-			Analysis<A, D> analysis,
-			ScopeId<?> context,
-			AnalysisState<A> state,
-			SymbolicExpression x,
-			SymbolicExpression y,
-			StatementStore<A> expressions)
-			throws SemanticException {
-
-		AnalysisState<A> res = state.bottomExecution();
-		Type t = x.getStaticType();
-
-		if (t instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaClassType innerType) {
-
-			assert (JavaClassType.isWrapperType(innerType));
-			SymbolicExpression unboxed = unbox(analysis, state, x, innerType, expressions);
-
-			AnalysisState<A> tmp = analysis.smallStepSemantics(state,
-					new BinaryExpression(getStaticType(), unboxed, y, ComparisonGe.INSTANCE, getLocation()), context,
-					this);
-			res = res.lub(tmp);
-		}
-		return res;
-	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> SymbolicExpression unbox(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression toUnbox,
-			JavaClassType t,
-			StatementStore<A> expressions)
-			throws SemanticException {
-		CodeLocation location = getLocation();
-		assert (toUnbox.getStaticType().isReferenceType());
-
-		GlobalVariable g = new GlobalVariable(Untyped.INSTANCE, "value", location);
-		HeapDereference deref = new HeapDereference(t, toUnbox, location);
-		AccessChild a = new AccessChild(JavaClassType.getUnwrappedType(t), deref, g, location);
-		return a;
+		AnalysisState<A> unboxed = JavaUnboxing.compare(interprocedural, state, left, right, ComparisonGe.INSTANCE,
+				getStaticType(), this);
+		return unboxed != null ? unboxed : super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 	}
 }
