@@ -19,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * The {@link WarningVerifier} used for SV-COMP tasks. Each task has a single
  * property, either the validity of assertions or the absence of uncaught

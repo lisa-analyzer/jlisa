@@ -1,18 +1,11 @@
 package it.unive.jlisa.program.operator;
 
-import it.unive.jlisa.program.type.JavaByteType;
-import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaDoubleType;
 import it.unive.jlisa.program.type.JavaFloatType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaNumericType;
-import it.unive.jlisa.program.type.JavaShortType;
-import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.Numeric16BitAdd;
 import it.unive.lisa.symbolic.value.operator.binary.Numeric16BitMul;
@@ -29,11 +22,8 @@ import it.unive.lisa.symbolic.value.operator.binary.Numeric8BitSub;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingMul;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
-import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
-import java.util.Collections;
 import java.util.Set;
 
 /**

@@ -15,8 +15,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 
 /**
- * The greater-than comparison of Java, unboxing its operands that are wrapper objects
- * (see {@link JavaUnboxing}).
+ * The greater-than comparison of Java, unboxing its operands that are wrapper
+ * objects (see {@link JavaUnboxing}).
  */
 public class JavaComparisonGT extends GreaterThan {
 

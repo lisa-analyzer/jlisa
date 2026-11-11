@@ -86,9 +86,6 @@ import it.unive.lisa.triage.smt.Sort;
 import it.unive.lisa.triage.smt.Term;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -97,6 +94,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * Checks the encodings of the functions of the Java library produced by

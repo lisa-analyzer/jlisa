@@ -1,6 +1,5 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
-import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
@@ -8,6 +7,7 @@ import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.FalseEdge;

@@ -52,10 +52,10 @@ final class JavaUnboxing {
 	}
 
 	/**
-	 * Yields the semantics of the numerical comparison with the given
-	 * operator of the given operands, unboxing the operands that are wrapper
-	 * objects, or {@code null} if no operand is a wrapper object (the
-	 * comparison has then the usual semantics).
+	 * Yields the semantics of the numerical comparison with the given operator
+	 * of the given operands, unboxing the operands that are wrapper objects, or
+	 * {@code null} if no operand is a wrapper object (the comparison has then
+	 * the usual semantics).
 	 *
 	 * @param <A>             the type of the abstract states
 	 * @param <D>             the type of the domain
@@ -69,8 +69,7 @@ final class JavaUnboxing {
 	 *
 	 * @return the resulting state, or {@code null}
 	 *
-	 * @throws SemanticException if something goes wrong during the
-	 *                               computation
+	 * @throws SemanticException if something goes wrong during the computation
 	 */
 	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> compare(
 			InterproceduralAnalysis<A, D> interprocedural,

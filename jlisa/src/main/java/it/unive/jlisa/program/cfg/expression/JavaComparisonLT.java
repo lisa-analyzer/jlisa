@@ -15,8 +15,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 
 /**
- * The less-than comparison of Java, unboxing its operands that are wrapper objects
- * (see {@link JavaUnboxing}).
+ * The less-than comparison of Java, unboxing its operands that are wrapper
+ * objects (see {@link JavaUnboxing}).
  */
 public class JavaComparisonLT extends LessThan {
 

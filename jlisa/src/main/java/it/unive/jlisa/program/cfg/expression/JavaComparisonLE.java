@@ -15,8 +15,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 
 /**
- * The less-or-equal comparison of Java, unboxing its operands that are wrapper objects
- * (see {@link JavaUnboxing}).
+ * The less-or-equal comparison of Java, unboxing its operands that are wrapper
+ * objects (see {@link JavaUnboxing}).
  */
 public class JavaComparisonLE extends LessOrEqual {
 
