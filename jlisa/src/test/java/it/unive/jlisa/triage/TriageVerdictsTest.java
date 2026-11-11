@@ -173,4 +173,15 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("boxed-boolean", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * The contents of strings, held by their {@code value} field, are encoded
+	 * as strings.
+	 */
+	@Test
+	public void violationsOnStringContentsAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("string-contents", SVCOMPProperty.ASSERT, dir));
+	}
 }
