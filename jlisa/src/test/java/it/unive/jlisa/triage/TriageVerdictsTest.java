@@ -163,4 +163,14 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("boxed-comparisons", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * Boxed booleans used as conditions are unboxed.
+	 */
+	@Test
+	public void violationsOnBoxedConditionsAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("boxed-boolean", SVCOMPProperty.ASSERT, dir));
+	}
 }

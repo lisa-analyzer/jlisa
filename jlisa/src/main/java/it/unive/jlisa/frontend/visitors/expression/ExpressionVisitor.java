@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.visitors.expression;
 
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
@@ -488,8 +489,8 @@ public class ExpressionVisitor
 	public boolean visit(
 			ConditionalExpression node) {
 
-		Expression conditionExpr = getParserContext().evaluate(node.getExpression(),
-				new ExpressionVisitor(getEnvironment(), getScope()));
+		Expression conditionExpr = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
 		if (conditionExpr == null) {
 			throw new ParsingException("conditional-expression",
 					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
@@ -573,6 +574,9 @@ public class ExpressionVisitor
 			}
 		}
 
+		if (operator == InfixExpression.Operator.CONDITIONAL_AND || operator == InfixExpression.Operator.CONDITIONAL_OR)
+			// the operands of logical operators are conditions
+			operands.replaceAll(JavaUnboxBoolean::ifBoxed);
 		BinaryFactory factory = INFIX_OPS.get(operator);
 		if (factory == null)
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
@@ -747,7 +751,7 @@ public class ExpressionVisitor
 			expression = new PrefixPlus(getScope().getCFG(), getSourceCodeLocation(node), expr);
 		}
 		if (node.getOperator() == PrefixExpression.Operator.NOT) {
-			expression = new Not(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new Not(getScope().getCFG(), getSourceCodeLocation(node), JavaUnboxBoolean.ifBoxed(expr));
 		}
 		if (node.getOperator() == PrefixExpression.Operator.COMPLEMENT) {
 			expression = new BitwiseNot(getScope().getCFG(), getSourceCodeLocation(node), expr);

@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.util.VariableInfo;
@@ -285,8 +286,8 @@ public class StatementASTVisitor extends ScopedVisitor<MethodScope> implements R
 		NodeList<CFG, Statement, Edge> nodeList = new NodeList<>(new SequentialEdge());
 
 		getScope().getTracker().enterScope();
-		Expression condition = getParserContext().evaluate(node.getExpression(),
-				new ExpressionVisitor(getEnvironment(), getScope()));
+		Expression condition = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
 		nodeList.addNode(condition);
 
 		ParsedBlock trueBlock = getParserContext().evaluate(

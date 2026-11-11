@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
@@ -34,8 +35,8 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		getScope().getTracker().enterScope();
 
-		Expression expression = getParserContext().evaluate(node.getExpression(),
-				new ExpressionVisitor(getEnvironment(), getScope()));
+		Expression expression = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
 
 		adj.addNode(expression);
 

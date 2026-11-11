@@ -1,5 +1,6 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
@@ -60,8 +61,8 @@ class ForStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		}
 
 		Expression condition = node.getExpression() != null
-				? getParserContext().evaluate(node.getExpression(),
-						new ExpressionVisitor(getEnvironment(), getScope()))
+				? JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+						new ExpressionVisitor(getEnvironment(), getScope())))
 				: null;
 		Statement alwaysTrue = new Equal(getScope().getCFG(), syntheticLocationManager.nextLocation(),
 				new TrueLiteral(getScope().getCFG(), syntheticLocationManager.nextLocation()),
