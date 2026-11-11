@@ -80,6 +80,13 @@ public final class CheckCommand {
 
 	private static final double RESULTS_FRACTION = 0.1;
 
+	/**
+	 * The maximum number of fixpoints computed for each recursive method by
+	 * recursive calls, after which its recursion is solved instead of unrolled
+	 * further.
+	 */
+	private static final int MAX_RECURSIVE_FIXPOINTS = 1000;
+
 	private CheckCommand() {
 	}
 
@@ -399,7 +406,9 @@ public final class CheckCommand {
 		if (graphOutput)
 			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
+		// recursions are unrolled up to 200 frames, and solved when deeper or
+		// when their call trees grow too large (e.g., fib(n - 1) + fib(n - 2))
+		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false, MAX_RECURSIVE_FIXPOINTS);
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
