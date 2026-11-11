@@ -87,15 +87,6 @@ public final class ReturnConstraint {
 			String s = unescape(t.substring(1, t.length() - 1), '\'');
 			return s != null && s.length() == 1 ? s.charAt(0) : null;
 		}
-		if (t.startsWith("-") && t.length() > 1) {
-			Object v = literal(t.substring(1));
-			return switch (v) {
-			case Long l -> -l;
-			case Float f -> -f;
-			case Double d -> -d;
-			case null, default -> null;
-			};
-		}
 		try {
 			char last = Character.toLowerCase(t.charAt(t.length() - 1));
 			if (last == 'l') {
