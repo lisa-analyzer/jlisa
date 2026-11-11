@@ -282,4 +282,16 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("radix-conversion", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * The functions of {@link Math} whose results are not specified exactly
+	 * are computed on the values of the counterexamples, so that violations
+	 * depending on them are confirmed.
+	 */
+	@Test
+	public void violationsOnMathFunctionsAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("math-functions", SVCOMPProperty.ASSERT, dir));
+	}
 }

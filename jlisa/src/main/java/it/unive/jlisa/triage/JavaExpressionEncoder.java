@@ -34,6 +34,30 @@ import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
 import it.unive.jlisa.program.operator.JavaLongCompareOperator;
 import it.unive.jlisa.program.operator.JavaLongRotateRightOperator;
+import it.unive.jlisa.program.operator.JavaMathSinOperator;
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
+import it.unive.jlisa.program.operator.JavaMathTanOperator;
+import it.unive.jlisa.program.operator.JavaMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaMathExpOperator;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
+import it.unive.jlisa.program.operator.JavaMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaMathPowOperator;
+import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaStrictMathSinOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathCosOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathTanOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathExpOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathLogOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaStrictMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathPowOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAtan2Operator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
 import it.unive.jlisa.program.operator.JavaMathMax;
@@ -118,6 +142,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 /**
@@ -384,6 +411,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return floatCompare(toFloat(left, Sort.FLOAT64, e), toFloat(right, Sort.FLOAT64, e));
 		if (op instanceof JavaFloatCompareOperator)
 			return floatCompare(toFloat(left, Sort.FLOAT32, e), toFloat(right, Sort.FLOAT32, e));
+		DoubleBinaryOperator function = evaluatedBinary(op);
+		if (function != null) {
+			if (!getSorts().encodesFloats())
+				return null;
+			// computed on the values of the counterexamples, as the result is
+			// not specified exactly
+			Term x = toFloat(left, Sort.FLOAT64, e.getLeft(), e);
+			Term y = toFloat(right, Sort.FLOAT64, e.getRight(), e);
+			return getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x, y),
+					args -> function.applyAsDouble(args.get(0).doubleValue(), args.get(1).doubleValue()), e);
+		}
 		if (op instanceof JavaMathMax || op instanceof JavaStrictMathMax)
 			return maxMin(left, right, true, e);
 		if (op instanceof JavaMathMin || op instanceof JavaStrictMathMin)
@@ -552,7 +590,26 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	private static Term unsigned(
 			Term x,
 			int bits) {
+		BigInteger value = integerLiteral(x);
+		if (value != null)
+			return num(value.signum() < 0 ? value.add(pow2(bits)) : value);
 		return Term.ite(lt(x, num(0)), add(x, num(pow2(bits))), x);
+	}
+
+	/**
+	 * Yields the value of the given term, if it is an integer literal, or
+	 * {@code null}.
+	 */
+	private static BigInteger integerLiteral(
+			Term term) {
+		if (!term.getSort().equals(Sort.INT))
+			return null;
+		String text = term.toSmtLib();
+		if (text.matches("\\d+"))
+			return new BigInteger(text);
+		if (text.matches("\\(- \\d+\\)"))
+			return new BigInteger(text.substring(3, text.length() - 1)).negate();
+		return null;
 	}
 
 	/**
@@ -1053,6 +1110,19 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			// the absolute value of the minimum integer is the minimum integer
 			return wrap(Term.ite(lt(arg, num(0)), Term.app("-", Sort.INT, arg), arg), bits, false);
 		}
+		DoubleUnaryOperator function = evaluatedUnary(op);
+		if (function != null) {
+			if (!getSorts().encodesFloats())
+				return null;
+			// computed on the values of the counterexamples, as the result is
+			// not specified exactly
+			Term x = toFloat(arg, Sort.FLOAT64, e.getExpression(), e);
+			Function<List<Number>, Number> evaluator = args -> function.applyAsDouble(args.get(0).doubleValue());
+			Boolean increasing = monotonicity(op);
+			if (increasing != null)
+				return getSymbols().monotone("$" + op, Sort.FLOAT64, x, evaluator, increasing, e);
+			return getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x), evaluator, e);
+		}
 		if (!sort.isFloatingPoint())
 			return null;
 		if (op instanceof JavaMathFloorOperator || op instanceof JavaStrictMathFloorOperator)
@@ -1062,6 +1132,98 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return Term.app("fp.sqrt", sort, Term.value("RNE", Sort.ROUNDING_MODE), arg);
 		if (op instanceof JavaMathRoundOperator || op instanceof JavaStrictMathRoundOperator)
 			return round(arg, sort.equals(Sort.FLOAT64) ? 64 : 32);
+		return null;
+	}
+
+	/**
+	 * Yields the function of {@link Math} or {@link StrictMath} over doubles
+	 * computed by the given operator, whose result is not specified exactly
+	 * (e.g., the sine), or {@code null} if it is not such an operator. The
+	 * functions of {@link Math} are the ones of the running virtual machine,
+	 * that the programs are run with.
+	 */
+	private static DoubleUnaryOperator evaluatedUnary(
+			UnaryOperator op) {
+		if (op instanceof JavaMathSinOperator)
+			return Math::sin;
+		if (op instanceof JavaMathCosOperator)
+			return Math::cos;
+		if (op instanceof JavaMathTanOperator)
+			return Math::tan;
+		if (op instanceof JavaMathAsinOperator)
+			return Math::asin;
+		if (op instanceof JavaMathAcosOperator)
+			return Math::acos;
+		if (op instanceof JavaMathAtanOperator)
+			return Math::atan;
+		if (op instanceof JavaMathExpOperator)
+			return Math::exp;
+		if (op instanceof JavaMathLogOperator)
+			return Math::log;
+		if (op instanceof JavaMathLog10Operator)
+			return Math::log10;
+		if (op instanceof JavaMathToRadiansOperator)
+			return Math::toRadians;
+		if (op instanceof JavaStrictMathSinOperator)
+			return StrictMath::sin;
+		if (op instanceof JavaStrictMathCosOperator)
+			return StrictMath::cos;
+		if (op instanceof JavaStrictMathTanOperator)
+			return StrictMath::tan;
+		if (op instanceof JavaStrictMathAsinOperator)
+			return StrictMath::asin;
+		if (op instanceof JavaStrictMathAcosOperator)
+			return StrictMath::acos;
+		if (op instanceof JavaStrictMathAtanOperator)
+			return StrictMath::atan;
+		if (op instanceof JavaStrictMathExpOperator)
+			return StrictMath::exp;
+		if (op instanceof JavaStrictMathLogOperator)
+			return StrictMath::log;
+		if (op instanceof JavaStrictMathLog10Operator)
+			return StrictMath::log10;
+		if (op instanceof JavaStrictMathToRadiansOperator)
+			return StrictMath::toRadians;
+		return null;
+	}
+
+	/**
+	 * Yields whether the function of {@link Math} or {@link StrictMath}
+	 * computed by the given operator is non-decreasing ({@code true}) or
+	 * non-increasing ({@code false}), as the specification of {@link Math}
+	 * requires the results of its functions to be semi-monotonic, or
+	 * {@code null} if the function is not monotone (e.g., the sine).
+	 */
+	private static Boolean monotonicity(
+			UnaryOperator op) {
+		if (op instanceof JavaMathExpOperator || op instanceof JavaStrictMathExpOperator
+				|| op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
+				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator
+				|| op instanceof JavaMathAtanOperator || op instanceof JavaStrictMathAtanOperator
+				|| op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator
+				|| op instanceof JavaMathToRadiansOperator || op instanceof JavaStrictMathToRadiansOperator)
+			return true;
+		if (op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator)
+			return false;
+		return null;
+	}
+
+	/**
+	 * Yields the binary function of {@link Math} or {@link StrictMath} over
+	 * doubles computed by the given operator, whose result is not specified
+	 * exactly (e.g., the power), or {@code null} if it is not such an operator
+	 * (see {@link #evaluatedUnary(UnaryOperator)}).
+	 */
+	private static DoubleBinaryOperator evaluatedBinary(
+			BinaryOperator op) {
+		if (op instanceof JavaMathPowOperator)
+			return Math::pow;
+		if (op instanceof JavaMathAtan2Operator)
+			return Math::atan2;
+		if (op instanceof JavaStrictMathPowOperator)
+			return StrictMath::pow;
+		if (op instanceof JavaStrictMathAtan2Operator)
+			return StrictMath::atan2;
 		return null;
 	}
 
@@ -1386,6 +1548,11 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			int bits,
 			Term when,
 			SymbolicExpression e) {
+		BigInteger literal = integerLiteral(value);
+		if (literal != null && literal.signum() >= 0)
+			// computed directly, as solvers handle building long strings
+			// from their characters poorly
+			return Term.string(literal.toString(radix));
 		// the value is used by every digit: it is named once
 		Term u = auxiliary(Sort.INT, e);
 		getSymbols().require(Term.eq(u, value));
@@ -1444,6 +1611,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			SymbolicExpression e) {
 		if (radix == 10)
 			return decimal(x);
+		BigInteger literal = integerLiteral(x);
+		if (literal != null)
+			return Term.string(literal.toString(radix));
 		Term magnitude = Term.ite(lt(x, num(0)), Term.app("-", Sort.INT, x), x);
 		Term digits = digits(magnitude, radix, bits, when, e);
 		return Term.ite(lt(x, num(0)), Term.app("str.++", Sort.STRING, Term.string("-"), digits), digits);
