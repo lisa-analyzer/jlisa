@@ -42,6 +42,27 @@ class java.util.HashMap extends java.util.Map:
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype java.util.Map*
 
+	instance method putAll: it.unive.jlisa.program.java.constructs.map.MapPutUnknown
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.Map*
+		param m type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method putIfAbsent: it.unive.jlisa.program.java.constructs.map.MapPutUnknown
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param value type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method containsKey: it.unive.jlisa.program.java.constructs.map.MapContainsKey
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method remove: it.unive.jlisa.program.java.constructs.map.MapRemove
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+
 	instance method keySet: it.unive.jlisa.program.java.constructs.map.MapView
 		libtype java.util.Set*
 		param this libtype java.util.Map*
@@ -50,9 +71,23 @@ class java.util.HashMap extends java.util.Map:
 		libtype java.util.Collection*
 		param this libtype java.util.Map*
 
-class java.util.TreeMap extends java.util.Map:
+	instance method entrySet: it.unive.jlisa.program.java.constructs.map.MapEntrySet
+		libtype java.util.Set*
+		param this libtype java.util.Map*
+
+class java.util.SortedMap extends java.util.Map:
+
+class java.util.TreeMap extends java.util.SortedMap:
 
 class java.util.Map.Entry extends java.lang.Object:
+
+	instance method getKey: it.unive.jlisa.program.java.constructs.map.MapEntryGetKey
+		libtype java.lang.Object*
+		param this libtype java.util.Map.Entry*
+
+	instance method getValue: it.unive.jlisa.program.java.constructs.map.MapEntryGetValue
+		libtype java.lang.Object*
+		param this libtype java.util.Map.Entry*
 
 class java.util.Hashtable extends java.lang.Object:
 

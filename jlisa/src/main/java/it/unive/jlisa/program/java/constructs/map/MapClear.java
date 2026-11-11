@@ -66,6 +66,7 @@ public class MapClear extends UnaryExpression implements PluggableStatement {
 
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, location);
 		AnalysisState<A> tmp = analysis.assign(state, accessSize, zero, context, this);
+		tmp = MapModel.clear(analysis, context, tmp, expr, this);
 
 		// TODO: remove key entries
 

@@ -2,9 +2,11 @@ package it.unive.jlisa.program.java.constructs.map;
 
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.java.constructs.lists.ListModel;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -33,6 +35,7 @@ import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -57,14 +60,37 @@ public class MapView extends UnaryExpression implements PluggableStatement {
 	 */
 	private final CodeLocation elementDataLocation;
 
+	/**
+	 * The location of the allocation of the entries, if the view holds the
+	 * entries of the map ({@code null} otherwise).
+	 */
+	private final CodeLocation entryLocation;
+
 	public MapView(
 			CFG cfg,
 			CodeLocation location,
 			Expression expr) {
+		this(cfg, location, expr, false);
+	}
+
+	/**
+	 * Builds the view.
+	 *
+	 * @param cfg      the cfg
+	 * @param location the location
+	 * @param expr     the map
+	 * @param entries  whether the view holds the entries of the map
+	 */
+	protected MapView(
+			CFG cfg,
+			CodeLocation location,
+			Expression expr,
+			boolean entries) {
 		super(cfg, location, "view", expr);
 		SyntheticCodeLocationManager synGen = new SyntheticCodeLocationManager("map-view-" + location.toString());
 		viewLocation = synGen.nextLocation();
 		elementDataLocation = synGen.nextLocation();
+		entryLocation = entries ? synGen.nextLocation() : null;
 	}
 
 	public static MapView build(
@@ -134,8 +160,42 @@ public class MapView extends UnaryExpression implements PluggableStatement {
 				value = ListModel.between(size, 1, k, location);
 			result = result.lub(analysis.assign(before, size, value, context, this));
 		}
+		if (entryLocation != null)
+			result = addEntries(analysis, context, result, view, location);
 		getMetaVariables().add(view);
 		return analysis.smallStepSemantics(result, view, context, this);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> addEntries(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression view,
+			CodeLocation location)
+			throws SemanticException {
+		// all the elements are the same entry, with an unknown key and value
+		LibrarySpecificationProvider.importClass(getProgram(), "java.util.Map.Entry");
+		JavaClassType entryType = JavaClassType.lookup("java.util.Map.Entry");
+		MemoryAllocation created = new MemoryAllocation(entryType, entryLocation, false);
+		HeapReference ref = new HeapReference(entryType.getReference(), created, location);
+		AnalysisState<A> tmp = analysis.smallStepSemantics(state, created, context, this);
+		// a variable of its own (the one of the view has the location of the
+		// call)
+		InstrumentedReceiver entry = new InstrumentedReceiver(entryType.getReference(), true, entryLocation);
+		tmp = analysis.assign(tmp, entry, ref, context, this);
+		PushAny any = new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location);
+		tmp = analysis.assign(tmp, MapEntryGet.field(entry, "$key", location), any, context, this);
+		tmp = analysis.assign(tmp, MapEntryGet.field(entry, "$value", location), any, context, this);
+		for (int i = 0; i < ListModel.MAX_TRACKED_ELEMENTS; i++) {
+			AnalysisState<A> cell = analysis.assume(tmp,
+					ListModel.compareSize(view, ComparisonGt.INSTANCE, i, location), context, this, this);
+			if (cell.getExecutionState().isBottom())
+				break;
+			AnalysisState<A> other = analysis.assume(tmp,
+					ListModel.compareSize(view, ComparisonLe.INSTANCE, i, location), context, this, this);
+			tmp = analysis.assign(cell, ListModel.element(view, i, location), entry, context, this).lub(other);
+		}
+		return tmp.forgetIdentifier(entry, this);
 	}
 
 	@Override

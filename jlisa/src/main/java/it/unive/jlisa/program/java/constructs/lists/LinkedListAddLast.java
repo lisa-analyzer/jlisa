@@ -55,11 +55,13 @@ public class LinkedListAddLast
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		if (!ListModel.isModeled(analysis, context, state, left, this))
 			return state;
-		AnalysisState<A> boxed = ListModel.box(interprocedural, state, right, getRight(), this, expressions);
+		AnalysisState<A> modifiable = ListModel.allowed(analysis, context, state, left, ListModel.FIXED_SIZE, this);
+		AnalysisState<A> boxed = ListModel.box(interprocedural, modifiable, right, getRight(), this, expressions);
 		AnalysisState<A> added = boxed.bottomExecution();
 		for (SymbolicExpression value : boxed.getExecutionExpressions())
 			added = added.lub(ListModel.append(analysis, context, boxed, left, value, this));
-		return added;
+		return ListModel.unsupported(interprocedural, state, added, left, ListModel.FIXED_SIZE, this,
+				getSubExpressions(), expressions);
 	}
 
 	@Override

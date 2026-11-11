@@ -59,12 +59,16 @@ public class ListAdd
 		if (!ListModel.isModeled(analysis, context, state, left, this))
 			return analysis.smallStepSemantics(state, new PushAny(JavaBooleanType.INSTANCE, getLocation()), context,
 					this);
-		AnalysisState<A> boxed = ListModel.box(interprocedural, state, right, getRight(), this, expressions);
+		AnalysisState<A> modifiable = ListModel.allowed(analysis, context, state, left, ListModel.FIXED_SIZE, this);
+		AnalysisState<A> boxed = ListModel.box(interprocedural, modifiable, right, getRight(), this, expressions);
 		AnalysisState<A> added = boxed.bottomExecution();
 		for (SymbolicExpression value : boxed.getExecutionExpressions())
 			added = added.lub(ListModel.append(analysis, context, boxed, left, value, this));
-		return analysis.smallStepSemantics(added, new Constant(JavaBooleanType.INSTANCE, true, getLocation()),
-				context, this);
+		AnalysisState<A> done = modifiable.getExecutionState().isBottom() ? added
+				: analysis.smallStepSemantics(added, new Constant(JavaBooleanType.INSTANCE, true, getLocation()),
+						context, this);
+		return ListModel.unsupported(interprocedural, state, done, left, ListModel.FIXED_SIZE, this,
+				getSubExpressions(), expressions);
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.lists;
 
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -18,10 +17,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.HeapReference;
-import it.unive.lisa.symbolic.heap.MemoryAllocation;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.PushAny;
 
 public class ListGetIterator
@@ -73,16 +68,7 @@ public class ListGetIterator
 			return analysis.smallStepSemantics(state, new PushAny(iteratorRef, location), context, this);
 
 		// a new iterator on the list, at its first element
-		MemoryAllocation created = new MemoryAllocation(iteratorType, iteratorLocation, false);
-		HeapReference ref = new HeapReference(iteratorRef, created, location);
-		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
-		InstrumentedReceiver iterator = new InstrumentedReceiver(iteratorRef, true, location);
-		AnalysisState<A> tmp = analysis.assign(allocated, iterator, ref, context, this);
-		tmp = analysis.assign(tmp, ListModel.iteratedList(iterator, location), expr, context, this);
-		tmp = analysis.assign(tmp, ListModel.cursor(iterator, location),
-				new Constant(JavaIntType.INSTANCE, 0, location), context, this);
-		getMetaVariables().add(iterator);
-		return analysis.smallStepSemantics(tmp, iterator, context, this);
+		return ListModel.iterate(analysis, context, state, expr, iteratorType, iteratorLocation, false, this);
 	}
 
 	@Override

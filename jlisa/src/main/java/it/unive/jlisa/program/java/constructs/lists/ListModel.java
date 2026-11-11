@@ -30,12 +30,14 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Identifier;
+import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -55,6 +57,23 @@ public class ListModel {
 	 */
 	public static final int MAX_TRACKED_ELEMENTS = 64;
 
+	/**
+	 * The value of {@code $fixed} for the collections that can be changed.
+	 */
+	public static final int MODIFIABLE = 0;
+
+	/**
+	 * The value of {@code $fixed} for the lists whose size cannot change (e.g.,
+	 * {@code Arrays.asList}): their elements can be replaced.
+	 */
+	public static final int FIXED_SIZE = 1;
+
+	/**
+	 * The value of {@code $fixed} for the collections that cannot be changed
+	 * (e.g., {@code Collections.singletonList}).
+	 */
+	public static final int IMMUTABLE = 2;
+
 	private ListModel() {
 	}
 
@@ -70,6 +89,21 @@ public class ListModel {
 			SymbolicExpression list,
 			CodeLocation location) {
 		return field(list, "$size", JavaIntType.INSTANCE, location);
+	}
+
+	/**
+	 * Returns the access to the field {@code $fixed} of the given collection:
+	 * {@link #MODIFIABLE}, {@link #FIXED_SIZE} or {@link #IMMUTABLE}.
+	 *
+	 * @param list     the collection
+	 * @param location the location of the access
+	 *
+	 * @return the access to the field
+	 */
+	public static AccessChild fixed(
+			SymbolicExpression list,
+			CodeLocation location) {
+		return field(list, "$fixed", JavaIntType.INSTANCE, location);
 	}
 
 	/**
@@ -138,7 +172,7 @@ public class ListModel {
 	public static AccessChild iteratedList(
 			SymbolicExpression iterator,
 			CodeLocation location) {
-		return iteratorField(iterator, "$list", JavaClassType.lookup("java.util.List").getReference(), location);
+		return iteratorField(iterator, "$list", JavaClassType.lookup("java.util.Collection").getReference(), location);
 	}
 
 	/**
@@ -154,6 +188,69 @@ public class ListModel {
 			SymbolicExpression iterator,
 			CodeLocation location) {
 		return iteratorField(iterator, "$cursor", JavaIntType.INSTANCE, location);
+	}
+
+	/**
+	 * Returns the access to the field {@code $anyOrder} of the given iterator:
+	 * 1 if it iterates a collection without an order (e.g., a set), so that
+	 * {@code next} may return any of its elements, 0 otherwise.
+	 *
+	 * @param iterator the iterator
+	 * @param location the location of the access
+	 *
+	 * @return the access to the field
+	 */
+	public static AccessChild anyOrder(
+			SymbolicExpression iterator,
+			CodeLocation location) {
+		return iteratorField(iterator, "$anyOrder", JavaIntType.INSTANCE, location);
+	}
+
+	/**
+	 * Returns the state where a new iterator of the given type on the given
+	 * collection is created, at its first element: the expression of the state
+	 * is a variable holding the iterator, that the given statement forgets
+	 * after its execution.
+	 *
+	 * @param <A>              the kind of the abstract state
+	 * @param <D>              the kind of the abstract domain
+	 * @param analysis         the analysis
+	 * @param context          the current context
+	 * @param state            the state
+	 * @param collection       the collection
+	 * @param iteratorType     the type of the iterator
+	 * @param iteratorLocation the location of the allocation of the iterator
+	 * @param anyOrder         whether the collection has no order (e.g., a set)
+	 * @param st               the statement that creates the iterator
+	 *
+	 * @return the state where the iterator is created
+	 *
+	 * @throws SemanticException if the fields cannot be assigned
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> iterate(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression collection,
+			JavaClassType iteratorType,
+			CodeLocation iteratorLocation,
+			boolean anyOrder,
+			Expression st)
+			throws SemanticException {
+		CodeLocation location = st.getLocation();
+		JavaReferenceType iteratorRef = iteratorType.getReference();
+		MemoryAllocation created = new MemoryAllocation(iteratorType, iteratorLocation, false);
+		HeapReference ref = new HeapReference(iteratorRef, created, location);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, st);
+		InstrumentedReceiver iterator = new InstrumentedReceiver(iteratorRef, true, location);
+		AnalysisState<A> tmp = analysis.assign(allocated, iterator, ref, context, st);
+		tmp = analysis.assign(tmp, iteratedList(iterator, location), collection, context, st);
+		tmp = analysis.assign(tmp, cursor(iterator, location), new Constant(JavaIntType.INSTANCE, 0, location),
+				context, st);
+		tmp = analysis.assign(tmp, anyOrder(iterator, location),
+				new Constant(JavaIntType.INSTANCE, anyOrder ? 1 : 0, location), context, st);
+		st.getMetaVariables().add(iterator);
+		return analysis.smallStepSemantics(tmp, iterator, context, st);
 	}
 
 	/**
@@ -259,6 +356,8 @@ public class ListModel {
 		HeapReference ref = new HeapReference(arrayType, created, location);
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, st);
 		AnalysisState<A> tmp = analysis.assign(allocated, elementData(list, location), ref, context, st);
+		tmp = analysis.assign(tmp, fixed(list, location), new Constant(JavaIntType.INSTANCE, MODIFIABLE, location),
+				context, st);
 		return analysis.assign(tmp, size(list, location), new Constant(JavaIntType.INSTANCE, 0, location),
 				context, st);
 	}
@@ -345,6 +444,51 @@ public class ListModel {
 		bounds.add(new BinaryExpression(JavaBooleanType.INSTANCE, new Constant(JavaIntType.INSTANCE, high, location),
 				target, ComparisonGe.INSTANCE, location));
 		return new PushFromConstraints(JavaIntType.INSTANCE, location, bounds);
+	}
+
+	/**
+	 * Returns the state where a new collection of the given type is created,
+	 * empty and with the given level of {@code $fixed}: the expression of the
+	 * state is a variable holding the collection, that the given statement
+	 * forgets after its execution.
+	 *
+	 * @param <A>                 the kind of the abstract state
+	 * @param <D>                 the kind of the abstract domain
+	 * @param analysis            the analysis
+	 * @param context             the current context
+	 * @param state               the state
+	 * @param type                the type of the reference to the collection
+	 * @param collectionLocation  the location of the allocation of the
+	 *                                collection
+	 * @param elementDataLocation the location of the allocation of its array
+	 * @param level               the level of {@code $fixed}
+	 * @param st                  the statement that creates the collection
+	 *
+	 * @return the state where the collection is created
+	 *
+	 * @throws SemanticException if the fields cannot be assigned
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> create(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			JavaReferenceType type,
+			CodeLocation collectionLocation,
+			CodeLocation elementDataLocation,
+			int level,
+			Expression st)
+			throws SemanticException {
+		CodeLocation location = st.getLocation();
+		MemoryAllocation created = new MemoryAllocation(type.getInnerType(), collectionLocation, false);
+		HeapReference ref = new HeapReference(type, created, location);
+		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, st);
+		InstrumentedReceiver collection = new InstrumentedReceiver(type, true, location);
+		AnalysisState<A> tmp = analysis.assign(allocated, collection, ref, context, st);
+		tmp = init(analysis, context, tmp, collection, elementDataLocation, st);
+		tmp = analysis.assign(tmp, fixed(collection, location), new Constant(JavaIntType.INSTANCE, level, location),
+				context, st);
+		st.getMetaVariables().add(collection);
+		return analysis.smallStepSemantics(tmp, collection, context, st);
 	}
 
 	/**
@@ -532,6 +676,85 @@ public class ListModel {
 					new PushFromConstraints(JavaIntType.INSTANCE, location, bounds), context, st));
 		}
 		return result;
+	}
+
+	/**
+	 * Returns the state where the given change of the given collection is
+	 * allowed, that is, where the collection is not fixed at the given level
+	 * (e.g., {@link #FIXED_SIZE} for a change of its size).
+	 *
+	 * @param <A>      the kind of the abstract state
+	 * @param <D>      the kind of the abstract domain
+	 * @param analysis the analysis
+	 * @param context  the current context
+	 * @param state    the state
+	 * @param list     the collection
+	 * @param level    the level of the change
+	 * @param st       the statement that changes the collection
+	 *
+	 * @return the state where the change is allowed
+	 *
+	 * @throws SemanticException if the field cannot be read
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> allowed(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression list,
+			int level,
+			Statement st)
+			throws SemanticException {
+		CodeLocation location = st.getLocation();
+		return analysis.assume(state, new BinaryExpression(JavaBooleanType.INSTANCE, fixed(list, location),
+				new Constant(JavaIntType.INSTANCE, level, location), ComparisonLt.INSTANCE, location), context, st,
+				st);
+	}
+
+	/**
+	 * Returns the given state, where the given change of the given collection
+	 * raises {@code UnsupportedOperationException} if the collection is fixed
+	 * at the given level (see {@link #allowed}): the normal execution of
+	 * {@code done} is kept, and the exception is added to its errors.
+	 *
+	 * @param <A>             the kind of the abstract state
+	 * @param <D>             the kind of the abstract domain
+	 * @param interprocedural the interprocedural analysis
+	 * @param state           the state before the change
+	 * @param done            the state after the allowed change
+	 * @param list            the collection
+	 * @param level           the level of the change
+	 * @param st              the statement that changes the collection
+	 * @param subExpressions  the sub-expressions of the statement
+	 * @param expressions     the statement store
+	 *
+	 * @return the state with the exception, if any
+	 *
+	 * @throws SemanticException if the exception cannot be created
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> unsupported(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			AnalysisState<A> done,
+			SymbolicExpression list,
+			int level,
+			Statement st,
+			Expression[] subExpressions,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		CodeLocation location = st.getLocation();
+		AnalysisState<A> fixedState = analysis.assume(state, new BinaryExpression(JavaBooleanType.INSTANCE,
+				fixed(list, location), new Constant(JavaIntType.INSTANCE, level, location), ComparisonGe.INSTANCE,
+				location), context, st, st);
+		if (fixedState.getExecutionState().isBottom())
+			return done;
+		String exc = "java.lang.UnsupportedOperationException";
+		AnalysisState<A> raised = raise(interprocedural, fixedState, exc, st, subExpressions, expressions);
+		AnalysisState.Error error = new AnalysisState.Error(JavaClassType.lookup(exc).getReference(), st);
+		if (done.getExecutionState().isBottom())
+			return analysis.moveExecutionToError(raised, error, context, st);
+		return analysis.moveExecutionToError(done, raised, error, context, st);
 	}
 
 	/**

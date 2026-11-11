@@ -25,6 +25,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 
@@ -65,9 +66,9 @@ public class IteratorNext
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
-		PushAny any = new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location);
+		PushAny anyValue = new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location);
 		if (!ListModel.isModeledIterator(analysis, context, state, expr, this))
-			return analysis.smallStepSemantics(state, any, context, this);
+			return analysis.smallStepSemantics(state, anyValue, context, this);
 
 		AccessChild cursor = ListModel.cursor(expr, location);
 		AccessChild list = ListModel.iteratedList(expr, location);
@@ -76,8 +77,32 @@ public class IteratorNext
 		AnalysisState<A> next = analysis.assume(state, hasNext, context, this, this);
 
 		// the element is in the cell at the cursor, each cell under the
-		// condition that the cursor denotes it (as for the cells of the arrays)
+		// condition that the cursor denotes it (as for the cells of the
+		// arrays);
+		// for a collection without an order, it is any of its elements
 		AnalysisState<A> result = state.bottomExecution();
+		AnalysisState<A> unordered = analysis.assume(next, new BinaryExpression(JavaBooleanType.INSTANCE,
+				ListModel.anyOrder(expr, location), new Constant(JavaIntType.INSTANCE, 1, location),
+				ComparisonEq.INSTANCE, location), context, this, this);
+		if (!unordered.getExecutionState().isBottom()) {
+			AnalysisState<A> any = unordered.bottomExecution();
+			for (int i = 0; i < ListModel.MAX_TRACKED_ELEMENTS; i++) {
+				AnalysisState<A> cell = analysis.assume(unordered,
+						ListModel.compareSize(list, ComparisonGt.INSTANCE, i, location), context, this, this);
+				if (cell.getExecutionState().isBottom())
+					break;
+				any = any.lub(analysis.smallStepSemantics(cell, ListModel.element(list, i, location), context,
+						this));
+			}
+			AnalysisState<A> beyond = analysis.assume(unordered, ListModel.compareSize(list, ComparisonGt.INSTANCE,
+					ListModel.MAX_TRACKED_ELEMENTS, location), context, this, this);
+			if (!beyond.getExecutionState().isBottom())
+				any = any.lub(analysis.smallStepSemantics(beyond, anyValue, context, this));
+			result = result.lub(any);
+			next = analysis.assume(next, new BinaryExpression(JavaBooleanType.INSTANCE,
+					ListModel.anyOrder(expr, location), new Constant(JavaIntType.INSTANCE, 0, location),
+					ComparisonEq.INSTANCE, location), context, this, this);
+		}
 		if (!next.getExecutionState().isBottom()) {
 			for (int i = 0; i < ListModel.MAX_TRACKED_ELEMENTS; i++) {
 				AnalysisState<A> cell = analysis.assume(next, new BinaryExpression(JavaBooleanType.INSTANCE, cursor,
@@ -96,7 +121,7 @@ public class IteratorNext
 							ComparisonGe.INSTANCE, location),
 					context, this, this);
 			if (!beyond.getExecutionState().isBottom())
-				result = result.lub(analysis.smallStepSemantics(beyond, any, context, this));
+				result = result.lub(analysis.smallStepSemantics(beyond, anyValue, context, this));
 
 			// the cursor moves to the following element, keeping the
 			// returned element on the stack

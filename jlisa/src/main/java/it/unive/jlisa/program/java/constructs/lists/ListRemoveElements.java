@@ -58,10 +58,16 @@ public class ListRemoveElements extends NaryExpression implements PluggableState
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression list : params[0])
-			if (ListModel.isModeled(analysis, context, state, list, this))
-				result = result.lub(ListModel.change(analysis, context, state, list, ListModel.SizeChange.SHRINKS,
-						false, this));
-			else
+			if (ListModel.isModeled(analysis, context, state, list, this)) {
+				AnalysisState<A> modifiable = ListModel.allowed(analysis, context, state, list, ListModel.FIXED_SIZE,
+						this);
+				AnalysisState<A> done = modifiable.getExecutionState().isBottom() ? modifiable
+						: ListModel.change(analysis, context, modifiable, list, ListModel.SizeChange.SHRINKS, false,
+								this);
+				result = result
+						.lub(ListModel.unsupported(interprocedural, state, done, list, ListModel.FIXED_SIZE, this,
+								getSubExpressions(), expressions));
+			} else
 				result = result.lub(state);
 
 		// the returned value is unknown

@@ -81,6 +81,12 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			return analysis.smallStepSemantics(state, new NullConstant(getLocation()), context, this);
 		}
 
+		// a key that is not a constant is looked up in the entries of the map,
+		// if they are tracked (see MapModel)
+		if (!isConstantKey(interprocedural, state, right, keyTypes)
+				&& MapModel.isTracked(analysis, context, state, left, this))
+			return MapModel.get(interprocedural, state, left, right, this);
+
 		AnalysisState<A> res = state.bottomExecution();
 
 		if (keyTypes.size() == 1) {
@@ -101,6 +107,35 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			res = topReturnValue(interprocedural, state, expressions);
 		}
 		return res;
+	}
+
+	// whether the key is a constant (an int or a string with a single value),
+	// that is written in a field named after it
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean isConstantKey(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression key,
+			Set<Type> keyTypes)
+			throws SemanticException {
+		if (keyTypes.size() != 1)
+			return false;
+		Type keyType = keyTypes.iterator().next();
+		if (keyType instanceof JavaReferenceType jrt)
+			keyType = jrt.getInnerType();
+		if (keyType != JavaIntType.INSTANCE && !keyType.isStringType())
+			return false;
+		SymbolicExpression accessKeyArg = key;
+		if (keyType.isStringType()) {
+			HeapDereference derefKeyArg = new HeapDereference(keyType, key, getLocation());
+			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+			accessKeyArg = new AccessChild(keyType, derefKeyArg, var, getLocation());
+		}
+		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = ConstraintUtils.extractConstraints(
+				interprocedural, state, accessKeyArg,
+				this);
+		if (constraints == null)
+			return true;
+		return constraints.toList().size() == 1;
 	}
 
 	/**
