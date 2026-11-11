@@ -25,7 +25,7 @@ class java.util.List extends java.util.Collection:
         libtype java.util.Iterator*
         param this libtype java.util.List*
 
-    instance method addAll: it.unive.jlisa.program.java.constructs.lists.ListAppendElements
+    instance method addAll: it.unive.jlisa.program.java.constructs.lists.ListAppendAll
         type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
         param this libtype java.util.List*
         param c type it.unive.lisa.type.Untyped::INSTANCE

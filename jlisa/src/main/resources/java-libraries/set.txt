@@ -27,7 +27,7 @@ class java.util.Set extends java.util.Collection:
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.util.Set*
 
-	instance method addAll: it.unive.jlisa.program.java.constructs.lists.ListAppendElements
+	instance method addAll: it.unive.jlisa.program.java.constructs.lists.ListAppendAll
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype java.util.Set*
 		param c type it.unive.lisa.type.Untyped::INSTANCE

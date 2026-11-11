@@ -259,6 +259,26 @@ public class MapModel {
 				&& li.equals(ri);
 	}
 
+	// whether the two values are surely different: one is surely null, and the
+	// other one surely is not
+	private static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean surelyDifferent(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression a,
+			SymbolicExpression b,
+			Statement st)
+			throws SemanticException {
+		Type nullType = new JavaReferenceType(it.unive.lisa.type.NullType.INSTANCE);
+		java.util.Set<Type> left = analysis.getRuntimeTypesOf(state, a, context, st);
+		java.util.Set<Type> right = analysis.getRuntimeTypesOf(state, b, context, st);
+		if (left.isEmpty() || right.isEmpty())
+			return false;
+		boolean leftNull = left.size() == 1 && left.contains(nullType);
+		boolean rightNull = right.size() == 1 && right.contains(nullType);
+		return leftNull && !right.contains(nullType) || rightNull && !left.contains(nullType);
+	}
+
 	// whether all the runtime types of the expression are references
 	private static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean isReference(
 			Analysis<A, D> analysis,
@@ -471,8 +491,8 @@ public class MapModel {
 	/**
 	 * Returns the given result of a method of the given map, joined with the
 	 * state where a {@code NullPointerException} is raised if the map does not
-	 * allow null keys (a {@code ConcurrentMap}) and the given key might be
-	 * null.
+	 * allow null keys (a {@code ConcurrentMap}) and the given key might be null
+	 * (see {@link ListModel#nullArgument}).
 	 *
 	 * @param <A>             the kind of the abstract state
 	 * @param <D>             the kind of the abstract domain
@@ -509,15 +529,9 @@ public class MapModel {
 		for (Type t : analysis.getRuntimeTypesOf(state, map, context, st))
 			if (t instanceof JavaReferenceType ref && ref.getInnerType().canBeAssignedTo(concurrent))
 				noNullKeys = true;
-		if (!noNullKeys || !analysis.getRuntimeTypesOf(state, key, context, st)
-				.contains(new JavaReferenceType(it.unive.lisa.type.NullType.INSTANCE)))
+		if (!noNullKeys)
 			return done;
-		String exc = "java.lang.NullPointerException";
-		AnalysisState<A> raised = ListModel.raise(interprocedural, state, exc, st, subExpressions, expressions);
-		AnalysisState.Error error = new AnalysisState.Error(JavaClassType.lookup(exc).getReference(), st);
-		if (done.getExecutionState().isBottom())
-			return analysis.moveExecutionToError(raised, error, context, st);
-		return analysis.moveExecutionToError(done, raised, error, context, st);
+		return ListModel.nullArgument(interprocedural, state, done, key, st, subExpressions, expressions);
 	}
 
 	/**
@@ -565,7 +579,8 @@ public class MapModel {
 			AnalysisState<A> rest = bucket;
 			for (int i = k - 1; i >= 0 && !rest.getExecutionState().isBottom(); i--) {
 				AnalysisState<A> alive = withAlive(analysis, context, rest, map, i, 1, st);
-				if (alive.getExecutionState().isBottom())
+				if (alive.getExecutionState().isBottom()
+						|| surelyDifferent(analysis, context, rest, key, key(map, i, location), st))
 					continue;
 				result = result.lub(analysis.smallStepSemantics(alive, value(map, i, location), context, st));
 				if (sameObject(analysis, context, rest, key, key(map, i, location), st))
@@ -624,7 +639,8 @@ public class MapModel {
 			AnalysisState<A> rest = bucket;
 			for (int i = k - 1; i >= 0 && !rest.getExecutionState().isBottom(); i--) {
 				AnalysisState<A> alive = withAlive(analysis, context, rest, map, i, 1, st);
-				if (alive.getExecutionState().isBottom())
+				if (alive.getExecutionState().isBottom()
+						|| surelyDifferent(analysis, context, rest, key, key(map, i, location), st))
 					continue;
 				if (sameObject(analysis, context, rest, key, key(map, i, location), st)) {
 					result = result.lub(analysis.smallStepSemantics(alive, yes, context, st));
