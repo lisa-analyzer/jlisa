@@ -318,4 +318,25 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertNotEquals(Verdict.REFUTED, verdict("object-comparison", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * The calls of the right operand of a short-circuiting operator that are
+	 * not evaluated produce no reproducing input: violations reached where the
+	 * left operand decides the result are confirmed with the inputs of the
+	 * calls that are executed only (here, the one of line 5, but not the one
+	 * of line 6).
+	 */
+	@Test
+	public void callsNotEvaluatedByShortCircuitingOperatorsProduceNoInputs(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("short-circuit", SVCOMPProperty.ASSERT, dir);
+		JsonReport.JsonMessage definite = warnings.stream()
+				.filter(JsonReport.JsonMessage::isDefinite)
+				.findFirst()
+				.orElseThrow();
+		assertTrue(definite.getReproducingInputs().stream().anyMatch(i -> i.getLocation().contains("Main.java':5:")));
+		assertTrue(definite.getReproducingInputs().stream().noneMatch(i -> i.getLocation().contains("Main.java':6:")),
+				"input of a call that is not evaluated");
+	}
 }
