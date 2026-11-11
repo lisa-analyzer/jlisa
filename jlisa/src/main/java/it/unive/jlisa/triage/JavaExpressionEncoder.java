@@ -1454,6 +1454,32 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
+	 * The strings of the solver are sequences of Unicode code points, while the
+	 * ones of Java are sequences of UTF-16 code units, where a code point
+	 * outside of the Basic Multilingual Plane is a pair of surrogates: their
+	 * lengths, positions and characters coincide only if the strings are made
+	 * of code points of the Basic Multilingual Plane that are not surrogates.
+	 * The operands of string operations are thus encoded precisely only when
+	 * they are such strings.
+	 */
+	@Override
+	protected Term asString(
+			Term term,
+			SymbolicExpression origin) {
+		Term s = super.asString(term, origin);
+		getSymbols().exactOnlyIf(Term.app("str.in_re", Sort.BOOL, s, UTF16), origin);
+		return s;
+	}
+
+	/**
+	 * The strings made of code points of the Basic Multilingual Plane that are
+	 * not surrogates (see {@link #asString(Term, SymbolicExpression)}).
+	 */
+	private static final Term UTF16 = Term.value(
+			"(re.* (re.union (re.range \"\\u{0}\" \"\\u{d7ff}\") (re.range \"\\u{e000}\" \"\\u{ffff}\")))",
+			Sort.STRING);
+
+	/**
 	 * Compares two strings lexicographically, as
 	 * {@link String#compareTo(String)}: through an auxiliary index, the length
 	 * of their longest common prefix.
