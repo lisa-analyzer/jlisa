@@ -25,15 +25,12 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 import java.util.Set;
 
 public class ConcurrentMapGet extends BinaryExpression implements PluggableStatement {
@@ -157,11 +154,7 @@ public class ConcurrentMapGet extends BinaryExpression implements PluggableState
 
 		CodeLocation location = getLocation();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		Type mapType = JavaClassType.lookup("java.util.Map");
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
-		HeapDereference derefMap = new HeapDereference(mapType, map, location);
-		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+		AccessChild accessSize = MapModel.size(map, location);
 
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, location);
 		SymbolicExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, accessSize,

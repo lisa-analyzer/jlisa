@@ -1,5 +1,22 @@
 class java.util.Collection extends java.lang.Object:
 
+    instance method size: it.unive.jlisa.program.java.constructs.lists.ListSize
+        type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param this libtype java.util.Collection*
+
+    instance method isEmpty: it.unive.jlisa.program.java.constructs.lists.ListIsEmpty
+        type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+        param this libtype java.util.Collection*
+
+    instance method add: it.unive.jlisa.program.java.constructs.sets.SetAdd
+        type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+        param this libtype java.util.Collection*
+        param e type it.unive.lisa.type.Untyped::INSTANCE
+
+    instance method iterator: it.unive.jlisa.program.java.constructs.lists.CollectionGetIterator
+        libtype java.util.Iterator*
+        param this libtype java.util.Collection*
+
 class java.util.Vector extends java.util.Collection:
 
 class java.util.Stack extends java.util.Vector:
@@ -13,5 +30,19 @@ class java.util.Collections extends java.lang.Object:
 
     method emptyMap: it.unive.jlisa.program.java.constructs.collections.CollectionsEmptyMap
         libtype java.util.Map*
+
+    method emptyList: it.unive.jlisa.program.java.constructs.collections.CollectionsEmptyList
+        libtype java.util.List*
+
+    method emptySet: it.unive.jlisa.program.java.constructs.collections.CollectionsEmptySet
+        libtype java.util.Set*
+
+    method singletonList: it.unive.jlisa.program.java.constructs.collections.CollectionsSingletonList
+        libtype java.util.List*
+        param o type it.unive.lisa.type.Untyped::INSTANCE
+
+    method singleton: it.unive.jlisa.program.java.constructs.collections.CollectionsSingleton
+        libtype java.util.Set*
+        param o type it.unive.lisa.type.Untyped::INSTANCE
 
 

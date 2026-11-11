@@ -75,6 +75,12 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 
 		Set<Type> keyTypes = analysis.getRuntimeTypesOf(state, middle, context, this);
 
+		// a key that is not a constant goes to the entries of the map, if they
+		// are tracked (see MapModel)
+		if (!isConstantKey(interprocedural, state, middle, keyTypes)
+				&& MapModel.isTracked(analysis, context, state, left, this))
+			return MapModel.put(interprocedural, state, left, middle, right, getRight(), this, expressions);
+
 		AnalysisState<A> res = state.bottomExecution();
 
 		if (keyTypes.size() == 1) {
@@ -96,6 +102,34 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 		}
 
 		return incrementSize(interprocedural, res, left, expressions);
+	}
+
+	// whether the key is a constant (an int or a string with a single value),
+	// that is written in a field named after it
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean isConstantKey(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression key,
+			Set<Type> keyTypes)
+			throws SemanticException {
+		if (keyTypes.size() != 1)
+			return false;
+		Type keyType = keyTypes.iterator().next();
+		if (keyType instanceof JavaReferenceType jrt)
+			keyType = jrt.getInnerType();
+		if (keyType != JavaIntType.INSTANCE && !keyType.isStringType())
+			return false;
+		SymbolicExpression accessKeyArg = key;
+		if (keyType.isStringType()) {
+			HeapDereference derefKeyArg = new HeapDereference(keyType, key, getLocation());
+			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+			accessKeyArg = new AccessChild(keyType, derefKeyArg, var, getLocation());
+		}
+		Stream<BinaryExpression> constraints = ConstraintUtils.extractConstraints(interprocedural, state, accessKeyArg,
+				this);
+		if (constraints == null)
+			return true;
+		return constraints.toList().size() == 1;
 	}
 
 	@Override
@@ -201,11 +235,7 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 			throws SemanticException {
 		CodeLocation location = getLocation();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		Type mapType = JavaClassType.lookup("java.util.Map");
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
-		HeapDereference derefMap = new HeapDereference(mapType, map, location);
-		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+		AccessChild accessSize = MapModel.size(map, location);
 
 		Constant one = new Constant(JavaIntType.INSTANCE, 1, location);
 		SymbolicExpression add = new BinaryExpression(JavaIntType.INSTANCE, accessSize, one,

@@ -246,10 +246,10 @@ public class TriageVerdictsTest {
 	}
 
 	/**
-	 * Strings are sequences of UTF-16 code units: violations depending on
-	 * their characters are confirmed with strings whose code points are each a
-	 * single code unit (e.g., the result of {@code compareTo} is the difference
-	 * of the first different code units).
+	 * Strings are sequences of UTF-16 code units: violations depending on their
+	 * characters are confirmed with strings whose code points are each a single
+	 * code unit (e.g., the result of {@code compareTo} is the difference of the
+	 * first different code units).
 	 */
 	@Test
 	public void violationsOnStringsAreConfirmedWithSingleCodeUnits(

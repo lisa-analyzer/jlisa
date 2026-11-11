@@ -1,1 +1,5 @@
 class java.io.File extends java.lang.Object:
+
+    instance method listFiles: it.unive.jlisa.program.java.constructs.file.FileListFiles
+        type it.unive.lisa.type.Untyped::INSTANCE
+        param this libtype java.io.File*

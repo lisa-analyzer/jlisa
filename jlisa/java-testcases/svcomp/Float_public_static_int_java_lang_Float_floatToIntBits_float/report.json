@@ -7,22 +7,41 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 4 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), output_1 = java.lang.Float::floatToIntBits(input_1_0), output_2 = java.lang.Float::floatToIntBits(input_2_0), assert !(&&(==(output_1, -(1241006294)), ==(output_2, 1238061318)))], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaFloatToIntBitsOperator; ReferenceRead; contents of $field:java.lang.Integer::value not written by the model"
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':11:26-11:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\""
+    }, {
+      "location" : "'Main.java':13:22-13:43",
+      "source" : "return of float org.sosy_lab.sv_benchmarks.Verifier::nondetFloat()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "-2.022784E-6"
+    }, {
+      "location" : "'Main.java':14:22-14:43",
+      "source" : "return of float org.sosy_lab.sv_benchmarks.Verifier::nondetFloat()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "1665568.8"
+    } ],
+    "explanation" : "violation reached in 4 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), output_1 = java.lang.Float::floatToIntBits(input_1_0), output_2 = java.lang.Float::floatToIntBits(input_2_0), assert !(&&(==(output_1, -(1241006294)), ==(output_2, 1238061318)))] (not yet certified by execution)"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "44ms",
-    "end" : "2026-11-10T14:20:48.347+01:00",
+    "duration" : "198ms",
+    "end" : "2026-11-11T13:08:12.151+01:00",
     "expressions" : "26",
     "files" : "1",
     "globals" : "51",
     "members" : "405",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-10T14:20:48.303+01:00",
+    "start" : "2026-11-11T13:08:11.953+01:00",
     "statements" : "14",
     "units" : "55",
     "version" : "1.0",
