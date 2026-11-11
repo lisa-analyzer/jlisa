@@ -1,1 +1,3 @@
 class java.nio.charset.Charset extends java.lang.Object:
+
+class java.nio.ByteBuffer extends java.lang.Object:

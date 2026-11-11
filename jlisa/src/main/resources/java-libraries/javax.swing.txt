@@ -17,3 +17,7 @@ class javax.swing.JTree extends java.lang.Object:
 class javax.swing.tree.DefaultMutableTreeNode extends java.lang.Object:
 
 class javax.swing.tree.TreePath extends java.lang.Object:
+
+interface java.beans.PropertyChangeListener:
+
+class javax.swing.plaf.basic.BasicRootPaneUI extends java.lang.Object implements java.beans.PropertyChangeListener:
