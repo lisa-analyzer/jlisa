@@ -1,8 +1,6 @@
 package it.unive.jlisa.program.java.constructs.map;
 
 import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -19,11 +17,7 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 /**
  * The constructor {@code HashMap(Map m)} of {@code java.util.HashMap}: the new
@@ -65,13 +59,8 @@ public class MapCopyConstructor extends BinaryExpression implements PluggableSta
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
-		Type mapType = JavaClassType.lookup("java.util.Map");
-
-		GlobalVariable size = new GlobalVariable(Untyped.INSTANCE, "size", location);
-		AccessChild newSize = new AccessChild(JavaIntType.INSTANCE, new HeapDereference(mapType, left, location),
-				size, location);
-		AccessChild oldSize = new AccessChild(JavaIntType.INSTANCE, new HeapDereference(mapType, right, location),
-				size, location);
+		AccessChild newSize = MapModel.size(left, location);
+		AccessChild oldSize = MapModel.size(right, location);
 		AnalysisState<A> tmp = analysis.assign(state, newSize, oldSize, context, this);
 		tmp = analysis.assign(tmp, MapGet.unknownKeys(left, location),
 				new Constant(JavaBooleanType.INSTANCE, true, location), context, this);

@@ -259,11 +259,7 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 
 		CodeLocation location = getLocation();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		Type mapType = JavaClassType.lookup("java.util.Map");
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
-		HeapDereference derefMap = new HeapDereference(mapType, map, location);
-		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+		AccessChild accessSize = MapModel.size(map, location);
 
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, location);
 		SymbolicExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, accessSize,

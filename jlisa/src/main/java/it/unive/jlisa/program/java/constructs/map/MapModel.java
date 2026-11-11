@@ -64,9 +64,8 @@ public class MapModel {
 	}
 
 	/**
-	 * Returns the access to the size of the map: the field {@code size}, the
-	 * same one that the other map constructs (e.g., {@link MapPut}) read and
-	 * write.
+	 * Returns the access to the size of the map (the field {@code $size}), used
+	 * by all the map constructs.
 	 *
 	 * @param map      the map
 	 * @param location the location of the access
@@ -76,7 +75,7 @@ public class MapModel {
 	public static AccessChild size(
 			SymbolicExpression map,
 			CodeLocation location) {
-		return field(map, "size", JavaIntType.INSTANCE, location);
+		return field(map, "$size", JavaIntType.INSTANCE, location);
 	}
 
 	/**

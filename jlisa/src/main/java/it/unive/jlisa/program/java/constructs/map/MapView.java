@@ -23,12 +23,10 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.PushAny;
@@ -117,9 +115,7 @@ public class MapView extends UnaryExpression implements PluggableStatement {
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		Type viewType = originating instanceof Expression e ? e.getStaticType() : Untyped.INSTANCE;
-		AccessChild mapSize = new AccessChild(JavaIntType.INSTANCE,
-				new HeapDereference(JavaClassType.lookup("java.util.Map"), expr, location),
-				new GlobalVariable(Untyped.INSTANCE, "size", location), location);
+		AccessChild mapSize = MapModel.size(expr, location);
 
 		// a map that is not modeled gives a view that is not modeled either
 		boolean known = false;

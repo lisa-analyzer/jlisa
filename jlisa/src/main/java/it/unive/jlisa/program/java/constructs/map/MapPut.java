@@ -235,11 +235,7 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 			throws SemanticException {
 		CodeLocation location = getLocation();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		Type mapType = JavaClassType.lookup("java.util.Map");
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
-		HeapDereference derefMap = new HeapDereference(mapType, map, location);
-		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+		AccessChild accessSize = MapModel.size(map, location);
 
 		Constant one = new Constant(JavaIntType.INSTANCE, 1, location);
 		SymbolicExpression add = new BinaryExpression(JavaIntType.INSTANCE, accessSize, one,
