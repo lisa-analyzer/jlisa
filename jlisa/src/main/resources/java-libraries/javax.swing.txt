@@ -21,3 +21,9 @@ class javax.swing.tree.TreePath extends java.lang.Object:
 interface java.beans.PropertyChangeListener:
 
 class javax.swing.plaf.basic.BasicRootPaneUI extends java.lang.Object implements java.beans.PropertyChangeListener:
+
+interface javax.swing.text.AttributeSet:
+
+interface javax.swing.text.MutableAttributeSet extends javax.swing.text.AttributeSet:
+
+class javax.swing.text.SimpleAttributeSet extends java.lang.Object implements javax.swing.text.MutableAttributeSet:

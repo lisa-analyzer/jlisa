@@ -47,11 +47,17 @@ class java.util.HashMap extends java.util.Map:
 		param this libtype java.util.Map*
 		param m type it.unive.lisa.type.Untyped::INSTANCE
 
-	instance method putIfAbsent: it.unive.jlisa.program.java.constructs.map.MapPutUnknown
+	instance method putIfAbsent: it.unive.jlisa.program.java.constructs.map.MapPutIfAbsent
 		libtype java.lang.Object*
 		param this libtype java.util.Map*
 		param key type it.unive.lisa.type.Untyped::INSTANCE
 		param value type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method getOrDefault: it.unive.jlisa.program.java.constructs.map.MapGetOrDefault
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param defaultValue type it.unive.lisa.type.Untyped::INSTANCE
 
 	instance method containsKey: it.unive.jlisa.program.java.constructs.map.MapContainsKey
 		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
@@ -111,4 +117,39 @@ class java.util.concurrent.ConcurrentHashMap extends java.util.concurrent.Concur
 	instance method size: it.unive.jlisa.program.java.constructs.map.ConcurrentMapSize
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.util.Map*
+
+	instance method isEmpty: it.unive.jlisa.program.java.constructs.map.MapIsEmpty
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Map*
+
+	instance method put: it.unive.jlisa.program.java.constructs.map.MapPut
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param value type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method putIfAbsent: it.unive.jlisa.program.java.constructs.map.MapPutIfAbsent
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param value type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method getOrDefault: it.unive.jlisa.program.java.constructs.map.MapGetOrDefault
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+		param defaultValue type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method containsKey: it.unive.jlisa.program.java.constructs.map.MapContainsKey
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+
+	instance method remove: it.unive.jlisa.program.java.constructs.map.MapRemove
+		libtype java.lang.Object*
+		param this libtype java.util.Map*
+		param key type it.unive.lisa.type.Untyped::INSTANCE
+
+	method newKeySet: it.unive.jlisa.program.java.constructs.collections.ConcurrentHashMapNewKeySet
+		libtype java.util.Set*
 

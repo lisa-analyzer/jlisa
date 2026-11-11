@@ -215,9 +215,26 @@ public class MapModel {
 				k == MAX_ENTRIES ? ComparisonGe.INSTANCE : ComparisonEq.INSTANCE, location), context, st, st);
 	}
 
-	// whether the two references surely denote the same object: they point
-	// to the same single strong allocation site
-	private static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean sameObject(
+	/**
+	 * Returns whether the two values surely denote the same object: they point
+	 * to the same single strong allocation site (or, if they are not
+	 * references, their values are surely equal). Since {@code equals} is
+	 * reflexive, the two values are then surely equal also for the collections.
+	 *
+	 * @param <A>      the kind of the abstract state
+	 * @param <D>      the kind of the abstract domain
+	 * @param analysis the analysis
+	 * @param context  the current context
+	 * @param state    the state
+	 * @param a        the first value
+	 * @param b        the second value
+	 * @param st       the statement
+	 *
+	 * @return whether the two values surely denote the same object
+	 *
+	 * @throws SemanticException if the values cannot be resolved
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean sameObject(
 			Analysis<A, D> analysis,
 			ScopeId<A> context,
 			AnalysisState<A> state,
@@ -449,6 +466,58 @@ public class MapModel {
 		if (!anyUnknown)
 			return result;
 		return analysis.smallStepSemantics(result, new PushAny(type, st.getLocation()), context, st);
+	}
+
+	/**
+	 * Returns the given result of a method of the given map, joined with the
+	 * state where a {@code NullPointerException} is raised if the map does not
+	 * allow null keys (a {@code ConcurrentMap}) and the given key might be
+	 * null.
+	 *
+	 * @param <A>             the kind of the abstract state
+	 * @param <D>             the kind of the abstract domain
+	 * @param interprocedural the interprocedural analysis
+	 * @param state           the state before the method
+	 * @param done            the result of the method
+	 * @param map             the map
+	 * @param key             the key
+	 * @param st              the statement
+	 * @param subExpressions  the sub-expressions of the statement
+	 * @param expressions     the statement store
+	 *
+	 * @return the result, possibly with the exception
+	 *
+	 * @throws SemanticException if the exception cannot be raised
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> nullKey(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			AnalysisState<A> done,
+			SymbolicExpression map,
+			SymbolicExpression key,
+			Statement st,
+			Expression[] subExpressions,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		String concurrentMap = "java.util.concurrent.ConcurrentMap";
+		if (!JavaClassType.hasType(concurrentMap))
+			return done;
+		JavaClassType concurrent = JavaClassType.lookup(concurrentMap);
+		boolean noNullKeys = false;
+		for (Type t : analysis.getRuntimeTypesOf(state, map, context, st))
+			if (t instanceof JavaReferenceType ref && ref.getInnerType().canBeAssignedTo(concurrent))
+				noNullKeys = true;
+		if (!noNullKeys || !analysis.getRuntimeTypesOf(state, key, context, st)
+				.contains(new JavaReferenceType(it.unive.lisa.type.NullType.INSTANCE)))
+			return done;
+		String exc = "java.lang.NullPointerException";
+		AnalysisState<A> raised = ListModel.raise(interprocedural, state, exc, st, subExpressions, expressions);
+		AnalysisState.Error error = new AnalysisState.Error(JavaClassType.lookup(exc).getReference(), st);
+		if (done.getExecutionState().isBottom())
+			return analysis.moveExecutionToError(raised, error, context, st);
+		return analysis.moveExecutionToError(done, raised, error, context, st);
 	}
 
 	/**

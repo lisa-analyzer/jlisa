@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.sets;
 
 import it.unive.jlisa.program.java.constructs.lists.ListModel;
+import it.unive.jlisa.program.java.constructs.map.MapModel;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -64,18 +65,29 @@ public class SetContains
 		if (!ListModel.isModeled(analysis, context, state, left, this))
 			return analysis.smallStepSemantics(state, any, context, this);
 
-		// the empty set contains nothing, otherwise the result is unknown
+		// the empty set contains nothing, a set with an element that is surely
+		// the object contains it, otherwise the result is unknown
 		AnalysisState<A> result = state.bottomExecution();
 		AnalysisState<A> empty = analysis.assume(state,
 				ListModel.compareSize(left, ComparisonEq.INSTANCE, 0, location), context, this, this);
 		if (!empty.getExecutionState().isBottom())
 			result = result.lub(analysis.smallStepSemantics(empty,
 					new Constant(JavaBooleanType.INSTANCE, false, location), context, this));
-		AnalysisState<A> nonEmpty = analysis.assume(state,
-				ListModel.compareSize(left, ComparisonGe.INSTANCE, 1, location), context, this, this);
-		if (!nonEmpty.getExecutionState().isBottom())
-			result = result.lub(analysis.smallStepSemantics(nonEmpty, any, context, this));
-		return result;
+		for (int k = 1; k <= ListModel.MAX_TRACKED_ELEMENTS; k++) {
+			boolean beyond = k == ListModel.MAX_TRACKED_ELEMENTS;
+			AnalysisState<A> sized = analysis.assume(state,
+					ListModel.compareSize(left, beyond ? ComparisonGe.INSTANCE : ComparisonEq.INSTANCE, k, location),
+					context, this, this);
+			if (sized.getExecutionState().isBottom())
+				continue;
+			boolean found = false;
+			for (int i = 0; i < k && !found; i++)
+				found = MapModel.sameObject(analysis, context, sized, ListModel.element(left, i, location), right,
+						this);
+			result = result.lub(analysis.smallStepSemantics(sized,
+					found ? new Constant(JavaBooleanType.INSTANCE, true, location) : any, context, this));
+		}
+		return MapModel.single(analysis, context, result, JavaBooleanType.INSTANCE, this);
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package it.unive.jlisa.program.java.constructs.collections;
 
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.java.constructs.lists.ListModel;
+import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -57,6 +58,17 @@ public abstract class CollectionsFactory extends NaryExpression implements Plugg
 	 */
 	protected abstract String collectionType();
 
+	/**
+	 * Returns how the created collection can be changed (see
+	 * {@link ListModel#IMMUTABLE}): the collections of the factories of
+	 * {@code Collections} cannot be changed.
+	 *
+	 * @return the value of the field {@code $fixed} of the collection
+	 */
+	protected int fixed() {
+		return ListModel.IMMUTABLE;
+	}
+
 	@Override
 	public void setOriginatingStatement(
 			Statement st) {
@@ -72,9 +84,10 @@ public abstract class CollectionsFactory extends NaryExpression implements Plugg
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
+		LibrarySpecificationProvider.importClass(getProgram(), collectionType());
 		AnalysisState<A> created = ListModel.create(analysis, context, state,
 				JavaClassType.lookup(collectionType()).getReference(), collectionLocation, elementDataLocation,
-				ListModel.IMMUTABLE, this);
+				fixed(), this);
 		if (params.length == 0)
 			return created;
 

@@ -27,7 +27,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
@@ -86,10 +85,15 @@ public class ConcurrentMapGet extends BinaryExpression implements PluggableState
 		if (containsNull) {
 			res = res.lub(throwNullPointerException(interprocedural, state, expressions));
 		}
-		// and also top return value if key is not null
-		// NOTE: could simply call the MapGet semantics instead of returning top
+		// otherwise, as for the other maps
 		if (!keyTypes.isEmpty()) {
-			res = res.lub(topReturnValue(interprocedural, state, expressions));
+			MapGet get = new MapGet(getCFG(), getLocation(), getLeft(), getRight());
+			// MapGet takes the sub-expressions as its own
+			getLeft().setParentStatement(this);
+			getRight().setParentStatement(this);
+			get.setOriginatingStatement(originating);
+			res = res.lub(get.fwdBinarySemantics(interprocedural, state, left, right, expressions));
+			getMetaVariables().addAll(get.getMetaVariables());
 		}
 
 		return res;
@@ -99,18 +103,6 @@ public class ConcurrentMapGet extends BinaryExpression implements PluggableState
 	protected int compareSameClassAndParams(
 			Statement o) {
 		return 0;
-	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> topReturnValue(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			StatementStore<A> expressions)
-			throws SemanticException {
-		ScopeId<A> context = interprocedural.getCurrentContext();
-		AnalysisState<A> topState = interprocedural.getAnalysis().smallStepSemantics(state,
-				new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), getLocation()),
-				context, originating);
-		return topState;
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNullPointerException(
