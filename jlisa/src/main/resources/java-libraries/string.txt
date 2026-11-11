@@ -62,6 +62,11 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 	instance method toLowerCase: it.unive.jlisa.program.java.constructs.string.StringToLowerCase
 		libtype java.lang.String*
 		param this libtype java.lang.String*	
+
+	instance method toLowerCase: it.unive.jlisa.program.java.constructs.string.StringToLowerCaseLocale
+		libtype java.lang.String*
+		param this libtype java.lang.String*
+		param locale libtype java.util.Locale*
 						
 	instance method toString: it.unive.jlisa.program.java.constructs.string.StringToString
 		libtype java.lang.String*

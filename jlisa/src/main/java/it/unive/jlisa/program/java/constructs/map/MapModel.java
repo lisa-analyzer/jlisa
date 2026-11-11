@@ -215,9 +215,26 @@ public class MapModel {
 				k == MAX_ENTRIES ? ComparisonGe.INSTANCE : ComparisonEq.INSTANCE, location), context, st, st);
 	}
 
-	// whether the two references surely denote the same object: they point
-	// to the same single strong allocation site
-	private static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean sameObject(
+	/**
+	 * Returns whether the two values surely denote the same object: they point
+	 * to the same single strong allocation site (or, if they are not
+	 * references, their values are surely equal). Since {@code equals} is
+	 * reflexive, the two values are then surely equal also for the collections.
+	 *
+	 * @param <A>      the kind of the abstract state
+	 * @param <D>      the kind of the abstract domain
+	 * @param analysis the analysis
+	 * @param context  the current context
+	 * @param state    the state
+	 * @param a        the first value
+	 * @param b        the second value
+	 * @param st       the statement
+	 *
+	 * @return whether the two values surely denote the same object
+	 *
+	 * @throws SemanticException if the values cannot be resolved
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean sameObject(
 			Analysis<A, D> analysis,
 			ScopeId<A> context,
 			AnalysisState<A> state,
@@ -240,6 +257,41 @@ public class MapModel {
 		SymbolicExpression r = right.iterator().next();
 		return l instanceof Identifier li && r instanceof Identifier ri && !li.isWeak() && !ri.isWeak()
 				&& li.equals(ri);
+	}
+
+	/**
+	 * Yields whether the two values are surely different: one is surely null,
+	 * and the other one surely is not.
+	 *
+	 * @param <A>      the kind of lattice
+	 * @param <D>      the kind of domain
+	 * @param analysis the analysis
+	 * @param context  the current context
+	 * @param state    the current state
+	 * @param a        the first value
+	 * @param b        the second value
+	 * @param st       the statement comparing the values
+	 *
+	 * @return whether the values are surely different
+	 *
+	 * @throws SemanticException if the runtime types cannot be computed
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean surelyDifferent(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression a,
+			SymbolicExpression b,
+			Statement st)
+			throws SemanticException {
+		Type nullType = new JavaReferenceType(it.unive.lisa.type.NullType.INSTANCE);
+		java.util.Set<Type> left = analysis.getRuntimeTypesOf(state, a, context, st);
+		java.util.Set<Type> right = analysis.getRuntimeTypesOf(state, b, context, st);
+		if (left.isEmpty() || right.isEmpty())
+			return false;
+		boolean leftNull = left.size() == 1 && left.contains(nullType);
+		boolean rightNull = right.size() == 1 && right.contains(nullType);
+		return leftNull && !right.contains(nullType) || rightNull && !left.contains(nullType);
 	}
 
 	// whether all the runtime types of the expression are references
@@ -452,6 +504,52 @@ public class MapModel {
 	}
 
 	/**
+	 * Returns the given result of a method of the given map, joined with the
+	 * state where a {@code NullPointerException} is raised if the map does not
+	 * allow null keys (a {@code ConcurrentMap}) and the given key might be null
+	 * (see {@link ListModel#nullArgument}).
+	 *
+	 * @param <A>             the kind of the abstract state
+	 * @param <D>             the kind of the abstract domain
+	 * @param interprocedural the interprocedural analysis
+	 * @param state           the state before the method
+	 * @param done            the result of the method
+	 * @param map             the map
+	 * @param key             the key
+	 * @param st              the statement
+	 * @param subExpressions  the sub-expressions of the statement
+	 * @param expressions     the statement store
+	 *
+	 * @return the result, possibly with the exception
+	 *
+	 * @throws SemanticException if the exception cannot be raised
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> nullKey(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			AnalysisState<A> done,
+			SymbolicExpression map,
+			SymbolicExpression key,
+			Statement st,
+			Expression[] subExpressions,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		String concurrentMap = "java.util.concurrent.ConcurrentMap";
+		if (!JavaClassType.hasType(concurrentMap))
+			return done;
+		JavaClassType concurrent = JavaClassType.lookup(concurrentMap);
+		boolean noNullKeys = false;
+		for (Type t : analysis.getRuntimeTypesOf(state, map, context, st))
+			if (t instanceof JavaReferenceType ref && ref.getInnerType().canBeAssignedTo(concurrent))
+				noNullKeys = true;
+		if (!noNullKeys)
+			return done;
+		return ListModel.nullArgument(interprocedural, state, done, key, st, subExpressions, expressions);
+	}
+
+	/**
 	 * Returns the value of the given key in the given map (that is tracked),
 	 * for {@code get}: the value of the last entry that has surely the key,
 	 * joined with the ones that might have it, or {@code null} if no entry has
@@ -496,7 +594,8 @@ public class MapModel {
 			AnalysisState<A> rest = bucket;
 			for (int i = k - 1; i >= 0 && !rest.getExecutionState().isBottom(); i--) {
 				AnalysisState<A> alive = withAlive(analysis, context, rest, map, i, 1, st);
-				if (alive.getExecutionState().isBottom())
+				if (alive.getExecutionState().isBottom()
+						|| surelyDifferent(analysis, context, rest, key, key(map, i, location), st))
 					continue;
 				result = result.lub(analysis.smallStepSemantics(alive, value(map, i, location), context, st));
 				if (sameObject(analysis, context, rest, key, key(map, i, location), st))
@@ -555,7 +654,8 @@ public class MapModel {
 			AnalysisState<A> rest = bucket;
 			for (int i = k - 1; i >= 0 && !rest.getExecutionState().isBottom(); i--) {
 				AnalysisState<A> alive = withAlive(analysis, context, rest, map, i, 1, st);
-				if (alive.getExecutionState().isBottom())
+				if (alive.getExecutionState().isBottom()
+						|| surelyDifferent(analysis, context, rest, key, key(map, i, location), st))
 					continue;
 				if (sameObject(analysis, context, rest, key, key(map, i, location), st)) {
 					result = result.lub(analysis.smallStepSemantics(alive, yes, context, st));

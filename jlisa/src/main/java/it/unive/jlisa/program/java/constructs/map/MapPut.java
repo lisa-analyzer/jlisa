@@ -69,6 +69,20 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		// a ConcurrentMap is not null safe
+		return MapModel.nullKey(interprocedural, state,
+				semantics(interprocedural, state, left, middle, right, expressions), left,
+				middle, this, getSubExpressions(), expressions);
+	}
+
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> semantics(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression left,
+			SymbolicExpression middle,
+			SymbolicExpression right,
+			StatementStore<A> expressions)
+			throws SemanticException {
 
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();

@@ -258,14 +258,13 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope>
 		if (u == null)
 			throw new UnsupportedStatementException(
 					qName + " does not exist in the program, location: " + getSourceCodeLocation(node));
-		if (!(u instanceof ClassUnit))
-			throw new UnsupportedStatementException(u.getName() + " is not a class unit.");
-
-		JavaClassType javaClassType = JavaClassType.lookup(u.getName());
-		if (javaClassType == null)
-			type = Untyped.INSTANCE;
+		// as for simple names
+		if (u instanceof ClassUnit)
+			type = JavaClassType.lookup(u.getName());
+		else if (u instanceof InterfaceUnit)
+			type = JavaInterfaceType.lookup(u.getName());
 		else
-			type = javaClassType;
+			throw new UnsupportedStatementException(u.getName() + " is not a class or interface unit");
 
 		return false;
 	}

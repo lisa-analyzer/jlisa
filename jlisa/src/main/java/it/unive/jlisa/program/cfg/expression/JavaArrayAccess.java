@@ -26,6 +26,7 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
@@ -63,9 +64,26 @@ public class JavaArrayAccess extends BinaryExpression {
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		if (!left.getStaticType().isReferenceType()
-				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
-			return state.bottomExecution();
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Type leftType = left.getStaticType();
+		if (!isArrayReference(leftType)) {
+			// the static type might not be an array (e.g., the element of a
+			// collection is an object): the runtime types tell which array it
+			// is, and the element is unknown if they do not tell a single one
+			leftType = null;
+			for (Type t : analysis.getRuntimeTypesOf(state, left, context, this))
+				if (t.isNullType() || t.isReferenceType() && t.asReferenceType().getInnerType().isNullType())
+					continue;
+				else if (!isArrayReference(t) || leftType != null && !leftType.equals(t))
+					return analysis.smallStepSemantics(state, new PushAny(Untyped.INSTANCE, getLocation()), context,
+							this);
+				else
+					leftType = t;
+			if (leftType == null)
+				return analysis.smallStepSemantics(state, new PushAny(Untyped.INSTANCE, getLocation()), context,
+						this);
+		}
 
 		// an index read from an array (e.g., a[b[i]]) is a value like any
 		// other, while an array read from an array (e.g., a[i][j]) is not
@@ -78,12 +96,10 @@ public class JavaArrayAccess extends BinaryExpression {
 		}
 
 		// need to check in-bound
-		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) left.getStaticType()).getInnerType();
+		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) leftType).getInnerType();
 		HeapDereference container = new HeapDereference(arrayType, left, getLocation());
 		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(Untyped.INSTANCE, container, lenProperty, getLocation());
-		Analysis<A, D> analysis = interprocedural.getAnalysis();
-		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheck1 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
@@ -230,5 +246,11 @@ public class JavaArrayAccess extends BinaryExpression {
 	@Override
 	public String toString() {
 		return getLeft() + "[" + getRight() + "]";
+	}
+
+	// whether the type is a reference to an array
+	private static boolean isArrayReference(
+			Type type) {
+		return type.isReferenceType() && type.asReferenceType().getInnerType().isArrayType();
 	}
 }
