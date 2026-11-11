@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -41,14 +42,48 @@ final class JavaUnboxing {
 	static SymbolicExpression unbox(
 			SymbolicExpression e,
 			CodeLocation location) {
+		return unbox(e, null, location);
+	}
+
+	/**
+	 * Yields the primitive value wrapped by the given expression, compared with
+	 * the given other operand: if the expression is a reference to a wrapper
+	 * object, its value; if it is a reference to an object of another class
+	 * (e.g., an {@code Object} yielded by a collection) and the other operand
+	 * is a primitive value, the value of the object as a primitive of the type
+	 * of the other operand, as the object is unboxed when the comparison is
+	 * executed (it must then be a wrapper object); the expression itself
+	 * otherwise.
+	 *
+	 * @param e        the expression
+	 * @param other    the other operand of the comparison (can be
+	 *                     {@code null} if unknown)
+	 * @param location the location of the unboxing
+	 *
+	 * @return the unboxed expression
+	 */
+	static SymbolicExpression unbox(
+			SymbolicExpression e,
+			SymbolicExpression other,
+			CodeLocation location) {
 		Type t = e.getStaticType();
-		if (t instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaClassType inner
-				&& JavaClassType.isWrapperType(inner)) {
-			GlobalVariable value = new GlobalVariable(Untyped.INSTANCE, "value", location);
-			HeapDereference deref = new HeapDereference(inner, e, location);
-			return new AccessChild(JavaClassType.getUnwrappedType(inner), deref, value, location);
-		}
-		return e;
+		if (!(t instanceof JavaReferenceType jrt) || !(jrt.getInnerType() instanceof JavaClassType inner))
+			return e;
+		Type unwrapped;
+		if (JavaClassType.isWrapperType(inner))
+			unwrapped = JavaClassType.getUnwrappedType(inner);
+		else if (other != null && isPrimitive(other.getStaticType()))
+			unwrapped = other.getStaticType();
+		else
+			return e;
+		GlobalVariable value = new GlobalVariable(Untyped.INSTANCE, "value", location);
+		HeapDereference deref = new HeapDereference(inner, e, location);
+		return new AccessChild(unwrapped, deref, value, location);
+	}
+
+	private static boolean isPrimitive(
+			Type type) {
+		return type.isNumericType() || type.isBooleanType() || type instanceof JavaCharType;
 	}
 
 	/**
@@ -80,8 +115,8 @@ final class JavaUnboxing {
 			Type type,
 			ProgramPoint pp)
 			throws SemanticException {
-		SymbolicExpression l = unbox(left, pp.getLocation());
-		SymbolicExpression r = unbox(right, pp.getLocation());
+		SymbolicExpression l = unbox(left, right, pp.getLocation());
+		SymbolicExpression r = unbox(right, left, pp.getLocation());
 		if (l == left && r == right)
 			return null;
 		return interprocedural.getAnalysis().smallStepSemantics(state,

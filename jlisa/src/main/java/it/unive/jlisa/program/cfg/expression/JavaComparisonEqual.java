@@ -81,12 +81,8 @@ public class JavaComparisonEqual extends Equal {
 			throws SemanticException {
 
 		AnalysisState<A> res = state.bottomExecution();
-		Type t = x.getStaticType();
-
-		if (t instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaClassType innerType) {
-
-			assert (JavaClassType.isWrapperType(innerType));
-			SymbolicExpression unboxed = unbox(analysis, state, x, innerType, expressions);
+		SymbolicExpression unboxed = JavaUnboxing.unbox(x, y, getLocation());
+		if (unboxed != x) {
 
 			AnalysisState<A> tmp = analysis.smallStepSemantics(state,
 					new BinaryExpression(getStaticType(), unboxed, y, ComparisonEq.INSTANCE, getLocation()), context,
@@ -97,21 +93,5 @@ public class JavaComparisonEqual extends Equal {
 			res = res.lub(analysis.smallStepSemantics(state, c, context, this));
 		}
 		return res;
-	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> SymbolicExpression unbox(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression toUnbox,
-			JavaClassType t,
-			StatementStore<A> expressions)
-			throws SemanticException {
-		CodeLocation location = getLocation();
-		assert (toUnbox.getStaticType().isReferenceType());
-
-		GlobalVariable g = new GlobalVariable(Untyped.INSTANCE, "value", location);
-		HeapDereference deref = new HeapDereference(t, toUnbox, location);
-		AccessChild a = new AccessChild(JavaClassType.getUnwrappedType(t), deref, g, location);
-		return a;
 	}
 }

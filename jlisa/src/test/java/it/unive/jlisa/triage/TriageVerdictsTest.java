@@ -307,4 +307,15 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertNotEquals(Verdict.REFUTED, verdict("math-nan", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * Values of generic collections, whose models yield objects, are unboxed
+	 * when compared with primitive values.
+	 */
+	@Test
+	public void comparisonsOfObjectsWithPrimitivesAreAnalyzed(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("object-comparison", SVCOMPProperty.ASSERT, dir));
+	}
 }
