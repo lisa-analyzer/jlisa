@@ -17,6 +17,9 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -62,16 +65,18 @@ public class JavaCastExpression extends UnaryExpression {
 			AnalysisState<A> erroneousState = state.bottom();
 			Error error = null;
 
-			// the cast fails only if the value is not an instance of the type
-			// (null is never an instance, but its cast succeeds: the check
-			// can only be assumed when the cast fails), built as instanceof
-			// does
+			// the cast fails only if the value is not null and not an
+			// instance of the type (null is never an instance, but its cast
+			// succeeds), built as instanceof does
 			BinaryExpression instanceOf = new BinaryExpression(Untyped.INSTANCE, expr,
 					new Constant(new TypeTokenType(Collections.singleton(type)), 0, getLocation()),
 					TypeCheck.INSTANCE, getLocation());
-			it.unive.lisa.symbolic.value.UnaryExpression notInstanceOf = new it.unive.lisa.symbolic.value.UnaryExpression(
-					getProgram().getTypes().getBooleanType(),
-					instanceOf, LogicalNegation.INSTANCE, getLocation());
+			BinaryExpression notNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), expr,
+					new NullConstant(getLocation()), ComparisonNe.INSTANCE, getLocation());
+			BinaryExpression notInstanceOf = new BinaryExpression(getProgram().getTypes().getBooleanType(), notNull,
+					new it.unive.lisa.symbolic.value.UnaryExpression(getProgram().getTypes().getBooleanType(),
+							instanceOf, LogicalNegation.INSTANCE, getLocation()),
+					LogicalAnd.INSTANCE, getLocation());
 			AnalysisState<A> failing = null;
 
 			for (Type t : types) {

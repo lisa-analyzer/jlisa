@@ -3,6 +3,7 @@ package it.unive.jlisa.triage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import it.unive.jlisa.Main;
@@ -15,6 +16,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -69,6 +72,19 @@ public class TriageVerdictsTest {
 			SVCOMPProperty property,
 			Path outdir)
 			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings(program, property, outdir);
+		if (warnings.stream().anyMatch(JsonReport.JsonMessage::isDefinite))
+			return Verdict.DEFINITE;
+		if (warnings.stream().allMatch(JsonReport.JsonMessage::isRefuted))
+			return Verdict.REFUTED;
+		return Verdict.POSSIBLE;
+	}
+
+	private static List<JsonReport.JsonMessage> warnings(
+			String program,
+			SVCOMPProperty property,
+			Path outdir)
+			throws Exception {
 		Main.main(new String[] {
 				"check",
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
@@ -83,12 +99,7 @@ public class TriageVerdictsTest {
 		try (Reader reader = Files.newBufferedReader(outdir.resolve("report.json"))) {
 			report = JsonReport.read(reader);
 		}
-		List<JsonReport.JsonMessage> warnings = List.copyOf(report.getWarnings());
-		if (warnings.stream().anyMatch(JsonReport.JsonMessage::isDefinite))
-			return Verdict.DEFINITE;
-		if (warnings.stream().allMatch(JsonReport.JsonMessage::isRefuted))
-			return Verdict.REFUTED;
-		return Verdict.POSSIBLE;
+		return List.copyOf(report.getWarnings());
 	}
 
 	/**
@@ -221,5 +232,43 @@ public class TriageVerdictsTest {
 			@TempDir Path dir)
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("valueof-null", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * Casting null never fails: a cast that can only see null or instances of
+	 * the type does not raise exceptions.
+	 */
+	@Test
+	public void castsOfNullDoNotFail(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("cast-null", SVCOMPProperty.RUNTIME_EXCEPTION, dir));
+	}
+
+	/**
+	 * Strings are sequences of UTF-16 code units: violations depending on
+	 * their characters are confirmed with strings whose code points are each a
+	 * single code unit (e.g., the result of {@code compareTo} is the difference
+	 * of the first different code units).
+	 */
+	@Test
+	public void violationsOnStringsAreConfirmedWithSingleCodeUnits(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("string-compare", SVCOMPProperty.ASSERT, dir);
+		JsonReport.JsonMessage definite = warnings.stream()
+				.filter(JsonReport.JsonMessage::isDefinite)
+				.findFirst()
+				.orElseThrow();
+		Pattern escape = Pattern.compile("\\\\u\\{([0-9a-fA-F]+)\\}");
+		for (JsonReport.JsonReproducingInput input : definite.getReproducingInputs())
+			if (input.getSource().contains("nondetString")) {
+				Matcher m = escape.matcher(input.getValue());
+				while (m.find()) {
+					int code = Integer.parseInt(m.group(1), 16);
+					assertTrue(code < 0xD800 || code >= 0xE000 && code <= 0xFFFF,
+							"not a single code unit: " + input.getValue());
+				}
+			}
 	}
 }
