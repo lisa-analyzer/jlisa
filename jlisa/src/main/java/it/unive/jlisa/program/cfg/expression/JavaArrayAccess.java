@@ -67,8 +67,10 @@ public class JavaArrayAccess extends BinaryExpression {
 				|| !left.getStaticType().asReferenceType().getInnerType().isArrayType())
 			return state.bottomExecution();
 
-		if (getSubExpressions()[0] instanceof JavaArrayAccess
-				|| getSubExpressions()[1] instanceof JavaArrayAccess) {
+		// an index read from an array (e.g., a[b[i]]) is a value like any
+		// other, while an array read from an array (e.g., a[i][j]) is not
+		// supported
+		if (getSubExpressions()[0] instanceof JavaArrayAccess) {
 			// TODO 99% of these require a more refined heap model, otherwise we
 			// have some false
 			// positives. For now, we just avoid nested array accesses.
