@@ -69,6 +69,19 @@ public class TriageVerdictsTest {
 			SVCOMPProperty property,
 			Path outdir)
 			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings(program, property, outdir);
+		if (warnings.stream().anyMatch(JsonReport.JsonMessage::isDefinite))
+			return Verdict.DEFINITE;
+		if (warnings.stream().allMatch(JsonReport.JsonMessage::isRefuted))
+			return Verdict.REFUTED;
+		return Verdict.POSSIBLE;
+	}
+
+	private static List<JsonReport.JsonMessage> warnings(
+			String program,
+			SVCOMPProperty property,
+			Path outdir)
+			throws Exception {
 		Main.main(new String[] {
 				"check",
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
@@ -83,12 +96,7 @@ public class TriageVerdictsTest {
 		try (Reader reader = Files.newBufferedReader(outdir.resolve("report.json"))) {
 			report = JsonReport.read(reader);
 		}
-		List<JsonReport.JsonMessage> warnings = List.copyOf(report.getWarnings());
-		if (warnings.stream().anyMatch(JsonReport.JsonMessage::isDefinite))
-			return Verdict.DEFINITE;
-		if (warnings.stream().allMatch(JsonReport.JsonMessage::isRefuted))
-			return Verdict.REFUTED;
-		return Verdict.POSSIBLE;
+		return List.copyOf(report.getWarnings());
 	}
 
 	/**
@@ -221,5 +229,16 @@ public class TriageVerdictsTest {
 			@TempDir Path dir)
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("valueof-null", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * Casting null never fails: a cast that can only see null or instances of
+	 * the type does not raise exceptions.
+	 */
+	@Test
+	public void castsOfNullDoNotFail(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("cast-null", SVCOMPProperty.RUNTIME_EXCEPTION, dir));
 	}
 }
