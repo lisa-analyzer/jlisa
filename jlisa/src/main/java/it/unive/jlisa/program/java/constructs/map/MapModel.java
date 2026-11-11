@@ -259,9 +259,24 @@ public class MapModel {
 				&& li.equals(ri);
 	}
 
-	// whether the two values are surely different: one is surely null, and the
-	// other one surely is not
-	private static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean surelyDifferent(
+	/**
+	 * Yields whether the two values are surely different: one is surely null,
+	 * and the other one surely is not.
+	 *
+	 * @param <A>      the kind of lattice
+	 * @param <D>      the kind of domain
+	 * @param analysis the analysis
+	 * @param context  the current context
+	 * @param state    the current state
+	 * @param a        the first value
+	 * @param b        the second value
+	 * @param st       the statement comparing the values
+	 *
+	 * @return whether the values are surely different
+	 *
+	 * @throws SemanticException if the runtime types cannot be computed
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean surelyDifferent(
 			Analysis<A, D> analysis,
 			ScopeId<A> context,
 			AnalysisState<A> state,

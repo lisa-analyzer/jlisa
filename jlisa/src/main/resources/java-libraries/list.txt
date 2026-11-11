@@ -17,6 +17,16 @@ class java.util.List extends java.util.Collection:
         type it.unive.jlisa.program.type.JavaIntType::INSTANCE
         param this libtype java.util.List*
 
+    instance method contains: it.unive.jlisa.program.java.constructs.sets.SetContains
+        type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+        param this libtype java.util.List*
+        param o type it.unive.lisa.type.Untyped::INSTANCE
+
+    instance method equals: it.unive.jlisa.program.java.constructs.lists.ListEquals
+        type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+        param this libtype java.util.List*
+        param o libtype java.lang.Object*
+
     instance method isEmpty: it.unive.jlisa.program.java.constructs.lists.ListIsEmpty
         type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
         param this libtype java.util.List*

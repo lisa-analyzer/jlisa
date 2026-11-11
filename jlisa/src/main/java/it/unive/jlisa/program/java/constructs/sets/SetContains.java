@@ -66,7 +66,8 @@ public class SetContains
 			return analysis.smallStepSemantics(state, any, context, this);
 
 		// the empty set contains nothing, a set with an element that is surely
-		// the object contains it, otherwise the result is unknown
+		// the object contains it, a set whose elements are surely not the
+		// object does not contain it, otherwise the result is unknown
 		AnalysisState<A> result = state.bottomExecution();
 		AnalysisState<A> empty = analysis.assume(state,
 				ListModel.compareSize(left, ComparisonEq.INSTANCE, 0, location), context, this, this);
@@ -81,11 +82,17 @@ public class SetContains
 			if (sized.getExecutionState().isBottom())
 				continue;
 			boolean found = false;
-			for (int i = 0; i < k && !found; i++)
-				found = MapModel.sameObject(analysis, context, sized, ListModel.element(left, i, location), right,
-						this);
-			result = result.lub(analysis.smallStepSemantics(sized,
-					found ? new Constant(JavaBooleanType.INSTANCE, true, location) : any, context, this));
+			// whether every element is surely not the object (e.g., the object
+			// is null and no element is)
+			boolean absent = !beyond;
+			for (int i = 0; i < k && !found; i++) {
+				SymbolicExpression element = ListModel.element(left, i, location);
+				found = MapModel.sameObject(analysis, context, sized, element, right, this);
+				absent = absent && MapModel.surelyDifferent(analysis, context, sized, element, right, this);
+			}
+			SymbolicExpression res = found ? new Constant(JavaBooleanType.INSTANCE, true, location)
+					: absent ? new Constant(JavaBooleanType.INSTANCE, false, location) : any;
+			result = result.lub(analysis.smallStepSemantics(sized, res, context, this));
 		}
 		return MapModel.single(analysis, context, result, JavaBooleanType.INSTANCE, this);
 	}

@@ -24,7 +24,8 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 /**
  * The factories of {@code java.util.Collections} that create collections that
  * cannot be changed: {@code emptyList()}, {@code emptySet()} (no parameters)
- * and {@code singletonList(o)}, {@code singleton(o)} (one element).
+ * and {@code singletonList(o)}, {@code singleton(o)} (one element), and the
+ * ones creating collections with the given elements, in order.
  */
 public abstract class CollectionsFactory extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -91,16 +92,23 @@ public abstract class CollectionsFactory extends NaryExpression implements Plugg
 		if (params.length == 0)
 			return created;
 
-		// the only element
+		// the elements, in order
 		AnalysisState<A> result = created.bottomExecution();
-		for (SymbolicExpression collection : created.getExecutionExpressions())
-			for (SymbolicExpression element : params[0]) {
-				AnalysisState<A> boxed = ListModel.box(interprocedural, created, element, getSubExpressions()[0],
-						this, expressions);
-				for (SymbolicExpression value : boxed.getExecutionExpressions())
-					result = result.lub(ListModel.append(analysis, context, boxed, collection, value, this)
-							.withExecutionExpression(collection));
+		for (SymbolicExpression collection : created.getExecutionExpressions()) {
+			AnalysisState<A> current = created.withExecutionExpression(collection);
+			for (int i = 0; i < params.length; i++) {
+				AnalysisState<A> next = current.bottomExecution();
+				for (SymbolicExpression element : params[i]) {
+					AnalysisState<A> boxed = ListModel.box(interprocedural, current, element,
+							getSubExpressions()[i], this, expressions);
+					for (SymbolicExpression value : boxed.getExecutionExpressions())
+						next = next.lub(ListModel.append(analysis, context, boxed, collection, value, this)
+								.withExecutionExpression(collection));
+				}
+				current = next;
 			}
+			result = result.lub(current);
+		}
 		return result;
 	}
 
