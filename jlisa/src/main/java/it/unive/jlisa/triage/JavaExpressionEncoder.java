@@ -117,6 +117,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.IntFunction;
 
 /**
@@ -326,17 +327,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_TO_UNSIGNED_STRING)
 			return Term.app("str.from_int", Sort.STRING, unsigned(x, 64));
 		if (f == JavaLibraryFunction.INTEGER_TO_HEX_STRING)
-			return digits(unsigned(x, 32), 16, 32);
+			return digits(unsigned(x, 32), 16, 32, e);
 		if (f == JavaLibraryFunction.INTEGER_TO_BINARY_STRING)
-			return digits(unsigned(x, 32), 2, 32);
+			return digits(unsigned(x, 32), 2, 32, e);
 		if (f == JavaLibraryFunction.INTEGER_TO_OCTAL_STRING)
-			return digits(unsigned(x, 32), 8, 32);
+			return digits(unsigned(x, 32), 8, 32, e);
 		if (f == JavaLibraryFunction.LONG_TO_HEX_STRING)
-			return digits(unsigned(x, 64), 16, 64);
+			return digits(unsigned(x, 64), 16, 64, e);
 		if (f == JavaLibraryFunction.LONG_TO_BINARY_STRING)
-			return digits(unsigned(x, 64), 2, 64);
+			return digits(unsigned(x, 64), 2, 64, e);
 		if (f == JavaLibraryFunction.LONG_TO_OCTAL_STRING)
-			return digits(unsigned(x, 64), 8, 64);
+			return digits(unsigned(x, 64), 8, 64, e);
 		return null;
 	}
 
@@ -463,13 +464,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_ROTATE_LEFT)
 			return signed(rotate(unsigned(a, 64), b, 64, true), 64);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING_RADIX)
-			return withRadix(b, r -> signedDigits(a, r, 32));
+			return withRadix(b, (r, when) -> signedDigits(a, r, 32, when, e));
 		if (f == JavaLibraryFunction.LONG_TO_STRING_RADIX)
-			return withRadix(b, r -> signedDigits(a, r, 64));
+			return withRadix(b, (r, when) -> signedDigits(a, r, 64, when, e));
 		if (f == JavaLibraryFunction.INTEGER_TO_UNSIGNED_STRING_RADIX)
-			return withRadix(b, r -> digits(unsigned(a, 32), r, 32));
+			return withRadix(b, (r, when) -> digits(unsigned(a, 32), r, 32, when, e));
 		if (f == JavaLibraryFunction.LONG_TO_UNSIGNED_STRING_RADIX)
-			return withRadix(b, r -> digits(unsigned(a, 64), r, 64));
+			return withRadix(b, (r, when) -> digits(unsigned(a, 64), r, 64, when, e));
 		return null;
 	}
 
@@ -1364,57 +1365,108 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * of bits in the given radix, with lowercase letters for the digits above
 	 * {@code 9}, as by {@link Long#toString(long, int)}.
 	 */
-	private static Term digits(
-			Term u,
+	private Term digits(
+			Term value,
 			int radix,
-			int bits) {
+			int bits,
+			SymbolicExpression e) {
+		return digits(value, radix, bits, Term.TRUE, e);
+	}
+
+	/**
+	 * The representation of a non-negative integer, as
+	 * {@link #digits(Term, int, int, SymbolicExpression)}, defined only when
+	 * the given condition holds (e.g., the radix of the conversion is the given
+	 * one): the representation is otherwise unconstrained, and it must not be
+	 * used.
+	 */
+	private Term digits(
+			Term value,
+			int radix,
+			int bits,
+			Term when,
+			SymbolicExpression e) {
+		// the value is used by every digit: it is named once
+		Term u = auxiliary(Sort.INT, e);
+		getSymbols().require(Term.eq(u, value));
 		BigInteger r = BigInteger.valueOf(radix);
 		BigInteger limit = pow2(bits);
 		// the number of digits needed for the largest value
 		int max = 1;
 		while (r.pow(max).compareTo(limit) < 0)
 			max++;
-		// all the digits, from the most significant one
-		Term[] all = new Term[max];
-		for (int i = 0; i < max; i++) {
-			Term d = mod(div(u, r.pow(max - 1 - i)), r);
-			all[i] = Term.app("str.from_code", Sort.STRING,
-					Term.ite(lt(d, num(10)), add(d, num('0')), add(d, num('a' - 10))));
-		}
-		Term full = max == 1 ? all[0] : Term.app("str.++", Sort.STRING, all);
-		// the number of significant digits
-		Term count = num(max);
+		// the number of significant digits, named once as well
+		Term digits = num(max);
 		for (int k = max - 1; k >= 1; k--)
-			count = Term.ite(lt(u, num(r.pow(k))), num(k), count);
-		return substr(full, Term.app("-", Sort.INT, num(max), count), count);
+			digits = Term.ite(lt(u, num(r.pow(k))), num(k), digits);
+		Term count = auxiliary(Sort.INT, e);
+		getSymbols().require(Term.eq(count, digits));
+		// the representation is a string whose characters are constrained one
+		// by one, the j-th digit from the least significant one being at
+		// position count - 1 - j: solvers handle such constraints far better
+		// than a string built by concatenating the digits
+		Term s = auxiliary(Sort.STRING, e);
+		// for radixes that are powers of two, the digits are groups of bits of
+		// the value, extracted from a bit-vector rather than computed through
+		// quotients and remainders
+		int group = Integer.bitCount(radix) == 1 ? Integer.numberOfTrailingZeros(radix) : 0;
+		Term b = group > 0 ? bitVector(u, bits, e) : null;
+		Term[] defs = new Term[max + 1];
+		defs[0] = Term.eq(len(s), count);
+		for (int j = 0; j < max; j++) {
+			Term d = group > 0
+					? Term.app("bv2nat", Sort.INT, extract(b, j * group, Math.min(group, bits - j * group)))
+					: mod(div(u, r.pow(j)), r);
+			Term c;
+			if (radix <= 10)
+				c = add(d, num('0'));
+			else {
+				// the digit is used twice: it is named once
+				Term v = auxiliary(Sort.INT, e);
+				getSymbols().require(Term.eq(v, d));
+				c = Term.ite(lt(v, num(10)), add(v, num('0')), add(v, num('a' - 10)));
+			}
+			defs[j + 1] = Term.implies(lt(num(j), count), Term.eq(code(at(s, sub(count, num(j + 1)))), c));
+		}
+		getSymbols().require(Term.implies(when, Term.and(defs)));
+		return s;
 	}
 
 	/**
 	 * The representation of a signed integer of the given bit width in the
 	 * given radix, as by {@link Long#toString(long, int)}.
 	 */
-	private static Term signedDigits(
+	private Term signedDigits(
 			Term x,
 			int radix,
-			int bits) {
+			int bits,
+			Term when,
+			SymbolicExpression e) {
 		if (radix == 10)
 			return decimal(x);
 		Term magnitude = Term.ite(lt(x, num(0)), Term.app("-", Sort.INT, x), x);
-		Term digits = digits(magnitude, radix, bits);
+		Term digits = digits(magnitude, radix, bits, when, e);
 		return Term.ite(lt(x, num(0)), Term.app("str.++", Sort.STRING, Term.string("-"), digits), digits);
 	}
 
 	/**
 	 * Selects the representation for the given radix, using radix {@code 10}
-	 * for radixes that are not valid, as Java does.
+	 * for radixes that are not valid, as Java does. Each representation is
+	 * built given the condition under which it is selected.
 	 */
 	private static Term withRadix(
 			Term radix,
-			IntFunction<Term> representation) {
-		Term result = representation.apply(10);
-		for (int r = Character.MAX_RADIX; r >= Character.MIN_RADIX; r--)
+			BiFunction<Integer, Term, Term> representation) {
+		List<Term> others = new ArrayList<>();
+		for (int r = Character.MIN_RADIX; r <= Character.MAX_RADIX; r++)
 			if (r != 10)
-				result = Term.ite(Term.eq(radix, num(r)), representation.apply(r), result);
+				others.add(Term.eq(radix, num(r)));
+		Term result = representation.apply(10, Term.not(Term.or(others.toArray(Term[]::new))));
+		for (int r = Character.MAX_RADIX; r >= Character.MIN_RADIX; r--)
+			if (r != 10) {
+				Term selected = Term.eq(radix, num(r));
+				result = Term.ite(selected, representation.apply(r, selected), result);
+			}
 		return result;
 	}
 

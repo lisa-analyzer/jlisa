@@ -271,4 +271,15 @@ public class TriageVerdictsTest {
 				}
 			}
 	}
+
+	/**
+	 * The representations of integers in radixes that are powers of two are
+	 * encoded so that violations depending on them are confirmed.
+	 */
+	@Test
+	public void violationsOnRadixConversionsAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("radix-conversion", SVCOMPProperty.ASSERT, dir));
+	}
 }
