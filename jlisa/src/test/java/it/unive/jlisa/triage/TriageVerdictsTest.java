@@ -294,4 +294,17 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.DEFINITE, verdict("math-functions", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * Monotone functions are NaN outside of their domain: the values learned
+	 * for them do not exclude the arguments where they are NaN, nor the ones
+	 * where they are numbers, so that violations are never refuted because of
+	 * them.
+	 */
+	@Test
+	public void violationsOnMathFunctionsWithNaNsAreNotRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("math-nan", SVCOMPProperty.ASSERT, dir));
+	}
 }
