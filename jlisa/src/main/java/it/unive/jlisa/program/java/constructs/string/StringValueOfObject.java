@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import java.util.Set;
-
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
@@ -41,6 +39,7 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
+import java.util.Set;
 
 public class StringValueOfObject extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;

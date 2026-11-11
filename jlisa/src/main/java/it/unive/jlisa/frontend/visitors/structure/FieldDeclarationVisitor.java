@@ -97,8 +97,8 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 	 * expression, if the expression is a literal (possibly negated) of a
 	 * primitive type that can initialize the field, as the constant the
 	 * literals of the frontend yield for the type of the field (e.g.,
-	 * {@code char}, {@code short} and {@code byte} values are integers).
-	 * Yields {@code null} otherwise.
+	 * {@code char}, {@code short} and {@code byte} values are integers). Yields
+	 * {@code null} otherwise.
 	 *
 	 * @param type        the type of the field
 	 * @param initializer the initializer (can be {@code null})
@@ -170,9 +170,9 @@ public class FieldDeclarationVisitor extends ScopedVisitor<ClassScope> {
 
 	/**
 	 * Yields the value of the given number literal: a {@link Double} for
-	 * floating point literals (also of type {@code float}), a {@link Long}
-	 * (the bits of the literal, for hexadecimal, octal and binary ones) for
-	 * integer literals, or {@code null} if it cannot be parsed.
+	 * floating point literals (also of type {@code float}), a {@link Long} (the
+	 * bits of the literal, for hexadecimal, octal and binary ones) for integer
+	 * literals, or {@code null} if it cannot be parsed.
 	 */
 	private static Object number(
 			String token) {

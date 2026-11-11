@@ -119,7 +119,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntFunction;
 
-
 /**
  * An {@link ExpressionEncoder} that also encodes the operators of the Java
  * frontend, so that counterexamples relying on them can be confirmed. Functions
@@ -965,9 +964,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Encodes {@link Character#forDigit(int, int)}: the character
-	 * representing the given digit in the given radix, or the null character
-	 * if the digit or the radix are not valid.
+	 * Encodes {@link Character#forDigit(int, int)}: the character representing
+	 * the given digit in the given radix, or the null character if the digit or
+	 * the radix are not valid.
 	 */
 	private static Term forDigit(
 			Term digit,
@@ -1083,7 +1082,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term half = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(0.5) : FloatingPoints.literal(0.5f);
 		Term one = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(1.0) : FloatingPoints.literal(1.0f);
 		Term fraction = Term.app("fp.sub", sort, rne, f, floor);
-		Term rounded = Term.ite(Term.app("fp.geq", Sort.BOOL, fraction, half), Term.app("fp.add", sort, rne, floor, one),
+		Term rounded = Term.ite(Term.app("fp.geq", Sort.BOOL, fraction, half),
+				Term.app("fp.add", sort, rne, floor, one),
 				floor);
 		return toIntegral(rounded, bits == 64 ? JavaLongType.INSTANCE : JavaIntType.INSTANCE);
 	}
@@ -1512,24 +1512,24 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * The code at position i of s, with the ASCII uppercase letters converted to
-	 * lowercase (-1 past the end of the string).
+	 * The code at position i of s, with the ASCII uppercase letters converted
+	 * to lowercase (-1 past the end of the string).
 	 */
 	private static Term foldedCode(
-		Term s,
-		int i) {
+			Term s,
+			int i) {
 		Term c = code(at(s, num(i)));
 		return Term.ite(between(c, 'A', 'Z'), add(c, num('a' - 'A')), c);
 	}
 
 	/**
-	 * String#equalsIgnoreCase: precise for strings of different length (false), and
-	 * for ASCII strings of at most CASE_BOUND chars.
+	 * String#equalsIgnoreCase: precise for strings of different length (false),
+	 * and for ASCII strings of at most CASE_BOUND chars.
 	 */
 	private Term equalsIgnoreCase(
-		Term a,
-		Term b,
-		ValueExpression e) {
+			Term a,
+			Term b,
+			ValueExpression e) {
 		int CASE_BOUND = 8;
 		Term sameLength = Term.eq(len(a), len(b));
 		Term[] same = new Term[CASE_BOUND + 1];

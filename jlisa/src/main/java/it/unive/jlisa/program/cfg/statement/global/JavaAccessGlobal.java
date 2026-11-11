@@ -99,8 +99,8 @@ public class JavaAccessGlobal extends Expression {
 
 	/**
 	 * Yields the name of the global variable holding the value of the accessed
-	 * global, as the semantics of this expression names it (e.g.,
-	 * {@code C::f}, where {@code C} is the unit declaring the global, see
+	 * global, as the semantics of this expression names it (e.g., {@code C::f},
+	 * where {@code C} is the unit declaring the global, see
 	 * {@link #definingUnit()}).
 	 *
 	 * @return the name
