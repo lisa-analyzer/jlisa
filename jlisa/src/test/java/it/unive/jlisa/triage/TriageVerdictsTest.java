@@ -152,4 +152,15 @@ public class TriageVerdictsTest {
 			throws Exception {
 		assertEquals(Verdict.REFUTED, verdict("recursive-sum", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * The relational comparisons of Java compare the values wrapped by boxed
+	 * operands.
+	 */
+	@Test
+	public void violationsOnBoxedComparisonsAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("boxed-comparisons", SVCOMPProperty.ASSERT, dir));
+	}
 }
