@@ -2,6 +2,7 @@ package it.unive.jlisa.svcomp;
 
 import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.jlisa.triage.JavaGlobalWrites;
+import it.unive.jlisa.triage.JavaHeapWrites;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.SemanticException;
@@ -59,8 +60,9 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 	/**
 	 * Yields a {@link FirstViolationVerifier} with default parameters, whose
 	 * {@link PdrVerifier} encodes the operators of the Java frontend through a
-	 * {@link JavaExpressionEncoder}, and knows the static fields written by the
-	 * methods of the program ({@link JavaGlobalWrites}).
+	 * {@link JavaExpressionEncoder}, and knows the static fields and the
+	 * contents of the heap written by the methods of the program
+	 * ({@link JavaGlobalWrites} and {@link JavaHeapWrites}).
 	 *
 	 * @param <A> the kind of {@link AbstractLattice} produced by the domain
 	 *                {@code D}
@@ -72,7 +74,7 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 			D> firstViolation() {
 		return new FirstViolationVerifier<>(new ReachabilityVerifier<>(),
 				new PdrVerifier<A, D>().withFixpointCheck(false).withEncoder(JavaExpressionEncoder::new)
-						.withGlobalWrites(new JavaGlobalWrites()));
+						.withGlobalWrites(new JavaGlobalWrites()).withHeapWrites(new JavaHeapWrites()));
 	}
 
 	/**

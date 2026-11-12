@@ -393,4 +393,34 @@ public class TriageVerdictsTest {
 		assertTrue(definite.getReproducingInputs().stream().noneMatch(i -> i.getLocation().contains("Main.java':6:")),
 				"input of a call that is not evaluated");
 	}
+
+	/**
+	 * The calls that the models do not expand (e.g., recursive ones) keep the
+	 * fields that their callees cannot write: an assertion on a field that no
+	 * callee writes is refuted, also when the field is read before the call in
+	 * the same condition...
+	 */
+	@Test
+	public void assertionsOnFieldsNotWrittenByCalleesAreRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("heap-unwritten-by-recursion", SVCOMPProperty.ASSERT, dir));
+		assertEquals(Verdict.REFUTED, verdict("heap-unwritten-fields", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * ... while the fields that callees might write are unknown after the
+	 * calls: written by their code, by the code called on their behalf (e.g.,
+	 * the conversion of objects to strings), or reflectively.
+	 */
+	@Test
+	public void fieldsWrittenByCalleesAreUnknownAfterTheCalls(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("heap-written-by-recursion", SVCOMPProperty.ASSERT, dir));
+		assertNotEquals(Verdict.REFUTED,
+				verdict("heap-written-by-recursion-callback", SVCOMPProperty.ASSERT, dir));
+		assertNotEquals(Verdict.REFUTED,
+				verdict("heap-written-by-recursion-reflection", SVCOMPProperty.ASSERT, dir));
+	}
 }
