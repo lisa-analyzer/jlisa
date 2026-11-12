@@ -34,44 +34,44 @@ import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
 import it.unive.jlisa.program.operator.JavaLongCompareOperator;
 import it.unive.jlisa.program.operator.JavaLongRotateRightOperator;
-import it.unive.jlisa.program.operator.JavaMathSinOperator;
-import it.unive.jlisa.program.operator.JavaMathCosOperator;
-import it.unive.jlisa.program.operator.JavaMathTanOperator;
-import it.unive.jlisa.program.operator.JavaMathAsinOperator;
-import it.unive.jlisa.program.operator.JavaMathAcosOperator;
-import it.unive.jlisa.program.operator.JavaMathAtanOperator;
-import it.unive.jlisa.program.operator.JavaMathExpOperator;
-import it.unive.jlisa.program.operator.JavaMathLogOperator;
-import it.unive.jlisa.program.operator.JavaMathLog10Operator;
-import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
-import it.unive.jlisa.program.operator.JavaMathPowOperator;
-import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
-import it.unive.jlisa.program.operator.JavaStrictMathSinOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathCosOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathTanOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathAsinOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathAcosOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathAtanOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathExpOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathLogOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathLog10Operator;
-import it.unive.jlisa.program.operator.JavaStrictMathToRadiansOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathPowOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathAtan2Operator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
+import it.unive.jlisa.program.operator.JavaMathExpOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.operator.JavaMathMax;
 import it.unive.jlisa.program.operator.JavaMathMin;
+import it.unive.jlisa.program.operator.JavaMathPowOperator;
 import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaMathTanOperator;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaShortCompareOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaStrictMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathCosOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathExpOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathFloorOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathGetExponentOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaStrictMathLogOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathMax;
 import it.unive.jlisa.program.operator.JavaStrictMathMin;
+import it.unive.jlisa.program.operator.JavaStrictMathPowOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathSinOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathTanOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
@@ -502,13 +502,21 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_ROTATE_LEFT)
 			return signed(rotate(unsigned(a, 64), b, 64, true), 64);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING_RADIX)
-			return withRadix(b, (r, when) -> signedDigits(a, r, 32, when, e));
+			return withRadix(b, (
+					r,
+					when) -> signedDigits(a, r, 32, when, e));
 		if (f == JavaLibraryFunction.LONG_TO_STRING_RADIX)
-			return withRadix(b, (r, when) -> signedDigits(a, r, 64, when, e));
+			return withRadix(b, (
+					r,
+					when) -> signedDigits(a, r, 64, when, e));
 		if (f == JavaLibraryFunction.INTEGER_TO_UNSIGNED_STRING_RADIX)
-			return withRadix(b, (r, when) -> digits(unsigned(a, 32), r, 32, when, e));
+			return withRadix(b, (
+					r,
+					when) -> digits(unsigned(a, 32), r, 32, when, e));
 		if (f == JavaLibraryFunction.LONG_TO_UNSIGNED_STRING_RADIX)
-			return withRadix(b, (r, when) -> digits(unsigned(a, 64), r, 64, when, e));
+			return withRadix(b, (
+					r,
+					when) -> digits(unsigned(a, 64), r, 64, when, e));
 		return null;
 	}
 

@@ -284,8 +284,8 @@ public class TriageVerdictsTest {
 	}
 
 	/**
-	 * The functions of {@link Math} whose results are not specified exactly
-	 * are computed on the values of the counterexamples, so that violations
+	 * The functions of {@link Math} whose results are not specified exactly are
+	 * computed on the values of the counterexamples, so that violations
 	 * depending on them are confirmed.
 	 */
 	@Test
@@ -323,8 +323,8 @@ public class TriageVerdictsTest {
 	 * The calls of the right operand of a short-circuiting operator that are
 	 * not evaluated produce no reproducing input: violations reached where the
 	 * left operand decides the result are confirmed with the inputs of the
-	 * calls that are executed only (here, the one of line 5, but not the one
-	 * of line 6).
+	 * calls that are executed only (here, the one of line 5, but not the one of
+	 * line 6).
 	 */
 	@Test
 	public void callsNotEvaluatedByShortCircuitingOperatorsProduceNoInputs(

@@ -56,8 +56,8 @@ final class JavaUnboxing {
 	 * otherwise.
 	 *
 	 * @param e        the expression
-	 * @param other    the other operand of the comparison (can be
-	 *                     {@code null} if unknown)
+	 * @param other    the other operand of the comparison (can be {@code null}
+	 *                     if unknown)
 	 * @param location the location of the unboxing
 	 *
 	 * @return the unboxed expression
