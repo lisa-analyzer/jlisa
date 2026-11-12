@@ -1127,9 +1127,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term x = toFloat(arg, Sort.FLOAT64, e.getExpression(), e);
 			Function<List<Number>, Number> evaluator = args -> function.applyAsDouble(args.get(0).doubleValue());
 			Boolean increasing = monotonicity(op);
-			if (increasing != null)
-				return getSymbols().monotone("$" + op, Sort.FLOAT64, x, evaluator, increasing, e);
-			return getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x), evaluator, e);
+			Term result = increasing != null
+					? getSymbols().monotone("$" + op, Sort.FLOAT64, x, evaluator, increasing, e)
+					: getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x), evaluator, e);
+			Term range = range(op, x, result);
+			if (range != null)
+				getSymbols().require(range);
+			return result;
 		}
 		if (!sort.isFloatingPoint())
 			return null;
@@ -1192,6 +1196,48 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return StrictMath::log10;
 		if (op instanceof JavaStrictMathToRadiansOperator)
 			return StrictMath::toRadians;
+		return null;
+	}
+
+	/**
+	 * Yields the values that the function of {@link Math} or
+	 * {@link StrictMath} computed by the given operator can yield on the given
+	 * argument, as a condition over the given result, or {@code null} if
+	 * nothing is known: the specification of {@link Math} tells when the
+	 * functions yield NaN, and the results are within one ulp of the exact
+	 * ones, that the implementations never round out of the ranges of the
+	 * functions (e.g., the sine of a finite number is between {@code -1} and
+	 * {@code 1}).
+	 */
+	private static Term range(
+			UnaryOperator op,
+			Term x,
+			Term result) {
+		Term nanArg = Term.app("fp.isNaN", Sort.BOOL, x);
+		Term nan = Term.app("fp.isNaN", Sort.BOOL, result);
+		Term zero = FloatingPoints.literal(0.0);
+		if (op instanceof JavaMathSinOperator || op instanceof JavaStrictMathSinOperator
+				|| op instanceof JavaMathCosOperator || op instanceof JavaStrictMathCosOperator)
+			return Term.ite(Term.or(nanArg, Term.app("fp.isInfinite", Sort.BOOL, x)), nan,
+					Term.and(Term.app("fp.leq", Sort.BOOL, FloatingPoints.literal(-1.0), result),
+							Term.app("fp.leq", Sort.BOOL, result, FloatingPoints.literal(1.0))));
+		if (op instanceof JavaMathTanOperator || op instanceof JavaStrictMathTanOperator)
+			return Term.eq(nan, Term.or(nanArg, Term.app("fp.isInfinite", Sort.BOOL, x)));
+		if (op instanceof JavaMathExpOperator || op instanceof JavaStrictMathExpOperator)
+			return Term.ite(nanArg, nan, Term.app("fp.leq", Sort.BOOL, zero, result));
+		if (op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
+				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator)
+			// the logarithm of both zeros is the negative infinity
+			return Term.eq(nan, Term.or(nanArg, Term.app("fp.lt", Sort.BOOL, x, zero)));
+		if (op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator
+				|| op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator) {
+			Term outside = Term.or(nanArg,
+					Term.app("fp.lt", Sort.BOOL, x, FloatingPoints.literal(-1.0)),
+					Term.app("fp.gt", Sort.BOOL, x, FloatingPoints.literal(1.0)));
+			if (op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator)
+				return Term.eq(nan, outside);
+			return Term.ite(outside, nan, Term.app("fp.leq", Sort.BOOL, zero, result));
+		}
 		return null;
 	}
 

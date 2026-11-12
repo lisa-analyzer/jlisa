@@ -309,6 +309,18 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * The ranges of the functions of {@link Math} whose results are not
+	 * specified exactly are known, so that violations outside of them are
+	 * refuted.
+	 */
+	@Test
+	public void violationsOutOfTheRangesOfMathFunctionsAreRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("math-ranges", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
 	 * Values of generic collections, whose models yield objects, are unboxed
 	 * when compared with primitive values.
 	 */
