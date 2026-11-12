@@ -79,6 +79,13 @@ public final class EventLoop {
 	// a witness value that could not be returned (the run left the witness)
 	private boolean witnessValueNotApplied = false;
 
+	/**
+	 * Whether the target JVM disconnected before a verdict, without the VM
+	 * death event of a program that ends (e.g., it could not start, or it was
+	 * killed).
+	 */
+	private boolean disconnected = false;
+
 	// Deferred breakpoints: class name → list of (line, plan-item-type)
 	private final Map<String, List<PendingBreakpoint>> pendingBreakpoints = new HashMap<>();
 
@@ -144,6 +151,7 @@ public final class EventLoop {
 				// VM terminated — it ran to completion without reaching the
 				// target
 				ValidatorLogger.event("VM disconnected");
+				disconnected = true;
 				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 			}
 
@@ -158,7 +166,8 @@ public final class EventLoop {
 					result = processEvent(event);
 				} catch (VMDisconnectedException e) {
 					ValidatorLogger.event("VM disconnected while handling {}", event);
-					return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
+					disconnected = true;
+				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 				}
 
 				if (result.isPresent()) {
@@ -175,6 +184,7 @@ public final class EventLoop {
 			try {
 				eventSet.resume();
 			} catch (VMDisconnectedException e) {
+				disconnected = true;
 				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 			}
 		}
@@ -502,6 +512,17 @@ public final class EventLoop {
 	 * witness fixed every nondet value the run used; otherwise the run took
 	 * values of its own and says nothing about the witness.
 	 */
+	/**
+	 * Yields whether the target JVM disconnected before a verdict, without
+	 * ending as programs do (e.g., it could not start, or it was killed): the
+	 * run says nothing about the witness, and it can be repeated.
+	 *
+	 * @return whether the target JVM disconnected
+	 */
+	public boolean disconnected() {
+		return disconnected;
+	}
+
 	/**
 	 * Verifier.nondet* calls of the run that returned a value the witness did
 	 * not fix.
