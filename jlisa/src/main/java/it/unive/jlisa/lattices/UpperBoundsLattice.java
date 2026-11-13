@@ -30,6 +30,10 @@ import java.util.function.Predicate;
  * or popped, and removed when they are forgotten, so that a relation keeps
  * naming the same variables.</li>
  * </ul>
+ * Optionally, it also keeps relations with an offset, {@code x <= y + c} for an
+ * integer constant {@code c} (see {@link OffsetBounds}): their least upper
+ * bound keeps the relations holding in both elements, with the weaker offset,
+ * and their widening drops the relations whose offset grows.
  *
  * @author <a href="mailto:giacomo.zanatta@unive.it">Giacomo Zanatta</a>
  */
@@ -43,6 +47,9 @@ public class UpperBoundsLattice
 	// for each identifier x, the identifiers y with x <= y (empty when the
 	// upper bounds keep the strict relations only)
 	private final ValueEnvironment<DefiniteIdSet> atMost;
+
+	// the relations x <= y + c (empty when the upper bounds keep no offsets)
+	private final OffsetBounds offsets;
 
 	/**
 	 * Builds the lattice element, with the strict relations only.
@@ -63,8 +70,32 @@ public class UpperBoundsLattice
 	public UpperBoundsLattice(
 			ValueEnvironment<DefiniteIdSet> bounds,
 			ValueEnvironment<DefiniteIdSet> atMost) {
+		this(bounds, atMost, OffsetBounds.EMPTY);
+	}
+
+	/**
+	 * Builds the lattice element.
+	 *
+	 * @param bounds  the upper bounds of each identifier
+	 * @param atMost  for each identifier x, the identifiers y with x <= y
+	 * @param offsets the relations x <= y + c
+	 */
+	public UpperBoundsLattice(
+			ValueEnvironment<DefiniteIdSet> bounds,
+			ValueEnvironment<DefiniteIdSet> atMost,
+			OffsetBounds offsets) {
 		this.bounds = bounds;
 		this.atMost = atMost;
+		this.offsets = offsets;
+	}
+
+	/**
+	 * Returns the relations {@code x <= y + c}.
+	 *
+	 * @return the relations with an offset
+	 */
+	public OffsetBounds getOffsets() {
+		return offsets;
 	}
 
 	/**
@@ -87,7 +118,7 @@ public class UpperBoundsLattice
 
 	@Override
 	public UpperBoundsLattice top() {
-		return new UpperBoundsLattice(bounds.top(), atMost.top());
+		return new UpperBoundsLattice(bounds.top(), atMost.top(), OffsetBounds.EMPTY);
 	}
 
 	@Override
@@ -98,7 +129,7 @@ public class UpperBoundsLattice
 	@Override
 	public boolean isTop() {
 		// a map without relations is top
-		return bounds.isTop() && (atMost.isTop() || atMost.getKeys().isEmpty());
+		return bounds.isTop() && (atMost.isTop() || atMost.getKeys().isEmpty()) && offsets.isEmpty();
 	}
 
 	@Override
@@ -114,22 +145,30 @@ public class UpperBoundsLattice
 			return other;
 		if (other.isBottom())
 			return this;
-		return new UpperBoundsLattice(join(bounds, other.bounds), join(atMost, other.atMost));
+		return new UpperBoundsLattice(join(bounds, other.bounds), join(atMost, other.atMost),
+				offsets.lub(other.offsets));
 	}
 
 	@Override
 	public UpperBoundsLattice wideningAux(
 			UpperBoundsLattice other)
 			throws SemanticException {
-		// the relations of an identifier can only decrease along a chain
-		return lubAux(other);
+		// the relations of an identifier can only decrease along a chain, and
+		// the offsets that grow are dropped
+		if (isBottom())
+			return other;
+		if (other.isBottom())
+			return this;
+		return new UpperBoundsLattice(join(bounds, other.bounds), join(atMost, other.atMost),
+				offsets.widening(other.offsets));
 	}
 
 	@Override
 	public UpperBoundsLattice glbAux(
 			UpperBoundsLattice other)
 			throws SemanticException {
-		return new UpperBoundsLattice(meet(bounds, other.bounds), meet(atMost, other.atMost));
+		return new UpperBoundsLattice(meet(bounds, other.bounds), meet(atMost, other.atMost),
+				offsets.glb(other.offsets));
 	}
 
 	@Override
@@ -144,7 +183,8 @@ public class UpperBoundsLattice
 			UpperBoundsLattice other)
 			throws SemanticException {
 		return contains(bounds, other.bounds) && (other.atMost.isBottom() || other.atMost.isTop()
-				|| other.atMost.getKeys().isEmpty() || contains(atMost, other.atMost));
+				|| other.atMost.getKeys().isEmpty() || contains(atMost, other.atMost))
+				&& (isBottom() || offsets.lessOrEqual(other.offsets));
 	}
 
 	/**
@@ -214,7 +254,7 @@ public class UpperBoundsLattice
 	@Override
 	public boolean knowsIdentifier(
 			Identifier id) {
-		return bounds.knowsIdentifier(id) || atMost.knowsIdentifier(id);
+		return bounds.knowsIdentifier(id) || atMost.knowsIdentifier(id) || offsets.identifiers().contains(id);
 	}
 
 	@Override
@@ -222,7 +262,10 @@ public class UpperBoundsLattice
 			Identifier target,
 			Identifier source)
 			throws SemanticException {
-		return new UpperBoundsLattice(bounds.store(target, source), atMost.store(target, source));
+		// the relations with an offset of the target are not copied: they are
+		// only computed by the domain
+		return new UpperBoundsLattice(bounds.store(target, source), atMost.store(target, source),
+				offsets.drop(target));
 	}
 
 	@Override
@@ -232,7 +275,7 @@ public class UpperBoundsLattice
 			throws SemanticException {
 		Lifter lifter = cached(id -> (Identifier) id.pushScope(token, pp));
 		return new UpperBoundsLattice(liftElements(bounds.pushScope(token, pp), lifter),
-				liftElements(atMost.pushScope(token, pp), lifter));
+				liftElements(atMost.pushScope(token, pp), lifter), offsets.renameAll(lifter::lift).withoutMixed());
 	}
 
 	@Override
@@ -242,7 +285,7 @@ public class UpperBoundsLattice
 			throws SemanticException {
 		Lifter lifter = cached(id -> (Identifier) id.popScope(token, pp));
 		return new UpperBoundsLattice(liftElements(bounds.popScope(token, pp), lifter),
-				liftElements(atMost.popScope(token, pp), lifter));
+				liftElements(atMost.popScope(token, pp), lifter), offsets.renameAll(lifter::lift));
 	}
 
 	@Override
@@ -273,7 +316,7 @@ public class UpperBoundsLattice
 		// assigned again
 		Lifter lifter = id -> test.test(id) ? null : id;
 		return new UpperBoundsLattice(liftElements(bounds.forgetIdentifiersIf(test, pp), lifter),
-				liftElements(atMost.forgetIdentifiersIf(test, pp), lifter));
+				liftElements(atMost.forgetIdentifiersIf(test, pp), lifter), offsets.renameAll(lifter::lift));
 	}
 
 	// a renaming of identifiers, giving null for an identifier to drop
@@ -338,6 +381,9 @@ public class UpperBoundsLattice
 
 	@Override
 	public StructuredRepresentation representation() {
+		if (!offsets.isEmpty())
+			return new ListRepresentation(bounds.representation(), atMost.representation(),
+					offsets.representation());
 		if (atMost.isBottom() || atMost.isTop() || atMost.getKeys().isEmpty())
 			return bounds.representation();
 		return new ListRepresentation(bounds.representation(), atMost.representation());
@@ -345,19 +391,20 @@ public class UpperBoundsLattice
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(bounds, atMost);
+		return Objects.hash(bounds, atMost, offsets);
 	}
 
 	@Override
 	public boolean equals(
 			Object obj) {
 		return obj instanceof UpperBoundsLattice other && Objects.equals(bounds, other.bounds)
-				&& Objects.equals(atMost, other.atMost);
+				&& Objects.equals(atMost, other.atMost) && Objects.equals(offsets, other.offsets);
 	}
 
 	@Override
 	public String toString() {
-		return atMost.isBottom() || atMost.isTop() || atMost.getKeys().isEmpty() ? bounds.toString()
+		String s = atMost.isBottom() || atMost.isTop() || atMost.getKeys().isEmpty() ? bounds.toString()
 				: bounds + " " + atMost;
+		return offsets.isEmpty() ? s : s + " " + offsets;
 	}
 }

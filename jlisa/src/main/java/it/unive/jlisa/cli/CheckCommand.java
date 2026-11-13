@@ -536,6 +536,11 @@ public final class CheckCommand {
 			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaUpperBounds(true), new JavaTarsis());
 			break;
+		case "JavaWholeValueUBOFF":
+			// JavaWholeValueUBLE with the relations x <= y + c too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(true, true), new JavaTarsis());
+			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
