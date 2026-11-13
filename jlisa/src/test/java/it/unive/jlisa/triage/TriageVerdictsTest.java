@@ -321,6 +321,30 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * Counterexamples relying on values that are not encoded precisely are
+	 * confirmed if their witnesses are validated by executing the program.
+	 */
+	@Test
+	public void impreciseCounterexamplesAreCertifiedByExecution(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir);
+		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
+				&& w.getExplanation().contains("certified by execution")), warnings.toString());
+	}
+
+	/**
+	 * Counterexamples relying on values that are not encoded precisely, whose
+	 * witnesses are not validated by executing the program, stay possible.
+	 */
+	@Test
+	public void impreciseCounterexamplesThatAreNotReproducedStayPossible(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.POSSIBLE, verdict("certified-spurious", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
 	 * Values of generic collections, whose models yield objects, are unboxed
 	 * when compared with primitive values.
 	 */
