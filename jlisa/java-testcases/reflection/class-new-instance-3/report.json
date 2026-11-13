@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 9 steps through [s = null, ==(args::length, 1), s = \"B\", c = java.lang.Class::forName(s), o = newInstance(c), [main > B] java.lang.Object::Object(this), [main > B] this::s = \"hello\", [main > B] ret, o = newInstance(c) (after [1 targets] B::B($rec@'Main.java':11:13-11:27)), assert instanceof(o,A*)], relying on values that are not computed precisely (operations on values of other kinds, heap values): ReferenceRead; contents of $field:length not written by the model"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':14:2-14:24",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -18,23 +18,23 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 14 steps through [s = null, ==(args::length, 1), s = \"A\", c = java.lang.Class::forName(s), o = newInstance(c), [main > B] java.lang.Object::Object(this), [main > B] this::s = \"hello\", [main > B] ret, o = newInstance(c) (after [1 targets] B::B($rec@'Main.java':11:13-11:27)), [main > A] java.lang.Object::Object(this), [main > A] this::x = 42, [main > A] ret, o = newInstance(c) (after [1 targets] A::A($rec@'Main.java':11:13-11:27)), assert instanceof(o,A*), assert instanceof(o,B*)], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers): ReferenceRead; contents of $field:length not written by the model; ComparisonEq; ReferenceStore"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_2c760cd2affc261091696f136b12e42f.graph.json", "void_B.B(B__this)_2c760cd2affc261091696f136b12e42f.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "393ms",
-    "end" : "2026-11-11T17:42:33.115+01:00",
+    "duration" : "129ms",
+    "end" : "2026-11-13T15:27:33.485+01:00",
     "expressions" : "32",
     "files" : "3",
     "globals" : "55",
-    "members" : "396",
+    "members" : "397",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T17:42:32.722+01:00",
+    "start" : "2026-11-13T15:27:33.356+01:00",
     "statements" : "20",
-    "units" : "57",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "2"
   },

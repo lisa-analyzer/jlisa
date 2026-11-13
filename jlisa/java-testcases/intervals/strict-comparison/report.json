@@ -7,37 +7,24 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':4:26-4:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':5:16-5:38",
-      "source" : "return of double org.sosy_lab.sv_benchmarks.Verifier::nondetDouble()",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "8.90029543402893E-309"
-    } ],
-    "explanation" : "violation reached in 3 steps through [d1 = org.sosy_lab.sv_benchmarks.Verifier::nondetDouble(), org.sosy_lab.sv_benchmarks.Verifier::assume(<(d1, 0.7)), >(d1, 0), assert false] (not yet certified by execution)"
+    "definite" : false,
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "22ms",
-    "end" : "2026-11-11T17:42:24.405+01:00",
+    "duration" : "34ms",
+    "end" : "2026-11-13T15:26:54.438+01:00",
     "expressions" : "15",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "407",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T17:42:24.383+01:00",
+    "start" : "2026-11-13T15:26:54.404+01:00",
     "statements" : "13",
-    "units" : "56",
+    "units" : "57",
     "version" : "1.0",
     "warnings" : "1"
   },
