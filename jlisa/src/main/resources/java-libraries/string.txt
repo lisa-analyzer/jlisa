@@ -76,6 +76,14 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param this libtype java.lang.String*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method getChars: it.unive.jlisa.program.java.constructs.string.StringGetChars
+		type  it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.String*
+		param srcBegin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param srcEnd type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param dst type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param dstBegin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method trim: it.unive.jlisa.program.java.constructs.string.StringTrim
 		libtype java.lang.String*

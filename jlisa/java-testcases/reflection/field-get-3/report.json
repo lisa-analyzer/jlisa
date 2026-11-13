@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "explanation" : "time budget exhausted after 67 queries, at level 6"
   }, {
     "location" : "'Main.java':26:3-26:32",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -18,21 +18,21 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "explanation" : "time budget exhausted after 145 queries, at level 2"
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_4b90900dfba7655ffd97438e2add1ac5.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_bb035935c1d6d6fedb470a9a559561f0.graph.json", "report.json", "void_A.A(A__this)_3cd489dd0f89ac56471d2a949e1854f7.graph.json", "void_B.B(B__this)_3a89ef35a06f0cb145102446759a7a35.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "259ms",
-    "end" : "2026-11-13T15:28:00.944+01:00",
+    "duration" : "2m 12s 114ms",
+    "end" : "2026-11-13T14:06:37.232+01:00",
     "expressions" : "64",
     "files" : "5",
     "globals" : "57",
-    "members" : "397",
+    "members" : "398",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T15:28:00.685+01:00",
+    "start" : "2026-11-13T14:04:25.118+01:00",
     "statements" : "28",
     "units" : "57",
     "version" : "1.0",

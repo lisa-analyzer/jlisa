@@ -19,7 +19,7 @@
       "source" : "return of double org.sosy_lab.sv_benchmarks.Verifier::nondetDouble()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "NaN"
+      "value" : "-6.63123685E-316"
     } ],
     "explanation" : "violation reached in 3 steps through [deg = org.sosy_lab.sv_benchmarks.Verifier::nondetDouble(), rad = java.lang.Math::toRadians(deg), >=(rad, 0), assert false] (not yet certified by execution)"
   } ],
@@ -27,15 +27,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "122ms",
-    "end" : "2026-11-11T18:38:04.360+01:00",
+    "duration" : "127ms",
+    "end" : "2026-11-13T14:17:06.786+01:00",
     "expressions" : "17",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "408",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:38:04.238+01:00",
+    "start" : "2026-11-13T14:17:06.659+01:00",
     "statements" : "14",
     "units" : "56",
     "version" : "1.0",

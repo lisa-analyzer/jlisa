@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "explanation" : "time budget exhausted after 31 queries, at level 4"
   }, {
     "location" : "'Main.java':27:2-27:32",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -18,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "explanation" : "time budget exhausted after 32 queries, at level 4"
   }, {
     "location" : "'Main.java':28:2-28:32",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -28,21 +28,21 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "explanation" : "time budget exhausted after 28 queries, at level 3"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Animal.Animal_clinit()_3b8fb22400a1a40580b7fc168d58da76.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "915ms",
-    "end" : "2026-11-13T15:27:46.519+01:00",
+    "duration" : "3m 7s 434ms",
+    "end" : "2026-11-13T14:04:14.107+01:00",
     "expressions" : "98",
     "files" : "2",
     "globals" : "56",
-    "members" : "398",
+    "members" : "399",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T15:27:45.604+01:00",
+    "start" : "2026-11-13T14:01:06.673+01:00",
     "statements" : "37",
     "units" : "57",
     "version" : "1.0",
