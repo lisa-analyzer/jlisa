@@ -29,9 +29,9 @@ import java.util.function.Predicate;
  * uncaught runtime exceptions (that is, the ones reporting an
  * {@link ErrorViolation}) are verified separately, each with a
  * {@link FirstViolationVerifier}: the verification of each kind of warnings
- * stops at the first one that is confirmed, independently of the other kind.
- * If none of a kind is confirmed, the candidate confirmations of the warnings
- * that stayed possible (see {@link VerificationResult#getCandidate()}) are
+ * stops at the first one that is confirmed, independently of the other kind. If
+ * none of a kind is confirmed, the candidate confirmations of the warnings that
+ * stayed possible (see {@link VerificationResult#getCandidate()}) are
  * certified, in order, with the certifier of the verifier, if any (see
  * {@link #setCertifier(Predicate)}), until one is certified.
  *
@@ -110,9 +110,9 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 
 	/**
 	 * Sets the certifier of the candidate confirmations of the warnings that
-	 * stay possible: given the copy of a warning confirmed with a candidate,
-	 * it tells whether the candidate is certified (e.g., by executing the
-	 * program with its reproducing inputs).
+	 * stay possible: given the copy of a warning confirmed with a candidate, it
+	 * tells whether the candidate is certified (e.g., by executing the program
+	 * with its reproducing inputs).
 	 *
 	 * @param certifier the certifier, or {@code null} for none
 	 */
@@ -122,8 +122,8 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 	}
 
 	/**
-	 * Certifies the candidate confirmations of the given warnings, in order,
-	 * if none of them has been confirmed, until one is certified, that is then
+	 * Certifies the candidate confirmations of the given warnings, in order, if
+	 * none of them has been confirmed, until one is certified, that is then
 	 * confirmed.
 	 */
 	private Map<StatementMessage, VerificationResult> certify(

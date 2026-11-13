@@ -1200,14 +1200,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Yields the values that the function of {@link Math} or
-	 * {@link StrictMath} computed by the given operator can yield on the given
-	 * argument, as a condition over the given result, or {@code null} if
-	 * nothing is known: the specification of {@link Math} tells when the
-	 * functions yield NaN, and the results are within one ulp of the exact
-	 * ones, that the implementations never round out of the ranges of the
-	 * functions (e.g., the sine of a finite number is between {@code -1} and
-	 * {@code 1}).
+	 * Yields the values that the function of {@link Math} or {@link StrictMath}
+	 * computed by the given operator can yield on the given argument, as a
+	 * condition over the given result, or {@code null} if nothing is known: the
+	 * specification of {@link Math} tells when the functions yield NaN, and the
+	 * results are within one ulp of the exact ones, that the implementations
+	 * never round out of the ranges of the functions (e.g., the sine of a
+	 * finite number is between {@code -1} and {@code 1}).
 	 */
 	private static Term range(
 			UnaryOperator op,

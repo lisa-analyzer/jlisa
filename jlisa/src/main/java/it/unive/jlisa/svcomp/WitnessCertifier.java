@@ -59,9 +59,9 @@ public class WitnessCertifier
 	 *
 	 * @param sources       the sources of the task, as given to jlisa
 	 * @param propertyFiles the property files of the task, for each property
-	 * @param violations    yields the violation reported by a confirmed
-	 *                          warning (with its target and reproducing
-	 *                          inputs), or {@code null} if it has none
+	 * @param violations    yields the violation reported by a confirmed warning
+	 *                          (with its target and reproducing inputs), or
+	 *                          {@code null} if it has none
 	 * @param deadline      the time by which certifications must end (as
 	 *                          returned by {@link System#currentTimeMillis()}),
 	 *                          or {@code 0} for no deadline

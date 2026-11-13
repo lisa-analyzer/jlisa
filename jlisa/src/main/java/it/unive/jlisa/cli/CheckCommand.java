@@ -601,8 +601,8 @@ public final class CheckCommand {
 	 * @param warning the warning
 	 * @param checker the checker that issued the warning
 	 *
-	 * @return the violation, or {@code null} if the warning reports none, or
-	 *             if its target is unknown
+	 * @return the violation, or {@code null} if the warning reports none, or if
+	 *             its target is unknown
 	 */
 	private static Violation violationOf(
 			Message warning,

@@ -167,7 +167,7 @@ public final class EventLoop {
 				} catch (VMDisconnectedException e) {
 					ValidatorLogger.event("VM disconnected while handling {}", event);
 					disconnected = true;
-				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
+					return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 				}
 
 				if (result.isPresent()) {
