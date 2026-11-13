@@ -182,7 +182,13 @@ public final class EventLoop {
 			}
 
 			try {
-				eventSet.resume();
+				// the target VM starts suspended by its start event, and has
+				// already been resumed (see above): resuming the event set of
+				// that event would resume the VM again, including the threads
+				// suspended meanwhile by other events (e.g., at the entry of a
+				// nondet method whose value is still to be forced)
+				if (eventSet.stream().noneMatch(VMStartEvent.class::isInstance))
+					eventSet.resume();
 			} catch (VMDisconnectedException e) {
 				disconnected = true;
 				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
