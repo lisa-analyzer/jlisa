@@ -128,7 +128,7 @@ public class ExpressionVisitor
 	private interface BinaryFactory {
 		Expression build(
 				CFG cfg,
-				SourceCodeLocation loc,
+				JavaLocation loc,
 				Expression left,
 				Expression right);
 	}
@@ -588,7 +588,7 @@ public class ExpressionVisitor
 	private Expression buildExpression(
 			List<Expression> operands,
 			List<ASTNode> jdtOperands,
-			TriFunction<Expression, Expression, SourceCodeLocation, Expression> opBuilder) {
+			TriFunction<Expression, Expression, JavaLocation, Expression> opBuilder) {
 
 		if (operands.isEmpty())
 			throw new IllegalArgumentException("No operands for expression");
@@ -599,7 +599,7 @@ public class ExpressionVisitor
 		for (int i = 1; i < operands.size(); i++) {
 			JavaLocation last = getSourceCodeLocation(jdtOperands.get(i));
 			result = opBuilder.apply(result, operands.get(i), new JavaLocation(getSource(), first.getLine(),
-					first.getCol(), last.getEndLine(), last.getEndCol()));
+					first.getCol(), last.getEndLine(), last.getEndCol(), last.getCopy()));
 		}
 		return result;
 	}

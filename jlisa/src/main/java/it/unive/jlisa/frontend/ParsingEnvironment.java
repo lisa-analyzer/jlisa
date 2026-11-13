@@ -11,22 +11,26 @@ public final class ParsingEnvironment {
 	private final CompilationUnit astUnit;
 	private final CompilationUnit[] allAstUnits;
 
+	private final int unrollingCopy;
+
 	public ParsingEnvironment(
 			ParserContext parserContext,
 			String source,
 			CompilationUnit astUnit) {
-		this(parserContext, source, astUnit, null);
+		this(parserContext, source, astUnit, null, 0);
 	}
 
 	public ParsingEnvironment(
 			ParserContext parserContext,
 			String source,
 			CompilationUnit astUnit,
-			CompilationUnit[] allAstUnits) {
+			CompilationUnit[] allAstUnits,
+			int unrollingCopy) {
 		this.parserContext = parserContext;
 		this.source = source;
 		this.astUnit = astUnit;
 		this.allAstUnits = allAstUnits;
+		this.unrollingCopy = unrollingCopy;
 	}
 
 	public ParserContext parserContext() {
@@ -45,6 +49,10 @@ public final class ParsingEnvironment {
 		return allAstUnits;
 	}
 
+	public ParsingEnvironment withUnrollingCopy(int k) {
+		return new ParsingEnvironment(parserContext, source, astUnit, allAstUnits, k);
+	}
+
 	/**
 	 * Returns the location of the given node, from its first to its last
 	 * character.
@@ -59,6 +67,6 @@ public final class ParsingEnvironment {
 		int end = node.getLength() > 0 ? start + node.getLength() - 1 : start;
 		return new JavaLocation(source,
 				astUnit.getLineNumber(start), astUnit.getColumnNumber(start),
-				astUnit.getLineNumber(end), astUnit.getColumnNumber(end));
+				astUnit.getLineNumber(end), astUnit.getColumnNumber(end), unrollingCopy);
 	}
 }

@@ -26,6 +26,8 @@ public class JavaLocation
 	 */
 	private final int endCol;
 
+	private final int copy;
+
 	/**
 	 * Builds the location.
 	 *
@@ -44,11 +46,35 @@ public class JavaLocation
 			int col,
 			int endLine,
 			int endCol) {
+		this(sourceFile, line, col, endLine, endCol, 0);
+	}
+
+	/**
+	 * Builds the location including the loop unrolling copy.
+	 *
+	 * @param sourceFile    the source file where this code element happens
+	 * @param line          the line of the first character of this code element
+	 * @param col           the column of the first character of this code element
+	 * @param endLine       the line of the last character of this code element
+	 * @param endCol        the column of the last character of this code element
+	 * @param unrollingCopy the id of the unrolling copy
+	 *
+	 * @throws IllegalArgumentException if the last character comes before the
+	 *                                      first one
+	 */
+	public JavaLocation(
+			String sourceFile,
+			int line,
+			int col,
+			int endLine,
+			int endCol,
+			int unrollingCopy) {
 		super(sourceFile, line, col);
 		if (endLine < line || (endLine == line && endCol < col))
 			throw new IllegalArgumentException("The end of a location cannot come before its start");
 		this.endLine = endLine;
 		this.endCol = endCol;
+		this.copy = unrollingCopy;
 	}
 
 	/**
@@ -69,8 +95,16 @@ public class JavaLocation
 		return endCol;
 	}
 
+	public int getCopy() {
+		return copy;
+	}
+
 	@Override
 	public String getCodeLocation() {
+		return super.getCodeLocation() + "-" + endLine + ":" + endCol + ((copy > 1) ? "#" + copy : "");
+	}
+
+	public String getCodeLocationNoCopy() {
 		return super.getCodeLocation() + "-" + endLine + ":" + endCol;
 	}
 
@@ -85,6 +119,7 @@ public class JavaLocation
 		int result = super.hashCode();
 		result = prime * result + endCol;
 		result = prime * result + endLine;
+		result = prime * result + copy;
 		return result;
 	}
 
@@ -94,7 +129,7 @@ public class JavaLocation
 		if (!super.equals(obj))
 			return false;
 		JavaLocation other = (JavaLocation) obj;
-		return endLine == other.endLine && endCol == other.endCol;
+		return endLine == other.endLine && endCol == other.endCol && copy == other.copy;
 	}
 
 	@Override
@@ -106,6 +141,9 @@ public class JavaLocation
 		JavaLocation o = (JavaLocation) other;
 		if ((cmp = Integer.compare(endLine, o.endLine)) != 0)
 			return cmp;
-		return Integer.compare(endCol, o.endCol);
+		if ((cmp = Integer.compare(endCol, o.endCol)) != 0)
+			return cmp;
+		return Integer.compare(copy, o.copy);
 	}
 }
+
