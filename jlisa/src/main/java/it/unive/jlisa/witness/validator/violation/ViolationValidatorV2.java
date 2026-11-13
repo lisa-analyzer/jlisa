@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -46,6 +47,12 @@ public final class ViolationValidatorV2 {
 	 * 90 s; the rest is left for compiling, starting and stopping.
 	 */
 	private static final long TIME_BUDGET_MILLIS = 75_000;
+
+	/**
+	 * The number of times the program is run again when its JVM disconnects
+	 * before a verdict, without ending as programs do.
+	 */
+	private static final int MAX_DISCONNECTED_RETRIES = 2;
 
 	private ViolationValidatorV2() {
 	}
@@ -118,15 +125,29 @@ public final class ViolationValidatorV2 {
 					+ task.classesDir().getAbsolutePath());
 		}
 
-		// Launch the target JVM
-		VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
-
 		// The witness values (each run passes them again from the first)
 		List<Interception> witnessValues = plan.interceptions();
 
-		// Run the event loop
-		EventLoop loop = new EventLoop(vm, plan, property, new WitnessLocations(extraSources));
-		ValidationResult result = loop.run();
+		// Launch the target JVM and run the event loop: a target JVM that
+		// disconnects without ending as programs do (e.g., it could not
+		// start, or it was killed, as it might happen on loaded machines) says
+		// nothing about the witness, and the program is run again
+		Map<String, Integer> counts = RunSummary.counts();
+		EventLoop loop;
+		ValidationResult result;
+		int retries = 0;
+		while (true) {
+			VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
+			loop = new EventLoop(vm, plan, property, new WitnessLocations(extraSources));
+			result = loop.run();
+			if (!loop.disconnected() || retries >= MAX_DISCONNECTED_RETRIES
+					|| System.currentTimeMillis() >= start + TIME_BUDGET_MILLIS)
+				break;
+			retries++;
+			ValidatorLogger.warn("[VALIDATE] Target JVM disconnected before a verdict, running it again");
+			RunSummary.restoreCounts(counts);
+			RunSummary.set("jvm.retries", retries);
+		}
 
 		// No violation, but the run chose values of its own for calls the
 		// witness says nothing

@@ -94,12 +94,6 @@ public class JavaAssignment extends Assignment {
 		Type targetType = left.getStaticType();
 		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 
-		if (targetType instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaArrayType arrType) {
-			if (arrType.getDimensions() > 1) {
-				throw new SemanticException("Assignment to matrices elements are not supported yet");
-			}
-		}
-
 		// int constants, if they fit the target type, can be assigned
 		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType
 				|| targetType instanceof JavaCharType)

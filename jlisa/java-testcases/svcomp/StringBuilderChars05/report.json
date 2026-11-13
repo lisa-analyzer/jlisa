@@ -42,7 +42,7 @@
       "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "\"\\u{c104}\\u{2000}\\u{97b0}\\u{f49c}\\u{5f16}\\u{2040}\\u{6cda}\""
+      "value" : "\"\\u{c104}\\u{6001}\\u{fedc}\\u{fc24}\\u{3716}\\u{5cd2}\\u{ce82}\\u{5d7a}\""
     } ],
     "explanation" : "violation reached in 4 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), buffer = new java.lang.StringBuilder(arg), setCharAt(buffer, 0, 'H'), setCharAt(buffer, 6, 'T'), assert equals(toString(buffer), \"HiffBllTe Limited\")] (not yet certified by execution)"
   } ],
@@ -50,15 +50,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "1s 149ms",
-    "end" : "2026-11-11T18:41:20.150+01:00",
+    "duration" : "1s 423ms",
+    "end" : "2026-11-13T17:41:33.382+01:00",
     "expressions" : "22",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "409",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:41:19.001+01:00",
+    "start" : "2026-11-13T17:41:31.959+01:00",
     "statements" : "14",
     "units" : "56",
     "version" : "1.0",

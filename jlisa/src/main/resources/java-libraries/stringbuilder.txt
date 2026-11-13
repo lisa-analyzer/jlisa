@@ -146,6 +146,14 @@ class java.lang.StringBuilder extends java.lang.Object:
 		type  it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param this libtype java.lang.StringBuilder*
 		param idx type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method getChars: it.unive.jlisa.program.java.constructs.string.StringGetChars
+		type  it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringBuilder*
+		param srcBegin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param srcEnd type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param dst type it.unive.jlisa.program.type.JavaArrayType::CHAR_ARRAY
+		param dstBegin type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
 	instance method setCharAt: it.unive.jlisa.program.java.constructs.stringbuilder.StringBuilderSetCharAt
 		type  it.unive.lisa.type.VoidType::INSTANCE

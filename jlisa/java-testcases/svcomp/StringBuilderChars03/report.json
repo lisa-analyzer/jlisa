@@ -42,7 +42,7 @@
       "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "\"\\u{7f85}\\u{856c}\\u{5b74}\\u{6e8e}\\u{c21}\""
+      "value" : "\"\\u{efde}\\u{5be2}\\u{fd9e}\\u{d23c}\\u{c840}\""
     } ],
     "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))] (not yet certified by execution)"
   } ],
@@ -50,15 +50,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "459ms",
-    "end" : "2026-11-11T18:41:18.384+01:00",
+    "duration" : "397ms",
+    "end" : "2026-11-13T17:41:31.254+01:00",
     "expressions" : "17",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "409",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:41:17.925+01:00",
+    "start" : "2026-11-13T17:41:30.857+01:00",
     "statements" : "11",
     "units" : "56",
     "version" : "1.0",

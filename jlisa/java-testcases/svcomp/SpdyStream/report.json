@@ -19,19 +19,19 @@
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "3287"
+      "value" : "12266"
     }, {
       "location" : "'Main.java':69:18-69:37",
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "1073741825"
+      "value" : "2147483647"
     }, {
       "location" : "'Main.java':26:16-26:35",
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "['Main.java':72:23-72:36]",
       "occurrence" : 0,
-      "value" : "2147483647"
+      "value" : "0"
     }, {
       "location" : "'Main.java':29:16-29:35",
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
@@ -43,29 +43,29 @@
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "['Main.java':72:23-72:36]",
       "occurrence" : 0,
-      "value" : "1073741824"
+      "value" : "2147483646"
     }, {
       "location" : "'Main.java':42:23-42:42",
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "['Main.java':72:23-72:36]",
       "occurrence" : 0,
-      "value" : "-1073741825"
+      "value" : "-2147483648"
     } ],
-    "explanation" : "violation reached in 26 steps through [n = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), >=(n, 0), b = new byte[]*[n], count = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), >(count, 0), copies = Main::read(b, count), [main > read] windowUpdateThreshold = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] unacknowledgedBytes = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] limit = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] >=(limit, 0), [main > read] pos = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] ==(pos, -(1)), [main > read] >=(pos, 0), [main > read] assert >=(pos, 0), [main > read] copied = 0, [main > read] bytesToCopy = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] >=(bytesToCopy, 0), [main > read] <=(limit, pos), [main > read] +=(pos, bytesToCopy), [main > read] +=(copied, bytesToCopy), [main > read] ==(pos, org.sosy_lab.sv_benchmarks.Verifier::nondetInt()), [main > read] pos = 0, [main > read] <(copied, count), [main > read] +=(pos, bytesToCopy), [main > read] +=(copied, bytesToCopy), [main > read] ==(pos, limit), [main > read] assert >=(copied, 0)] (not yet certified by execution)"
+    "explanation" : "violation reached in 25 steps through [n = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), >=(n, 0), b = new byte[]*[n], count = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), >(count, 0), copies = Main::read(b, count), [main > read] windowUpdateThreshold = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] unacknowledgedBytes = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] limit = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] >=(limit, 0), [main > read] pos = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] ==(pos, -(1)), [main > read] >=(pos, 0), [main > read] assert >=(pos, 0), [main > read] copied = 0, [main > read] bytesToCopy = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > read] >=(bytesToCopy, 0), [main > read] <=(limit, pos), [main > read] +=(pos, bytesToCopy), [main > read] +=(copied, bytesToCopy), [main > read] ==(pos, org.sosy_lab.sv_benchmarks.Verifier::nondetInt()), [main > read] <(copied, count), [main > read] +=(pos, bytesToCopy), [main > read] +=(copied, bytesToCopy), [main > read] ==(pos, limit), [main > read] assert >=(copied, 0)] (not yet certified by execution)"
   } ],
   "notices" : [ ],
   "files" : [ "int_Main.read(byte[]__b,_int_count)_d3762e9d572e83bf49d2c0ef8fb58837.graph.json", "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "7",
-    "duration" : "745ms",
-    "end" : "2026-11-11T18:34:16.970+01:00",
+    "duration" : "967ms",
+    "end" : "2026-11-13T17:29:44.395+01:00",
     "expressions" : "81",
     "files" : "2",
     "globals" : "53",
-    "members" : "407",
+    "members" : "410",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:34:16.225+01:00",
+    "start" : "2026-11-13T17:29:43.428+01:00",
     "statements" : "43",
     "units" : "56",
     "version" : "1.0",

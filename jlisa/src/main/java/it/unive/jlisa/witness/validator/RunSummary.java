@@ -49,6 +49,21 @@ public final class RunSummary {
 		COUNTS.merge(key, n, Integer::sum);
 	}
 
+	/**
+	 * Yields a copy of the counters, to restore them with
+	 * {@link #restoreCounts(Map)} (e.g., before running the program again).
+	 */
+	public static Map<String, Integer> counts() {
+		return new LinkedHashMap<>(COUNTS);
+	}
+
+	/** Replaces the counters with the given ones (see {@link #counts()}). */
+	public static void restoreCounts(
+			Map<String, Integer> counts) {
+		COUNTS.clear();
+		COUNTS.putAll(counts);
+	}
+
 	/** Sets a counter to a value, replacing an earlier one. */
 	public static void set(
 			String key,

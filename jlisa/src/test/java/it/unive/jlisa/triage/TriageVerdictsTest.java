@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,9 +84,10 @@ public class TriageVerdictsTest {
 	private static List<JsonReport.JsonMessage> warnings(
 			String program,
 			SVCOMPProperty property,
-			Path outdir)
+			Path outdir,
+			String... options)
 			throws Exception {
-		Main.main(new String[] {
+		List<String> args = new ArrayList<>(List.of(
 				"check",
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
 				"-o", outdir.toString(),
@@ -94,7 +96,9 @@ public class TriageVerdictsTest {
 				"-c", "Assert",
 				"-t", "Combined",
 				"-l", "ERROR",
-				"--svcomp-property", TASKS.resolve(property.getName() + ".prp").toString() });
+				"--svcomp-property", TASKS.resolve(property.getName() + ".prp").toString()));
+		args.addAll(List.of(options));
+		Main.main(args.toArray(String[]::new));
 		JsonReport report;
 		try (Reader reader = Files.newBufferedReader(outdir.resolve("report.json"))) {
 			report = JsonReport.read(reader);
@@ -309,6 +313,56 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * The ranges of the functions of {@link Math} whose results are not
+	 * specified exactly are known, so that violations outside of them are
+	 * refuted.
+	 */
+	@Test
+	public void violationsOutOfTheRangesOfMathFunctionsAreRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("math-ranges", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * Counterexamples relying on values that are not encoded precisely are
+	 * confirmed if their witnesses are validated by executing the program.
+	 */
+	@Test
+	public void impreciseCounterexamplesAreCertifiedByExecution(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir, "--certification");
+		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
+				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
+	}
+
+	/**
+	 * Without certification (the default), counterexamples relying on values
+	 * that are not encoded precisely stay possible.
+	 */
+	@Test
+	public void impreciseCounterexamplesAreNotCertifiedByDefault(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir);
+		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
+	}
+
+	/**
+	 * Counterexamples relying on values that are not encoded precisely, whose
+	 * witnesses are not validated by executing the program, stay possible.
+	 */
+	@Test
+	public void impreciseCounterexamplesThatAreNotReproducedStayPossible(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("certified-spurious", SVCOMPProperty.ASSERT, dir,
+				"--certification");
+		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
+	}
+
+	/**
 	 * Values of generic collections, whose models yield objects, are unboxed
 	 * when compared with primitive values.
 	 */
@@ -338,5 +392,35 @@ public class TriageVerdictsTest {
 		assertTrue(definite.getReproducingInputs().stream().anyMatch(i -> i.getLocation().contains("Main.java':5:")));
 		assertTrue(definite.getReproducingInputs().stream().noneMatch(i -> i.getLocation().contains("Main.java':6:")),
 				"input of a call that is not evaluated");
+	}
+
+	/**
+	 * The calls that the models do not expand (e.g., recursive ones) keep the
+	 * fields that their callees cannot write: an assertion on a field that no
+	 * callee writes is refuted, also when the field is read before the call in
+	 * the same condition...
+	 */
+	@Test
+	public void assertionsOnFieldsNotWrittenByCalleesAreRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("heap-unwritten-by-recursion", SVCOMPProperty.ASSERT, dir));
+		assertEquals(Verdict.REFUTED, verdict("heap-unwritten-fields", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * ... while the fields that callees might write are unknown after the
+	 * calls: written by their code, by the code called on their behalf (e.g.,
+	 * the conversion of objects to strings), or reflectively.
+	 */
+	@Test
+	public void fieldsWrittenByCalleesAreUnknownAfterTheCalls(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("heap-written-by-recursion", SVCOMPProperty.ASSERT, dir));
+		assertNotEquals(Verdict.REFUTED,
+				verdict("heap-written-by-recursion-callback", SVCOMPProperty.ASSERT, dir));
+		assertNotEquals(Verdict.REFUTED,
+				verdict("heap-written-by-recursion-reflection", SVCOMPProperty.ASSERT, dir));
 	}
 }

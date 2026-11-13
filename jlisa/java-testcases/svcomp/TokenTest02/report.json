@@ -1,5 +1,15 @@
 {
   "warnings" : [ {
+    "location" : "'$Main.java':17",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false,
+    "explanation" : "time budget exhausted after 2054 queries, at level 17"
+  }, {
     "location" : "'Main.java':18:18-18:52",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
     "text" : "assert equals(token, \"genneration\")",
@@ -8,25 +18,25 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 18 steps through [sentence = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), tokens = split(sentence, \" \"), i = 0, ==(true, hasNextElementForEach(tokens)), token = getNextElementForEach(tokens), ==(i, 3), ++i, ==(true, hasNextElementForEach(tokens)), token = getNextElementForEach(tokens), ==(i, 3), ++i, ==(true, hasNextElementForEach(tokens)), token = getNextElementForEach(tokens), ==(i, 3), ++i, ==(true, hasNextElementForEach(tokens)), token = getNextElementForEach(tokens), ==(i, 3), assert equals(token, \"genneration\")], relying on values that are not computed precisely (call results, unsupported operations, heap values, unsupported expressions, operations on values of other kinds): imprecise return of java.lang.String*[]* java.lang.String::split(java.lang.String* this, java.lang.String* regex); ReferenceRead; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"genneration\") not written by the model; imprecise return of void java.lang.String::String(java.lang.String* this); unknown value of type java.lang.String* produced by 'token = getNextElementForEach(tokens)'"
+    "explanation" : "violation reached in 23 steps through [sentence = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), tokens = split(sentence, \" \"), i = 0, $foreach-array@503 = tokens, $foreach-index@503 = 0, <($foreach-index@503, $foreach-array@503::length), token = $foreach-array@503[$foreach-index@503], ==(i, 3), ++i, $foreach-index@503++, <($foreach-index@503, $foreach-array@503::length), token = $foreach-array@503[$foreach-index@503], ==(i, 3), ++i, $foreach-index@503++, <($foreach-index@503, $foreach-array@503::length), token = $foreach-array@503[$foreach-index@503], ==(i, 3), ++i, $foreach-index@503++, <($foreach-index@503, $foreach-array@503::length), token = $foreach-array@503[$foreach-index@503], ==(i, 3), assert equals(token, \"genneration\")], relying on values that are not computed precisely (call results, operations on values of other kinds, heap values): imprecise return of java.lang.String*[]* java.lang.String::split(java.lang.String* this, java.lang.String* regex); ReferenceRead; CellKey; contents of $cells not written by the model; contents of $field:length not written by the model"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "513ms",
-    "end" : "2026-11-11T18:38:08.659+01:00",
-    "expressions" : "27",
+    "duration" : "1m 950ms",
+    "end" : "2026-11-13T17:37:41.910+01:00",
+    "expressions" : "33",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "409",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:38:08.146+01:00",
-    "statements" : "17",
+    "start" : "2026-11-13T17:36:40.960+01:00",
+    "statements" : "20",
     "units" : "56",
     "version" : "1.0",
-    "warnings" : "1"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

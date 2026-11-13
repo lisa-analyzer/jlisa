@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 3 steps through [strings = new java.lang.String*[]*{\"tested\", \"testing\", \"passed\", \"passing\"}, i = 0, ==(true, hasNextElementForEach(strings)), assert ==(i, 2)], relying on values that are not computed precisely (unsupported expressions): unknown value of type bool produced by '==(true, hasNextElementForEach(strings))'"
+    "explanation" : "violation reached in 22 steps through [strings = new java.lang.String*[]*{\"tested\", \"testing\", \"passed\", \"passing\"}, i = 0, $foreach-array@440 = strings, $foreach-index@440 = 0, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), ++i, $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), assert ==(i, 2)], relying on values that are not computed precisely (heap values, operations on values of other kinds, comparisons of non-integers): choice among the heap locations accessed by $foreach-array@440[$foreach-index@440]; ReferenceRead; ComparisonLt; CellKey; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") not written by the model"
   }, {
     "location" : "'Main.java':23:4-23:17",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -18,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 14 steps through [strings = new java.lang.String*[]*{\"tested\", \"testing\", \"passed\", \"passing\"}, i = 0, ==(true, hasNextElementForEach(strings)), string = getNextElementForEach(strings), startsWith(string, \"te\"), ++i, ==(true, hasNextElementForEach(strings)), string = getNextElementForEach(strings), startsWith(string, \"te\"), ++i, ==(true, hasNextElementForEach(strings)), assert ==(i, 2), i = 0, ==(true, hasNextElementForEach(strings)), assert ==(i, 1)], relying on values that are not computed precisely (unsupported operations, heap values, unsupported expressions, operations on values of other kinds): ReferenceRead; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") not written by the model; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"te\") not written by the model; unknown value of type bool produced by '==(true, hasNextElementForEach(strings))'; unknown value of type java.lang.String* produced by 'string = getNextElementForEach(strings)'"
+    "explanation" : "time budget exhausted after 658 queries, at level 9"
   }, {
     "location" : "'Main.java':29:4-29:17",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -28,22 +28,22 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 21 steps through [strings = new java.lang.String*[]*{\"tested\", \"testing\", \"passed\", \"passing\"}, i = 0, ==(true, hasNextElementForEach(strings)), string = getNextElementForEach(strings), startsWith(string, \"te\"), ++i, ==(true, hasNextElementForEach(strings)), string = getNextElementForEach(strings), startsWith(string, \"te\"), ++i, ==(true, hasNextElementForEach(strings)), assert ==(i, 2), i = 0, ==(true, hasNextElementForEach(strings)), string = getNextElementForEach(strings), startsWith(string, \"ste\", 2), ++i, ==(true, hasNextElementForEach(strings)), assert ==(i, 1), i = 0, ==(true, hasNextElementForEach(strings)), assert ==(i, 2)], relying on values that are not computed precisely (unsupported operations, heap values, unsupported expressions, operations on values of other kinds): ReferenceRead; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") not written by the model; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"te\") not written by the model; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") store(ref $alloc + 1, \"\") store(ref $alloc + 1, \"te\") store(ref $alloc + 2, \"\") store(ref $alloc + 2, \"ste\") not written by the model; unknown value of type bool produced by '==(true, hasNextElementForEach(strings))'"
+    "explanation" : "time budget exhausted after 1461 queries, at level 20"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "1s 883ms",
-    "end" : "2026-11-11T18:37:57.662+01:00",
-    "expressions" : "56",
+    "duration" : "2m 52s 213ms",
+    "end" : "2026-11-13T17:36:28.973+01:00",
+    "expressions" : "74",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "409",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:37:55.779+01:00",
-    "statements" : "28",
+    "start" : "2026-11-13T17:33:36.760+01:00",
+    "statements" : "37",
     "units" : "56",
     "version" : "1.0",
     "warnings" : "3"

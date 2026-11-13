@@ -22,8 +22,8 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 
 public class JavaNewArrayWithInitializer extends NaryExpression {
@@ -96,10 +96,11 @@ public class JavaNewArrayWithInitializer extends NaryExpression {
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, context, this);
 
+		// the elements of arrays of arrays are references to arrays, whose
+		// default value is null
 		Type contentType = ((JavaArrayType) refType.getInnerType()).getInnerType();
-		contentType = contentType.isArrayType() ? contentType.asArrayType().getInnerType() : contentType;
 
-		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
+		GlobalVariable lenProperty = new GlobalVariable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 		Constant length = new Constant(JavaIntType.INSTANCE, params.length, getLocation());
 		tmp = analysis.assign(tmp, lenAccess, length, context, this);

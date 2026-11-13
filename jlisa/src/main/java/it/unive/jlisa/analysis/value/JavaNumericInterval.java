@@ -776,8 +776,9 @@ public class JavaNumericInterval extends Interval {
 			// wrap around, and a product may be 0 times an infinity. The sum
 			// and the difference of floating point values do not wrap around,
 			// and their interval is computed (e.g., [0, +Inf] + 0.2 is [0.2,
-			// +Inf])
-			return top();
+			// +Inf]). The other domains might bound the operands (e.g., i <= n
+			// - 1 with n <= 99 for i + 1)
+			return refinedOrTop(expression, left, right, pp, oracle);
 		IntInterval result = evalExact(expression, left, right, pp, oracle);
 		if (operator instanceof MultiplicationOperator && oracle != null && isFloatingPoint(expression, pp, oracle))
 			result = keepSign(result, left, right, false);
@@ -785,9 +786,67 @@ public class JavaNumericInterval extends Interval {
 			// both operands are bounded, but their exact (arbitrary precision)
 			// result falls outside the range of the expression's type: Java
 			// would wrap it around via two's-complement truncation, which
-			// cannot be pinned down without the concrete values
-			return top();
+			// cannot be pinned down without the concrete values, unless the
+			// other domains bound the operands more
+			return refinedOrTop(expression, left, right, pp, oracle);
 		return roundOutward(result, expression, pp, oracle);
+	}
+
+	// the result of the integral operation with the operands narrowed by the
+	// bounds that the other domains give for the identifiers among them, if
+	// some operand gets strictly narrower (so that the evaluation is repeated
+	// at most once per narrowing), or top: their bounds hold on the same
+	// values, so the narrowed operands are sound
+	private IntInterval refinedOrTop(
+			BinaryExpression expression,
+			IntInterval left,
+			IntInterval right,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (oracle == null || !oracle.hasWholeValueAnlysis() || mayBeFloatingPoint(expression, pp, oracle))
+			return top();
+		IntInterval l = narrowed(expression.getLeft(), left, pp, oracle);
+		IntInterval r = narrowed(expression.getRight(), right, pp, oracle);
+		if (l == null && r == null)
+			return top();
+		return evalBinaryExpression(expression, l == null ? left : l, r == null ? right : r, pp, oracle);
+	}
+
+	// the given interval of the operand narrowed by the bounds that the other
+	// domains give for it, if it is an identifier and they make it strictly
+	// narrower, or null
+	private IntInterval narrowed(
+			SymbolicExpression operand,
+			IntInterval value,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!(operand instanceof Identifier id) || value.isBottom() || JavaInterval.isNaN(value))
+			return null;
+		Set<BinaryExpression> constraints = oracle.constraints(this, id, pp);
+		if (constraints == null)
+			return null;
+		MathNumber low = value.getLow(), high = value.getHigh();
+		boolean changed = false;
+		for (BinaryExpression constraint : constraints)
+			if (constraint.getLeft() instanceof Constant c && c.getValue() instanceof Number n
+					&& !(n instanceof Double || n instanceof Float)) {
+				MathNumber v = new MathNumber(n.longValue());
+				BinaryOperator op = constraint.getOperator();
+				// c == e, c >= e (an upper bound of e), c <= e (a lower bound)
+				if ((op == ComparisonEq.INSTANCE || op == ComparisonGe.INSTANCE) && v.compareTo(high) < 0) {
+					high = v;
+					changed = true;
+				}
+				if ((op == ComparisonEq.INSTANCE || op == ComparisonLe.INSTANCE) && v.compareTo(low) > 0) {
+					low = v;
+					changed = true;
+				}
+			}
+		if (!changed || low.compareTo(high) > 0)
+			return null;
+		return JavaInterval.of(new IntInterval(low, high));
 	}
 
 	/**

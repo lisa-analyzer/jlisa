@@ -22,6 +22,7 @@ import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
+import it.unive.jlisa.svcomp.WitnessCertifier;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.LiSAReport;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -46,7 +47,9 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -70,6 +73,13 @@ public final class CheckCommand {
 	 * ({@code --time-limit}), or {@code 0}.
 	 */
 	private static long verificationDeadline = 0;
+
+	/**
+	 * Whether the candidate confirmations of the warnings that stay possible
+	 * are certified by validating their violation witnesses (enabled by
+	 * {@code --certification}).
+	 */
+	private static boolean certification = false;
 
 	/**
 	 * The time left, out of the time limit, for writing the results after the
@@ -219,6 +229,13 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 		options.addOption(timeLimit);
+		Option certificationOption = Option.builder()
+				.longOpt("certification")
+				.desc("Certify the counterexamples that the verification cannot confirm by validating their "
+						+ "violation witnesses, when a property file is given (disabled by default)")
+				.required(false)
+				.build();
+		options.addOption(certificationOption);
 		SharedOptions.markRequired(options, SharedOptions.SOURCE, "outdir", "numericalDomain");
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
@@ -294,6 +311,8 @@ public final class CheckCommand {
 
 			if (cmd.hasOption("z3"))
 				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
+
+			certification = cmd.hasOption("certification");
 
 			interprocedural = cmd.getOptionValue("i", "EntryState");
 			if (!interprocedural.equals("Inlining") && !interprocedural.matches("EntryState(:[1-9][0-9]*)?"))
@@ -448,13 +467,14 @@ public final class CheckCommand {
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
 		// warnings are verified after the checks
+		SVCOMPVerifier<?, ?> svcomp = null;
 		switch (verifierName) {
 		case "Reachability":
 			conf.warningVerifier = new ReachabilityVerifier<>();
 			break;
 		case "Combined":
-			conf.warningVerifier = new SVCOMPVerifier<>(
-					SVCOMPVerifier.firstViolation().withDeadline(verificationDeadline));
+			svcomp = new SVCOMPVerifier<>(SVCOMPVerifier.firstViolation().withDeadline(verificationDeadline));
+			conf.warningVerifier = svcomp;
 			break;
 		default:
 			throw new ParseException("Invalid verifier name: " + verifierName);
@@ -477,6 +497,19 @@ public final class CheckCommand {
 		default:
 			throw new ParseException("Invalid checker name: " + checkerName);
 		}
+		// the candidate confirmations of the warnings that stay possible are
+		// certified by validating their witnesses, as SV-COMP does
+		if (certification && svcomp != null && checker != null && !witnesses.isEmpty()) {
+			Map<SVCOMPProperty, String> files = new LinkedHashMap<>();
+			for (String propertyFile : propertyFiles) {
+				ViolationWitnessProducer witness = ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
+				if (witness != null)
+					files.putIfAbsent(witness.getProperty(), propertyFile);
+			}
+			AssertChecker<?> warnings = checker;
+			svcomp.setCertifier(new WitnessCertifier(Arrays.asList(sources), files,
+					warning -> violationOf(warning, warnings), verificationDeadline));
+		}
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagationWithTarsis":
@@ -497,11 +530,16 @@ public final class CheckCommand {
 			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaUpperBounds(), new JavaTarsis());
 			break;
-		case "ConstantPropagation":
 		case "JavaWholeValueUBLE":
 			// JavaWholeValueUB with the relations x <= y too
 			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaUpperBounds(true), new JavaTarsis());
+			break;
+		case "ConstantPropagation":
+		case "JavaWholeValueUBOFF":
+			// JavaWholeValueUBLE with the relations x <= y + c too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(true, true), new JavaTarsis());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
@@ -550,20 +588,41 @@ public final class CheckCommand {
 			AssertChecker<?> checker) {
 		List<Violation> violations = new ArrayList<>();
 		for (Message warning : report.getWarnings()) {
-			if (!warning.isDefinite() || warning.getViolation() == null || !(warning instanceof StatementMessage))
+			if (!warning.isDefinite())
 				continue;
-			Statement target;
-			ViolationKind kind;
-			if (warning.getViolation() instanceof ErrorViolation) {
-				kind = ViolationKind.RUNTIME_EXCEPTION;
-				target = checker.runtimeExceptionTarget(warning).orElse(null);
-			} else {
-				kind = ViolationKind.ASSERT;
-				target = ((StatementMessage) warning).getStatement();
-			}
-			if (target != null)
-				violations.add(new Violation(kind, target, warning.getReproducingInputs()));
+			Violation violation = violationOf(warning, checker);
+			if (violation != null)
+				violations.add(violation);
 		}
 		return violations;
+	}
+
+	/**
+	 * Yields the violation reported by the given warning of the given checker,
+	 * with the inputs reproducing it, if known. The target of an uncaught
+	 * runtime exception is the statement raising it, as recorded by the
+	 * checker; the target of a failing assertion is the assertion itself.
+	 *
+	 * @param warning the warning
+	 * @param checker the checker that issued the warning
+	 *
+	 * @return the violation, or {@code null} if the warning reports none, or if
+	 *             its target is unknown
+	 */
+	private static Violation violationOf(
+			Message warning,
+			AssertChecker<?> checker) {
+		if (warning.getViolation() == null || !(warning instanceof StatementMessage))
+			return null;
+		Statement target;
+		ViolationKind kind;
+		if (warning.getViolation() instanceof ErrorViolation) {
+			kind = ViolationKind.RUNTIME_EXCEPTION;
+			target = checker.runtimeExceptionTarget(warning).orElse(null);
+		} else {
+			kind = ViolationKind.ASSERT;
+			target = ((StatementMessage) warning).getStatement();
+		}
+		return target == null ? null : new Violation(kind, target, warning.getReproducingInputs());
 	}
 }

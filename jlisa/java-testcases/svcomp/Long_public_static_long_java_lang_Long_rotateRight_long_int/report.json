@@ -19,25 +19,25 @@
       "source" : "return of long org.sosy_lab.sv_benchmarks.Verifier::nondetLong()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "-1640708365972339363"
+      "value" : "-6071653424827251040"
     }, {
       "location" : "'Main.java':14:24-14:43",
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "-2147483628"
+      "value" : "-2147483639"
     }, {
       "location" : "'Main.java':15:21-15:41",
       "source" : "return of long org.sosy_lab.sv_benchmarks.Verifier::nondetLong()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "19081524992"
+      "value" : "312631705468928"
     }, {
       "location" : "'Main.java':16:24-16:43",
       "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
       "context" : "<empty>",
       "occurrence" : 0,
-      "value" : "34"
+      "value" : "48"
     } ],
     "explanation" : "violation reached in 6 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetLong(), input_1_1 = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetLong(), input_2_1 = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), output_1 = java.lang.Long::rotateRight(input_1_0, input_1_1), output_2 = java.lang.Long::rotateRight(input_2_0, input_2_1), assert !(&&(==(output_1, 5788777621957833123), ==(output_2, 2041887375902113793)))] (not yet certified by execution)"
   } ],
@@ -45,15 +45,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "468ms",
-    "end" : "2026-11-11T18:34:25.444+01:00",
+    "duration" : "610ms",
+    "end" : "2026-11-13T17:29:53.231+01:00",
     "expressions" : "31",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "409",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:34:24.976+01:00",
+    "start" : "2026-11-13T17:29:52.621+01:00",
     "statements" : "16",
     "units" : "56",
     "version" : "1.0",
