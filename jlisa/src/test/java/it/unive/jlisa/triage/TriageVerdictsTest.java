@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,9 +84,10 @@ public class TriageVerdictsTest {
 	private static List<JsonReport.JsonMessage> warnings(
 			String program,
 			SVCOMPProperty property,
-			Path outdir)
+			Path outdir,
+			String... options)
 			throws Exception {
-		Main.main(new String[] {
+		List<String> args = new ArrayList<>(List.of(
 				"check",
 				"-s", COMMON.toString(), TASKS.resolve(program).toString(),
 				"-o", outdir.toString(),
@@ -94,7 +96,9 @@ public class TriageVerdictsTest {
 				"-c", "Assert",
 				"-t", "Combined",
 				"-l", "ERROR",
-				"--svcomp-property", TASKS.resolve(property.getName() + ".prp").toString() });
+				"--svcomp-property", TASKS.resolve(property.getName() + ".prp").toString()));
+		args.addAll(List.of(options));
+		Main.main(args.toArray(String[]::new));
 		JsonReport report;
 		try (Reader reader = Files.newBufferedReader(outdir.resolve("report.json"))) {
 			report = JsonReport.read(reader);
@@ -330,7 +334,20 @@ public class TriageVerdictsTest {
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir);
 		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
-				&& w.getExplanation().contains("certified by execution")), warnings.toString());
+				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
+	}
+
+	/**
+	 * Without certification, counterexamples relying on values that are not
+	 * encoded precisely stay possible.
+	 */
+	@Test
+	public void impreciseCounterexamplesAreNotCertifiedIfDisabled(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir,
+				"--no-certification");
+		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
 	}
 
 	/**

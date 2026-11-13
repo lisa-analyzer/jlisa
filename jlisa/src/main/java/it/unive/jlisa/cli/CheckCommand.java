@@ -75,6 +75,13 @@ public final class CheckCommand {
 	private static long verificationDeadline = 0;
 
 	/**
+	 * Whether the candidate confirmations of the warnings that stay possible
+	 * are certified by validating their violation witnesses (enabled unless
+	 * {@code --no-certification} is given).
+	 */
+	private static boolean certification = true;
+
+	/**
 	 * The time left, out of the time limit, for writing the results after the
 	 * verification of the warnings, in milliseconds: the fraction
 	 * {@value #RESULTS_FRACTION} of the limit, at most
@@ -222,6 +229,13 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 		options.addOption(timeLimit);
+		Option noCertification = Option.builder()
+				.longOpt("no-certification")
+				.desc("Do not certify the counterexamples that the verification cannot confirm by validating their "
+						+ "violation witnesses (they are certified by default, when a property file is given)")
+				.required(false)
+				.build();
+		options.addOption(noCertification);
 		SharedOptions.markRequired(options, SharedOptions.SOURCE, "outdir", "numericalDomain");
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
@@ -297,6 +311,8 @@ public final class CheckCommand {
 
 			if (cmd.hasOption("z3"))
 				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
+
+			certification = !cmd.hasOption("no-certification");
 
 			interprocedural = cmd.getOptionValue("i", "EntryState");
 			if (!interprocedural.equals("Inlining") && !interprocedural.matches("EntryState(:[1-9][0-9]*)?"))
@@ -483,7 +499,7 @@ public final class CheckCommand {
 		}
 		// the candidate confirmations of the warnings that stay possible are
 		// certified by validating their witnesses, as SV-COMP does
-		if (svcomp != null && checker != null && !witnesses.isEmpty()) {
+		if (certification && svcomp != null && checker != null && !witnesses.isEmpty()) {
 			Map<SVCOMPProperty, String> files = new LinkedHashMap<>();
 			for (String propertyFile : propertyFiles) {
 				ViolationWitnessProducer witness = ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
