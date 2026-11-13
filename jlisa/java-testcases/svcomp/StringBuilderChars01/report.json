@@ -1,6 +1,6 @@
 {
   "warnings" : [ {
-    "location" : "'$Main.java':7",
+    "location" : "'$Main.java':17",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
     "text" : "ret",
     "context" : "<empty>",
@@ -8,7 +8,7 @@
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
     "definite" : false,
-    "explanation" : "the solver could not decide a query: canceled"
+    "explanation" : "time budget exhausted after 169 queries, at level 4"
   }, {
     "location" : "'Main.java':22:6-22:42",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -18,22 +18,22 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 9 steps through [buffer = new java.lang.StringBuilder(\"DiffBlue Limited\"), assert equals(toString(buffer), \"DiffBlue Limited\"), assert !=(charAt(buffer, 0), charAt(buffer, 4)), charArray = new char[]*[length(buffer)], getChars(buffer, 0, length(buffer), charArray, 0), i = 0, ==(true, hasNextElementForEach(charArray)), character = getNextElementForEach(charArray), print(java.lang.System::out, character), assert ==(character, charAt(buffer, i))], relying on values that are not computed precisely (unsupported expressions, operations on values of other kinds, heap values): unknown value of type bool produced by '==(true, hasNextElementForEach(charArray))'; unknown value of type char produced by 'character = getNextElementForEach(charArray)'; ReferenceRead; contents of $field:value not written by the model; JavaStringCharAtOperator"
+    "explanation" : "violation reached in 11 steps through [buffer = new java.lang.StringBuilder(\"DiffBlue Limited\"), assert equals(toString(buffer), \"DiffBlue Limited\"), assert !=(charAt(buffer, 0), charAt(buffer, 4)), charArray = new char[]*[length(buffer)], getChars(buffer, 0, length(buffer), charArray, 0), i = 0, $foreach-array@656 = charArray, $foreach-index@656 = 0, <($foreach-index@656, $foreach-array@656::length), character = $foreach-array@656[$foreach-index@656], print(java.lang.System::out, character), assert ==(character, charAt(buffer, i))], relying on values that are not computed precisely (call results, heap values, operations on values of other kinds): imprecise return of void java.lang.StringBuilder::getChars(java.lang.StringBuilder* this, int srcBegin, int srcEnd, char[]* dst, int dstBegin); choice among the heap locations accessed by $foreach-array@656[$foreach-index@656]; ReferenceRead; contents of $field:length not written by the model; CellKey"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "41s 877ms",
-    "end" : "2026-11-11T18:41:17.072+01:00",
-    "expressions" : "62",
+    "duration" : "1m 7s 692ms",
+    "end" : "2026-11-13T14:21:34.091+01:00",
+    "expressions" : "68",
     "files" : "1",
     "globals" : "53",
-    "members" : "406",
+    "members" : "408",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T18:40:35.195+01:00",
-    "statements" : "25",
+    "start" : "2026-11-13T14:20:26.399+01:00",
+    "statements" : "28",
     "units" : "56",
     "version" : "1.0",
     "warnings" : "2"
