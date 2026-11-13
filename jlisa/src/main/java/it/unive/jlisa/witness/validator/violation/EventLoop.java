@@ -470,6 +470,15 @@ public final class EventLoop {
 		boolean isRuntimeException = isRefInstance(reference,
 				(ClassType) vm.classesByName("java.lang.RuntimeException").getFirst());
 
+		if (isError && isResourceExhaustion(reference)) {
+			// the program ran out of stack or memory with the values of the
+			// witness (e.g., a recursion as deep as an input): the run says
+			// nothing about the violation, and the validator did not fail
+			ValidatorLogger.event("Resources exhausted - " + reference);
+			recordUnusedValues();
+			RunSummary.reason("resource-exhausted", exceptionClass + " at " + where(loc));
+			return Optional.of(ValidationResult.UNKNOWN);
+		}
 		if (isError) {
 			ValidatorLogger.event("Uncaught JVM ERROR - " + reference);
 			recordUnusedValues();
@@ -490,6 +499,19 @@ public final class EventLoop {
 	// ------------------------------------------------------------------
 	// private utilities
 	// ------------------------------------------------------------------
+
+	/**
+	 * Yields whether the given exception is a {@link VirtualMachineError}
+	 * signalling that the program ran out of resources (stack or memory).
+	 */
+	private boolean isResourceExhaustion(
+			ObjectReference ref) {
+		for (String name : List.of("java.lang.StackOverflowError", "java.lang.OutOfMemoryError"))
+			for (ReferenceType type : vm.classesByName(name))
+				if (type instanceof ClassType && isRefInstance(ref, (ClassType) type))
+					return true;
+		return false;
+	}
 
 	private boolean isRefInstance(
 			ObjectReference ref,
