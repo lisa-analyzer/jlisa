@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 19 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), [main > Animal_clinit] java.lang.Object::Object_clinit(), [main > Animal_clinit] Animal::pi = 3.14, [main > Animal_clinit] ret, c = java.lang.Class::forName(s) (after [1 targets] Animal::Animal_clinit()), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.reflect.Field::modifiers; SummaryValue; merged value of $written:java.lang.reflect.Field::modifiers; merged value of $alloc; merged value of $types"
+    "explanation" : "time budget exhausted after 31 queries, at level 4"
   }, {
     "location" : "'Main.java':27:2-27:32",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -18,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 20 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), [main > Animal_clinit] java.lang.Object::Object_clinit(), [main > Animal_clinit] Animal::pi = 3.14, [main > Animal_clinit] ret, c = java.lang.Class::forName(s) (after [1 targets] Animal::Animal_clinit()), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds, unprojected values): merged value of $field:java.lang.reflect.Field::modifiers; SummaryValue; merged value of $written:java.lang.reflect.Field::modifiers; merged value of $alloc; merged value of $types"
+    "explanation" : "time budget exhausted after 32 queries, at level 4"
   }, {
     "location" : "'Main.java':28:2-28:32",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -28,21 +28,21 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 21 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), [main > Animal_clinit] java.lang.Object::Object_clinit(), [main > Animal_clinit] Animal::pi = 3.14, [main > Animal_clinit] ret, c = java.lang.Class::forName(s) (after [1 targets] Animal::Animal_clinit()), c2 = \"Animal\", f1 = getField(c, \"nickname\"), f2 = getField(c, \"age\"), f3 = getField(c, \"pi\"), assert equals(getName(f1), \"nickname\"), assert equals(getName(f2), \"age\"), assert equals(getName(f3), \"pi\"), assert ==(getDeclaringClass(f1), c), assert ==(getDeclaringClass(f2), c2), assert ==(getDeclaringClass(f3), c2), assert equals(getName(getType(f1)), \"java.lang.String\"), assert equals(getName(getType(f2)), \"int\"), assert equals(getName(getType(f3)), \"double\"), assert ==(getModifiers(f1), 0), assert ==(getModifiers(f2), 0), assert !=(getModifiers(f3), 0)], relying on values that are not computed precisely (merged values, heap values, unsupported operations, operations on values of other kinds, unprojected values): merged value of $field:java.lang.reflect.Field::modifiers; merged value of $alloc; merged value of $written:java.lang.reflect.Field::modifiers; heap expression ref$*(heap[s]:pp@'$internal-load-class-Cat':1->declaredFields)->0; ReferenceStore"
+    "explanation" : "time budget exhausted after 28 queries, at level 3"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Animal.Animal_clinit()_3b8fb22400a1a40580b7fc168d58da76.graph.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "41s 185ms",
-    "end" : "2026-11-11T17:43:19.087+01:00",
+    "duration" : "3m 7s 434ms",
+    "end" : "2026-11-13T14:04:14.107+01:00",
     "expressions" : "98",
     "files" : "2",
     "globals" : "56",
-    "members" : "397",
+    "members" : "399",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-11T17:42:37.902+01:00",
+    "start" : "2026-11-13T14:01:06.673+01:00",
     "statements" : "37",
     "units" : "56",
     "version" : "1.0",
