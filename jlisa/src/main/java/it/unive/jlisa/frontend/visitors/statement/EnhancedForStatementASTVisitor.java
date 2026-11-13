@@ -119,8 +119,8 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 	 * }
 	 * </pre>
 	 * 
-	 * where {@code $a} and {@code $i} are hidden variables, so that the loop
-	 * is precise, as any loop over the cells of an array.
+	 * where {@code $a} and {@code $i} are hidden variables, so that the loop is
+	 * precise, as any loop over the cells of an array.
 	 */
 	private void visitArray(
 			EnhancedForStatement node,

@@ -14,10 +14,10 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.StatementStore;
-import it.unive.lisa.interprocedural.InterproceduralAnalysis;
-import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.analysis.value.ValueDomain;
 import it.unive.lisa.analysis.value.ValueLattice;
+import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
@@ -34,10 +34,10 @@ import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
-import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.Set;
@@ -234,9 +234,8 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 	}
 
 	/**
-	 * Yields the contents of the string referenced by the given expression,
-	 * if the value domain knows that they are a single constant, or
-	 * {@code null}.
+	 * Yields the contents of the string referenced by the given expression, if
+	 * the value domain knows that they are a single constant, or {@code null}.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> String constant(
