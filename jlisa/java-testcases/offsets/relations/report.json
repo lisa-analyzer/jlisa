@@ -1,0 +1,78 @@
+{
+  "warnings" : [ {
+    "location" : "'Main.java':15:73-15:85",
+    "cfg" : "void Main::successor()",
+    "text" : "assert >(j, i)",
+    "context" : "['Main.java':6:16-6:26]",
+    "contextHash" : "974ddd50bd274ae5f9649844d7fd8a4f",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
+  }, {
+    "location" : "'Main.java':16:81-16:94",
+    "cfg" : "void Main::counter()",
+    "text" : "assert >=(i, 0)",
+    "context" : "['Main.java':7:21-7:29]",
+    "contextHash" : "b51f6fcca64484e36b2ae1f44b2f91b5",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
+  }, {
+    "location" : "'Main.java':22:4-22:16",
+    "cfg" : "void Main::shiftedWrong()",
+    "text" : "assert >(j, i)",
+    "context" : "['Main.java':8:21-8:34]",
+    "contextHash" : "21174097790b0e7e845d5eadcfc5f6cb",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
+  }, {
+    "location" : "'Main.java':37:4-37:21",
+    "cfg" : "void Main::joinWrong()",
+    "text" : "assert <=(x, +(y, 2))",
+    "context" : "['Main.java':10:21-10:31]",
+    "contextHash" : "c376192df43a8589a157a0699a07fa53",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Main.copyNext()_3ef60f31ff996f32c6ca45813379af53.graph.json", "void_Main.counter()_b51f6fcca64484e36b2ae1f44b2f91b5.graph.json", "void_Main.decrement()_8046b7e4d157149db0bf603748050469.graph.json", "void_Main.insertionSort()_5f37b8614495fa4a3547f32475a72ded.graph.json", "void_Main.joinRight()_e0ac51227bcfcc3be0717c7486b8a1ff.graph.json", "void_Main.joinWrong()_c376192df43a8589a157a0699a07fa53.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.shiftedWrong()_21174097790b0e7e845d5eadcfc5f6cb.graph.json", "void_Main.successor()_974ddd50bd274ae5f9649844d7fd8a4f.graph.json" ],
+  "info" : {
+    "cfgs" : "14",
+    "duration" : "423ms",
+    "end" : "2026-11-13T15:27:22.228+01:00",
+    "expressions" : "243",
+    "files" : "9",
+    "globals" : "53",
+    "members" : "415",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-11-13T15:27:21.805+01:00",
+    "statements" : "89",
+    "units" : "57",
+    "version" : "1.0",
+    "warnings" : "4"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/offsets/relations"
+  }
+}

@@ -16,7 +16,6 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -81,13 +80,13 @@ public class StringCharArrayFromToConstructor extends NaryExpression implements 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 
-		String constantValue;
+		SymbolicExpression constantValue;
 		try {
 			Object offsetVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, arrayOffset,
 					this);
 			Object countVal = CharArrayConstantSupport.extractConstantValue(interprocedural, state, arrayCount, this);
 			constantValue = offsetVal instanceof Integer && countVal instanceof Integer
-					? CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, arrayRef,
+					? CharArrayConstantSupport.computeSubstring(stringType, interprocedural, state, arrayRef,
 							(Integer) offsetVal, (Integer) countVal, getLocation(), this)
 					: null;
 		} catch (SemanticException e) {
@@ -100,7 +99,7 @@ public class StringCharArrayFromToConstructor extends NaryExpression implements 
 		}
 
 		SymbolicExpression value = constantValue != null
-				? new Constant(stringType, constantValue, getLocation())
+				? constantValue
 				: new PushAny(stringType, getLocation());
 		return interprocedural.getAnalysis().assign(state, leftAccess, value, interprocedural.getCurrentContext(),
 				originating);

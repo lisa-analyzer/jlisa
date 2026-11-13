@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs;
 
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.operator.JavaStringConcatOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -21,8 +22,9 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -77,6 +79,74 @@ public final class CharArrayConstantSupport {
 		return sb.toString();
 	}
 
+	// the string of count characters starting at offset from the array
+	// referenced by arrayRef, as a constant, or as a concatenation of the
+	// constant parts and of any string for each run of cells that cannot be
+	// resolved to a constant (only the first cells that are tracked are read),
+	// or null if arrayRef is not an array reference
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> SymbolicExpression computeSubstring(
+			Type stringType,
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression arrayRef,
+			int offset,
+			int count,
+			CodeLocation location,
+			ProgramPoint pp)
+			throws SemanticException {
+		if (!arrayRef.getStaticType().isReferenceType()
+				|| !arrayRef.getStaticType().asReferenceType().getInnerType().isArrayType())
+			return null;
+
+		JavaArrayType arrayType = (JavaArrayType) arrayRef.getStaticType().asReferenceType().getInnerType();
+		HeapDereference container = new HeapDereference(arrayType, arrayRef, location);
+		Type accessType = arrayType.getInnerType();
+
+		SymbolicExpression result = null;
+		StringBuilder known = new StringBuilder();
+		boolean unknown = false;
+		int end = offset + Math.min(count, MAX_READ_CELLS);
+		for (int i = offset; i < end; i++) {
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, location);
+			AccessChild access = new AccessChild(accessType, container, idx, location);
+			Object c = extractConstantValue(interprocedural, state, access, pp);
+			if (c instanceof Character ch)
+				// a character computed by the domains (e.g., by charAt)
+				c = (int) ch;
+			if (c instanceof Integer ch) {
+				if (unknown) {
+					result = concat(stringType, result, new PushAny(stringType, location), location);
+					unknown = false;
+				}
+				known.append((char) (int) ch);
+			} else {
+				if (known.length() > 0) {
+					result = concat(stringType, result, new Constant(stringType, known.toString(), location),
+							location);
+					known.setLength(0);
+				}
+				unknown = true;
+			}
+		}
+		if (known.length() > 0)
+			result = concat(stringType, result, new Constant(stringType, known.toString(), location), location);
+		if (unknown || count > MAX_READ_CELLS)
+			result = concat(stringType, result, new PushAny(stringType, location), location);
+		return result == null ? new Constant(stringType, "", location) : result;
+	}
+
+	// the maximum number of cells read by computeSubstring
+	private static final int MAX_READ_CELLS = 64;
+
+	private static SymbolicExpression concat(
+			Type stringType,
+			SymbolicExpression left,
+			SymbolicExpression right,
+			CodeLocation location) {
+		return left == null ? right
+				: new BinaryExpression(stringType, left, right, JavaStringConcatOperator.INSTANCE, location);
+	}
+
 	// resolves the (constant) length of the array referenced by arrayRef, or
 	// null if it is not an array reference or its length is not known
 	// precisely
@@ -93,7 +163,7 @@ public final class CharArrayConstantSupport {
 
 		JavaArrayType arrayType = (JavaArrayType) arrayRef.getStaticType().asReferenceType().getInnerType();
 		HeapDereference container = new HeapDereference(arrayType, arrayRef, location);
-		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", location);
+		GlobalVariable lenProperty = new GlobalVariable(JavaIntType.INSTANCE, "length", location);
 		AccessChild lenAccess = new AccessChild(Untyped.INSTANCE, container, lenProperty, location);
 
 		Object length = extractConstantValue(interprocedural, state, lenAccess, pp);

@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 3 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), m1 = getMethod(c, \"canFly\", new java.lang.Class*[]*[0]), assert ==(getDeclaringClass(m1), c)], relying on values that are not computed precisely (merged values, operations on values of other kinds, heap values): merged value of __Cat; merged value of __Animal; merged value of __Animal2; ReferenceRead; contents of $field:interfaces store(ref $alloc + 2, ref $alloc + 4) store(ref $alloc + 5, ref $alloc + 7) store(ref $alloc + 8, ref $alloc + 10) store(ref $alloc + 11, ref $alloc + 13) store(ref $alloc + 14, ref $alloc + 16) not written by the model"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':12:2-12:34",
     "cfg" : "void ReflectionTest::main(java.lang.String*[]* args)",
@@ -18,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 5 steps through [s = new java.lang.String(\"Cat\"), c = java.lang.Class::forName(s), m1 = getMethod(c, \"canFly\", new java.lang.Class*[]*[0]), assert ==(getDeclaringClass(m1), c), c2 = \"bool\", assert ==(getReturnType(m1), c2)], relying on values that are not computed precisely (merged values, unsupported operations, heap values, operations on values of other kinds): merged value of __Cat; merged value of $field:java.lang.Class::isArray; ReferenceStore; merged value of $written:java.lang.Class::isArray; merged value of $field:isArray"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
@@ -34,7 +34,7 @@
     "programs" : "1",
     "start" : "2026-11-13T14:00:55.498+01:00",
     "statements" : "29",
-    "units" : "58",
+    "units" : "59",
     "version" : "1.0",
     "warnings" : "2"
   },

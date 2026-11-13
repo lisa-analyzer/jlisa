@@ -8,7 +8,7 @@
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
     "definite" : false,
-    "explanation" : "violation reached in 9 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"nickname\", f = getField(c, s)], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; ComparisonEq; contents of __java.lang.Object not written by the model"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':16:2-16:36",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -44,7 +44,7 @@
     "programs" : "1",
     "start" : "2026-11-13T14:07:45.574+01:00",
     "statements" : "18",
-    "units" : "55",
+    "units" : "56",
     "version" : "1.0",
     "warnings" : "3"
   },

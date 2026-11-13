@@ -536,6 +536,11 @@ public final class CheckCommand {
 			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
 					new JavaUpperBounds(true), new JavaTarsis());
 			break;
+		case "JavaWholeValueUBOFF":
+			// JavaWholeValueUBLE with the relations x <= y + c too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(true, true), new JavaTarsis());
+			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
 		}
@@ -601,8 +606,8 @@ public final class CheckCommand {
 	 * @param warning the warning
 	 * @param checker the checker that issued the warning
 	 *
-	 * @return the violation, or {@code null} if the warning reports none, or
-	 *             if its target is unknown
+	 * @return the violation, or {@code null} if the warning reports none, or if
+	 *             its target is unknown
 	 */
 	private static Violation violationOf(
 			Message warning,

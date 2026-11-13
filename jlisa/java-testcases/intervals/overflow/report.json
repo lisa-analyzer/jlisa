@@ -7,27 +7,8 @@
     "contextHash" : "f9b64dd4bdd93e868553912392f1e7db",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':4:26-4:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':5:12-5:31",
-      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "1"
-    }, {
-      "location" : "'Main.java':13:45-13:64",
-      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
-      "context" : "['Main.java':6:16-6:28, 'Main.java':16:38-16:66]",
-      "occurrence" : 0,
-      "value" : "2147483647"
-    } ],
-    "explanation" : "violation reached in 9 steps through [k = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), ==(k, 1), Main::addOverflow(), [main > addOverflow] x = Main::range(2147483646, 2147483647), [main > addOverflow > range] i = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > addOverflow > range] ||(<(i, lo), >(i, hi)), [main > addOverflow > range] return i, [main > addOverflow] x = Main::range(2147483646, 2147483647) (after [1 targets] Main::range(2147483646, 2147483647)), [main > addOverflow] y = +(x, 1), [main > addOverflow] assert >(y, 0)] (not yet certified by execution)"
+    "definite" : false,
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':17:78-17:90",
     "cfg" : "void Main::mulOverflow()",
@@ -37,7 +18,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "not verified: the verification stopped at the first confirmed warning"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':18:103-18:115",
     "cfg" : "void Main::longAdd()",
@@ -47,7 +28,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "not verified: the verification stopped at the first confirmed warning"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':19:78-19:90",
     "cfg" : "void Main::negMin()",
@@ -57,7 +38,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "not verified: the verification stopped at the first confirmed warning"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':20:86-20:98",
     "cfg" : "void Main::subOverflow()",
@@ -67,7 +48,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "not verified: the verification stopped at the first confirmed warning"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   }, {
     "location" : "'Main.java':21:95-21:107",
     "cfg" : "void Main::unboundedAdd()",
@@ -77,7 +58,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "not verified: the verification stopped at the first confirmed warning"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   } ],
   "notices" : [ ],
   "files" : [ "int_Main.range(int_lo,_int_hi)_0c4685cd3b131e9710dfc20434b43191.graph.json", "int_Main.range(int_lo,_int_hi)_26cde5d0cdb7337c51d14dbec37bc8c1.graph.json", "int_Main.range(int_lo,_int_hi)_3b0b3b0a79e16a6eff23f3dbd6773ef5.graph.json", "int_Main.range(int_lo,_int_hi)_d65b9aef53c90340744e1d8ab5eb8481.graph.json", "long_Main.lrange(long_lo,_long_hi)_305e08f8dddc43a6fe4ca5196e99b4d8.graph.json", "report.json", "void_Main.addOverflow()_f9b64dd4bdd93e868553912392f1e7db.graph.json", "void_Main.longAdd()_9c652780e389af64e45f9455dbd68e5e.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.mulOverflow()_845f5e6e518358b4619310af2fc3d008.graph.json", "void_Main.negMin()_28df674007150fa67a07f96c6745bfe9.graph.json", "void_Main.subOverflow()_5bb7cf06e212a70b6b1731765d436674.graph.json", "void_Main.unboundedAdd()_910563ae638e8b7e00424a89326d2953.graph.json" ],
@@ -93,7 +74,7 @@
     "programs" : "1",
     "start" : "2026-11-13T14:00:26.151+01:00",
     "statements" : "56",
-    "units" : "56",
+    "units" : "57",
     "version" : "1.0",
     "warnings" : "6"
   },

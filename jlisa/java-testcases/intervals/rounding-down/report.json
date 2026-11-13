@@ -8,7 +8,7 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "violation reached in 3 steps through [a = ?(>(args::length, 0), 0.1, 0.5), y = +(a, 0.7), <=(y, 0.7999999999999999), assert false], relying on values that are not computed precisely (operations on values of other kinds, heap values): ReferenceRead; contents of $field:length not written by the model"
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
@@ -24,7 +24,7 @@
     "programs" : "1",
     "start" : "2026-11-13T14:00:27.448+01:00",
     "statements" : "13",
-    "units" : "56",
+    "units" : "57",
     "version" : "1.0",
     "warnings" : "1"
   },

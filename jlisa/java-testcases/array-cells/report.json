@@ -1,0 +1,62 @@
+{
+  "warnings" : [ {
+    "location" : "'$Main.java':1",
+    "cfg" : "void Main::main(java.lang.String*[]* args)",
+    "text" : "ret",
+    "context" : "<empty>",
+    "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
+    "targetKind" : "STATEMENT",
+    "message" : "uncaught runtime exception in main method",
+    "definite" : false,
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+  }, {
+    "location" : "'Main.java':14:2-14:20",
+    "cfg" : "void Main::writePast64(int i)",
+    "text" : "assert ==(a[120], 0)",
+    "context" : "['Main.java':4:2-4:31]",
+    "contextHash" : "039498cc6bd2c9a946775162cdb9c667",
+    "targetKind" : "EXPRESSION",
+    "message" : "the assertion might not hold",
+    "definite" : false,
+    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+  } ],
+  "notices" : [ ],
+  "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.references(int_size,_int_n)_cbf626c2e3c5228ccedf2f2c92ca0f6e.graph.json", "void_Main.writePast64(int_i)_039498cc6bd2c9a946775162cdb9c667.graph.json" ],
+  "info" : {
+    "cfgs" : "4",
+    "duration" : "410ms",
+    "end" : "2026-11-13T15:26:17.399+01:00",
+    "expressions" : "51",
+    "files" : "3",
+    "globals" : "53",
+    "members" : "396",
+    "notices" : "0",
+    "programs" : "1",
+    "start" : "2026-11-13T15:26:16.989+01:00",
+    "statements" : "19",
+    "units" : "55",
+    "version" : "1.0",
+    "warnings" : "2"
+  },
+  "configuration" : {
+    "asynchronousListeners" : "",
+    "backwardDescendingFixpoint" : "unset",
+    "backwardFixpoint" : "BackwardAscendingFixpoint",
+    "dumpForcesUnwinding" : "false",
+    "fixpointWorkingSet" : "OrderBasedWorkingSet",
+    "forwardDescendingFixpoint" : "unset",
+    "forwardFixpoint" : "ForwardAscendingFixpoint",
+    "glbThreshold" : "5",
+    "hotspots" : "unset",
+    "openCallPolicy" : "ReturnTopPolicy",
+    "outputs" : "JSONReportDumper, JSONResults",
+    "recursionWideningThreshold" : "5",
+    "semanticChecks" : "AssertChecker",
+    "shouldSmashError" : "unset",
+    "synchronousListeners" : "",
+    "syntacticChecks" : "",
+    "useWideningPoints" : "true",
+    "wideningThreshold" : "20",
+    "workdir" : "java-outputs/array-cells"
+  }
+}
