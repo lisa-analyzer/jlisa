@@ -1,6 +1,8 @@
 package it.unive.jlisa.checkers;
 
+import it.unive.jlisa.program.JavaLocation;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertStatement;
+import org.apache.commons.lang3.tuple.Pair;
 import it.unive.jlisa.program.cfg.statement.asserts.AssertionStatement;
 import it.unive.jlisa.program.cfg.statement.asserts.SimpleAssert;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -12,6 +14,7 @@ import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.checks.semantic.SemanticTool;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
@@ -31,7 +34,9 @@ import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -77,6 +82,11 @@ public class AssertChecker<V extends ValueLattice<V>>
 	private final boolean assertions;
 
 	private final boolean runtimeExceptions;
+
+	// if a loop contains an assert, that assert may issue more than one warning.
+	// We keep track of the (unrolled) asserts that raise warnings, and also of the original assert from which the unrolled copies derive. This is so that the warning is raised at the location of the original assert.
+	private final Map<String, Statement> originalUnrolledAsserts = new ConcurrentHashMap<>();
+	private final Map<String, Pair<ScopeId, it.unive.lisa.checks.verification.Violation>> toIssueWarnings = new ConcurrentHashMap<>();
 
 	/**
 	 * Builds the checker, checking both failing assertions and uncaught runtime
@@ -168,6 +178,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 				e.printStackTrace();
 			}
 
+		issueUnrolledAssertsWarnings(tool);
+
 		return true;
 	}
 
@@ -236,23 +248,39 @@ public class AssertChecker<V extends ValueLattice<V>>
 			AssertStatement node)
 			throws SemanticException {
 		Expression expr;
-		if (node instanceof SimpleAssert)
+		if (node instanceof SimpleAssert) {
 			expr = ((SimpleAssert) node).getSubExpression();
+		}
 		else if (node instanceof AssertionStatement)
 			expr = ((AssertionStatement) node).getLeft();
 		else
 			return;
 		boolean isAssertFalse = expr.toString().equals("false");
 
+		// exprLocation being not null indicates an unrolled assert.
+		// It's original location is exprLocation without the copy id
+		JavaLocation unrolledExprLocation = null;
+		if (expr.getLocation() instanceof JavaLocation jl) {
+			// if we are dealing with an assert that's been unrolled
+			if (jl.getCopy() > 0) {
+				unrolledExprLocation = jl;
+			}
+			// we have the original assert that's been unrolled
+			if (jl.getCopy() == 1){
+				originalUnrolledAsserts.put(unrolledExprLocation.getCodeLocationNoCopy(), (Statement) node);
+			}
+		}
+
 		for (var result : tool.getResultOf(graph)) {
 			AnalysisState<
 					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> state = result
 							.getAnalysisStateAfter(expr);
 
-			if (state.getExecutionState().isBottom())
+			if (state.getExecutionState().isBottom()) {
 				// the assertion is never evaluated in this result: it cannot
 				// fail
 				continue;
+			}
 
 			// the violation of the assertion: reaching it if it is an assert
 			// false, or its condition not holding otherwise
@@ -261,27 +289,43 @@ public class AssertChecker<V extends ValueLattice<V>>
 					: failure(expr, state);
 
 			if (isAssertFalse) {
-				// we do not need to query the satisfiability of the expression:
-				// the assertion fails whenever it is evaluated
-				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				if (unrolledExprLocation == null) {
+					// we do not need to query the satisfiability of the expression:
+					// the assertion fails whenever it is evaluated
+					tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				}
+				else {
+					// we need to issue a warning for this statement once we find the original statement
+					toIssueWarnings.put(unrolledExprLocation.getCodeLocationNoCopy(), Pair.of(result.getId(), violation));
+				}
 				continue;
 			}
 
 			V values = state.getExecutionState().valueState;
 			if (values.isBottom()) {
-				// the assertion is evaluated, but we have a bottom value state:
-				// we cannot do much other than being conservative and say that
-				// the assertion might not hold
-				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				if (unrolledExprLocation == null) {
+					// the assertion is evaluated, but we have a bottom value state:
+					// we cannot do much other than being conservative and say that
+					// the assertion might not hold
+					tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				}
+				else {
+					toIssueWarnings.put(unrolledExprLocation.getCodeLocationNoCopy(), Pair.of(result.getId(), violation));
+				}
 				LOG.error("The abstract state of assert's expression is BOTTOM");
 				continue;
 			}
 
 			if (values.isTop()) {
-				// the assertion is evaluated, but we have a top value state:
-				// we cannot do much other than being conservative and say that
-				// the assertion might not hold
-				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				if (unrolledExprLocation == null) {
+					// the assertion is evaluated, but we have a top value state:
+					// we cannot do much other than being conservative and say that
+					// the assertion might not hold
+					tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				}
+				else {
+					toIssueWarnings.put(unrolledExprLocation.getCodeLocationNoCopy(), Pair.of(result.getId(), violation));
+				}
 				continue;
 			}
 
@@ -290,8 +334,14 @@ public class AssertChecker<V extends ValueLattice<V>>
 				overall = overall.lub(tool.getAnalysis().satisfies(state, e, result.getId(), (ProgramPoint) node));
 
 			// only assertions that surely hold do not raise warnings
-			if (overall != Satisfiability.SATISFIED)
-				tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+			if (overall != Satisfiability.SATISFIED) {
+				if (unrolledExprLocation == null) {
+					tool.warnOn((Statement) node, result.getId(), violation, POSSIBLE_FAILURE);
+				}
+				else {
+					toIssueWarnings.put(unrolledExprLocation.getCodeLocationNoCopy(), Pair.of(result.getId(), violation));
+				}
+			}
 		}
 	}
 
@@ -314,5 +364,24 @@ public class AssertChecker<V extends ValueLattice<V>>
 		if (condition == null)
 			return it.unive.lisa.checks.verification.Violation.reach();
 		return it.unive.lisa.checks.verification.Violation.condition(expr, condition);
+	}
+
+	private void issueUnrolledAssertsWarnings(
+			SemanticTool<
+					SimpleAbstractState<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>,
+					SimpleAbstractDomain<HeapEnvironment<AllocationSites>, V, TypeEnvironment<TypeSet>>> tool) {
+
+		for (var entry : toIssueWarnings.entrySet()) {
+			String key = entry.getKey();
+			var warningParams = entry.getValue();
+
+			if (originalUnrolledAsserts.containsKey(key)) {
+				Statement originalStatement = originalUnrolledAsserts.get(key);
+				tool.warnOn(originalStatement, warningParams.getLeft(), warningParams.getRight(), POSSIBLE_FAILURE);
+				originalUnrolledAsserts.remove(key);
+			}
+
+		}
+
 	}
 }
