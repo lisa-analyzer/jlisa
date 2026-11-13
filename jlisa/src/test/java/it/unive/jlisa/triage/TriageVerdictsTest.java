@@ -332,21 +332,20 @@ public class TriageVerdictsTest {
 	public void impreciseCounterexamplesAreCertifiedByExecution(
 			@TempDir Path dir)
 			throws Exception {
-		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir);
+		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir, "--certification");
 		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
 				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
 	}
 
 	/**
-	 * Without certification, counterexamples relying on values that are not
-	 * encoded precisely stay possible.
+	 * Without certification (the default), counterexamples relying on values
+	 * that are not encoded precisely stay possible.
 	 */
 	@Test
-	public void impreciseCounterexamplesAreNotCertifiedIfDisabled(
+	public void impreciseCounterexamplesAreNotCertifiedByDefault(
 			@TempDir Path dir)
 			throws Exception {
-		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir,
-				"--no-certification");
+		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir);
 		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
 	}
 
@@ -358,7 +357,9 @@ public class TriageVerdictsTest {
 	public void impreciseCounterexamplesThatAreNotReproducedStayPossible(
 			@TempDir Path dir)
 			throws Exception {
-		assertEquals(Verdict.POSSIBLE, verdict("certified-spurious", SVCOMPProperty.ASSERT, dir));
+		List<JsonReport.JsonMessage> warnings = warnings("certified-spurious", SVCOMPProperty.ASSERT, dir,
+				"--certification");
+		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
 	}
 
 	/**

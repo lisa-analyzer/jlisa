@@ -76,10 +76,10 @@ public final class CheckCommand {
 
 	/**
 	 * Whether the candidate confirmations of the warnings that stay possible
-	 * are certified by validating their violation witnesses (enabled unless
-	 * {@code --no-certification} is given).
+	 * are certified by validating their violation witnesses (enabled by
+	 * {@code --certification}).
 	 */
-	private static boolean certification = true;
+	private static boolean certification = false;
 
 	/**
 	 * The time left, out of the time limit, for writing the results after the
@@ -229,13 +229,13 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 		options.addOption(timeLimit);
-		Option noCertification = Option.builder()
-				.longOpt("no-certification")
-				.desc("Do not certify the counterexamples that the verification cannot confirm by validating their "
-						+ "violation witnesses (they are certified by default, when a property file is given)")
+		Option certificationOption = Option.builder()
+				.longOpt("certification")
+				.desc("Certify the counterexamples that the verification cannot confirm by validating their "
+						+ "violation witnesses, when a property file is given (disabled by default)")
 				.required(false)
 				.build();
-		options.addOption(noCertification);
+		options.addOption(certificationOption);
 		SharedOptions.markRequired(options, SharedOptions.SOURCE, "outdir", "numericalDomain");
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
@@ -312,7 +312,7 @@ public final class CheckCommand {
 			if (cmd.hasOption("z3"))
 				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
 
-			certification = !cmd.hasOption("no-certification");
+			certification = cmd.hasOption("certification");
 
 			interprocedural = cmd.getOptionValue("i", "EntryState");
 			if (!interprocedural.equals("Inlining") && !interprocedural.matches("EntryState(:[1-9][0-9]*)?"))
