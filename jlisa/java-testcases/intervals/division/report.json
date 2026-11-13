@@ -7,8 +7,21 @@
     "contextHash" : "03f962637be9d28a3b68e799d29bef71",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "definite" : true,
+    "reproducingInputs" : [ {
+      "location" : "'Main.java':4:26-4:38",
+      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "\"\""
+    }, {
+      "location" : "'Main.java':5:12-5:31",
+      "source" : "return of int org.sosy_lab.sv_benchmarks.Verifier::nondetInt()",
+      "context" : "<empty>",
+      "occurrence" : 0,
+      "value" : "4"
+    } ],
+    "explanation" : "violation reached in 8 steps through [k = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), ==(k, 1), ==(k, 2), ==(k, 3), ==(k, 4), Main::varNegWrong(), [main > varNegWrong] z = -(0.0), [main > varNegWrong] r = /(1.0, z), [main > varNegWrong] assert >(r, 0)] (not yet certified by execution)"
   }, {
     "location" : "'Main.java':23:91-23:137",
     "cfg" : "void Main::unknownNumerator()",
@@ -18,23 +31,23 @@
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
     "definite" : false,
-    "explanation" : "no SMT solver available: Cannot start SMT solver with command [z3, -in, -smt2]"
+    "explanation" : "not verified: the verification stopped at the first confirmed warning"
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.literalNeg()_cf534772a8b935104c2149f3db3b768f.graph.json", "void_Main.literalPos()_86fa2d6d5579c5144fb038bf68404196.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_Main.nan()_be774f2ae1c23e30eec802a5c4302fce.graph.json", "void_Main.negNumerator()_9c9998b801b4763f092ca39bbed7367f.graph.json", "void_Main.remNan()_28e678330aa6519031541bbd35f565ed.graph.json", "void_Main.unknownNumerator()_6a681b1e28525692eb1438bbe370a58c.graph.json", "void_Main.varNegRight()_5bb7cf06e212a70b6b1731765d436674.graph.json", "void_Main.varNegWrong()_03f962637be9d28a3b68e799d29bef71.graph.json", "void_Main.varPos()_54c7daf39c07f4c07355239e1177ea51.graph.json" ],
   "info" : {
     "cfgs" : "15",
-    "duration" : "292ms",
-    "end" : "2026-11-13T14:00:24.667+01:00",
+    "duration" : "189ms",
+    "end" : "2026-11-13T17:18:53.421+01:00",
     "expressions" : "104",
     "files" : "10",
     "globals" : "53",
-    "members" : "417",
+    "members" : "418",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T14:00:24.375+01:00",
+    "start" : "2026-11-13T17:18:53.232+01:00",
     "statements" : "59",
-    "units" : "57",
+    "units" : "56",
     "version" : "1.0",
     "warnings" : "2"
   },

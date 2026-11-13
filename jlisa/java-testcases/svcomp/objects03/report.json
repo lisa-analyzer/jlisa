@@ -1,15 +1,5 @@
 {
   "warnings" : [ {
-    "location" : "'A.java':21:4-21:45",
-    "cfg" : "void svcomp.objects.A::A(svcomp.objects.A* this, int x)",
-    "text" : "assert false : \"Error in constructor A()\"",
-    "context" : "['Main.java':16:12-16:71, 'Verifier.java':62:11-62:32, 'Factories.java':125:17-125:45, 'Factories.java':91:17-91:43]",
-    "contextHash" : "6e17719aa396bf1643a027be0a53d9fb",
-    "targetKind" : "EXPRESSION",
-    "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 19 steps through [o = org.sosy_lab.sv_benchmarks.Verifier::nondetObject(\"svcomp.objects.Any\", new svcomp.objects.Factories.AnyFactory()), [main > nondetObject] return createObject(factory), [main > nondetObject > createObject] i = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > nondetObject > createObject] ==/equals(i, 1), [main > nondetObject > createObject] return createObject(new svcomp.objects.Factories.AFactory()), [main > nondetObject > createObject > AFactory] java.lang.Object::Object(this), [main > nondetObject > createObject > AFactory] ret, [main > nondetObject > createObject] return createObject(new svcomp.objects.Factories.AFactory()) (after [1 targets] svcomp.objects.Factories.AFactory::AFactory($rec@'Factories.java':125:17-125:30)), [main > nondetObject > createObject > createObject] i = org.sosy_lab.sv_benchmarks.Verifier::nondetInt(), [main > nondetObject > createObject > createObject] ==/equals(i, 1), [main > nondetObject > createObject > createObject] ==/equals(i, 2), [main > nondetObject > createObject > createObject] return new svcomp.objects.A(org.sosy_lab.sv_benchmarks.Verifier::nondetInt()), [main > nondetObject > createObject > createObject > A] svcomp.objects.Any::Any(this), [main > nondetObject > createObject > createObject > A > Any] java.lang.Object::Object(this), [main > nondetObject > createObject > createObject > A > Any] ret, [main > nondetObject > createObject > createObject > A] svcomp.objects.Any::Any(this) (after [1 targets] svcomp.objects.Any::Any(this)), [main > nondetObject > createObject > createObject > A] this::x = 0, [main > nondetObject > createObject > createObject > A] this::y = 0, [main > nondetObject > createObject > createObject > A] this::sub = null, [main > nondetObject > createObject > createObject > A] assert false : \"Error in constructor A()\"], relying on values that are not computed precisely (heap values, unsupported operations): contents of $field:svcomp.objects.A::x after unmodeled writes; ReferenceStore; contents of $written:svcomp.objects.A::x after unmodeled writes; contents of $field:x after unmodeled writes; contents of $written:x after unmodeled writes"
-  }, {
     "location" : "'Main.java':19:6-19:18",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
     "text" : "assert false",
@@ -47,19 +37,19 @@
   "files" : [ "java.lang.Object__org.sosy_lab.sv_benchmarks.Verifier.nondetObject(java.lang.Class__type,_org.sosy_lab.sv_benchmarks.ObjectFactory__factory)_7a7454d2e25bfbe4a21ef28d7a42ee0c.graph.json", "report.json", "svcomp.objects.A__svcomp.objects.Factories.AFactory.createObject(svcomp.objects.Factories.AFactory__this)_de8253e019b7b82a6829ae9753b7d10b.graph.json", "svcomp.objects.Any__svcomp.objects.Factories.AnyFactory.createObject(svcomp.objects.Factories.AnyFactory__this)_9d1eefb73ddda758bf41d3635050ea92.graph.json", "svcomp.objects.B__svcomp.objects.Factories.BFactory.createObject(svcomp.objects.Factories.BFactory__this)_5c3c1f9d5340b8556350a811ecbd737e.graph.json", "svcomp.objects.C__svcomp.objects.Factories.CFactory.createObject(svcomp.objects.Factories.CFactory__this)_c037555d5644f68060fe8c26950f0356.graph.json", "svcomp.objects.D__svcomp.objects.Factories.DFactory.createObject(svcomp.objects.Factories.DFactory__this)_38eb88fb8c2c3aab54b4c64b4ab8e28e.graph.json", "svcomp.objects.Sub1__svcomp.objects.Factories.Sub1Factory.createObject(svcomp.objects.Factories.Sub1Factory__this)_48a0a0f2f0e7e9b88778b3be7fed6f79.graph.json", "svcomp.objects.Sub2__svcomp.objects.Factories.Sub2Factory.createObject(svcomp.objects.Factories.Sub2Factory__this)_b7b3346cf8a2ebb38ff66e9517c31a75.graph.json", "svcomp.objects.Sub__svcomp.objects.Factories.SubFactory.createObject(svcomp.objects.Factories.SubFactory__this)_190d7161100ae5477ba6543a123feec0.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_ce5aa8874fdca230f00502fd37b20e50.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_d104d6f59bf2ea288ea58a867a0bee9d.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this)_f1458dfaa55c2e9662f0f06ece7cd4dc.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x)_6e17719aa396bf1643a027be0a53d9fb.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y)_07891e43547b2ab5187f3818ab552b28.graph.json", "void_svcomp.objects.A.A(svcomp.objects.A__this,_int_x,_int_y,_svcomp.objects.Sub__sub)_d008eab9997d229e27f10d83fdb0687e.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_27ab9c73f17bb6c1fb285fab7718feb2.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_5c942387b4111afe34206743743d8920.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_88548d736e8865dc395e1f92937f50a1.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_934b55a6343f16c78eb6adb7f9942bd2.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_a201ee3190638275ee3fe89e611fbf13.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_b5f0bd17d61d3060e3bdef9ab5848d13.graph.json", "void_svcomp.objects.Any.Any(svcomp.objects.Any__this)_c29a77d4db30ec04e94c7584eb4a6840.graph.json", "void_svcomp.objects.B.B(svcomp.objects.B__this)_5937bd37e0cf424f42218961db13895c.graph.json", "void_svcomp.objects.C.C(svcomp.objects.C__this)_08463b3e6104788aa2d84c8690c096f6.graph.json", "void_svcomp.objects.D.D(svcomp.objects.D__this)_b76ae05d801625a9f6ecf1c75a00b8ac.graph.json", "void_svcomp.objects.Factories.AFactory.AFactory(svcomp.objects.Factories.AFactory__this)_64d84997e2d8bed9f59b3d683267fa12.graph.json", "void_svcomp.objects.Factories.AnyFactory.AnyFactory(svcomp.objects.Factories.AnyFactory__this)_9b3257799935e5bb338647aae144b426.graph.json", "void_svcomp.objects.Factories.BFactory.BFactory(svcomp.objects.Factories.BFactory__this)_8762a1d337dbcc5783f6fe976d54b36d.graph.json", "void_svcomp.objects.Factories.CFactory.CFactory(svcomp.objects.Factories.CFactory__this)_1ae637af6052022e2f3eb7de6e00b72b.graph.json", "void_svcomp.objects.Factories.DFactory.DFactory(svcomp.objects.Factories.DFactory__this)_a440555bab30955928b9bb4452bb2b0b.graph.json", "void_svcomp.objects.Factories.Sub1Factory.Sub1Factory(svcomp.objects.Factories.Sub1Factory__this)_bff2ce05264251bd71c4e50d3e97c498.graph.json", "void_svcomp.objects.Factories.Sub2Factory.Sub2Factory(svcomp.objects.Factories.Sub2Factory__this)_855a807dc41496c1e5b80324838d0d6f.graph.json", "void_svcomp.objects.Factories.SubFactory.SubFactory(svcomp.objects.Factories.SubFactory__this)_84bee340f1fc903b5e744b159f666031.graph.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_2b19d352288fc91e62a78358ed2d1ede.graph.json", "void_svcomp.objects.Sub.Sub(svcomp.objects.Sub__this)_f406a7aa062e26a88c8ebdad88ada1dd.graph.json", "void_svcomp.objects.Sub1.Sub1(svcomp.objects.Sub1__this)_c949b4c7ff3a145be11e05b9110f904f.graph.json", "void_svcomp.objects.Sub2.Sub2(svcomp.objects.Sub2__this,_int_z)_458d66b2e13426398c64cd52627e211c.graph.json" ],
   "info" : {
     "cfgs" : "46",
-    "duration" : "844ms",
-    "end" : "2026-11-13T14:11:29.612+01:00",
-    "expressions" : "203",
+    "duration" : "492ms",
+    "end" : "2026-11-13T17:51:12.429+01:00",
+    "expressions" : "204",
     "files" : "38",
     "globals" : "65",
-    "members" : "448",
+    "members" : "449",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T14:11:28.768+01:00",
+    "start" : "2026-11-13T17:51:11.937+01:00",
     "statements" : "146",
     "units" : "73",
     "version" : "1.0",
-    "warnings" : "3"
+    "warnings" : "2"
   },
   "configuration" : {
     "asynchronousListeners" : "",

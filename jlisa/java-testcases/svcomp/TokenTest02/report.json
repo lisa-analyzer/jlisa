@@ -8,7 +8,7 @@
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
     "definite" : false,
-    "explanation" : "time budget exhausted after 2141 queries, at level 17"
+    "explanation" : "time budget exhausted after 2054 queries, at level 17"
   }, {
     "location" : "'Main.java':18:18-18:52",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -24,15 +24,15 @@
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "1m 906ms",
-    "end" : "2026-11-13T14:18:11.838+01:00",
+    "duration" : "1m 950ms",
+    "end" : "2026-11-13T17:37:41.910+01:00",
     "expressions" : "33",
     "files" : "1",
     "globals" : "53",
-    "members" : "408",
+    "members" : "409",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T14:17:10.932+01:00",
+    "start" : "2026-11-13T17:36:40.960+01:00",
     "statements" : "20",
     "units" : "56",
     "version" : "1.0",

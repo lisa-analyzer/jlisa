@@ -18,7 +18,7 @@ public class A extends Any {
   public A() {}
 
   public A(int x) {
-    assert false : "Error in constructor A()";
+    this.x = x;
   }
 
   public A(int x, int y) {
