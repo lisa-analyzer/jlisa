@@ -90,15 +90,11 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope>
 			throw new RuntimeException(new UnsupportedStatementException("array should have a type"));
 		} else if (node.getDimensions() == 0) {
 			throw new RuntimeException(new UnsupportedStatementException("array should have at least one dimension"));
-		} else if (node.getDimensions() == 2) {
-			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
+		} else
+			// arrays of more dimensions are arrays of references to arrays (see
+			// JavaArrayType.lookup)
+			type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
 					node.getDimensions());
-			type = JavaArrayType.lookup(new JavaReferenceType(_type), 0);
-		} else {
-			_type = JavaArrayType.lookup(_type.isInMemoryType() ? new JavaReferenceType(_type) : _type,
-					node.getDimensions());
-			type = _type;
-		}
 		return false;
 
 	}
@@ -313,23 +309,14 @@ public class TypeASTVisitor extends ScopedVisitor<UnitScope>
 	public Type liftToArray(
 			Type t,
 			VariableDeclarationFragment fragment) {
-		Type type = t;
-		// we do not currently support k-dim arrays, with k > 2
-		if (fragment.getExtraDimensions() > 2)
-			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Multi-dimensional arrays are not supported are not supported.",
-					getSourceCodeLocation(fragment));
-
-		// single-dim array
-		if (fragment.getExtraDimensions() == 1)
-			type = new JavaReferenceType(JavaArrayType.lookup(type, 1));
-
-		// bidim array
-		else if (fragment.getExtraDimensions() == 2)
-			type = new JavaReferenceType(
-					JavaArrayType.lookup(new JavaReferenceType(JavaArrayType.lookup(type, 1)), 2));
-
-		return type;
+		// the brackets after the name add dimensions to the type (e.g., int
+		// a[][]
+		// is an int[][]), and arrays of more dimensions are arrays of
+		// references
+		// to arrays (see JavaArrayType.lookup)
+		if (fragment.getExtraDimensions() == 0)
+			return t;
+		return new JavaReferenceType(JavaArrayType.lookup(t, fragment.getExtraDimensions()));
 	}
 
 	@Override
