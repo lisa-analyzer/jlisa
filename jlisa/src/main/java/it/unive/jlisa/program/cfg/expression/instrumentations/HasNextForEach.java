@@ -26,6 +26,7 @@ import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 
@@ -98,7 +99,8 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 				return topFallback(interprocedural, state, expressions);
 
 			List<BinaryExpression> lengthsList = lengths.toList();
-			if (lengthsList.size() == 1) {
+
+			if (hasEqualConstraint(lengthsList)) {
 
 				BinaryExpression lt = new BinaryExpression(JavaBooleanType.INSTANCE, ghostIt, ghostLen, ComparisonLt.INSTANCE, loc);
 				Satisfiability sat = analysis.satisfies(state, lt, context, this);
@@ -133,6 +135,15 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					throws SemanticException {
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				new PushAny(JavaBooleanType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), this);
+	}
+
+	private boolean hasEqualConstraint(List<BinaryExpression> constraints) {
+		for (BinaryExpression expr : constraints) {
+			if (expr.getOperator() == ComparisonEq.INSTANCE) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

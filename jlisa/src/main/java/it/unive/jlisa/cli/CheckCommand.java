@@ -19,6 +19,7 @@ import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.interprocedural.JavaEntryStateContextBasedAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
+import it.unive.jlisa.outputs.MergingReportDumper;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
@@ -428,7 +429,7 @@ public final class CheckCommand {
 		conf.workdir = outdir;
 		if (graphOutput)
 			conf.outputs.add(new JSONResults<>());
-		conf.outputs.add(new JSONReportDumper());
+		conf.outputs.add(new MergingReportDumper());
 
 		// recursions are unrolled up to 200 frames, and solved when deeper or
 		// when their call trees grow too large (e.g., fib(n - 1) + fib(n - 2))

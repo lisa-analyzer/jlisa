@@ -23,6 +23,7 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 
 /**
@@ -92,7 +93,7 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 				return topFallback(interprocedural, state, expr, expressions);
 
 			List<BinaryExpression> lengthsList = lengths.toList();
-			if (lengthsList.size() == 1) {
+			if (hasEqualConstraint(lengthsList)) {
 
 				IntLiteral dummy = new IntLiteral(getCFG(), loc, 0);
 				JavaArrayAccess accessArr = new JavaArrayAccess(getCFG(), arrType.getBaseType(), loc, getSubExpression(), dummy);
@@ -119,5 +120,14 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 		PushAny top = new PushAny(contentType, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state,
 				top, interprocedural.getCurrentContext(), this);
+	}
+
+	private boolean hasEqualConstraint(List<BinaryExpression> constraints) {
+		for (BinaryExpression expr : constraints) {
+			if (expr.getOperator() == ComparisonEq.INSTANCE) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
