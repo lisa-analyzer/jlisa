@@ -31,6 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.Property;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -57,11 +58,21 @@ public class AnnotationTest {
 		}
 	}
 
+	/**
+	 * The logger whose warnings are captured.
+	 */
+	private static final String ANNOTATION_BUILDER = "it.unive.jlisa.frontend.util.AnnotationBuilder";
+
 	@BeforeAll
 	static void parse() throws IOException {
+		// the warnings are captured whatever the level of the loggers of
+		// jlisa, that other tests might have set (e.g., running jlisa with
+		// -l ERROR): the level of the logger is set before adding the
+		// appender, as setting levels reconfigures the loggers
+		Configurator.setLevel(ANNOTATION_BUILDER, Level.WARN);
 		captureAppender = new CapturingAppender();
 		captureAppender.start();
-		annotationBuilderLogger = (Logger) LogManager.getLogger("it.unive.jlisa.frontend.util.AnnotationBuilder");
+		annotationBuilderLogger = (Logger) LogManager.getLogger(ANNOTATION_BUILDER);
 		annotationBuilderLogger.addAppender(captureAppender);
 
 		lisaProgram = new JavaFrontend().parseFromListOfFile(List.of(
@@ -577,5 +588,7 @@ public class AnnotationTest {
 			annotationBuilderLogger.removeAppender(captureAppender);
 		if (captureAppender != null)
 			captureAppender.stop();
+		// the logger inherits its level again
+		Configurator.setLevel(ANNOTATION_BUILDER, (Level) null);
 	}
 }
