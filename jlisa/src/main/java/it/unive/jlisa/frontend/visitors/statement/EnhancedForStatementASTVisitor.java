@@ -130,8 +130,6 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		block.addNode(initLen);
 		block.addNode(initIdx);
 
-		 // TODO: add a check to only unroll in simple cases:
-		 // no break/continue, no nested loops, no lambdas etc...
 		boolean canUnroll = canUnroll(node);
 		int UNROLL_FACTOR = 16;
 

@@ -6,6 +6,7 @@ import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
 
 import java.util.stream.Stream;
 import it.unive.jlisa.program.type.JavaArrayType;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import java.util.List;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -115,7 +116,10 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					StatementStore<A> expressions)
 					throws SemanticException {
 		Type containerType = expr.getStaticType().asReferenceType().getInnerType();
-		Type contentType = containerType.asArrayType().getInnerType();
+
+		Type contentType = JavaClassType.getObjectType();
+		if (containerType instanceof JavaArrayType)
+			contentType = containerType.asArrayType().getInnerType();
 
 		PushAny top = new PushAny(contentType, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state,
