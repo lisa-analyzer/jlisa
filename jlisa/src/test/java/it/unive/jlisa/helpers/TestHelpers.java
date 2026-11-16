@@ -50,7 +50,7 @@ public class TestHelpers {
 		// the values of reproducing inputs depend on the solver
 		conf.reportComparer = new InputValuesIgnoringComparer();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		conf.forceUpdate = true;
+//		conf.forceUpdate = true;
 		// conf.outputs.add(new HtmlResults<>(true));
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 
