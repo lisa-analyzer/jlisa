@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.LoopUnrolling;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
@@ -113,7 +114,6 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		String lenName = "$len" + id;
 		String idxName = "$i" + id;
 		Type collectionType = collection.getStaticType();
-		Type elementType = arrayType.getInnerType();
 
 		VariableRef arrDecl = declare(arrName, collectionType, synth);
 		VariableRef lenDecl = declare(lenName, JavaIntType.INSTANCE, synth);
@@ -130,7 +130,7 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		block.addNode(initLen);
 		block.addNode(initIdx);
 
-		boolean canUnroll = canUnroll(node);
+		boolean canUnroll = LoopUnrolling.canUnroll(node);
 		int UNROLL_FACTOR = 16;
 
 		Statement first = null;
@@ -141,9 +141,6 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 
 				ParsingEnvironment env = getEnvironment().withUnrollingCopy(i + 2);
 
-				// Expression condition = new LessThan(cfg, synth.nextLocation(),
-				// 		ref(idxName, JavaIntType.INSTANCE, synth),
-				// 		ref(lenName, JavaIntType.INSTANCE, synth));
 				Expression condition = new Equal(cfg, synth.nextLocation(),
 						new TrueLiteral(getScope().getCFG(), synth.nextLocation()),
 						new HasNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
@@ -153,10 +150,6 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 						new StatementASTVisitor(env, getScope()));
 
 				// item = $arr[$i]
-				// JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item,
-				// 		new JavaArrayAccess(cfg, elementType, synth.nextLocation(),
-				// 				ref(arrName, collectionType, synth),
-				// 				ref(idxName, JavaIntType.INSTANCE, synth)));
 
 				JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item, new GetNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
 
@@ -325,80 +318,4 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		return block;
 	}
 
-	private boolean canUnroll(EnhancedForStatement node) {
-		Checker checker = new Checker();
-		node.getBody().accept(checker);
-		return checker.ok;
-	}
-
-	private static class Checker extends ASTVisitor {
-
-		boolean ok = true;
-
-		private boolean reject() {
-			ok = false;
-			return false;
-		}
-
-		@Override
-		public boolean visit(Block node) {
-			return true;
-		}
-
-
-		@Override
-		public boolean visit(BreakStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(ContinueStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(LabeledStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(WhileStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(DoStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(ForStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(EnhancedForStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(AnonymousClassDeclaration node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(LambdaExpression node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(TypeDeclarationStatement node) {
-			return reject();
-		}
-
-		@Override
-		public boolean visit(TryStatement node) {
-			return reject();
-		}
-	}
 }
