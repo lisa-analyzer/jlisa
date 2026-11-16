@@ -2,6 +2,7 @@ package it.unive.jlisa.svcomp;
 
 import it.unive.jlisa.triage.JavaExpressionEncoder;
 import it.unive.jlisa.triage.JavaGlobalWrites;
+import it.unive.jlisa.triage.JavaHeapWrites;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.SemanticException;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * The {@link WarningVerifier} used for SV-COMP tasks. Each task has a single
@@ -27,7 +29,11 @@ import java.util.Map;
  * uncaught runtime exceptions (that is, the ones reporting an
  * {@link ErrorViolation}) are verified separately, each with a
  * {@link FirstViolationVerifier}: the verification of each kind of warnings
- * stops at the first one that is confirmed, independently of the other kind.
+ * stops at the first one that is confirmed, independently of the other kind. If
+ * none of a kind is confirmed, the candidate confirmations of the warnings that
+ * stayed possible (see {@link VerificationResult#getCandidate()}) are
+ * certified, in order, with the certifier of the verifier, if any (see
+ * {@link #setCertifier(Predicate)}), until one is certified.
  *
  * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
  *
@@ -41,6 +47,8 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 
 	private final WarningVerifier<A, D> verifier;
 
+	private Predicate<StatementMessage> certifier;
+
 	/**
 	 * Builds the verifier, verifying each kind of warnings with the verifier of
 	 * {@link #firstViolation()}.
@@ -52,8 +60,9 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 	/**
 	 * Yields a {@link FirstViolationVerifier} with default parameters, whose
 	 * {@link PdrVerifier} encodes the operators of the Java frontend through a
-	 * {@link JavaExpressionEncoder}, and knows the static fields written by the
-	 * methods of the program ({@link JavaGlobalWrites}).
+	 * {@link JavaExpressionEncoder}, and knows the static fields and the
+	 * contents of the heap written by the methods of the program
+	 * ({@link JavaGlobalWrites} and {@link JavaHeapWrites}).
 	 *
 	 * @param <A> the kind of {@link AbstractLattice} produced by the domain
 	 *                {@code D}
@@ -65,7 +74,7 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 			D> firstViolation() {
 		return new FirstViolationVerifier<>(new ReachabilityVerifier<>(),
 				new PdrVerifier<A, D>().withFixpointCheck(false).withEncoder(JavaExpressionEncoder::new)
-						.withGlobalWrites(new JavaGlobalWrites()));
+						.withGlobalWrites(new JavaGlobalWrites()).withHeapWrites(new JavaHeapWrites()));
 	}
 
 	/**
@@ -93,9 +102,46 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 
 		Map<StatementMessage, VerificationResult> results = new LinkedHashMap<>();
 		if (!asserts.isEmpty())
-			results.putAll(verifier.verify(tool, asserts));
+			results.putAll(certify(asserts, verifier.verify(tool, asserts)));
 		if (!exceptions.isEmpty())
-			results.putAll(verifier.verify(tool, exceptions));
+			results.putAll(certify(exceptions, verifier.verify(tool, exceptions)));
+		return results;
+	}
+
+	/**
+	 * Sets the certifier of the candidate confirmations of the warnings that
+	 * stay possible: given the copy of a warning confirmed with a candidate, it
+	 * tells whether the candidate is certified (e.g., by executing the program
+	 * with its reproducing inputs).
+	 *
+	 * @param certifier the certifier, or {@code null} for none
+	 */
+	public void setCertifier(
+			Predicate<StatementMessage> certifier) {
+		this.certifier = certifier;
+	}
+
+	/**
+	 * Certifies the candidate confirmations of the given warnings, in order, if
+	 * none of them has been confirmed, until one is certified, that is then
+	 * confirmed.
+	 */
+	private Map<StatementMessage, VerificationResult> certify(
+			List<StatementMessage> warnings,
+			Map<StatementMessage, VerificationResult> results) {
+		if (certifier == null || results.values().stream().anyMatch(VerificationResult::isConfirmed))
+			return results;
+		for (StatementMessage warning : warnings) {
+			VerificationResult result = results.get(warning);
+			if (result == null || !result.isPossible() || result.getCandidate() == null)
+				continue;
+			VerificationResult candidate = result.getCandidate();
+			if (certifier.test(warning.verified(candidate))) {
+				Map<StatementMessage, VerificationResult> certified = new LinkedHashMap<>(results);
+				certified.put(warning, candidate);
+				return certified;
+			}
+		}
 		return results;
 	}
 }

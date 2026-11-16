@@ -85,15 +85,21 @@ public class JavaAddition extends it.unive.lisa.program.cfg.statement.BinaryExpr
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		Set<Type> leftTypes = analysis.getRuntimeTypesOf(state, left, context, this);
 		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
-		SymbolicExpression actualLeft = left;
-		SymbolicExpression actualRight = right;
 		AnalysisState<A> result = state.bottomExecution();
-		BinaryOperator op;
-		Type type;
 
-		AnalysisState<A> partialResult = state.bottomExecution();
-		for (Type lType : leftTypes) {
-			for (Type rType : rightTypes) {
+		for (Type leftType : leftTypes) {
+			for (Type rightType : rightTypes) {
+				// each pair of types is handled on its own operands and result:
+				// the operands unboxed for a pair (or the result computed for
+				// it) must not leak into the other pairs, as the result would
+				// otherwise depend on the order of the types
+				Type lType = leftType;
+				Type rType = rightType;
+				SymbolicExpression actualLeft = left;
+				SymbolicExpression actualRight = right;
+				BinaryOperator op;
+				Type type;
+				AnalysisState<A> partialResult = state.bottomExecution();
 				if (lType.isReferenceType() && rType.isReferenceType()
 						&& lType.asReferenceType().getInnerType().equals(JavaClassType.getStringType())
 						&& lType.asReferenceType().getInnerType().equals(rType.asReferenceType().getInnerType())) {

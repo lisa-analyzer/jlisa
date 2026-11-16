@@ -79,6 +79,13 @@ public final class EventLoop {
 	// a witness value that could not be returned (the run left the witness)
 	private boolean witnessValueNotApplied = false;
 
+	/**
+	 * Whether the target JVM disconnected before a verdict, without the VM
+	 * death event of a program that ends (e.g., it could not start, or it was
+	 * killed).
+	 */
+	private boolean disconnected = false;
+
 	// Deferred breakpoints: class name → list of (line, plan-item-type)
 	private final Map<String, List<PendingBreakpoint>> pendingBreakpoints = new HashMap<>();
 
@@ -144,6 +151,7 @@ public final class EventLoop {
 				// VM terminated — it ran to completion without reaching the
 				// target
 				ValidatorLogger.event("VM disconnected");
+				disconnected = true;
 				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 			}
 
@@ -158,6 +166,7 @@ public final class EventLoop {
 					result = processEvent(event);
 				} catch (VMDisconnectedException e) {
 					ValidatorLogger.event("VM disconnected while handling {}", event);
+					disconnected = true;
 					return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 				}
 
@@ -173,8 +182,15 @@ public final class EventLoop {
 			}
 
 			try {
-				eventSet.resume();
+				// the target VM starts suspended by its start event, and has
+				// already been resumed (see above): resuming the event set of
+				// that event would resume the VM again, including the threads
+				// suspended meanwhile by other events (e.g., at the entry of a
+				// nondet method whose value is still to be forced)
+				if (eventSet.stream().noneMatch(VMStartEvent.class::isInstance))
+					eventSet.resume();
 			} catch (VMDisconnectedException e) {
+				disconnected = true;
 				return handleErrorStatus("vm-disconnected", "target JVM disconnected before a verdict");
 			}
 		}
@@ -460,6 +476,15 @@ public final class EventLoop {
 		boolean isRuntimeException = isRefInstance(reference,
 				(ClassType) vm.classesByName("java.lang.RuntimeException").getFirst());
 
+		if (isError && isResourceExhaustion(reference)) {
+			// the program ran out of stack or memory with the values of the
+			// witness (e.g., a recursion as deep as an input): the run says
+			// nothing about the violation, and the validator did not fail
+			ValidatorLogger.event("Resources exhausted - " + reference);
+			recordUnusedValues();
+			RunSummary.reason("resource-exhausted", exceptionClass + " at " + where(loc));
+			return Optional.of(ValidationResult.UNKNOWN);
+		}
 		if (isError) {
 			ValidatorLogger.event("Uncaught JVM ERROR - " + reference);
 			recordUnusedValues();
@@ -480,6 +505,19 @@ public final class EventLoop {
 	// ------------------------------------------------------------------
 	// private utilities
 	// ------------------------------------------------------------------
+
+	/**
+	 * Yields whether the given exception is a {@link VirtualMachineError}
+	 * signalling that the program ran out of resources (stack or memory).
+	 */
+	private boolean isResourceExhaustion(
+			ObjectReference ref) {
+		for (String name : List.of("java.lang.StackOverflowError", "java.lang.OutOfMemoryError"))
+			for (ReferenceType type : vm.classesByName(name))
+				if (type instanceof ClassType && isRefInstance(ref, (ClassType) type))
+					return true;
+		return false;
+	}
 
 	private boolean isRefInstance(
 			ObjectReference ref,
@@ -502,6 +540,17 @@ public final class EventLoop {
 	 * witness fixed every nondet value the run used; otherwise the run took
 	 * values of its own and says nothing about the witness.
 	 */
+	/**
+	 * Yields whether the target JVM disconnected before a verdict, without
+	 * ending as programs do (e.g., it could not start, or it was killed): the
+	 * run says nothing about the witness, and it can be repeated.
+	 *
+	 * @return whether the target JVM disconnected
+	 */
+	public boolean disconnected() {
+		return disconnected;
+	}
+
 	/**
 	 * Verifier.nondet* calls of the run that returned a value the witness did
 	 * not fix.

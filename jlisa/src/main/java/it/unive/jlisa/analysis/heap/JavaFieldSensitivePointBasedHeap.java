@@ -33,6 +33,7 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.util.datastructures.trie.PatriciaTrieMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -66,6 +67,66 @@ public class JavaFieldSensitivePointBasedHeap
 	public JavaFieldSensitivePointBasedHeap(
 			boolean contextSensitive) {
 		super(contextSensitive);
+	}
+
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * The cells of arrays are named by the expressions of their indexes (e.g.,
+	 * {@code a[i]} and {@code a[0]} are different cells, even if {@code i} is
+	 * {@code 0}): a cell of an array of references that does not point to any
+	 * location might be any cell written through another expression, or a cell
+	 * never written, so it points to the locations of all the cells of the same
+	 * array and to null. Without this, the cell would be taken as the object
+	 * whose fields are accessed (see
+	 * {@link FieldSensitivePointBasedHeap#rewriteAccessChild}), and an access
+	 * to a cell of the array it points to would access a cell of the array
+	 * containing it instead.
+	 */
+	@Override
+	protected Set<SymbolicExpression> resolveIdentifier(
+			HeapEnvWithFields state,
+			Identifier v,
+			ProgramPoint pp) {
+		if (v instanceof AllocationSite && ((AllocationSite) v).getField() != null
+				&& !state.getKeys().contains(v)) {
+			AllocationSite cell = (AllocationSite) v;
+			if (isArray(state, cell)) {
+				Set<SymbolicExpression> result = new HashSet<>();
+				for (Identifier other : state.getKeys())
+					if (other instanceof AllocationSite && sameObject((AllocationSite) other, cell))
+						result.addAll(super.resolveIdentifier(state, other, pp));
+				// or a cell never written, which is null
+				result.add(new MemoryPointer(pp.getProgram().getTypes().getReference(cell.getStaticType()),
+						NullAllocationSite.INSTANCE, cell.getCodeLocation()));
+				return result;
+			}
+		}
+		return super.resolveIdentifier(state, v, pp);
+	}
+
+	// whether the given cell is a cell of an array, that is, its object (with
+	// the same name and context, and no field) is an array
+	private static boolean isArray(
+			HeapEnvWithFields state,
+			AllocationSite cell) {
+		if (state.fields.function == null)
+			return false;
+		for (AllocationSite site : state.fields.getKeys())
+			if (site.getField() == null && site.getStaticType().isArrayType()
+					&& site.getLocationName().equals(cell.getLocationName())
+					&& Objects.equals(site.getContext(), cell.getContext()))
+				return true;
+		return false;
+	}
+
+	// whether the given site is another cell (or field) of the object of the
+	// given cell
+	private static boolean sameObject(
+			AllocationSite other,
+			AllocationSite cell) {
+		return other.getField() != null && other.getLocationName().equals(cell.getLocationName())
+				&& Objects.equals(other.getContext(), cell.getContext());
 	}
 
 	@Override

@@ -30,7 +30,6 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -225,8 +224,11 @@ public class JavaAccessInstanceGlobal
 			return state.bottomExecution();
 
 		Type rectype = Type.commonSupertype(rectypes, Untyped.INSTANCE);
-		Variable var = new Variable(Untyped.INSTANCE, target, new Annotations(), getLocation());
-		HeapDereference container = new HeapDereference(rectype, expr, getLocation());
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, target, new Annotations(), getLocation());
+		// a receiver that is already a location of the heap (e.g., an array
+		// read from a cell of another array) is not dereferenced again, as for
+		// the fields of classes above
+		SymbolicExpression container = new HeapDereference(rectype, expr, getLocation());
 		AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
 		return analysis.smallStepSemantics(state, access, context, this);
 	}

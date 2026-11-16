@@ -23,8 +23,8 @@ import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.type.Type;
 
 public class ArraysAsList extends UnaryExpression implements PluggableStatement {
@@ -96,7 +96,7 @@ public class ArraysAsList extends UnaryExpression implements PluggableStatement 
 				JavaArrayType arrayType = (JavaArrayType) argType.asReferenceType().getInnerType();
 				AccessChild length = new AccessChild(JavaIntType.INSTANCE,
 						new HeapDereference(arrayType, arg, location),
-						new Variable(JavaIntType.INSTANCE, "length", location), location);
+						new GlobalVariable(JavaIntType.INSTANCE, "length", location), location);
 				AnalysisState<A> tmp = analysis.assign(created, ListModel.elementData(list, location), arg, context,
 						this);
 				tmp = analysis.assign(tmp, ListModel.size(list, location), length, context, this);

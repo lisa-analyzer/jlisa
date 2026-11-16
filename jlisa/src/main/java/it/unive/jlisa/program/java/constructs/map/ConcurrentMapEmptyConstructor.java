@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.map;
 
-import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -19,9 +18,6 @@ import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.PushFromConstraints;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
-import java.util.Set;
 
 public class ConcurrentMapEmptyConstructor extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -58,17 +54,9 @@ public class ConcurrentMapEmptyConstructor extends UnaryExpression implements Pl
 
 		CodeLocation location = getLocation();
 
+		// the new map is empty
 		AccessChild accessSize = MapModel.size(expr, location);
-
-		PushFromConstraints size = new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), Set.of(
-				new it.unive.lisa.symbolic.value.BinaryExpression(
-						JavaBooleanType.INSTANCE,
-						new Constant(JavaIntType.INSTANCE, 0, getLocation()),
-						accessSize,
-						ComparisonLe.INSTANCE,
-						getLocation())));
-
-		return analysis.assign(state, accessSize, size, context, this);
+		return analysis.assign(state, accessSize, new Constant(JavaIntType.INSTANCE, 0, location), context, this);
 	}
 
 	@Override

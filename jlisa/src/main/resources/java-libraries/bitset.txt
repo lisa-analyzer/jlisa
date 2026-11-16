@@ -9,3 +9,12 @@ class java.util.BitSet extends java.lang.Object:
 		param this libtype java.util.BitSet*		
 		param v type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		
+	instance method get: it.unive.jlisa.program.java.constructs.bitset.BitSetGet
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.BitSet*
+		param bitIndex type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+
+	instance method set: it.unive.jlisa.program.java.constructs.bitset.BitSetSet
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.BitSet*
+		param bitIndex type it.unive.jlisa.program.type.JavaIntType::INSTANCE

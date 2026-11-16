@@ -905,6 +905,14 @@ public class JavaTarsis extends Tarsis {
 				continue;
 			}
 			int unknown = s.indexOf(UNKNOWN);
+			if (unknown == s.lastIndexOf(UNKNOWN) && high - known <= MAX_MIN_LENGTH) {
+				// the unknown part has [(low - known), (high - known)]
+				// characters
+				for (long k = Math.max(0, low - known); k <= high - known; k++)
+					kept.add(s.substring(0, unknown) + String.valueOf(ANY_CHAR).repeat((int) k)
+							+ s.substring(unknown + 1));
+				continue;
+			}
 			if (known >= low || low > MAX_MIN_LENGTH || unknown != s.lastIndexOf(UNKNOWN)) {
 				// the unknown parts of a string with more than one may be
 				// filled in different ways: the string is kept as it is

@@ -21,6 +21,12 @@ public class ArrayCreationTest extends JLiSAAnalysisExecutor {
 		perform(conf);
 	}
 
+	@Test
+	public void testArrayCells() throws IOException {
+		CronConfiguration conf = TestHelpers.assertCheckerWithConstantPropagation("array-cells", "", "Main.java");
+		perform(conf);
+	}
+
 	@Disabled
 	public void testTwoDimArray() throws IOException {
 		// FIXME this has a double array access, see comment in JavaArrayAccess

@@ -65,6 +65,7 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
@@ -197,7 +198,17 @@ public class ExpressionVisitor
 				// name: the type of the field is the one of the elements
 				contentType = expr.getStaticType();
 			} else {
-				contentType = contentType.asArrayType().getBaseType();
+				// the initializer of an element of an array of arrays (e.g.,
+				// {1, 2} in {{1, 2}, {3, 4}}) creates the array referenced by
+				// the element: its type is the one of the elements of the
+				// enclosing initializer
+				Type created = contentType;
+				for (ASTNode parent = node.getParent(); parent instanceof ArrayInitializer
+						&& created.isArrayType(); parent = parent.getParent()) {
+					Type element = created.asArrayType().getInnerType();
+					created = element.isReferenceType() ? element.asReferenceType().getInnerType() : element;
+				}
+				contentType = created.isArrayType() ? created.asArrayType().getInnerType() : expr.getStaticType();
 			}
 
 		}
@@ -215,39 +226,9 @@ public class ExpressionVisitor
 		Type type = getParserContext().evaluate(node.getType(),
 				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
-		// currently we handle just single-dim and bi-dim arrays
-		if (node.dimensions().size() > 2)
-			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Multi-dimensional arrays are not supported are not supported.",
-					getSourceCodeLocation(node));
-
-		// single-dimension arrays
-		if (node.dimensions().size() == 1) {
-			Expression length = getParserContext().evaluate((ASTNode) node.dimensions().get(0),
-					new ExpressionVisitor(getEnvironment(), getScope()));
-			expression = new JavaNewArray(getScope().getCFG(), getSourceCodeLocation(node), length,
-					new JavaReferenceType(type));
-		}
-		// bi-dimension arrays
-		else if (node.dimensions().size() == 2) {
-			if (!(node.dimensions().get(0) instanceof NumberLiteral))
-				throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Bi-dimensional arrays with variable first dimension are not supported are not supported.",
-						getSourceCodeLocation(node));
-			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
-			Expression sndDimExpr = getParserContext().evaluate((ASTNode) node.dimensions().get(1),
-					new ExpressionVisitor(getEnvironment(), getScope()));
-			List<Expression> parameters = new ArrayList<>();
-			for (int i = 0; i < fstDim; i++) {
-				Expression expr = new JavaNewArray(getScope().getCFG(),
-						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
-						sndDimExpr, (JavaReferenceType) type.asArrayType().getInnerType());
-				parameters.add(expr);
-			}
-
-			expression = new JavaNewArrayWithInitializer(getScope().getCFG(), getSourceCodeLocation(node),
-					parameters.toArray(new Expression[0]), new JavaReferenceType(type));
-		} else {
+		if (!node.dimensions().isEmpty())
+			expression = newArray(node, type, 0, getSourceCodeLocation(node));
+		else {
 			ArrayInitializer initializer = node.getInitializer();
 
 			List<Expression> parameters = new ArrayList<>();
@@ -263,6 +244,58 @@ public class ExpressionVisitor
 		}
 
 		return false;
+	}
+
+	/**
+	 * The maximum number of elements of an array of arrays created by the
+	 * frontend element by element (see
+	 * {@link #newArray(ArrayCreation, Type, int, CodeLocation)}), as the
+	 * accesses enumerate the cells of arrays up to this length.
+	 */
+	private static final int MAX_ELEMENT_ARRAYS = 64;
+
+	/**
+	 * Yields the creation of the array of the given type with the dimensions of
+	 * the given creation starting from the given one (e.g., the rows of a
+	 * matrix): an array whose elements are the arrays of the following
+	 * dimensions, if they are given (e.g., {@code new int[2][3]}), or the
+	 * default value of its elements (e.g., {@code new int[2][]}, whose elements
+	 * are null references). The arrays of the following dimensions are created
+	 * for each element, which needs a constant length.
+	 */
+	private Expression newArray(
+			ArrayCreation node,
+			Type type,
+			int dimension,
+			CodeLocation location) {
+		ASTNode length = (ASTNode) node.dimensions().get(dimension);
+		if (dimension == node.dimensions().size() - 1)
+			return new JavaNewArray(getScope().getCFG(), location,
+					getParserContext().evaluate(length, new ExpressionVisitor(getEnvironment(), getScope())),
+					new JavaReferenceType(type));
+		if (!(length instanceof NumberLiteral))
+			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Arrays of arrays whose length is not constant are not supported.",
+					getSourceCodeLocation(node));
+		int elements = Long.decode(((NumberLiteral) length).getToken()).intValue();
+		// the elements are read and written through the constant indexes of
+		// the cells (see JavaArrayAccess) only for arrays with few elements:
+		// the cells of larger arrays are denoted by the expressions of their
+		// indexes, so that the references of an element written and read
+		// through different expressions (e.g., a[i] and a[j]) would not be
+		// the same
+		if (elements > MAX_ELEMENT_ARRAYS)
+			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Arrays of more than " + MAX_ELEMENT_ARRAYS + " arrays are not supported.",
+					getSourceCodeLocation(node));
+		// the elements are references to the arrays of the next dimension
+		Type nested = type.asArrayType().getInnerType().asReferenceType().getInnerType();
+		List<Expression> arrays = new ArrayList<>();
+		for (int i = 0; i < elements; i++)
+			arrays.add(newArray(node, nested, dimension + 1,
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation()));
+		return new JavaNewArrayWithInitializer(getScope().getCFG(), location, arrays.toArray(new Expression[0]),
+				new JavaReferenceType(type));
 	}
 
 	public Type getArrayInitializerType(

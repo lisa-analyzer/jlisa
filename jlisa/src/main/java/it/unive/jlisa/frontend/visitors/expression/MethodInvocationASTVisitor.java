@@ -135,11 +135,8 @@ class MethodInvocationASTVisitor extends ScopedVisitor<MethodScope> implements R
 			}
 		}
 
-		if (!node.typeArguments().isEmpty())
-			throw new ParsingException("method-invocation",
-					ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Method Invocation expressions with type arguments are not supported.",
-					getSourceCodeLocation(node));
+		// explicit type arguments (e.g., ConcurrentHashMap.<T>newKeySet()) are
+		// erased at runtime, hence they are ignored
 
 		if (!node.arguments().isEmpty()) {
 			for (Object args : node.arguments()) {

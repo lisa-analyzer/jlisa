@@ -23,9 +23,9 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import java.util.Set;
 
@@ -72,7 +72,7 @@ public class ListToArray
 		InstrumentedReceiver array = new InstrumentedReceiver(refType, true, getLocation());
 		AnalysisState<A> allocated = analysis.smallStepSemantics(state, created, context, this);
 		AnalysisState<A> tmp = analysis.assign(allocated, array, ref, context, this);
-		Variable lenProperty = new Variable(JavaIntType.INSTANCE, "length", getLocation());
+		GlobalVariable lenProperty = new GlobalVariable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(refType.getInnerType(), array, lenProperty, getLocation());
 		PushFromConstraints length = new PushFromConstraints(JavaIntType.INSTANCE, getLocation(), Set.of(
 				new BinaryExpression(

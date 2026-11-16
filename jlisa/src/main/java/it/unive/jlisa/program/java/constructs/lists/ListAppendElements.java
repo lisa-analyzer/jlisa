@@ -46,6 +46,16 @@ public class ListAppendElements extends NaryExpression implements PluggableState
 		originating = st;
 	}
 
+	/**
+	 * Returns whether the argument of the method is a collection (e.g.,
+	 * {@code addAll}), that cannot be null; otherwise, it is an element.
+	 *
+	 * @return whether the argument is a collection
+	 */
+	protected boolean collectionArgument() {
+		return false;
+	}
+
 	@Override
 	public <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> forwardSemanticsAux(
 			InterproceduralAnalysis<A, D> interprocedural,
@@ -67,6 +77,15 @@ public class ListAppendElements extends NaryExpression implements PluggableState
 								getSubExpressions(), expressions));
 			} else
 				result = result.lub(state);
+
+		// a null collection raises an exception
+		if (collectionArgument() && params.length > 1) {
+			AnalysisState<A> checked = result.bottomExecution();
+			for (SymbolicExpression arg : params[1])
+				checked = checked.lub(ListModel.nullArgument(interprocedural, state, result, arg, this,
+						getSubExpressions(), expressions));
+			result = checked;
+		}
 
 		// the returned value is unknown
 		Type returned = originating instanceof Expression e ? e.getStaticType() : getStaticType();

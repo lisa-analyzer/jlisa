@@ -13,7 +13,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.value.PushAny;
 
 public class BitSetConstructor extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
@@ -53,9 +52,8 @@ public class BitSetConstructor extends BinaryExpression implements PluggableStat
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		// TODO: fix semantics
-		return interprocedural.getAnalysis().smallStepSemantics(state, new PushAny(getStaticType(), getLocation()),
-				interprocedural.getCurrentContext(), originating);
+		// the new bit set is empty
+		return BitSetGet.setEmpty(interprocedural, state, left, true, this);
 
 	}
 }

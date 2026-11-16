@@ -758,6 +758,50 @@ public class ListModel {
 	}
 
 	/**
+	 * Returns the given result of a method, joined with the state where a
+	 * {@code NullPointerException} is raised if the given argument (that the
+	 * method does not accept null) might be null; if the argument is surely
+	 * null, only the exception is raised.
+	 *
+	 * @param <A>             the kind of the abstract state
+	 * @param <D>             the kind of the abstract domain
+	 * @param interprocedural the interprocedural analysis
+	 * @param state           the state before the method
+	 * @param done            the result of the method
+	 * @param argument        the argument
+	 * @param st              the statement
+	 * @param subExpressions  the sub-expressions of the statement
+	 * @param expressions     the statement store
+	 *
+	 * @return the result, possibly with the exception
+	 *
+	 * @throws SemanticException if the exception cannot be raised
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> nullArgument(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			AnalysisState<A> done,
+			SymbolicExpression argument,
+			Statement st,
+			Expression[] subExpressions,
+			StatementStore<A> expressions)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> types = analysis.getRuntimeTypesOf(state, argument, context, st);
+		JavaReferenceType nullType = new JavaReferenceType(it.unive.lisa.type.NullType.INSTANCE);
+		if (!types.contains(nullType))
+			return done;
+		String exc = "java.lang.NullPointerException";
+		AnalysisState<A> raised = raise(interprocedural, state, exc, st, subExpressions, expressions);
+		AnalysisState.Error error = new AnalysisState.Error(JavaClassType.lookup(exc).getReference(), st);
+		if (types.size() == 1 || done.getExecutionState().isBottom())
+			// the argument is surely null
+			return analysis.moveExecutionToError(raised, error, context, st);
+		return analysis.moveExecutionToError(done, raised, error, context, st);
+	}
+
+	/**
 	 * Returns the state where the given statement raises a new exception of the
 	 * given class, not yet moved to the errors.
 	 *

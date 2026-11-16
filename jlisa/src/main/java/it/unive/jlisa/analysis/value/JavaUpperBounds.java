@@ -1,5 +1,6 @@
 package it.unive.jlisa.analysis.value;
 
+import it.unive.jlisa.lattices.OffsetBounds;
 import it.unive.jlisa.lattices.UpperBoundsLattice;
 import it.unive.jlisa.program.type.JavaNumericType;
 import it.unive.lisa.analysis.SemanticException;
@@ -67,6 +68,31 @@ import java.util.Set;
  * handles conjunctions, disjunctions and negations, and {@link #assume} handles
  * conjunctions and the negations of comparisons.</li>
  * </ul>
+ * Depending on its flags, the domain computes:
+ * <ul>
+ * <li>the strict relations {@code x < y} only: the upper bounds of the
+ * Pentagons (Logozzo and Fähndrich, "Pentagons: A Weakly Relational Abstract
+ * Domain for the Efficient Validation of Array Accesses");</li>
+ * <li>also the relations {@code x <= y}: as {@code PentagonsPlus} in Clousot,
+ * the Pentagons with the weak upper bounds of
+ * {@code WeakUpperBoundsEqual};</li>
+ * <li>also the relations with an offset {@code x <= y + c}, for an integer
+ * constant {@code c} (see {@link OffsetBounds}): the domain Stripes of Clousot
+ * ({@code x - N * (y + z) > c}) restricted to one variable and coefficient
+ * {@code N = 1}, as the arrays of Java are accessed through indexes (Stripes
+ * has the coefficient for the byte offsets of unsafe code). They follow
+ * {@code x = y + c}, {@code x = x + c} and the comparisons between an
+ * identifier and another plus a constant, and are used with the chains of
+ * strict relations to decide comparisons, and with the bounds of the related
+ * identifiers to bound the intervals.</li>
+ * </ul>
+ * None of them is closed: as in the Pentagons and in Clousot, the consequences
+ * of several relations are only computed when a comparison is checked (through
+ * chains of bounded length) or when the bounds of an identifier are asked, so
+ * that some consequences are not derived. Relations are only kept on integral
+ * values, only when the sums they come from cannot overflow (as far as the
+ * intervals tell), and only between identifiers that keep naming the same value
+ * until assigned.
  *
  * @author <a href="mailto:giacomo.zanatta@unive.it">Giacomo Zanatta</a>
  */
@@ -80,6 +106,9 @@ public class JavaUpperBounds
 	// whether the relations x <= y are kept too (otherwise, only the strict
 	// ones of the Pentagons)
 	private final boolean nonStrict;
+
+	// whether the relations x <= y + c are kept too
+	private final boolean withOffsets;
 
 	/**
 	 * Builds the domain, with the strict relations only (the upper bounds of
@@ -96,7 +125,20 @@ public class JavaUpperBounds
 	 */
 	public JavaUpperBounds(
 			boolean nonStrict) {
+		this(nonStrict, false);
+	}
+
+	/**
+	 * Builds the domain.
+	 *
+	 * @param nonStrict   whether the relations {@code x <= y} are kept too
+	 * @param withOffsets whether the relations {@code x <= y + c} are kept too
+	 */
+	public JavaUpperBounds(
+			boolean nonStrict,
+			boolean withOffsets) {
 		this.nonStrict = nonStrict;
+		this.withOffsets = withOffsets;
 	}
 
 	@Override
@@ -207,7 +249,84 @@ public class JavaUpperBounds
 			after = UpperBoundsLattice.join(before, after);
 			leAfter = UpperBoundsLattice.join(le, leAfter);
 		}
-		return new UpperBoundsLattice(after, leAfter);
+		OffsetBounds off = withOffsets ? assignOffsets(state.getOffsets(), id, expression, pp, oracle)
+				: state.getOffsets();
+		return new UpperBoundsLattice(after, leAfter, off);
+	}
+
+	// the relations with an offset after id = expression: id = id + k shifts
+	// the offsets of id, id = y + k relates id and y, any other assignment
+	// removes the relations of id
+	private OffsetBounds assignOffsets(
+			OffsetBounds rel,
+			Identifier id,
+			ValueExpression expression,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		JavaNumericType type = integralType(expression, pp, oracle);
+		if (id.isWeak() || !isStable(id) || type == null)
+			// a weak identifier stands for more than one location: its
+			// relations might not hold for the locations that are not assigned
+			return rel.drop(id);
+		Offset sum = linear(expression, type, pp, oracle);
+		if (sum != null && id.equals(sum.id())) {
+			// id = id + k: the relations of the old value hold with the
+			// offset shifted, if the sum cannot overflow
+			if (sum.c() == 0)
+				return rel;
+			if (sum.c() == Long.MIN_VALUE || mayOverflow(rel, id, sum.c(), type, pp, oracle))
+				return rel.drop(id);
+			return rel.shift(id, sum.c());
+		}
+		OffsetBounds result = rel.drop(id);
+		if (sum != null && sum.id() == null) {
+			// id = k: the relations with the identifiers already related to
+			// others whose ranges are known (id <= z + k - low(z) and z <= id +
+			// high(z) - k), so that they hold on both sides of the joins of
+			// the loops where id starts from a constant (as the joins of the
+			// Pentagons recover relations from the intervals)
+			for (Identifier z : rel.identifiers()) {
+				if (z.equals(id) || z.isWeak() || !isStable(z))
+					continue;
+				BigDecimal[] range = range(z, pp, oracle);
+				if (range == null)
+					continue;
+				try {
+					result = result.add(id, z, Math.subtractExact(sum.c(), range[0].longValueExact()));
+					result = result.add(z, id, Math.subtractExact(range[1].longValueExact(), sum.c()));
+				} catch (ArithmeticException e) {
+					// not related
+				}
+			}
+			return result;
+		}
+		if (sum != null && sum.id() != null && !sum.id().isWeak() && isStable(sum.id())
+				&& canProcess(sum.id(), pp, oracle) && sum.c() != Long.MIN_VALUE
+				&& (sum.c() == 0 || !mayOverflow(rel, sum.id(), sum.c(), type, pp, oracle))) {
+			// id = y + k: id <= y + k and y <= id - k, and id has the
+			// relations of y shifted by k (y <= z + c gives id <= z + c + k, z
+			// <= y + c gives z <= id + c - k), as for x = y in the Pentagons
+			// (e.g., i++ is t = i; i = t + 1)
+			Identifier y = sum.id();
+			long k = sum.c();
+			for (Map.Entry<Identifier, Long> e : rel.above(y).entrySet())
+				if (!e.getKey().equals(id))
+					try {
+						result = result.add(id, e.getKey(), Math.addExact(e.getValue(), k));
+					} catch (ArithmeticException ex) {
+						// not related
+					}
+			for (Map.Entry<Identifier, Long> e : rel.below(y).entrySet())
+				if (!e.getKey().equals(id))
+					try {
+						result = result.add(e.getKey(), id, Math.subtractExact(e.getValue(), k));
+					} catch (ArithmeticException ex) {
+						// not related
+					}
+			result = result.add(id, y, k).add(y, id, -k);
+		}
+		return result;
 	}
 
 	// for id = y + c and id = y - c (c a non-zero integral constant), the
@@ -420,6 +539,10 @@ public class JavaUpperBounds
 			ProgramPoint dest,
 			SemanticOracle oracle)
 			throws SemanticException {
+		OffsetBounds off = withOffsets ? assumeOffsets(state.getOffsets(), comparison, src, oracle)
+				: state.getOffsets();
+		if (off != state.getOffsets())
+			state = new UpperBoundsLattice(state.getBounds(), state.getAtMost(), off);
 		if (!(comparison.getLeft() instanceof Identifier left) || !(comparison.getRight() instanceof Identifier right)
 				|| !canProcess(left, src, oracle) || !canProcess(right, src, oracle))
 			return state;
@@ -439,7 +562,76 @@ public class JavaUpperBounds
 			if (op == ComparisonGe.INSTANCE || op == ComparisonGt.INSTANCE || op == ComparisonEq.INSTANCE)
 				le = put(le, right, left);
 		}
-		return new UpperBoundsLattice(strict, le);
+		return new UpperBoundsLattice(strict, le, state.getOffsets());
+	}
+
+	// the integral type of the values of the given expression: its static
+	// type, or the single type of its runtime types if the static type is not
+	// a numeric one (e.g., the length of an array is untyped), or null
+	private JavaNumericType integralType(
+			ValueExpression e,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (e.getStaticType() instanceof JavaNumericType t)
+			return t.isIntegral() ? t : null;
+		JavaNumericType found = null;
+		for (Type r : oracle.getRuntimeTypesOf(e, pp))
+			if (!(r instanceof JavaNumericType t) || !t.isIntegral() || found != null && !found.equals(t))
+				return null;
+			else
+				found = t;
+		return found;
+	}
+
+	// the relations with an offset after assuming x + a op y + b, for
+	// identifiers that keep naming the same value and sums that cannot
+	// overflow: on the integers, it is x - y op b - a
+	private OffsetBounds assumeOffsets(
+			OffsetBounds rel,
+			BinaryExpression comparison,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		BinaryOperator op = comparison.getOperator();
+		if (!(op == ComparisonLt.INSTANCE || op == ComparisonLe.INSTANCE || op == ComparisonGt.INSTANCE
+				|| op == ComparisonGe.INSTANCE || op == ComparisonEq.INSTANCE))
+			return rel;
+		if (!(comparison.getLeft() instanceof ValueExpression l)
+				|| !(comparison.getRight() instanceof ValueExpression r))
+			return rel;
+		JavaNumericType lt = integralType(l, pp, oracle), rt = integralType(r, pp, oracle);
+		if (lt == null || rt == null)
+			return rel;
+		Offset left = linear(l, lt, pp, oracle), right = linear(r, rt, pp, oracle);
+		if (left == null || right == null || left.id() == null || right.id() == null
+				|| left.id().equals(right.id()))
+			return rel;
+		Identifier x = left.id(), y = right.id();
+		if (x.isWeak() || y.isWeak() || !isStable(x) || !isStable(y) || !canProcess(x, pp, oracle)
+				|| !canProcess(y, pp, oracle))
+			return rel;
+		if (left.c() != 0 && mayOverflow(rel, x, left.c(), lt, pp, oracle)
+				|| right.c() != 0 && mayOverflow(rel, y, right.c(), rt, pp, oracle))
+			return rel;
+		long d;
+		try {
+			// x - y op d
+			d = Math.subtractExact(right.c(), left.c());
+			if (op == ComparisonLt.INSTANCE)
+				return rel.add(x, y, Math.subtractExact(d, 1));
+			if (op == ComparisonLe.INSTANCE)
+				return rel.add(x, y, d);
+			if (op == ComparisonGt.INSTANCE)
+				// y - x < -d
+				return rel.add(y, x, Math.subtractExact(Math.negateExact(d), 1));
+			if (op == ComparisonGe.INSTANCE)
+				return rel.add(y, x, Math.negateExact(d));
+			// x - y == d
+			return rel.add(x, y, d).add(y, x, Math.negateExact(d));
+		} catch (ArithmeticException e) {
+			return rel;
+		}
 	}
 
 	// the comparison equivalent to the negation of the given one, if it is a
@@ -497,19 +689,23 @@ public class JavaUpperBounds
 		}
 		ValueEnvironment<DefiniteIdSet> env = state.getBounds();
 		ValueEnvironment<DefiniteIdSet> le = state.getAtMost();
-		return satisfiesComparison(env, le, bexp, pp, oracle);
+		return satisfiesComparison(env, le, state.getOffsets(), bexp, pp, oracle);
 	}
 
 	// the satisfiability of a comparison from the relations alone
 	private Satisfiability satisfiesComparison(
 			ValueEnvironment<DefiniteIdSet> env,
 			ValueEnvironment<DefiniteIdSet> le,
+			OffsetBounds rel,
 			BinaryExpression bexp,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
 		BinaryOperator op = bexp.getOperator();
-		Satisfiability offset = satisfiesWithOffset(env, bexp, pp, oracle);
+		Satisfiability constant = satisfiesWithConstant(rel, bexp, pp, oracle);
+		if (constant != Satisfiability.UNKNOWN)
+			return constant;
+		Satisfiability offset = satisfiesWithOffset(env, rel, bexp, pp, oracle);
 		if (offset != Satisfiability.UNKNOWN)
 			return offset;
 		if (!(bexp.getLeft() instanceof Identifier left) || !(bexp.getRight() instanceof Identifier right)
@@ -590,14 +786,37 @@ public class JavaUpperBounds
 			if (range != null)
 				low = low == null ? range[0] : low.max(range[0]);
 		}
+		if (high != null)
+			high = high.subtract(BigDecimal.ONE);
+		if (low != null)
+			low = low.add(BigDecimal.ONE);
+		// the relations with an offset: id <= y + c with y <= h gives id <= h +
+		// c, and x <= id + c with x >= l gives id >= l - c
+		OffsetBounds rel = state.getOffsets();
+		for (Map.Entry<Identifier, Long> e : rel.above(id).entrySet()) {
+			BigDecimal[] range = range(e.getKey(), pp, oracle);
+			if (range != null) {
+				BigDecimal h = range[1].add(BigDecimal.valueOf(e.getValue()));
+				high = high == null ? h : high.min(h);
+			}
+		}
+		for (Map.Entry<Identifier, Long> e : rel.below(id).entrySet()) {
+			BigDecimal[] range = range(e.getKey(), pp, oracle);
+			if (range != null) {
+				BigDecimal l = range[0].subtract(BigDecimal.valueOf(e.getValue()));
+				low = low == null ? l : low.max(l);
+			}
+		}
 		Set<BinaryExpression> result = new HashSet<>();
 		Type type = pp.getProgram().getTypes().getIntegerType();
-		if (high != null)
-			result.addAll(ValueDomain.makeConstraint(type, high.subtract(BigDecimal.ONE).longValueExact(),
-					ComparisonGe.INSTANCE, id, pp));
-		if (low != null)
-			result.addAll(ValueDomain.makeConstraint(type, low.add(BigDecimal.ONE).longValueExact(),
-					ComparisonLe.INSTANCE, id, pp));
+		try {
+			if (high != null)
+				result.addAll(ValueDomain.makeConstraint(type, high.longValueExact(), ComparisonGe.INSTANCE, id, pp));
+			if (low != null)
+				result.addAll(ValueDomain.makeConstraint(type, low.longValueExact(), ComparisonLe.INSTANCE, id, pp));
+		} catch (ArithmeticException e) {
+			// a bound that does not fit a long is not given
+		}
 		return result;
 	}
 
@@ -631,6 +850,45 @@ public class JavaUpperBounds
 		return false;
 	}
 
+	// whether x + k may overflow in the given type, as far as the intervals
+	// and the relations with an offset tell: x <= z + c with z <= h and h + c
+	// + k within the type (for k > 0), or z <= x + c with z >= l and l - c +
+	// k within the type (for k < 0), exclude it
+	private boolean mayOverflow(
+			OffsetBounds rel,
+			Identifier x,
+			long k,
+			JavaNumericType type,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (!mayOverflow(x, k, pp, oracle))
+			return false;
+		IntInterval bounds = JavaNumericInterval.typeBounds(type);
+		BigDecimal max, min;
+		try {
+			max = new BigDecimal(bounds.getHigh().toLong());
+			min = new BigDecimal(bounds.getLow().toLong());
+		} catch (Exception e) {
+			return true;
+		}
+		BigDecimal step = BigDecimal.valueOf(k);
+		if (k > 0) {
+			for (Map.Entry<Identifier, Long> e : rel.above(x).entrySet()) {
+				BigDecimal[] range = range(e.getKey(), pp, oracle);
+				if (range != null && range[1].add(BigDecimal.valueOf(e.getValue())).add(step).compareTo(max) <= 0)
+					return false;
+			}
+		} else
+			for (Map.Entry<Identifier, Long> e : rel.below(x).entrySet()) {
+				BigDecimal[] range = range(e.getKey(), pp, oracle);
+				if (range != null
+						&& range[0].subtract(BigDecimal.valueOf(e.getValue())).add(step).compareTo(min) >= 0)
+					return false;
+			}
+		return true;
+	}
+
 	/**
 	 * Returns the satisfiability of a comparison {@code x + c op y} (or
 	 * {@code y op x + c}, or with {@code x - c}) between integral identifiers,
@@ -643,6 +901,7 @@ public class JavaUpperBounds
 	 */
 	private Satisfiability satisfiesWithOffset(
 			ValueEnvironment<DefiniteIdSet> env,
+			OffsetBounds rel,
 			BinaryExpression comparison,
 			ProgramPoint pp,
 			SemanticOracle oracle)
@@ -690,6 +949,13 @@ public class JavaUpperBounds
 			int down = longestChain(env, y, x, MAX_CHAIN);
 			lo = up > 0 ? (long) up : null; // y - x >= up
 			hi = down > 0 ? (long) -down : null; // y - x <= -down
+			// the relations with an offset: x <= y + c gives y - x >= -c, and
+			// y <= x + c gives y - x <= c
+			Long cxy = composed(rel, x, y), cyx = composed(rel, y, x);
+			if (cxy != null && cxy != Long.MIN_VALUE)
+				lo = lo == null ? -cxy : Math.max(lo, -cxy);
+			if (cyx != null)
+				hi = hi == null ? cyx : Math.min(hi, cyx);
 			if (lo == null && hi == null)
 				return Satisfiability.UNKNOWN;
 			// x + c does not overflow: x <= y - up <= MAX - up (c <= up), or
@@ -715,6 +981,123 @@ public class JavaUpperBounds
 			return decide(false, lo != null && lo > c || hi != null && hi < c);
 		// !=
 		return decide(lo != null && lo > c || hi != null && hi < c, false);
+	}
+
+	// the satisfiability of x + c op k (or k op x + c) for a constant k, from
+	// the range of x given by the other domains narrowed by the relations with
+	// an offset (x <= z + d with z <= h gives x <= h + d, z <= x + d with z >=
+	// l gives x >= l - d), if x + c cannot overflow in that range (e.g., i + 1
+	// < 0 is false with i >= 0 and i <= n - 2)
+	private Satisfiability satisfiesWithConstant(
+			OffsetBounds rel,
+			BinaryExpression comparison,
+			ProgramPoint pp,
+			SemanticOracle oracle)
+			throws SemanticException {
+		if (rel.isEmpty())
+			return Satisfiability.UNKNOWN;
+		BinaryOperator op = comparison.getOperator();
+		if (!(op == ComparisonLt.INSTANCE || op == ComparisonLe.INSTANCE || op == ComparisonGt.INSTANCE
+				|| op == ComparisonGe.INSTANCE || op == ComparisonEq.INSTANCE || op == ComparisonNe.INSTANCE))
+			return Satisfiability.UNKNOWN;
+		Offset side;
+		Long k;
+		if (comparison.getRight() instanceof Constant rc && (k = integral(rc)) != null)
+			side = offset(comparison.getLeft());
+		else if (comparison.getLeft() instanceof Constant lc && (k = integral(lc)) != null) {
+			side = offset(comparison.getRight());
+			op = mirror(op);
+		} else
+			return Satisfiability.UNKNOWN;
+		if (side == null || side.id() == null || !canProcess(side.id(), pp, oracle))
+			return Satisfiability.UNKNOWN;
+		Identifier x = side.id();
+		BigDecimal[] range = range(x, pp, oracle);
+		if (range == null)
+			return Satisfiability.UNKNOWN;
+		BigDecimal low = range[0], high = range[1];
+		for (Map.Entry<Identifier, Long> e : rel.above(x).entrySet()) {
+			BigDecimal[] r = range(e.getKey(), pp, oracle);
+			if (r != null)
+				high = high.min(r[1].add(BigDecimal.valueOf(e.getValue())));
+		}
+		for (Map.Entry<Identifier, Long> e : rel.below(x).entrySet()) {
+			BigDecimal[] r = range(e.getKey(), pp, oracle);
+			if (r != null)
+				low = low.max(r[0].subtract(BigDecimal.valueOf(e.getValue())));
+		}
+		if (low.compareTo(high) > 0)
+			return Satisfiability.UNKNOWN;
+		// x + c must stay in the range of every runtime type of x
+		BigDecimal c = BigDecimal.valueOf(side.c());
+		BigDecimal lo = low.add(c), hi = high.add(c);
+		Set<Type> types = oracle.getRuntimeTypesOf(x, pp);
+		if (types.isEmpty())
+			return Satisfiability.UNKNOWN;
+		for (Type type : types) {
+			if (!(type instanceof JavaNumericType numType) || !numType.isIntegral())
+				return Satisfiability.UNKNOWN;
+			IntInterval bounds = JavaNumericInterval.typeBounds(numType);
+			if (bounds.getLow().compareTo(new MathNumber(lo)) > 0 || bounds.getHigh().compareTo(new MathNumber(hi)) < 0)
+				return Satisfiability.UNKNOWN;
+		}
+		BigDecimal v = BigDecimal.valueOf(k);
+		// x + c op k, with x + c in [lo, hi]
+		if (op == ComparisonLt.INSTANCE)
+			return decide(hi.compareTo(v) < 0, lo.compareTo(v) >= 0);
+		if (op == ComparisonLe.INSTANCE)
+			return decide(hi.compareTo(v) <= 0, lo.compareTo(v) > 0);
+		if (op == ComparisonGt.INSTANCE)
+			return decide(lo.compareTo(v) > 0, hi.compareTo(v) <= 0);
+		if (op == ComparisonGe.INSTANCE)
+			return decide(lo.compareTo(v) >= 0, hi.compareTo(v) < 0);
+		boolean outside = lo.compareTo(v) > 0 || hi.compareTo(v) < 0;
+		if (op == ComparisonEq.INSTANCE)
+			return decide(false, outside);
+		return decide(outside, false);
+	}
+
+	// the value of an integral constant, or null
+	private static Long integral(
+			Constant c) {
+		return c.getValue() instanceof Number n && !(n instanceof Double || n instanceof Float) ? n.longValue()
+				: null;
+	}
+
+	// the maximum number of relations composed by composed
+	private static final int MAX_COMPOSITION = 3;
+
+	// the smallest offset c of x <= y + c known directly or through chains of
+	// at most MAX_COMPOSITION relations (x <= m + c1 and m <= y + c2 give x <=
+	// y + c1 + c2), or null: the relations are not closed, so the consequences
+	// are computed when a comparison is checked (as a shortest path from x to
+	// y, by increasing number of steps)
+	private static Long composed(
+			OffsetBounds rel,
+			Identifier x,
+			Identifier y) {
+		Map<Identifier, Long> best = new HashMap<>();
+		best.put(x, 0L);
+		Map<Identifier, Long> frontier = new HashMap<>(best);
+		for (int step = 0; step < MAX_COMPOSITION && !frontier.isEmpty(); step++) {
+			Map<Identifier, Long> next = new HashMap<>();
+			for (Map.Entry<Identifier, Long> f : frontier.entrySet())
+				for (Map.Entry<Identifier, Long> e : rel.above(f.getKey()).entrySet()) {
+					long c;
+					try {
+						c = Math.addExact(f.getValue(), e.getValue());
+					} catch (ArithmeticException ex) {
+						continue;
+					}
+					Long old = best.get(e.getKey());
+					if (old == null || c < old) {
+						best.put(e.getKey(), c);
+						next.put(e.getKey(), c);
+					}
+				}
+			frontier = next;
+		}
+		return y.equals(x) ? null : best.get(y);
 	}
 
 	// an integral identifier plus a constant: x, x + c or x - c
