@@ -17,6 +17,19 @@ import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ParsedBlock;
+
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.BreakStatement;
+import org.eclipse.jdt.core.dom.ContinueStatement;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.LabeledStatement;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
 class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
@@ -35,10 +48,53 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		getScope().getTracker().enterScope();
 
+		Expression item = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
+		Statement noop = new NoOp(getScope().getCFG(), item.getLocation());
+		adj.addNode(noop);
+
+		boolean canUnroll = canUnroll(node);
+		int UNROLL_FACTOR = 8;
+
+		Statement first = null;
+		Statement last = null;
+
+		if (canUnroll) {
+			for (int i = 0; i < UNROLL_FACTOR; i++) {
+
+				ParsingEnvironment env = getEnvironment().withUnrollingCopy(i + 2);
+
+				Expression condition = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+						new ExpressionVisitor(env, getScope())));
+
+				ParsedBlock loopBody = getParserContext().evaluate(
+						node.getBody(),
+						new StatementASTVisitor(env, getScope()));
+
+				adj.addNode(condition);
+				adj.mergeWith(loopBody.getBody());
+				adj.addEdge(new TrueEdge(condition, loopBody.getBegin()));
+				adj.addEdge(new FalseEdge(condition, noop));
+
+				if (first == null)
+					first = condition;
+				if (last != null)
+					adj.addEdge(new SequentialEdge(last, condition));
+
+				if (!loopBody.canBeContinued()) { last = null; break; }
+				last = loopBody.getEnd();
+			}
+		}
+
+
+		// remaining loop
+
 		Expression expression = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
 				new ExpressionVisitor(getEnvironment(), getScope())));
 
 		adj.addNode(expression);
+		if (last != null)
+			adj.addEdge(new SequentialEdge(last, expression));
 
 		ParsedBlock loopBody = getParserContext().evaluate(
 				node.getBody(),
@@ -50,8 +106,6 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		if (loopBody.canBeContinued())
 			adj.addEdge(new SequentialEdge(loopBody.getEnd(), expression));
 
-		Statement noop = new NoOp(getScope().getCFG(), expression.getLocation());
-		adj.addNode(noop);
 		adj.addEdge(new FalseEdge(expression, noop));
 
 		getScope().getTracker().exitScope(noop);
@@ -60,7 +114,7 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		WhileLoop whileLoop = new WhileLoop(adj, expression, noop, loopBody.getBody().getNodes());
 		getScope().getCFG().getDescriptor().addControlFlowStructure(whileLoop);
 		getScope().getControlFlowTracker().endControlFlowOf(adj, expression, noop, expression, null);
-		this.block = new ParsedBlock(expression, adj, noop);
+		this.block = new ParsedBlock(first != null ? first : expression, adj, noop);
 
 		return false;
 	}
@@ -68,5 +122,82 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 	@Override
 	public ParsedBlock getResult() {
 		return block;
+	}
+
+	private boolean canUnroll(WhileStatement node) {
+		Checker checker = new Checker();
+		node.getBody().accept(checker);
+		return checker.ok;
+	}
+
+	private static class Checker extends ASTVisitor {
+
+		boolean ok = true;
+
+		private boolean reject() {
+			ok = false;
+			return false;
+		}
+
+		@Override
+		public boolean visit(Block node) {
+			return true;
+		}
+
+
+		@Override
+		public boolean visit(BreakStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(ContinueStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(LabeledStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(WhileStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(DoStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(ForStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(EnhancedForStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(AnonymousClassDeclaration node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(LambdaExpression node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(TypeDeclarationStatement node) {
+			return reject();
+		}
+
+		@Override
+		public boolean visit(TryStatement node) {
+			return reject();
+		}
 	}
 }
