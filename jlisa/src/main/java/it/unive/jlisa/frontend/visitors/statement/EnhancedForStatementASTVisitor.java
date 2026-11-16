@@ -10,9 +10,6 @@ import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForEachLoop;
 import it.unive.jlisa.program.cfg.controlflow.loops.ForLoop;
-import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
-import it.unive.jlisa.program.cfg.expression.JavaComparisonLT;
-import it.unive.jlisa.program.cfg.expression.JavaIncrement;
 import it.unive.jlisa.program.cfg.expression.instrumentations.GetNextForEach;
 import it.unive.jlisa.program.cfg.expression.instrumentations.HasNextForEach;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
@@ -38,20 +35,7 @@ import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ParsedBlock;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.BreakStatement;
-import org.eclipse.jdt.core.dom.ContinueStatement;
-import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.LabeledStatement;
-import org.eclipse.jdt.core.dom.LambdaExpression;
-import org.eclipse.jdt.core.dom.TryStatement;
-import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
-import org.eclipse.jdt.core.dom.WhileStatement;
 
 class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
 
@@ -80,18 +64,9 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 	}
 
 	/**
-	 * desugared to:
-	 * ```
-	 * T[] $arr = collection;
-	 * int $len = $arr.length;
-	 * for (int $i = 0; $i < $len; $i++) {
-	 *     T item = $arr[$i];
-	 *     body
-	 * }
-	 * ```
-	 *
-	 * includes loop unrolling
-	 *
+	 * desugared to: ``` T[] $arr = collection; int $len = $arr.length; for (int
+	 * $i = 0; $i < $len; $i++) { T item = $arr[$i]; body } ``` includes loop
+	 * unrolling
 	 */
 	private void visitArray(
 			EnhancedForStatement node,
@@ -151,7 +126,8 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 
 				// item = $arr[$i]
 
-				JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item, new GetNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
+				JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item,
+						new GetNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
 
 				// $i = $i + 1
 				JavaAssignment increment = new JavaAssignment(cfg, synth.nextLocation(),
@@ -182,26 +158,27 @@ class EnhancedForStatementASTVisitor extends ScopedVisitor<MethodScope> implemen
 		block.addEdge(new SequentialEdge(initLen, initIdx));
 		block.addEdge(new SequentialEdge(initIdx, first));
 
-		// the original loop will have copy id = 1. This s used by the assert checker to
+		// the original loop will have copy id = 1. This s used by the assert
+		// checker to
 		// figure out which one is the real assert
 		ParsingEnvironment env = getEnvironment().withUnrollingCopy(1);
 
 		// build the actual loop
 		// Expression condition = new LessThan(cfg, getSourceCodeLocation(node),
-		// 		ref(idxName, JavaIntType.INSTANCE, synth),
-		// 		ref(lenName, JavaIntType.INSTANCE, synth));
+		// ref(idxName, JavaIntType.INSTANCE, synth),
+		// ref(lenName, JavaIntType.INSTANCE, synth));
 		Expression condition = new Equal(cfg, synth.nextLocation(),
 				new TrueLiteral(getScope().getCFG(), synth.nextLocation()),
 				new HasNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
 
-
 		// item = $arr[$i]
-		// JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item,
-		// 		new JavaArrayAccess(cfg, elementType, synth.nextLocation(),
-		// 				ref(arrName, collectionType, synth),
-		// 				ref(idxName, JavaIntType.INSTANCE, synth)));
-		JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item, new GetNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
-
+		// JavaAssignment assignItem = new JavaAssignment(cfg,
+		// synth.nextLocation(), item,
+		// new JavaArrayAccess(cfg, elementType, synth.nextLocation(),
+		// ref(arrName, collectionType, synth),
+		// ref(idxName, JavaIntType.INSTANCE, synth)));
+		JavaAssignment assignItem = new JavaAssignment(cfg, synth.nextLocation(), item,
+				new GetNextForEach(getScope().getCFG(), synth.nextLocation(), collection, idxName, lenName));
 
 		// $i = $i + 1
 		JavaAssignment increment = new JavaAssignment(cfg, synth.nextLocation(),

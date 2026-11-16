@@ -1,8 +1,5 @@
 package it.unive.jlisa.program.cfg.expression.instrumentations;
 
-import java.util.List;
-import java.util.stream.Stream;
-
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -29,6 +26,8 @@ import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Instrumentation to compute if there is a next element within the collection
@@ -91,10 +90,12 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 			Variable ghostIt = new Variable(JavaIntType.INSTANCE, ghostIdxName, loc);
 			Variable ghostLen = new Variable(JavaIntType.INSTANCE, ghostLenName, loc);
 
+			// if the len is constant, we can give a definite answer. Otherwise
+			// we fallback to a top boolean result indicating we may (not) have
+			// a next element.
 
-			// if the len is constant, we can give a definite answer. Otherwise we fallback to a top boolean result indicating we may (not) have a next element.
-
-			Stream<BinaryExpression> lengths = ConstraintUtils.extractConstraints(interprocedural, state, ghostLen, this);
+			Stream<BinaryExpression> lengths = ConstraintUtils.extractConstraints(interprocedural, state, ghostLen,
+					this);
 			if (lengths == null)
 				return topFallback(interprocedural, state, expressions);
 
@@ -102,24 +103,25 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 
 			if (hasEqualConstraint(lengthsList)) {
 
-				BinaryExpression lt = new BinaryExpression(JavaBooleanType.INSTANCE, ghostIt, ghostLen, ComparisonLt.INSTANCE, loc);
+				BinaryExpression lt = new BinaryExpression(JavaBooleanType.INSTANCE, ghostIt, ghostLen,
+						ComparisonLt.INSTANCE, loc);
 				Satisfiability sat = analysis.satisfies(state, lt, context, this);
 
 				Constant resC = null;
 				if (sat == Satisfiability.SATISFIED) {
 					// the iterator is definitely < length
 					resC = new Constant(JavaBooleanType.INSTANCE, true, loc);
-				}
-				else if (sat == Satisfiability.UNKNOWN
-					|| sat == Satisfiability.NOT_SATISFIED) {
-					// if the `<` operator returns unknown, we are surely out of bounds. This is because we know that the array has constant size (and assuming intervals as numeric domain)
+				} else if (sat == Satisfiability.UNKNOWN
+						|| sat == Satisfiability.NOT_SATISFIED) {
+					// if the `<` operator returns unknown, we are surely out of
+					// bounds. This is because we know that the array has
+					// constant size (and assuming intervals as numeric domain)
 					resC = new Constant(JavaBooleanType.INSTANCE, false, loc);
 				}
 
 				if (resC != null)
 					return analysis.smallStepSemantics(state, resC, context, this);
-			}
-			else {
+			} else {
 				return topFallback(interprocedural, state, expressions);
 			}
 		}
@@ -137,7 +139,8 @@ public class HasNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 				new PushAny(JavaBooleanType.INSTANCE, getLocation()), interprocedural.getCurrentContext(), this);
 	}
 
-	private boolean hasEqualConstraint(List<BinaryExpression> constraints) {
+	private boolean hasEqualConstraint(
+			List<BinaryExpression> constraints) {
 		for (BinaryExpression expr : constraints) {
 			if (expr.getOperator() == ComparisonEq.INSTANCE) {
 				return true;

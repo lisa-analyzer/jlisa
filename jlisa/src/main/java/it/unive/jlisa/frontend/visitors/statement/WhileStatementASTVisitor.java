@@ -18,7 +18,6 @@ import it.unive.lisa.program.cfg.statement.NoOp;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.util.datastructures.graph.code.NodeList;
 import it.unive.lisa.util.frontend.ParsedBlock;
-
 import org.eclipse.jdt.core.dom.WhileStatement;
 
 class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements ResultHolder<ParsedBlock> {
@@ -70,11 +69,13 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 				if (last != null)
 					adj.addEdge(new SequentialEdge(last, condition));
 
-				if (!loopBody.canBeContinued()) { last = null; break; }
+				if (!loopBody.canBeContinued()) {
+					last = null;
+					break;
+				}
 				last = loopBody.getEnd();
 			}
 		}
-
 
 		// remaining loop
 

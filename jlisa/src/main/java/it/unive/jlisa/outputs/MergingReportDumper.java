@@ -16,18 +16,21 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /*
- * A JSON report dumper that eliminates duplicate warnings issued at locations that differ by
- * the copy number.
- * Loop unrolling can cause asserts to be duplicated. The analysis would raise multiple warnings
- * for the same assert (through the duplicates).
- *
+ * A JSON report dumper that eliminates duplicate warnings issued at locations
+ * that differ by the copy number. Loop unrolling can cause asserts to be
+ * duplicated. The analysis would raise multiple warnings for the same assert
+ * (through the duplicates).
  */
 public class MergingReportDumper implements LiSAOutput {
 
 	private final LiSAOutput delegate = new JSONReportDumper();
 
 	@Override
-	public void dump(Application app, LiSAReport report, ReportingTool tool, FileManager fileManager)
+	public void dump(
+			Application app,
+			LiSAReport report,
+			ReportingTool tool,
+			FileManager fileManager)
 			throws IOException {
 		LiSAReport merged = new LiSAReport(report.getConfiguration(),
 				report.getRunInfo(),
@@ -42,19 +45,20 @@ public class MergingReportDumper implements LiSAOutput {
 		return true;
 	}
 
-	static Collection<Message> merge(Collection<Message> warnings) {
+	static Collection<Message> merge(
+			Collection<Message> warnings) {
 		Map<String, StatementMessage> best = new TreeMap<>();
 		Collection<Message> result = new ArrayList<>();
 
 		for (Message m : warnings) {
 			if (!(m instanceof StatementMessage sm)
-			|| !(sm.getStatement().getLocation() instanceof JavaLocation jl)) {
+					|| !(sm.getStatement().getLocation() instanceof JavaLocation jl)) {
 				result.add(m);
 				continue;
 			}
 
 			String key = sm.getStatement().getCFG() + "-" + jl.getCodeLocationNoCopy()
-				+ "-" + sm.getStatement() + "-" + m.getMessage() + "-" + m.getContext();
+					+ "-" + sm.getStatement() + "-" + m.getMessage() + "-" + m.getContext();
 			StatementMessage old = best.get(key);
 			if (old == null || better(sm, old))
 				best.put(key, sm);
@@ -64,12 +68,13 @@ public class MergingReportDumper implements LiSAOutput {
 		return result;
 	}
 
-	static private boolean better(StatementMessage a, StatementMessage b) {
+	static private boolean better(
+			StatementMessage a,
+			StatementMessage b) {
 		if (a.isDefinite() != b.isDefinite())
 			return a.isDefinite();
-		return ((JavaLocation) a.getStatement().getLocation()).getCopy()
-			< ((JavaLocation) b.getStatement().getLocation()).getCopy();
+		return ((JavaLocation) a.getStatement().getLocation())
+				.getCopy() < ((JavaLocation) b.getStatement().getLocation()).getCopy();
 	}
 
 }
-

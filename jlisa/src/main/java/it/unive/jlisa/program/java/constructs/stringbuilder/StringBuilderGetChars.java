@@ -86,7 +86,8 @@ public class StringBuilderGetChars extends NaryExpression implements PluggableSt
 		JavaReferenceType charArrType = JavaArrayType.CHAR_ARRAY;
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
-		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), actualParams[0], getLocation());
+		HeapDereference deref = new HeapDereference(JavaClassType.lookup("java.lang.StringBuilder"), actualParams[0],
+				getLocation());
 		AccessChild accessExpr = new AccessChild(stringType, deref, var, getLocation());
 
 		HeapDereference derefDst = new HeapDereference(charArrType.getInnerType(), actualParams[3], location);

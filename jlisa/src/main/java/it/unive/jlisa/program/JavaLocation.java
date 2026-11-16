@@ -54,9 +54,11 @@ public class JavaLocation
 	 *
 	 * @param sourceFile    the source file where this code element happens
 	 * @param line          the line of the first character of this code element
-	 * @param col           the column of the first character of this code element
+	 * @param col           the column of the first character of this code
+	 *                          element
 	 * @param endLine       the line of the last character of this code element
-	 * @param endCol        the column of the last character of this code element
+	 * @param endCol        the column of the last character of this code
+	 *                          element
 	 * @param unrollingCopy the id of the unrolling copy
 	 *
 	 * @throws IllegalArgumentException if the last character comes before the
@@ -146,4 +148,3 @@ public class JavaLocation
 		return Integer.compare(copy, o.copy);
 	}
 }
-

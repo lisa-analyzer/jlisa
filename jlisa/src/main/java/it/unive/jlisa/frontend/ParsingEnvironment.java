@@ -49,7 +49,8 @@ public final class ParsingEnvironment {
 		return allAstUnits;
 	}
 
-	public ParsingEnvironment withUnrollingCopy(int k) {
+	public ParsingEnvironment withUnrollingCopy(
+			int k) {
 		return new ParsingEnvironment(parserContext, source, astUnit, allAstUnits, k);
 	}
 

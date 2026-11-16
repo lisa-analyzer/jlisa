@@ -35,7 +35,6 @@ import it.unive.lisa.interprocedural.inlining.InliningAnalysis;
 import it.unive.lisa.listeners.BottomTopListener;
 import it.unive.lisa.listeners.CallResolutionListener;
 import it.unive.lisa.outputs.HtmlResults;
-import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.outputs.messages.Message;
 import it.unive.lisa.outputs.messages.StatementMessage;

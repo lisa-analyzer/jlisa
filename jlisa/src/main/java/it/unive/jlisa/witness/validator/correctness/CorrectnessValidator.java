@@ -18,7 +18,6 @@ import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.statement.Statement;

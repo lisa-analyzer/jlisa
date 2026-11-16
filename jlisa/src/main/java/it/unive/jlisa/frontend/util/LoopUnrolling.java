@@ -16,13 +16,15 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class LoopUnrolling {
 
-	public static boolean canUnroll(WhileStatement node) {
+	public static boolean canUnroll(
+			WhileStatement node) {
 		Checker checker = new Checker();
 		node.getBody().accept(checker);
 		return checker.ok;
 	}
 
-	public static boolean canUnroll(EnhancedForStatement node) {
+	public static boolean canUnroll(
+			EnhancedForStatement node) {
 		Checker checker = new Checker();
 		node.getBody().accept(checker);
 		return checker.ok;
@@ -38,63 +40,74 @@ public class LoopUnrolling {
 		}
 
 		@Override
-		public boolean visit(Block node) {
+		public boolean visit(
+				Block node) {
 			return true;
 		}
 
-
 		@Override
-		public boolean visit(BreakStatement node) {
+		public boolean visit(
+				BreakStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(ContinueStatement node) {
+		public boolean visit(
+				ContinueStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(LabeledStatement node) {
+		public boolean visit(
+				LabeledStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(WhileStatement node) {
+		public boolean visit(
+				WhileStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(DoStatement node) {
+		public boolean visit(
+				DoStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(ForStatement node) {
+		public boolean visit(
+				ForStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(EnhancedForStatement node) {
+		public boolean visit(
+				EnhancedForStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(AnonymousClassDeclaration node) {
+		public boolean visit(
+				AnonymousClassDeclaration node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(LambdaExpression node) {
+		public boolean visit(
+				LambdaExpression node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(TypeDeclarationStatement node) {
+		public boolean visit(
+				TypeDeclarationStatement node) {
 			return reject();
 		}
 
 		@Override
-		public boolean visit(TryStatement node) {
+		public boolean visit(
+				TryStatement node) {
 			return reject();
 		}
 	}
