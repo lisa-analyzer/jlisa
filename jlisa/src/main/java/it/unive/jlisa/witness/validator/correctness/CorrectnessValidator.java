@@ -6,6 +6,7 @@ import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.jlisa.outputs.MergingReportDumper;
 import it.unive.jlisa.witness.validator.RunSummary;
 import it.unive.jlisa.witness.validator.ValidationException;
 import it.unive.jlisa.witness.validator.correctness.InductionChecker.CheckResult;
@@ -17,7 +18,6 @@ import it.unive.lisa.LiSA;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.interprocedural.ReturnTopPolicy;
-import it.unive.lisa.outputs.JSONReportDumper;
 import it.unive.lisa.outputs.JSONResults;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -199,7 +199,7 @@ public final class CorrectnessValidator {
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = workdir;
 		conf.outputs.add(new JSONResults<>());
-		conf.outputs.add(new JSONReportDumper());
+		conf.outputs.add(new MergingReportDumper());
 		conf.interproceduralAnalysis = null; // new
 												// JavaContextBasedAnalysis<>(150);
 		conf.callGraph = new JavaRTACallGraph();

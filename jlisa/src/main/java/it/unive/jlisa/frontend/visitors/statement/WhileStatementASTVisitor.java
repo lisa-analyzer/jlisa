@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend.visitors.statement;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
+import it.unive.jlisa.frontend.util.LoopUnrolling;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
@@ -35,10 +36,55 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		NodeList<CFG, Statement, Edge> adj = new NodeList<>(new SequentialEdge());
 		getScope().getTracker().enterScope();
 
+		Expression item = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
+		Statement noop = new NoOp(getScope().getCFG(), item.getLocation());
+		adj.addNode(noop);
+
+		boolean canUnroll = LoopUnrolling.canUnroll(node);
+		int UNROLL_FACTOR = 8;
+
+		Statement first = null;
+		Statement last = null;
+
+		if (canUnroll) {
+			for (int i = 0; i < UNROLL_FACTOR; i++) {
+
+				ParsingEnvironment env = getEnvironment().withUnrollingCopy(i + 2);
+
+				Expression condition = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+						new ExpressionVisitor(env, getScope())));
+
+				ParsedBlock loopBody = getParserContext().evaluate(
+						node.getBody(),
+						new StatementASTVisitor(env, getScope()));
+
+				adj.addNode(condition);
+				adj.mergeWith(loopBody.getBody());
+				adj.addEdge(new TrueEdge(condition, loopBody.getBegin()));
+				adj.addEdge(new FalseEdge(condition, noop));
+
+				if (first == null)
+					first = condition;
+				if (last != null)
+					adj.addEdge(new SequentialEdge(last, condition));
+
+				if (!loopBody.canBeContinued()) {
+					last = null;
+					break;
+				}
+				last = loopBody.getEnd();
+			}
+		}
+
+		// remaining loop
+
 		Expression expression = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
 				new ExpressionVisitor(getEnvironment(), getScope())));
 
 		adj.addNode(expression);
+		if (last != null)
+			adj.addEdge(new SequentialEdge(last, expression));
 
 		ParsedBlock loopBody = getParserContext().evaluate(
 				node.getBody(),
@@ -50,8 +96,6 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		if (loopBody.canBeContinued())
 			adj.addEdge(new SequentialEdge(loopBody.getEnd(), expression));
 
-		Statement noop = new NoOp(getScope().getCFG(), expression.getLocation());
-		adj.addNode(noop);
 		adj.addEdge(new FalseEdge(expression, noop));
 
 		getScope().getTracker().exitScope(noop);
@@ -60,7 +104,7 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 		WhileLoop whileLoop = new WhileLoop(adj, expression, noop, loopBody.getBody().getNodes());
 		getScope().getCFG().getDescriptor().addControlFlowStructure(whileLoop);
 		getScope().getControlFlowTracker().endControlFlowOf(adj, expression, noop, expression, null);
-		this.block = new ParsedBlock(expression, adj, noop);
+		this.block = new ParsedBlock(first != null ? first : expression, adj, noop);
 
 		return false;
 	}
@@ -69,4 +113,5 @@ class WhileStatementASTVisitor extends ScopedVisitor<MethodScope> implements Res
 	public ParsedBlock getResult() {
 		return block;
 	}
+
 }

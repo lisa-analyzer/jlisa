@@ -1,20 +1,30 @@
 package it.unive.jlisa.program.cfg.expression.instrumentations;
 
+import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
+import it.unive.jlisa.program.cfg.statement.literal.IntLiteral;
+import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Instrumentation to get next element from collection involved in for-each
@@ -23,6 +33,9 @@ import it.unive.lisa.type.Type;
  * @author <a href="mailto:luca.olivieri@unive.it">Luca Olivieri</a>
  */
 public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExpression {
+
+	private String ghostIdxName;
+	private String ghostLenName;
 
 	/**
 	 * Builds the construct.
@@ -35,8 +48,12 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 	public GetNextForEach(
 			CFG cfg,
 			CodeLocation location,
-			Expression collection) {
+			Expression collection,
+			String ghostIdxName,
+			String ghostLenName) {
 		super(cfg, location, "getNextElementForEach", collection.getStaticType(), collection);
+		this.ghostIdxName = ghostIdxName;
+		this.ghostLenName = ghostLenName;
 	}
 
 	@Override
@@ -53,15 +70,72 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					SymbolicExpression expr,
 					StatementStore<A> expressions)
 					throws SemanticException {
-		// TODO: to implement semantics
-		// the element of an array has the type of its cells, the one of any
-		// other container (e.g., a collection) is an object
-		Type contentType = new JavaReferenceType(JavaClassType.getObjectType());
-		if (expr.getStaticType().isReferenceType()
-				&& expr.getStaticType().asReferenceType().getInnerType().isArrayType())
-			contentType = expr.getStaticType().asReferenceType().getInnerType().asArrayType().getInnerType();
+
+		// this includes the same exact check on the length of the array as
+		// `HasNextForEach`.
+		// The reason is that if the guard (`HasNext`) returns top, we are in
+		// the case where the array length is not known.
+		// In that case, return the top content value
+
+		CodeLocation loc = getLocation();
+
+		// state has expr in the execution expressions, get rid of it to check
+		// if it's bottom
+		if (state.withExecutionExpressions(new ExpressionSet()).getExecution().isBottom())
+			return state;
+
+		Type containerType = expr.getStaticType();
+		if (containerType.asReferenceType() != null
+				&& containerType.asReferenceType().getInnerType() instanceof JavaArrayType arrType) {
+
+			Variable ghostIt = new Variable(JavaIntType.INSTANCE, ghostIdxName, loc);
+			Variable ghostLen = new Variable(JavaIntType.INSTANCE, ghostLenName, loc);
+
+			Stream<BinaryExpression> lengths = ConstraintUtils.extractConstraints(interprocedural, state, ghostLen,
+					this);
+			if (lengths == null)
+				return topFallback(interprocedural, state, expr, expressions);
+
+			List<BinaryExpression> lengthsList = lengths.toList();
+			if (hasEqualConstraint(lengthsList)) {
+
+				IntLiteral dummy = new IntLiteral(getCFG(), loc, 0);
+				JavaArrayAccess accessArr = new JavaArrayAccess(getCFG(), arrType.getBaseType(), loc,
+						getSubExpression(), dummy);
+				return accessArr.fwdBinarySemantics(interprocedural, state, expr, ghostIt, expressions);
+			} else {
+				return topFallback(interprocedural, state, expr, expressions);
+			}
+		}
+
+		return topFallback(interprocedural, state, expr, expressions);
+	}
+
+	private <A extends AbstractLattice<A>,
+			D extends AbstractDomain<A>> AnalysisState<A> topFallback(
+					InterproceduralAnalysis<A, D> interprocedural,
+					AnalysisState<A> state,
+					SymbolicExpression expr,
+					StatementStore<A> expressions)
+					throws SemanticException {
+		Type containerType = expr.getStaticType().asReferenceType().getInnerType();
+
+		Type contentType = JavaClassType.getObjectType();
+		if (containerType instanceof JavaArrayType)
+			contentType = containerType.asArrayType().getInnerType();
 
 		PushAny top = new PushAny(contentType, getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, top, interprocedural.getCurrentContext(), this);
+		return interprocedural.getAnalysis().smallStepSemantics(state,
+				top, interprocedural.getCurrentContext(), this);
+	}
+
+	private boolean hasEqualConstraint(
+			List<BinaryExpression> constraints) {
+		for (BinaryExpression expr : constraints) {
+			if (expr.getOperator() == ComparisonEq.INSTANCE) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

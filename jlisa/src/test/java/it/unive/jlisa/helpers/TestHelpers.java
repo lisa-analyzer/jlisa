@@ -11,6 +11,7 @@ import it.unive.jlisa.analysis.value.JavaUpperBounds;
 import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
+import it.unive.jlisa.outputs.MergingReportDumper;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
 import it.unive.lisa.analysis.heap.pointbased.FieldSensitivePointBasedHeap;
@@ -45,10 +46,11 @@ public class TestHelpers {
 		for (String pf : programFiles)
 			conf.programFiles.add(pf);
 		conf.outputs.add(new JSONResults<>());
+		conf.outputs.add(new MergingReportDumper());
 		// the values of reproducing inputs depend on the solver
 		conf.reportComparer = new InputValuesIgnoringComparer();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
-		// conf.forceUpdate = true;
+		conf.forceUpdate = true;
 		// conf.outputs.add(new HtmlResults<>(true));
 		// conf.semanticChecks.add(new OpenCallsFinder<>());
 

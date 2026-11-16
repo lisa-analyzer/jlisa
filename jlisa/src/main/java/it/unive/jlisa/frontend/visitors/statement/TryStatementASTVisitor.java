@@ -163,8 +163,11 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		// lastly, we parse the finally block and
 		// we connect it with the body (or the else block if it exists) and with
 		// each catch block
+		// an empty finally block does nothing: it is ignored, so that the
+		// normal and the exceptional exits are not merged through it
+		boolean withFinally = node.getFinally() != null && !node.getFinally().statements().isEmpty();
 		ParsedBlock finallyBlock = null;
-		if (node.getFinally() != null) {
+		if (withFinally) {
 			finallyBlock = getParserContext().evaluate(
 					node.getFinally(),
 					new StatementASTVisitor(getEnvironment(), getScope()));
@@ -178,7 +181,7 @@ class TryStatementASTVisitor extends ScopedVisitor<MethodScope> implements Resul
 		boolean usedNoop = !normalExits.isEmpty();
 		if (usedNoop) {
 			trycatch.addNode(noop);
-			if (node.getFinally() == null)
+			if (!withFinally)
 				// if there is no finally block, we connect the noop to the
 				// end of all non-terminating inner blocks. otherwise,
 				// the CFGTweaker will add the edges to the finally block

@@ -2,7 +2,6 @@
 .idea
 .jlisa
 build/
-outputs
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/

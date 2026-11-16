@@ -210,7 +210,7 @@ public class JavaFrontend {
 					System.out.println("Error at line " + problem.getSourceLineNumber() + ": " + problem.getMessage());
 			if (problems.length != 0)
 				throw new RuntimeException(problems.length + " problems found.");
-			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i], cus);
+			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i], cus, 0);
 			cus[i].accept(new CompilationUnitASTVisitor(env, scopes[i]));
 			registerTypes();
 		}
@@ -224,7 +224,7 @@ public class JavaFrontend {
 			UnitScope[] scopes,
 			BiFunction<ParsingEnvironment, UnitScope, ASTVisitor> factory) {
 		for (int i = 0; i < cus.length; i++) {
-			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i], cus);
+			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i], cus, 0);
 			cus[i].accept(factory.apply(env, scopes[i]));
 		}
 	}
