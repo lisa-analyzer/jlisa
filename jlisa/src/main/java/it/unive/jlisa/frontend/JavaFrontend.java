@@ -1,6 +1,7 @@
 package it.unive.jlisa.frontend;
 
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.frontend.util.ArrayCreations;
 import it.unive.jlisa.frontend.visitors.pipeline.CompilationUnitASTVisitor;
 import it.unive.jlisa.frontend.visitors.pipeline.InitCodeMembersASTVisitor;
 import it.unive.jlisa.frontend.visitors.pipeline.PopulateUnitsASTVisitor;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -171,13 +173,15 @@ public class JavaFrontend {
 		LibrarySpecificationProvider.load(getProgram());
 		LibrarySpecificationProvider.importJavaLang(getProgram());
 		List<String> expandedPaths = expandFilePaths(filePaths);
-		int n = expandedPaths.size();
+		int files = expandedPaths.size();
 
-		// Parse all files once upfront
-		CompilationUnit[] cus = new CompilationUnit[n];
-		String[] fileNames = new String[n];
-		UnitScope[] scopes = new UnitScope[n];
-		for (int i = 0; i < n; i++) {
+		// Parse all files once upfront, plus the class creating the arrays
+		// whose elements are created one by one, if any (see
+		// ArrayCreations)
+		CompilationUnit[] cus = new CompilationUnit[files + 1];
+		String[] fileNames = new String[files + 1];
+		UnitScope[] scopes = new UnitScope[files + 1];
+		for (int i = 0; i < files; i++) {
 			Path path = Paths.get(expandedPaths.get(i));
 			fileNames[i] = path.getFileName().toString();
 			if (fileNames[i].equals("module-info.java"))
@@ -187,6 +191,18 @@ public class JavaFrontend {
 			cus[i] = getCompilationUnit(source);
 			ParsingEnvironment environment = new ParsingEnvironment(parserContext, fileNames[i], cus[i]);
 			scopes[i] = UnitScope.init(environment, cus[i]);
+		}
+		String creations = ArrayCreations.source(Arrays.copyOf(cus, files));
+		int n = creations == null ? files : files + 1;
+		if (creations == null) {
+			cus = Arrays.copyOf(cus, files);
+			fileNames = Arrays.copyOf(fileNames, files);
+			scopes = Arrays.copyOf(scopes, files);
+		} else {
+			fileNames[files] = ArrayCreations.FILE;
+			cus[files] = getCompilationUnit(creations);
+			ParsingEnvironment environment = new ParsingEnvironment(parserContext, fileNames[files], cus[files]);
+			scopes[files] = UnitScope.init(environment, cus[files]);
 		}
 
 		runPass(cus, fileNames, scopes, (

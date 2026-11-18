@@ -3,6 +3,7 @@ package it.unive.jlisa.frontend.visitors.expression;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.frontend.util.ArrayCreations;
 import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
@@ -42,6 +43,7 @@ import it.unive.jlisa.program.cfg.expression.JavaRemainder;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
 import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
+import it.unive.jlisa.program.cfg.expression.JavaUnresolvedStaticCall;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
@@ -268,6 +270,16 @@ public class ExpressionVisitor
 			Type type,
 			int dimension,
 			CodeLocation location) {
+		if (dimension == 0 && ArrayCreations.isTranslated(node)) {
+			// created by a method with a loop (see ArrayCreations), whose
+			// parameters are the dimensions, evaluated once and in order
+			List<Expression> lengths = new ArrayList<>();
+			for (Object d : node.dimensions())
+				lengths.add(getParserContext().evaluate((ASTNode) d,
+						new ExpressionVisitor(getEnvironment(), getScope())));
+			return new JavaUnresolvedStaticCall(getScope().getCFG(), location, ArrayCreations.CLASS,
+					ArrayCreations.method(node), lengths.toArray(new Expression[0]));
+		}
 		ASTNode length = (ASTNode) node.dimensions().get(dimension);
 		if (dimension == node.dimensions().size() - 1)
 			return new JavaNewArray(getScope().getCFG(), location,
