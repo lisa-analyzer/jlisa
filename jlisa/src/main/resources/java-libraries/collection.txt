@@ -42,5 +42,3 @@ class java.util.Collections extends java.lang.Object:
     method singleton: it.unive.jlisa.program.java.constructs.collections.CollectionsSingleton
         libtype java.util.Set*
         param o type it.unive.lisa.type.Untyped::INSTANCE
-
-

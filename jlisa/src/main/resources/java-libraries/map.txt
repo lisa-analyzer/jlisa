@@ -8,6 +8,14 @@ class java.util.AbstractMap extends java.util.Map:
 		param key type it.unive.lisa.type.Untyped::INSTANCE
 		param value type it.unive.lisa.type.Untyped::INSTANCE
 
+	instance method keySet: it.unive.jlisa.program.java.constructs.map.AbstractMapKeySet
+		libtype java.util.Set*
+		param this libtype java.util.Map*
+
+	instance method values: it.unive.jlisa.program.java.constructs.map.AbstractMapValueSet
+		libtype java.util.Set*
+		param this libtype java.util.Map*
+
 class java.util.HashMap extends java.util.Map:
 
 	instance method HashMap: it.unive.jlisa.program.java.constructs.map.MapEmptyConstructor
