@@ -3,3 +3,13 @@ class java.io.File extends java.lang.Object:
     instance method listFiles: it.unive.jlisa.program.java.constructs.file.FileListFiles
         type it.unive.lisa.type.Untyped::INSTANCE
         param this libtype java.io.File*
+
+    instance method File: it.unive.jlisa.program.java.constructs.file.FileConstructor
+        type it.unive.lisa.type.Untyped::INSTANCE
+        param this libtype java.io.File*
+        param path libtype java.lang.String*
+
+    instance method exists: it.unive.jlisa.program.java.constructs.file.FileExists
+        type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+        param this libtype java.io.File*
+
