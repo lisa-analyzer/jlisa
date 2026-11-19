@@ -211,7 +211,13 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 		param this libtype java.lang.String*
 		param other type it.unive.jlisa.program.type.JavaCharType::INSTANCE
 		param char type it.unive.jlisa.program.type.JavaCharType::INSTANCE
-		
+
+	instance method replace: it.unive.jlisa.program.java.constructs.string.StringReplace
+		libtype java.lang.String*
+		param this libtype java.lang.String*
+		param old libtype java.lang.String*
+		param new libtype java.lang.String*
+
 	instance method replaceFirst: it.unive.jlisa.program.java.constructs.string.StringReplaceFirst
 		libtype java.lang.String*
 		param this libtype java.lang.String*

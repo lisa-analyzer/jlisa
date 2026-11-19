@@ -2,7 +2,9 @@ package it.unive.jlisa.program.java.constructs.string;
 
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
+import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
+import it.unive.jlisa.program.type.JavaStringType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -65,16 +67,29 @@ public class StringReplace extends TernaryExpression implements PluggableStateme
 			StatementStore<A> expressions)
 			throws SemanticException {
 		Type stringType = getProgram().getTypes().getStringType();
+		CodeLocation loc = getLocation();
 
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
+		SymbolicExpression accessMiddle = middle;
+		SymbolicExpression accessRight = right;
+
+		if (middle.getStaticType() instanceof JavaStringType) {
+			HeapDereference tmp = new HeapDereference(JavaClassType.getStringType(), middle, loc);
+			accessMiddle = new AccessChild(JavaClassType.getStringType(), tmp, var, loc);
+		}
+		if (right.getStaticType() instanceof JavaStringType) {
+			HeapDereference tmp = new HeapDereference(JavaClassType.getStringType(), right, loc);
+			accessRight = new AccessChild(JavaClassType.getStringType(), tmp, var, loc);
+		}
+
 		it.unive.lisa.symbolic.value.TernaryExpression replaceAll = new it.unive.lisa.symbolic.value.TernaryExpression(
 				getProgram().getTypes().getStringType(),
 				accessLeft,
-				middle,
-				right,
+				accessMiddle,
+				accessRight,
 				JavaStringReplaceOperator.INSTANCE,
 				getLocation());
 
