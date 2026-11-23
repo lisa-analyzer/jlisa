@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaCharType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -9,7 +10,8 @@ import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.program.cfg.CodeLocation;
-import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -101,6 +103,7 @@ final class JavaUnboxing {
 	 * @param operator        the comparison
 	 * @param type            the static type of the comparison
 	 * @param pp              the comparison
+	 * @param subExpressions  the operands of the comparison
 	 *
 	 * @return the resulting state, or {@code null}
 	 *
@@ -113,14 +116,48 @@ final class JavaUnboxing {
 			SymbolicExpression right,
 			BinaryOperator operator,
 			Type type,
-			ProgramPoint pp)
+			Statement pp,
+			Expression... subExpressions)
 			throws SemanticException {
 		SymbolicExpression l = unbox(left, right, pp.getLocation());
 		SymbolicExpression r = unbox(right, left, pp.getLocation());
 		if (l == left && r == right)
 			return null;
-		return interprocedural.getAnalysis().smallStepSemantics(state,
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, pp, subExpressions);
+		state = nonNull(raising, state, left, l);
+		state = nonNull(raising, state, right, r);
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
+		return raising.moveFrom(interprocedural.getAnalysis().smallStepSemantics(state,
 				new BinaryExpression(type, l, r, operator, pp.getLocation()), interprocedural.getCurrentContext(),
-				pp);
+				pp));
+	}
+
+	/**
+	 * Yields the executions of the given state where the given operand, that
+	 * is unboxed as {@code unboxed}, is not {@code null}, raising
+	 * {@link NullPointerException} in the others (unboxing {@code null}
+	 * raises it, JLS 5.1.8). If the operand is not unboxed, the state is
+	 * returned unchanged.
+	 *
+	 * @param <A>     the type of the abstract states
+	 * @param <D>     the type of the domain
+	 * @param raising where the exception is raised
+	 * @param state   the state
+	 * @param operand the operand
+	 * @param unboxed the unboxed operand (see
+	 *                    {@link #unbox(SymbolicExpression, SymbolicExpression, CodeLocation)})
+	 *
+	 * @return the executions where the operand is not {@code null}
+	 *
+	 * @throws SemanticException if something goes wrong during the computation
+	 */
+	static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> nonNull(
+			JavaExceptions.Raising<A, D> raising,
+			AnalysisState<A> state,
+			SymbolicExpression operand,
+			SymbolicExpression unboxed)
+			throws SemanticException {
+		return unboxed == operand ? state : raising.raiseIfNull(operand, state);
 	}
 }

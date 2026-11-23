@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
+import it.unive.lisa.lattices.Satisfiability;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -8,7 +10,6 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
@@ -67,8 +68,14 @@ public class IteratorNext
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		PushAny anyValue = new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location);
-		if (!ListModel.isModeledIterator(analysis, context, state, expr, this))
-			return analysis.smallStepSemantics(state, anyValue, context, this);
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		String exc = "java.util.NoSuchElementException";
+		if (!ListModel.isModeledIterator(analysis, context, state, expr, this)) {
+			// whether there is a next element is not known
+			raising.raise(Satisfiability.UNKNOWN, state, exc);
+			return raising.moveFrom(analysis.smallStepSemantics(state, anyValue, context, this));
+		}
 
 		AccessChild cursor = ListModel.cursor(expr, location);
 		AccessChild list = ListModel.iteratedList(expr, location);
@@ -122,35 +129,29 @@ public class IteratorNext
 					context, this, this);
 			if (!beyond.getExecutionState().isBottom())
 				result = result.lub(analysis.smallStepSemantics(beyond, anyValue, context, this));
-
-			// the cursor moves to the following element, keeping the
-			// returned element on the stack
-			AnalysisState<A> moved = result.bottomExecution();
-			for (SymbolicExpression element : result.getExecutionExpressions()) {
-				AnalysisState<A> tmp = analysis.assign(result, cursor,
-						new BinaryExpression(JavaIntType.INSTANCE, cursor,
-								new Constant(JavaIntType.INSTANCE, 1, location), NumericNonOverflowingAdd.INSTANCE,
-								location),
-						context, this);
-				moved = moved.lub(tmp.withExecutionExpression(element));
-			}
-			result = moved;
 		}
+
+		// the cursor moves to the following element (also for a collection
+		// without an order, whose elements are then all visited), keeping the
+		// returned element on the stack
+		AnalysisState<A> moved = result.bottomExecution();
+		for (SymbolicExpression element : result.getExecutionExpressions()) {
+			AnalysisState<A> tmp = analysis.assign(result, cursor,
+					new BinaryExpression(JavaIntType.INSTANCE, cursor,
+							new Constant(JavaIntType.INSTANCE, 1, location), NumericNonOverflowingAdd.INSTANCE,
+							location),
+					context, this);
+			moved = moved.lub(tmp.withExecutionExpression(element));
+		}
+		result = moved;
 
 		// there is no next element: NoSuchElementException
 		AnalysisState<A> end = analysis.assume(state,
 				new BinaryExpression(JavaBooleanType.INSTANCE, cursor, ListModel.size(list, location),
 						ComparisonGe.INSTANCE, location),
 				context, this, this);
-		if (end.getExecutionState().isBottom())
-			return result;
-		String exc = "java.util.NoSuchElementException";
-		AnalysisState<A> raised = ListModel.raise(interprocedural, end, exc, this, getSubExpressions(),
-				expressions);
-		Error error = new Error(JavaClassType.lookup(exc).getReference(), this);
-		if (result.getExecutionState().isBottom())
-			return analysis.moveExecutionToError(raised, error, context, this);
-		return analysis.moveExecutionToError(result, raised, error, context, this);
+		raising.raise(Satisfiability.SATISFIED, end, exc);
+		return raising.moveFrom(result);
 	}
 
 	@Override

@@ -1,19 +1,16 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
-import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.CompilationUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.annotations.Annotations;
@@ -23,14 +20,10 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.program.language.hierarchytraversal.HierarchyTraversalStrategy;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
-import it.unive.lisa.symbolic.heap.NullConstant;
-import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.GlobalVariable;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.HashSet;
@@ -145,42 +138,28 @@ public class JavaAccessInstanceGlobal
 					StatementStore<A> expressions)
 					throws SemanticException {
 		CodeLocation loc = getLocation();
-
-		AnalysisState<A> result = state.bottomExecution();
-		AnalysisState<A> erroneousState = state.bottom();
-		Error error = null;
-		boolean atLeastOne = false;
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
+
+		// a null receiver raises NullPointerException, and the field is read
+		// in the other executions
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this,
+				getSubExpression());
+		state = raising.raiseIfNull(expr, state);
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
+
+		AnalysisState<A> result = state.bottomExecution();
+		boolean atLeastOne = false;
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
 
 		for (Type recType : types)
 			if (recType.isPointerType()) {
 				Type inner = recType.asPointerType().getInnerType();
-				if (inner.isNullType()) {
-					// builds the exception
-					JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
-					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-							npeType.getReference(), new Expression[0]);
-					AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural,
-							whenNull(analysis, state, expr, context),
-							new ExpressionSet[0], expressions);
-
-					// assign exception to variable thrower
-					CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-					for (SymbolicExpression th : npeState.getExecutionExpressions()) {
-						AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, context, this);
-
-						// deletes the receiver of the constructor
-						// and all the metavariables from subexpressions
-						thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
-						thrown = thrown.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-						erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
-						error = new Error(npeType.getReference(), this);
-					}
-					atLeastOne = true;
+				if (inner.isNullType())
+					// see above
 					continue;
-				} else if (!inner.isUnitType())
+				else if (!inner.isUnitType())
 					continue;
 
 				HeapDereference container = new HeapDereference(inner, expr, loc);
@@ -209,10 +188,7 @@ public class JavaAccessInstanceGlobal
 			}
 
 		if (atLeastOne)
-			if (error == null)
-				return result;
-			else
-				return analysis.moveExecutionToError(result, erroneousState, error, context, this);
+			return raising.moveFrom(result);
 
 		// worst case: we are accessing a global that we know nothing about
 		Set<Type> rectypes = new HashSet<>();
@@ -221,7 +197,7 @@ public class JavaAccessInstanceGlobal
 				rectypes.add(t.asPointerType().getInnerType());
 
 		if (rectypes.isEmpty())
-			return state.bottomExecution();
+			return raising.moveFrom(state.bottomExecution());
 
 		Type rectype = Type.commonSupertype(rectypes, Untyped.INSTANCE);
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, target, new Annotations(), getLocation());
@@ -230,23 +206,6 @@ public class JavaAccessInstanceGlobal
 		// the fields of classes above
 		SymbolicExpression container = new HeapDereference(rectype, expr, getLocation());
 		AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
-		return analysis.smallStepSemantics(state, access, context, this);
-	}
-
-	/**
-	 * Yields the given state, where the given receiver is null: the
-	 * {@link NullPointerException} is only raised in that case. If the domain
-	 * cannot represent the condition, the state is returned unchanged.
-	 */
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> whenNull(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression receiver,
-			ScopeId<A> context)
-			throws SemanticException {
-		BinaryExpression isNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), receiver,
-				new NullConstant(getLocation()), ComparisonEq.INSTANCE, getLocation());
-		AnalysisState<A> assumed = analysis.assume(state, isNull, context, this, this);
-		return assumed.getExecutionState().isBottom() ? state : assumed;
+		return raising.moveFrom(analysis.smallStepSemantics(state, access, context, this));
 	}
 }

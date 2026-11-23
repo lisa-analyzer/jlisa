@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -55,13 +56,22 @@ public class JavaComparisonEqual extends Equal {
 		}
 
 		// try unboxing
+		// unboxing null raises NullPointerException
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, getLeft(),
+				getRight());
+		if (left.getStaticType().isReferenceType())
+			state = JavaUnboxing.nonNull(raising, state, left, JavaUnboxing.unbox(left, right, getLocation()));
+		else
+			state = JavaUnboxing.nonNull(raising, state, right, JavaUnboxing.unbox(right, left, getLocation()));
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
 		AnalysisState<A> res = state.bottomExecution();
 		if (left.getStaticType().isReferenceType()) {
 			res = eqWithUnbox(analysis, context, state, left, right, expressions);
 		} else {
 			res = eqWithUnbox(analysis, context, state, right, left, expressions);
 		}
-		return res;
+		return raising.moveFrom(res);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> eqWithUnbox(

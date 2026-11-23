@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.statement;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.*;
 import it.unive.jlisa.type.JavaTypeSystem;
@@ -93,6 +94,16 @@ public class JavaAssignment extends Assignment {
 		AnalysisState<A> result = state.bottomExecution();
 		Type targetType = left.getStaticType();
 		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
+		// unboxing null (assigning it to a primitive) raises
+		// NullPointerException
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, getLeft(),
+				getRight());
+		if (JavaTypeSystem.isPrimitive(targetType) && rightTypes.stream().anyMatch(JavaExceptions::isNull)) {
+			state = raising.raiseIfNull(right, state);
+			if (state.getExecutionState().isBottom())
+				return raising.moveFrom(state.bottomExecution());
+			rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
+		}
 
 		// int constants, if they fit the target type, can be assigned
 		if ((targetType instanceof JavaByteType || targetType instanceof JavaShortType
@@ -173,7 +184,7 @@ public class JavaAssignment extends Assignment {
 				result = result.lub(analysis.assign(state, lhs, rightExpr, context, this));
 			}
 		}
-		return result;
+		return raising.moveFrom(result);
 	}
 
 	/**

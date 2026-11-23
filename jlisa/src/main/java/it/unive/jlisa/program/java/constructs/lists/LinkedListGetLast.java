@@ -1,12 +1,13 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
+import it.unive.lisa.lattices.Satisfiability;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
@@ -61,8 +62,14 @@ public class LinkedListGetLast
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		PushAny any = new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location);
-		if (!ListModel.isModeled(analysis, context, state, expr, this))
-			return analysis.smallStepSemantics(state, any, context, this);
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		String exc = "java.util.NoSuchElementException";
+		if (!ListModel.isModeled(analysis, context, state, expr, this)) {
+			// whether the list is empty is not known
+			raising.raise(Satisfiability.UNKNOWN, state, exc);
+			return raising.moveFrom(analysis.smallStepSemantics(state, any, context, this));
+		}
 
 		// the last element is in the cell at index size - 1, each cell under
 		// the condition that size denotes it (as for the cells of the arrays)
@@ -86,15 +93,8 @@ public class LinkedListGetLast
 		// the empty list raises NoSuchElementException
 		AnalysisState<A> empty = analysis.assume(state,
 				ListModel.compareSize(expr, ComparisonLe.INSTANCE, 0, location), context, this, this);
-		if (empty.getExecutionState().isBottom())
-			return result;
-		String exc = "java.util.NoSuchElementException";
-		AnalysisState<A> raised = ListModel.raise(interprocedural, empty, exc, this, getSubExpressions(),
-				expressions);
-		Error error = new Error(JavaClassType.lookup(exc).getReference(), this);
-		if (result.getExecutionState().isBottom())
-			return analysis.moveExecutionToError(raised, error, context, this);
-		return analysis.moveExecutionToError(result, raised, error, context, this);
+		raising.raise(Satisfiability.SATISFIED, empty, exc);
+		return raising.moveFrom(result);
 	}
 
 	@Override

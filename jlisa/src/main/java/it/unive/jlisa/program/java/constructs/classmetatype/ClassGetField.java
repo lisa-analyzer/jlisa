@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.ReflectionDataUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -92,7 +93,9 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, context, this);
 			if (clazzTypes.isEmpty()) {
-				result = result.lub(state);
+				// the class is not known: so is the result
+				result = result.lub(analysis.smallStepSemantics(state,
+						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), context, this));
 				continue;
 			}
 
@@ -100,9 +103,13 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			AnalysisState<A> searchResult = state.bottomExecution();
 			AnalysisState<A> npeState = state.bottom();
 
+			// each exception is raised in all the executions only if the
+			// class is the only one: otherwise, under an unknown condition
+			boolean exact = classes.size() == 1 && clazzTypes.size() == 1;
 			for (Type t : clazzTypes) {
-				if (t.isNullType()) {
-					npeState = npeState.lub(prepareNullPointerException(interprocedural, state, expressions));
+				if (JavaExceptions.isNull(t)) {
+					npeState = npeState.lub(prepareNullPointerException(interprocedural,
+							exact ? state : JavaExceptions.maybe(interprocedural, state, this), expressions));
 				}
 				// search the field
 				else {
@@ -115,7 +122,9 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					// didn't find any matching field
 					if (fieldSearched.getExecutionExpressions().isEmpty()) {
 						searchResult = searchResult
-								.lub(throwNoSuchFieldException(interprocedural, fieldSearched, expressions));
+								.lub(throwNoSuchFieldException(interprocedural, exact ? fieldSearched
+										: JavaExceptions.maybe(interprocedural, fieldSearched, this),
+										expressions));
 					} else {
 						// found at least one field, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -286,7 +295,10 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refField, context, this);
 				unknownFields = unknownFields.lub(noExceptionState.getExecutionExpressions());
 
-				state = throwNoSuchFieldException(interprocedural, noExceptionState, state, expressions);
+				// another candidate might match: the exception is raised under
+				// an unknown condition
+				state = throwNoSuchFieldException(interprocedural, noExceptionState,
+						JavaExceptions.maybe(interprocedural, state, this), expressions);
 			}
 			++i;
 		}

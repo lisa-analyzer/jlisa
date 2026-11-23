@@ -1,8 +1,7 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.lisa.analysis.*;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
@@ -12,16 +11,10 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.call.UnresolvedCall;
 import it.unive.lisa.program.cfg.statement.evaluation.EvaluationOrder;
 import it.unive.lisa.program.cfg.statement.evaluation.LeftToRightEvaluation;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.NullConstant;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
-import java.util.Set;
+import java.util.List;
 
 public class JavaUnresolvedCall extends UnresolvedCall {
 
@@ -71,71 +64,22 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = state.bottomExecution();
-		AnalysisState<A> erroneousState = state.bottom();
-		Error error = null;
-
+		// a null receiver raises NullPointerException, and the call happens
+		// in the other executions
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, List.of());
+		Expression[] subs = getSubExpressions();
 		for (SymbolicExpression rec : receiver) {
-			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, context, this);
-			// when the receiver might be null, the call happens only if it is
-			// not (otherwise, nothing is assumed, so that the call does not
-			// depend on how precisely the receiver is known)
-			boolean mayBeNull = types.stream()
-					.anyMatch(t -> t.isPointerType() && t.asPointerType().getInnerType().isNullType());
-			AnalysisState<A> notNull = mayBeNull ? when(analysis, state, rec, ComparisonNe.INSTANCE, context)
-					: state;
-			for (Type recType : types) {
-				if (recType.isPointerType()) {
-					Type inner = recType.asPointerType().getInnerType();
-					if (inner.isNullType()) {
-						// builds the exception
-						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
-						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-								npeType.getReference(), new Expression[0]);
-						AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural,
-								when(analysis, state, rec, ComparisonEq.INSTANCE, context),
-								new ExpressionSet[0], expressions);
-
-						// assign exception to variable thrower
-						for (SymbolicExpression th : npeState.getExecutionExpressions()) {
-							CFGThrow throwVar = new CFGThrow(getCFG(), npeType.getReference(), getLocation());
-							AnalysisState<A> thrown = analysis.assign(npeState, throwVar, th, context, this);
-
-							// deletes the receiver of the constructor
-							thrown = thrown.forgetIdentifiers(call.getMetaVariables(), this);
-							erroneousState = erroneousState.lub(thrown.withExecutionExpression(throwVar));
-							error = new Error(npeType.getReference(), this);
-						}
-						continue;
-					} else if (!inner.isUnitType())
-						continue;
-					else
-						result = result.lub(super.forwardSemanticsAux(interprocedural, notNull, params, expressions));
+			// the executions where the receiver computed this value
+			AnalysisState<A> computing = subs.length > 0 ? analysis.restrictTo(state, subs[0], rec) : state;
+			AnalysisState<A> notNull = raising.raiseIfNull(rec, computing);
+			if (notNull.getExecutionState().isBottom())
+				continue;
+			for (Type recType : analysis.getRuntimeTypesOf(notNull, rec, context, this))
+				if (recType.isPointerType() && recType.asPointerType().getInnerType().isUnitType()) {
+					result = result.lub(super.forwardSemanticsAux(interprocedural, notNull, params, expressions));
+					break;
 				}
-			}
 		}
-
-		if (error == null)
-			return result;
-		return analysis.moveExecutionToError(result, erroneousState, error, context, this);
-	}
-
-	/**
-	 * Yields the given state, where the given receiver is compared with null
-	 * through the given operator (equality or inequality): the
-	 * {@link NullPointerException} is only raised if the receiver is null, and
-	 * the call happens only if it is not. If the domain cannot represent the
-	 * condition, the state is returned unchanged.
-	 */
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> when(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression receiver,
-			BinaryOperator operator,
-			ScopeId<A> context)
-			throws SemanticException {
-		BinaryExpression comparison = new BinaryExpression(getProgram().getTypes().getBooleanType(), receiver,
-				new NullConstant(getLocation()), operator, getLocation());
-		AnalysisState<A> assumed = analysis.assume(state, comparison, context, this, this);
-		return assumed.getExecutionState().isBottom() ? state : assumed;
+		return raising.moveFrom(result);
 	}
 }

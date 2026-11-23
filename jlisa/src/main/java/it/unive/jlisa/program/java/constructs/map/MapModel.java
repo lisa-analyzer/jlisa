@@ -26,13 +26,19 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
+import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
+import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.type.Untyped;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The entries of the maps whose keys are not constants (the ones with constant
@@ -540,13 +546,32 @@ public class MapModel {
 		if (!JavaClassType.hasType(concurrentMap))
 			return done;
 		JavaClassType concurrent = JavaClassType.lookup(concurrentMap);
-		boolean noNullKeys = false;
-		for (Type t : analysis.getRuntimeTypesOf(state, map, context, st))
+		Set<Type> types = analysis.getRuntimeTypesOf(state, map, context, st);
+		Set<Type> noNullKeys = new HashSet<>();
+		for (Type t : types)
 			if (t instanceof JavaReferenceType ref && ref.getInnerType().canBeAssignedTo(concurrent))
-				noNullKeys = true;
-		if (!noNullKeys)
+				noNullKeys.add(t);
+		if (noNullKeys.isEmpty())
 			return done;
-		return ListModel.nullArgument(interprocedural, state, done, key, st, subExpressions, expressions);
+		if (noNullKeys.size() == types.size())
+			return ListModel.nullArgument(interprocedural, state, true, true, done, key, st, subExpressions);
+		// the exception is raised only where the map is a ConcurrentMap, and
+		// the method completes in the others and in the ones where the key is
+		// not null
+		CodeLocation location = st.getLocation();
+		BinaryExpression isConcurrent = new BinaryExpression(JavaBooleanType.INSTANCE, map,
+				new Constant(new TypeTokenType(noNullKeys), 0, location), TypeCheck.INSTANCE, location);
+		UnaryExpression notConcurrent = new UnaryExpression(JavaBooleanType.INSTANCE, isConcurrent,
+				LogicalNegation.INSTANCE, location);
+		AnalysisState<A> concurrentState = analysis.assume(state, isConcurrent, context, st, st);
+		AnalysisState<A> concurrentDone = analysis.assume(done, isConcurrent, context, st, st);
+		AnalysisState<A> otherDone = analysis.assume(done, notConcurrent, context, st, st);
+		if (concurrentState.getExecutionState().isBottom() || concurrentDone.getExecutionState().isBottom()
+				|| otherDone.getExecutionState().isBottom())
+			// the analysis cannot tell the executions apart
+			return ListModel.nullArgument(interprocedural, state, false, false, done, key, st, subExpressions);
+		return otherDone.lub(ListModel.nullArgument(interprocedural, concurrentState, true, true, concurrentDone,
+				key, st, subExpressions));
 	}
 
 	/**

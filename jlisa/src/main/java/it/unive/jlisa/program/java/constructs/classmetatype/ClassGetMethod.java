@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.ReflectionDataUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
@@ -97,7 +98,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 			Set<Type> clazzTypes = analysis.getRuntimeTypesOf(state, clazz, context, this);
 			if (clazzTypes.isEmpty()) {
-				result = result.lub(state);
+				// the class is not known: so is the result
+				result = result.lub(analysis.smallStepSemantics(state,
+						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), context, this));
 				continue;
 			}
 
@@ -105,9 +108,13 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			AnalysisState<A> searchResult = state.bottomExecution();
 			AnalysisState<A> npeState = state.bottom();
 
+			// each exception is raised in all the executions only if the
+			// class is the only one: otherwise, under an unknown condition
+			boolean exact = classes.size() == 1 && clazzTypes.size() == 1;
 			for (Type t : clazzTypes) {
-				if (t instanceof JavaReferenceType jrt && jrt.getInnerType().isNullType()) {
-					npeState = npeState.lub(prepareNullPointerException(interprocedural, state, expressions));
+				if (JavaExceptions.isNull(t)) {
+					npeState = npeState.lub(prepareNullPointerException(interprocedural,
+							exact ? state : JavaExceptions.maybe(interprocedural, state, this), expressions));
 				}
 				// search for the method
 				else {
@@ -122,7 +129,9 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 					// didn't find any matching method
 					if (methodSearched.getExecutionExpressions().isEmpty()) {
 						searchResult = searchResult
-								.lub(throwNoSuchMethodException(interprocedural, methodSearched, expressions));
+								.lub(throwNoSuchMethodException(interprocedural, exact ? methodSearched
+										: JavaExceptions.maybe(interprocedural, methodSearched, this),
+										expressions));
 					} else {
 						// found at least one method, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -277,7 +286,10 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				AnalysisState<A> noExceptionState = analysis.smallStepSemantics(state, refMethod, context, this);
 				unknownMethods = unknownMethods.lub(noExceptionState.getExecutionExpressions());
 
-				state = throwNoSuchMethodException(interprocedural, noExceptionState, state, expressions);
+				// another candidate might match: the exception is raised under
+				// an unknown condition
+				state = throwNoSuchMethodException(interprocedural, noExceptionState,
+						JavaExceptions.maybe(interprocedural, state, this), expressions);
 			}
 
 			++i;

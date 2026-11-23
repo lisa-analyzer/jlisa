@@ -21,3 +21,8 @@ class java.util.Arrays extends java.lang.Object:
         param e1 type it.unive.lisa.type.Untyped::INSTANCE
         param e2 type it.unive.lisa.type.Untyped::INSTANCE
         param e3 type it.unive.lisa.type.Untyped::INSTANCE
+
+    method copyOf: it.unive.jlisa.program.java.constructs.arrays.ArraysCopyOf
+        type it.unive.lisa.type.Untyped::INSTANCE
+        param original type it.unive.lisa.type.Untyped::INSTANCE
+        param newLength type it.unive.jlisa.program.type.JavaIntType::INSTANCE

@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.JavaLocation;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -87,8 +88,15 @@ public class JavaUnboxBoolean extends UnaryExpression {
 			SymbolicExpression expr,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return interprocedural.getAnalysis().smallStepSemantics(state, JavaUnboxing.unbox(expr, getLocation()),
-				interprocedural.getCurrentContext(), this);
+		// unboxing null raises NullPointerException
+		SymbolicExpression unboxed = JavaUnboxing.unbox(expr, getLocation());
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this,
+				getSubExpression());
+		state = JavaUnboxing.nonNull(raising, state, expr, unboxed);
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
+		return raising.moveFrom(interprocedural.getAnalysis().smallStepSemantics(state, unboxed,
+				interprocedural.getCurrentContext(), this));
 	}
 
 	@Override

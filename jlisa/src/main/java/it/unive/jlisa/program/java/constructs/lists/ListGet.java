@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
+import it.unive.lisa.lattices.Satisfiability;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -8,7 +10,6 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
@@ -69,8 +70,14 @@ public class ListGet
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		CodeLocation location = getLocation();
 		PushAny any = new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location);
-		if (!ListModel.isModeled(analysis, context, state, left, this))
-			return analysis.smallStepSemantics(state, any, context, this);
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		String exc = "java.lang.IndexOutOfBoundsException";
+		if (!ListModel.isModeled(analysis, context, state, left, this)) {
+			// the bounds of the list are not known
+			raising.raise(Satisfiability.UNKNOWN, state, exc);
+			return raising.moveFrom(analysis.smallStepSemantics(state, any, context, this));
+		}
 
 		// the index is out of bounds if it is negative or not smaller than size
 		BinaryExpression outOfBounds = new BinaryExpression(JavaBooleanType.INSTANCE,
@@ -107,16 +114,8 @@ public class ListGet
 				result = result.lub(analysis.smallStepSemantics(beyond, any, context, this));
 		}
 
-		AnalysisState<A> out = analysis.assume(state, outOfBounds, context, this, this);
-		if (out.getExecutionState().isBottom())
-			return result;
-		String exc = "java.lang.IndexOutOfBoundsException";
-		AnalysisState<A> raised = ListModel.raise(interprocedural, out, exc, this, getSubExpressions(),
-				expressions);
-		Error error = new Error(JavaClassType.lookup(exc).getReference(), this);
-		if (result.getExecutionState().isBottom())
-			return analysis.moveExecutionToError(raised, error, context, this);
-		return analysis.moveExecutionToError(result, raised, error, context, this);
+		raising.raise(Satisfiability.SATISFIED, analysis.assume(state, outOfBounds, context, this, this), exc);
+		return raising.moveFrom(result);
 	}
 
 	@Override

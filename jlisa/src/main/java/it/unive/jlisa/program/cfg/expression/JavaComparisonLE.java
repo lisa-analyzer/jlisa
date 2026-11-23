@@ -51,7 +51,7 @@ public class JavaComparisonLE extends LessOrEqual {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		AnalysisState<A> unboxed = JavaUnboxing.compare(interprocedural, state, left, right, ComparisonLe.INSTANCE,
-				getStaticType(), this);
+				getStaticType(), this, getLeft(), getRight());
 		return unboxed != null ? unboxed : super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 	}
 }

@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
+import it.unive.lisa.lattices.Satisfiability;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -56,18 +58,35 @@ public class ListInsertElements extends NaryExpression implements PluggableState
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		AnalysisState<A> result = state.bottomExecution();
+		// an index out of the bounds of the list raises
+		// IndexOutOfBoundsException
+		boolean indexed = ListModel.indexed(getSubExpressions());
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
 		for (SymbolicExpression list : params[0])
 			if (ListModel.isModeled(analysis, context, state, list, this)) {
 				AnalysisState<A> modifiable = ListModel.allowed(analysis, context, state, list, ListModel.FIXED_SIZE,
 						this);
+				if (indexed) {
+					AnalysisState<A> inBounds = modifiable.bottomExecution();
+					for (SymbolicExpression index : params[1])
+						inBounds = inBounds.lub(ListModel.checkIndex(raising, analysis, context, modifiable, list, index,
+								true, this));
+					modifiable = inBounds;
+				}
 				AnalysisState<A> done = modifiable.getExecutionState().isBottom() ? modifiable
 						: ListModel.change(analysis, context, modifiable, list, ListModel.SizeChange.GROWS, false,
 								this);
 				result = result
 						.lub(ListModel.unsupported(interprocedural, state, done, list, ListModel.FIXED_SIZE, this,
 								getSubExpressions(), expressions));
-			} else
+			} else {
 				result = result.lub(state);
+				// the bounds of the list are not known
+				if (indexed)
+					raising.raise(Satisfiability.UNKNOWN, state, "java.lang.IndexOutOfBoundsException");
+			}
+		result = raising.moveFrom(result);
 
 		// the returned value is unknown
 		Type returned = originating instanceof Expression e ? e.getStaticType() : getStaticType();

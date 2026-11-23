@@ -1,5 +1,12 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -127,6 +134,32 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		AccessChild length = new AccessChild(Untyped.INSTANCE, dst,
 				new Variable(JavaIntType.INSTANCE, "length", getLocation()), getLocation());
 
+		// a null destination raises NullPointerException, and the bounds
+		// raise IndexOutOfBoundsException when from < 0, from > to, to is
+		// beyond the receiver, at < 0, or the copied characters do not fit
+		// the destination
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		state = raising.raiseIfNull(exprs[3], state);
+		CodeLocation loc = getLocation();
+		Constant zero = new Constant(JavaIntType.INSTANCE, 0, loc);
+		AccessChild dstLength = new AccessChild(JavaIntType.INSTANCE, dst,
+				new GlobalVariable(JavaIntType.INSTANCE, "length", loc), loc);
+		BinaryExpression copied = new BinaryExpression(JavaIntType.INSTANCE, exprs[4],
+				new BinaryExpression(JavaIntType.INSTANCE, exprs[2], exprs[1], NumericNonOverflowingSub.INSTANCE, loc),
+				NumericNonOverflowingAdd.INSTANCE, loc);
+		BinaryExpression outOfBounds = or(loc,
+				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[1], zero, ComparisonLt.INSTANCE, loc),
+				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[1], exprs[2], ComparisonGt.INSTANCE, loc),
+				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[2],
+						new UnaryExpression(JavaIntType.INSTANCE, contents, JavaStringLengthOperator.INSTANCE, loc),
+						ComparisonGt.INSTANCE, loc),
+				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[4], zero, ComparisonLt.INSTANCE, loc),
+				new BinaryExpression(JavaBooleanType.INSTANCE, copied, dstLength, ComparisonGt.INSTANCE, loc));
+		state = raising.raiseWhere(outOfBounds, true, state, "java.lang.IndexOutOfBoundsException");
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
+
 		// the cells of the destination are written one by one, as the cells
 		// of arrays are accessed through constant indexes when there are few
 		// of them (see JavaArrayAccess): a copied character is the one of the
@@ -153,6 +186,17 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 			result = analysis.assign(result, new AccessChild(JavaCharType.INSTANCE, dst, idx, getLocation()), value,
 					context, originating);
 		}
-		return result.withExecutionExpression(new Skip(getLocation()));
+		return raising.moveFrom(result.withExecutionExpression(new Skip(getLocation())));
+	}
+
+	// the disjunction of the given conditions
+	private static BinaryExpression or(
+			CodeLocation location,
+			BinaryExpression first,
+			BinaryExpression... others) {
+		BinaryExpression result = first;
+		for (BinaryExpression other : others)
+			result = new BinaryExpression(JavaBooleanType.INSTANCE, result, other, LogicalOr.INSTANCE, location);
+		return result;
 	}
 }

@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -125,7 +127,12 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 		List<BinaryExpression> constraintList = constraints.toList();
 		if (constraintList.isEmpty())
-			return state;
+			// the class is not known: so is the new object
+			return analysis.smallStepSemantics(state,
+					new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location), context, this);
+		// the exceptions of a class are raised in all the executions only if
+		// it is the only class the object might have
+		AnalysisState<A> raising = constraintList.size() == 1 ? state : JavaExceptions.maybe(interprocedural, state, this);
 
 		for (BinaryExpression constraint : constraintList) {
 
@@ -149,7 +156,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 					if (!hasDefaultCtor(cu)) {
 						noSuchMethodState = noSuchMethodState
-								.lub(prepareNoSuchMethodException(interprocedural, state, expressions));
+								.lub(prepareNoSuchMethodException(interprocedural, raising, expressions));
 						noSuchMethodError = new Error(JavaClassType.getNoSuchMethodException().getReference(),
 								originating);
 						continue;
@@ -170,7 +177,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 				JavaNewObj call = new JavaNewObj(getCFG(), location,
 						instantiationExceptionType.getReference(), new Expression[0]);
-				AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
+				AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, raising, new ExpressionSet[0],
 						expressions);
 
 				// assign exception to variable thrower

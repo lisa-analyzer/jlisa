@@ -1,5 +1,8 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -17,6 +20,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
@@ -26,6 +30,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
@@ -38,6 +43,7 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -758,6 +764,69 @@ public class ListModel {
 	}
 
 	/**
+	 * Yields whether the method of a list implemented by the given native
+	 * takes an index as its first argument (e.g. {@code remove(int)}, as
+	 * opposed to {@code remove(Object)}).
+	 *
+	 * @param subExpressions the sub-expressions of the native (the receiver
+	 *                           first)
+	 *
+	 * @return whether the method takes an index
+	 */
+	public static boolean indexed(
+			Expression[] subExpressions) {
+		return subExpressions.length > 1 && subExpressions[1].getStaticType() instanceof JavaIntType;
+	}
+
+	/**
+	 * Raises {@code IndexOutOfBoundsException} exactly in the executions of
+	 * the given state where the given index is out of the bounds of the given
+	 * list (negative, or not smaller than its size; greater than its size if
+	 * {@code inclusive}, e.g. for {@code add(int, E)}), yielding the other
+	 * executions. If the list is not modeled, the exception is raised under
+	 * an unknown condition, and all the executions are yielded.
+	 *
+	 * @param <A>       the kind of the abstract state
+	 * @param <D>       the kind of the abstract domain
+	 * @param raising   where the exception is raised
+	 * @param analysis  the analysis
+	 * @param context   the context
+	 * @param state     the state
+	 * @param list      the list
+	 * @param index     the index
+	 * @param inclusive whether the size is a valid index
+	 * @param st        the statement
+	 *
+	 * @return the executions where the index is within the bounds
+	 *
+	 * @throws SemanticException if the analysis fails
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> checkIndex(
+			JavaExceptions.Raising<A, D> raising,
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			SymbolicExpression list,
+			SymbolicExpression index,
+			boolean inclusive,
+			Statement st)
+			throws SemanticException {
+		String exc = "java.lang.IndexOutOfBoundsException";
+		if (!isModeled(analysis, context, state, list, st)) {
+			raising.raise(Satisfiability.UNKNOWN, state, exc);
+			return state;
+		}
+		CodeLocation location = st.getLocation();
+		BinaryExpression outOfBounds = new BinaryExpression(JavaBooleanType.INSTANCE,
+				new BinaryExpression(JavaBooleanType.INSTANCE, index, new Constant(JavaIntType.INSTANCE, 0, location),
+						ComparisonLt.INSTANCE, location),
+				new BinaryExpression(JavaBooleanType.INSTANCE, index, size(list, location),
+						inclusive ? ComparisonGt.INSTANCE : ComparisonGe.INSTANCE, location),
+				LogicalOr.INSTANCE, location);
+		return raising.raiseWhere(outOfBounds, true, state, exc);
+	}
+
+	/**
 	 * Returns the given result of a method, joined with the state where a
 	 * {@code NullPointerException} is raised if the given argument (that the
 	 * method does not accept null) might be null; if the argument is surely
@@ -786,19 +855,74 @@ public class ListModel {
 			Expression[] subExpressions,
 			StatementStore<A> expressions)
 			throws SemanticException {
+		return nullArgument(interprocedural, state, true, true, done, argument, st, subExpressions);
+	}
+
+	/**
+	 * As
+	 * {@link #nullArgument(InterproceduralAnalysis, AnalysisState, AnalysisState, SymbolicExpression, Statement, Expression[], StatementStore)},
+	 * where {@code state} is the state of the executions where the method
+	 * does not accept null: if it is {@code exact}, it is exactly them, and
+	 * the exception is raised exactly where the argument is null; otherwise,
+	 * it is raised under an unknown condition. The result of the method is
+	 * restricted to the executions where the argument is not null if
+	 * {@code restrict} holds (that is, the method never accepts null).
+	 *
+	 * @param <A>             the kind of the abstract state
+	 * @param <D>             the kind of the abstract domain
+	 * @param interprocedural the interprocedural analysis
+	 * @param state           the state before the method, of the executions
+	 *                            where the method does not accept null
+	 * @param exact           whether {@code state} is exactly those
+	 *                            executions
+	 * @param restrict        whether the result is restricted to the
+	 *                            executions where the argument is not null
+	 * @param done            the result of the method
+	 * @param argument        the argument
+	 * @param st              the statement
+	 * @param subExpressions  the sub-expressions of the statement
+	 *
+	 * @return the result, possibly with the exception
+	 *
+	 * @throws SemanticException if the exception cannot be raised
+	 */
+	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> nullArgument(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			boolean exact,
+			boolean restrict,
+			AnalysisState<A> done,
+			SymbolicExpression argument,
+			Statement st,
+			Expression[] subExpressions)
+			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, argument, context, st);
-		JavaReferenceType nullType = new JavaReferenceType(it.unive.lisa.type.NullType.INSTANCE);
-		if (!types.contains(nullType))
+		if (types.stream().noneMatch(JavaExceptions::isNull))
 			return done;
-		String exc = "java.lang.NullPointerException";
-		AnalysisState<A> raised = raise(interprocedural, state, exc, st, subExpressions, expressions);
-		AnalysisState.Error error = new AnalysisState.Error(JavaClassType.lookup(exc).getReference(), st);
-		if (types.size() == 1 || done.getExecutionState().isBottom())
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, st, subExpressions);
+		String npe = "java.lang.NullPointerException";
+		CodeLocation location = st.getLocation();
+		if (types.stream().allMatch(JavaExceptions::isNull)) {
 			// the argument is surely null
-			return analysis.moveExecutionToError(raised, error, context, st);
-		return analysis.moveExecutionToError(done, raised, error, context, st);
+			raising.raise(exact ? Satisfiability.SATISFIED : Satisfiability.UNKNOWN, state, npe);
+			return raising.moveFrom(restrict ? done.bottomExecution() : done);
+		}
+		AnalysisState<A> isNull = analysis.assume(state, new BinaryExpression(JavaBooleanType.INSTANCE, argument,
+				new NullConstant(location), ComparisonEq.INSTANCE, location), context, st, st);
+		if (isNull.getExecutionState().isBottom()) {
+			// the analysis cannot tell the executions apart
+			raising.raise(Satisfiability.UNKNOWN, state, npe);
+			return raising.moveFrom(done);
+		}
+		raising.raise(exact ? Satisfiability.SATISFIED : Satisfiability.UNKNOWN, isNull, npe);
+		if (!restrict)
+			return raising.moveFrom(done);
+		// the method completes where the argument is not null
+		AnalysisState<A> notNull = analysis.assume(done, new BinaryExpression(JavaBooleanType.INSTANCE, argument,
+				new NullConstant(location), ComparisonNe.INSTANCE, location), context, st, st);
+		return raising.moveFrom(notNull.getExecutionState().isBottom() ? done : notNull);
 	}
 
 	/**

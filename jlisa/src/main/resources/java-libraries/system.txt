@@ -4,3 +4,11 @@ sealed class java.lang.System extends java.lang.Object:
     field err libtype java.io.PrintStream*
     method System_clinit: it.unive.jlisa.program.java.constructs.system.SystemClassInitializer
         type it.unive.lisa.type.VoidType::INSTANCE
+
+    method arraycopy: it.unive.jlisa.program.java.constructs.system.SystemArrayCopy
+        type it.unive.lisa.type.VoidType::INSTANCE
+        param src type it.unive.lisa.type.Untyped::INSTANCE
+        param srcPos type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param dest type it.unive.lisa.type.Untyped::INSTANCE
+        param destPos type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+        param length type it.unive.jlisa.program.type.JavaIntType::INSTANCE

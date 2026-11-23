@@ -570,6 +570,10 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Short.parseShort(s));
 
+		if (operator instanceof JavaIntegerParseIntOperator)
+			if (arg.getValue() instanceof String s)
+				return new ConstantValue(Integer.parseInt(s));
+
 		if (operator instanceof JavaDoubleParseDoubleOperator)
 			if (arg.getValue() instanceof String s)
 				return new ConstantValue(Double.parseDouble(s));
@@ -1615,6 +1619,16 @@ public class ConstantPropagation implements BaseNonRelationalValueDomain<Constan
 			if (arg.getValue() instanceof String v)
 				try {
 					Short.parseShort(v);
+				} catch (NumberFormatException e) {
+					return Satisfiability.NOT_SATISFIED;
+				}
+			return Satisfiability.SATISFIED;
+		}
+
+		if (operator instanceof JavaIsIntParsableOperator) {
+			if (arg.getValue() instanceof String v)
+				try {
+					Integer.parseInt(v);
 				} catch (NumberFormatException e) {
 					return Satisfiability.NOT_SATISFIED;
 				}

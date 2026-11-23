@@ -1,5 +1,12 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.Constant;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -62,11 +69,30 @@ public class StringBuilderDelete extends TernaryExpression implements PluggableS
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
+		// an index out of the contents raises IndexOutOfBoundsException
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		// start < 0, start > length or start > end (end is cut to the length)
+		it.unive.lisa.symbolic.value.BinaryExpression startOut = new it.unive.lisa.symbolic.value.BinaryExpression(
+				JavaBooleanType.INSTANCE,
+				new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, middle,
+						new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation()),
+				new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, middle,
+						StringBuilderMutationSupport.length(left, stringType, getLocation()), ComparisonGt.INSTANCE,
+						getLocation()),
+				LogicalOr.INSTANCE, getLocation());
+		state = raising.raiseWhere(new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, startOut,
+				new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, middle, right,
+						ComparisonGt.INSTANCE, getLocation()),
+				LogicalOr.INSTANCE, getLocation()), true, state, "java.lang.IndexOutOfBoundsException");
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
+
 		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, context, state, left, stringType,
 				getLocation(), this,
 				oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
 						stringType, oldValue, middle, right, JavaStringDeleteOperator.INSTANCE, getLocation()));
 
-		return analysis.smallStepSemantics(result, left, context, originating);
+		return raising.moveFrom(analysis.smallStepSemantics(result, left, context, originating));
 	}
 }

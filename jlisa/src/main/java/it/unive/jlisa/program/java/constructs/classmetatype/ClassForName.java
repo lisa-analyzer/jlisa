@@ -151,6 +151,10 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 
 			if (tmp != okState)
 				noExceptionState = tmp.withExecutionExpressions(execExpressions);
+			else
+				// no class is known: so is the result
+				noExceptionState = interprocedural.getAnalysis().smallStepSemantics(okState,
+						new PushAny(new JavaReferenceType(getStaticType()), getLocation()), context, this);
 		}
 
 		// `ClassNotFoundException to be thrown

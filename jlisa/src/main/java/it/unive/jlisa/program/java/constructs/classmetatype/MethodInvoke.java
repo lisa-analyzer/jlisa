@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
@@ -172,9 +174,10 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		Satisfiability isStaticSat = Satisfiability.NOT_SATISFIED;
 		isStaticSat = analysis.satisfies(state, isStaticExpr, context, this);
 
-		// we don't know whether the method is static or not
+		// we don't know whether the method is static or not: the result is
+		// not known
 		if (isStaticSat == Satisfiability.UNKNOWN)
-			return state;
+			return unknownResult(analysis, context, state);
 
 		AnalysisState<A> exceptionState = state.bottomExecution();
 		AnalysisState<A> noExceptionState = state.bottomExecution();
@@ -189,7 +192,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		// of the receiver could be null
 		if (isStaticSat == Satisfiability.NOT_SATISFIED
 				&& thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
-			npeState = prepareNullPointerException(interprocedural, state, expressions);
+			// in all the executions only if the receiver is surely null
+			npeState = prepareNullPointerException(interprocedural,
+					thisObjTypes.isEmpty() ? state : JavaExceptions.maybe(interprocedural, state, this), expressions);
 			npeError = new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating);
 		}
 
@@ -203,7 +208,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
 
 		if (clazzNameConstraints.isEmpty())
-			return withPendingExceptions(analysis, context, state, npeState, npeError, iaeState, iaeError);
+			return withPendingExceptions(analysis, context, unknownResult(analysis, context, state), npeState,
+					npeError, iaeState, iaeError);
 
 		// check the types of the receiver against the type of the declaring
 		// class.
@@ -212,7 +218,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			boolean mayThrowIA = checkMayThrowIllegalArgumentReceiver(interprocedural, state, thisObjTypes,
 					clazzNameConstraints, derefMethod);
 			if (mayThrowIA) {
-				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+				// the executions raising it are not known
+				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, JavaExceptions.maybe(interprocedural, state, this),
+						expressions));
 				iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			}
 		}
@@ -233,7 +241,11 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 
 		Satisfiability nArgsMatch = isNArgsEq(interprocedural, state, derefMethod, lenAccess);
 		if (nArgsMatch != Satisfiability.SATISFIED) {
-			iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+			// in all the executions only if the number of arguments surely
+			// does not match, and no execution raises another exception
+			boolean exact = nArgsMatch == Satisfiability.NOT_SATISFIED && npeError == null && iaeError == null;
+			iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural,
+					exact ? state : JavaExceptions.maybe(interprocedural, state, this), expressions));
 			iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			// if the number of arguments certainly does not match, no
 			// execution reaches the call
@@ -340,7 +352,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				// if open call, it's a stray call. Throw an illegal argument
 				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
-					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+					// the executions raising it are not known
+					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, JavaExceptions.maybe(interprocedural, state, this),
+							expressions));
 					iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(),
 							originating);
 					continue;
@@ -379,6 +393,16 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return withPendingExceptions(analysis, context, noExceptionState.lub(exceptionState), npeState, npeError,
 				iaeState,
 				iaeError);
+	}
+
+	// the state where the invocation yields an unknown object
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> unknownResult(
+			Analysis<A, D> analysis,
+			ScopeId<?> context,
+			AnalysisState<A> state)
+			throws SemanticException {
+		return analysis.smallStepSemantics(state,
+				new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), getLocation()), context, this);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> withPendingExceptions(

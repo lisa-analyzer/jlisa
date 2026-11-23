@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -62,11 +63,19 @@ public class StringBuilderInsertInt extends TernaryExpression implements Pluggab
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
+		// an index out of the contents raises IndexOutOfBoundsException
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		state = StringBuilderMutationSupport.checkIndex(raising, state, left, stringType, middle, true,
+				getLocation());
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
+
 		AnalysisState<A> result = StringBuilderMutationSupport.mutateValue(analysis, context, state, left, stringType,
 				getLocation(), this,
 				oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
 						stringType, oldValue, middle, right, JavaStringInsertIntOperator.INSTANCE, getLocation()));
 
-		return analysis.smallStepSemantics(result, left, context, originating);
+		return raising.moveFrom(analysis.smallStepSemantics(result, left, context, originating));
 	}
 }

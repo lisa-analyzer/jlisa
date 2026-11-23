@@ -1,21 +1,19 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.statement.JavaCompoundAssignment;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
-import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
-import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -23,7 +21,6 @@ import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -37,7 +34,6 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
-import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.ArrayList;
@@ -73,6 +69,12 @@ public class JavaArrayAccess extends BinaryExpression {
 			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, getLeft(),
+				getRight());
+		// a null array raises NullPointerException
+		state = raising.raiseIfNull(left, state);
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
 		Type leftType = left.getStaticType();
 		if (!isArrayReference(leftType)) {
 			// the static type might not be an array (e.g., the element of a
@@ -83,13 +85,13 @@ public class JavaArrayAccess extends BinaryExpression {
 				if (t.isNullType() || t.isReferenceType() && t.asReferenceType().getInnerType().isNullType())
 					continue;
 				else if (!isArrayReference(t) || leftType != null && !leftType.equals(t))
-					return analysis.smallStepSemantics(state, new PushAny(Untyped.INSTANCE, getLocation()), context,
-							this);
+					return raising.moveFrom(analysis.smallStepSemantics(state,
+							new PushAny(Untyped.INSTANCE, getLocation()), context, this));
 				else
 					leftType = t;
 			if (leftType == null)
-				return analysis.smallStepSemantics(state, new PushAny(Untyped.INSTANCE, getLocation()), context,
-						this);
+				return raising.moveFrom(analysis.smallStepSemantics(state,
+						new PushAny(Untyped.INSTANCE, getLocation()), context, this));
 		}
 
 		// need to check in-bound
@@ -111,75 +113,16 @@ public class JavaArrayAccess extends BinaryExpression {
 				JavaBooleanType.INSTANCE,
 				idxCheck1, idxCheck2, LogicalOr.INSTANCE, getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, or, context, this);
-		if (sat == Satisfiability.SATISFIED) {
-			// builds the exception
-			JavaClassType oonExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
-
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, this);
-
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
-						.forgetIdentifiers(getLeft().getMetaVariables(), this)
-						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this), context, this));
-			}
-
-			return exceptionState;
-		} else if (sat == Satisfiability.NOT_SATISFIED) {
+		// the index is out of bounds exactly where the condition holds
+		AnalysisState<A> inBounds = raising.raiseWhere(or, true, state,
+				"java.lang.ArrayIndexOutOfBoundsException");
+		AnalysisState<A> result = inBounds;
+		if (!inBounds.getExecutionState().isBottom())
 			// the elements of arrays of arrays (e.g., the rows of a[i][j]) are
 			// references to arrays
-			Type accessType = arrayType.getInnerType();
-			return readArrayElement(analysis, context, state, container, right, lenAccess, accessType);
-		} else if (sat == Satisfiability.BOTTOM) {
-			return state.bottomExecution();
-		} else {
-			// restrict each half to the executions it describes
-			AnalysisState<A> okState = analysis.assume(state,
-					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, or,
-							LogicalNegation.INSTANCE, getLocation()),
-					context, this, this);
-			AnalysisState<A> koState = analysis.assume(state, or, context, this, this);
-
-			Type accessType = arrayType.getInnerType();
-			AnalysisState<
-					A> noExceptionState = readArrayElement(analysis, context, okState, container, right, lenAccess,
-							accessType);
-
-			// builds the exception
-			JavaClassType oobExc = JavaClassType.getArrayIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-					oobExc.getReference(), new Expression[0]);
-			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0],
-					new StatementStore<A>(koState));
-
-			AnalysisState<A> erroneousState = koState.bottomExecution();
-
-			for (SymbolicExpression th : koState.getExecutionExpressions()) {
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), oobExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(koState, throwVar, th, context, this);
-
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
-						.forgetIdentifiers(getLeft().getMetaVariables(), this)
-						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
-			}
-
-			return analysis.moveExecutionToError(noExceptionState, erroneousState,
-					new Error(oobExc.getReference(), this), context, this);
-		}
+			result = readArrayElement(analysis, context, inBounds, container, right, lenAccess,
+					arrayType.getInnerType());
+		return raising.moveFrom(result);
 	}
 
 	// array elements are written with constant indices (e.g. by reflection

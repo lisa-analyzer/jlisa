@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -216,8 +217,9 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 
 						JavaNewObj npeCall = new JavaNewObj(cfg, location,
 								npeType.getReference(), new Expression[0]);
-						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural, state,
-								new ExpressionSet[0], expressions);
+						// in all the executions only if the target is surely null
+						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural,
+								targetTypes.isEmpty() ? state : JavaExceptions.maybe(interprocedural, state, this), new ExpressionSet[0], expressions);
 
 						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), location);
 						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,

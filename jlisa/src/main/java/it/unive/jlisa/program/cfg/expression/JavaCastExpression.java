@@ -1,23 +1,21 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
-import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
@@ -60,11 +58,10 @@ public class JavaCastExpression extends UnaryExpression {
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
 		if (type.isReferenceType()) {
+			if (state.getExecutionState().isBottom())
+				// unreachable: nothing is computed
+				return state.bottomExecution();
 			Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
-			AnalysisState<A> result = state.bottomExecution();
-			AnalysisState<A> erroneousState = state.bottom();
-			Error error = null;
-
 			// the cast fails only if the value is not null and not an
 			// instance of the type (null is never an instance, but its cast
 			// succeeds), built as instanceof does
@@ -77,48 +74,45 @@ public class JavaCastExpression extends UnaryExpression {
 					new it.unive.lisa.symbolic.value.UnaryExpression(getProgram().getTypes().getBooleanType(),
 							instanceOf, LogicalNegation.INSTANCE, getLocation()),
 					LogicalAnd.INSTANCE, getLocation());
-			AnalysisState<A> failing = null;
 
-			for (Type t : types) {
-				boolean safe = t.isReferenceType() && t.asReferenceType().getInnerType().isNullType()
-						|| t.canBeAssignedTo(type);
+			// with no known type, the cast might both fail and succeed
+			boolean safe = types.isEmpty(), unsafe = types.isEmpty();
+			for (Type t : types)
+				if (t.isReferenceType() && t.asReferenceType().getInnerType().isNullType() || t.canBeAssignedTo(type))
+					safe = true;
+				else
+					unsafe = true;
 
-				if (safe) {
-					BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE,
-							getLocation());
-					result = result.lub(analysis.smallStepSemantics(state, castExpression, context, this));
-				} else {
-					// builds the exception
-					JavaClassType ccExc = JavaClassType.getClassCastExceptionType();
-					JavaNewObj call = new JavaNewObj(getCFG(), getLocation(), ccExc.getReference(),
-							new Expression[0]);
-					if (failing == null) {
-						failing = analysis.assume(state, notInstanceOf, context, this, this);
-						if (failing.getExecutionState().isBottom())
-							// the domain cannot represent the failure of the
-							// check: keep the original state
-							failing = state;
-					}
-					AnalysisState<A> excState = call.forwardSemanticsAux(interprocedural, failing,
-							new ExpressionSet[0], expressions);
-
-					// assign exception to variable thrower
-					CFGThrow throwVar = new CFGThrow(getCFG(), ccExc.getReference(), getLocation());
-					excState = analysis.assign(excState, throwVar,
-							excState.getExecutionExpressions().elements.stream().findFirst().get(), context, this);
-
-					// deletes the receiver of the constructor
-					// and all the metavariables from subexpressions
-					excState = excState.forgetIdentifiers(call.getMetaVariables(), this);
-					excState = excState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
-					erroneousState = erroneousState.lub(excState.withExecutionExpression(throwVar));
-					error = new Error(ccExc.getReference(), this);
+			// the exception is raised exactly in the executions where the cast
+			// fails, and the cast is computed in the others
+			JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this,
+					getSubExpression());
+			String cce = "java.lang.ClassCastException";
+			AnalysisState<A> succeeding = state;
+			if (unsafe && !safe) {
+				raising.raise(Satisfiability.SATISFIED, state, cce);
+				succeeding = state.bottomExecution();
+			} else if (unsafe) {
+				AnalysisState<A> failing = analysis.assume(state, notInstanceOf, context, this, this);
+				AnalysisState<A> passing = analysis.assume(state,
+						new it.unive.lisa.symbolic.value.UnaryExpression(getProgram().getTypes().getBooleanType(),
+								notInstanceOf, LogicalNegation.INSTANCE, getLocation()),
+						context, this, this);
+				if (failing.getExecutionState().isBottom() || passing.getExecutionState().isBottom())
+					// the analysis cannot tell the executions apart, although
+					// the cast might both fail and succeed
+					raising.raise(Satisfiability.UNKNOWN, state, cce);
+				else {
+					raising.raise(Satisfiability.SATISFIED, failing, cce);
+					succeeding = passing;
 				}
 			}
 
-			if (error == null)
-				return result;
-			return analysis.moveExecutionToError(result, erroneousState, error, context, this);
+			AnalysisState<A> result = succeeding;
+			if (safe && !succeeding.getExecutionState().isBottom())
+				result = analysis.smallStepSemantics(succeeding,
+						new BinaryExpression(type, expr, typeConv, TypeCast.INSTANCE, getLocation()), context, this);
+			return raising.moveFrom(result);
 		} else {
 			BinaryExpression castExpression = new BinaryExpression(type, expr, typeConv, TypeConv.INSTANCE,
 					getLocation());

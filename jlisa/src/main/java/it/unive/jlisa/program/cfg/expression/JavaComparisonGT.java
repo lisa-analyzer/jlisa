@@ -51,7 +51,7 @@ public class JavaComparisonGT extends GreaterThan {
 			StatementStore<A> expressions)
 			throws SemanticException {
 		AnalysisState<A> unboxed = JavaUnboxing.compare(interprocedural, state, left, right, ComparisonGt.INSTANCE,
-				getStaticType(), this);
+				getStaticType(), this, getLeft(), getRight());
 		return unboxed != null ? unboxed : super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 	}
 }

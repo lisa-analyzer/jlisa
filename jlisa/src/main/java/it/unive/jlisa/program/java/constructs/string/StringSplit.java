@@ -1,5 +1,8 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import java.util.regex.Pattern;
+import it.unive.lisa.lattices.Satisfiability;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.SyntheticCodeLocation;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -90,6 +93,16 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 		// known
 		String receiver = constant(interprocedural, state, left);
 		String regex = constant(interprocedural, state, right);
+		if (regex != null)
+			try {
+				Pattern.compile(regex);
+			} catch (PatternSyntaxException e) {
+				// an invalid regular expression raises the exception
+				JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this,
+						originating, getSubExpressions());
+				raising.raise(Satisfiability.SATISFIED, state, "java.util.regex.PatternSyntaxException");
+				return raising.moveFrom(state.bottomExecution());
+			}
 		if (receiver != null && regex != null) {
 			String[] parts;
 			try {

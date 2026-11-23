@@ -20,6 +20,10 @@ class java.lang.Integer extends java.lang.Number:
 
 
 
+	method parseInt: it.unive.jlisa.program.java.constructs.integer.IntegerParseInt
+		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
+		param v libtype java.lang.String*
+
 	method compare: it.unive.jlisa.program.java.constructs.integer.IntegerCompare
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param this libtype java.lang.Integer*

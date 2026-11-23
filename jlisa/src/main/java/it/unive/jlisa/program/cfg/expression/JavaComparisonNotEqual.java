@@ -1,5 +1,6 @@
 package it.unive.jlisa.program.cfg.expression;
 
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
@@ -69,14 +70,22 @@ public class JavaComparisonNotEqual extends NotEqual {
 			return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 		}
 
+		// unboxing null raises NullPointerException
+		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, getLeft(),
+				getRight());
+		if (left.getStaticType().isReferenceType())
+			state = JavaUnboxing.nonNull(raising, state, left, JavaUnboxing.unbox(left, right, getLocation()));
+		else
+			state = JavaUnboxing.nonNull(raising, state, right, JavaUnboxing.unbox(right, left, getLocation()));
+		if (state.getExecutionState().isBottom())
+			return raising.moveFrom(state.bottomExecution());
 		AnalysisState<A> res = state.bottomExecution();
 		if (left.getStaticType().isReferenceType()) {
 			res = notEqWithUnbox(analysis, context, state, left, right, expressions);
 		} else {
 			res = notEqWithUnbox(analysis, context, state, right, left, expressions);
 		}
-		return res;
-
+		return raising.moveFrom(res);
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> notEqWithUnbox(

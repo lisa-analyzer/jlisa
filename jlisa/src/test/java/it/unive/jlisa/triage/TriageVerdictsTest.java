@@ -423,4 +423,80 @@ public class TriageVerdictsTest {
 		assertNotEquals(Verdict.REFUTED,
 				verdict("heap-written-by-recursion-reflection", SVCOMPProperty.ASSERT, dir));
 	}
+
+	/**
+	 * Null values raise NullPointerException where they are dereferenced:
+	 * reading a cell of an array, and unboxing (assignments, conditions,
+	 * comparisons).
+	 */
+	@Test
+	public void nullValuesRaiseExceptions(
+			@TempDir Path dir)
+			throws Exception {
+		for (String program : List.of("npe-array", "npe-unboxing", "npe-boolean-condition", "npe-comparison"))
+			assertEquals(Verdict.DEFINITE, verdict(program, SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve(program)),
+					program);
+	}
+
+	/**
+	 * Exceptions are raised only in the executions raising them, and the
+	 * others continue normally: the field of a reference that might be null
+	 * is read only where it is not, a cast fails only where the value is not
+	 * an instance of the type, and a null key is rejected only by the maps
+	 * that do not accept it.
+	 */
+	@Test
+	public void exceptionsAreRaisedOnlyWhereTheyHappen(
+			@TempDir Path dir)
+			throws Exception {
+		for (String program : List.of("npe-field-normal-path", "cast-mixed", "null-key-mixed-maps"))
+			assertEquals(Verdict.REFUTED, verdict(program, SVCOMPProperty.ASSERT, dir.resolve(program)), program);
+		assertEquals(Verdict.DEFINITE, verdict("null-key-mixed-maps-reach", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * The bounds of strings, string builders and lists raise
+	 * IndexOutOfBoundsException exactly when the indexes are out of them.
+	 */
+	@Test
+	public void indexesOutOfBoundsRaiseExceptions(
+			@TempDir Path dir)
+			throws Exception {
+		for (String program : List.of("substring-inverted", "bounds-getchars", "bounds-builder-delete",
+				"bounds-builder-insert", "bounds-list-remove", "bounds-list-add", "bounds-list-set"))
+			assertEquals(Verdict.DEFINITE, verdict(program, SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve(program)),
+					program);
+		for (String program : List.of("substring-full", "bounds-getchars-valid", "bounds-builder-valid"))
+			assertEquals(Verdict.REFUTED, verdict(program, SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve(program)),
+					program);
+	}
+
+	/**
+	 * The iterators of collections without an order advance over their
+	 * elements, and raise NoSuchElementException when there are no more.
+	 */
+	@Test
+	public void iteratorsOfSetsAreExhausted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("set-iterator-exhausted", SVCOMPProperty.RUNTIME_EXCEPTION, dir));
+	}
+
+	/**
+	 * Integer.parseInt, System.arraycopy, Arrays.copyOf and String.split
+	 * raise their exceptions, and compute their results (arraycopy writes the
+	 * destination).
+	 */
+	@Test
+	public void libraryMethodsRaiseTheirExceptions(
+			@TempDir Path dir)
+			throws Exception {
+		for (String program : List.of("parseint-invalid", "arraycopy-bounds", "copyof-negative",
+				"split-invalid-regex"))
+			assertEquals(Verdict.DEFINITE, verdict(program, SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve(program)),
+					program);
+		assertEquals(Verdict.DEFINITE, verdict("arraycopy-write", SVCOMPProperty.ASSERT, dir.resolve("write")));
+		for (String program : List.of("parseint-value", "arraycopy-value"))
+			assertEquals(Verdict.REFUTED, verdict(program, SVCOMPProperty.ASSERT, dir.resolve(program)), program);
+	}
 }

@@ -105,6 +105,12 @@ class java.lang.NumberFormatException extends java.lang.IllegalArgumentException
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.NumberFormatException*
 		
+class java.util.regex.PatternSyntaxException extends java.lang.IllegalArgumentException:
+
+	instance method PatternSyntaxException: it.unive.jlisa.program.java.constructs.exceptions.IllegalArgumentExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.regex.PatternSyntaxException*
+
 class java.lang.NegativeArraySizeException extends java.lang.RuntimeException:
 
 	instance method NegativeArraySizeException: it.unive.jlisa.program.java.constructs.exceptions.NegativeArraySizeExceptionConstructor
