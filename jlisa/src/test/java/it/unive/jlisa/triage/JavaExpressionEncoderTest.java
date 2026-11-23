@@ -21,9 +21,13 @@ import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathExpOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
 import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathExpOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathSinOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
@@ -71,6 +75,7 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.TypeConv;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
@@ -90,6 +95,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -127,6 +133,26 @@ public class JavaExpressionEncoderTest {
 		private final List<Term> requirements = new ArrayList<>();
 
 		private boolean havoc;
+
+		/**
+		 * The functions computed on concrete values, with the sorts of their
+		 * arguments.
+		 */
+		private final Set<String> evaluated = new HashSet<>();
+
+		@Override
+		public Term evaluable(
+				String function,
+				Sort result,
+				List<Term> arguments,
+				java.util.function.Function<List<Number>, Number> evaluator,
+				SymbolicExpression origin) {
+			List<Sort> sorts = new ArrayList<>();
+			for (Term arg : arguments)
+				sorts.add(arg.getSort());
+			evaluated.add(function + sorts);
+			return solver.declare("evaluable#" + (counter++), result);
+		}
 
 		@Override
 		public Term constant(
@@ -623,6 +649,70 @@ public class JavaExpressionEncoderTest {
 			solver.assertTerm(Term.not(Term.eq(term, expected(c[2]))));
 			assertEquals(SmtResult.UNSAT, solver.check(), "(" + target + ") " + c[1] + " should be " + c[2]);
 			solver.pop();
+		}
+	}
+
+	/**
+	 * A symbol table recording the unknown functions applied, with their
+	 * sorts.
+	 */
+	private static class FunctionSymbols
+			extends
+			Symbols {
+
+		private final Set<String> applied = new HashSet<>();
+
+		@Override
+		public Term apply(
+				String function,
+				Sort result,
+				List<Term> arguments,
+				SymbolicExpression origin,
+				Term guard) {
+			List<Sort> sorts = new ArrayList<>();
+			for (Term arg : arguments)
+				sorts.add(arg.getSort());
+			applied.add(function + sorts + result);
+			return super.apply(function, result, arguments, origin, guard);
+		}
+	}
+
+	@Test
+	public void libraryFunctionsAreDifferentFunctions() throws SemanticException {
+		// outside the code points, the functions of the library are unknown
+		// functions, identified by their name and sorts: they must not be
+		// forced to be equal (e.g., Character.getType(-1) is 0, while
+		// Character.toLowerCase(-1) is -1)
+		Variable x = new Variable(JavaIntType.INSTANCE, "x", LOC);
+		Set<String> names = new HashSet<>();
+		for (JavaLibraryFunction f : List.of(JavaLibraryFunction.CHARACTER_GET_TYPE,
+				JavaLibraryFunction.CHARACTER_TO_LOWER_CASE)) {
+			FunctionSymbols symbols = new FunctionSymbols();
+			JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(new HashMap<>()), symbols);
+			new UnaryExpression(JavaIntType.INSTANCE, x, f, LOC).accept(encoder);
+			assertEquals(1, symbols.applied.size(), f + " applies " + symbols.applied);
+			names.addAll(symbols.applied);
+		}
+		assertEquals(2, names.size(), "getType and toLowerCase share " + names);
+	}
+
+	@Test
+	public void mathAndStrictMathAreDifferentFunctions() throws SemanticException {
+		// functions are identified by their name and sorts, and the functions
+		// of Math and StrictMath can differ
+		Object[][] pairs = {
+				{ JavaMathSinOperator.INSTANCE, JavaStrictMathSinOperator.INSTANCE },
+				{ JavaMathExpOperator.INSTANCE, JavaStrictMathExpOperator.INSTANCE } };
+		for (Object[] pair : pairs) {
+			Set<String> names = new HashSet<>();
+			for (Object op : pair) {
+				Symbols symbols = new Symbols();
+				JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(new HashMap<>()), symbols);
+				new UnaryExpression(JavaDoubleType.INSTANCE, constant(0.5d), (UnaryOperator) op, LOC).accept(encoder);
+				assertEquals(1, symbols.evaluated.size(), op + " computes " + symbols.evaluated);
+				names.addAll(symbols.evaluated);
+			}
+			assertEquals(2, names.size(), pair[0] + " and " + pair[1] + " share " + names);
 		}
 	}
 

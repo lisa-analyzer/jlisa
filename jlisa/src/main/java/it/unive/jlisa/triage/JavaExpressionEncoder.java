@@ -419,7 +419,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			// not specified exactly
 			Term x = toFloat(left, Sort.FLOAT64, e.getLeft(), e);
 			Term y = toFloat(right, Sort.FLOAT64, e.getRight(), e);
-			return getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x, y),
+			return getSymbols().evaluable(functionOf(op), Sort.FLOAT64, List.of(x, y),
 					args -> function.applyAsDouble(args.get(0).doubleValue(), args.get(1).doubleValue()), e);
 		}
 		if (op instanceof JavaMathMax || op instanceof JavaStrictMathMax)
@@ -1128,8 +1128,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Function<List<Number>, Number> evaluator = args -> function.applyAsDouble(args.get(0).doubleValue());
 			Boolean increasing = monotonicity(op);
 			Term result = increasing != null
-					? getSymbols().monotone("$" + op, Sort.FLOAT64, x, evaluator, increasing, e)
-					: getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x), evaluator, e);
+					? getSymbols().monotone(functionOf(op), Sort.FLOAT64, x, evaluator, increasing, e)
+					: getSymbols().evaluable(functionOf(op), Sort.FLOAT64, List.of(x), evaluator, e);
 			Term range = range(op, x, result);
 			if (range != null)
 				getSymbols().require(range);
@@ -1145,6 +1145,22 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaMathRoundOperator || op instanceof JavaStrictMathRoundOperator)
 			return round(arg, sort.equals(Sort.FLOAT64) ? 64 : 32);
 		return null;
+	}
+
+	/**
+	 * Yields the name of the uninterpreted function computed by the given
+	 * operator. Functions are identified by their name and sorts, and the
+	 * operators of {@link Math} and {@link StrictMath} share their textual
+	 * representation while computing possibly different results: the name thus
+	 * includes the class of the operator.
+	 *
+	 * @param op the operator
+	 *
+	 * @return the name of the function
+	 */
+	private static String functionOf(
+			Object op) {
+		return "$" + op.getClass().getSimpleName() + ":" + op;
 	}
 
 	/**
