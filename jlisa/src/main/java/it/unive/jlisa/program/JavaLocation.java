@@ -106,6 +106,11 @@ public class JavaLocation
 		JavaLocation o = (JavaLocation) other;
 		if ((cmp = Integer.compare(endLine, o.endLine)) != 0)
 			return cmp;
-		return Integer.compare(endCol, o.endCol);
+		if ((cmp = Integer.compare(endCol, o.endCol)) != 0)
+			return cmp;
+		// locations of different kinds at the same position (e.g., the ones of
+		// the unboxings of expressions) are told apart by their code location,
+		// consistently with equals
+		return getCodeLocation().compareTo(o.getCodeLocation());
 	}
 }

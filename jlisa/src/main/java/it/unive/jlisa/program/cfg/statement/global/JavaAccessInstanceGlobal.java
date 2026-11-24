@@ -201,9 +201,6 @@ public class JavaAccessInstanceGlobal
 
 		Type rectype = Type.commonSupertype(rectypes, Untyped.INSTANCE);
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, target, new Annotations(), getLocation());
-		// a receiver that is already a location of the heap (e.g., an array
-		// read from a cell of another array) is not dereferenced again, as for
-		// the fields of classes above
 		SymbolicExpression container = new HeapDereference(rectype, expr, getLocation());
 		AccessChild access = new AccessChild(Untyped.INSTANCE, container, var, getLocation());
 		return raising.moveFrom(analysis.smallStepSemantics(state, access, context, this));

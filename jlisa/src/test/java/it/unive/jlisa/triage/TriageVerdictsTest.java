@@ -1,6 +1,7 @@
 package it.unive.jlisa.triage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -74,6 +75,9 @@ public class TriageVerdictsTest {
 			Path outdir)
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings(program, property, outdir);
+		// no warning would be trivially refuted (e.g., if a regression drops
+		// them)
+		assertFalse(warnings.isEmpty(), "no warning for " + program);
 		if (warnings.stream().anyMatch(JsonReport.JsonMessage::isDefinite))
 			return Verdict.DEFINITE;
 		if (warnings.stream().allMatch(JsonReport.JsonMessage::isRefuted))
@@ -156,6 +160,77 @@ public class TriageVerdictsTest {
 			@TempDir Path dir)
 			throws Exception {
 		assertEquals(Verdict.REFUTED, verdict("string-equals-other", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * Runtime exceptions of the language are confirmed: an index out of the
+	 * bounds of an array, and an integer division by zero.
+	 */
+	@Test
+	public void languageRuntimeExceptionsAreConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		for (String program : List.of("aioobe-array", "division-by-zero"))
+			assertEquals(Verdict.DEFINITE, verdict(program, SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve(program)),
+					program);
+	}
+
+	/**
+	 * The elements of arrays are visited by for-each loops, and getChars writes
+	 * the cells of its destination: violations are confirmed, and assertions
+	 * that hold are refuted.
+	 */
+	@Test
+	public void arrayElementsAreVisitedAndWritten(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("foreach-array", SVCOMPProperty.ASSERT, dir.resolve("a")));
+		assertEquals(Verdict.REFUTED, verdict("foreach-array-holds", SVCOMPProperty.ASSERT, dir.resolve("b")));
+		assertEquals(Verdict.REFUTED, verdict("getchars-cells", SVCOMPProperty.ASSERT, dir.resolve("c")));
+	}
+
+	/**
+	 * A static field inherited from an ancestor and written by a summarized
+	 * callee is unknown after the call.
+	 */
+	@Test
+	public void inheritedStaticFieldsWrittenByCalleesAreUnknown(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("static-inherited-written", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * The default methods of interfaces are called on the objects of the
+	 * classes implementing them.
+	 */
+	@Test
+	public void defaultMethodsAreCalled(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("default-methods", SVCOMPProperty.ASSERT, dir.resolve("a")));
+		assertEquals(Verdict.REFUTED, verdict("default-methods-holds", SVCOMPProperty.ASSERT, dir.resolve("b")));
+	}
+
+	/**
+	 * Runtime exceptions whose counterexamples rely on imprecise values are
+	 * certified by execution too, also within a time limit (that leaves time
+	 * to the certification).
+	 */
+	@Test
+	public void runtimeExceptionsAreCertifiedByExecution(
+			@TempDir Path dir)
+			throws Exception {
+		List<JsonReport.JsonMessage> warnings = warnings("certified-exception", SVCOMPProperty.RUNTIME_EXCEPTION,
+				dir.resolve("a"), "--certification");
+		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
+				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
+		// the limit counts from the start of the virtual machine, that runs
+		// all the tests: it is large enough not to be reached
+		warnings = warnings("certified", SVCOMPProperty.ASSERT, dir.resolve("b"), "--certification",
+				"--time-limit", "3600");
+		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
+				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
 	}
 
 	/**

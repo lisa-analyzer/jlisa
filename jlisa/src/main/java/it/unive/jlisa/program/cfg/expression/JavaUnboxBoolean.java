@@ -66,13 +66,27 @@ public class JavaUnboxBoolean extends UnaryExpression {
 			return location;
 		// same source position as the unboxed expression, but a different
 		// location, as no two statements can share one
-		return new JavaLocation(loc.getSourceFile(), loc.getLine(), loc.getCol(), loc.getEndLine(), loc.getEndCol()) {
+		return new UnboxedLocation(loc);
+	}
 
-			@Override
-			public String getCodeLocation() {
-				return super.getCodeLocation() + "(unboxed)";
-			}
-		};
+	/**
+	 * The location of the unboxing of an expression: the source position of
+	 * the expression, but a different location (not equal to it, and ordered
+	 * after it, see {@link JavaLocation#compareTo}).
+	 */
+	private static final class UnboxedLocation
+			extends
+			JavaLocation {
+
+		private UnboxedLocation(
+				JavaLocation loc) {
+			super(loc.getSourceFile(), loc.getLine(), loc.getCol(), loc.getEndLine(), loc.getEndCol());
+		}
+
+		@Override
+		public String getCodeLocation() {
+			return super.getCodeLocation() + "(unboxed)";
+		}
 	}
 
 	@Override

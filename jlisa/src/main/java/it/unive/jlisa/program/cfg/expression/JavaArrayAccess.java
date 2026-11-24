@@ -96,9 +96,6 @@ public class JavaArrayAccess extends BinaryExpression {
 
 		// need to check in-bound
 		JavaArrayType arrayType = (JavaArrayType) ((JavaReferenceType) leftType).getInnerType();
-		// a receiver that is already a location of the heap (e.g., an array
-		// read from a cell of another array) is not dereferenced again, as for
-		// the accesses to fields (see JavaAccessInstanceGlobal)
 		SymbolicExpression container = new HeapDereference(arrayType, left, getLocation());
 		GlobalVariable lenProperty = new GlobalVariable(JavaIntType.INSTANCE, "length", getLocation());
 		AccessChild lenAccess = new AccessChild(Untyped.INSTANCE, container, lenProperty, getLocation());

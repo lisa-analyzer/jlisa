@@ -113,83 +113,40 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 				return split(interprocedural, state, parts, expressions);
 		}
 
-		// FIXME: this is a temporary solution: we return an array with length
-		// set to top but with
-		// for elements, set to the top string
-
+		// the parts are not known: an array of unknown length whose first
+		// UNKNOWN_PARTS cells are new strings with unknown contents (each in
+		// its own state, joined)
 		String src = ((SourceCodeLocation) getLocation()).getSourceFile();
 		Expression unknown = stringArrayType.unknownValue(getCFG(), originating.getLocation());
 		AnalysisState<A> splitArray = unknown.forwardSemantics(state, interprocedural, expressions);
 
+		// the 'value' property of strings
+		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", originating.getLocation());
 		AnalysisState<A> result = state.bottomExecution();
-		for (SymbolicExpression spl : splitArray.getExecutionExpressions()) {
-			AccessChild ch = new AccessChild(stringType, spl,
-					new Constant(JavaIntType.INSTANCE, 0, getLocation()), getLocation());
-
-			// the 'value' property of strings
-			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", originating.getLocation());
-
-			// first
-			Expression unknownStr = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 1),
-					new JavaReferenceType(stringType), new Expression[0]);
-
-			AnalysisState<A> unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
-			SymbolicExpression topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny()
-					.get();
-			AccessChild access = new AccessChild(stringType, topStringRef, var, getLocation());
-			AnalysisState<
-					A> sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context,
-							this);
-
-			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, context, originating));
-
-			// second
-			ch = new AccessChild(stringType, spl,
-					new Constant(JavaIntType.INSTANCE, 1, getLocation()), getLocation());
-			unknownStr = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 2),
-					new JavaReferenceType(stringType), new Expression[0]);
-
-			unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
-			topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny().get();
-			access = new AccessChild(stringType, topStringRef, var, getLocation());
-			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context, this);
-
-			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, context, originating));
-
-			// third
-			ch = new AccessChild(stringType, spl,
-					new Constant(JavaIntType.INSTANCE, 2, getLocation()), getLocation());
-			unknownStr = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 3),
-					new JavaReferenceType(stringType), new Expression[0]);
-
-			unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
-			topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny().get();
-			access = new AccessChild(stringType, topStringRef, var, getLocation());
-			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context, this);
-
-			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, context, originating));
-
-			// forth
-			ch = new AccessChild(stringType, spl,
-					new Constant(JavaIntType.INSTANCE, 3, getLocation()), getLocation());
-			unknownStr = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, 4),
-					new JavaReferenceType(stringType), new Expression[0]);
-
-			unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural, expressions);
-			topStringRef = unknownStrState.getExecutionExpressions().elements().stream().findAny().get();
-			access = new AccessChild(stringType, topStringRef, var, getLocation());
-			sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()), context, this);
-
-			result = result.lub(analysis.assign(sem, ch,
-					topStringRef, context, originating));
-
-		}
+		for (SymbolicExpression spl : splitArray.getExecutionExpressions())
+			for (int i = 0; i < UNKNOWN_PARTS; i++) {
+				AccessChild cell = new AccessChild(stringType, spl, new Constant(JavaIntType.INSTANCE, i, getLocation()),
+						getLocation());
+				Expression unknownStr = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, i + 1),
+						new JavaReferenceType(stringType), new Expression[0]);
+				AnalysisState<A> unknownStrState = unknownStr.forwardSemantics(splitArray, interprocedural,
+						expressions);
+				SymbolicExpression topStringRef = unknownStrState.getExecutionExpressions().elements().stream()
+						.findAny().get();
+				AccessChild access = new AccessChild(stringType, topStringRef, var, getLocation());
+				AnalysisState<A> sem = analysis.assign(unknownStrState, access, new PushAny(stringType, getLocation()),
+						context, this);
+				result = result.lub(analysis.assign(sem, cell, topStringRef, context, originating));
+			}
 
 		return result.withExecutionExpressions(splitArray.getExecutionExpressions());
 	}
+
+	/**
+	 * The number of cells of the array of a split string written when its
+	 * parts are not known.
+	 */
+	private static final int UNKNOWN_PARTS = 4;
 
 	/**
 	 * The maximum number of parts of a split string that is computed.
