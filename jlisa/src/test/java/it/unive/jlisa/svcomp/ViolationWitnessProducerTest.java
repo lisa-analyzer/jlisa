@@ -66,7 +66,7 @@ public class ViolationWitnessProducerTest {
 			args.add("--svcomp-property");
 			args.add(TASKS.resolve(property.getName() + ".prp").toString());
 		}
-		Main.main(args.toArray(new String[0]));
+		Main.run(args.toArray(new String[0]));
 	}
 
 	/**

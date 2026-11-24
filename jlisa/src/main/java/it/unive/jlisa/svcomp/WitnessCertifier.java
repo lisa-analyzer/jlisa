@@ -50,6 +50,8 @@ public class WitnessCertifier
 
 	private final Map<SVCOMPProperty, String> propertyFiles;
 
+	private final Map<SVCOMPProperty, ViolationWitnessProducer> producers;
+
 	private final Function<StatementMessage, Violation> violations;
 
 	private final long deadline;
@@ -59,6 +61,9 @@ public class WitnessCertifier
 	 *
 	 * @param sources       the sources of the task, as given to jlisa
 	 * @param propertyFiles the property files of the task, for each property
+	 * @param producers     the producers of the witnesses of the task (loaded
+	 *                          once), for each property: a fresh copy of them
+	 *                          produces the witness of each certification
 	 * @param violations    yields the violation reported by a confirmed warning
 	 *                          (with its target and reproducing inputs), or
 	 *                          {@code null} if it has none
@@ -69,10 +74,12 @@ public class WitnessCertifier
 	public WitnessCertifier(
 			List<String> sources,
 			Map<SVCOMPProperty, String> propertyFiles,
+			Map<SVCOMPProperty, ViolationWitnessProducer> producers,
 			Function<StatementMessage, Violation> violations,
 			long deadline) {
 		this.sources = sources;
 		this.propertyFiles = propertyFiles;
+		this.producers = producers;
 		this.violations = violations;
 		this.deadline = deadline;
 	}
@@ -84,21 +91,20 @@ public class WitnessCertifier
 		if (violation == null)
 			return false;
 		for (Map.Entry<SVCOMPProperty, String> property : propertyFiles.entrySet())
-			if (property.getKey().getViolation() == violation.getKind())
-				return certify(violation, property.getValue());
+			if (property.getKey().getViolation() == violation.getKind()
+					&& producers.containsKey(property.getKey()))
+				return certify(violation, property.getValue(), producers.get(property.getKey()).fresh());
 		return false;
 	}
 
 	private boolean certify(
 			Violation violation,
-			String propertyFile) {
+			String propertyFile,
+			ViolationWitnessProducer producer) {
 		long time = MAX_VALIDATION_MILLIS;
 		if (deadline > 0)
 			time = Math.min(time, deadline - System.currentTimeMillis());
 		if (time <= 0)
-			return false;
-		ViolationWitnessProducer producer = ViolationWitnessProducer.load(sources, propertyFile);
-		if (producer == null)
 			return false;
 		producer.accept(violation);
 		Path dir = null;
@@ -122,6 +128,11 @@ public class WitnessCertifier
 			command.addAll(sources);
 			Process process = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output).start();
 			if (!process.waitFor(time, TimeUnit.MILLISECONDS)) {
+				// the validator runs the program in a debuggee virtual machine,
+				// that its shutdown hook stops: killed forcibly, the validator
+				// does not run it, so the debuggee (that might never end) is
+				// killed first
+				process.descendants().forEach(ProcessHandle::destroyForcibly);
 				process.destroyForcibly();
 				LOG.info("The certification of {} ran out of time", violation);
 				return false;

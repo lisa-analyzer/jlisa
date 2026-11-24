@@ -138,6 +138,16 @@ public final class ViolationWitnessProducer
 		return new ViolationWitnessProducer(task, property, SVCOMPWitnesses.producer(null));
 	}
 
+	/**
+	 * Yields a new producer of the witness of the same task, that has received
+	 * no violation (the task, read and hashed when loaded, is shared).
+	 *
+	 * @return the producer
+	 */
+	public ViolationWitnessProducer fresh() {
+		return new ViolationWitnessProducer(task, property, producer);
+	}
+
 	@Override
 	public void accept(
 			Violation violation) {

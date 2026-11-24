@@ -98,7 +98,7 @@ public class TriageVerdictsTest {
 				"-l", "ERROR",
 				"--svcomp-property", TASKS.resolve(property.getName() + ".prp").toString()));
 		args.addAll(List.of(options));
-		Main.main(args.toArray(String[]::new));
+		Main.run(args.toArray(String[]::new));
 		JsonReport report;
 		try (Reader reader = Files.newBufferedReader(outdir.resolve("report.json"))) {
 			report = JsonReport.read(reader);

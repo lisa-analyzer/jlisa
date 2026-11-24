@@ -101,7 +101,20 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 				asserts.add(warning);
 
 		Map<StatementMessage, VerificationResult> results = new LinkedHashMap<>();
-		if (!asserts.isEmpty())
+		// with both kinds of warnings (e.g., with no property file), the
+		// assertions get half of the time left until the deadline, so that
+		// the exceptions get the rest (the verifier would use all of it)
+		long end = verifier instanceof FirstViolationVerifier ? ((FirstViolationVerifier<A, D>) verifier).getDeadline()
+				: 0;
+		if (!asserts.isEmpty() && !exceptions.isEmpty() && end > 0) {
+			long now = System.currentTimeMillis();
+			((FirstViolationVerifier<A, D>) verifier).withDeadline(now + Math.max(0, (end - now) / 2));
+			try {
+				results.putAll(certify(asserts, verifier.verify(tool, asserts)));
+			} finally {
+				((FirstViolationVerifier<A, D>) verifier).withDeadline(end);
+			}
+		} else if (!asserts.isEmpty())
 			results.putAll(certify(asserts, verifier.verify(tool, asserts)));
 		if (!exceptions.isEmpty())
 			results.putAll(certify(exceptions, verifier.verify(tool, exceptions)));

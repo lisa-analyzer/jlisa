@@ -45,6 +45,7 @@ import it.unive.lisa.triage.reachability.ReachabilityVerifier;
 import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -73,6 +74,18 @@ public final class CheckCommand {
 	 * ({@code --time-limit}), or {@code 0}.
 	 */
 	private static long verificationDeadline = 0;
+
+	/**
+	 * The time by which the certification of the warnings must end (as
+	 * {@link System#currentTimeMillis()} gives it), when a time limit is given
+	 * ({@code --time-limit}), or {@code 0}: the verification ends earlier
+	 * ({@link #verificationDeadline}), leaving the fraction
+	 * {@value #CERTIFICATION_FRACTION} of the limit to the certification, if
+	 * enabled.
+	 */
+	private static long certificationDeadline = 0;
+
+	private static final double CERTIFICATION_FRACTION = 0.2;
 
 	/**
 	 * Whether the candidate confirmations of the warnings that stay possible
@@ -122,6 +135,11 @@ public final class CheckCommand {
 			throws IOException,
 			ParseException,
 			ParsingException {
+		// the options of a previous run (in the same virtual machine) are
+		// forgotten
+		verificationDeadline = 0;
+		certificationDeadline = 0;
+		certification = false;
 
 		Options options = SharedOptions.create(
 				"SV-COMP property file of the task. When given, a violation witness is written for a definite "
@@ -147,7 +165,10 @@ public final class CheckCommand {
 				.longOpt("numericalDomain")
 				.hasArg()
 				.argName("DOMAIN")
-				.desc("Numerical domain: (ConstantPropagation [the same as JavaWholeValueTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis)")
+				.desc("Numerical domain: (ConstantPropagation [the same as JavaWholeValueUBOFF], "
+						+ "ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis, "
+						+ "JavaWholeValueUB [with upper bounds x < y], JavaWholeValueUBLE [also x <= y], "
+						+ "JavaWholeValueUBOFF [also x <= y + c])")
 				.required(false)
 				.build();
 
@@ -253,12 +274,12 @@ public final class CheckCommand {
 			// Handle help
 			if (cmd.hasOption("h") || args.length == 0) {
 				SharedOptions.printHelp("check", options, System.out);
-				System.exit(0);
+				throw new CommandExit(0);
 			}
 
 			if (cmd.hasOption("v")) {
 				System.out.println(Main.versionLine());
-				System.exit(0);
+				throw new CommandExit(0);
 			}
 
 			if (!cmd.hasOption("s") || !cmd.hasOption("o")) {
@@ -329,14 +350,19 @@ public final class CheckCommand {
 					throw new ParseException("Invalid time limit: " + cmd.getOptionValue("time-limit"));
 				// the limit counts from the start of the virtual machine
 				long start = ManagementFactory.getRuntimeMXBean().getStartTime();
-				verificationDeadline = start + limit
+				certificationDeadline = start + limit
 						- Math.min(MAX_RESULTS_MILLIS, (long) (limit * RESULTS_FRACTION));
+				// the certification has a slice of its own, as the verification
+				// would use all the time left
+				verificationDeadline = certification
+						? certificationDeadline - (long) (limit * CERTIFICATION_FRACTION)
+						: certificationDeadline;
 			}
 
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
 			SharedOptions.printHelp("check", options, System.err);
-			System.exit(1);
+			throw new CommandExit(1);
 		}
 
 		switch (executionMode) {
@@ -349,7 +375,7 @@ public final class CheckCommand {
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
-			System.exit(1);
+			throw new CommandExit(1);
 		}
 	}
 
@@ -389,12 +415,12 @@ public final class CheckCommand {
 			Throwable root = e;
 			while (root.getCause() != null)
 				root = root.getCause();
-			CSVExceptionWriter.writeCSV(outdir + "frontend.csv", root);
-			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + outdir
-					+ "/frontend.csv file.");
+			String csv = Paths.get(outdir, "frontend.csv").toString();
+			CSVExceptionWriter.writeCSV(csv, root);
+			LOG.error("Some errors occurred in the frontend outside the parsing phase. Check " + csv + " file.");
 			if (dumpExceptions)
 				root.printStackTrace(System.out);
-			System.exit(1);
+			throw new CommandExit(1);
 		}
 		try {
 			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
@@ -403,11 +429,12 @@ public final class CheckCommand {
 			Throwable root = e;
 			while (root.getCause() != null)
 				root = root.getCause();
-			CSVExceptionWriter.writeCSV(outdir + "analysis.csv", root);
-			LOG.error("Some errors occurred during the analysis. Check " + outdir + "analysis.csv file.");
+			String csv = Paths.get(outdir, "analysis.csv").toString();
+			CSVExceptionWriter.writeCSV(csv, root);
+			LOG.error("Some errors occurred during the analysis. Check " + csv + " file.");
 			if (dumpExceptions)
 				root.printStackTrace(System.out);
-			System.exit(1);
+			throw new CommandExit(1);
 		}
 	}
 
@@ -435,13 +462,18 @@ public final class CheckCommand {
 			throws ParseException {
 		Program p = frontend.getProgram();
 		List<ViolationWitnessProducer> witnesses = new ArrayList<>();
+		// the property file of each property (loaded once, also for the
+		// certification)
+		Map<SVCOMPProperty, String> files = new LinkedHashMap<>();
 		if (propertyFiles != null)
 			for (String propertyFile : propertyFiles) {
 				ViolationWitnessProducer witness = ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
 				// a property given twice has a single witness
 				if (witness != null
-						&& witnesses.stream().noneMatch(other -> other.getProperty() == witness.getProperty()))
+						&& witnesses.stream().noneMatch(other -> other.getProperty() == witness.getProperty())) {
 					witnesses.add(witness);
+					files.put(witness.getProperty(), propertyFile);
+				}
 			}
 		LiSAConfiguration conf = new LiSAConfiguration();
 		conf.workdir = outdir;
@@ -449,8 +481,10 @@ public final class CheckCommand {
 			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
 
-		// recursions are unrolled up to 200 frames, and solved when deeper or
-		// when their call trees grow too large (e.g., fib(n - 1) + fib(n - 2))
+		// recursions are unrolled up to the bound of the interprocedural
+		// analysis (EntryState:bound, or 200 frames when inlining), and solved
+		// when deeper or when their call trees grow too large (e.g., fib(n -
+		// 1) + fib(n - 2))
 		if (interprocedural.startsWith("EntryState"))
 			conf.interproceduralAnalysis = new JavaEntryStateContextBasedAnalysis<>(interprocedural.contains(":")
 					? Integer.parseInt(interprocedural.substring(interprocedural.indexOf(':') + 1))
@@ -500,16 +534,15 @@ public final class CheckCommand {
 		// the candidate confirmations of the warnings that stay possible are
 		// certified by validating their witnesses, as SV-COMP does
 		if (certification && svcomp != null && checker != null && !witnesses.isEmpty()) {
-			Map<SVCOMPProperty, String> files = new LinkedHashMap<>();
-			for (String propertyFile : propertyFiles) {
-				ViolationWitnessProducer witness = ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
-				if (witness != null)
-					files.putIfAbsent(witness.getProperty(), propertyFile);
-			}
+			Map<SVCOMPProperty, ViolationWitnessProducer> producers = new LinkedHashMap<>();
+			for (ViolationWitnessProducer witness : witnesses)
+				producers.put(witness.getProperty(), witness);
 			AssertChecker<?> warnings = checker;
-			svcomp.setCertifier(new WitnessCertifier(Arrays.asList(sources), files,
-					warning -> violationOf(warning, warnings), verificationDeadline));
-		}
+			svcomp.setCertifier(new WitnessCertifier(Arrays.asList(sources), files, producers,
+					warning -> violationOf(warning, warnings), certificationDeadline));
+		} else if (certification)
+			LOG.warn("--certification is ignored: it requires the Combined verifier (-t Combined), the Assert "
+					+ "checker and a known SV-COMP property file (--svcomp-property)");
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
 		case "ConstantPropagationWithTarsis":

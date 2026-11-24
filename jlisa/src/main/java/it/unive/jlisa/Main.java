@@ -1,6 +1,7 @@
 package it.unive.jlisa;
 
 import it.unive.jlisa.cli.CheckCommand;
+import it.unive.jlisa.cli.CommandExit;
 import it.unive.jlisa.cli.FindBugCommand;
 import it.unive.jlisa.cli.ValidateCommand;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
@@ -42,10 +43,35 @@ public final class Main {
 			throws IOException,
 			ParseException,
 			ParsingException {
+		try {
+			run(args);
+		} catch (CommandExit e) {
+			System.exit(e.getCode());
+		}
+	}
+
+	/**
+	 * Runs jlisa as {@link #main(String[])}, without exiting the virtual machine
+	 * when a sub-command ends with an exit code (e.g., after a failure): a
+	 * {@link CommandExit} is thrown instead (for {@code check}).
+	 *
+	 * @param args the command-line arguments: the sub-command, then its
+	 *                 arguments
+	 *
+	 * @throws IOException      if a source cannot be read ({@code check})
+	 * @throws ParseException   if the checker or the domain is not known
+	 *                              ({@code check})
+	 * @throws ParsingException if the frontend fails ({@code check})
+	 * @throws CommandExit      if the sub-command ends with an exit code
+	 */
+	public static void run(
+			String[] args)
+			throws IOException,
+			ParseException,
+			ParsingException {
 		if (args.length == 0) {
 			usage(System.err);
-			System.exit(1);
-			return;
+			throw new CommandExit(1);
 		}
 		String[] rest = Arrays.copyOfRange(args, 1, args.length);
 		switch (args[0]) {
@@ -69,7 +95,7 @@ public final class Main {
 		default:
 			System.err.println("Error: unknown sub-command: " + args[0]);
 			usage(System.err);
-			System.exit(1);
+			throw new CommandExit(1);
 		}
 	}
 
