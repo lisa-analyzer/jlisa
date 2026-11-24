@@ -150,7 +150,8 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 		List<BinaryExpression> clazzNameConstraints = clazzNameStream.toList();
 		if (clazzNameConstraints.isEmpty() || fieldNameConstraints.isEmpty())
-			return state;
+			// the written field is not known: any field might be written
+			return state.topExecution();
 
 		AnalysisState<A> result = state.bottomExecution();
 
