@@ -85,10 +85,10 @@ class java.lang.StrictMath extends java.lang.Object:
 		type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
-	method getExponent: it.unive.jlisa.program.java.constructs.strictmath.StrictMathGetExponent
+	method getExponent: it.unive.jlisa.program.java.constructs.library.MathFunctions$GetExponentDouble
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaDoubleType::INSTANCE
 		
-	method getExponent: it.unive.jlisa.program.java.constructs.strictmath.StrictMathGetExponent
+	method getExponent: it.unive.jlisa.program.java.constructs.library.MathFunctions$GetExponentFloat
 		type it.unive.jlisa.program.type.JavaIntType::INSTANCE
 		param v type it.unive.jlisa.program.type.JavaFloatType::INSTANCE

@@ -48,7 +48,7 @@ class java.lang.String extends java.lang.CharSequence: it.unive.jlisa.program.ty
 	instance method equals: it.unive.jlisa.program.java.constructs.string.StringEquals
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
 		param this libtype java.lang.String*
-		param other libtype java.lang.String*
+		param other libtype java.lang.Object*
 		
 	instance method equalsIgnoreCase: it.unive.jlisa.program.java.constructs.string.StringEqualsIgnoreCase
 		type  it.unive.jlisa.program.type.JavaBooleanType::INSTANCE

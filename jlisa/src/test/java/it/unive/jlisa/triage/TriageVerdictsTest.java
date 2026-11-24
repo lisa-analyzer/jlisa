@@ -128,6 +128,37 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * A Character equals only a Character with the same value: not an Integer
+	 * with the same code...
+	 */
+	@Test
+	public void characterEqualsOtherClassesIsRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("character-equals-other", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * ... while it equals a Character with the same value.
+	 */
+	@Test
+	public void characterEqualsSameCharacterIsConfirmed(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("character-equals-same", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * A String equals only a String with the same contents: not an Integer.
+	 */
+	@Test
+	public void stringEqualsOtherClassesIsRefuted(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.REFUTED, verdict("string-equals-other", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
 	 * Assertions on fields that hold are refuted.
 	 */
 	@Test

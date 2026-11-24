@@ -126,6 +126,7 @@ import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
+import it.unive.lisa.symbolic.value.operator.unary.StringLength;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.triage.encoding.ExpressionEncoder;
 import it.unive.lisa.triage.encoding.SortPolicy;
@@ -167,7 +168,11 @@ import java.util.function.IntFunction;
  * otherwise.</li>
  * </ul>
  * Other functions yield unconstrained values, as any other operator unknown to
- * this encoder.
+ * this encoder. The string operations are exact only for the strings of UTF-16
+ * code units (the characters of the Basic Multilingual Plane that are not
+ * surrogates), and the functions depending on the default locale
+ * ({@link String#toLowerCase()} and {@link String#toUpperCase()}) assume one
+ * converting the ASCII letters plainly (not, e.g., the Turkish one).
  */
 public class JavaExpressionEncoder extends ExpressionEncoder {
 
@@ -194,6 +199,11 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			UnaryExpression expression,
 			Term arg)
 			throws SemanticException {
+		if (expression.getOperator() instanceof StringLength)
+			// as the other string operations, exact only for the strings of
+			// UTF-16 code units (see asString): the length of a string with a
+			// character above 0xFFFF is 2 in Java
+			return Term.app("str.len", Sort.INT, asString(arg, expression));
 		Term result = unary(expression.getOperator(), arg, expression);
 		return result != null ? result : super.encodeUnary(expression, arg);
 	}
@@ -272,7 +282,12 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaCharacterToUpperCaseOperator)
 			return charTable("toUpperCase(char)", c -> (int) Character.toUpperCase((char) c), arg, e);
 		if (op instanceof JavaStrictMathGetExponentOperator)
-			return exponent(arg, e);
+			// the overload is not known: it is the one of the argument
+			return exponent(arg, arg.getSort().isFloatingPoint() ? arg.getSort()
+					: e.getExpression().getStaticType().isNumericType()
+							&& e.getExpression().getStaticType().asNumericType().is32Bits() ? Sort.FLOAT32
+									: Sort.FLOAT64,
+					e);
 		if (op instanceof JavaLongBitCountOperator)
 			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64, e);
 		if (op instanceof JavaByteToUnsignedIntOperator || op instanceof JavaByteToUnsignedLongOperator)
@@ -298,8 +313,10 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			if (table != null)
 				return table;
 		}
-		if (f == JavaLibraryFunction.MATH_GET_EXPONENT_DOUBLE || f == JavaLibraryFunction.MATH_GET_EXPONENT_FLOAT)
-			return exponent(arg, e);
+		if (f == JavaLibraryFunction.MATH_GET_EXPONENT_DOUBLE)
+			return exponent(arg, Sort.FLOAT64, e);
+		if (f == JavaLibraryFunction.MATH_GET_EXPONENT_FLOAT)
+			return exponent(arg, Sort.FLOAT32, e);
 		if (f == JavaLibraryFunction.STRING_IS_EMPTY)
 			return Term.eq(len(asString(arg, e)), num(0));
 		if (f == JavaLibraryFunction.BOOLEAN_TO_STRING)
@@ -804,17 +821,16 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * The unbiased exponent of a floating point number, as
-	 * {@link Math#getExponent(double)}: it is read from the bits of the number,
+	 * The unbiased exponent of a floating point number of the given sort (the
+	 * one of the overload, as {@link Math#getExponent(double)} and
+	 * {@link Math#getExponent(float)}): it is read from the bits of the number,
 	 * given by an auxiliary bit-vector whose interpretation as a floating point
 	 * number is the number.
 	 */
 	private Term exponent(
 			Term arg,
+			Sort fp,
 			UnaryExpression e) {
-		Sort fp = arg.getSort().isFloatingPoint() ? arg.getSort()
-				: e.getExpression().getStaticType().isNumericType()
-						&& e.getExpression().getStaticType().asNumericType().is32Bits() ? Sort.FLOAT32 : Sort.FLOAT64;
 		Term f = toFloat(arg, fp, e);
 		int eb = fp.getExponentBits();
 		int sb = fp.getSignificandBits();
@@ -1137,11 +1153,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		}
 		if (!sort.isFloatingPoint())
 			return null;
+		// floor and sqrt have only double overloads: a float argument is
+		// widened (exactly)
 		if (op instanceof JavaMathFloorOperator || op instanceof JavaStrictMathFloorOperator)
-			return Term.app("fp.roundToIntegral", sort, Term.value("RTN", Sort.ROUNDING_MODE), arg);
+			return Term.app("fp.roundToIntegral", Sort.FLOAT64, Term.value("RTN", Sort.ROUNDING_MODE),
+					toFloat(arg, Sort.FLOAT64, e));
 		if (op instanceof JavaMathSqrtOperator || op instanceof JavaStrictMathSqrtOperator)
 			// correctly rounded, as specified
-			return Term.app("fp.sqrt", sort, Term.value("RNE", Sort.ROUNDING_MODE), arg);
+			return Term.app("fp.sqrt", Sort.FLOAT64, Term.value("RNE", Sort.ROUNDING_MODE),
+					toFloat(arg, Sort.FLOAT64, e));
 		if (op instanceof JavaMathRoundOperator || op instanceof JavaStrictMathRoundOperator)
 			return round(arg, sort.equals(Sort.FLOAT64) ? 64 : 32);
 		return null;
@@ -1330,6 +1350,10 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			UnaryOperator op,
 			Term arg,
 			UnaryExpression e) {
+		// toLowerCase() and toUpperCase() use the default locale: they are
+		// encoded only for ASCII strings, assuming a locale whose conversions
+		// of ASCII letters are the plain ones (not, e.g., the Turkish one,
+		// where 'I' becomes a dotless 'ı')
 		if (op instanceof JavaStringToLowerCaseOperator) {
 			Term s = asString(arg, e);
 			return guarded(ascii(s), lower(s), List.of(s), e);

@@ -1,5 +1,6 @@
 package it.unive.jlisa.triage;
 
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -154,11 +155,15 @@ public class JavaExpressionEncoderTest {
 			return solver.declare("evaluable#" + (counter++), result);
 		}
 
+		// the constants of the identifiers, the same for the same identifier
+		private final java.util.Map<String, Term> constants = new java.util.HashMap<>();
+
 		@Override
 		public Term constant(
 				Identifier id,
 				Sort sort) {
-			return solver.declare(id.getName() + "#" + (counter++), sort);
+			return constants.computeIfAbsent(id.getName() + ":" + sort,
+					k -> solver.declare(id.getName() + "#" + (counter++), sort));
 		}
 
 		@Override
@@ -540,6 +545,45 @@ public class JavaExpressionEncoderTest {
 		checkOperator(JavaStringValueOfBooleanOperator.INSTANCE, str, () -> String.valueOf(false), false);
 		checkOperator(JavaCharacterEqualsOperator.INSTANCE, bool, () -> 'a' == 'a', 'a', 'a');
 		checkOperator(JavaCharacterEqualsOperator.INSTANCE, bool, () -> 'a' == 'b', 'a', 'b');
+	}
+
+	/**
+	 * The length of a string is exact only for the strings of UTF-16 code
+	 * units: a character above 0xFFFF has length 1 in SMT, 2 in Java.
+	 */
+	@Test
+	public void lengthIsExactOnlyForUtf16Strings() throws SemanticException {
+		checkOperator(JavaStringLengthOperator.INSTANCE, JavaIntType.INSTANCE, () -> "abc".length(), "abc");
+		Symbols symbols = new Symbols();
+		JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(new HashMap<>()), symbols);
+		Variable s = new Variable(StringType.INSTANCE, "s" + counter++, LOC);
+		new UnaryExpression(JavaIntType.INSTANCE, s, JavaStringLengthOperator.INSTANCE, LOC).accept(encoder);
+		Term string = s.accept(encoder);
+		solver.push();
+		try {
+			for (Term r : symbols.requirements)
+				solver.assertTerm(r);
+			for (Term g : symbols.guards)
+				solver.assertTerm(g);
+			// a string with a character above 0xFFFF
+			Term emoji = Term.value("\"\\u{1f600}\"", Sort.STRING);
+			solver.assertTerm(Term.eq(string, string.getSort().equals(Sort.STRING) ? emoji : ValueSort.wrap(emoji)));
+			assertEquals(SmtResult.UNSAT, solver.check(), "the length of a non-UTF-16 string should not be exact");
+		} finally {
+			solver.pop();
+		}
+	}
+
+	/**
+	 * Math.floor and Math.sqrt have only double overloads: a float argument is
+	 * widened, and the result is a double.
+	 */
+	@Test
+	public void floorAndSqrtOfFloatsAreDoubles() throws SemanticException {
+		for (float f : new float[] { 2.0f, 0.1f, -3.7f, 1e-3f }) {
+			checkOperator(JavaMathSqrtOperator.INSTANCE, JavaDoubleType.INSTANCE, () -> Math.sqrt(f), f);
+			checkOperator(JavaMathFloorOperator.INSTANCE, JavaDoubleType.INSTANCE, () -> Math.floor(f), f);
+		}
 	}
 
 	@Test

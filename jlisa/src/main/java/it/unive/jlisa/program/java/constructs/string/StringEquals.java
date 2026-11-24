@@ -1,5 +1,9 @@
 package it.unive.jlisa.program.java.constructs.string;
 
+import java.util.Set;
+import it.unive.lisa.symbolic.value.PushAny;
+import it.unive.lisa.interprocedural.ScopeId;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.jlisa.program.java.constructs.map.MapModel;
 import it.unive.jlisa.program.operator.JavaStringEqualsOperator;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -67,6 +71,23 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 			return interprocedural.getAnalysis().smallStepSemantics(state,
 					new Constant(JavaBooleanType.INSTANCE, true, getLocation()), interprocedural.getCurrentContext(),
 					originating);
+		// equals(Object) holds only for a String with the same contents: the
+		// argument might be of another class, or null
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		Set<Type> types = analysis.getRuntimeTypesOf(state, right, context, this);
+		boolean unknown = types.isEmpty() || types.stream().anyMatch(Type::isUntyped);
+		boolean strings = types.stream().anyMatch(StringEquals::isString);
+		boolean others = types.stream().anyMatch(t -> !isString(t));
+		if (!unknown && !strings)
+			return analysis.smallStepSemantics(state,
+					new Constant(JavaBooleanType.INSTANCE, false, getLocation()), context, originating);
+		if (unknown || others)
+			// the executions where the argument is a String are not told
+			// apart from the other ones
+			return analysis.smallStepSemantics(state,
+					new PushAny(getProgram().getTypes().getBooleanType(), getLocation()), context, originating);
+
 		Type stringType = getProgram().getTypes().getStringType();
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		HeapDereference derefLeft = new HeapDereference(stringType, left, getLocation());
@@ -81,7 +102,12 @@ public class StringEquals extends BinaryExpression implements PluggableStatement
 				accessRight,
 				JavaStringEqualsOperator.INSTANCE,
 				getLocation());
-		return interprocedural.getAnalysis().smallStepSemantics(state, equalsExpr, interprocedural.getCurrentContext(),
-				originating);
+		return analysis.smallStepSemantics(state, equalsExpr, context, originating);
+	}
+
+	// whether the values of the type are Strings
+	private static boolean isString(
+			Type t) {
+		return t.isStringType() || (t.isPointerType() && t.asPointerType().getInnerType().isStringType());
 	}
 }

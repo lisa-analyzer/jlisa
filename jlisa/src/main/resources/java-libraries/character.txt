@@ -21,7 +21,7 @@ class java.lang.Character extends java.lang.Object:
 	instance method equals: it.unive.jlisa.program.java.constructs.character.CharacterEquals
 		type it.unive.lisa.program.type.BoolType::INSTANCE
 		param this libtype java.lang.Character*
-		param other libtype java.lang.Character*
+		param other libtype java.lang.Object*
 		
 	method isDefined: it.unive.jlisa.program.java.constructs.character.CharacterIsDefined
 		type it.unive.lisa.program.type.BoolType::INSTANCE
