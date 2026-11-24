@@ -86,6 +86,7 @@ import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertBooleanOperator;
@@ -143,6 +144,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.regex.Pattern;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
@@ -225,7 +227,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term middle,
 			Term right)
 			throws SemanticException {
-		if (expression.getOperator() == JavaLibraryFunction.STRING_INDEX_OF_CHAR_FROM) {
+		if (expression.getOperator() == JavaLibraryFunction.STRING_INDEX_OF_CHAR_FROM
+				|| expression.getOperator() instanceof JavaStringIndexOfCharFromIndexOperator) {
 			Term s = asString(left, expression);
 			Term from = coerce(right, Sort.INT, expression);
 			return indexOf(s, coerce(middle, Sort.INT, expression), Term.ite(lt(from, num(0)), num(0), from),
@@ -342,17 +345,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_HIGHEST_ONE_BIT)
 			return signed(highestOneBit(unsigned(x, 64), 64), 64);
 		if (f == JavaLibraryFunction.INTEGER_LOWEST_ONE_BIT)
-			return signed(lowestOneBit(unsigned(x, 32), 32), 32);
+			return signed(lowestOneBit(unsigned(x, 32), 32, e), 32);
 		if (f == JavaLibraryFunction.LONG_LOWEST_ONE_BIT)
-			return signed(lowestOneBit(unsigned(x, 64), 64), 64);
+			return signed(lowestOneBit(unsigned(x, 64), 64, e), 64);
 		if (f == JavaLibraryFunction.INTEGER_NUMBER_OF_LEADING_ZEROS)
 			return leadingZeros(unsigned(x, 32), 32);
 		if (f == JavaLibraryFunction.LONG_NUMBER_OF_LEADING_ZEROS)
 			return leadingZeros(unsigned(x, 64), 64);
 		if (f == JavaLibraryFunction.INTEGER_NUMBER_OF_TRAILING_ZEROS)
-			return trailingZeros(unsigned(x, 32), 32);
+			return trailingZeros(unsigned(x, 32), 32, e);
 		if (f == JavaLibraryFunction.LONG_NUMBER_OF_TRAILING_ZEROS)
-			return trailingZeros(unsigned(x, 64), 64);
+			return trailingZeros(unsigned(x, 64), 64, e);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE)
 			return signed(reverse(unsigned(x, 32), 32, 1, e), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE)
@@ -446,7 +449,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaCharacterDigitOperator)
 			return digit(left, right, e);
 		if (op instanceof JavaLongRotateRightOperator)
-			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false), 64);
+			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false, e), 64);
 		if (op instanceof JavaStringCompareToOperator)
 			return compareStrings(asString(left, e), asString(right, e), e);
 		Term string = stringBinary(op, left, right, e);
@@ -513,11 +516,11 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 					num(Character.MIN_SUPPLEMENTARY_CODE_POINT - (Character.MIN_HIGH_SURROGATE << 10)
 							- Character.MIN_LOW_SURROGATE));
 		if (f == JavaLibraryFunction.INTEGER_ROTATE_LEFT)
-			return signed(rotate(unsigned(a, 32), b, 32, true), 32);
+			return signed(rotate(unsigned(a, 32), b, 32, true, e), 32);
 		if (f == JavaLibraryFunction.INTEGER_ROTATE_RIGHT)
-			return signed(rotate(unsigned(a, 32), b, 32, false), 32);
+			return signed(rotate(unsigned(a, 32), b, 32, false, e), 32);
 		if (f == JavaLibraryFunction.LONG_ROTATE_LEFT)
-			return signed(rotate(unsigned(a, 64), b, 64, true), 64);
+			return signed(rotate(unsigned(a, 64), b, 64, true, e), 64);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING_RADIX)
 			return withRadix(b, (
 					r,
@@ -630,12 +633,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (!term.getSort().equals(Sort.INT))
 			return null;
 		String text = term.toSmtLib();
-		if (text.matches("\\d+"))
+		if (NATURAL.matcher(text).matches())
 			return new BigInteger(text);
-		if (text.matches("\\(- \\d+\\)"))
+		if (NEGATIVE.matcher(text).matches())
 			return new BigInteger(text.substring(3, text.length() - 1)).negate();
 		return null;
 	}
+
+	// the SMT-LIB literals of natural numbers and of negative integers
+	private static final Pattern NATURAL = Pattern.compile("\\d+");
+
+	private static final Pattern NEGATIVE = Pattern.compile("\\(- \\d+\\)");
 
 	/**
 	 * The signed reading of an unsigned integer of the given bit width.
@@ -644,17 +652,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term u,
 			int bits) {
 		return Term.ite(ge(u, num(pow2(bits - 1))), sub(u, num(pow2(bits))), u);
-	}
-
-	/**
-	 * The group of {@code width} bits of the unsigned integer {@code u}
-	 * starting at bit {@code index}.
-	 */
-	private static Term bits(
-			Term u,
-			int index,
-			int width) {
-		return mod(div(u, pow2(index)), pow2(width));
 	}
 
 	/**
@@ -703,13 +700,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		return result;
 	}
 
-	private static Term lowestOneBit(
+	// on bit-vectors, as the extraction of bits through div and mod times out
+	private Term lowestOneBit(
 			Term u,
-			int bits) {
-		Term result = num(0);
-		for (int i = bits - 1; i >= 0; i--)
-			result = Term.ite(Term.eq(bits(u, i, 1), num(1)), num(pow2(i)), result);
-		return result;
+			int bits,
+			SymbolicExpression e) {
+		// b & -b
+		Term b = bitVector(u, bits, e);
+		return Term.app("bv2nat", Sort.INT,
+				Term.app("bvand", Sort.bitVector(bits), b, Term.app("bvneg", Sort.bitVector(bits), b)));
 	}
 
 	private static Term leadingZeros(
@@ -721,12 +720,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		return result;
 	}
 
-	private static Term trailingZeros(
+	private Term trailingZeros(
 			Term u,
-			int bits) {
+			int bits,
+			SymbolicExpression e) {
+		Term b = bitVector(u, bits, e);
+		Term one = Term.value("#b1", Sort.bitVector(1));
 		Term result = num(bits);
 		for (int i = bits - 1; i >= 0; i--)
-			result = Term.ite(Term.eq(bits(u, i, 1), num(1)), num(i), result);
+			result = Term.ite(Term.eq(extract(b, i, 1), one), num(i), result);
 		return result;
 	}
 
@@ -755,18 +757,26 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * Rotates the unsigned integer {@code u} by the given distance (only its
 	 * lowest bits are used, as in Java).
 	 */
-	private static Term rotate(
+	private Term rotate(
 			Term u,
 			Term distance,
 			int bits,
-			boolean left) {
+			boolean left,
+			SymbolicExpression e) {
 		Term k = Term.app("mod", Sort.INT, left ? distance : Term.app("-", Sort.INT, distance), num(bits));
+		BigInteger literal = integerLiteral(k);
+		Term b = bitVector(u, bits, e);
 		Term result = u;
 		for (int i = 1; i < bits; i++) {
-			Term rotated = add(mod(Term.app("*", Sort.INT, u, num(pow2(i))), pow2(bits)), div(u, pow2(bits - i)));
+			// rotated left by i: the lowest bits - i bits become the highest
+			// ones
+			Term rotated = Term.app("bv2nat", Sort.INT,
+					Term.app("concat", Sort.bitVector(bits), extract(b, 0, bits - i), extract(b, bits - i, i)));
+			if (literal != null && literal.intValue() == i)
+				return rotated;
 			result = Term.ite(Term.eq(k, num(i)), rotated, result);
 		}
-		return result;
+		return literal != null ? u : result;
 	}
 
 	private Term maxMin(
@@ -1104,7 +1114,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		int width = fp.equals(Sort.FLOAT64) ? 64 : 32;
 		if (op instanceof JavaDoubleToRawLongBitsOperator || op instanceof JavaFloatToRawIntBitsOperator)
 			getSymbols().exactOnlyIf(Term.not(nan), e);
-		Term bits = Term.app("bv2int", Sort.INT, Term.app("fp.to_ieee_bv", Sort.bitVector(width), x));
+		// the bits are given by an auxiliary bit-vector whose interpretation as
+		// a floating point number is the number (fp.to_ieee_bv is specific to
+		// z3), unique for numbers that are not NaN
+		Term raw = auxiliary(Sort.bitVector(width), e);
+		getSymbols().require(Term.eq(x, Term.app("(_ to_fp " + fp.getExponentBits() + " " + fp.getSignificandBits()
+				+ ")", fp, raw)));
+		Term bits = Term.app("bv2nat", Sort.INT, raw);
 		long canonical = width == 64 ? Double.doubleToLongBits(Double.NaN) : Float.floatToIntBits(Float.NaN);
 		return Term.ite(nan, num(canonical), signed(bits, width));
 	}
@@ -1133,6 +1149,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 				return null;
 			// the absolute value of the minimum integer is the minimum integer
 			return wrap(Term.ite(lt(arg, num(0)), Term.app("-", Sort.INT, arg), arg), bits, false);
+		}
+		if (op instanceof JavaMathToRadiansOperator || op instanceof JavaStrictMathToRadiansOperator) {
+			if (!getSorts().encodesFloats())
+				return null;
+			// angdeg * DEGREES_TO_RADIANS, rounded to nearest (since JDK 9)
+			return Term.app("fp.mul", Sort.FLOAT64, Term.value("RNE", Sort.ROUNDING_MODE),
+					toFloat(arg, Sort.FLOAT64, e.getExpression(), e), FloatingPoints.literal(0.017453292519943295));
 		}
 		DoubleUnaryOperator function = evaluatedUnary(op);
 		if (function != null) {
@@ -1210,8 +1233,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return Math::log;
 		if (op instanceof JavaMathLog10Operator)
 			return Math::log10;
-		if (op instanceof JavaMathToRadiansOperator)
-			return Math::toRadians;
 		if (op instanceof JavaStrictMathSinOperator)
 			return StrictMath::sin;
 		if (op instanceof JavaStrictMathCosOperator)
@@ -1230,8 +1251,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return StrictMath::log;
 		if (op instanceof JavaStrictMathLog10Operator)
 			return StrictMath::log10;
-		if (op instanceof JavaStrictMathToRadiansOperator)
-			return StrictMath::toRadians;
 		return null;
 	}
 
@@ -1289,8 +1308,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 				|| op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
 				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator
 				|| op instanceof JavaMathAtanOperator || op instanceof JavaStrictMathAtanOperator
-				|| op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator
-				|| op instanceof JavaMathToRadiansOperator || op instanceof JavaStrictMathToRadiansOperator)
+				|| op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator)
 			return true;
 		if (op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator)
 			return false;
@@ -1354,13 +1372,10 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		// encoded only for ASCII strings, assuming a locale whose conversions
 		// of ASCII letters are the plain ones (not, e.g., the Turkish one,
 		// where 'I' becomes a dotless 'ı')
-		if (op instanceof JavaStringToLowerCaseOperator) {
+		if (op instanceof JavaStringToLowerCaseOperator || op instanceof JavaStringToUpperCaseOperator) {
 			Term s = asString(arg, e);
-			return guarded(ascii(s), lower(s), List.of(s), e);
-		}
-		if (op instanceof JavaStringToUpperCaseOperator) {
-			Term s = asString(arg, e);
-			return guarded(ascii(s), upper(s), List.of(s), e);
+			Term converted = convertCase(s, op instanceof JavaStringToLowerCaseOperator, e);
+			return guarded(Term.and(ascii(s), le(len(s), num(CASE_BOUND))), converted, List.of(s), e);
 		}
 		if (op instanceof JavaStringTrimOperator)
 			return trim(asString(arg, e), e);
@@ -1720,6 +1735,12 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	private static Term withRadix(
 			Term radix,
 			BiFunction<Integer, Term, Term> representation) {
+		BigInteger literal = integerLiteral(radix);
+		if (literal != null)
+			// a known radix: only its representation is built
+			return representation.apply(literal.compareTo(BigInteger.valueOf(Character.MIN_RADIX)) >= 0
+					&& literal.compareTo(BigInteger.valueOf(Character.MAX_RADIX)) <= 0 ? literal.intValue() : 10,
+					Term.TRUE);
 		List<Term> others = new ArrayList<>();
 		for (int r = Character.MIN_RADIX; r <= Character.MAX_RADIX; r++)
 			if (r != 10)
@@ -1823,33 +1844,40 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term a,
 			Term b,
 			ValueExpression e) {
-		Term ascii = Term.value("(re.* (re.range \"\\u{0}\" \"\\u{7f}\"))", Sort.STRING);
-		Term guard = Term.and(Term.app("str.in_re", Sort.BOOL, a, ascii), Term.app("str.in_re", Sort.BOOL, b, ascii));
-		return guarded(guard, compareStrings(lower(a), lower(b), e), List.of(a, b), e);
+		Term guard = Term.and(ascii(a), ascii(b), le(len(a), num(CASE_BOUND)), le(len(b), num(CASE_BOUND)));
+		return guarded(guard, compareStrings(convertCase(a, true, e), convertCase(b, true, e), e), List.of(a, b),
+				e);
 	}
 
 	/**
-	 * Converts the ASCII lowercase letters of the given string to uppercase.
+	 * The length up to which the conversions and the comparisons ignoring the
+	 * case of the ASCII letters are encoded (char by char).
 	 */
-	private static Term upper(
-			Term s) {
-		Term result = s;
-		for (char c = 'a'; c <= 'z'; c++)
-			result = Term.app("str.replace_all", Sort.STRING, result, Term.string(String.valueOf(c)),
-					Term.string(String.valueOf(Character.toUpperCase(c))));
-		return result;
-	}
+	private static final int CASE_BOUND = 16;
 
 	/**
-	 * Converts the ASCII uppercase letters of the given string to lowercase.
+	 * The given string where the ASCII uppercase letters are converted to
+	 * lowercase (or vice versa): an auxiliary string with the same length, whose
+	 * chars are the converted ones of the string, up to {@link #CASE_BOUND}
+	 * chars (so the result is precise only for strings of at most
+	 * {@link #CASE_BOUND} chars). The conversion is char by char, as nested
+	 * {@code str.replace_all} (one per letter) make the solvers time out.
 	 */
-	private static Term lower(
-			Term s) {
-		Term result = s;
-		for (char c = 'A'; c <= 'Z'; c++)
-			result = Term.app("str.replace_all", Sort.STRING, result, Term.string(String.valueOf(c)),
-					Term.string(String.valueOf(Character.toLowerCase(c))));
-		return result;
+	private Term convertCase(
+			Term s,
+			boolean toLower,
+			ValueExpression e) {
+		Term r = auxiliary(Sort.STRING, e);
+		getSymbols().require(Term.eq(len(r), len(s)));
+		char from = toLower ? 'A' : 'a';
+		char to = toLower ? 'Z' : 'z';
+		int shift = toLower ? 'a' - 'A' : 'A' - 'a';
+		for (int i = 0; i < CASE_BOUND; i++) {
+			Term c = code(at(s, num(i)));
+			Term converted = Term.ite(between(c, from, to), add(c, num(shift)), c);
+			getSymbols().require(Term.or(Term.not(lt(num(i), len(s))), Term.eq(code(at(r, num(i))), converted)));
+		}
+		return r;
 	}
 
 	/**
@@ -1871,7 +1899,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term a,
 			Term b,
 			ValueExpression e) {
-		int CASE_BOUND = 8;
 		Term sameLength = Term.eq(len(a), len(b));
 		Term[] same = new Term[CASE_BOUND + 1];
 		Term[] precise = new Term[2 * CASE_BOUND + 1];

@@ -1,5 +1,7 @@
 package it.unive.jlisa.triage;
 
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -584,6 +586,23 @@ public class JavaExpressionEncoderTest {
 			checkOperator(JavaMathSqrtOperator.INSTANCE, JavaDoubleType.INSTANCE, () -> Math.sqrt(f), f);
 			checkOperator(JavaMathFloorOperator.INSTANCE, JavaDoubleType.INSTANCE, () -> Math.floor(f), f);
 		}
+	}
+
+	/**
+	 * Math.toRadians is exact (a product rounded to nearest, since JDK 9), and
+	 * indexOf(char, from) is encoded as String.indexOf(int, int).
+	 */
+	@Test
+	public void toRadiansAndIndexOfCharFrom() throws SemanticException {
+		for (double d : new double[] { 0.0, -0.0, 1.0, 90.0, 180.0, -45.5, 1e300, Double.NaN,
+				Double.POSITIVE_INFINITY })
+			checkOperator(JavaMathToRadiansOperator.INSTANCE, JavaDoubleType.INSTANCE, () -> Math.toRadians(d), d);
+		for (String s : List.of("", "abcabc", "xyz"))
+			for (int from = -1; from <= s.length() + 1; from++) {
+				int k = from;
+				checkOperator(JavaStringIndexOfCharFromIndexOperator.INSTANCE, JavaIntType.INSTANCE,
+						() -> s.indexOf('c', k), s, 'c', k);
+			}
 	}
 
 	@Test
