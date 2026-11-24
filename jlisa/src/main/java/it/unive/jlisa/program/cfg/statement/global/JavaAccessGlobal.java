@@ -25,7 +25,6 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.util.datastructures.graph.GraphVisitor;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * An access to a {@link Global} of a {@link Unit}.
@@ -76,25 +75,30 @@ public class JavaAccessGlobal extends Expression {
 
 	/**
 	 * Yields the unit declaring the accessed global: the container, or the
-	 * ancestor of the same kind (a superclass for a class, or a superinterface
-	 * for an interface) declaring it.
+	 * closest ancestor declaring it (also not an immediate one, e.g., {@code A}
+	 * for a static field of {@code A} accessed in {@code C extends B extends A},
+	 * and also an implemented interface), as the reflective accesses and the
+	 * other accesses to it name it.
 	 *
 	 * @return the unit declaring the global
 	 */
 	public CompilationUnit definingUnit() {
-		CompilationUnit definingUnit = (CompilationUnit) container;
-		if (definingUnit.getGlobal(target.getName()) == null) {
-			Class<? extends CompilationUnit> containerKind = definingUnit.getClass();
-			Set<CompilationUnit> ancestors = definingUnit
-					.getImmediateAncestors().stream()
-					.filter(u -> u.getClass() == containerKind)
-					.collect(Collectors.toSet());
-
-			// we can safely suppose that there exist a single ancestor
-			// declaring the global
-			definingUnit = ancestors.stream().findFirst().get();
+		CompilationUnit unit = (CompilationUnit) container;
+		if (unit.getGlobal(target.getName()) != null)
+			return unit;
+		// the ancestors, the closest first
+		java.util.Deque<CompilationUnit> queue = new java.util.ArrayDeque<>(unit.getImmediateAncestors());
+		Set<CompilationUnit> seen = new java.util.HashSet<>();
+		while (!queue.isEmpty()) {
+			CompilationUnit ancestor = queue.poll();
+			if (!seen.add(ancestor))
+				continue;
+			if (ancestor.getGlobal(target.getName()) != null)
+				return ancestor;
+			queue.addAll(ancestor.getImmediateAncestors());
 		}
-		return definingUnit;
+		// not declared by any ancestor (e.g., an unknown library class)
+		return unit;
 	}
 
 	/**

@@ -4,6 +4,7 @@ import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.visitors.scope.ClassScope;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class InterfaceASTVisitor extends ClassASTVisitor {
@@ -39,6 +40,13 @@ public class InterfaceASTVisitor extends ClassASTVisitor {
 					getSourceCodeLocation((ASTNode) node.permittedTypes().get(0)));
 
 		createClassInitializer(getScope().getLiSACompilationUnit(), node);
+
+		// the methods with a body (default and static methods), whose code
+		// members exist already: without their bodies, their calls would never
+		// return
+		for (MethodDeclaration md : node.getMethods())
+			if (md.getBody() != null)
+				getParserContext().evaluate(md, new MethodASTVisitor(getEnvironment(), getScope()));
 
 		return false;
 	}
