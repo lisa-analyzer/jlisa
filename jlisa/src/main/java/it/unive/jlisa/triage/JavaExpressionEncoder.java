@@ -139,6 +139,7 @@ import it.unive.lisa.triage.smt.Term;
 import it.unive.lisa.type.Type;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -169,8 +170,13 @@ import java.util.function.IntFunction;
  * and special values), the result being an unknown function of the arguments
  * otherwise.</li>
  * </ul>
- * Other functions yield unconstrained values, as any other operator unknown to
- * this encoder. The string operations are exact only for the strings of UTF-16
+ * Functions whose result is not specified exactly (e.g., the sine, or the
+ * power) are unknown, deterministic functions whose values are computed by
+ * running the functions of the library on the values of the counterexamples
+ * (and constrained by their known properties, e.g., monotonicity and ranges).
+ * Other functions, as any other operator unknown to this encoder, yield an
+ * unknown, deterministic function of their operands, never precise. The string
+ * operations are exact only for the strings of UTF-16
  * code units (the characters of the Basic Multilingual Plane that are not
  * surrogates), and the functions depending on the default locale
  * ({@link String#toLowerCase()} and {@link String#toUpperCase()}) assume one
@@ -311,7 +317,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term exact = exactCodePointFunction(f, arg, e);
 		if (exact != null)
 			return exact;
-		if (f.toString().startsWith("Character.") && !f.returnsString()) {
+		if (f.getDeclaringClass().equals("Character") && !f.returnsString()) {
 			Term table = codePointTable(f, arg, e);
 			if (table != null)
 				return table;
@@ -323,13 +329,13 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.STRING_IS_EMPTY)
 			return Term.eq(len(asString(arg, e)), num(0));
 		if (f == JavaLibraryFunction.BOOLEAN_TO_STRING)
-			return Term.ite(coerce(arg, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+			return stringOf(boolean.class, arg, e);
 		if (f == JavaLibraryFunction.CHARACTER_TO_STRING)
-			return Term.app("str.from_code", Sort.STRING, coerce(arg, Sort.INT, e));
+			return stringOf(char.class, arg, e);
 		if (f == JavaLibraryFunction.DOUBLE_TO_STRING)
-			return floatToString(toFloat(arg, Sort.FLOAT64, e), e);
+			return stringOf(double.class, arg, e);
 		if (f == JavaLibraryFunction.FLOAT_TO_STRING)
-			return floatToString(toFloat(arg, Sort.FLOAT32, e), e);
+			return stringOf(float.class, arg, e);
 
 		Term x = coerce(arg, Sort.INT, e);
 		if (f == JavaLibraryFunction.INTEGER_SIGNUM || f == JavaLibraryFunction.LONG_SIGNUM)
@@ -423,14 +429,22 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			BinaryExpression e) {
 		if (op instanceof JavaCharacterForDigitOperator)
 			return forDigit(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
-		if (op instanceof JavaIntegerCompareOperator || op instanceof JavaLongCompareOperator)
+		// the operators of the frontend and the functions of the library
+		// computing the same method share their encoding
+		if (op instanceof JavaIntegerCompareOperator || op instanceof JavaLongCompareOperator
+				|| op == JavaLibraryFunction.INTEGER_COMPARE || op == JavaLibraryFunction.LONG_COMPARE)
 			return compare(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
-		if (op instanceof JavaShortCompareOperator || op instanceof JavaByteCompareOperator)
+		if (op instanceof JavaShortCompareOperator || op instanceof JavaByteCompareOperator
+				|| op == JavaLibraryFunction.SHORT_COMPARE || op == JavaLibraryFunction.BYTE_COMPARE
+				|| op == JavaLibraryFunction.CHARACTER_COMPARE)
+			// the difference of the values, that cannot overflow
 			return sub(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
-		if (op instanceof JavaDoubleCompareOperator)
+		if (op instanceof JavaDoubleCompareOperator || op == JavaLibraryFunction.DOUBLE_COMPARE)
 			return floatCompare(toFloat(left, Sort.FLOAT64, e), toFloat(right, Sort.FLOAT64, e));
-		if (op instanceof JavaFloatCompareOperator)
+		if (op instanceof JavaFloatCompareOperator || op == JavaLibraryFunction.FLOAT_COMPARE)
 			return floatCompare(toFloat(left, Sort.FLOAT32, e), toFloat(right, Sort.FLOAT32, e));
+		if (op instanceof JavaCharacterDigitOperator || op == JavaLibraryFunction.CHARACTER_DIGIT)
+			return digit(left, right, e);
 		DoubleBinaryOperator function = evaluatedBinary(op);
 		if (function != null) {
 			if (!getSorts().encodesFloats())
@@ -446,8 +460,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return maxMin(left, right, true, e);
 		if (op instanceof JavaMathMin || op instanceof JavaStrictMathMin)
 			return maxMin(left, right, false, e);
-		if (op instanceof JavaCharacterDigitOperator)
-			return digit(left, right, e);
 		if (op instanceof JavaLongRotateRightOperator)
 			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false, e), 64);
 		if (op instanceof JavaStringCompareToOperator)
@@ -474,18 +486,12 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			// false < true
 			return Term.ite(Term.eq(a, b), num(0), Term.ite(a, num(1), num(-1)));
 		}
-		if (f == JavaLibraryFunction.DOUBLE_COMPARE)
-			return floatCompare(toFloat(left, Sort.FLOAT64, e), toFloat(right, Sort.FLOAT64, e));
-		if (f == JavaLibraryFunction.FLOAT_COMPARE)
-			return floatCompare(toFloat(left, Sort.FLOAT32, e), toFloat(right, Sort.FLOAT32, e));
 		if (f == JavaLibraryFunction.STRING_INDEX_OF_CHAR)
 			return indexOf(asString(left, e), coerce(right, Sort.INT, e), num(0), e);
 		if (f == JavaLibraryFunction.STRING_LAST_INDEX_OF_CHAR)
 			return lastIndexOf(asString(left, e), coerce(right, Sort.INT, e), e);
 		if (f == JavaLibraryFunction.STRING_COMPARE_TO_IGNORE_CASE)
 			return compareIgnoringCase(asString(left, e), asString(right, e), e);
-		if (f == JavaLibraryFunction.CHARACTER_DIGIT)
-			return digit(left, right, e);
 
 		Term a = coerce(left, Sort.INT, e);
 		Term b = coerce(right, Sort.INT, e);
@@ -497,17 +503,10 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return wrap(add(a, b), 32, false);
 		if (f == JavaLibraryFunction.LONG_SUM)
 			return wrap(add(a, b), 64, false);
-		if (f == JavaLibraryFunction.INTEGER_COMPARE || f == JavaLibraryFunction.LONG_COMPARE)
-			return compare(a, b);
 		if (f == JavaLibraryFunction.INTEGER_COMPARE_UNSIGNED)
 			return compare(unsigned(a, 32), unsigned(b, 32));
 		if (f == JavaLibraryFunction.LONG_COMPARE_UNSIGNED)
 			return compare(unsigned(a, 64), unsigned(b, 64));
-		if (f == JavaLibraryFunction.SHORT_COMPARE
-				|| f == JavaLibraryFunction.BYTE_COMPARE
-				|| f == JavaLibraryFunction.CHARACTER_COMPARE)
-			// the difference of the values, that cannot overflow
-			return sub(a, b);
 		if (f == JavaLibraryFunction.CHARACTER_TO_CODE_POINT)
 			// ((high << 10) + low) + (MIN_SUPPLEMENTARY_CODE_POINT
 			// - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE), that cannot
@@ -855,7 +854,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * Converts a floating point number to a string as
 	 * {@link Double#toString(double)}, precisely only for special values and
 	 * for integral numbers below {@code 10^7} (that are printed with a single
-	 * decimal digit): the result is an unknown function of the number
+	 * fractional digit, {@code 0}): the result is an unknown function of the number
 	 * otherwise.
 	 */
 	private Term floatToString(
@@ -867,7 +866,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term integral = Term.and(Term.app("fp.isNormal", Sort.BOOL, f), Term.app("fp.eq", Sort.BOOL, f, rounded),
 				Term.app("fp.lt", Sort.BOOL, Term.app("fp.abs", fp, f), limit));
 		Term value = Term.app("to_int", Sort.INT, Term.app("fp.to_real", Sort.REAL, f));
-		Term printed = Term.app("str.++", Sort.STRING, decimal(value), Term.string(".0"));
+		Term printed = concat(decimal(value), Term.string(".0"));
 		Term negative = Term.app("fp.isNegative", Sort.BOOL, f);
 		Term special = Term.ite(Term.app("fp.isNaN", Sort.BOOL, f), Term.string("NaN"),
 				Term.ite(Term.app("fp.isInfinite", Sort.BOOL, f),
@@ -1040,22 +1039,6 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Yields the given operand, converted to the sort of its static type if it
-	 * is a value of unknown kind and its static type is numeric (e.g., the
-	 * value of a boxed number read from the heap): the conversion is precise
-	 * only if the value has that kind.
-	 */
-	private Term typed(
-			Term arg,
-			UnaryExpression e) {
-		Type type = e.getExpression().getStaticType();
-		if (!arg.getSort().equals(ValueSort.SORT) || !type.isNumericType())
-			return arg;
-		Sort sort = getSorts().sortOf(type);
-		return sort.equals(Sort.INT) || sort.isFloatingPoint() ? coerce(arg, sort, e) : arg;
-	}
-
-	/**
 	 * Encodes {@link Character#forDigit(int, int)}: the character representing
 	 * the given digit in the given radix, or the null character if the digit or
 	 * the radix are not valid.
@@ -1069,7 +1052,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 				num(0));
 	}
 
-	// floating point numbers
+	// floating point predicates and bit representations
 
 	/**
 	 * Encodes the predicates over floating point numbers of {@link Double} and
@@ -1128,6 +1111,22 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	// math
 
 	/**
+	 * Yields the given operand, converted to the sort of its static type if it
+	 * is a value of unknown kind and its static type is numeric (e.g., the
+	 * value of a boxed number read from the heap): the conversion is precise
+	 * only if the value has that kind.
+	 */
+	private Term typed(
+			Term arg,
+			UnaryExpression e) {
+		Type type = e.getExpression().getStaticType();
+		if (!arg.getSort().equals(ValueSort.SORT) || !type.isNumericType())
+			return arg;
+		Sort sort = getSorts().sortOf(type);
+		return sort.equals(Sort.INT) || sort.isFloatingPoint() ? coerce(arg, sort, e) : arg;
+	}
+
+	/**
 	 * Encodes the functions of {@link Math} and {@link StrictMath} that are
 	 * specified exactly (absolute value, floor, square root, rounding), or
 	 * yields {@code null} for the other operators, or if the kind of the
@@ -1154,24 +1153,24 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			if (!getSorts().encodesFloats())
 				return null;
 			// angdeg * DEGREES_TO_RADIANS, rounded to nearest (since JDK 9)
-			return Term.app("fp.mul", Sort.FLOAT64, Term.value("RNE", Sort.ROUNDING_MODE),
+			return Term.app("fp.mul", Sort.FLOAT64, rne(),
 					toFloat(arg, Sort.FLOAT64, e.getExpression(), e), FloatingPoints.literal(0.017453292519943295));
 		}
-		DoubleUnaryOperator function = evaluatedUnary(op);
-		if (function != null) {
+		MathFunction math = MATH_FUNCTIONS.get(op.getClass());
+		if (math != null) {
+			DoubleUnaryOperator function = math.function();
 			if (!getSorts().encodesFloats())
 				return null;
 			// computed on the values of the counterexamples, as the result is
 			// not specified exactly
 			Term x = toFloat(arg, Sort.FLOAT64, e.getExpression(), e);
 			Function<List<Number>, Number> evaluator = args -> function.applyAsDouble(args.get(0).doubleValue());
-			Boolean increasing = monotonicity(op);
+			Boolean increasing = math.increasing();
 			Term result = increasing != null
 					? getSymbols().monotone(functionOf(op), Sort.FLOAT64, x, evaluator, increasing, e)
 					: getSymbols().evaluable(functionOf(op), Sort.FLOAT64, List.of(x), evaluator, e);
-			Term range = range(op, x, result);
-			if (range != null)
-				getSymbols().require(range);
+			if (math.range() != null)
+				getSymbols().require(math.range().apply(x, result));
 			return result;
 		}
 		if (!sort.isFloatingPoint())
@@ -1183,7 +1182,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 					toFloat(arg, Sort.FLOAT64, e));
 		if (op instanceof JavaMathSqrtOperator || op instanceof JavaStrictMathSqrtOperator)
 			// correctly rounded, as specified
-			return Term.app("fp.sqrt", Sort.FLOAT64, Term.value("RNE", Sort.ROUNDING_MODE),
+			return Term.app("fp.sqrt", Sort.FLOAT64, rne(),
 					toFloat(arg, Sort.FLOAT64, e));
 		if (op instanceof JavaMathRoundOperator || op instanceof JavaStrictMathRoundOperator)
 			return round(arg, sort.equals(Sort.FLOAT64) ? 64 : 32);
@@ -1207,119 +1206,106 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * Yields the function of {@link Math} or {@link StrictMath} over doubles
-	 * computed by the given operator, whose result is not specified exactly
-	 * (e.g., the sine), or {@code null} if it is not such an operator. The
-	 * functions of {@link Math} are the ones of the running virtual machine,
-	 * that the programs are run with.
+	 * A function of {@link Math} or {@link StrictMath} over doubles whose
+	 * result is not specified exactly (e.g., the sine), computed on the values
+	 * of the counterexamples.
+	 *
+	 * @param function   the function (the one of {@link Math} is the one of
+	 *                       the running virtual machine, that the programs are
+	 *                       run with)
+	 * @param increasing whether the function is non-decreasing ({@code true})
+	 *                       or non-increasing ({@code false}), as the
+	 *                       specification of {@link Math} requires the results
+	 *                       of its functions to be semi-monotonic, or
+	 *                       {@code null} if it is not monotone
+	 * @param range      the values that the function can yield on an
+	 *                       argument, as a condition over the argument and the
+	 *                       result, or {@code null} if nothing is known: the
+	 *                       specification of {@link Math} tells when the
+	 *                       functions yield NaN, and the results are within one
+	 *                       ulp of the exact ones, that the implementations
+	 *                       never round out of the ranges of the functions
+	 *                       (e.g., the sine of a finite number is between
+	 *                       {@code -1} and {@code 1})
 	 */
-	private static DoubleUnaryOperator evaluatedUnary(
-			UnaryOperator op) {
-		if (op instanceof JavaMathSinOperator)
-			return Math::sin;
-		if (op instanceof JavaMathCosOperator)
-			return Math::cos;
-		if (op instanceof JavaMathTanOperator)
-			return Math::tan;
-		if (op instanceof JavaMathAsinOperator)
-			return Math::asin;
-		if (op instanceof JavaMathAcosOperator)
-			return Math::acos;
-		if (op instanceof JavaMathAtanOperator)
-			return Math::atan;
-		if (op instanceof JavaMathExpOperator)
-			return Math::exp;
-		if (op instanceof JavaMathLogOperator)
-			return Math::log;
-		if (op instanceof JavaMathLog10Operator)
-			return Math::log10;
-		if (op instanceof JavaStrictMathSinOperator)
-			return StrictMath::sin;
-		if (op instanceof JavaStrictMathCosOperator)
-			return StrictMath::cos;
-		if (op instanceof JavaStrictMathTanOperator)
-			return StrictMath::tan;
-		if (op instanceof JavaStrictMathAsinOperator)
-			return StrictMath::asin;
-		if (op instanceof JavaStrictMathAcosOperator)
-			return StrictMath::acos;
-		if (op instanceof JavaStrictMathAtanOperator)
-			return StrictMath::atan;
-		if (op instanceof JavaStrictMathExpOperator)
-			return StrictMath::exp;
-		if (op instanceof JavaStrictMathLogOperator)
-			return StrictMath::log;
-		if (op instanceof JavaStrictMathLog10Operator)
-			return StrictMath::log10;
-		return null;
+	private record MathFunction(
+			DoubleUnaryOperator function,
+			Boolean increasing,
+			java.util.function.BinaryOperator<Term> range) {
 	}
 
 	/**
-	 * Yields the values that the function of {@link Math} or {@link StrictMath}
-	 * computed by the given operator can yield on the given argument, as a
-	 * condition over the given result, or {@code null} if nothing is known: the
-	 * specification of {@link Math} tells when the functions yield NaN, and the
-	 * results are within one ulp of the exact ones, that the implementations
-	 * never round out of the ranges of the functions (e.g., the sine of a
-	 * finite number is between {@code -1} and {@code 1}).
+	 * The functions of {@link Math} and {@link StrictMath} whose result is not
+	 * specified exactly, by the class of their operator.
 	 */
-	private static Term range(
-			UnaryOperator op,
+	private static final Map<Class<?>, MathFunction> MATH_FUNCTIONS = new HashMap<>();
+
+	private static final Term ZERO = FloatingPoints.literal(0.0);
+
+	static {
+		math(JavaMathSinOperator.class, JavaStrictMathSinOperator.class, Math::sin, StrictMath::sin, null,
+				JavaExpressionEncoder::sinCosRange);
+		math(JavaMathCosOperator.class, JavaStrictMathCosOperator.class, Math::cos, StrictMath::cos, null,
+				JavaExpressionEncoder::sinCosRange);
+		math(JavaMathTanOperator.class, JavaStrictMathTanOperator.class, Math::tan, StrictMath::tan, null,
+				(x, r) -> Term.eq(isNaN(r), Term.or(isNaN(x), Term.app("fp.isInfinite", Sort.BOOL, x))));
+		math(JavaMathAsinOperator.class, JavaStrictMathAsinOperator.class, Math::asin, StrictMath::asin, true,
+				(x, r) -> Term.eq(isNaN(r), outsideUnit(x)));
+		math(JavaMathAcosOperator.class, JavaStrictMathAcosOperator.class, Math::acos, StrictMath::acos, false,
+				(x, r) -> Term.ite(outsideUnit(x), isNaN(r), Term.app("fp.leq", Sort.BOOL, ZERO, r)));
+		math(JavaMathAtanOperator.class, JavaStrictMathAtanOperator.class, Math::atan, StrictMath::atan, true,
+				null);
+		math(JavaMathExpOperator.class, JavaStrictMathExpOperator.class, Math::exp, StrictMath::exp, true,
+				(x, r) -> Term.ite(isNaN(x), isNaN(r), Term.app("fp.leq", Sort.BOOL, ZERO, r)));
+		// the logarithm of both zeros is the negative infinity
+		math(JavaMathLogOperator.class, JavaStrictMathLogOperator.class, Math::log, StrictMath::log, true,
+				JavaExpressionEncoder::logRange);
+		math(JavaMathLog10Operator.class, JavaStrictMathLog10Operator.class, Math::log10, StrictMath::log10, true,
+				JavaExpressionEncoder::logRange);
+	}
+
+	private static void math(
+			Class<?> mathOperator,
+			Class<?> strictOperator,
+			DoubleUnaryOperator math,
+			DoubleUnaryOperator strict,
+			Boolean increasing,
+			java.util.function.BinaryOperator<Term> range) {
+		MATH_FUNCTIONS.put(mathOperator, new MathFunction(math, increasing, range));
+		MATH_FUNCTIONS.put(strictOperator, new MathFunction(strict, increasing, range));
+	}
+
+	private static Term isNaN(
+			Term f) {
+		return Term.app("fp.isNaN", Sort.BOOL, f);
+	}
+
+	// whether the number is NaN or outside [-1, 1]
+	private static Term outsideUnit(
+			Term x) {
+		return Term.or(isNaN(x), Term.app("fp.lt", Sort.BOOL, x, FloatingPoints.literal(-1.0)),
+				Term.app("fp.gt", Sort.BOOL, x, FloatingPoints.literal(1.0)));
+	}
+
+	private static Term sinCosRange(
 			Term x,
-			Term result) {
-		Term nanArg = Term.app("fp.isNaN", Sort.BOOL, x);
-		Term nan = Term.app("fp.isNaN", Sort.BOOL, result);
-		Term zero = FloatingPoints.literal(0.0);
-		if (op instanceof JavaMathSinOperator || op instanceof JavaStrictMathSinOperator
-				|| op instanceof JavaMathCosOperator || op instanceof JavaStrictMathCosOperator)
-			return Term.ite(Term.or(nanArg, Term.app("fp.isInfinite", Sort.BOOL, x)), nan,
-					Term.and(Term.app("fp.leq", Sort.BOOL, FloatingPoints.literal(-1.0), result),
-							Term.app("fp.leq", Sort.BOOL, result, FloatingPoints.literal(1.0))));
-		if (op instanceof JavaMathTanOperator || op instanceof JavaStrictMathTanOperator)
-			return Term.eq(nan, Term.or(nanArg, Term.app("fp.isInfinite", Sort.BOOL, x)));
-		if (op instanceof JavaMathExpOperator || op instanceof JavaStrictMathExpOperator)
-			return Term.ite(nanArg, nan, Term.app("fp.leq", Sort.BOOL, zero, result));
-		if (op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
-				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator)
-			// the logarithm of both zeros is the negative infinity
-			return Term.eq(nan, Term.or(nanArg, Term.app("fp.lt", Sort.BOOL, x, zero)));
-		if (op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator
-				|| op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator) {
-			Term outside = Term.or(nanArg,
-					Term.app("fp.lt", Sort.BOOL, x, FloatingPoints.literal(-1.0)),
-					Term.app("fp.gt", Sort.BOOL, x, FloatingPoints.literal(1.0)));
-			if (op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator)
-				return Term.eq(nan, outside);
-			return Term.ite(outside, nan, Term.app("fp.leq", Sort.BOOL, zero, result));
-		}
-		return null;
+			Term r) {
+		return Term.ite(Term.or(isNaN(x), Term.app("fp.isInfinite", Sort.BOOL, x)), isNaN(r),
+				Term.and(Term.app("fp.leq", Sort.BOOL, FloatingPoints.literal(-1.0), r),
+						Term.app("fp.leq", Sort.BOOL, r, FloatingPoints.literal(1.0))));
 	}
 
-	/**
-	 * Yields whether the function of {@link Math} or {@link StrictMath}
-	 * computed by the given operator is non-decreasing ({@code true}) or
-	 * non-increasing ({@code false}), as the specification of {@link Math}
-	 * requires the results of its functions to be semi-monotonic, or
-	 * {@code null} if the function is not monotone (e.g., the sine).
-	 */
-	private static Boolean monotonicity(
-			UnaryOperator op) {
-		if (op instanceof JavaMathExpOperator || op instanceof JavaStrictMathExpOperator
-				|| op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
-				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator
-				|| op instanceof JavaMathAtanOperator || op instanceof JavaStrictMathAtanOperator
-				|| op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator)
-			return true;
-		if (op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator)
-			return false;
-		return null;
+	private static Term logRange(
+			Term x,
+			Term r) {
+		return Term.eq(isNaN(r), Term.or(isNaN(x), Term.app("fp.lt", Sort.BOOL, x, ZERO)));
 	}
 
 	/**
 	 * Yields the binary function of {@link Math} or {@link StrictMath} over
 	 * doubles computed by the given operator, whose result is not specified
 	 * exactly (e.g., the power), or {@code null} if it is not such an operator
-	 * (see {@link #evaluatedUnary(UnaryOperator)}).
+	 * (see {@link MathFunction}).
 	 */
 	private static DoubleBinaryOperator evaluatedBinary(
 			BinaryOperator op) {
@@ -1347,7 +1333,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term f,
 			int bits) {
 		Sort sort = f.getSort();
-		Term rne = Term.value("RNE", Sort.ROUNDING_MODE);
+		Term rne = rne();
 		Term floor = Term.app("fp.roundToIntegral", sort, Term.value("RTN", Sort.ROUNDING_MODE), f);
 		Term half = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(0.5) : FloatingPoints.literal(0.5f);
 		Term one = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(1.0) : FloatingPoints.literal(1.0f);
@@ -1380,15 +1366,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaStringTrimOperator)
 			return trim(asString(arg, e), e);
 		if (op instanceof JavaStringValueOfIntOperator || op instanceof JavaStringValueOfLongOperator)
-			return decimal(coerce(arg, Sort.INT, e));
+			return stringOf(long.class, arg, e);
 		if (op instanceof JavaStringValueOfBooleanOperator)
-			return Term.ite(coerce(arg, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+			return stringOf(boolean.class, arg, e);
 		if (op instanceof JavaStringValueOfCharOperator)
-			return fromChar(coerce(arg, Sort.INT, e));
+			return stringOf(char.class, arg, e);
 		if (op instanceof JavaStringValueOfDoubleOperator)
-			return floatToString(toFloat(arg, Sort.FLOAT64, e), e);
+			return stringOf(double.class, arg, e);
 		if (op instanceof JavaStringValueOfFloatOperator)
-			return floatToString(toFloat(arg, Sort.FLOAT32, e), e);
+			return stringOf(float.class, arg, e);
 		return null;
 	}
 
@@ -1407,12 +1393,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term appended = representation(op, right, e);
 		if (appended != null)
 			return concat(asString(left, e), appended);
-		if (op instanceof JavaStringCharAtOperator) {
-			Term c = code(at(asString(left, e), coerce(right, Sort.INT, e)));
-			// chars beyond the basic multilingual plane are two chars in Java
-			return guarded(le(c, num(Character.MAX_VALUE)), c, List.of(asString(left, e), coerce(right, Sort.INT, e)),
-					e);
-		}
+		if (op instanceof JavaStringCharAtOperator)
+			// the string is made of UTF-16 code units (see asString)
+			return code(at(asString(left, e), coerce(right, Sort.INT, e)));
 		if (op instanceof JavaStringStartsWithOperator)
 			return Term.app("str.prefixof", Sort.BOOL, asString(right, e), asString(left, e));
 		if (op instanceof JavaStringEndsWithOperator)
@@ -1491,11 +1474,11 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return Term.and(ge(from, num(0)), le(add(from, len(p)), len(s)),
 					Term.app("str.prefixof", Sort.BOOL, p, substr(s, from, len(p))));
 		}
+		// replace(char, char); replace(CharSequence, CharSequence) is not
+		// encoded, as its sequences of characters are passed as references to
+		// the strings (not their contents)
 		if (op instanceof JavaStringReplaceOperator && e.getMiddle().getStaticType() instanceof JavaCharType
 				&& e.getRight().getStaticType() instanceof JavaCharType)
-			// replacing characters: the sequences of characters are passed as
-			// references to the strings (not their contents), that cannot be
-			// encoded
 			return Term.app("str.replace_all", Sort.STRING, asString(left, e), fromChar(coerce(middle, Sort.INT, e)),
 					fromChar(coerce(right, Sort.INT, e)));
 		return null;
@@ -1514,17 +1497,38 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaStringAppendStringOperator || op instanceof JavaStringInsertStringOperator)
 			return asString(value, e);
 		if (op instanceof JavaStringAppendCharOperator || op instanceof JavaStringInsertCharOperator)
-			return fromChar(coerce(value, Sort.INT, e));
+			return stringOf(char.class, value, e);
 		if (op instanceof JavaStringAppendIntOperator || op instanceof JavaStringInsertIntOperator
 				|| op instanceof JavaStringAppendLongOperator || op instanceof JavaStringInsertLongOperator)
-			return decimal(coerce(value, Sort.INT, e));
+			return stringOf(long.class, value, e);
 		if (op instanceof JavaStringAppendBooleanOperator || op instanceof JavaStringInsertBooleanOperator)
-			return Term.ite(coerce(value, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+			return stringOf(boolean.class, value, e);
 		if (op instanceof JavaStringAppendDoubleOperator || op instanceof JavaStringInsertDoubleOperator)
-			return floatToString(toFloat(value, Sort.FLOAT64, e), e);
+			return stringOf(double.class, value, e);
 		if (op instanceof JavaStringAppendFloatOperator || op instanceof JavaStringInsertFloatOperator)
-			return floatToString(toFloat(value, Sort.FLOAT32, e), e);
+			return stringOf(float.class, value, e);
 		return null;
+	}
+
+	/**
+	 * The representation of a value of the given primitive type (longs also
+	 * standing for the other integral types), as {@link String#valueOf}: the
+	 * conversion shared by {@code toString}, {@code String.valueOf} and the
+	 * appends and inserts of string builders.
+	 */
+	private Term stringOf(
+			Class<?> kind,
+			Term value,
+			ValueExpression e) {
+		if (kind == boolean.class)
+			return booleanString(coerce(value, Sort.BOOL, e));
+		if (kind == char.class)
+			return fromChar(coerce(value, Sort.INT, e));
+		if (kind == double.class)
+			return floatToString(toFloat(value, Sort.FLOAT64, e), e);
+		if (kind == float.class)
+			return floatToString(toFloat(value, Sort.FLOAT32, e), e);
+		return decimal(coerce(value, Sort.INT, e));
 	}
 
 	/**
@@ -1582,6 +1586,14 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 				Term.value("(re.* (re.range \"\\u{0}\" \"\\u{7f}\"))", Sort.STRING));
 	}
 
+	/**
+	 * The representation of a boolean, as {@link String#valueOf(boolean)}.
+	 */
+	private static Term booleanString(
+			Term b) {
+		return Term.ite(b, Term.string("true"), Term.string("false"));
+	}
+
 	private static Term concat(
 			Term a,
 			Term b) {
@@ -1625,8 +1637,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	private static Term decimal(
 			Term x) {
 		return Term.ite(lt(x, num(0)),
-				Term.app("str.++", Sort.STRING, Term.string("-"),
-						Term.app("str.from_int", Sort.STRING, Term.app("-", Sort.INT, x))),
+				concat(Term.string("-"), Term.app("str.from_int", Sort.STRING, Term.app("-", Sort.INT, x))),
 				Term.app("str.from_int", Sort.STRING, x));
 	}
 
@@ -1724,7 +1735,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return Term.string(literal.toString(radix));
 		Term magnitude = Term.ite(lt(x, num(0)), Term.app("-", Sort.INT, x), x);
 		Term digits = digits(magnitude, radix, bits, when, e);
-		return Term.ite(lt(x, num(0)), Term.app("str.++", Sort.STRING, Term.string("-"), digits), digits);
+		return Term.ite(lt(x, num(0)), concat(Term.string("-"), digits), digits);
 	}
 
 	/**
@@ -1764,7 +1775,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term ch,
 			Term from,
 			ValueExpression e) {
-		Term found = Term.app("str.indexof", Sort.INT, s, Term.app("str.from_code", Sort.STRING, ch), from);
+		Term found = Term.app("str.indexof", Sort.INT, s, fromChar(ch), from);
 		return guarded(between(ch, 0, Character.MAX_VALUE), found, List.of(s, ch, from), e);
 	}
 
@@ -1778,25 +1789,31 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term s,
 			Term ch,
 			ValueExpression e) {
-		Term c = Term.app("str.from_code", Sort.STRING, ch);
+		Term c = fromChar(ch);
 		Term i = auxiliary(Sort.INT, e);
 		Term len = len(s);
 		Term rest = substr(s, add(i, num(1)), sub(sub(len, i), num(1)));
-		getSymbols().require(Term.ite(Term.app("str.contains", Sort.BOOL, s, c),
+		Term valid = between(ch, 0, Character.MAX_VALUE);
+		// only for chars: for other values, the code is the empty string, that
+		// every string contains, but at no index
+		getSymbols().require(Term.or(Term.not(valid), Term.ite(Term.app("str.contains", Sort.BOOL, s, c),
 				Term.and(ge(i, num(0)), lt(i, len), Term.eq(at(s, i), c),
 						Term.not(Term.app("str.contains", Sort.BOOL, rest, c))),
-				Term.eq(i, num(-1))));
-		return guarded(between(ch, 0, Character.MAX_VALUE), i, List.of(s, ch), e);
+				Term.eq(i, num(-1)))));
+		return guarded(valid, i, List.of(s, ch), e);
 	}
 
 	/**
 	 * The strings of the solver are sequences of Unicode code points, while the
-	 * ones of Java are sequences of UTF-16 code units, where a code point
-	 * outside of the Basic Multilingual Plane is a pair of surrogates: their
-	 * lengths, positions and characters coincide only if the strings are made
-	 * of code points of the Basic Multilingual Plane that are not surrogates.
-	 * The operands of string operations are thus encoded precisely only when
-	 * they are such strings.
+	 * ones of Java are sequences of UTF-16 code units. String literals are
+	 * encoded unit by unit (see {@link Term#string(String)}), so that their
+	 * lengths, positions and characters are the ones of Java (a code point
+	 * outside of the Basic Multilingual Plane being a pair of surrogates), but
+	 * the solver might pick strings with code points above {@code 0xFFFF},
+	 * that are one character for it and two for Java. The operands of string
+	 * operations are thus encoded precisely only when they are made of code
+	 * points of the Basic Multilingual Plane that are not surrogates (also
+	 * excluding, conservatively, the literals with surrogates).
 	 */
 	@Override
 	protected Term asString(
@@ -1881,8 +1898,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * The code at position i of s, with the ASCII uppercase letters converted
-	 * to lowercase (-1 past the end of the string).
+	 * The code of the char at the given position of the given string, with the
+	 * ASCII uppercase letters converted to lowercase (-1 past the end of the
+	 * string).
 	 */
 	private static Term foldedCode(
 			Term s,
@@ -1892,8 +1910,10 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
-	 * String#equalsIgnoreCase: precise for strings of different length (false),
-	 * and for ASCII strings of at most CASE_BOUND chars.
+	 * Compares two strings ignoring the case of the ASCII letters, as
+	 * {@link String#equalsIgnoreCase(String)}: precisely for strings of
+	 * different lengths (that are not equal), and for ASCII strings of at most
+	 * {@link #CASE_BOUND} chars.
 	 */
 	private Term equalsIgnoreCase(
 			Term a,

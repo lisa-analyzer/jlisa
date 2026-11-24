@@ -1,5 +1,29 @@
 package it.unive.jlisa.triage;
 
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
+import it.unive.jlisa.program.operator.JavaLongCompareOperator;
+import it.unive.jlisa.program.operator.JavaByteCompareOperator;
+import it.unive.jlisa.program.operator.JavaShortCompareOperator;
+import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
+import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
+import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathMin;
+import it.unive.jlisa.program.operator.JavaStrictMathMax;
+import it.unive.jlisa.program.operator.JavaMathMin;
+import it.unive.jlisa.program.operator.JavaMathMax;
+import it.unive.jlisa.program.operator.JavaStrictMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
@@ -154,7 +178,31 @@ public class JavaExpressionEncoderTest {
 			for (Term arg : arguments)
 				sorts.add(arg.getSort());
 			evaluated.add(function + sorts);
-			return solver.declare("evaluable#" + (counter++), result);
+			return Term.app(function(function, sorts, result), result, arguments.toArray(Term[]::new));
+		}
+
+		// the unknown functions are keyed by their names and sorts, as in the
+		// verification (see Unrolling), so that two operations whose
+		// functions have the same name share them
+		@Override
+		public Term apply(
+				String function,
+				Sort result,
+				List<Term> arguments,
+				SymbolicExpression origin,
+				Term guard) {
+			guards.add(guard);
+			return Term.app(function(function, sortsOf(arguments), result), result, arguments.toArray(Term[]::new));
+		}
+
+		@Override
+		public Term unknown(
+				String function,
+				Sort result,
+				List<Term> arguments,
+				SymbolicExpression origin) {
+			havoc = true;
+			return Term.app(function(function, sortsOf(arguments), result), result, arguments.toArray(Term[]::new));
 		}
 
 		// the constants of the identifiers, the same for the same identifier
@@ -195,6 +243,58 @@ public class JavaExpressionEncoderTest {
 		public void require(
 				Term condition) {
 			requirements.add(condition);
+		}
+	}
+
+	// the functions declared to the solver, by name and sorts
+	private static final java.util.Map<String, String> FUNCTIONS = new java.util.HashMap<>();
+
+	private static String function(
+			String name,
+			List<Sort> arguments,
+			Sort result) {
+		return FUNCTIONS.computeIfAbsent(name + arguments + result,
+				k -> solver.declareFunction(name + "#" + FUNCTIONS.size(), arguments, result));
+	}
+
+	private static List<Sort> sortsOf(
+			List<Term> terms) {
+		List<Sort> sorts = new ArrayList<>();
+		for (Term t : terms)
+			sorts.add(t.getSort());
+		return sorts;
+	}
+
+	/**
+	 * Checks the encoding of an expression whose value is known: its
+	 * requirements alone must be satisfiable (a requirement must never exclude
+	 * the execution, also when the encoding is not precise); then, the
+	 * encoding is precise if its guards hold too, and its value must be the
+	 * expected one.
+	 *
+	 * @return whether the encoding is precise
+	 */
+	private static boolean precise(
+			Symbols symbols,
+			Term term,
+			Term expected,
+			String what) {
+		if (symbols.havoc)
+			return false;
+		solver.push();
+		try {
+			for (Term r : symbols.requirements)
+				solver.assertTerm(r);
+			assertEquals(SmtResult.SAT, solver.check(), what + ": the requirements exclude the execution");
+			for (Term g : symbols.guards)
+				solver.assertTerm(g);
+			if (solver.check() != SmtResult.SAT)
+				return false;
+			solver.assertTerm(Term.not(Term.eq(term, expected)));
+			assertEquals(SmtResult.UNSAT, solver.check(), what + " should be " + expected);
+			return true;
+		} finally {
+			solver.pop();
 		}
 	}
 
@@ -268,28 +368,7 @@ public class JavaExpressionEncoderTest {
 		else
 			expr = new TernaryExpression(type, constant(args[0]), constant(args[1]), constant(args[2]), f, LOC);
 		Term term = expr.accept(encoder);
-		if (symbols.havoc)
-			return false;
-		solver.push();
-		for (Term r : symbols.requirements)
-			solver.assertTerm(r);
-		for (Term g : symbols.guards)
-			solver.assertTerm(g);
-		SmtResult precise = solver.check();
-		solver.pop();
-		if (precise != SmtResult.SAT)
-			// the encoding is not precise for these arguments
-			return false;
-		solver.push();
-		for (Term r : symbols.requirements)
-			solver.assertTerm(r);
-		for (Term g : symbols.guards)
-			solver.assertTerm(g);
-		solver.assertTerm(Term.not(Term.eq(term, expected(value))));
-		SmtResult res = solver.check();
-		solver.pop();
-		assertEquals(SmtResult.UNSAT, res, f + " on " + java.util.Arrays.toString(args) + " should be " + value);
-		return true;
+		return precise(symbols, term, expected(value), f + " on " + java.util.Arrays.toString(args));
 	}
 
 	private static final Random RANDOM = new Random(42);
@@ -421,11 +500,12 @@ public class JavaExpressionEncoderTest {
 	public void stringFunctions() throws Exception {
 		List<String> strings = List.of("", "a", "abc", "abcabc", "Hello World", "hELLO world", "aXb", "xéy",
 				"Été");
-		List<Integer> chars = List.of((int) 'a', (int) 'b', (int) 'c', (int) 'o', (int) 'z', 0xE9, 0x1F600);
+		List<Integer> chars = List.of((int) 'a', (int) 'b', (int) 'c', (int) 'o', (int) 'z', 0xE9, 0x1F600, -1,
+				Character.MAX_CODE_POINT + 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
 		for (String s : strings) {
-			check(JavaLibraryFunction.STRING_IS_EMPTY, s);
+			assertTrue(check(JavaLibraryFunction.STRING_IS_EMPTY, s), "isEmpty not precise on " + s);
 			for (Integer c : chars) {
-				boolean bmp = c <= Character.MAX_VALUE;
+				boolean bmp = c >= 0 && c <= Character.MAX_VALUE;
 				assertTrue(check(JavaLibraryFunction.STRING_INDEX_OF_CHAR, s, c) || !bmp);
 				assertTrue(check(JavaLibraryFunction.STRING_LAST_INDEX_OF_CHAR, s, c) || !bmp);
 				for (Integer from : List.of(-1, 0, 1, 3, 100)) {
@@ -470,21 +550,9 @@ public class JavaExpressionEncoderTest {
 					(TernaryOperator) op, LOC);
 		Term term = expr.accept(encoder);
 		String what = op + " on " + java.util.Arrays.toString(args);
-		assertFalse(symbols.havoc, what + " is not precise");
-		solver.push();
-		try {
-			for (Term r : symbols.requirements)
-				solver.assertTerm(r);
-			for (Term g : symbols.guards)
-				solver.assertTerm(g);
-			assertEquals(SmtResult.SAT, solver.check(), what + " is not precise");
-			Term exp = value instanceof Double ? FloatingPoints.literal((Double) value)
-					: value instanceof Float ? FloatingPoints.literal((Float) value) : expected(value);
-			solver.assertTerm(Term.not(Term.eq(term, exp)));
-			assertEquals(SmtResult.UNSAT, solver.check(), what + " should be " + value);
-		} finally {
-			solver.pop();
-		}
+		Term exp = value instanceof Double ? FloatingPoints.literal((Double) value)
+				: value instanceof Float ? FloatingPoints.literal((Float) value) : expected(value);
+		assertTrue(precise(symbols, term, exp, what), what + " is not precise");
 	}
 
 	@Test
@@ -605,6 +673,108 @@ public class JavaExpressionEncoderTest {
 			}
 	}
 
+	/**
+	 * The operators of the frontend modeling methods of the library that are
+	 * also functions of the library share their encodings with them.
+	 */
+	@Test
+	public void frontendOperators() throws Exception {
+		Type dbl = JavaDoubleType.INSTANCE;
+		Type integer = JavaIntType.INSTANCE;
+		Type bool = JavaBooleanType.INSTANCE;
+		Type str = StringType.INSTANCE;
+		List<Double> doubles = List.of(0.0, -0.0, 1.5, -2.5, 4.0, Double.NaN, Double.POSITIVE_INFINITY,
+				Double.NEGATIVE_INFINITY);
+		for (double a : doubles) {
+			checkOperator(JavaStrictMathAbsOperator.INSTANCE, dbl, () -> StrictMath.abs(a), a);
+			checkOperator(JavaStrictMathFloorOperator.INSTANCE, dbl, () -> StrictMath.floor(a), a);
+			checkOperator(JavaStrictMathSqrtOperator.INSTANCE, dbl, () -> StrictMath.sqrt(a), a);
+			for (double b : doubles) {
+				// NaN if either is NaN, and -0.0 < 0.0
+				checkOperator(JavaMathMax.INSTANCE, dbl, () -> Math.max(a, b), a, b);
+				checkOperator(JavaMathMin.INSTANCE, dbl, () -> Math.min(a, b), a, b);
+				checkOperator(JavaStrictMathMax.INSTANCE, dbl, () -> StrictMath.max(a, b), a, b);
+				checkOperator(JavaStrictMathMin.INSTANCE, dbl, () -> StrictMath.min(a, b), a, b);
+				checkOperator(JavaDoubleCompareOperator.INSTANCE, integer, () -> Double.compare(a, b), a, b);
+			}
+		}
+		for (char c : new char[] { 'a', 'Z', '5', ' ', 0xE9, 0x0660, 0xFFFF }) {
+			checkOperator(JavaCharacterIsDigitOperator.INSTANCE, bool, () -> Character.isDigit(c), c);
+			checkOperator(JavaCharacterIsLetterOperator.INSTANCE, bool, () -> Character.isLetter(c), c);
+			checkOperator(JavaCharacterToUpperCaseOperator.INSTANCE, JavaCharType.INSTANCE,
+					() -> Character.toUpperCase(c), c);
+			for (int radix : new int[] { -1, 2, 10, 16, 36, 37 })
+				checkOperator(JavaCharacterDigitOperator.INSTANCE, integer, () -> Character.digit(c, radix), c, radix);
+		}
+		for (int a : new int[] { 0, 1, -1, 127, -128, 32767, -32768, Integer.MAX_VALUE, Integer.MIN_VALUE })
+			for (int b : new int[] { 0, -1, 127, -32768, Integer.MIN_VALUE }) {
+				checkOperator(JavaIntegerCompareOperator.INSTANCE, integer, () -> Integer.compare(a, b), a, b);
+				checkOperator(JavaShortCompareOperator.INSTANCE, integer,
+						() -> Short.compare((short) a, (short) b), (int) (short) a, (int) (short) b);
+				checkOperator(JavaByteCompareOperator.INSTANCE, integer, () -> Byte.compare((byte) a, (byte) b),
+						(int) (byte) a, (int) (byte) b);
+				checkOperator(JavaLongCompareOperator.INSTANCE, integer, () -> Long.compare(a, (long) b << 32),
+						(long) a, (long) b << 32);
+			}
+		List<String> strings = List.of("", "a", "abc", "abd", "ab", "B");
+		for (String a : strings)
+			for (String b : strings)
+				checkOperator(JavaStringCompareToOperator.INSTANCE, integer, () -> a.compareTo(b), a, b);
+		// the values whose representation is encoded: special values and
+		// integral numbers below 10^7
+		for (double d : new double[] { 0.0, 1.0, -42.0, 1234567.0, Double.NaN, Double.NEGATIVE_INFINITY }) {
+			float f = (float) d;
+			checkOperator(JavaStringValueOfDoubleOperator.INSTANCE, str, () -> String.valueOf(d), d);
+			checkOperator(JavaStringValueOfFloatOperator.INSTANCE, str, () -> String.valueOf(f), f);
+			checkOperator(JavaStringAppendDoubleOperator.INSTANCE, str, () -> "x" + d, "x", d);
+			checkOperator(JavaStringAppendFloatOperator.INSTANCE, str, () -> "x" + f, "x", f);
+			checkOperator(JavaStringInsertDoubleOperator.INSTANCE, str,
+					() -> new StringBuilder("ab").insert(1, d).toString(), "ab", 1, d);
+			checkOperator(JavaStringInsertFloatOperator.INSTANCE, str,
+					() -> new StringBuilder("ab").insert(1, f).toString(), "ab", 1, f);
+		}
+	}
+
+	/**
+	 * Different functions computed on concrete values are different unknown
+	 * functions (their names do not collide), also the ones of Math and
+	 * StrictMath with the same name.
+	 */
+	@Test
+	public void functionsDoNotCollide() throws SemanticException {
+		Symbols symbols = new Symbols();
+		JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(new HashMap<>()), symbols);
+		Constant x = constant(0.5);
+		Term sin = new UnaryExpression(JavaDoubleType.INSTANCE, x, JavaMathSinOperator.INSTANCE, LOC).accept(encoder);
+		Term cos = new UnaryExpression(JavaDoubleType.INSTANCE, x, JavaMathCosOperator.INSTANCE, LOC).accept(encoder);
+		Term strictSin = new UnaryExpression(JavaDoubleType.INSTANCE, x, JavaStrictMathSinOperator.INSTANCE, LOC)
+				.accept(encoder);
+		Term again = new UnaryExpression(JavaDoubleType.INSTANCE, x, JavaMathSinOperator.INSTANCE, LOC)
+				.accept(encoder);
+		solver.push();
+		try {
+			for (Term r : symbols.requirements)
+				solver.assertTerm(r);
+			// the same function on the same argument is the same value...
+			solver.assertTerm(Term.not(Term.eq(sin, again)));
+			assertEquals(SmtResult.UNSAT, solver.check(), "Math.sin is not a function");
+		} finally {
+			solver.pop();
+		}
+		for (Term other : List.of(cos, strictSin)) {
+			solver.push();
+			try {
+				for (Term r : symbols.requirements)
+					solver.assertTerm(r);
+				// ... while different functions are not forced to be equal
+				solver.assertTerm(Term.not(Term.eq(sin, other)));
+				assertEquals(SmtResult.SAT, solver.check(), "Math.sin collides with " + other);
+			} finally {
+				solver.pop();
+			}
+		}
+	}
+
 	@Test
 	public void mathFunctions() throws Exception {
 		Type dbl = JavaDoubleType.INSTANCE;
@@ -703,15 +873,8 @@ public class JavaExpressionEncoderTest {
 			BinaryExpression conversion = new BinaryExpression(target, constant(c[1]),
 					new Constant(new TypeTokenType(Set.of(target)), target, LOC), TypeConv.INSTANCE, LOC);
 			Term term = conversion.accept(encoder);
-			assertFalse(symbols.havoc, "(" + target + ") " + c[1] + " is not precise");
-			solver.push();
-			for (Term r : symbols.requirements)
-				solver.assertTerm(r);
-			for (Term g : symbols.guards)
-				solver.assertTerm(g);
-			solver.assertTerm(Term.not(Term.eq(term, expected(c[2]))));
-			assertEquals(SmtResult.UNSAT, solver.check(), "(" + target + ") " + c[1] + " should be " + c[2]);
-			solver.pop();
+			assertTrue(precise(symbols, term, expected(c[2]), "(" + target + ") " + c[1]),
+					"(" + target + ") " + c[1] + " is not precise");
 		}
 	}
 

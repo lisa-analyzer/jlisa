@@ -501,6 +501,17 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 	}
 
 	/**
+	 * Yields the simple name of the class of the library declaring the
+	 * function (e.g., {@code Character} for {@code Character.isLetter(int)}).
+	 *
+	 * @return the name of the class
+	 */
+	public String getDeclaringClass() {
+		int dot = name.indexOf('.');
+		return dot < 0 ? name : name.substring(0, dot);
+	}
+
+	/**
 	 * Applies this function to the given values of constants. Characters are
 	 * returned as {@link Character}s, and the other values as the boxed
 	 * versions of the return types of the corresponding methods.
