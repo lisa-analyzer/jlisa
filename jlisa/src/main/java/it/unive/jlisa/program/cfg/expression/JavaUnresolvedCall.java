@@ -69,13 +69,17 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, List.of());
 		for (SymbolicExpression rec : receiver) {
 			// the executions where the receiver computed this value
+			// (if they are not known exactly, the exceptions might be raised
+			// only in some of them)
 			AnalysisState<A> computing = restrictTo(interprocedural, state, rec);
-			AnalysisState<A> notNull = raising.raiseIfNull(rec, computing);
+			boolean exact = receiver.size() == 1 || restrictsExactly(interprocedural, state, rec);
+			AnalysisState<A> notNull = raising.certainOnlyIf(exact).raiseIfNull(rec, computing);
 			if (notNull.getExecutionState().isBottom())
 				continue;
 			for (Type recType : analysis.getRuntimeTypesOf(notNull, rec, context, this))
 				if (recType.isPointerType() && recType.asPointerType().getInnerType().isUnitType()) {
-					result = result.lub(super.forwardSemanticsAux(interprocedural, notNull, params, expressions));
+					AnalysisState<A> called = super.forwardSemanticsAux(interprocedural, notNull, params, expressions);
+					result = result.lub(exact ? called : analysis.uncertainErrors(notNull, called, context, this));
 					break;
 				}
 		}

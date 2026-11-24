@@ -128,7 +128,10 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 			AnalysisState<A> computing = restrictTo(interprocedural, state, args);
 			if (computing.getExecutionState().isBottom())
 				return computing.bottomExecution();
-			return copy(interprocedural, computing, args, raising);
+			// if the executions computing the combination are not known
+			// exactly, the exceptions might be raised in some of them
+			return copy(interprocedural, computing, args, raising
+					.certainOnlyIf(singleValues(params) || restrictsExactly(interprocedural, state, args)));
 		}
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression e : params[pos]) {

@@ -110,7 +110,11 @@ public final class JavaExceptions {
 		private final Collection<Identifier> consumed;
 
 		// the state of the executions raising each error, not moved yet
-		private final Map<AnalysisState.Error, AnalysisState<A>> raised = new LinkedHashMap<>();
+		private final Map<AnalysisState.Error, AnalysisState<A>> raised;
+
+		// whether the exceptions raised in all the executions of a state are
+		// raised in all of them (see certainOnlyIf)
+		private final boolean certain;
 
 		/**
 		 * Builds the collector.
@@ -151,6 +155,39 @@ public final class JavaExceptions {
 			this.thrower = thrower;
 			this.source = source == null ? thrower : source;
 			this.consumed = consumed;
+			this.raised = new LinkedHashMap<>();
+			this.certain = true;
+		}
+
+		private Raising(
+				Raising<A, D> other,
+				boolean certain) {
+			this.interprocedural = other.interprocedural;
+			this.thrower = other.thrower;
+			this.source = other.source;
+			this.consumed = other.consumed;
+			this.raised = other.raised;
+			this.certain = other.certain && certain;
+		}
+
+		/**
+		 * Yields a collector of the same exceptions as this one (moved together
+		 * with them) that, unless the given condition holds, raises under an
+		 * unknown condition also the exceptions that this would raise in all
+		 * the executions of a state. This is used with states that might have
+		 * more executions than the ones where the exceptions are raised (e.g.,
+		 * the executions computing a combination of the operands of a
+		 * statement, if they are not known exactly, see
+		 * {@link it.unive.lisa.program.cfg.statement.NaryExpression#restrictsExactly}).
+		 *
+		 * @param exact whether the states are made exactly of the executions
+		 *                  where the exceptions are raised
+		 *
+		 * @return the collector
+		 */
+		public Raising<A, D> certainOnlyIf(
+				boolean exact) {
+			return exact ? this : new Raising<>(this, false);
 		}
 
 		/**
@@ -237,7 +274,7 @@ public final class JavaExceptions {
 				return;
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			ScopeId<A> context = interprocedural.getCurrentContext();
-			AnalysisState<A> raising = raises == Satisfiability.SATISFIED ? state
+			AnalysisState<A> raising = raises == Satisfiability.SATISFIED && certain ? state
 					: maybe(interprocedural, state, thrower);
 			if (raising.getExecutionState().isBottom())
 				return;
