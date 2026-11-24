@@ -39,7 +39,6 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.InstrumentedReceiver;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -221,7 +220,7 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 		HeapDereference container = new HeapDereference(refType.getInnerType(), array, getLocation());
 		result = analysis.assign(result,
 				new AccessChild(JavaIntType.INSTANCE, container,
-						new Variable(JavaIntType.INSTANCE, "length", getLocation()), getLocation()),
+						new GlobalVariable(JavaIntType.INSTANCE, "length", getLocation()), getLocation()),
 				new Constant(JavaIntType.INSTANCE, parts.length, getLocation()), context, this);
 
 		GlobalVariable value = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());

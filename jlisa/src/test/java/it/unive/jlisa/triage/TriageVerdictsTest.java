@@ -440,6 +440,28 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * The fields that natives write (e.g., the value of an atomic integer) are
+	 * written also when a class of the program has a field with the same name.
+	 */
+	@Test
+	public void fieldsWrittenByNativesAreUnknownAfterTheCalls(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("heap-native-fields", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
+	 * A static initializer writing the static fields of another class writes
+	 * them when its class is first used, also after they have been read.
+	 */
+	@Test
+	public void staticFieldsWrittenByOtherInitializersAreUnknown(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("static-initializer-writes", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
 	 * ... while the fields that callees might write are unknown after the
 	 * calls: written by their code, by the code called on their behalf (e.g.,
 	 * the conversion of objects to strings), or reflectively.

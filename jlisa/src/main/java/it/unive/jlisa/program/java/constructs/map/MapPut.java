@@ -202,7 +202,7 @@ public class MapPut extends TernaryExpression implements PluggableStatement {
 		Object value = (Object) ((Constant) eqConstraint.getLeft()).getValue();
 		String keyString = value.toString();
 
-		GlobalVariable keyStringVar = new GlobalVariable(Untyped.INSTANCE, keyString, location);
+		GlobalVariable keyStringVar = new GlobalVariable(Untyped.INSTANCE, MapModel.keyField(keyString), location);
 
 		AnalysisState<A> tmp = state;
 		for (Type t : analysis.getRuntimeTypesOf(state, right, context, this)) {

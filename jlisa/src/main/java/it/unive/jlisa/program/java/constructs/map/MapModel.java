@@ -60,6 +60,26 @@ public class MapModel {
 	private MapModel() {
 	}
 
+	/**
+	 * The prefix of the names of the fields holding the entries whose keys are
+	 * constants: it is not part of any Java identifier, so that these fields
+	 * never share their names with the fields of the classes of the program.
+	 */
+	public static final String KEY_PREFIX = "$key:";
+
+	/**
+	 * Yields the name of the field holding the entry with the given constant
+	 * key (its string representation).
+	 *
+	 * @param key the string representation of the key
+	 *
+	 * @return the name of the field
+	 */
+	public static String keyField(
+			String key) {
+		return KEY_PREFIX + key;
+	}
+
 	private static AccessChild field(
 			SymbolicExpression map,
 			String name,

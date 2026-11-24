@@ -60,12 +60,24 @@ public class JavaGlobalWrites
 	 * {@inheritDoc}<br>
 	 * <br>
 	 * Static initializers are initializers: they run at most once, before the
-	 * first access to the static fields of their class, including writes.
+	 * first access to the static fields of their class, including writes. This
+	 * holds only for the static fields of their own class: a static initializer
+	 * writing the static fields of other classes (e.g., {@code A.x = 5} in the
+	 * one of {@code B}) writes them the first time its class is used, also
+	 * after they have been accessed, and it is not an initializer.
 	 */
 	@Override
 	public boolean isInitializer(
 			CodeMember member) {
-		return member.getDescriptor().getName().endsWith(InitializedClassSet.SUFFIX_CLINIT);
+		String unit = member.getDescriptor().getUnit().getName();
+		String simpleName = unit.substring(unit.lastIndexOf('.') + 1);
+		// the static initializer of its class (not, e.g., a method of the
+		// program whose name ends with the suffix)
+		if (!member.getDescriptor().getName().equals(simpleName + InitializedClassSet.SUFFIX_CLINIT)
+				|| member.getDescriptor().isInstance() || member.getDescriptor().getFormals().length != 0)
+			return false;
+		Set<String> written = writtenBy(member);
+		return written != null && written.stream().allMatch(name -> name.startsWith(unit + "::"));
 	}
 
 	private static Set<String> compute(

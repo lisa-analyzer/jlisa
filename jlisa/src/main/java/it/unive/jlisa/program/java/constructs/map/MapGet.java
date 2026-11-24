@@ -210,7 +210,7 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 		Object value = (Object) ((Constant) eqConstraint.getLeft()).getValue();
 		String keyString = value.toString();
 
-		GlobalVariable keyStringVar = new GlobalVariable(Untyped.INSTANCE, keyString, location);
+		GlobalVariable keyStringVar = new GlobalVariable(Untyped.INSTANCE, MapModel.keyField(keyString), location);
 
 		AccessChild accessMapKey = new AccessChild(Untyped.INSTANCE, derefMap, keyStringVar, location);
 

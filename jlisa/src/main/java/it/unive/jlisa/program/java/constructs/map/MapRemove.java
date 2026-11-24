@@ -114,7 +114,7 @@ public class MapRemove extends BinaryExpression implements PluggableStatement {
 		// written), and the size might decrease
 		AccessChild field = new AccessChild(Untyped.INSTANCE,
 				new HeapDereference(it.unive.jlisa.program.type.JavaClassType.lookup("java.util.Map"), left, location),
-				new GlobalVariable(Untyped.INSTANCE, constant, location), location);
+				new GlobalVariable(Untyped.INSTANCE, MapModel.keyField(constant), location), location);
 		// the returned value is the one of the key (as in MapGet): the field,
 		// if it was written, null otherwise
 		boolean anyKnown = false;

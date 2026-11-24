@@ -36,7 +36,6 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Skip;
-import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -132,7 +131,7 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 				new GlobalVariable(Untyped.INSTANCE, "value", getLocation()), getLocation());
 		HeapDereference dst = new HeapDereference(JavaArrayType.CHAR_ARRAY, exprs[3], getLocation());
 		AccessChild length = new AccessChild(Untyped.INSTANCE, dst,
-				new Variable(JavaIntType.INSTANCE, "length", getLocation()), getLocation());
+				new GlobalVariable(JavaIntType.INSTANCE, "length", getLocation()), getLocation());
 
 		// a null destination raises NullPointerException, and the bounds
 		// raise IndexOutOfBoundsException when from < 0, from > to, to is
