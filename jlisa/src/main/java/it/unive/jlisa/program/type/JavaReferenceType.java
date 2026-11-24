@@ -6,12 +6,29 @@ import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.type.ReferenceType;
 import it.unive.lisa.type.Type;
+import it.unive.lisa.type.TypeSystem;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JavaReferenceType extends ReferenceType {
 
 	public JavaReferenceType(
 			Type t) {
 		super(t);
+	}
+
+	/**
+	 * Yields the references to the instances of the inner type, as Java
+	 * references (the ones of {@link ReferenceType} are not equal to them).
+	 */
+	@Override
+	public Set<Type> allInstances(
+			TypeSystem types) {
+		Set<Type> instances = new HashSet<>();
+		for (Type inner : getInnerType().allInstances(types))
+			instances.add(new JavaReferenceType(inner));
+		instances.add(this);
+		return instances;
 	}
 
 	@Override

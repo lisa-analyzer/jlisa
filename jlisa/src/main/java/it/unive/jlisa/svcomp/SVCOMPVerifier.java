@@ -112,7 +112,8 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 	 * Sets the certifier of the candidate confirmations of the warnings that
 	 * stay possible: given the copy of a warning confirmed with a candidate, it
 	 * tells whether the candidate is certified (e.g., by executing the program
-	 * with its reproducing inputs).
+	 * with its reproducing inputs). Certification is off by default (no
+	 * certifier is set).
 	 *
 	 * @param certifier the certifier, or {@code null} for none
 	 */
