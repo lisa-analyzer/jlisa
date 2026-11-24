@@ -67,10 +67,9 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 		// a null receiver raises NullPointerException, and the call happens
 		// in the other executions
 		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, List.of());
-		Expression[] subs = getSubExpressions();
 		for (SymbolicExpression rec : receiver) {
 			// the executions where the receiver computed this value
-			AnalysisState<A> computing = subs.length > 0 ? analysis.restrictTo(state, subs[0], rec) : state;
+			AnalysisState<A> computing = restrictTo(interprocedural, state, rec);
 			AnalysisState<A> notNull = raising.raiseIfNull(rec, computing);
 			if (notNull.getExecutionState().isBottom())
 				continue;

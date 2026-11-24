@@ -124,14 +124,16 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 			int pos,
 			JavaExceptions.Raising<A, D> raising)
 			throws SemanticException {
-		if (pos == params.length)
-			return copy(interprocedural, state, args, raising);
+		if (pos == params.length) {
+			AnalysisState<A> computing = restrictTo(interprocedural, state, args);
+			if (computing.getExecutionState().isBottom())
+				return computing.bottomExecution();
+			return copy(interprocedural, computing, args, raising);
+		}
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression e : params[pos]) {
 			args[pos] = e;
-			AnalysisState<A> computing = interprocedural.getAnalysis().restrictTo(state, getSubExpressions()[pos], e);
-			if (!computing.getExecutionState().isBottom())
-				result = result.lub(combinations(interprocedural, computing, params, args, pos + 1, raising));
+			result = result.lub(combinations(interprocedural, state, params, args, pos + 1, raising));
 		}
 		return result;
 	}
