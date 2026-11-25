@@ -13,7 +13,6 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
-import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -103,19 +102,10 @@ public class IntegerParseInt extends UnaryExpression implements PluggableStateme
 		// parsable, and the number is computed in the other executions
 		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
 				getSubExpression());
-		String nfe = "java.lang.NumberFormatException";
-		Satisfiability sat = analysis.satisfies(state, parsable, context, originating);
-		AnalysisState<A> parsed = state;
-		if (sat == Satisfiability.NOT_SATISFIED) {
-			raising.raise(Satisfiability.SATISFIED, state, nfe);
-			parsed = state.bottomExecution();
-		} else if (sat == Satisfiability.UNKNOWN) {
-			raising.raise(Satisfiability.SATISFIED, analysis.assume(state,
-					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, parsable,
-							LogicalNegation.INSTANCE, location),
-					context, originating, originating), nfe);
-			parsed = analysis.assume(state, parsable, context, originating, originating);
-		}
+		AnalysisState<A> parsed = raising.raiseWhere(
+				new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, parsable,
+						LogicalNegation.INSTANCE, location),
+				true, state, "java.lang.NumberFormatException");
 		if (!parsed.getExecutionState().isBottom())
 			parsed = analysis.smallStepSemantics(parsed, new it.unive.lisa.symbolic.value.UnaryExpression(
 					JavaIntType.INSTANCE, value, JavaIntegerParseIntOperator.INSTANCE, location), context, originating);

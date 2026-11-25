@@ -42,14 +42,6 @@ import java.util.List;
 import java.util.Set;
 
 public class JavaArrayAccess extends BinaryExpression {
-
-	/**
-	 * The maximum number of cells joined when reading an array element with a
-	 * non-constant index. The cells after them are not tracked: a read gives
-	 * any value of the element type, and a write changes only the first cells.
-	 */
-	private static final int MAX_ENUMERATED_CELLS = 64;
-
 	public JavaArrayAccess(
 			CFG cfg,
 			Type staticType,
@@ -147,7 +139,7 @@ public class JavaArrayAccess extends BinaryExpression {
 			for (SymbolicExpression idx : concreteIndexes) {
 				result = result.lub(analysis.smallStepSemantics(state,
 						new AccessChild(accessType, container, idx, getLocation()), context, this));
-				if (!(((Constant) idx).getValue() instanceof Number n) || n.longValue() >= MAX_ENUMERATED_CELLS)
+				if (!(((Constant) idx).getValue() instanceof Number n) || n.longValue() >= ArrayCells.MAX_ENUMERATED_CELLS)
 					untracked = true;
 			}
 			// a write with a non-constant index might have changed the cells
@@ -159,7 +151,7 @@ public class JavaArrayAccess extends BinaryExpression {
 
 		if (!accessType.isReferenceType() && !accessType.isInMemoryType()) {
 			it.unive.lisa.symbolic.value.BinaryExpression larger = new it.unive.lisa.symbolic.value.BinaryExpression(
-					JavaBooleanType.INSTANCE, new Constant(JavaIntType.INSTANCE, MAX_ENUMERATED_CELLS, getLocation()),
+					JavaBooleanType.INSTANCE, new Constant(JavaIntType.INSTANCE, ArrayCells.MAX_ENUMERATED_CELLS, getLocation()),
 					lenAccess, ComparisonLt.INSTANCE, getLocation());
 			Satisfiability untracked = analysis.satisfies(state, larger, context, this);
 			if (untracked == Satisfiability.SATISFIED || untracked == Satisfiability.UNKNOWN) {
@@ -173,7 +165,7 @@ public class JavaArrayAccess extends BinaryExpression {
 				if (!isWritten())
 					return unknownElement(analysis, context, state, accessType);
 				Set<Identifier> cells = new HashSet<>();
-				for (int i = 0; i < MAX_ENUMERATED_CELLS; i++)
+				for (int i = 0; i < ArrayCells.MAX_ENUMERATED_CELLS; i++)
 					addCells(analysis, context, state, new AccessChild(accessType, container,
 							new Constant(JavaIntType.INSTANCE, i, getLocation()), getLocation()), cells);
 				AccessChild target = new AccessChild(accessType, container, right, getLocation());
@@ -185,7 +177,7 @@ public class JavaArrayAccess extends BinaryExpression {
 		// if the length of an array of references might be larger than
 		// MAX_ENUMERATED_CELLS, the cell is read through the non-constant index
 		it.unive.lisa.symbolic.value.BinaryExpression small = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE, lenAccess, new Constant(JavaIntType.INSTANCE, MAX_ENUMERATED_CELLS,
+				JavaBooleanType.INSTANCE, lenAccess, new Constant(JavaIntType.INSTANCE, ArrayCells.MAX_ENUMERATED_CELLS,
 						getLocation()),
 				ComparisonLe.INSTANCE, getLocation());
 		if (analysis.satisfies(state, small, context, this) != Satisfiability.SATISFIED)
@@ -194,7 +186,7 @@ public class JavaArrayAccess extends BinaryExpression {
 
 		AnalysisState<A> result = state.bottomExecution();
 		for (int i = 0;; i++) {
-			if (i == MAX_ENUMERATED_CELLS)
+			if (i == ArrayCells.MAX_ENUMERATED_CELLS)
 				// the length is unbounded or too large: a read gives any
 				// value, and a write changes only the tracked cells
 				return isWritten() ? result : result.lub(unknownElement(analysis, context, state, accessType));

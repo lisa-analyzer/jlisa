@@ -500,6 +500,12 @@ public final class CheckCommand {
 		// result for a recursive call
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
+		// the certification is active only with its requirements: otherwise,
+		// the verification keeps the time that would be left to it
+		boolean certifying = certification && verifierName.equals("Combined") && checkerName.equals("Assert")
+				&& !witnesses.isEmpty();
+		if (certification && !certifying)
+			verificationDeadline = certificationDeadline;
 		// warnings are verified after the checks
 		SVCOMPVerifier<?, ?> svcomp = null;
 		switch (verifierName) {
@@ -533,7 +539,7 @@ public final class CheckCommand {
 		}
 		// the candidate confirmations of the warnings that stay possible are
 		// certified by validating their witnesses, as SV-COMP does
-		if (certification && svcomp != null && checker != null && !witnesses.isEmpty()) {
+		if (certifying) {
 			Map<SVCOMPProperty, ViolationWitnessProducer> producers = new LinkedHashMap<>();
 			for (ViolationWitnessProducer witness : witnesses)
 				producers.put(witness.getProperty(), witness);

@@ -108,6 +108,7 @@ public class WitnessCertifier
 			return false;
 		producer.accept(violation);
 		Path dir = null;
+		Process process = null;
 		try {
 			dir = Files.createTempDirectory("jlisa-certify");
 			producer.write(dir.toString());
@@ -126,14 +127,9 @@ public class WitnessCertifier
 					// last, since it takes all the following arguments
 					"--source"));
 			command.addAll(sources);
-			Process process = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output).start();
+			process = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output).start();
 			if (!process.waitFor(time, TimeUnit.MILLISECONDS)) {
-				// the validator runs the program in a debuggee virtual machine,
-				// that its shutdown hook stops: killed forcibly, the validator
-				// does not run it, so the debuggee (that might never end) is
-				// killed first
-				process.descendants().forEach(ProcessHandle::destroyForcibly);
-				process.destroyForcibly();
+				kill(process);
 				LOG.info("The certification of {} ran out of time", violation);
 				return false;
 			}
@@ -145,12 +141,25 @@ public class WitnessCertifier
 			LOG.warn("The certification of {} failed: {}", violation, e.getMessage());
 			return false;
 		} catch (InterruptedException e) {
+			// the validator (and the program it runs) must not outlive the
+			// certification
+			if (process != null)
+				kill(process);
 			Thread.currentThread().interrupt();
 			return false;
 		} finally {
 			if (dir != null)
 				delete(dir);
 		}
+	}
+
+	// the validator runs the program in a debuggee virtual machine, that its
+	// shutdown hook stops: killed forcibly, the validator does not run it, so
+	// the debuggee (that might never end) is killed first
+	private static void kill(
+			Process process) {
+		process.descendants().forEach(ProcessHandle::destroyForcibly);
+		process.destroyForcibly();
 	}
 
 	private static void delete(

@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.system;
 
 import it.unive.jlisa.program.cfg.JavaExceptions;
+import it.unive.jlisa.program.cfg.expression.ArrayCells;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaIntType;
@@ -31,7 +32,6 @@ import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import java.util.ArrayList;
@@ -51,10 +51,6 @@ import java.util.Set;
  * known, and become unknown otherwise.
  */
 public class SystemArrayCopy extends NaryExpression implements PluggableStatement {
-
-	// the cells of arrays that are tracked one by one (see JavaArrayAccess)
-	private static final int MAX_ENUMERATED_CELLS = 64;
-
 	/**
 	 * The call implemented by this native.
 	 */
@@ -200,7 +196,7 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 		AccessChild srcLength = new AccessChild(JavaIntType.INSTANCE, srcArray, lengthField, loc);
 		AccessChild destLength = new AccessChild(JavaIntType.INSTANCE, destArray, lengthField, loc);
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, loc);
-		BinaryExpression outOfBounds = or(loc,
+		BinaryExpression outOfBounds = ArrayCells.or(loc,
 				new BinaryExpression(JavaBooleanType.INSTANCE, srcPos, zero, ComparisonLt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, destPos, zero, ComparisonLt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, length, zero, ComparisonLt.INSTANCE, loc),
@@ -218,16 +214,16 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 
 		// the cells of the destination: the copied ones if the range is
 		// known, any value otherwise
-		Integer from = constant(analysis, state, srcPos, context);
-		Integer at = constant(analysis, state, destPos, context);
-		Integer count = constant(analysis, state, length, context);
+		Integer from = ArrayCells.constant(analysis, state, srcPos, context, this);
+		Integer at = ArrayCells.constant(analysis, state, destPos, context, this);
+		Integer count = ArrayCells.constant(analysis, state, length, context, this);
 		Type content = destType.getInnerType();
 		if (from == null || at == null || count == null)
 			return havoc(analysis, context, state, destArray, destLength, content)
 					.withExecutionExpression(new Skip(loc));
 		// the copied cells of the destination that might exist
 		List<Integer> cells = new ArrayList<>();
-		for (int i = 0; i < MAX_ENUMERATED_CELLS; i++) {
+		for (int i = 0; i < ArrayCells.MAX_ENUMERATED_CELLS; i++) {
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, loc);
 			if (analysis.satisfies(state, new BinaryExpression(JavaBooleanType.INSTANCE, idx, destLength,
 					ComparisonLt.INSTANCE, loc), context, this) == Satisfiability.NOT_SATISFIED)
@@ -264,7 +260,7 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 			throws SemanticException {
 		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state;
-		for (int i = 0; i < MAX_ENUMERATED_CELLS; i++) {
+		for (int i = 0; i < ArrayCells.MAX_ENUMERATED_CELLS; i++) {
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, loc);
 			if (analysis.satisfies(result, new BinaryExpression(JavaBooleanType.INSTANCE, idx, length,
 					ComparisonLt.INSTANCE, loc), context, this) == Satisfiability.NOT_SATISFIED)
@@ -316,32 +312,5 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 			else
 				return null;
 		return arrays.size() == 1 ? (JavaArrayType) arrays.iterator().next() : null;
-	}
-
-	// the disjunction of the given conditions
-	private static BinaryExpression or(
-			CodeLocation location,
-			BinaryExpression first,
-			BinaryExpression... others) {
-		BinaryExpression result = first;
-		for (BinaryExpression other : others)
-			result = new BinaryExpression(JavaBooleanType.INSTANCE, result, other, LogicalOr.INSTANCE, location);
-		return result;
-	}
-
-	// the value of the given expression, if it is a constant int
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Integer constant(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression expression,
-			ScopeId<A> context)
-			throws SemanticException {
-		ExpressionSet rewritten = analysis.rewrite(state, expression, context, this);
-		if (rewritten.size() != 1)
-			return null;
-		SymbolicExpression e = rewritten.iterator().next();
-		if (e instanceof Constant && ((Constant) e).getValue() instanceof Integer)
-			return (Integer) ((Constant) e).getValue();
-		return null;
 	}
 }

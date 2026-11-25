@@ -1,13 +1,9 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.jlisa.program.operator.JavaStringLengthOperator;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
-import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
-import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.jlisa.program.cfg.JavaExceptions;
+import it.unive.jlisa.program.cfg.expression.ArrayCells;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.type.JavaArrayType;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaCharType;
@@ -36,7 +32,11 @@ import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Skip;
+import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
+import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingSub;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -62,32 +62,6 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 			Statement st) {
 		originating = st;
 	}
-
-	/**
-	 * The maximum number of cells of an array that are accessed through
-	 * constant indexes (the same of {@code JavaArrayAccess}).
-	 */
-	private static final int MAX_ENUMERATED_CELLS = 64;
-
-	/**
-	 * Yields the integer constant the given expression evaluates to, or
-	 * {@code null} if it is not a single constant.
-	 */
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> Integer constant(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression expression,
-			ScopeId<A> context)
-			throws SemanticException {
-		ExpressionSet rewritten = analysis.rewrite(state, expression, context, originating);
-		if (rewritten.size() != 1)
-			return null;
-		SymbolicExpression e = rewritten.iterator().next();
-		if (e instanceof Constant && ((Constant) e).getValue() instanceof Integer)
-			return (Integer) ((Constant) e).getValue();
-		return null;
-	}
-
 	@Override
 	protected int compareSameClassAndParams(
 			Statement o) {
@@ -117,9 +91,9 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		// the operands are the receiver, the first and the last (excluded)
 		// characters to copy, the destination array, and the position in the
 		// destination of the first character copied
-		Integer from = constant(analysis, state, exprs[1], context);
-		Integer to = constant(analysis, state, exprs[2], context);
-		Integer at = constant(analysis, state, exprs[4], context);
+		Integer from = ArrayCells.constant(analysis, state, exprs[1], context, originating);
+		Integer to = ArrayCells.constant(analysis, state, exprs[2], context, originating);
+		Integer at = ArrayCells.constant(analysis, state, exprs[4], context, originating);
 		boolean exact = from != null && to != null && at != null && from <= to;
 
 		// the receiver is a string or a string builder, whose contents are a
@@ -147,7 +121,7 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		BinaryExpression copied = new BinaryExpression(JavaIntType.INSTANCE, exprs[4],
 				new BinaryExpression(JavaIntType.INSTANCE, exprs[2], exprs[1], NumericNonOverflowingSub.INSTANCE, loc),
 				NumericNonOverflowingAdd.INSTANCE, loc);
-		BinaryExpression sourceOutOfBounds = or(loc,
+		BinaryExpression sourceOutOfBounds = ArrayCells.or(loc,
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[1], zero, ComparisonLt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[1], exprs[2], ComparisonGt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[2],
@@ -155,7 +129,7 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 						ComparisonGt.INSTANCE, loc));
 		state = raising.raiseWhere(sourceOutOfBounds, true, state, "java.lang.StringIndexOutOfBoundsException");
 		state = raising.raiseIfNull(exprs[3], state);
-		BinaryExpression destinationOutOfBounds = or(loc,
+		BinaryExpression destinationOutOfBounds = ArrayCells.or(loc,
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[4], zero, ComparisonLt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, copied, dstLength, ComparisonGt.INSTANCE, loc));
 		state = raising.raiseWhere(destinationOutOfBounds, true, state, "java.lang.StringIndexOutOfBoundsException");
@@ -169,7 +143,7 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		// the enumerated ones are accessed through non-constant indexes, and
 		// have unknown contents)
 		AnalysisState<A> result = state;
-		for (int i = 0; i < MAX_ENUMERATED_CELLS; i++) {
+		for (int i = 0; i < ArrayCells.MAX_ENUMERATED_CELLS; i++) {
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, getLocation());
 			BinaryExpression inBounds = new BinaryExpression(JavaBooleanType.INSTANCE, idx, length,
 					ComparisonLt.INSTANCE, getLocation());
@@ -189,16 +163,5 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 					context, originating);
 		}
 		return raising.moveFrom(result.withExecutionExpression(new Skip(getLocation())));
-	}
-
-	// the disjunction of the given conditions
-	private static BinaryExpression or(
-			CodeLocation location,
-			BinaryExpression first,
-			BinaryExpression... others) {
-		BinaryExpression result = first;
-		for (BinaryExpression other : others)
-			result = new BinaryExpression(JavaBooleanType.INSTANCE, result, other, LogicalOr.INSTANCE, location);
-		return result;
 	}
 }

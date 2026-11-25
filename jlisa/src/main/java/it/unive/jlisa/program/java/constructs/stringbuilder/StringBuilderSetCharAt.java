@@ -1,6 +1,6 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.jlisa.program.cfg.expression.JavaNewObj;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -10,20 +10,16 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
-import it.unive.lisa.lattices.ExpressionSet;
-import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -32,7 +28,6 @@ import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
-import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -101,77 +96,19 @@ public class StringBuilderSetCharAt extends TernaryExpression implements Pluggab
 				JavaBooleanType.INSTANCE,
 				idxCheck1, idxCheck2, LogicalOr.INSTANCE, getLocation());
 
-		Satisfiability sat = analysis.satisfies(state, or, context, this);
-
-		if (sat == Satisfiability.SATISFIED) {
-			// builds the exception
-			JavaClassType oonExc = JavaClassType.getStringIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-					oonExc.getReference(), new Expression[0]);
-			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
-			AnalysisState<A> exceptionState = state.bottomExecution();
-
-			for (SymbolicExpression th : state.getExecutionExpressions()) {
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(state, throwVar, th, context, this);
-
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
-						.forgetIdentifiers(getLeft().getMetaVariables(), this)
-						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), originating), context, this));
-			}
-
-			return exceptionState;
-		} else if (sat == Satisfiability.NOT_SATISFIED) {
-			AnalysisState<
-					A> result = StringBuilderMutationSupport.mutateValue(analysis, context, state, left, stringType,
-							getLocation(), this,
-							oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
-									stringType, oldValue, middle, right, JavaStringSetCharAtOperator.INSTANCE,
-									getLocation()));
-			return analysis.smallStepSemantics(result, left, context, originating);
-		} else {
-			// restrict each half to the executions it describes
-			AnalysisState<A> okState = analysis.assume(state,
-					new it.unive.lisa.symbolic.value.UnaryExpression(JavaBooleanType.INSTANCE, or,
-							LogicalNegation.INSTANCE, getLocation()),
-					context, this, this);
-			AnalysisState<A> koState = analysis.assume(state, or, context, this, this);
-
-			AnalysisState<
-					A> result = StringBuilderMutationSupport.mutateValue(analysis, context, okState, left, stringType,
-							getLocation(), this,
-							oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
-									stringType, oldValue, middle, right, JavaStringSetCharAtOperator.INSTANCE,
-									getLocation()));
-			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(result, left, context, originating);
-
-			// builds the exception
-			JavaClassType oonExc = JavaClassType.getStringIndexOutOfBoundsExceptionType();
-			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
-					oonExc.getReference(), new Expression[0]);
-			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);
-			AnalysisState<A> erroneousState = koState.bottomExecution();
-
-			for (SymbolicExpression th : koState.getExecutionExpressions()) {
-				// assign exception to variable thrower
-				CFGThrow throwVar = new CFGThrow(getCFG(), oonExc.getReference(), getLocation());
-				AnalysisState<A> tmp = analysis.assign(koState, throwVar, th, context, this);
-
-				// deletes the receiver of the constructor
-				// and all the metavariables from subexpressions
-				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
-						.forgetIdentifiers(getLeft().getMetaVariables(), this)
-						.forgetIdentifiers(getRight().getMetaVariables(), this);
-				erroneousState = erroneousState.lub(tmp.withExecutionExpression(throwVar));
-			}
-
-			return analysis.moveExecutionToError(noExceptionState, erroneousState,
-					new Error(oonExc.getReference(), originating), context, this);
-		}
+		// StringIndexOutOfBoundsException exactly where the condition holds,
+		// the operation is performed in the other executions
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		AnalysisState<A> ok = raising.raiseWhere(or, true, state, "java.lang.StringIndexOutOfBoundsException");
+		if (ok.getExecutionState().isBottom())
+			return raising.moveFrom(ok.bottomExecution());
+		AnalysisState<
+				A> result = StringBuilderMutationSupport.mutateValue(analysis, context, ok, left, stringType,
+						getLocation(), this,
+						oldValue -> new it.unive.lisa.symbolic.value.TernaryExpression(
+								stringType, oldValue, middle, right, JavaStringSetCharAtOperator.INSTANCE,
+								getLocation()));
+		return raising.moveFrom(analysis.smallStepSemantics(result, left, context, originating));
 	}
 }

@@ -26,7 +26,6 @@ import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
-import it.unive.lisa.analysis.AnalysisState.Error;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
 import it.unive.lisa.analysis.StatementStore;
@@ -49,7 +48,6 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.literal.Literal;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
-import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
@@ -57,7 +55,6 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.ValueExpression;
-import it.unive.lisa.type.NullType;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
 import it.unive.lisa.type.Untyped;
@@ -202,62 +199,28 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 				SymbolicExpression access;
 				if (reflectedGlobal.isInstance()) {
 
-					// get the runtime types of the target object
-					Set<Type> targetTypes = analysis.getRuntimeTypesOf(state, right, context, this);
-
-					// remove null, if present
-					boolean mightBeNull = targetTypes.remove(new JavaReferenceType(NullType.INSTANCE));
-
+					// NullPointerException exactly where the target is null,
+					// and the field is read in the other executions
+					JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this,
+							originating, getSubExpressions());
+					AnalysisState<A> nonNull = raising.raiseIfNull(right, state);
 					AnalysisState<A> accessState = state.bottomExecution();
-					AnalysisState<A> npeState = null;
-					Error npeError = null;
-
-					if (mightBeNull) {
-						// create NullPointerException for the null case
-						JavaClassType npeType = JavaClassType.getNullPointerExceptionType();
-
-						JavaNewObj npeCall = new JavaNewObj(cfg, location,
-								npeType.getReference(), new Expression[0]);
-						// in all the executions only if the target is surely null
-						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural,
-								targetTypes.isEmpty() ? state : JavaExceptions.maybe(interprocedural, state, this), new ExpressionSet[0], expressions);
-
-						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), location);
-						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
-								nullAnalysisState.getExecutionExpressions().elements.stream().findFirst().get(),
-								context, this);
-
-						nullAnalysisState = nullAnalysisState.forgetIdentifiers(npeCall.getMetaVariables(), this);
-						nullAnalysisState = nullAnalysisState
-								.forgetIdentifiers(getRight().getMetaVariables(), this);
-
-						npeState = nullAnalysisState.withExecutionExpression(throwVar);
-						npeError = new Error(npeType.getReference(), originating);
-					}
-
-					// if there are non-null targets, proceed normally
-					if (!targetTypes.isEmpty()) {
+					if (!nonNull.getExecutionState().isBottom()) {
 						// safety: getRight() is always of Object type
 						JavaReferenceType targetType = (JavaReferenceType) getRight().getStaticType();
 
 						HeapDereference derefTarget = new HeapDereference(targetType.getInnerType(), right, location);
 						SymbolicExpression fieldVar = reflectedGlobal.toSymbolicVariable(location);
-
 						access = new AccessChild(reflectedFieldType, derefTarget, fieldVar, location);
 
 						if (reflectedFieldType.isReferenceType()) {
 							access = new HeapReference(reflectedFieldType, access, location);
 						}
 
-						AnalysisState<A> okState = analysis.smallStepSemantics(state, access, context, this);
-						AnalysisState<A> boxedState = getBoxedState(interprocedural, okState, reflectedFieldType,
-								expressions);
-						accessState = accessState.lub(boxedState);
+						AnalysisState<A> okState = analysis.smallStepSemantics(nonNull, access, context, this);
+						accessState = getBoxedState(interprocedural, okState, reflectedFieldType, expressions);
 					}
-
-					if (npeError != null)
-						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, context, this);
-					result = result.lub(accessState);
+					result = result.lub(raising.moveFrom(accessState));
 				} else {
 					// constants have no variable: they are their values
 					access = reflectedGlobal instanceof ConstantGlobal
