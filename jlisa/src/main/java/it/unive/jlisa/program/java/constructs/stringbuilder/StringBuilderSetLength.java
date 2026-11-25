@@ -80,7 +80,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 				getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		// check for IndexOutOfBoundException
+		// check for StringIndexOutOfBoundsException
 		// index < 0
 		it.unive.lisa.symbolic.value.BinaryExpression idxCheck1 = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE,
@@ -90,7 +90,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
-			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
+			JavaClassType oonExc = JavaClassType.getStringIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -128,7 +128,7 @@ public class StringBuilderSetLength extends BinaryExpression implements Pluggabl
 			AnalysisState<A> noExceptionState = sem.withExecutionExpression(new Skip(getLocation()));
 
 			// builds the exception
-			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
+			JavaClassType oonExc = JavaClassType.getStringIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);

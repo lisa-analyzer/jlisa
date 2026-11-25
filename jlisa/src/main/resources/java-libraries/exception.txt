@@ -66,6 +66,8 @@ class java.lang.IndexOutOfBoundsException extends java.lang.RuntimeException:
 		type it.unive.lisa.type.VoidType::INSTANCE
 		param this libtype java.lang.IndexOutOfBoundsException*
 
+class java.lang.StringIndexOutOfBoundsException extends java.lang.IndexOutOfBoundsException:
+
 class java.util.NoSuchElementException extends java.lang.RuntimeException:
 
 	instance method NoSuchElementException: it.unive.jlisa.program.java.constructs.exceptions.NoSuchElementExceptionConstructor

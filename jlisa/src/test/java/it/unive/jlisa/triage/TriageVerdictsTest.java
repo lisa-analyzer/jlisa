@@ -546,6 +546,19 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * The bounds of strings and string builders raise
+	 * StringIndexOutOfBoundsException, also caught as an
+	 * IndexOutOfBoundsException, and getChars checks the bounds of the receiver
+	 * before reading the destination.
+	 */
+	@Test
+	public void stringBoundsRaiseStringIndexOutOfBoundsException(
+			@TempDir Path dir)
+			throws Exception {
+		assertSafe(verdict("string-index-caught", SVCOMPProperty.RUNTIME_EXCEPTION, dir), "string-index-caught");
+	}
+
+	/**
 	 * A static initializer writing the static fields of another class writes
 	 * them when its class is first used, also after they have been read.
 	 */

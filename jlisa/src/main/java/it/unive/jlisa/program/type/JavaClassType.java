@@ -335,6 +335,10 @@ public class JavaClassType
 		return lookup("java.lang.IndexOutOfBoundsException");
 	}
 
+	public static JavaClassType getStringIndexOutOfBoundsExceptionType() {
+		return lookup("java.lang.StringIndexOutOfBoundsException");
+	}
+
 	public static JavaClassType getCharacterWrapperType() {
 		return lookup("java.lang.Character");
 	}

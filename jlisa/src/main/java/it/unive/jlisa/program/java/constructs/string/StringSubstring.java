@@ -92,7 +92,7 @@ public class StringSubstring extends BinaryExpression implements PluggableStatem
 				JavaBooleanType.INSTANCE, beginNegative, beginTooLarge, LogicalOr.INSTANCE, getLocation());
 		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
 				getSubExpressions());
-		AnalysisState<A> ok = raising.raiseWhere(outOfRange, true, state, "java.lang.IndexOutOfBoundsException");
+		AnalysisState<A> ok = raising.raiseWhere(outOfRange, true, state, "java.lang.StringIndexOutOfBoundsException");
 		if (ok.getExecutionState().isBottom())
 			return raising.moveFrom(ok.bottomExecution());
 

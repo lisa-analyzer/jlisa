@@ -84,7 +84,7 @@ public class StringBuilderSetCharAt extends TernaryExpression implements Pluggab
 				getLocation());
 		AccessChild accessLeft = new AccessChild(stringType, derefLeft, var, getLocation());
 
-		// check for IndexOutOfBoundException
+		// check for StringIndexOutOfBoundsException
 		// index < 0 or index >= length
 		it.unive.lisa.symbolic.value.UnaryExpression length = new it.unive.lisa.symbolic.value.UnaryExpression(
 				JavaIntType.INSTANCE,
@@ -105,7 +105,7 @@ public class StringBuilderSetCharAt extends TernaryExpression implements Pluggab
 
 		if (sat == Satisfiability.SATISFIED) {
 			// builds the exception
-			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
+			JavaClassType oonExc = JavaClassType.getStringIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			state = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0], expressions);
@@ -151,7 +151,7 @@ public class StringBuilderSetCharAt extends TernaryExpression implements Pluggab
 			AnalysisState<A> noExceptionState = analysis.smallStepSemantics(result, left, context, originating);
 
 			// builds the exception
-			JavaClassType oonExc = JavaClassType.getIndexOutOfBoundsExceptionType();
+			JavaClassType oonExc = JavaClassType.getStringIndexOutOfBoundsExceptionType();
 			JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 					oonExc.getReference(), new Expression[0]);
 			koState = call.forwardSemanticsAux(interprocedural, koState, new ExpressionSet[0], expressions);

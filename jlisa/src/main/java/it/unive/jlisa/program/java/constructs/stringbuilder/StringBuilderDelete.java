@@ -69,7 +69,7 @@ public class StringBuilderDelete extends TernaryExpression implements PluggableS
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 
-		// an index out of the contents raises IndexOutOfBoundsException
+		// an index out of the contents raises StringIndexOutOfBoundsException
 		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
 				getSubExpressions());
 		// start < 0, start > length or start > end (end is cut to the length)
@@ -84,7 +84,7 @@ public class StringBuilderDelete extends TernaryExpression implements PluggableS
 		state = raising.raiseWhere(new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, startOut,
 				new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, middle, right,
 						ComparisonGt.INSTANCE, getLocation()),
-				LogicalOr.INSTANCE, getLocation()), true, state, "java.lang.IndexOutOfBoundsException");
+				LogicalOr.INSTANCE, getLocation()), true, state, "java.lang.StringIndexOutOfBoundsException");
 		if (state.getExecutionState().isBottom())
 			return raising.moveFrom(state.bottomExecution());
 

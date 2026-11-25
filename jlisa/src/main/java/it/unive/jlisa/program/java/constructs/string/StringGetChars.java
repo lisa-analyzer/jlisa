@@ -133,13 +133,13 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		AccessChild length = new AccessChild(Untyped.INSTANCE, dst,
 				new GlobalVariable(JavaIntType.INSTANCE, "length", getLocation()), getLocation());
 
-		// a null destination raises NullPointerException, and the bounds
-		// raise IndexOutOfBoundsException when from < 0, from > to, to is
-		// beyond the receiver, at < 0, or the copied characters do not fit
-		// the destination
+		// as in java, the range of the receiver is checked first (from < 0,
+		// from > to, or to beyond the receiver), then the destination is
+		// read (raising NullPointerException if it is null), and finally its
+		// range is checked (at < 0, or the copied characters do not fit):
+		// the bounds raise StringIndexOutOfBoundsException
 		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
 				getSubExpressions());
-		state = raising.raiseIfNull(exprs[3], state);
 		CodeLocation loc = getLocation();
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, loc);
 		AccessChild dstLength = new AccessChild(JavaIntType.INSTANCE, dst,
@@ -147,15 +147,18 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 		BinaryExpression copied = new BinaryExpression(JavaIntType.INSTANCE, exprs[4],
 				new BinaryExpression(JavaIntType.INSTANCE, exprs[2], exprs[1], NumericNonOverflowingSub.INSTANCE, loc),
 				NumericNonOverflowingAdd.INSTANCE, loc);
-		BinaryExpression outOfBounds = or(loc,
+		BinaryExpression sourceOutOfBounds = or(loc,
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[1], zero, ComparisonLt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[1], exprs[2], ComparisonGt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[2],
 						new UnaryExpression(JavaIntType.INSTANCE, contents, JavaStringLengthOperator.INSTANCE, loc),
-						ComparisonGt.INSTANCE, loc),
+						ComparisonGt.INSTANCE, loc));
+		state = raising.raiseWhere(sourceOutOfBounds, true, state, "java.lang.StringIndexOutOfBoundsException");
+		state = raising.raiseIfNull(exprs[3], state);
+		BinaryExpression destinationOutOfBounds = or(loc,
 				new BinaryExpression(JavaBooleanType.INSTANCE, exprs[4], zero, ComparisonLt.INSTANCE, loc),
 				new BinaryExpression(JavaBooleanType.INSTANCE, copied, dstLength, ComparisonGt.INSTANCE, loc));
-		state = raising.raiseWhere(outOfBounds, true, state, "java.lang.IndexOutOfBoundsException");
+		state = raising.raiseWhere(destinationOutOfBounds, true, state, "java.lang.StringIndexOutOfBoundsException");
 		if (state.getExecutionState().isBottom())
 			return raising.moveFrom(state.bottomExecution());
 

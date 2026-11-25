@@ -94,7 +94,7 @@ final class StringBuilderMutationSupport {
 	}
 
 	/**
-	 * Raises {@code IndexOutOfBoundsException} exactly in the executions of
+	 * Raises {@code StringIndexOutOfBoundsException} exactly in the executions of
 	 * the given state where the given index is out of the contents of the
 	 * given builder (negative, or not smaller than their length; greater than
 	 * it if {@code inclusive}, e.g. for the offset of {@code insert}),
@@ -129,6 +129,6 @@ final class StringBuilderMutationSupport {
 				new BinaryExpression(JavaBooleanType.INSTANCE, index, length(receiver, stringType, location),
 						inclusive ? ComparisonGt.INSTANCE : ComparisonGe.INSTANCE, location),
 				LogicalOr.INSTANCE, location);
-		return raising.raiseWhere(outOfBounds, true, state, "java.lang.IndexOutOfBoundsException");
+		return raising.raiseWhere(outOfBounds, true, state, "java.lang.StringIndexOutOfBoundsException");
 	}
 }
