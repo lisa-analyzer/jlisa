@@ -206,6 +206,15 @@ public class UpperBoundsLattice
 			return b;
 		if (b.isBottom())
 			return a;
+		// when one map has all the relations of the other, the join is the
+		// other one: returning it keeps its representation (e.g., an
+		// identifier mapped to no relations, which the loop below would drop),
+		// so that joining equivalent maps yields the same map whatever the
+		// number of joins performed by the fixpoint
+		if (contains(a, b))
+			return b;
+		if (contains(b, a))
+			return a;
 		ValueEnvironment<DefiniteIdSet> result = new ValueEnvironment<>(a.lattice);
 		Set<Identifier> keys = b.getKeys();
 		for (Identifier key : a.getKeys())
