@@ -440,6 +440,9 @@ public abstract class JavaCallGraph extends BaseCallGraph {
 		else if (JavaClassType.isWrapperOf(paramType, formalTypeNoVarargs))
 			// unboxing
 			return 10;
+		else if (JavaClassType.boxesTo(formalTypeNoVarargs, paramType))
+			// boxing + widening, after plain boxing
+			return 11;
 		else if (paramType instanceof JavaNumericType numericParam) {
 			if (formalTypeNoVarargs instanceof JavaNumericType numericFormal) {
 				int paramDist = numericParam.distance(numericFormal);

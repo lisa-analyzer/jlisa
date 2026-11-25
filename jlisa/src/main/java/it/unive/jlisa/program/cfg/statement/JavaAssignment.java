@@ -151,10 +151,9 @@ public class JavaAssignment extends Assignment {
 						TypeConv.INSTANCE, loc);
 				result = result
 						.lub(super.fwdBinarySemantics(interprocedural, state, lhs, castExpression, expressions));
-			} else if (JavaClassType.isWrapperOf(targetType, rType)
-					|| (targetType.isReferenceType()
-							&& targetType.asReferenceType().getInnerType().equals(JavaClassType.getObjectType())
-							&& JavaTypeSystem.isPrimitive(rType))) {
+			} else if (JavaClassType.isWrapperOf(targetType, rType) || JavaClassType.boxesTo(targetType, rType)) {
+				// boxing, then widening the reference if the target is not
+				// the wrapper class (e.g., Object o = 'a')
 
 				Type boxedType = new JavaReferenceType(JavaClassType.getWrappedType(rType));
 				if (JavaClassType.isWrapperType(targetType)) {

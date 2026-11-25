@@ -380,6 +380,26 @@ public class JavaClassType
 	 * 
 	 * @return
 	 */
+	/**
+	 * Yields whether a value of the given primitive type is passed to a
+	 * parameter of the given reference type by boxing it and then widening
+	 * the reference (e.g., a {@code char} passed as an {@code Object}, as a
+	 * {@code Character}), excluding the case where the reference type is the
+	 * one of the wrapper class itself (see {@link #isWrapperOf(Type, Type)}).
+	 *
+	 * @param objectType the reference type
+	 * @param baseType   the primitive type
+	 *
+	 * @return whether the value is boxed and widened
+	 */
+	public static boolean boxesTo(
+			Type objectType,
+			Type baseType) {
+		Type wrapper = getWrappedType(baseType);
+		return wrapper != null && objectType.isReferenceType() && !isWrapperOf(objectType, baseType)
+				&& new JavaReferenceType(wrapper).canBeAssignedTo(objectType);
+	}
+
 	public static boolean isWrapperOf(
 			Type objectType,
 			Type baseType) {

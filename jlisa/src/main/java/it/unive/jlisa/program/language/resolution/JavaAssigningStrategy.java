@@ -214,12 +214,17 @@ public class JavaAssigningStrategy
 						set.add(castExpression);
 						pars.set(i, new ExpressionSet(set));
 						boxingUnboxingNeeded = true;
-					} else if (JavaClassType.isWrapperOf(formalType, actualType)) {
-						// boxing
+					} else if (JavaClassType.isWrapperOf(formalType, actualType)
+							|| JavaClassType.boxesTo(formalType, actualType)) {
+						// boxing (into the wrapper class, then widened to the
+						// formal type, e.g., a char passed as an Object)
+						JavaReferenceType boxed = JavaClassType.isWrapperOf(formalType, actualType)
+								? (JavaReferenceType) formalType
+								: new JavaReferenceType(JavaClassType.getWrappedType(actualType));
 						JavaNewObj wrap = new JavaNewObj(
 								call.getCFG(),
 								call.getLocation(),
-								(JavaReferenceType) formalType,
+								boxed,
 								new Expression[] { call.getSubExpressions()[i] });
 						// the synthetic object creation is not part of the cfg:
 						// it is attached to the call, so that the errors it

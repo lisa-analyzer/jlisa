@@ -30,6 +30,8 @@ import it.unive.jlisa.program.operator.JavaFloatIsNaNOperator;
 import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
+import it.unive.jlisa.program.operator.JavaIntegerParseIntOperator;
+import it.unive.jlisa.program.operator.JavaIsIntParsableOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
 import it.unive.jlisa.program.operator.JavaLongCompareOperator;
@@ -85,8 +87,8 @@ import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertBooleanOperator;
@@ -145,11 +147,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import java.util.regex.Pattern;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.regex.Pattern;
 
 /**
  * An {@link ExpressionEncoder} that also encodes the operators of the Java
@@ -1365,6 +1367,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		}
 		if (op instanceof JavaStringTrimOperator)
 			return trim(asString(arg, e), e);
+		if (op instanceof JavaIsIntParsableOperator || op instanceof JavaIntegerParseIntOperator)
+			return parseInt(asString(arg, e), op instanceof JavaIsIntParsableOperator, e);
 		if (op instanceof JavaStringValueOfIntOperator || op instanceof JavaStringValueOfLongOperator)
 			return stringOf(long.class, arg, e);
 		if (op instanceof JavaStringValueOfBooleanOperator)
@@ -1575,6 +1579,37 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 								Term.not(Term.app("str.contains", Sort.BOOL, rest, t))),
 						Term.eq(i, num(-1)))));
 		return i;
+	}
+
+	/**
+	 * The decimal integers of {@link Integer#parseInt(String)} made of ASCII
+	 * characters: an optional sign followed by at least one digit.
+	 */
+	private static final Term DECIMAL_INTEGER = Term.value(
+			"(re.++ (re.opt (re.union (str.to_re \"+\") (str.to_re \"-\"))) (re.+ (re.range \"0\" \"9\")))",
+			Sort.STRING);
+
+	/**
+	 * Whether the given string is parsable by {@link Integer#parseInt(String)}
+	 * (if {@code parsable}), or the int it denotes (only defined if it is
+	 * parsable): an optional sign followed by decimal digits, denoting a value
+	 * in the range of ints. Java also accepts the digits of other scripts
+	 * (see {@link Character#digit(char, int)}): the encoding is precise only
+	 * for ASCII strings.
+	 */
+	private Term parseInt(
+			Term s,
+			boolean parsable,
+			UnaryExpression e) {
+		Term negative = Term.app("str.prefixof", Sort.BOOL, Term.string("-"), s);
+		Term signed = Term.or(negative, Term.app("str.prefixof", Sort.BOOL, Term.string("+"), s));
+		Term magnitude = Term.app("str.to_int", Sort.INT, Term.ite(signed, substr(s, num(1), len(s)), s));
+		Term value = Term.ite(negative, sub(num(0), magnitude), magnitude);
+		Term inRange = Term.and(le(num(Integer.MIN_VALUE), value), le(value, num(Integer.MAX_VALUE)));
+		Term isInt = Term.and(Term.app("str.in_re", Sort.BOOL, s, DECIMAL_INTEGER), inRange);
+		if (parsable)
+			return guarded(ascii(s), isInt, List.of(s), e);
+		return guarded(Term.and(ascii(s), isInt), value, List.of(s), e);
 	}
 
 	/**

@@ -117,6 +117,9 @@ public class CustomJavaLikeMatchingStrategy
 			else if (JavaClassType.isWrapperOf(rType, formal.getStaticType()))
 				// unboxing
 				return true;
+			else if (JavaClassType.boxesTo(formal.getStaticType(), rType))
+				// boxing + widening (e.g., a char passed as an Object)
+				return true;
 		// TODO the next case should be allowed only when we handle it in the
 		// assigning strategy and in the call graph's parameter distance
 		// Type unwrapped;

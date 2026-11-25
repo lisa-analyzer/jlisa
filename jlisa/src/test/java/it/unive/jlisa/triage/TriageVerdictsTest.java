@@ -546,6 +546,31 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * A primitive passed to a parameter of a supertype of its wrapper class is
+	 * boxed (c.equals('A') reaches Character.equals(Object)).
+	 */
+	@Test
+	public void primitivesAreBoxedAndWidened(
+			@TempDir Path dir)
+			throws Exception {
+		assertSafe(verdict("char-equals", SVCOMPProperty.ASSERT, dir), "char-equals");
+	}
+
+	/**
+	 * Integer.parseInt is encoded for ASCII strings: the values parsed from
+	 * strings that are not constant, and the NumberFormatException of the
+	 * strings that are not parsable, are confirmed.
+	 */
+	@Test
+	public void parsedIntegersAreEncoded(
+			@TempDir Path dir)
+			throws Exception {
+		assertEquals(Verdict.DEFINITE, verdict("parseint-nondet", SVCOMPProperty.ASSERT, dir.resolve("value")));
+		assertEquals(Verdict.DEFINITE,
+				verdict("parseint-nondet-nfe", SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve("nfe")));
+	}
+
+	/**
 	 * The bounds of strings and string builders raise
 	 * StringIndexOutOfBoundsException, also caught as an
 	 * IndexOutOfBoundsException, and getChars checks the bounds of the receiver
