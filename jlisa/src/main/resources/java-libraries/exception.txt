@@ -142,6 +142,8 @@ class java.lang.AssertionError extends java.lang.Error:
 
 class java.lang.SecurityException extends java.lang.RuntimeException:
 
+class java.lang.ArrayStoreException extends java.lang.RuntimeException:
+
 class java.lang.IllegalAccessException extends java.lang.Exception:
 
 class java.lang.reflect.InvocationTargetException extends java.lang.Exception:

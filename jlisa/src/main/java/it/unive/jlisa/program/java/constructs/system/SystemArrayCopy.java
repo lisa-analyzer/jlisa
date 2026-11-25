@@ -34,7 +34,10 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -159,21 +162,41 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 			return state;
 
 		// the types of the arrays: the copy is checked (and performed) only
-		// if each is a single array type, and the cells are stored only if
-		// the types are the same
+		// if each is a single array type
+		Set<Type> destTypes = analysis.getRuntimeTypesOf(state, dest, context, this);
 		JavaArrayType srcType = arrayType(analysis.getRuntimeTypesOf(state, src, context, this));
-		JavaArrayType destType = arrayType(analysis.getRuntimeTypesOf(state, dest, context, this));
-		if (srcType == null || destType == null || !srcType.equals(destType))
-			raising.raise(Satisfiability.UNKNOWN, state, "java.lang.ArrayStoreException");
+		JavaArrayType destType = arrayType(destTypes);
+		GlobalVariable lengthField = new GlobalVariable(JavaIntType.INSTANCE, "length", loc);
 		if (srcType == null || destType == null) {
-			// the arrays are not known: the indexes might be out of bounds
+			// the arrays are not known: the types might not be compatible,
+			// the indexes might be out of bounds, and any cell of the
+			// destination might be overwritten with any value
+			raising.raise(Satisfiability.UNKNOWN, state, "java.lang.ArrayStoreException");
 			raising.raise(Satisfiability.UNKNOWN, state, "java.lang.ArrayIndexOutOfBoundsException");
-			return state.withExecutionExpression(new Skip(loc));
+			AnalysisState<A> result = state;
+			for (JavaArrayType t : arrayTypes(destTypes)) {
+				HeapDereference destArray = new HeapDereference(t, dest, loc);
+				result = havoc(analysis, context, result, destArray,
+						new AccessChild(JavaIntType.INSTANCE, destArray, lengthField, loc), t.getInnerType());
+			}
+			return result.withExecutionExpression(new Skip(loc));
 		}
+
+		// the types are checked before the indexes: arrays of different
+		// primitive types, or of a primitive type and of references, are
+		// never compatible, while the elements of an array of references
+		// are checked one by one (failing only if some of them cannot be
+		// stored in the destination)
+		Satisfiability incompatible = incompatible(srcType, destType);
+		if (incompatible == Satisfiability.SATISFIED) {
+			raising.raise(Satisfiability.SATISFIED, state, "java.lang.ArrayStoreException");
+			return state.bottomExecution();
+		}
+		if (incompatible == Satisfiability.UNKNOWN)
+			raising.raise(Satisfiability.UNKNOWN, state, "java.lang.ArrayStoreException");
 
 		HeapDereference srcArray = new HeapDereference(srcType, src, loc);
 		HeapDereference destArray = new HeapDereference(destType, dest, loc);
-		GlobalVariable lengthField = new GlobalVariable(JavaIntType.INSTANCE, "length", loc);
 		AccessChild srcLength = new AccessChild(JavaIntType.INSTANCE, srcArray, lengthField, loc);
 		AccessChild destLength = new AccessChild(JavaIntType.INSTANCE, destArray, lengthField, loc);
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, loc);
@@ -198,30 +221,86 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 		Integer from = constant(analysis, state, srcPos, context);
 		Integer at = constant(analysis, state, destPos, context);
 		Integer count = constant(analysis, state, length, context);
-		boolean exact = from != null && at != null && count != null;
 		Type content = destType.getInnerType();
+		if (from == null || at == null || count == null)
+			return havoc(analysis, context, state, destArray, destLength, content)
+					.withExecutionExpression(new Skip(loc));
+		// the copied cells of the destination that might exist
+		List<Integer> cells = new ArrayList<>();
+		for (int i = 0; i < MAX_ENUMERATED_CELLS; i++) {
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, loc);
+			if (analysis.satisfies(state, new BinaryExpression(JavaBooleanType.INSTANCE, idx, destLength,
+					ComparisonLt.INSTANCE, loc), context, this) == Satisfiability.NOT_SATISFIED)
+				break;
+			if (i >= at && i < at + count)
+				cells.add(i);
+		}
+		// java copies as through a temporary array: when the source and the
+		// destination might be the same array, each cell must be read before
+		// it is overwritten, so the cells are copied from the last one if
+		// the range is moved forward (e.g., arraycopy(a, 0, a, 1, n))
+		if (at > from)
+			Collections.reverse(cells);
+		AnalysisState<A> result = state;
+		for (int i : cells) {
+			Constant idx = new Constant(JavaIntType.INSTANCE, i, loc);
+			AccessChild cell = new AccessChild(content, destArray, idx, loc);
+			result = analysis.assign(result, cell,
+					new AccessChild(content, srcArray, new Constant(JavaIntType.INSTANCE, from + i - at, loc), loc),
+					context, this);
+		}
+		return result.withExecutionExpression(new Skip(loc));
+	}
+
+	// the cells of the given array (as far as they are enumerated) hold any
+	// value
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> havoc(
+			Analysis<A, D> analysis,
+			ScopeId<A> context,
+			AnalysisState<A> state,
+			HeapDereference array,
+			AccessChild length,
+			Type content)
+			throws SemanticException {
+		CodeLocation loc = getLocation();
 		AnalysisState<A> result = state;
 		for (int i = 0; i < MAX_ENUMERATED_CELLS; i++) {
 			Constant idx = new Constant(JavaIntType.INSTANCE, i, loc);
-			if (analysis.satisfies(result, new BinaryExpression(JavaBooleanType.INSTANCE, idx, destLength,
+			if (analysis.satisfies(result, new BinaryExpression(JavaBooleanType.INSTANCE, idx, length,
 					ComparisonLt.INSTANCE, loc), context, this) == Satisfiability.NOT_SATISFIED)
 				break;
-			AccessChild cell = new AccessChild(content, destArray, idx, loc);
-			if (exact) {
-				if (i < at || i >= at + count)
-					continue;
-				result = analysis.assign(result, cell,
-						new AccessChild(content, srcArray, new Constant(JavaIntType.INSTANCE, from + i - at, loc),
-								loc),
-						context, this);
-			} else {
-				AnalysisState<A> any = analysis.assign(result, cell, new PushAny(content, loc), context, this);
-				if (content.isReferenceType() || content.isInMemoryType())
-					any = any.lub(analysis.assign(result, cell, new NullConstant(loc), context, this));
-				result = any;
-			}
+			AccessChild cell = new AccessChild(content, array, idx, loc);
+			AnalysisState<A> any = analysis.assign(result, cell, new PushAny(content, loc), context, this);
+			if (content.isReferenceType() || content.isInMemoryType())
+				any = any.lub(analysis.assign(result, cell, new NullConstant(loc), context, this));
+			result = any;
 		}
-		return result.withExecutionExpression(new Skip(loc));
+		return result;
+	}
+
+	// whether arraycopy from an array of the first type to one of the second
+	// type raises ArrayStoreException
+	private static Satisfiability incompatible(
+			JavaArrayType src,
+			JavaArrayType dest) {
+		Type s = src.getInnerType(), d = dest.getInnerType();
+		boolean sRef = s.isReferenceType() || s.isInMemoryType();
+		boolean dRef = d.isReferenceType() || d.isInMemoryType();
+		if (!sRef || !dRef)
+			// primitive types must be the same
+			return s.equals(d) ? Satisfiability.NOT_SATISFIED : Satisfiability.SATISFIED;
+		// references: depends on the elements, unless they are all assignable
+		return s.canBeAssignedTo(d) ? Satisfiability.NOT_SATISFIED : Satisfiability.UNKNOWN;
+	}
+
+	// the array types among the given runtime types
+	private static Set<JavaArrayType> arrayTypes(
+			Set<Type> types) {
+		Set<JavaArrayType> arrays = new HashSet<>();
+		for (Type t : types)
+			if (t.isReferenceType() && t.asReferenceType().getInnerType() instanceof JavaArrayType)
+				arrays.add((JavaArrayType) t.asReferenceType().getInnerType());
+		return arrays;
 	}
 
 	// the array type among the given runtime types (null excluded), if it is

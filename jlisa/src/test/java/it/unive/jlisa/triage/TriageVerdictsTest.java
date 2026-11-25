@@ -634,7 +634,7 @@ public class TriageVerdictsTest {
 	/**
 	 * Integer.parseInt, System.arraycopy, Arrays.copyOf and String.split
 	 * raise their exceptions, and compute their results (arraycopy writes the
-	 * destination).
+	 * destination, also when it is the source).
 	 */
 	@Test
 	public void libraryMethodsRaiseTheirExceptions(
@@ -646,6 +646,14 @@ public class TriageVerdictsTest {
 					program);
 		assertEquals(Verdict.DEFINITE, verdict("arraycopy-write", SVCOMPProperty.ASSERT, dir.resolve("write")));
 		assertSafe(verdict("arraycopy-value", SVCOMPProperty.ASSERT, dir.resolve("arraycopy-value")), "arraycopy-value");
+		assertSafe(verdict("arraycopy-overlap", SVCOMPProperty.ASSERT, dir.resolve("arraycopy-overlap")),
+				"arraycopy-overlap");
+		// a source of unknown type might overwrite the destination
+		Verdict unknown = verdict("arraycopy-unknown-type", SVCOMPProperty.ASSERT, dir.resolve("unknown-type"));
+		assertTrue(unknown == Verdict.DEFINITE || unknown == Verdict.POSSIBLE, "arraycopy-unknown-type is " + unknown);
+		// arrays of different primitive types always raise ArrayStoreException
+		assertSafe(verdict("arraycopy-store", SVCOMPProperty.ASSERT, dir.resolve("arraycopy-store")),
+				"arraycopy-store");
 		assertSafe(verdict("parseint-value", SVCOMPProperty.ASSERT, dir.resolve("parseint-value")), "parseint-value");
 	}
 }
