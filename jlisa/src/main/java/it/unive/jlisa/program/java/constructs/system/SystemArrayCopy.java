@@ -46,9 +46,15 @@ import java.util.Set;
  * {@code dest} from {@code destPos}. It raises {@link NullPointerException} if
  * an array is {@code null}, {@link ArrayIndexOutOfBoundsException} if a
  * position or the length is negative or the copied cells exceed an array, and
- * {@link ArrayStoreException} if the arrays have incompatible types. The cells
+ * {@link ArrayStoreException} if the arrays have incompatible types (always
+ * for different primitive types, or a primitive type and references, and
+ * depending on the elements for references that are not assignable). The cells
  * of the destination are copied exactly when the positions and the length are
- * known, and become unknown otherwise.
+ * known, as through a temporary array (from the last cell when the range moves
+ * forward, so that copies within the same array read each cell before it is
+ * overwritten), and become unknown otherwise. When the types of the arrays are
+ * not known, the exceptions might be raised, and the cells of the destination
+ * (for each of its array types) become unknown.
  */
 public class SystemArrayCopy extends NaryExpression implements PluggableStatement {
 	/**

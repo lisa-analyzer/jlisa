@@ -111,4 +111,32 @@ public class JavaWritesTest {
 		assertTrue(writes.isInitializer(member(program, "D", "D_clinit")));
 		assertFalse(writes.isInitializer(member(program, "E", "E_clinit")));
 	}
+
+	/**
+	 * The fields that the code of the frontend accesses by unqualified names
+	 * (e.g., the natives writing the {@code value} of strings) are the ones
+	 * that {@link JavaHeapWrites} deems written by natives: static globals
+	 * (qualified by their class) and the internal fields of the models of the
+	 * library (starting with {@code $}) are excluded.
+	 */
+	@Test
+	public void nativeFieldsAreInSyncWithTheNatives() throws IOException {
+		java.util.regex.Pattern field = java.util.regex.Pattern
+				.compile("new GlobalVariable\\([^,()]+,\\s*\"([^\"]+)\"\\s*,");
+		java.util.Set<String> names = new java.util.TreeSet<>();
+		try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files
+				.walk(java.nio.file.Paths.get("src", "main", "java", "it", "unive", "jlisa"))) {
+			for (java.nio.file.Path file : (Iterable<java.nio.file.Path>) files
+					.filter(f -> f.toString().endsWith(".java"))::iterator) {
+				java.util.regex.Matcher m = field.matcher(java.nio.file.Files.readString(file));
+				while (m.find())
+					if (!m.group(1).contains("::") && !m.group(1).startsWith("$"))
+						names.add(m.group(1));
+			}
+		}
+		assertFalse(names.isEmpty());
+		java.util.Set<String> missing = new java.util.TreeSet<>(names);
+		missing.removeAll(JavaHeapWrites.NATIVE_FIELDS);
+		assertTrue(missing.isEmpty(), "fields written by natives missing from NATIVE_FIELDS: " + missing);
+	}
 }
