@@ -434,6 +434,31 @@ public class JavaExpressionEncoderTest {
 		}
 	}
 
+	/**
+	 * The representations in a radix that is not a literal: the one of the
+	 * radix is selected (radix 10 for invalid radixes), and the constraints of
+	 * the others do not exclude it.
+	 */
+	@Test
+	public void conversionsWithARadixThatIsNotALiteral() throws Exception {
+		for (int[] c : new int[][] { { 255, 16 }, { 255, 2 }, { -255, 36 }, { 255, 10 }, { 255, 37 }, { 0, 8 } })
+			for (JavaLibraryFunction f : List.of(JavaLibraryFunction.INTEGER_TO_STRING_RADIX,
+					JavaLibraryFunction.INTEGER_TO_UNSIGNED_STRING_RADIX)) {
+				Symbols symbols = new Symbols();
+				Variable x = new Variable(JavaIntType.INSTANCE, "x", LOC);
+				Variable r = new Variable(JavaIntType.INSTANCE, "r", LOC);
+				java.util.Map<it.unive.lisa.symbolic.value.Identifier, java.util.Set<Type>> types = new HashMap<>();
+				types.put(x, java.util.Set.of(JavaIntType.INSTANCE));
+				types.put(r, java.util.Set.of(JavaIntType.INSTANCE));
+				JavaExpressionEncoder encoder = new JavaExpressionEncoder(new SortPolicy(types), symbols);
+				Term term = new BinaryExpression(StringType.INSTANCE, x, r, f, LOC).accept(encoder);
+				symbols.requirements.add(Term.eq(x.accept(encoder), Term.integer(c[0])));
+				symbols.requirements.add(Term.eq(r.accept(encoder), Term.integer(c[1])));
+				assertTrue(precise(symbols, term, expected(f.apply(c[0], c[1])), f + " on " + c[0] + ", " + c[1]),
+						f + " not precise on " + c[0] + ", " + c[1]);
+			}
+	}
+
 	@Test
 	public void longFunctions() throws Exception {
 		for (JavaLibraryFunction f : functions()) {

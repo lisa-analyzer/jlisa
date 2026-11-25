@@ -665,8 +665,18 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term u,
 			int bits,
 			SymbolicExpression e) {
+		return bitVector(u, bits, Term.TRUE, e);
+	}
+
+	// as bitVector(Term, int, SymbolicExpression), defined only when the given
+	// condition holds
+	private Term bitVector(
+			Term u,
+			int bits,
+			Term when,
+			SymbolicExpression e) {
 		Term b = auxiliary(Sort.bitVector(bits), e);
-		getSymbols().require(Term.eq(u, Term.app("bv2nat", Sort.INT, b)));
+		requireWhen(when, Term.eq(u, Term.app("bv2nat", Sort.INT, b)));
 		return b;
 	}
 
@@ -1707,9 +1717,12 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			// computed directly, as solvers handle building long strings
 			// from their characters poorly
 			return Term.string(literal.toString(radix));
-		// the value is used by every digit: it is named once
+		// the value is used by every digit: it is named once (all the
+		// constraints of the representation are required only when it is
+		// the selected one, e.g., for a radix that is not a literal, see
+		// withRadix)
 		Term u = auxiliary(Sort.INT, e);
-		getSymbols().require(Term.eq(u, value));
+		requireWhen(when, Term.eq(u, value));
 		BigInteger r = BigInteger.valueOf(radix);
 		BigInteger limit = pow2(bits);
 		// the number of digits needed for the largest value
@@ -1721,7 +1734,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		for (int k = max - 1; k >= 1; k--)
 			digits = Term.ite(lt(u, num(r.pow(k))), num(k), digits);
 		Term count = auxiliary(Sort.INT, e);
-		getSymbols().require(Term.eq(count, digits));
+		requireWhen(when, Term.eq(count, digits));
 		// the representation is a string whose characters are constrained one
 		// by one, the j-th digit from the least significant one being at
 		// position count - 1 - j: solvers handle such constraints far better
@@ -1731,7 +1744,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		// the value, extracted from a bit-vector rather than computed through
 		// quotients and remainders
 		int group = Integer.bitCount(radix) == 1 ? Integer.numberOfTrailingZeros(radix) : 0;
-		Term b = group > 0 ? bitVector(u, bits, e) : null;
+		Term b = group > 0 ? bitVector(u, bits, when, e) : null;
 		Term[] defs = new Term[max + 1];
 		defs[0] = Term.eq(len(s), count);
 		for (int j = 0; j < max; j++) {
@@ -1744,13 +1757,20 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			else {
 				// the digit is used twice: it is named once
 				Term v = auxiliary(Sort.INT, e);
-				getSymbols().require(Term.eq(v, d));
+				requireWhen(when, Term.eq(v, d));
 				c = Term.ite(lt(v, num(10)), add(v, num('0')), add(v, num('a' - 10)));
 			}
 			defs[j + 1] = Term.implies(lt(num(j), count), Term.eq(code(at(s, sub(count, num(j + 1)))), c));
 		}
-		getSymbols().require(Term.implies(when, Term.and(defs)));
+		requireWhen(when, Term.and(defs));
 		return s;
+	}
+
+	// requires the given condition when the other one holds
+	private void requireWhen(
+			Term when,
+			Term condition) {
+		getSymbols().require(when.equals(Term.TRUE) ? condition : Term.implies(when, condition));
 	}
 
 	/**
