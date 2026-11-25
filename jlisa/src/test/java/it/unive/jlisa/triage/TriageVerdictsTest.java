@@ -557,6 +557,16 @@ public class TriageVerdictsTest {
 	}
 
 	/**
+	 * ... also through the methods they call.
+	 */
+	@Test
+	public void staticFieldsWrittenByCalleesOfInitializersAreUnknown(
+			@TempDir Path dir)
+			throws Exception {
+		assertNotEquals(Verdict.REFUTED, verdict("static-initializer-calls", SVCOMPProperty.ASSERT, dir));
+	}
+
+	/**
 	 * ... while the fields that callees might write are unknown after the
 	 * calls: written by their code, by the code called on their behalf (e.g.,
 	 * the conversion of objects to strings), or reflectively.

@@ -93,4 +93,22 @@ public class JavaWritesTest {
 		// a method whose name ends with the suffix is not an initializer
 		assertFalse(writes.isInitializer(member(program, "Main", "touch")));
 	}
+
+	/**
+	 * A static initializer is an initializer only if the code it calls writes
+	 * no static field of other classes: other static initializers that are
+	 * initializers (e.g., the one of the superclass), and the libraries.
+	 */
+	@Test
+	public void staticInitializersCallingWritersAreNotInitializers() throws IOException {
+		Program program = parse("static-initializer-calls");
+		JavaGlobalWrites writes = new JavaGlobalWrites();
+		// Helper.bump writes Counter.n
+		assertFalse(writes.isInitializer(member(program, "B", "B_clinit")));
+		// Math.abs is a native
+		assertTrue(writes.isInitializer(member(program, "C", "C_clinit")));
+		// the initializers of the superclasses run first
+		assertTrue(writes.isInitializer(member(program, "D", "D_clinit")));
+		assertFalse(writes.isInitializer(member(program, "E", "E_clinit")));
+	}
 }
