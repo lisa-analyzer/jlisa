@@ -134,11 +134,11 @@ final class JavaUnboxing {
 	}
 
 	/**
-	 * Yields the executions of the given state where the given operand, that
-	 * is unboxed as {@code unboxed}, is not {@code null}, raising
-	 * {@link NullPointerException} in the others (unboxing {@code null}
-	 * raises it, JLS 5.1.8). If the operand is not unboxed, the state is
-	 * returned unchanged.
+	 * Yields the executions of the given state where the given operand, that is
+	 * unboxed as {@code unboxed}, is not {@code null}, raising
+	 * {@link NullPointerException} in the others (unboxing {@code null} raises
+	 * it, JLS 5.1.8). If the operand is not unboxed, the state is returned
+	 * unchanged.
 	 *
 	 * @param <A>     the type of the abstract states
 	 * @param <D>     the type of the domain

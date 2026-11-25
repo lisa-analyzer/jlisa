@@ -178,11 +178,11 @@ import java.util.regex.Pattern;
  * (and constrained by their known properties, e.g., monotonicity and ranges).
  * Other functions, as any other operator unknown to this encoder, yield an
  * unknown, deterministic function of their operands, never precise. The string
- * operations are exact only for the strings of UTF-16
- * code units (the characters of the Basic Multilingual Plane that are not
- * surrogates), and the functions depending on the default locale
- * ({@link String#toLowerCase()} and {@link String#toUpperCase()}) assume one
- * converting the ASCII letters plainly (not, e.g., the Turkish one).
+ * operations are exact only for the strings of UTF-16 code units (the
+ * characters of the Basic Multilingual Plane that are not surrogates), and the
+ * functions depending on the default locale ({@link String#toLowerCase()} and
+ * {@link String#toUpperCase()}) assume one converting the ASCII letters plainly
+ * (not, e.g., the Turkish one).
  */
 public class JavaExpressionEncoder extends ExpressionEncoder {
 
@@ -463,7 +463,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaMathMin || op instanceof JavaStrictMathMin)
 			return maxMin(left, right, false, e);
 		if (op instanceof JavaLongRotateRightOperator)
-			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false, e), 64);
+			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false, e),
+					64);
 		if (op instanceof JavaStringCompareToOperator)
 			return compareStrings(asString(left, e), asString(right, e), e);
 		Term string = stringBinary(op, left, right, e);
@@ -866,8 +867,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * Converts a floating point number to a string as
 	 * {@link Double#toString(double)}, precisely only for special values and
 	 * for integral numbers below {@code 10^7} (that are printed with a single
-	 * fractional digit, {@code 0}): the result is an unknown function of the number
-	 * otherwise.
+	 * fractional digit, {@code 0}): the result is an unknown function of the
+	 * number otherwise.
 	 */
 	private Term floatToString(
 			Term f,
@@ -1222,23 +1223,22 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * result is not specified exactly (e.g., the sine), computed on the values
 	 * of the counterexamples.
 	 *
-	 * @param function   the function (the one of {@link Math} is the one of
-	 *                       the running virtual machine, that the programs are
-	 *                       run with)
+	 * @param function   the function (the one of {@link Math} is the one of the
+	 *                       running virtual machine, that the programs are run
+	 *                       with)
 	 * @param increasing whether the function is non-decreasing ({@code true})
 	 *                       or non-increasing ({@code false}), as the
 	 *                       specification of {@link Math} requires the results
 	 *                       of its functions to be semi-monotonic, or
 	 *                       {@code null} if it is not monotone
-	 * @param range      the values that the function can yield on an
-	 *                       argument, as a condition over the argument and the
-	 *                       result, or {@code null} if nothing is known: the
-	 *                       specification of {@link Math} tells when the
-	 *                       functions yield NaN, and the results are within one
-	 *                       ulp of the exact ones, that the implementations
-	 *                       never round out of the ranges of the functions
-	 *                       (e.g., the sine of a finite number is between
-	 *                       {@code -1} and {@code 1})
+	 * @param range      the values that the function can yield on an argument,
+	 *                       as a condition over the argument and the result, or
+	 *                       {@code null} if nothing is known: the specification
+	 *                       of {@link Math} tells when the functions yield NaN,
+	 *                       and the results are within one ulp of the exact
+	 *                       ones, that the implementations never round out of
+	 *                       the ranges of the functions (e.g., the sine of a
+	 *                       finite number is between {@code -1} and {@code 1})
 	 */
 	private record MathFunction(
 			DoubleUnaryOperator function,
@@ -1260,15 +1260,23 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		math(JavaMathCosOperator.class, JavaStrictMathCosOperator.class, Math::cos, StrictMath::cos, null,
 				JavaExpressionEncoder::sinCosRange);
 		math(JavaMathTanOperator.class, JavaStrictMathTanOperator.class, Math::tan, StrictMath::tan, null,
-				(x, r) -> Term.eq(isNaN(r), Term.or(isNaN(x), Term.app("fp.isInfinite", Sort.BOOL, x))));
+				(
+						x,
+						r) -> Term.eq(isNaN(r), Term.or(isNaN(x), Term.app("fp.isInfinite", Sort.BOOL, x))));
 		math(JavaMathAsinOperator.class, JavaStrictMathAsinOperator.class, Math::asin, StrictMath::asin, true,
-				(x, r) -> Term.eq(isNaN(r), outsideUnit(x)));
+				(
+						x,
+						r) -> Term.eq(isNaN(r), outsideUnit(x)));
 		math(JavaMathAcosOperator.class, JavaStrictMathAcosOperator.class, Math::acos, StrictMath::acos, false,
-				(x, r) -> Term.ite(outsideUnit(x), isNaN(r), Term.app("fp.leq", Sort.BOOL, ZERO, r)));
+				(
+						x,
+						r) -> Term.ite(outsideUnit(x), isNaN(r), Term.app("fp.leq", Sort.BOOL, ZERO, r)));
 		math(JavaMathAtanOperator.class, JavaStrictMathAtanOperator.class, Math::atan, StrictMath::atan, true,
 				null);
 		math(JavaMathExpOperator.class, JavaStrictMathExpOperator.class, Math::exp, StrictMath::exp, true,
-				(x, r) -> Term.ite(isNaN(x), isNaN(r), Term.app("fp.leq", Sort.BOOL, ZERO, r)));
+				(
+						x,
+						r) -> Term.ite(isNaN(x), isNaN(r), Term.app("fp.leq", Sort.BOOL, ZERO, r)));
 		// the logarithm of both zeros is the negative infinity
 		math(JavaMathLogOperator.class, JavaStrictMathLogOperator.class, Math::log, StrictMath::log, true,
 				JavaExpressionEncoder::logRange);
@@ -1603,9 +1611,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * Whether the given string is parsable by {@link Integer#parseInt(String)}
 	 * (if {@code parsable}), or the int it denotes (only defined if it is
 	 * parsable): an optional sign followed by decimal digits, denoting a value
-	 * in the range of ints. Java also accepts the digits of other scripts
-	 * (see {@link Character#digit(char, int)}): the encoding is precise only
-	 * for ASCII strings.
+	 * in the range of ints. Java also accepts the digits of other scripts (see
+	 * {@link Character#digit(char, int)}): the encoding is precise only for
+	 * ASCII strings.
 	 */
 	private Term parseInt(
 			Term s,
@@ -1864,8 +1872,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * encoded unit by unit (see {@link Term#string(String)}), so that their
 	 * lengths, positions and characters are the ones of Java (a code point
 	 * outside of the Basic Multilingual Plane being a pair of surrogates), but
-	 * the solver might pick strings with code points above {@code 0xFFFF},
-	 * that are one character for it and two for Java. The operands of string
+	 * the solver might pick strings with code points above {@code 0xFFFF}, that
+	 * are one character for it and two for Java. The operands of string
 	 * operations are thus encoded precisely only when they are made of code
 	 * points of the Basic Multilingual Plane that are not surrogates (also
 	 * excluding, conservatively, the literals with surrogates).
@@ -1929,11 +1937,12 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 
 	/**
 	 * The given string where the ASCII uppercase letters are converted to
-	 * lowercase (or vice versa): an auxiliary string with the same length, whose
-	 * chars are the converted ones of the string, up to {@link #CASE_BOUND}
-	 * chars (so the result is precise only for strings of at most
-	 * {@link #CASE_BOUND} chars). The conversion is char by char, as nested
-	 * {@code str.replace_all} (one per letter) make the solvers time out.
+	 * lowercase (or vice versa): an auxiliary string with the same length,
+	 * whose chars are the converted ones of the string, up to
+	 * {@link #CASE_BOUND} chars (so the result is precise only for strings of
+	 * at most {@link #CASE_BOUND} chars). The conversion is char by char, as
+	 * nested {@code str.replace_all} (one per letter) make the solvers time
+	 * out.
 	 */
 	private Term convertCase(
 			Term s,

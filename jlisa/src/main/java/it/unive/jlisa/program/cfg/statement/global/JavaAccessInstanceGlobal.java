@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.cfg.statement.global;
 
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;

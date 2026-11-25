@@ -51,9 +51,9 @@ public final class Main {
 	}
 
 	/**
-	 * Runs jlisa as {@link #main(String[])}, without exiting the virtual machine
-	 * when a sub-command ends with an exit code (e.g., after a failure): a
-	 * {@link CommandExit} is thrown instead (for {@code check}).
+	 * Runs jlisa as {@link #main(String[])}, without exiting the virtual
+	 * machine when a sub-command ends with an exit code (e.g., after a
+	 * failure): a {@link CommandExit} is thrown instead (for {@code check}).
 	 *
 	 * @param args the command-line arguments: the sub-command, then its
 	 *                 arguments

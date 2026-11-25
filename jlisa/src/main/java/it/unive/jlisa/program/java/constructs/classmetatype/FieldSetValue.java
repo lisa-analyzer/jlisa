@@ -1,8 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -221,7 +221,8 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 						JavaNewObj npeCall = new JavaNewObj(cfg, loc,
 								npeType.getReference(), new Expression[0]);
-						// in all the executions only if the target is surely null
+						// in all the executions only if the target is surely
+						// null
 						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural,
 								targetTypes.isEmpty() ? clazzState
 										: JavaExceptions.maybe(interprocedural, clazzState, this),

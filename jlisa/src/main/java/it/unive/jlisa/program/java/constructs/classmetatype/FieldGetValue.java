@@ -1,8 +1,8 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;

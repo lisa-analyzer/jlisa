@@ -1,40 +1,18 @@
 package it.unive.jlisa.triage;
 
-import it.unive.jlisa.program.operator.JavaMathCosOperator;
-import it.unive.jlisa.program.operator.JavaStringInsertFloatOperator;
-import it.unive.jlisa.program.operator.JavaStringInsertDoubleOperator;
-import it.unive.jlisa.program.operator.JavaStringAppendFloatOperator;
-import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
-import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
-import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
-import it.unive.jlisa.program.operator.JavaLongCompareOperator;
-import it.unive.jlisa.program.operator.JavaByteCompareOperator;
-import it.unive.jlisa.program.operator.JavaShortCompareOperator;
-import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
-import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
-import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
-import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
-import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathMin;
-import it.unive.jlisa.program.operator.JavaStrictMathMax;
-import it.unive.jlisa.program.operator.JavaMathMin;
-import it.unive.jlisa.program.operator.JavaMathMax;
-import it.unive.jlisa.program.operator.JavaStrictMathSqrtOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathFloorOperator;
-import it.unive.jlisa.program.operator.JavaStrictMathAbsOperator;
-import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
-import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
-import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import it.unive.jlisa.program.operator.JavaByteCompareOperator;
 import it.unive.jlisa.program.operator.JavaByteToUnsignedIntOperator;
+import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
 import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterIsLetterOperator;
+import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
 import it.unive.jlisa.program.operator.JavaDoubleIsFiniteOperator;
 import it.unive.jlisa.program.operator.JavaDoubleIsInfiniteOperator;
 import it.unive.jlisa.program.operator.JavaDoubleIsNaNOperator;
@@ -46,32 +24,51 @@ import it.unive.jlisa.program.operator.JavaFloatIsInfiniteOperator;
 import it.unive.jlisa.program.operator.JavaFloatIsNaNOperator;
 import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
+import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
+import it.unive.jlisa.program.operator.JavaLongCompareOperator;
 import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
 import it.unive.jlisa.program.operator.JavaMathExpOperator;
 import it.unive.jlisa.program.operator.JavaMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaMathMax;
+import it.unive.jlisa.program.operator.JavaMathMin;
 import it.unive.jlisa.program.operator.JavaMathRoundOperator;
 import it.unive.jlisa.program.operator.JavaMathSinOperator;
 import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaShortCompareOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAbsOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathExpOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathMax;
+import it.unive.jlisa.program.operator.JavaStrictMathMin;
 import it.unive.jlisa.program.operator.JavaStrictMathSinOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathSqrtOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendLongOperator;
 import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
 import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
 import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
 import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
 import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
 import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
 import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
 import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
 import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
 import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
@@ -83,6 +80,8 @@ import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaStringTrimOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
 import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
 import it.unive.jlisa.program.type.JavaBooleanType;
@@ -268,9 +267,9 @@ public class JavaExpressionEncoderTest {
 	/**
 	 * Checks the encoding of an expression whose value is known: its
 	 * requirements alone must be satisfiable (a requirement must never exclude
-	 * the execution, also when the encoding is not precise); then, the
-	 * encoding is precise if its guards hold too, and its value must be the
-	 * expected one.
+	 * the execution, also when the encoding is not precise); then, the encoding
+	 * is precise if its guards hold too, and its value must be the expected
+	 * one.
 	 *
 	 * @return whether the encoding is precise
 	 */
@@ -904,8 +903,7 @@ public class JavaExpressionEncoderTest {
 	}
 
 	/**
-	 * A symbol table recording the unknown functions applied, with their
-	 * sorts.
+	 * A symbol table recording the unknown functions applied, with their sorts.
 	 */
 	private static class FunctionSymbols
 			extends

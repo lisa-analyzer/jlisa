@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
-import it.unive.lisa.lattices.Satisfiability;
 import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
@@ -11,6 +10,7 @@ import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -71,8 +71,9 @@ public class ListRemoveElements extends NaryExpression implements PluggableState
 				if (indexed) {
 					AnalysisState<A> inBounds = modifiable.bottomExecution();
 					for (SymbolicExpression index : params[1])
-						inBounds = inBounds.lub(ListModel.checkIndex(raising, analysis, context, modifiable, list, index,
-								false, this));
+						inBounds = inBounds
+								.lub(ListModel.checkIndex(raising, analysis, context, modifiable, list, index,
+										false, this));
 					modifiable = inBounds;
 				}
 				AnalysisState<A> done = modifiable.getExecutionState().isBottom() ? modifiable

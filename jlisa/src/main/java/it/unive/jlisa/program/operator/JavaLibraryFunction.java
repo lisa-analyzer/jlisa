@@ -501,8 +501,8 @@ public final class JavaLibraryFunction implements UnaryOperator, BinaryOperator,
 	}
 
 	/**
-	 * Yields the simple name of the class of the library declaring the
-	 * function (e.g., {@code Character} for {@code Character.isLetter(int)}).
+	 * Yields the simple name of the class of the library declaring the function
+	 * (e.g., {@code Character} for {@code Character.isLetter(int)}).
 	 *
 	 * @return the name of the class
 	 */

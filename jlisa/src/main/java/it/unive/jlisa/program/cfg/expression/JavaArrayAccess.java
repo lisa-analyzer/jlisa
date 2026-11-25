@@ -139,7 +139,8 @@ public class JavaArrayAccess extends BinaryExpression {
 			for (SymbolicExpression idx : concreteIndexes) {
 				result = result.lub(analysis.smallStepSemantics(state,
 						new AccessChild(accessType, container, idx, getLocation()), context, this));
-				if (!(((Constant) idx).getValue() instanceof Number n) || n.longValue() >= ArrayCells.MAX_ENUMERATED_CELLS)
+				if (!(((Constant) idx).getValue() instanceof Number n)
+						|| n.longValue() >= ArrayCells.MAX_ENUMERATED_CELLS)
 					untracked = true;
 			}
 			// a write with a non-constant index might have changed the cells
@@ -151,7 +152,8 @@ public class JavaArrayAccess extends BinaryExpression {
 
 		if (!accessType.isReferenceType() && !accessType.isInMemoryType()) {
 			it.unive.lisa.symbolic.value.BinaryExpression larger = new it.unive.lisa.symbolic.value.BinaryExpression(
-					JavaBooleanType.INSTANCE, new Constant(JavaIntType.INSTANCE, ArrayCells.MAX_ENUMERATED_CELLS, getLocation()),
+					JavaBooleanType.INSTANCE,
+					new Constant(JavaIntType.INSTANCE, ArrayCells.MAX_ENUMERATED_CELLS, getLocation()),
 					lenAccess, ComparisonLt.INSTANCE, getLocation());
 			Satisfiability untracked = analysis.satisfies(state, larger, context, this);
 			if (untracked == Satisfiability.SATISFIED || untracked == Satisfiability.UNKNOWN) {

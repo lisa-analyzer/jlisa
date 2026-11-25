@@ -382,8 +382,8 @@ public class JavaClassType
 	 */
 	/**
 	 * Yields whether a value of the given primitive type is passed to a
-	 * parameter of the given reference type by boxing it and then widening
-	 * the reference (e.g., a {@code char} passed as an {@code Object}, as a
+	 * parameter of the given reference type by boxing it and then widening the
+	 * reference (e.g., a {@code char} passed as an {@code Object}, as a
 	 * {@code Character}), excluding the case where the reference type is the
 	 * one of the wrapper class itself (see {@link #isWrapperOf(Type, Type)}).
 	 *

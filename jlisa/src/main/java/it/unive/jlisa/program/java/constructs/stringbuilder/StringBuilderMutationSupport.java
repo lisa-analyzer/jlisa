@@ -1,17 +1,10 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.UnaryExpression;
-import it.unive.lisa.symbolic.value.BinaryExpression;
-import it.unive.jlisa.program.operator.JavaStringLengthOperator;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.cfg.JavaExceptions;
+import it.unive.jlisa.program.operator.JavaStringLengthOperator;
+import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -23,8 +16,15 @@ import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
+import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.Variable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.function.Function;
@@ -94,11 +94,11 @@ final class StringBuilderMutationSupport {
 	}
 
 	/**
-	 * Raises {@code StringIndexOutOfBoundsException} exactly in the executions of
-	 * the given state where the given index is out of the contents of the
+	 * Raises {@code StringIndexOutOfBoundsException} exactly in the executions
+	 * of the given state where the given index is out of the contents of the
 	 * given builder (negative, or not smaller than their length; greater than
-	 * it if {@code inclusive}, e.g. for the offset of {@code insert}),
-	 * yielding the other executions.
+	 * it if {@code inclusive}, e.g. for the offset of {@code insert}), yielding
+	 * the other executions.
 	 *
 	 * @param <A>        the kind of the abstract state
 	 * @param <D>        the kind of the abstract domain

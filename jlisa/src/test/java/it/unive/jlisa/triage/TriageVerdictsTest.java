@@ -234,8 +234,8 @@ public class TriageVerdictsTest {
 
 	/**
 	 * Runtime exceptions whose counterexamples rely on imprecise values are
-	 * certified by execution too, also within a time limit (that leaves time
-	 * to the certification).
+	 * certified by execution too, also within a time limit (that leaves time to
+	 * the certification).
 	 */
 	@Test
 	public void runtimeExceptionsAreCertifiedByExecution(
@@ -635,11 +635,11 @@ public class TriageVerdictsTest {
 	}
 
 	/**
-	 * Exceptions are raised only in the executions raising them, and the
-	 * others continue normally: the field of a reference that might be null
-	 * is read only where it is not, a cast fails only where the value is not
-	 * an instance of the type, and a null key is rejected only by the maps
-	 * that do not accept it.
+	 * Exceptions are raised only in the executions raising them, and the others
+	 * continue normally: the field of a reference that might be null is read
+	 * only where it is not, a cast fails only where the value is not an
+	 * instance of the type, and a null key is rejected only by the maps that do
+	 * not accept it.
 	 */
 	@Test
 	public void exceptionsAreRaisedOnlyWhereTheyHappen(
@@ -680,8 +680,8 @@ public class TriageVerdictsTest {
 	}
 
 	/**
-	 * Integer.parseInt, System.arraycopy, Arrays.copyOf and String.split
-	 * raise their exceptions, and compute their results (arraycopy writes the
+	 * Integer.parseInt, System.arraycopy, Arrays.copyOf and String.split raise
+	 * their exceptions, and compute their results (arraycopy writes the
 	 * destination, also when it is the source).
 	 */
 	@Test
@@ -693,7 +693,8 @@ public class TriageVerdictsTest {
 			assertEquals(Verdict.DEFINITE, verdict(program, SVCOMPProperty.RUNTIME_EXCEPTION, dir.resolve(program)),
 					program);
 		assertEquals(Verdict.DEFINITE, verdict("arraycopy-write", SVCOMPProperty.ASSERT, dir.resolve("write")));
-		assertSafe(verdict("arraycopy-value", SVCOMPProperty.ASSERT, dir.resolve("arraycopy-value")), "arraycopy-value");
+		assertSafe(verdict("arraycopy-value", SVCOMPProperty.ASSERT, dir.resolve("arraycopy-value")),
+				"arraycopy-value");
 		assertSafe(verdict("arraycopy-overlap", SVCOMPProperty.ASSERT, dir.resolve("arraycopy-overlap")),
 				"arraycopy-overlap");
 		// a source of unknown type might overwrite the destination

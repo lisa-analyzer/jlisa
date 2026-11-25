@@ -3,8 +3,9 @@ package it.unive.jlisa.cli;
 /**
  * Thrown by a sub-command that ends with the given exit code (e.g., after a
  * failure that it has already reported), instead of exiting the virtual
- * machine: {@link it.unive.jlisa.Main#main(String[])} exits with the code, while
- * {@link it.unive.jlisa.Main#run(String[])} (e.g., in tests) lets it propagate.
+ * machine: {@link it.unive.jlisa.Main#main(String[])} exits with the code,
+ * while {@link it.unive.jlisa.Main#run(String[])} (e.g., in tests) lets it
+ * propagate.
  */
 public class CommandExit
 		extends

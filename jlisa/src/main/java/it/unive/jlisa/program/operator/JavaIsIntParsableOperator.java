@@ -8,8 +8,8 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Whether a string is the decimal representation of an {@code int}, as
- * accepted by {@link Integer#parseInt(String)}.
+ * Whether a string is the decimal representation of an {@code int}, as accepted
+ * by {@link Integer#parseInt(String)}.
  */
 public class JavaIsIntParsableOperator implements UnaryOperator {
 

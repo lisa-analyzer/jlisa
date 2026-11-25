@@ -1,6 +1,5 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.operator.JavaStringLengthOperator;
@@ -29,6 +28,7 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
@@ -87,7 +87,8 @@ public class StringSubstringFromTo extends TernaryExpression implements Pluggabl
 				JavaIntType.INSTANCE, accessLeft, JavaStringLengthOperator.INSTANCE, getLocation());
 		// JLS: begin < 0, end > length or begin > end
 		it.unive.lisa.symbolic.value.BinaryExpression beginNegative = new it.unive.lisa.symbolic.value.BinaryExpression(
-				JavaBooleanType.INSTANCE, middle, new Constant(JavaIntType.INSTANCE, 0, getLocation()), ComparisonLt.INSTANCE, getLocation());
+				JavaBooleanType.INSTANCE, middle, new Constant(JavaIntType.INSTANCE, 0, getLocation()),
+				ComparisonLt.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression endTooLarge = new it.unive.lisa.symbolic.value.BinaryExpression(
 				JavaBooleanType.INSTANCE, right, length, ComparisonGt.INSTANCE, getLocation());
 		it.unive.lisa.symbolic.value.BinaryExpression inverted = new it.unive.lisa.symbolic.value.BinaryExpression(

@@ -81,8 +81,7 @@ public class JavaWritesTest {
 
 	/**
 	 * A static initializer writing only the static fields of its class is an
-	 * initializer, while one writing the static fields of another class is
-	 * not.
+	 * initializer, while one writing the static fields of another class is not.
 	 */
 	@Test
 	public void staticInitializersWritingOtherClassesAreNotInitializers() throws IOException {

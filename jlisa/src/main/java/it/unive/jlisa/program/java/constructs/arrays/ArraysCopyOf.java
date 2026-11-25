@@ -26,8 +26,8 @@ import it.unive.lisa.type.Untyped;
  * {@link java.util.Arrays#copyOf(Object[], int)} (and its overloads for the
  * arrays of primitive values): a new array of the given length. It raises
  * {@link NullPointerException} if the array is {@code null}, and
- * {@link NegativeArraySizeException} if the length is negative. The contents
- * of the new array are not tracked: the result is any array.
+ * {@link NegativeArraySizeException} if the length is negative. The contents of
+ * the new array are not tracked: the result is any array.
  */
 public class ArraysCopyOf extends BinaryExpression implements PluggableStatement {
 

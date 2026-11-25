@@ -62,6 +62,7 @@ public class StringGetChars extends NaryExpression implements PluggableStatement
 			Statement st) {
 		originating = st;
 	}
+
 	@Override
 	protected int compareSameClassAndParams(
 			Statement o) {

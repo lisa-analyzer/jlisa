@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.java.constructs.lists;
 
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
@@ -41,9 +39,11 @@ import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.symbolic.value.operator.binary.NumericNonOverflowingAdd;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
@@ -764,9 +764,9 @@ public class ListModel {
 	}
 
 	/**
-	 * Yields whether the method of a list implemented by the given native
-	 * takes an index as its first argument (e.g. {@code remove(int)}, as
-	 * opposed to {@code remove(Object)}).
+	 * Yields whether the method of a list implemented by the given native takes
+	 * an index as its first argument (e.g. {@code remove(int)}, as opposed to
+	 * {@code remove(Object)}).
 	 *
 	 * @param subExpressions the sub-expressions of the native (the receiver
 	 *                           first)
@@ -779,12 +779,12 @@ public class ListModel {
 	}
 
 	/**
-	 * Raises {@code IndexOutOfBoundsException} exactly in the executions of
-	 * the given state where the given index is out of the bounds of the given
-	 * list (negative, or not smaller than its size; greater than its size if
+	 * Raises {@code IndexOutOfBoundsException} exactly in the executions of the
+	 * given state where the given index is out of the bounds of the given list
+	 * (negative, or not smaller than its size; greater than its size if
 	 * {@code inclusive}, e.g. for {@code add(int, E)}), yielding the other
-	 * executions. If the list is not modeled, the exception is raised under
-	 * an unknown condition, and all the executions are yielded.
+	 * executions. If the list is not modeled, the exception is raised under an
+	 * unknown condition, and all the executions are yielded.
 	 *
 	 * @param <A>       the kind of the abstract state
 	 * @param <D>       the kind of the abstract domain
@@ -861,22 +861,21 @@ public class ListModel {
 	/**
 	 * As
 	 * {@link #nullArgument(InterproceduralAnalysis, AnalysisState, AnalysisState, SymbolicExpression, Statement, Expression[], StatementStore)},
-	 * where {@code state} is the state of the executions where the method
-	 * does not accept null: if it is {@code exact}, it is exactly them, and
-	 * the exception is raised exactly where the argument is null; otherwise,
-	 * it is raised under an unknown condition. The result of the method is
-	 * restricted to the executions where the argument is not null if
-	 * {@code restrict} holds (that is, the method never accepts null).
+	 * where {@code state} is the state of the executions where the method does
+	 * not accept null: if it is {@code exact}, it is exactly them, and the
+	 * exception is raised exactly where the argument is null; otherwise, it is
+	 * raised under an unknown condition. The result of the method is restricted
+	 * to the executions where the argument is not null if {@code restrict}
+	 * holds (that is, the method never accepts null).
 	 *
 	 * @param <A>             the kind of the abstract state
 	 * @param <D>             the kind of the abstract domain
 	 * @param interprocedural the interprocedural analysis
 	 * @param state           the state before the method, of the executions
 	 *                            where the method does not accept null
-	 * @param exact           whether {@code state} is exactly those
-	 *                            executions
-	 * @param restrict        whether the result is restricted to the
-	 *                            executions where the argument is not null
+	 * @param exact           whether {@code state} is exactly those executions
+	 * @param restrict        whether the result is restricted to the executions
+	 *                            where the argument is not null
 	 * @param done            the result of the method
 	 * @param argument        the argument
 	 * @param st              the statement

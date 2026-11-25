@@ -1,7 +1,7 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.JavaLocation;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -70,9 +70,9 @@ public class JavaUnboxBoolean extends UnaryExpression {
 	}
 
 	/**
-	 * The location of the unboxing of an expression: the source position of
-	 * the expression, but a different location (not equal to it, and ordered
-	 * after it, see {@link JavaLocation#compareTo}).
+	 * The location of the unboxing of an expression: the source position of the
+	 * expression, but a different location (not equal to it, and ordered after
+	 * it, see {@link JavaLocation#compareTo}).
 	 */
 	private static final class UnboxedLocation
 			extends

@@ -63,14 +63,13 @@ public final class JavaExceptions {
 
 	/**
 	 * Restricts the given state to the executions of a branch whose condition
-	 * is not expressed (e.g., an exception raised when the analysis cannot
-	 * tell which executions raise it): the branch happens under an unknown
+	 * is not expressed (e.g., an exception raised when the analysis cannot tell
+	 * which executions raise it): the branch happens under an unknown
 	 * condition. The analysis is not affected, while the verification of the
 	 * warnings never takes the branch for granted.
 	 *
 	 * @param <A>             the kind of {@link AbstractLattice} of the state
-	 * @param <D>             the kind of {@link AbstractDomain} of the
-	 *                            analysis
+	 * @param <D>             the kind of {@link AbstractDomain} of the analysis
 	 * @param interprocedural the interprocedural analysis
 	 * @param state           the state
 	 * @param pp              the program point of the branch
@@ -90,11 +89,11 @@ public final class JavaExceptions {
 
 	/**
 	 * Collects the executions raising exceptions in a statement, so that they
-	 * are moved to the error channel once the executions that continue
-	 * normally are known (see {@link #moveFrom(AnalysisState)}). Each raise
-	 * states whether the given state is exactly the executions raising the
-	 * exception ({@link Satisfiability#SATISFIED}) or a state where it is
-	 * raised under an unknown condition ({@link Satisfiability#UNKNOWN}).
+	 * are moved to the error channel once the executions that continue normally
+	 * are known (see {@link #moveFrom(AnalysisState)}). Each raise states
+	 * whether the given state is exactly the executions raising the exception
+	 * ({@link Satisfiability#SATISFIED}) or a state where it is raised under an
+	 * unknown condition ({@link Satisfiability#UNKNOWN}).
 	 *
 	 * @param <A> the kind of {@link AbstractLattice} of the states
 	 * @param <D> the kind of {@link AbstractDomain} of the analysis
@@ -121,10 +120,9 @@ public final class JavaExceptions {
 		 *
 		 * @param interprocedural the interprocedural analysis
 		 * @param thrower         the statement raising the exceptions
-		 * @param consumed        the identifiers that the executions raising
-		 *                            an exception forget (e.g. the meta
-		 *                            variables of the sub-expressions of the
-		 *                            statement)
+		 * @param consumed        the identifiers that the executions raising an
+		 *                            exception forget (e.g. the meta variables
+		 *                            of the sub-expressions of the statement)
 		 */
 		public Raising(
 				InterproceduralAnalysis<A, D> interprocedural,
@@ -136,15 +134,15 @@ public final class JavaExceptions {
 		/**
 		 * Builds the collector for a statement that raises the exceptions on
 		 * behalf of another one (e.g. a native, on behalf of the call of the
-		 * program it implements): the errors are the ones of {@code source},
-		 * so that, e.g., the handlers of the exceptions raised by
-		 * {@code source} catch them.
+		 * program it implements): the errors are the ones of {@code source}, so
+		 * that, e.g., the handlers of the exceptions raised by {@code source}
+		 * catch them.
 		 *
 		 * @param interprocedural the interprocedural analysis
 		 * @param thrower         the statement raising the exceptions
 		 * @param source          the statement of the program raising them
-		 * @param consumed        the identifiers that the executions raising
-		 *                            an exception forget
+		 * @param consumed        the identifiers that the executions raising an
+		 *                            exception forget
 		 */
 		public Raising(
 				InterproceduralAnalysis<A, D> interprocedural,
@@ -249,13 +247,12 @@ public final class JavaExceptions {
 		}
 
 		/**
-		 * Raises an exception of the given class in the executions of the
-		 * given state where it is raised, according to {@code raises}: in none
-		 * of them if it is {@link Satisfiability#NOT_SATISFIED}, in all of
-		 * them if it is {@link Satisfiability#SATISFIED} (that is, the state is
-		 * exactly the executions raising it), and under an unknown condition
-		 * otherwise, so that the verification of the warnings never takes it
-		 * for granted.
+		 * Raises an exception of the given class in the executions of the given
+		 * state where it is raised, according to {@code raises}: in none of
+		 * them if it is {@link Satisfiability#NOT_SATISFIED}, in all of them if
+		 * it is {@link Satisfiability#SATISFIED} (that is, the state is exactly
+		 * the executions raising it), and under an unknown condition otherwise,
+		 * so that the verification of the warnings never takes it for granted.
 		 *
 		 * @param raises    whether the exception is raised
 		 * @param state     the state of the executions that might raise the
@@ -310,8 +307,7 @@ public final class JavaExceptions {
 		 * ones where it does not to continue. The executions where the
 		 * condition holds surely raise the exception only if {@code surely}
 		 * holds (e.g. not if they might raise another exception instead),
-		 * otherwise the exception is raised in them under an unknown
-		 * condition.
+		 * otherwise the exception is raised in them under an unknown condition.
 		 *
 		 * @param condition the condition under which the exception is raised
 		 * @param surely    whether the executions where the condition holds
@@ -320,8 +316,7 @@ public final class JavaExceptions {
 		 *                      exception
 		 * @param className the name of the class of the exception
 		 *
-		 * @return the state of the executions where the exception is not
-		 *             raised
+		 * @return the state of the executions where the exception is not raised
 		 *
 		 * @throws SemanticException if the analysis fails
 		 */

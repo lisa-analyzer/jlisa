@@ -1,9 +1,7 @@
 package it.unive.jlisa.program.java.constructs.string;
 
-import java.util.regex.Pattern;
-import it.unive.lisa.lattices.Satisfiability;
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.SyntheticCodeLocation;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaArrayType;
@@ -22,6 +20,7 @@ import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
 import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
+import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
@@ -43,6 +42,7 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class StringSplit extends BinaryExpression implements PluggableStatement {
@@ -125,7 +125,8 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression spl : splitArray.getExecutionExpressions())
 			for (int i = 0; i < UNKNOWN_PARTS; i++) {
-				AccessChild cell = new AccessChild(stringType, spl, new Constant(JavaIntType.INSTANCE, i, getLocation()),
+				AccessChild cell = new AccessChild(stringType, spl,
+						new Constant(JavaIntType.INSTANCE, i, getLocation()),
 						getLocation());
 				Expression unknownStr = new JavaNewObj(getCFG(), new SyntheticCodeLocation(src, i + 1),
 						new JavaReferenceType(stringType), new Expression[0]);
@@ -143,8 +144,8 @@ public class StringSplit extends BinaryExpression implements PluggableStatement 
 	}
 
 	/**
-	 * The number of cells of the array of a split string written when its
-	 * parts are not known.
+	 * The number of cells of the array of a split string written when its parts
+	 * are not known.
 	 */
 	private static final int UNKNOWN_PARTS = 4;
 

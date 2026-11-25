@@ -1,13 +1,9 @@
 package it.unive.jlisa.program.java.constructs.stringbuilder;
 
-import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
-import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
-import it.unive.lisa.symbolic.value.Constant;
-import it.unive.jlisa.program.type.JavaIntType;
-import it.unive.jlisa.program.type.JavaBooleanType;
 import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
+import it.unive.jlisa.program.type.JavaBooleanType;
+import it.unive.jlisa.program.type.JavaIntType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -23,6 +19,10 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.TernaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonGt;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonLt;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 import it.unive.lisa.type.Type;
 
 public class StringBuilderDelete extends TernaryExpression implements PluggableStatement {

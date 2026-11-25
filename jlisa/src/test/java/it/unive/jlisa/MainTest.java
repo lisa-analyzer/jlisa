@@ -20,6 +20,6 @@ public class MainTest {
 		// an invalid option of check
 		assertEquals(1, assertThrows(CommandExit.class,
 				() -> Main.run(new String[] { "check", "--time-limit", "-5", "-s", "x.java", "-o", "out" }))
-				.getCode());
+						.getCode());
 	}
 }

@@ -40,11 +40,11 @@ import java.util.Set;
  * declared by library classes, the ones that natives write through unqualified
  * names (e.g., {@code value}, also when a class of the program declares a field
  * with that name), and the internal fields of the models of the library.
- * Natives write no field of the classes of the program, except the reflective ones and the clones of
- * objects, whose writes are unknown. The calls that natives and statements
- * perform on behalf of the program (e.g., of the methods converting objects to
- * strings) are part of the call graph, so the writes of their targets are found
- * through it (as for {@link JavaGlobalWrites}).
+ * Natives write no field of the classes of the program, except the reflective
+ * ones and the clones of objects, whose writes are unknown. The calls that
+ * natives and statements perform on behalf of the program (e.g., of the methods
+ * converting objects to strings) are part of the call graph, so the writes of
+ * their targets are found through it (as for {@link JavaGlobalWrites}).
  */
 public class JavaHeapWrites
 		implements
@@ -71,10 +71,10 @@ public class JavaHeapWrites
 	 * {@code value} of string builders, atomic integers and boxed numbers, the
 	 * {@code message} of exceptions, the metadata of classes). The internal
 	 * fields of the models of the library (e.g., the entries of maps, see
-	 * {@link it.unive.jlisa.program.java.constructs.map.MapModel#keyField}) have
-	 * names starting with {@code $}, and are written by them too. This list
-	 * must be kept in sync with the natives (a test checks that it contains
-	 * the names of the fields that their code accesses).
+	 * {@link it.unive.jlisa.program.java.constructs.map.MapModel#keyField})
+	 * have names starting with {@code $}, and are written by them too. This
+	 * list must be kept in sync with the natives (a test checks that it
+	 * contains the names of the fields that their code accesses).
 	 */
 	static final Set<String> NATIVE_FIELDS = Set.of("value", "length", "capacity", "message", "name",
 			"type", "clazz", "modifiers", "superClass", "interfaces", "parameterTypes", "returnType",

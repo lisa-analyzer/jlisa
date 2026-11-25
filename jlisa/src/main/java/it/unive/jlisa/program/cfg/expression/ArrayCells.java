@@ -18,8 +18,8 @@ import it.unive.lisa.symbolic.value.operator.binary.LogicalOr;
 /**
  * Helpers shared by the statements accessing the cells of arrays one by one
  * (e.g., {@link JavaArrayAccess}, {@code System.arraycopy} and
- * {@code String.getChars}): the cells of an array are accessed through
- * constant indexes only when there are few of them.
+ * {@code String.getChars}): the cells of an array are accessed through constant
+ * indexes only when there are few of them.
  *
  * @author <a href="mailto:luca.negrini@unive.it">Luca Negrini</a>
  */

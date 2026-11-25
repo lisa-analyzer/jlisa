@@ -1,8 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.lisa.symbolic.value.PushAny;
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -34,6 +33,7 @@ import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.UnitType;
@@ -132,7 +132,8 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location), context, this);
 		// the exceptions of a class are raised in all the executions only if
 		// it is the only class the object might have
-		AnalysisState<A> raising = constraintList.size() == 1 ? state : JavaExceptions.maybe(interprocedural, state, this);
+		AnalysisState<
+				A> raising = constraintList.size() == 1 ? state : JavaExceptions.maybe(interprocedural, state, this);
 
 		for (BinaryExpression constraint : constraintList) {
 

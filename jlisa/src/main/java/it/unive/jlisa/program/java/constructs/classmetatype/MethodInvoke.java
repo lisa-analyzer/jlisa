@@ -1,8 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
-import it.unive.lisa.symbolic.value.PushAny;
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.ConstraintUtils;
+import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -59,6 +58,7 @@ import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.Skip;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
@@ -219,7 +219,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 					clazzNameConstraints, derefMethod);
 			if (mayThrowIA) {
 				// the executions raising it are not known
-				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, JavaExceptions.maybe(interprocedural, state, this),
+				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural,
+						JavaExceptions.maybe(interprocedural, state, this),
 						expressions));
 				iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			}
@@ -353,7 +354,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
 					// the executions raising it are not known
-					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, JavaExceptions.maybe(interprocedural, state, this),
+					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural,
+							JavaExceptions.maybe(interprocedural, state, this),
 							expressions));
 					iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(),
 							originating);

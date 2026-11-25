@@ -76,9 +76,9 @@ public class JavaAccessGlobal extends Expression {
 	/**
 	 * Yields the unit declaring the accessed global: the container, or the
 	 * closest ancestor declaring it (also not an immediate one, e.g., {@code A}
-	 * for a static field of {@code A} accessed in {@code C extends B extends A},
-	 * and also an implemented interface), as the reflective accesses and the
-	 * other accesses to it name it.
+	 * for a static field of {@code A} accessed in
+	 * {@code C extends B extends A}, and also an implemented interface), as the
+	 * reflective accesses and the other accesses to it name it.
 	 *
 	 * @return the unit declaring the global
 	 */
