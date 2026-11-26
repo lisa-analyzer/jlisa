@@ -7,8 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 103 queries, at level 4\ntime budget exhausted while building the model"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 119 queries, at level 5\ntime budget exhausted while building the model"
+    }
   }, {
     "location" : "'Main.java':21:6-21:45",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -17,8 +19,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 94 queries, at level 4"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 107 queries, at level 4"
+    }
   }, {
     "location" : "'Main.java':30:6-30:38",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -27,24 +31,26 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 60 queries, at level 2"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 67 queries, at level 3"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "3m 11s 404ms",
-    "end" : "2026-11-13T17:33:26.587+01:00",
+    "duration" : "3m 8s 934ms",
+    "end" : "2026-11-26T21:31:24.842+01:00",
     "expressions" : "71",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:30:15.183+01:00",
+    "start" : "2026-11-26T21:28:15.908+01:00",
     "statements" : "32",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "3"
   },

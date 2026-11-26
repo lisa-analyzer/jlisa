@@ -7,23 +7,25 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true
+    "verification" : {
+      "outcome" : "confirmed"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "7",
-    "duration" : "12ms",
-    "end" : "2026-11-13T17:36:40.150+01:00",
+    "duration" : "11ms",
+    "end" : "2026-11-26T21:35:46.700+01:00",
     "expressions" : "18",
     "files" : "1",
     "globals" : "54",
-    "members" : "410",
+    "members" : "416",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:36:40.138+01:00",
+    "start" : "2026-11-26T21:35:46.689+01:00",
     "statements" : "15",
-    "units" : "57",
+    "units" : "59",
     "version" : "1.0",
     "warnings" : "1"
   },

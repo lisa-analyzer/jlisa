@@ -7,8 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 22 steps through [strings = new java.lang.String*[]*{\"tested\", \"testing\", \"passed\", \"passing\"}, i = 0, $foreach-array@440 = strings, $foreach-index@440 = 0, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), ++i, $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), string = $foreach-array@440[$foreach-index@440], startsWith(string, \"te\"), $foreach-index@440++, <($foreach-index@440, $foreach-array@440::length), assert ==(i, 2)], relying on values that are not computed precisely (heap values, operations on values of other kinds, comparisons of non-integers): choice among the heap locations accessed by $foreach-array@440[$foreach-index@440]; ReferenceRead; ComparisonLt; CellKey; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"te\") not written by the model"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 469 queries, at level 6"
+    }
   }, {
     "location" : "'Main.java':23:4-23:17",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -17,8 +19,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 658 queries, at level 9"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 708 queries, at level 9"
+    }
   }, {
     "location" : "'Main.java':29:4-29:17",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -27,24 +31,26 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 1461 queries, at level 20"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 1230 queries, at level 20"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "2m 52s 213ms",
-    "end" : "2026-11-13T17:36:28.973+01:00",
+    "duration" : "3m 745ms",
+    "end" : "2026-11-26T21:35:39.378+01:00",
     "expressions" : "74",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:33:36.760+01:00",
+    "start" : "2026-11-26T21:32:38.633+01:00",
     "statements" : "37",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "3"
   },

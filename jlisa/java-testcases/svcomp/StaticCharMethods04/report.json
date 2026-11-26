@@ -7,37 +7,39 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':12:26-12:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':13:13-13:33",
-      "source" : "return of char org.sosy_lab.sv_benchmarks.Verifier::nondetChar()",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "65501"
-    } ],
-    "explanation" : "violation reached in 1 steps through [c = org.sosy_lab.sv_benchmarks.Verifier::nondetChar(), assert java.lang.Character::isLetter(c)] (not yet certified by execution)"
+    "verification" : {
+      "outcome" : "confirmed",
+      "reproducingInputs" : [ {
+        "location" : "'Main.java':12:26-12:38",
+        "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\""
+      }, {
+        "location" : "'Main.java':13:13-13:33",
+        "source" : "return of char org.sosy_lab.sv_benchmarks.Verifier::nondetChar()",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "65501"
+      } ],
+      "explanation" : "violation reached in 1 steps through [c = org.sosy_lab.sv_benchmarks.Verifier::nondetChar(), assert java.lang.Character::isLetter(c)] (not yet certified by execution)"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "136ms",
-    "end" : "2026-11-13T17:38:57.324+01:00",
+    "duration" : "94ms",
+    "end" : "2026-11-26T21:37:59.021+01:00",
     "expressions" : "11",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:38:57.188+01:00",
+    "start" : "2026-11-26T21:37:58.927+01:00",
     "statements" : "11",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "1"
   },

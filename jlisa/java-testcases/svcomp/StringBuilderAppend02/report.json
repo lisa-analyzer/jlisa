@@ -7,24 +7,26 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 13 steps through [objectRef = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), string = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), charArray = new char[]*{'v', 'e', 'r', 'i', 'f', 'i', 'c', 'a', 't', 'i', 'o', 'n'}, booleanValue = true, characterValue = 'Z', integerValue = 7, longValue = 10000000000, floatValue = 2.5, doubleValue = 33.333, lastBuffer = new java.lang.StringBuilder(\"last buffer\"), buffer = new java.lang.StringBuilder(), append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(buffer, objectRef), \"%n\"), string), \"%n\"), charArray), \"%n\"), charArray, 0, 3), \"%n\"), booleanValue), \"%n\"), characterValue), \"%n\"), integerValue), \"%n\"), longValue), \"%n\"), floatValue), \"%n\"), doubleValue), \"%n\"), lastBuffer), tmp = toString(buffer), assert equals(tmp, \"diffblue%ntest%nverification%nver%ntrue%n%Z%n7%n10000000000%n2.5%n33.333%nlast buffer\")], relying on values that are not computed precisely (heap values, unprojected values, operations on values of other kinds): value of $field:value too large to track; fresh values left unconstrained by the projection; ReferenceRead; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"diffblue%ntest%nverification%nver%ntrue%n%Z%n7%n10000000000%n2.5%n33.333%nlast buffer\") not written by the model"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "violation reached in 13 steps through [objectRef = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), string = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), charArray = new char[]*{'v', 'e', 'r', 'i', 'f', 'i', 'c', 'a', 't', 'i', 'o', 'n'}, booleanValue = true, characterValue = 'Z', integerValue = 7, longValue = 10000000000, floatValue = 2.5, doubleValue = 33.333, lastBuffer = new java.lang.StringBuilder(\"last buffer\"), buffer = new java.lang.StringBuilder(), append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(buffer, objectRef), \"%n\"), string), \"%n\"), charArray), \"%n\"), charArray, 0, 3), \"%n\"), booleanValue), \"%n\"), characterValue), \"%n\"), integerValue), \"%n\"), longValue), \"%n\"), floatValue), \"%n\"), doubleValue), \"%n\"), lastBuffer), tmp = toString(buffer), assert equals(tmp, \"diffblue%ntest%nverification%nver%ntrue%n%Z%n7%n10000000000%n2.5%n33.333%nlast buffer\")], relying on values that are not computed precisely (heap values, unprojected values, operations on values of other kinds): value of $field:value too large to track; fresh values left unconstrained by the projection; ReferenceRead; contents of $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"diffblue%ntest%nverification%nver%ntrue%n%Z%n7%n10000000000%n2.5%n33.333%nlast buffer\") not written by the model"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "832ms",
-    "end" : "2026-11-13T17:29:48.298+01:00",
+    "duration" : "585ms",
+    "end" : "2026-11-26T21:27:57.930+01:00",
     "expressions" : "92",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:29:47.466+01:00",
+    "start" : "2026-11-26T21:27:57.345+01:00",
     "statements" : "23",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "1"
   },

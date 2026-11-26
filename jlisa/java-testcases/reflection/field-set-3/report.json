@@ -7,8 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
-    "definite" : false,
-    "explanation" : "violation reached in 9 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"nickname\", f = getField(c, s)], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers, call results): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; ComparisonEq; imprecise return of java.lang.reflect.Field* java.lang.Class::getField(java.lang.Class* this, java.lang.String* v) or void java.lang.NoSuchFieldException::NoSuchFieldException(java.lang.NoSuchFieldException* this)"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "violation reached in 9 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"nickname\", f = getField(c, s)], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers, call results): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; ComparisonEq; imprecise return of java.lang.reflect.Field* java.lang.Class::getField(java.lang.Class* this, java.lang.String* v) or void java.lang.NoSuchFieldException::NoSuchFieldException(java.lang.NoSuchFieldException* this)"
+    }
   }, {
     "location" : "'Main.java':16:2-16:36",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -17,8 +19,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 11 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"name\", f = getField(c, s), set(f, null, \"newName\"), assert equals(Cat::name, \"newName\")], relying on values that are not computed precisely (operations on values of other kinds, heap values, merged values, unprojected values, unsupported operations): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; merged value of $field:java.lang.String::value; merged value of $written:java.lang.String::value; contents of $summary#3220 store(ref 729245 + 2, \"\") store(ref 729245 + 2, \"newName\") store(ref 729245 + 3, \"\") store(ref 729245 + 3, \"newName\") not written by the model"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "violation reached in 11 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"name\", f = getField(c, s), set(f, null, \"newName\"), assert equals(Cat::name, \"newName\")], relying on values that are not computed precisely (operations on values of other kinds, heap values, merged values, unprojected values, unsupported operations): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; merged value of $field:java.lang.String::value; merged value of $written:java.lang.String::value; contents of $summary#3220 store(ref 729245 + 2, \"\") store(ref 729245 + 2, \"newName\") store(ref 729245 + 3, \"\") store(ref 729245 + 3, \"newName\") not written by the model"
+    }
   }, {
     "location" : "'Main.java':17:2-17:40",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -27,22 +31,24 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 12 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"nickname\", f = getField(c, s), set(f, null, \"newName\"), assert equals(Cat::name, \"newName\"), assert equals(Cat::nickname, \"newName\")], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers, merged values, unprojected values, unsupported operations): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; ComparisonEq; merged value of $field:java.lang.String::value; merged value of $written:java.lang.String::value"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "violation reached in 12 steps through [c = java.lang.Class::forName(\"Cat\"), [main > Cat_clinit] java.lang.Object::Object_clinit(), [main > Cat_clinit] Cat::name = \"fluffy\", [main > Cat_clinit] Cat::nickname = \"fluff\", [main > Cat_clinit] ret, c = java.lang.Class::forName(\"Cat\") (after [1 targets] Cat::Cat_clinit()), s = null, ==(args::length, 1), s = \"nickname\", f = getField(c, s), set(f, null, \"newName\"), assert equals(Cat::name, \"newName\"), assert equals(Cat::nickname, \"newName\")], relying on values that are not computed precisely (operations on values of other kinds, heap values, comparisons of non-integers, merged values, unprojected values, unsupported operations): ReferenceRead; contents of $field:length store(ref $alloc + 5, 0) store(ref $alloc + 8, 0) not written by the model; ComparisonEq; merged value of $field:java.lang.String::value; merged value of $written:java.lang.String::value"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Cat.Cat_clinit()_7d8c0f532345b9c6983197f15c00c6b6.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "16s 947ms",
-    "end" : "2026-11-25T21:11:10.543+01:00",
+    "duration" : "16s 760ms",
+    "end" : "2026-11-26T21:22:45.980+01:00",
     "expressions" : "31",
     "files" : "2",
     "globals" : "55",
-    "members" : "400",
+    "members" : "404",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-25T21:10:53.596+01:00",
+    "start" : "2026-11-26T21:22:29.220+01:00",
     "statements" : "18",
     "units" : "57",
     "version" : "1.0",

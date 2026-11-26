@@ -7,23 +7,25 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true
+    "verification" : {
+      "outcome" : "confirmed"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_A.A(A__this)_3d1e913e0998d131b6ad71623b00dabb.graph.json", "void_A.A(A__this)_ed3c400c845ba979de6dd3e7bb9f7b19.graph.json", "void_B.B(B__this)_7a878d73fbb02cf9de0535e5caebe377.graph.json", "void_Main.foo()_54154623608c8bab99adfda41d370592.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "10",
-    "duration" : "52ms",
-    "end" : "2026-11-13T17:29:59.177+01:00",
+    "duration" : "25ms",
+    "end" : "2026-11-26T21:28:05.737+01:00",
     "expressions" : "20",
     "files" : "5",
     "globals" : "53",
-    "members" : "413",
+    "members" : "419",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:29:59.125+01:00",
+    "start" : "2026-11-26T21:28:05.712+01:00",
     "statements" : "24",
-    "units" : "59",
+    "units" : "61",
     "version" : "1.0",
     "warnings" : "1"
   },

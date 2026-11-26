@@ -7,8 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 38 queries, at level 5"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 46 queries, at level 5"
+    }
   }, {
     "location" : "'Main.java':32:2-32:33",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -17,23 +19,24 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "refuted" : true,
-    "explanation" : "inductive invariant found: {assert ==(Holder::branchCount, 2)=[![! Holder::branchCount defined $defined:Holder::branchCount == 2]], assert equals(Holder::label, \"right\")=[![$field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), Holder::label defined $defined:Holder::label) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), ref $alloc), ! Holder::branchCount defined $defined:Holder::branchCount == 2]]}"
+    "verification" : {
+      "outcome" : "refuted",
+      "explanation" : "inductive invariant found: {assert ==(Holder::branchCount, 2)=[![! Holder::branchCount defined $defined:Holder::branchCount == 2]], assert equals(Holder::label, \"right\")=[![$field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), Holder::label defined $defined:Holder::label) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, \"right\") read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), ref $alloc), ! Holder::branchCount defined $defined:Holder::branchCount == 2]]}"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Holder.Holder_clinit()_22eecd1edbfd571a3ff497017693103a.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "4",
-    "duration" : "1m 9s 143ms",
-    "end" : "2026-11-25T21:10:52.435+01:00",
+    "duration" : "1m 5s 829ms",
+    "end" : "2026-11-26T21:22:28.042+01:00",
     "expressions" : "74",
     "files" : "2",
     "globals" : "56",
-    "members" : "400",
+    "members" : "404",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-25T21:09:43.292+01:00",
+    "start" : "2026-11-26T21:21:22.213+01:00",
     "statements" : "30",
     "units" : "57",
     "version" : "1.0",

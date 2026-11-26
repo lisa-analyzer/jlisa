@@ -7,21 +7,23 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':12:26-12:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':13:45-13:67",
-      "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"A\""
-    } ],
-    "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))] (not yet certified by execution)"
+    "verification" : {
+      "outcome" : "confirmed",
+      "reproducingInputs" : [ {
+        "location" : "'Main.java':12:26-12:38",
+        "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\""
+      }, {
+        "location" : "'Main.java':13:45-13:67",
+        "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\\u{c000}\""
+      } ],
+      "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))] (not yet certified by execution)"
+    }
   }, {
     "location" : "'Main.java':14:4-14:47",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -30,37 +32,39 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':12:26-12:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':13:45-13:67",
-      "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\\u{efde}\\u{5be2}\\u{fd9e}\\u{d23c}\\u{c840}\""
-    } ],
-    "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))] (not yet certified by execution)"
+    "verification" : {
+      "outcome" : "confirmed",
+      "reproducingInputs" : [ {
+        "location" : "'Main.java':12:26-12:38",
+        "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\""
+      }, {
+        "location" : "'Main.java':13:45-13:67",
+        "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\\u{cb60}\\u{fea4}\\u{6ece}\\u{f93a}\\u{d05a}\""
+      } ],
+      "explanation" : "violation reached in 1 steps through [buffer = new java.lang.StringBuilder(org.sosy_lab.sv_benchmarks.Verifier::nondetString()), assert ==(charAt(buffer, 0), charAt(buffer, 4))] (not yet certified by execution)"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "397ms",
-    "end" : "2026-11-13T17:41:31.254+01:00",
+    "duration" : "403ms",
+    "end" : "2026-11-26T21:40:53.036+01:00",
     "expressions" : "17",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:41:30.857+01:00",
+    "start" : "2026-11-26T21:40:52.633+01:00",
     "statements" : "11",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "2"
   },

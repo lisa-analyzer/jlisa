@@ -7,25 +7,26 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "refuted" : true,
-    "explanation" : "inductive invariant found: {assert equals(tmp, +(args[0], args[1]))=[![! $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 0)) strcat $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 1))) read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), tmp) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 0)) strcat $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 1))) read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), ref $alloc)]]}"
+    "verification" : {
+      "outcome" : "refuted",
+      "explanation" : "inductive invariant found: {assert equals(tmp, +(args[0], args[1]))=[![! $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 0)) strcat $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 1))) read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), tmp) strequals $field:java.lang.String::value store(ref $alloc, \"\") store(ref $alloc, $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 0)) strcat $field:java.lang.String::value store(ref $alloc, \"\") read($written:java.lang.String::value store(ref $alloc, true), $cells read($written-cells, args cell 1))) read($written:java.lang.String::value store(ref $alloc, true) store(ref $alloc, true), ref $alloc)]]}"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "74ms",
-    "end" : "2026-11-13T17:38:54.408+01:00",
+    "duration" : "59ms",
+    "end" : "2026-11-26T21:37:57.257+01:00",
     "expressions" : "56",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:38:54.334+01:00",
+    "start" : "2026-11-26T21:37:57.198+01:00",
     "statements" : "20",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "1"
   },

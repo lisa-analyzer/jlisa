@@ -7,8 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 73 queries, at level 6"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 67 queries, at level 6"
+    }
   }, {
     "location" : "'Main.java':26:3-26:32",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -17,22 +19,24 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "time budget exhausted after 209 queries, at level 2"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "time budget exhausted after 209 queries, at level 2"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_4b90900dfba7655ffd97438e2add1ac5.graph.json", "java.lang.Object__B.getSomeField(java.lang.Object__o,_java.lang.String__fieldName)_bb035935c1d6d6fedb470a9a559561f0.graph.json", "report.json", "void_A.A(A__this)_3cd489dd0f89ac56471d2a949e1854f7.graph.json", "void_B.B(B__this)_3a89ef35a06f0cb145102446759a7a35.graph.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "5",
-    "duration" : "2m 9s 44ms",
-    "end" : "2026-11-25T21:09:42.597+01:00",
+    "duration" : "2m 3s 874ms",
+    "end" : "2026-11-26T21:21:21.533+01:00",
     "expressions" : "64",
     "files" : "5",
     "globals" : "57",
-    "members" : "401",
+    "members" : "405",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-25T21:07:33.553+01:00",
+    "start" : "2026-11-26T21:19:17.659+01:00",
     "statements" : "28",
     "units" : "58",
     "version" : "1.0",

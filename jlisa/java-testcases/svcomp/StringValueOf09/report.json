@@ -7,8 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
-    "definite" : false,
-    "explanation" : "violation reached in 1 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), doubleValue = java.lang.Double::parseDouble(arg)], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaIsDoubleParsableOperator; LogicalNegation; ReferenceRead; contents of $field:java.lang.String::value not written by the model"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "violation reached in 1 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), doubleValue = java.lang.Double::parseDouble(arg)], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaIsDoubleParsableOperator; LogicalNegation; ReferenceRead; contents of $field:java.lang.String::value not written by the model"
+    }
   }, {
     "location" : "'Main.java':17:4-17:32",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -17,24 +19,26 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : false,
-    "explanation" : "violation reached in 3 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), doubleValue = java.lang.Double::parseDouble(arg), tmp = java.lang.String::valueOf(doubleValue), assert equals(tmp, \"33.3333\")], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaIsDoubleParsableOperator; JavaDoubleParseDoubleOperator; JavaIsDoubleParsableOperator; JavaStringValueOfDoubleOperator; JavaDoubleParseDoubleOperator"
+    "verification" : {
+      "outcome" : "possible",
+      "explanation" : "violation reached in 3 steps through [arg = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), doubleValue = java.lang.Double::parseDouble(arg), tmp = java.lang.String::valueOf(doubleValue), assert equals(tmp, \"33.3333\")], relying on values that are not computed precisely (unsupported operations, operations on values of other kinds, heap values): JavaIsDoubleParsableOperator; JavaDoubleParseDoubleOperator; LogicalNegation; JavaStringValueOfDoubleOperator; JavaDoubleParseDoubleOperator"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "8s 560ms",
-    "end" : "2026-11-13T17:40:11.396+01:00",
+    "duration" : "208ms",
+    "end" : "2026-11-26T21:39:49.222+01:00",
     "expressions" : "18",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:40:02.836+01:00",
+    "start" : "2026-11-26T21:39:49.014+01:00",
     "statements" : "13",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "2"
   },

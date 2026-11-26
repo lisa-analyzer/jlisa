@@ -7,43 +7,45 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':11:26-11:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':13:22-13:43",
-      "source" : "return of float org.sosy_lab.sv_benchmarks.Verifier::nondetFloat()",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "0.0"
-    }, {
-      "location" : "'Main.java':14:22-14:43",
-      "source" : "return of float org.sosy_lab.sv_benchmarks.Verifier::nondetFloat()",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "Infinity"
-    } ],
-    "explanation" : "violation reached in 4 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), output_1 = isInfinite(input_1_0), output_2 = isInfinite(input_2_0), assert !(&&(==(output_1, false), ==(output_2, true)))] (not yet certified by execution)"
+    "verification" : {
+      "outcome" : "confirmed",
+      "reproducingInputs" : [ {
+        "location" : "'Main.java':11:26-11:38",
+        "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\""
+      }, {
+        "location" : "'Main.java':13:22-13:43",
+        "source" : "return of float org.sosy_lab.sv_benchmarks.Verifier::nondetFloat()",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "0.0"
+      }, {
+        "location" : "'Main.java':14:22-14:43",
+        "source" : "return of float org.sosy_lab.sv_benchmarks.Verifier::nondetFloat()",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "Infinity"
+      } ],
+      "explanation" : "violation reached in 4 steps through [input_1_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), input_2_0 = org.sosy_lab.sv_benchmarks.Verifier::nondetFloat(), output_1 = isInfinite(input_1_0), output_2 = isInfinite(input_2_0), assert !(&&(==(output_1, false), ==(output_2, true)))] (not yet certified by execution)"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "148ms",
-    "end" : "2026-11-13T17:37:43.973+01:00",
+    "duration" : "100ms",
+    "end" : "2026-11-26T21:36:49.401+01:00",
     "expressions" : "25",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:37:43.825+01:00",
+    "start" : "2026-11-26T21:36:49.301+01:00",
     "statements" : "14",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "1"
   },

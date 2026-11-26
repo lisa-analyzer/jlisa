@@ -7,21 +7,23 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true
+    "verification" : {
+      "outcome" : "confirmed"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_ReflectionTest.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "7",
-    "duration" : "109ms",
-    "end" : "2026-11-25T21:07:22.024+01:00",
+    "duration" : "113ms",
+    "end" : "2026-11-26T21:19:06.137+01:00",
     "expressions" : "112",
     "files" : "1",
     "globals" : "58",
-    "members" : "403",
+    "members" : "407",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-25T21:07:21.915+01:00",
+    "start" : "2026-11-26T21:19:06.024+01:00",
     "statements" : "46",
     "units" : "60",
     "version" : "1.0",

@@ -7,9 +7,10 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "STATEMENT",
     "message" : "uncaught runtime exception in main method",
-    "definite" : false,
-    "refuted" : true,
-    "explanation" : "inductive invariant found: {characterValue = charAt(args[0], 0)=[![0 < 0 || 0 >= strlen $field:java.lang.String::value read($written:java.lang.String::value, $cells read($written-cells, args cell 0))]]}"
+    "verification" : {
+      "outcome" : "refuted",
+      "explanation" : "inductive invariant found: {characterValue = charAt(args[0], 0)=[![0 < 0 || 0 >= strlen $field:java.lang.String::value read($written:java.lang.String::value, $cells read($written-cells, args cell 0))]]}"
+    }
   }, {
     "location" : "'Main.java':19:4-19:26",
     "cfg" : "void Main::main(java.lang.String*[]* args)",
@@ -18,37 +19,39 @@
     "contextHash" : "eb5f5da91de44083d423fe942c39ec56",
     "targetKind" : "EXPRESSION",
     "message" : "the assertion might not hold",
-    "definite" : true,
-    "reproducingInputs" : [ {
-      "location" : "'Main.java':12:26-12:38",
-      "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\""
-    }, {
-      "location" : "'Main.java':14:14-14:36",
-      "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
-      "context" : "<empty>",
-      "occurrence" : 0,
-      "value" : "\"\\u{fffc}\""
-    } ],
-    "explanation" : "violation reached in 5 steps through [args = new java.lang.String*[]*[1], args[0] = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), <(length(args[0]), 1), characterValue = charAt(args[0], 0), tmp = java.lang.String::valueOf(characterValue), assert equals(tmp, \"A\")] (not yet certified by execution)"
+    "verification" : {
+      "outcome" : "confirmed",
+      "reproducingInputs" : [ {
+        "location" : "'Main.java':12:26-12:38",
+        "source" : "parameter args of void Main::main(java.lang.String*[]* args)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\""
+      }, {
+        "location" : "'Main.java':14:14-14:36",
+        "source" : "return of java.lang.String* org.sosy_lab.sv_benchmarks.Verifier::nondetString() or void java.lang.String::String(java.lang.String* this)",
+        "context" : "<empty>",
+        "occurrence" : 0,
+        "value" : "\"\\u{8ff4}\""
+      } ],
+      "explanation" : "violation reached in 5 steps through [args = new java.lang.String*[]*[1], args[0] = org.sosy_lab.sv_benchmarks.Verifier::nondetString(), <(length(args[0]), 1), characterValue = charAt(args[0], 0), tmp = java.lang.String::valueOf(characterValue), assert equals(tmp, \"A\")] (not yet certified by execution)"
+    }
   } ],
   "notices" : [ ],
   "files" : [ "report.json", "void_Main.main(java.lang.String_[]__args).graph.json" ],
   "info" : {
     "cfgs" : "6",
-    "duration" : "191ms",
-    "end" : "2026-11-13T17:39:43.125+01:00",
+    "duration" : "159ms",
+    "end" : "2026-11-26T21:38:29.886+01:00",
     "expressions" : "31",
     "files" : "1",
     "globals" : "53",
-    "members" : "409",
+    "members" : "415",
     "notices" : "0",
     "programs" : "1",
-    "start" : "2026-11-13T17:39:42.934+01:00",
+    "start" : "2026-11-26T21:38:29.727+01:00",
     "statements" : "16",
-    "units" : "56",
+    "units" : "58",
     "version" : "1.0",
     "warnings" : "2"
   },
