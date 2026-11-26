@@ -26,10 +26,10 @@ import it.unive.lisa.symbolic.heap.AccessChild;
 import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
+import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.binary.StringContains;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
-import it.unive.lisa.triage.model.SummaryMarker;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 
@@ -41,7 +41,9 @@ import it.unive.lisa.type.Untyped;
  * {@code java.version}): if the name contains no dot, the property is assumed
  * not to be defined (as it happens also when the name is empty), and the result
  * is the default value. Otherwise, the result is either the default value or an
- * unknown number (that is never a precise value, see {@link SummaryMarker}).
+ * unknown number (the verification of the warnings treats it as an imprecise
+ * result of this call, not as an input of the program, since it is not a
+ * user input).
  */
 public abstract class PropertyLookup extends BinaryExpression implements PluggableStatement {
 
@@ -107,7 +109,7 @@ public abstract class PropertyLookup extends BinaryExpression implements Pluggab
 			result = result.lub(def(interprocedural, undefined, right, expressions));
 		if (!unknown.getExecution().isBottom()) {
 			result = result.lub(def(interprocedural, unknown, right, expressions));
-			SummaryMarker read = new SummaryMarker(wrapped, "value of a system property", getLocation());
+			PushAny read = new PushAny(wrapped, getLocation());
 			result = result.lub(box(interprocedural, unknown, read, expressions));
 		}
 		return result;
