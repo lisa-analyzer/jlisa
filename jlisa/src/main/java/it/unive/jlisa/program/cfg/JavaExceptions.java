@@ -22,7 +22,6 @@ import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Identifier;
-import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
@@ -40,9 +39,10 @@ import java.util.Set;
  * natives, so that each exception is raised only in the executions that raise
  * it. An exception raised in a state is raised, for the verification of the
  * warnings, in all the executions of that state: the state given to the error
- * channel must hence be exactly the executions raising it, or the exception
- * must be raised under an unknown condition. The {@link Raising} collector
- * makes each raise state which case it is.
+ * channel must hence be exactly the executions raising it, or the move must
+ * tell the analysis that they might not all raise it (see
+ * {@link it.unive.lisa.analysis.Analysis#moveExecutionToError(AnalysisState, AnalysisState, AnalysisState.Error, boolean, it.unive.lisa.interprocedural.ScopeId, it.unive.lisa.program.cfg.ProgramPoint)}).
+ * The {@link Raising} collector makes each raise state which case it is.
  */
 public final class JavaExceptions {
 
@@ -59,32 +59,6 @@ public final class JavaExceptions {
 	public static boolean isNull(
 			Type type) {
 		return type.isNullType() || type.isPointerType() && type.asPointerType().getInnerType().isNullType();
-	}
-
-	/**
-	 * Restricts the given state to the executions of a branch whose condition
-	 * is not expressed (e.g., an exception raised when the analysis cannot tell
-	 * which executions raise it): the branch happens under an unknown
-	 * condition. The analysis is not affected, while the verification of the
-	 * warnings never takes the branch for granted.
-	 *
-	 * @param <A>             the kind of {@link AbstractLattice} of the state
-	 * @param <D>             the kind of {@link AbstractDomain} of the analysis
-	 * @param interprocedural the interprocedural analysis
-	 * @param state           the state
-	 * @param pp              the program point of the branch
-	 *
-	 * @return the restricted state
-	 *
-	 * @throws SemanticException if the analysis fails
-	 */
-	public static <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> maybe(
-			InterproceduralAnalysis<A, D> interprocedural,
-			AnalysisState<A> state,
-			Statement pp)
-			throws SemanticException {
-		return interprocedural.getAnalysis().assume(state, new PushAny(JavaBooleanType.INSTANCE, pp.getLocation()),
-				interprocedural.getCurrentContext(), pp, pp);
 	}
 
 	/**
@@ -110,6 +84,10 @@ public final class JavaExceptions {
 
 		// the state of the executions raising each error, not moved yet
 		private final Map<AnalysisState.Error, AnalysisState<A>> raised;
+
+		// the state of the executions that might raise each error, under an
+		// unknown condition, not moved yet
+		private final Map<AnalysisState.Error, AnalysisState<A>> uncertain;
 
 		/**
 		 * Builds the collector.
@@ -150,6 +128,7 @@ public final class JavaExceptions {
 			this.source = source == null ? thrower : source;
 			this.consumed = consumed;
 			this.raised = new LinkedHashMap<>();
+			this.uncertain = new LinkedHashMap<>();
 		}
 
 		/**
@@ -207,7 +186,7 @@ public final class JavaExceptions {
 		 * @return whether no exception has been raised
 		 */
 		public boolean isEmpty() {
-			return raised.isEmpty();
+			return raised.isEmpty() && uncertain.isEmpty();
 		}
 
 		/**
@@ -235,10 +214,7 @@ public final class JavaExceptions {
 				return;
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			ScopeId<A> context = interprocedural.getCurrentContext();
-			AnalysisState<A> raising = raises == Satisfiability.SATISFIED ? state
-					: maybe(interprocedural, state, thrower);
-			if (raising.getExecutionState().isBottom())
-				return;
+			AnalysisState<A> raising = state;
 
 			CodeLocation location = thrower.getLocation();
 			LibrarySpecificationProvider.importClass(thrower.getProgram(), className);
@@ -256,8 +232,9 @@ public final class JavaExceptions {
 				thrown = thrown.lub(tmp.withExecutionExpression(throwVar));
 			}
 			AnalysisState.Error error = new AnalysisState.Error(type.getReference(), source);
-			AnalysisState<A> previous = raised.get(error);
-			raised.put(error, previous == null ? thrown : previous.lub(thrown));
+			Map<AnalysisState.Error, AnalysisState<A>> target = raises == Satisfiability.SATISFIED ? raised : uncertain;
+			AnalysisState<A> previous = target.get(error);
+			target.put(error, previous == null ? thrown : previous.lub(thrown));
 		}
 
 		/**
@@ -378,14 +355,19 @@ public final class JavaExceptions {
 				throws SemanticException {
 			Analysis<A, D> analysis = interprocedural.getAnalysis();
 			ScopeId<A> context = interprocedural.getCurrentContext();
-			if (raised.isEmpty())
+			if (isEmpty())
 				return normal;
 			// no execution continues normally: nothing is computed
 			AnalysisState<A> result = normal.getExecutionState().isBottom()
 					? normal.withExecution(normal.getExecution().bottom())
 					: normal;
 			for (Map.Entry<AnalysisState.Error, AnalysisState<A>> entry : raised.entrySet())
-				result = analysis.moveExecutionToError(result, entry.getValue(), entry.getKey(), context, thrower);
+				result = analysis.moveExecutionToError(result, entry.getValue(), entry.getKey(), true, context, thrower);
+			// the executions that might raise an error are moved telling the
+			// analysis that they might not all raise it
+			for (Map.Entry<AnalysisState.Error, AnalysisState<A>> entry : uncertain.entrySet())
+				result = analysis.moveExecutionToError(result, entry.getValue(), entry.getKey(), false, context,
+						thrower);
 			return result;
 		}
 	}

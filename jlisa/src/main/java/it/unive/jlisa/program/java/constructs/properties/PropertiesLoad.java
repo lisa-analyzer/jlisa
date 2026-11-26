@@ -82,7 +82,7 @@ public class PropertiesLoad extends BinaryExpression implements PluggableStateme
 		state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 
 		return analysis.moveExecutionToError(topState, state.withExecutionExpression(throwVar),
-				new Error(IOExceptionType.getReference(), originating), context, this);
+				new Error(IOExceptionType.getReference(), originating), true, context, this);
 
 	}
 

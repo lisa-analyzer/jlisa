@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ConstraintUtils;
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaArrayAccess;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
@@ -183,7 +182,12 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		AnalysisState<A> noExceptionState = state.bottomExecution();
 		AnalysisState<A> npeState = state.bottom();
 		Error npeError = null;
+		// whether all the executions of npeState raise the exception
+		boolean npeExact = true;
+		// the executions surely raising IllegalArgumentException, and the
+		// ones that might raise it
 		AnalysisState<A> iaeState = state.bottom();
+		AnalysisState<A> iaeUncertain = state.bottom();
 		Error iaeError = null;
 
 		Set<Type> thisObjTypes = analysis.getRuntimeTypesOf(state, middle, context, this);
@@ -193,8 +197,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		if (isStaticSat == Satisfiability.NOT_SATISFIED
 				&& thisObjTypes.remove(new JavaReferenceType(NullType.INSTANCE))) {
 			// in all the executions only if the receiver is surely null
-			npeState = prepareNullPointerException(interprocedural,
-					thisObjTypes.isEmpty() ? state : JavaExceptions.maybe(interprocedural, state, this), expressions);
+			npeState = prepareNullPointerException(interprocedural, state, expressions);
+			npeExact = thisObjTypes.isEmpty();
 			npeError = new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating);
 		}
 
@@ -203,13 +207,13 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			if (npeError == null)
 				return exceptionState;
 			else
-				return analysis.moveExecutionToError(npeState, npeError, context, this);
+				return analysis.moveExecutionToError(npeState, npeError, npeExact, context, this);
 
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
 
 		if (clazzNameConstraints.isEmpty())
-			return withPendingExceptions(analysis, context, unknownResult(analysis, context, state), npeState,
-					npeError, iaeState, iaeError);
+			return withPendingExceptions(analysis, context, unknownResult(analysis, context, state), npeState, npeError, npeExact,
+					iaeState, iaeUncertain, iaeError);
 
 		// check the types of the receiver against the type of the declaring
 		// class.
@@ -219,9 +223,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 					clazzNameConstraints, derefMethod);
 			if (mayThrowIA) {
 				// the executions raising it are not known
-				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural,
-						JavaExceptions.maybe(interprocedural, state, this),
-						expressions));
+				iaeUncertain = iaeUncertain.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
 				iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			}
 		}
@@ -245,14 +247,16 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			// in all the executions only if the number of arguments surely
 			// does not match, and no execution raises another exception
 			boolean exact = nArgsMatch == Satisfiability.NOT_SATISFIED && npeError == null && iaeError == null;
-			iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural,
-					exact ? state : JavaExceptions.maybe(interprocedural, state, this), expressions));
+			if (exact)
+				iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+			else
+				iaeUncertain = iaeUncertain.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
 			iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(), originating);
 			// if the number of arguments certainly does not match, no
 			// execution reaches the call
 			if (nArgsMatch != Satisfiability.UNKNOWN)
-				return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, iaeState,
-						iaeError);
+				return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, npeExact,
+					iaeState, iaeUncertain, iaeError);
 		}
 
 		boolean outOfBoundsMethodArr = false;
@@ -305,8 +309,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				accessValue);
 		assert (constraints != null);
 		if (constraints == null)
-			return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, iaeState,
-					iaeError);
+			return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, npeExact,
+					iaeState, iaeUncertain, iaeError);
 
 		for (it.unive.lisa.symbolic.value.BinaryExpression constraint : constraints.toList()) {
 
@@ -354,9 +358,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
 					// the executions raising it are not known
-					iaeState = iaeState.lub(prepareIllegalArgumentException(interprocedural,
-							JavaExceptions.maybe(interprocedural, state, this),
-							expressions));
+					iaeUncertain = iaeUncertain.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
 					iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(),
 							originating);
 					continue;
@@ -392,9 +394,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			}
 		}
 
-		return withPendingExceptions(analysis, context, noExceptionState.lub(exceptionState), npeState, npeError,
-				iaeState,
-				iaeError);
+		return withPendingExceptions(analysis, context, noExceptionState.lub(exceptionState), npeState, npeError, npeExact,
+					iaeState, iaeUncertain, iaeError);
 	}
 
 	// the state where the invocation yields an unknown object
@@ -413,14 +414,20 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			AnalysisState<A> normal,
 			AnalysisState<A> npeState,
 			Error npeError,
+			boolean npeExact,
 			AnalysisState<A> iaeState,
+			AnalysisState<A> iaeUncertain,
 			Error iaeError)
 			throws SemanticException {
 		AnalysisState<A> result = normal;
 		if (npeError != null)
-			result = analysis.moveExecutionToError(result, npeState, npeError, context, this);
-		if (iaeError != null)
-			result = analysis.moveExecutionToError(result, iaeState, iaeError, context, this);
+			result = analysis.moveExecutionToError(result, npeState, npeError, npeExact, context, this);
+		if (iaeError != null) {
+			result = analysis.moveExecutionToError(result, iaeState, iaeError, true, context, this);
+			// the executions that might raise it are moved telling the
+			// analysis that they might not all raise it
+			result = analysis.moveExecutionToError(result, iaeUncertain, iaeError, false, context, this);
+		}
 		return result;
 	}
 
@@ -561,6 +568,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		return interprocedural.getAnalysis().moveExecutionToError(
 				prepareNullPointerException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating),
+				true,
 				interprocedural.getCurrentContext(), this);
 	}
 

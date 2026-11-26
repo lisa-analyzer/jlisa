@@ -759,8 +759,8 @@ public class ListModel {
 		AnalysisState<A> raised = raise(interprocedural, fixedState, exc, st, subExpressions, expressions);
 		AnalysisState.Error error = new AnalysisState.Error(JavaClassType.lookup(exc).getReference(), st);
 		if (done.getExecutionState().isBottom())
-			return analysis.moveExecutionToError(raised, error, context, st);
-		return analysis.moveExecutionToError(done, raised, error, context, st);
+			return analysis.moveExecutionToError(raised, error, true, context, st);
+		return analysis.moveExecutionToError(done, raised, error, true, context, st);
 	}
 
 	/**

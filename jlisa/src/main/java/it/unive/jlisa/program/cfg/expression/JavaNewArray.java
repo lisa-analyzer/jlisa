@@ -93,7 +93,7 @@ public class JavaNewArray extends UnaryExpression {
 				tmp = tmp.forgetIdentifiers(call.getMetaVariables(), this)
 						.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 				exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-						new Error(oonExc.getReference(), this), context, this));
+						new Error(oonExc.getReference(), this), true, context, this));
 			}
 
 			if (sat == Satisfiability.SATISFIED)

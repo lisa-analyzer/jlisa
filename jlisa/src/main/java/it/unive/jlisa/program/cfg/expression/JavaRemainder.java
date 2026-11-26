@@ -115,6 +115,6 @@ public class JavaRemainder extends Remainder {
 		koState = koState.forgetIdentifiers(getLeft().getMetaVariables(), this);
 		koState = koState.forgetIdentifiers(getRight().getMetaVariables(), this);
 		return analysis.moveExecutionToError(okState, koState.withExecutionExpression(throwVar),
-				new Error(arithExc.getReference(), this), context, this);
+				new Error(arithExc.getReference(), this), true, context, this);
 	}
 }

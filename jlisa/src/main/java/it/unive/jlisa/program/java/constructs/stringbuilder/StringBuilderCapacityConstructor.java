@@ -92,7 +92,7 @@ public class StringBuilderCapacityConstructor extends BinaryExpression implement
 			AnalysisState<A> result = state.bottomExecution();
 			for (SymbolicExpression th : thrown.getExecutionExpressions())
 				result = result.lub(analysis.moveExecutionToError(thrown.withExecutionExpression(th),
-						new Error(excType.getReference(), originating), context, this));
+						new Error(excType.getReference(), originating), true, context, this));
 			return result;
 		}
 
@@ -104,7 +104,7 @@ public class StringBuilderCapacityConstructor extends BinaryExpression implement
 		AnalysisState<A> koState = analysis.assume(state, negative, context, this, this);
 		return analysis.moveExecutionToError(init(analysis, context, okState, left, right),
 				raise(interprocedural, koState, excType, expressions),
-				new Error(excType.getReference(), originating), context, this);
+				new Error(excType.getReference(), originating), true, context, this);
 	}
 
 	/**

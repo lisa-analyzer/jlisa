@@ -114,7 +114,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 			for (Type t : clazzTypes) {
 				if (JavaExceptions.isNull(t)) {
 					npeState = npeState.lub(prepareNullPointerException(interprocedural,
-							exact ? state : JavaExceptions.maybe(interprocedural, state, this), expressions));
+							state, expressions));
 				}
 				// search for the method
 				else {
@@ -129,9 +129,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 					// didn't find any matching method
 					if (methodSearched.getExecutionExpressions().isEmpty()) {
 						searchResult = searchResult
-								.lub(throwNoSuchMethodException(interprocedural, exact ? methodSearched
-										: JavaExceptions.maybe(interprocedural, methodSearched, this),
-										expressions));
+								.lub(throwNoSuchMethodException(interprocedural, methodSearched, exact, expressions));
 					} else {
 						// found at least one method, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -145,7 +143,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				}
 			}
 			searchResult = analysis.moveExecutionToError(searchResult, npeState,
-					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), context, this);
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), exact, context, this);
 			result = result.lub(searchResult);
 		}
 
@@ -288,8 +286,7 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 
 				// another candidate might match: the exception is raised under
 				// an unknown condition
-				state = throwNoSuchMethodException(interprocedural, noExceptionState,
-						JavaExceptions.maybe(interprocedural, state, this), expressions);
+				state = throwNoSuchMethodException(interprocedural, noExceptionState, state, false, expressions);
 			}
 
 			++i;
@@ -527,26 +524,35 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 		return state.withExecutionExpression(throwVar);
 	}
 
+	// raises NoSuchMethodException in the executions of the given state (all of
+	// them, if allExecutions holds, or some of them)
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
+			boolean allExecutions,
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().moveExecutionToError(
 				prepareNoSuchMethodException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating),
+				allExecutions,
 				interprocedural.getCurrentContext(), this);
 	}
 
+	// raises NoSuchMethodException in the executions of the given state (all of
+	// them, if allExecutions holds, or some of them), while the ones of normal
+	// continue normally
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchMethodException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> normal,
 			AnalysisState<A> state,
+			boolean allExecutions,
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().moveExecutionToError(normal,
 				prepareNoSuchMethodException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNoSuchMethodException().getReference(), originating),
+				allExecutions,
 				interprocedural.getCurrentContext(), this);
 	}
 

@@ -87,6 +87,6 @@ final class AssertSemantics {
 			thrownState = thrownState.lub(analysis.assign(errorState, thrown, ref, context, assertion));
 		thrownState = thrownState.forgetIdentifiers(call.getMetaVariables(), assertion);
 		return analysis.moveExecutionToError(result, thrownState.withExecutionExpression(thrown),
-				new Error(type.getReference(), assertion), context, assertion);
+				new Error(type.getReference(), assertion), true, context, assertion);
 	}
 }

@@ -78,7 +78,7 @@ public class AbstractMapPut extends TernaryExpression implements PluggableStatem
 					.forgetIdentifiers(getLeft().getMetaVariables(), this)
 					.forgetIdentifiers(getRight().getMetaVariables(), this);
 			exceptionState = exceptionState.lub(analysis.moveExecutionToError(tmp.withExecutionExpression(throwVar),
-					new Error(oobExc.getReference(), originating), context, this));
+					new Error(oobExc.getReference(), originating), true, context, this));
 		}
 
 		return exceptionState;

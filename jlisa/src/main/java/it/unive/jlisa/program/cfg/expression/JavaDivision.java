@@ -83,7 +83,7 @@ public class JavaDivision extends Division {
 			state = state.forgetIdentifiers(getLeft().getMetaVariables(), this);
 			state = state.forgetIdentifiers(getRight().getMetaVariables(), this);
 			return analysis.moveExecutionToError(state.withExecutionExpression(throwVar),
-					new Error(arithExc.getReference(), this), context, this);
+					new Error(arithExc.getReference(), this), true, context, this);
 		} else if (sat == Satisfiability.NOT_SATISFIED)
 			return super.fwdBinarySemantics(interprocedural, state, left, right, expressions);
 		else if (sat == Satisfiability.BOTTOM) {
@@ -114,7 +114,7 @@ public class JavaDivision extends Division {
 			koState = koState.forgetIdentifiers(getLeft().getMetaVariables(), this);
 			koState = koState.forgetIdentifiers(getRight().getMetaVariables(), this);
 			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
-					new Error(arithExc.getReference(), this), context, this);
+					new Error(arithExc.getReference(), this), true, context, this);
 		}
 	}
 }

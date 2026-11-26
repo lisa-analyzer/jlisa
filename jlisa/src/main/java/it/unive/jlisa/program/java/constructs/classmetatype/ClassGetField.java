@@ -109,7 +109,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 			for (Type t : clazzTypes) {
 				if (JavaExceptions.isNull(t)) {
 					npeState = npeState.lub(prepareNullPointerException(interprocedural,
-							exact ? state : JavaExceptions.maybe(interprocedural, state, this), expressions));
+							state, expressions));
 				}
 				// search the field
 				else {
@@ -122,9 +122,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 					// didn't find any matching field
 					if (fieldSearched.getExecutionExpressions().isEmpty()) {
 						searchResult = searchResult
-								.lub(throwNoSuchFieldException(interprocedural, exact ? fieldSearched
-										: JavaExceptions.maybe(interprocedural, fieldSearched, this),
-										expressions));
+								.lub(throwNoSuchFieldException(interprocedural, fieldSearched, exact, expressions));
 					} else {
 						// found at least one field, copy them
 						AnalysisState<A> tmp = state.bottomExecution();
@@ -138,7 +136,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				}
 			}
 			searchResult = analysis.moveExecutionToError(searchResult, npeState,
-					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), context, this);
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), exact, context, this);
 			result = result.lub(searchResult);
 		}
 
@@ -297,8 +295,7 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 
 				// another candidate might match: the exception is raised under
 				// an unknown condition
-				state = throwNoSuchFieldException(interprocedural, noExceptionState,
-						JavaExceptions.maybe(interprocedural, state, this), expressions);
+				state = throwNoSuchFieldException(interprocedural, noExceptionState, state, false, expressions);
 			}
 			++i;
 		}
@@ -405,26 +402,35 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 		return state.withExecutionExpression(throwVar);
 	}
 
+	// raises NoSuchFieldException in the executions of the given state (all of
+	// them, if allExecutions holds, or some of them)
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
+			boolean allExecutions,
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().moveExecutionToError(
 				prepareNoSuchFieldException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating),
+				allExecutions,
 				interprocedural.getCurrentContext(), this);
 	}
 
+	// raises NoSuchFieldException in the executions of the given state (all of
+	// them, if allExecutions holds, or some of them), while the ones of normal
+	// continue normally
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> throwNoSuchFieldException(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> normal,
 			AnalysisState<A> state,
+			boolean allExecutions,
 			StatementStore<A> expressions)
 			throws SemanticException {
 		return interprocedural.getAnalysis().moveExecutionToError(normal,
 				prepareNoSuchFieldException(interprocedural, state, expressions),
 				new Error(JavaClassType.getNoSuchFieldException().getReference(), originating),
+				allExecutions,
 				interprocedural.getCurrentContext(), this);
 	}
 

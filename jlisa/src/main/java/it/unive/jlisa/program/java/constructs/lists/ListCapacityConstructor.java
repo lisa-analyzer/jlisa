@@ -96,8 +96,8 @@ public class ListCapacityConstructor
 				expressions);
 		Error error = new Error(JavaClassType.lookup(exc).getReference(), this);
 		if (result.getExecutionState().isBottom())
-			return analysis.moveExecutionToError(raised, error, context, this);
-		return analysis.moveExecutionToError(result, raised, error, context, this);
+			return analysis.moveExecutionToError(raised, error, true, context, this);
+		return analysis.moveExecutionToError(result, raised, error, true, context, this);
 	}
 
 	@Override

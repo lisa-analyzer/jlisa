@@ -1,7 +1,6 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.program.ConstraintUtils;
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
@@ -132,8 +131,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 					new PushAny(new JavaReferenceType(JavaClassType.getObjectType()), location), context, this);
 		// the exceptions of a class are raised in all the executions only if
 		// it is the only class the object might have
-		AnalysisState<
-				A> raising = constraintList.size() == 1 ? state : JavaExceptions.maybe(interprocedural, state, this);
+		boolean exact = constraintList.size() == 1;
 
 		for (BinaryExpression constraint : constraintList) {
 
@@ -157,7 +155,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 					if (!hasDefaultCtor(cu)) {
 						noSuchMethodState = noSuchMethodState
-								.lub(prepareNoSuchMethodException(interprocedural, raising, expressions));
+								.lub(prepareNoSuchMethodException(interprocedural, state, expressions));
 						noSuchMethodError = new Error(JavaClassType.getNoSuchMethodException().getReference(),
 								originating);
 						continue;
@@ -178,7 +176,7 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 
 				JavaNewObj call = new JavaNewObj(getCFG(), location,
 						instantiationExceptionType.getReference(), new Expression[0]);
-				AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, raising, new ExpressionSet[0],
+				AnalysisState<A> callState = call.forwardSemanticsAux(interprocedural, state, new ExpressionSet[0],
 						expressions);
 
 				// assign exception to variable thrower
@@ -200,9 +198,9 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		noExceptionState = noExceptionState.withExecutionExpressions(execExpressions);
 		AnalysisState<A> result = noExceptionState.lub(exceptionState);
 		if (noSuchMethodError != null)
-			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, context, this);
+			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, exact, context, this);
 		if (instantiationError != null)
-			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, context, this);
+			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, exact, context, this);
 		return result;
 
 		// TODO: IllegalAccessException

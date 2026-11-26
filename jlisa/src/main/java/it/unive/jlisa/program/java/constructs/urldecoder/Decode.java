@@ -144,7 +144,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 					: analysis.assume(state, negate(isValidEncoding), context, originating, originating);
 			JavaClassType ueExc = JavaClassType.getUnsupportedEncodingExceptionType();
 			result = analysis.moveExecutionToError(result, buildException(interprocedural, invalidState, ueExc),
-					new Error(ueExc.getReference(), originating), context, this);
+					new Error(ueExc.getReference(), originating), true, context, this);
 		}
 
 		if (!validState.getExecution().isBottom() && satIsIllegalArg != Satisfiability.SATISFIED) {
@@ -153,7 +153,7 @@ public class Decode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 					: analysis.assume(validState, negate(isIllegalArgument), context, originating, originating);
 			JavaClassType iaExc = JavaClassType.getIllegalArgumentExceptionType();
 			result = analysis.moveExecutionToError(result, buildException(interprocedural, illegalState, iaExc),
-					new Error(iaExc.getReference(), originating), context, this);
+					new Error(iaExc.getReference(), originating), true, context, this);
 		}
 
 		return result;

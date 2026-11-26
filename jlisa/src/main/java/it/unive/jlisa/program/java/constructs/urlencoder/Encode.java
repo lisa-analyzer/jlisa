@@ -145,7 +145,7 @@ public class Encode extends it.unive.lisa.program.cfg.statement.BinaryExpression
 
 		Error error = new Error(oobExc.getReference(), originating);
 		if (sat == Satisfiability.NOT_SATISFIED)
-			return analysis.moveExecutionToError(erroneousState, error, context, this);
-		return analysis.moveExecutionToError(noExceptionState, erroneousState, error, context, this);
+			return analysis.moveExecutionToError(erroneousState, error, true, context, this);
+		return analysis.moveExecutionToError(noExceptionState, erroneousState, error, true, context, this);
 	}
 }

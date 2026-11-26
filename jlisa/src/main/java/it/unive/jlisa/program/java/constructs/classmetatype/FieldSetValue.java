@@ -2,7 +2,6 @@ package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
 import it.unive.jlisa.program.ConstraintUtils;
-import it.unive.jlisa.program.cfg.JavaExceptions;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.type.JavaClassType;
@@ -224,9 +223,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 						// in all the executions only if the target is surely
 						// null
 						AnalysisState<A> nullAnalysisState = npeCall.forwardSemanticsAux(interprocedural,
-								targetTypes.isEmpty() ? clazzState
-										: JavaExceptions.maybe(interprocedural, clazzState, this),
-								new ExpressionSet[0], expressions);
+								clazzState, new ExpressionSet[0], expressions);
 
 						CFGThrow throwVar = new CFGThrow(cfg, npeType.getReference(), loc);
 						nullAnalysisState = analysis.assign(nullAnalysisState, throwVar,
@@ -239,7 +236,7 @@ public class FieldSetValue extends TernaryExpression implements PluggableStateme
 
 						setState = analysis.moveExecutionToError(setState,
 								nullAnalysisState.withExecutionExpression(throwVar),
-								new Error(npeType.getReference(), originating), context, this);
+								new Error(npeType.getReference(), originating), targetTypes.isEmpty(), context, this);
 					}
 
 					result = result.lub(setState);

@@ -182,7 +182,7 @@ public class ClassForName extends it.unive.lisa.program.cfg.statement.UnaryExpre
 			koState = koState.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 
 			return analysis.moveExecutionToError(noExceptionState, koState.withExecutionExpression(throwVar),
-					new Error(classNotFoundType.getReference(), originating), context, this);
+					new Error(classNotFoundType.getReference(), originating), true, context, this);
 		}
 
 		return exceptionState.lub(noExceptionState);
