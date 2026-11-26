@@ -13,7 +13,6 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
-import it.unive.lisa.program.cfg.statement.UserInput;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
@@ -21,7 +20,7 @@ import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonGe;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 
-public class NextInt extends UnaryExpression implements PluggableStatement, UserInput {
+public class NextInt extends UnaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	public NextInt(

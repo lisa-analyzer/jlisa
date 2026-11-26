@@ -14,10 +14,9 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.NaryExpression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.UserInput;
 import it.unive.lisa.symbolic.value.PushAny;
 
-public class ReaderRead extends NaryExpression implements PluggableStatement, UserInput {
+public class ReaderRead extends NaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	public ReaderRead(

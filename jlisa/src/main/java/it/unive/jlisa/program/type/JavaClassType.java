@@ -235,10 +235,6 @@ public class JavaClassType
 		return lookup("java.lang.AssertionError");
 	}
 
-	public static JavaClassType getClassCastExceptionType() {
-		return lookup("java.lang.ClassCastException");
-	}
-
 	public static JavaClassType getNullPointerExceptionType() {
 		return lookup("java.lang.NullPointerException");
 	}
@@ -275,10 +271,6 @@ public class JavaClassType
 		return lookup("java.util.AbstractMap");
 	}
 
-	public static JavaClassType getArrayIndexOutOfBoundsExceptionType() {
-		return lookup("java.lang.ArrayIndexOutOfBoundsException");
-	}
-
 	public static JavaClassType getIllegalArgumentExceptionType() {
 		return lookup("java.lang.IllegalArgumentException");
 	}
@@ -289,10 +281,6 @@ public class JavaClassType
 
 	public static JavaClassType getSystemType() {
 		return lookup("java.lang.System");
-	}
-
-	public static JavaClassType getNumberFormatException() {
-		return lookup("java.lang.NumberFormatException");
 	}
 
 	public static JavaClassType getClassNotFoundException() {
@@ -329,14 +317,6 @@ public class JavaClassType
 
 	public static JavaClassType getUnsupportedEncodingExceptionType() {
 		return lookup("java.io.UnsupportedEncodingException");
-	}
-
-	public static JavaClassType getIndexOutOfBoundsExceptionType() {
-		return lookup("java.lang.IndexOutOfBoundsException");
-	}
-
-	public static JavaClassType getStringIndexOutOfBoundsExceptionType() {
-		return lookup("java.lang.StringIndexOutOfBoundsException");
 	}
 
 	public static JavaClassType getCharacterWrapperType() {

@@ -13,11 +13,10 @@ import it.unive.lisa.program.cfg.statement.BinaryExpression;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
-import it.unive.lisa.program.cfg.statement.UserInput;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.PushAny;
 
-public class NextBytes extends BinaryExpression implements PluggableStatement, UserInput {
+public class NextBytes extends BinaryExpression implements PluggableStatement {
 	protected Statement originating;
 
 	protected NextBytes(
