@@ -112,38 +112,43 @@ public class SystemArrayCopy extends NaryExpression implements PluggableStatemen
 			ExpressionSet[] params,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
-				getSubExpressions());
-		AnalysisState<A> result = combinations(interprocedural, state, params, new SymbolicExpression[5], 0,
-				raising);
-		return raising.moveFrom(result);
+		return combinations(interprocedural, state, params, new SymbolicExpression[5], 0);
 	}
 
-	// evaluates each combination of the operands in the executions computing
-	// it
+	// evaluates each combination of the operands through the analysis, that
+	// might evaluate it only in the executions computing it
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> combinations(
 			InterproceduralAnalysis<A, D> interprocedural,
 			AnalysisState<A> state,
 			ExpressionSet[] params,
 			SymbolicExpression[] args,
-			int pos,
-			JavaExceptions.Raising<A, D> raising)
+			int pos)
 			throws SemanticException {
 		if (pos == params.length) {
-			AnalysisState<A> computing = restrictTo(interprocedural, state, args);
-			if (computing.getExecutionState().isBottom())
-				return computing.bottomExecution();
-			// if the executions computing the combination are not known
-			// exactly, the exceptions might be raised in some of them
-			return copy(interprocedural, computing, args, raising
-					.certainOnlyIf(singleValues(params) || restrictsExactly(interprocedural, state, args)));
+			SymbolicExpression[] values = args.clone();
+			if (singleValues(params))
+				return copyRaising(interprocedural, state, values);
+			return ofCombination(interprocedural, state, s -> copyRaising(interprocedural, s, values), values);
 		}
 		AnalysisState<A> result = state.bottomExecution();
 		for (SymbolicExpression e : params[pos]) {
 			args[pos] = e;
-			result = result.lub(combinations(interprocedural, state, params, args, pos + 1, raising));
+			result = result.lub(combinations(interprocedural, state, params, args, pos + 1));
 		}
 		return result;
+	}
+
+	// the copy, raising its exceptions
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> copyRaising(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression[] args)
+			throws SemanticException {
+		if (state.getExecutionState().isBottom())
+			return state.bottomExecution();
+		JavaExceptions.Raising<A, D> raising = JavaExceptions.Raising.ofNative(interprocedural, this, originating,
+				getSubExpressions());
+		return raising.moveFrom(copy(interprocedural, state, args, raising));
 	}
 
 	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> copy(

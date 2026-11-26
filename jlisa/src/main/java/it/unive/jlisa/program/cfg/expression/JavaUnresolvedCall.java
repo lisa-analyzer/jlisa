@@ -59,30 +59,37 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		// get receiver
+		// each value of the receiver is evaluated through the analysis, that
+		// might evaluate it only in the executions computing it
 		ExpressionSet receiver = params[0];
+		AnalysisState<A> result = state.bottomExecution();
+		for (SymbolicExpression rec : receiver)
+			result = result.lub(receiver.size() == 1 ? callOn(interprocedural, state, rec, params, expressions)
+					: ofCombination(interprocedural, state, s -> callOn(interprocedural, s, rec, params, expressions),
+							rec));
+		return result;
+	}
+
+	// the call on the given value of the receiver: a null receiver raises
+	// NullPointerException, and the call happens in the other executions
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> callOn(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression rec,
+			ExpressionSet[] params,
+			StatementStore<A> expressions)
+			throws SemanticException {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		AnalysisState<A> result = state.bottomExecution();
-		// a null receiver raises NullPointerException, and the call happens
-		// in the other executions
 		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, List.of());
-		for (SymbolicExpression rec : receiver) {
-			// the executions where the receiver computed this value
-			// (if they are not known exactly, the exceptions might be raised
-			// only in some of them)
-			AnalysisState<A> computing = restrictTo(interprocedural, state, rec);
-			boolean exact = receiver.size() == 1 || restrictsExactly(interprocedural, state, rec);
-			AnalysisState<A> notNull = raising.certainOnlyIf(exact).raiseIfNull(rec, computing);
-			if (notNull.getExecutionState().isBottom())
-				continue;
+		AnalysisState<A> notNull = raising.raiseIfNull(rec, state);
+		AnalysisState<A> result = state.bottomExecution();
+		if (!notNull.getExecutionState().isBottom())
 			for (Type recType : analysis.getRuntimeTypesOf(notNull, rec, context, this))
 				if (recType.isPointerType() && recType.asPointerType().getInnerType().isUnitType()) {
-					AnalysisState<A> called = super.forwardSemanticsAux(interprocedural, notNull, params, expressions);
-					result = result.lub(exact ? called : analysis.uncertainErrors(notNull, called, context, this));
+					result = super.forwardSemanticsAux(interprocedural, notNull, params, expressions);
 					break;
 				}
-		}
 		return raising.moveFrom(result);
 	}
 }
