@@ -778,17 +778,25 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		Term k = Term.app("mod", Sort.INT, left ? distance : Term.app("-", Sort.INT, distance), num(bits));
 		BigInteger literal = integerLiteral(k);
 		Term b = bitVector(u, bits, e);
-		Term result = u;
-		for (int i = 1; i < bits; i++) {
+		if (literal != null) {
+			int i = literal.intValue();
+			if (i == 0)
+				return u;
 			// rotated left by i: the lowest bits - i bits become the highest
 			// ones
-			Term rotated = Term.app("bv2nat", Sort.INT,
+			return Term.app("bv2nat", Sort.INT,
 					Term.app("concat", Sort.bitVector(bits), extract(b, 0, bits - i), extract(b, bits - i, i)));
-			if (literal != null && literal.intValue() == i)
-				return rotated;
-			result = Term.ite(Term.eq(k, num(i)), rotated, result);
 		}
-		return literal != null ? u : result;
+		// rotated left by k, as a single bit-vector term: a case split on the
+		// distance (one case for each possible distance) times out when
+		// several rotations are combined
+		Sort bv = Sort.bitVector(bits);
+		Term kb = bitVector(k, bits, e);
+		Term width = Term.value("(_ bv" + bits + " " + bits + ")", bv);
+		Term rotated = Term.app("bvor", bv,
+				Term.app("bvshl", bv, b, kb),
+				Term.app("bvlshr", bv, b, Term.app("bvsub", bv, width, kb)));
+		return Term.app("bv2nat", Sort.INT, rotated);
 	}
 
 	private Term maxMin(

@@ -68,6 +68,15 @@ class java.lang.IndexOutOfBoundsException extends java.lang.RuntimeException:
 
 class java.lang.StringIndexOutOfBoundsException extends java.lang.IndexOutOfBoundsException:
 
+	instance method StringIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.IndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringIndexOutOfBoundsException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method StringIndexOutOfBoundsException: it.unive.jlisa.program.java.constructs.exceptions.IndexOutOfBoundsExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.StringIndexOutOfBoundsException*
+
 class java.util.NoSuchElementException extends java.lang.RuntimeException:
 
 	instance method NoSuchElementException: it.unive.jlisa.program.java.constructs.exceptions.NoSuchElementExceptionConstructor
@@ -145,6 +154,15 @@ class java.lang.AssertionError extends java.lang.Error:
 class java.lang.SecurityException extends java.lang.RuntimeException:
 
 class java.lang.ArrayStoreException extends java.lang.RuntimeException:
+
+	instance method ArrayStoreException: it.unive.jlisa.program.java.constructs.exceptions.IllegalArgumentExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.ArrayStoreException*
+		param str type it.unive.lisa.type.Untyped::INSTANCE
+		
+	instance method ArrayStoreException: it.unive.jlisa.program.java.constructs.exceptions.IllegalArgumentExceptionConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.lang.ArrayStoreException*
 
 class java.lang.IllegalAccessException extends java.lang.Exception:
 

@@ -213,6 +213,9 @@ public class JavaClassType
 		Set<Type> instances = new HashSet<>();
 		for (Unit in : unit.getInstances())
 			instances.add(lookup(in.getName()));
+		if (equals(getObjectType()))
+			// arrays are objects (see JavaArrayType#canBeAssignedTo)
+			instances.addAll(JavaArrayType.all());
 		return instances;
 	}
 

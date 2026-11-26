@@ -27,9 +27,10 @@ import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeSystem;
 import it.unive.lisa.type.Untyped;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
@@ -241,7 +242,17 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	@Override
 	public Set<Type> allInstances(
 			TypeSystem types) {
-		return Collections.singleton(this);
+		// arrays are covariant in the type of their elements: an array is an
+		// instance of this one if its elements are instances of the elements
+		// of this one (e.g., a String[] is an Object[], while an int[] is not
+		// a long[])
+		Set<Type> elements = getInnerType().allInstances(types);
+		Set<Type> instances = new HashSet<>();
+		instances.add(this);
+		for (JavaArrayType other : new ArrayList<>(all()))
+			if (elements.contains(other.getInnerType()))
+				instances.add(other);
+		return instances;
 	}
 
 	@Override
