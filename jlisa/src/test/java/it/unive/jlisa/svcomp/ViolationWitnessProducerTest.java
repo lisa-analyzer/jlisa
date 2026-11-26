@@ -165,7 +165,8 @@ public class ViolationWitnessProducerTest {
 			report = JsonReport.read(reader);
 		}
 		assertTrue(report.getWarnings().stream()
-				.anyMatch(w -> w.getMessage().equals("uncaught runtime exception in main method") && w.isDefinite()),
+				.anyMatch(w -> w.getMessage().equals("uncaught runtime exception in main method")
+						&& w.getVerification() != null && w.getVerification().getOutcome().equals("confirmed")),
 				report.getWarnings().toString());
 	}
 

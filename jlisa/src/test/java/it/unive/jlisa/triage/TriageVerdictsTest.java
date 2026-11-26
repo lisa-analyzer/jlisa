@@ -93,11 +93,21 @@ public class TriageVerdictsTest {
 		// no warning is not a refutation (e.g., if a regression drops them)
 		if (warnings.isEmpty())
 			return Verdict.NONE;
-		if (warnings.stream().anyMatch(JsonReport.JsonMessage::isDefinite))
+		if (warnings.stream().anyMatch(TriageVerdictsTest::isConfirmed))
 			return Verdict.DEFINITE;
-		if (warnings.stream().allMatch(JsonReport.JsonMessage::isRefuted))
+		if (warnings.stream().allMatch(TriageVerdictsTest::isRefuted))
 			return Verdict.REFUTED;
 		return Verdict.POSSIBLE;
+	}
+
+	private static boolean isConfirmed(
+			JsonReport.JsonMessage warning) {
+		return warning.getVerification() != null && warning.getVerification().getOutcome().equals("confirmed");
+	}
+
+	private static boolean isRefuted(
+			JsonReport.JsonMessage warning) {
+		return warning.getVerification() != null && warning.getVerification().getOutcome().equals("refuted");
 	}
 
 	private static List<JsonReport.JsonMessage> warnings(
@@ -243,14 +253,14 @@ public class TriageVerdictsTest {
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("certified-exception", SVCOMPProperty.RUNTIME_EXCEPTION,
 				dir.resolve("a"), "--certification");
-		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
-				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
+		assertTrue(warnings.stream().anyMatch(w -> isConfirmed(w) && w.getVerification().getExplanation() != null
+				&& w.getVerification().getExplanation().contains(", certified by execution")), warnings.toString());
 		// the limit counts from the start of the virtual machine, that runs
 		// all the tests: it is large enough not to be reached
 		warnings = warnings("certified", SVCOMPProperty.ASSERT, dir.resolve("b"), "--certification",
 				"--time-limit", "3600");
-		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
-				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
+		assertTrue(warnings.stream().anyMatch(w -> isConfirmed(w) && w.getVerification().getExplanation() != null
+				&& w.getVerification().getExplanation().contains(", certified by execution")), warnings.toString());
 	}
 
 	/**
@@ -387,11 +397,11 @@ public class TriageVerdictsTest {
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("string-compare", SVCOMPProperty.ASSERT, dir);
 		JsonReport.JsonMessage definite = warnings.stream()
-				.filter(JsonReport.JsonMessage::isDefinite)
+				.filter(TriageVerdictsTest::isConfirmed)
 				.findFirst()
 				.orElseThrow();
 		Pattern escape = Pattern.compile("\\\\u\\{([0-9a-fA-F]+)\\}");
-		for (JsonReport.JsonReproducingInput input : definite.getReproducingInputs())
+		for (JsonReport.JsonReproducingInput input : definite.getVerification().getReproducingInputs())
 			if (input.getSource().contains("nondetString")) {
 				Matcher m = escape.matcher(input.getValue());
 				while (m.find()) {
@@ -459,8 +469,8 @@ public class TriageVerdictsTest {
 			@TempDir Path dir)
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir, "--certification");
-		assertTrue(warnings.stream().anyMatch(w -> w.isDefinite() && w.getExplanation() != null
-				&& w.getExplanation().contains(", certified by execution")), warnings.toString());
+		assertTrue(warnings.stream().anyMatch(w -> isConfirmed(w) && w.getVerification().getExplanation() != null
+				&& w.getVerification().getExplanation().contains(", certified by execution")), warnings.toString());
 	}
 
 	/**
@@ -472,7 +482,7 @@ public class TriageVerdictsTest {
 			@TempDir Path dir)
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("certified", SVCOMPProperty.ASSERT, dir);
-		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
+		assertTrue(warnings.stream().noneMatch(TriageVerdictsTest::isConfirmed), warnings.toString());
 	}
 
 	/**
@@ -485,7 +495,7 @@ public class TriageVerdictsTest {
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("certified-spurious", SVCOMPProperty.ASSERT, dir,
 				"--certification");
-		assertTrue(warnings.stream().noneMatch(JsonReport.JsonMessage::isDefinite), warnings.toString());
+		assertTrue(warnings.stream().noneMatch(TriageVerdictsTest::isConfirmed), warnings.toString());
 	}
 
 	/**
@@ -512,11 +522,11 @@ public class TriageVerdictsTest {
 			throws Exception {
 		List<JsonReport.JsonMessage> warnings = warnings("short-circuit", SVCOMPProperty.ASSERT, dir);
 		JsonReport.JsonMessage definite = warnings.stream()
-				.filter(JsonReport.JsonMessage::isDefinite)
+				.filter(TriageVerdictsTest::isConfirmed)
 				.findFirst()
 				.orElseThrow();
-		assertTrue(definite.getReproducingInputs().stream().anyMatch(i -> i.getLocation().contains("Main.java':5:")));
-		assertTrue(definite.getReproducingInputs().stream().noneMatch(i -> i.getLocation().contains("Main.java':6:")),
+		assertTrue(definite.getVerification().getReproducingInputs().stream().anyMatch(i -> i.getLocation().contains("Main.java':5:")));
+		assertTrue(definite.getVerification().getReproducingInputs().stream().noneMatch(i -> i.getLocation().contains("Main.java':6:")),
 				"input of a call that is not evaluated");
 	}
 

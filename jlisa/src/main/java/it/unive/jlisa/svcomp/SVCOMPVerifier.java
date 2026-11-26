@@ -153,7 +153,7 @@ public class SVCOMPVerifier<A extends AbstractLattice<A>, D extends AbstractDoma
 			if (result == null || !result.isPossible() || result.getCandidate() == null)
 				continue;
 			VerificationResult candidate = result.getCandidate();
-			if (certifier.test(warning.verified(candidate))) {
+			if (certifier.test(warning.withVerdict(candidate))) {
 				Map<StatementMessage, VerificationResult> certified = new LinkedHashMap<>(results);
 				certified.put(warning, candidate);
 				return certified;

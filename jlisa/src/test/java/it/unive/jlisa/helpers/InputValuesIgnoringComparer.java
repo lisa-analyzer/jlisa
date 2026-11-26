@@ -27,7 +27,8 @@ public class InputValuesIgnoringComparer extends ResultComparer {
 	private static void forgetValues(
 			JsonReport report) {
 		for (JsonMessage warning : report.getWarnings())
-			for (JsonReproducingInput input : warning.getReproducingInputs())
-				input.setValue(null);
+			if (warning.getVerification() != null)
+				for (JsonReproducingInput input : warning.getVerification().getReproducingInputs())
+					input.setValue(null);
 	}
 }

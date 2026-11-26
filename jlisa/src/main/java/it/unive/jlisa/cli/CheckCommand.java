@@ -627,7 +627,7 @@ public final class CheckCommand {
 			AssertChecker<?> checker) {
 		List<Violation> violations = new ArrayList<>();
 		for (Message warning : report.getWarnings()) {
-			if (!warning.isDefinite())
+			if (warning.getVerdict() == null || !warning.getVerdict().isConfirmed())
 				continue;
 			Violation violation = violationOf(warning, checker);
 			if (violation != null)
@@ -662,6 +662,6 @@ public final class CheckCommand {
 			kind = ViolationKind.ASSERT;
 			target = ((StatementMessage) warning).getStatement();
 		}
-		return target == null ? null : new Violation(kind, target, warning.getReproducingInputs());
+		return target == null ? null : new Violation(kind, target, warning.getVerdict().getReproducingInputs());
 	}
 }

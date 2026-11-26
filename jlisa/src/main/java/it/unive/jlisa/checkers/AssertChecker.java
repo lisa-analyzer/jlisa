@@ -12,6 +12,7 @@ import it.unive.lisa.analysis.nonrelational.type.TypeEnvironment;
 import it.unive.lisa.analysis.value.ValueLattice;
 import it.unive.lisa.checks.semantic.SemanticCheck;
 import it.unive.lisa.checks.semantic.SemanticTool;
+import it.unive.lisa.checks.verification.VerificationResult;
 import it.unive.lisa.lattices.Satisfiability;
 import it.unive.lisa.lattices.SimpleAbstractState;
 import it.unive.lisa.lattices.heap.allocations.AllocationSites;
@@ -105,7 +106,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 	 * warning of this checker, that is the target of its violation witness. If
 	 * the exceptions reaching the end of the main method are raised at
 	 * different statements, the one raising the exception of a confirmed
-	 * warning is used (see {@link StatementMessage#getThrower()}).
+	 * warning is used (see {@link VerificationResult#getThrower()}).
 	 * 
 	 * @param warning the warning
 	 * 
@@ -124,7 +125,8 @@ public class AssertChecker<V extends ValueLattice<V>>
 			return Optional.of(targets.get(context));
 		// the exceptions are raised at different statements: the one raising
 		// the confirmed exception is used, if known
-		Statement thrower = message.getThrower();
+		VerificationResult verdict = message.getVerdict();
+		Statement thrower = verdict == null ? null : verdict.getThrower();
 		if (thrower == null)
 			return Optional.empty();
 		Map<String, Map<Statement, Statement>> byThrower = throwerTargets.get(message.getStatement());
@@ -138,7 +140,7 @@ public class AssertChecker<V extends ValueLattice<V>>
 		// them, or are not precise (and thus never confirmed): a call
 		// raising a confirmed error raises it itself (e.g., on a null
 		// receiver)
-		if (!(thrower instanceof Call) || !warning.getReproducingInputs().isEmpty())
+		if (!(thrower instanceof Call) || !verdict.getReproducingInputs().isEmpty())
 			return Optional.of(RuntimeExceptionTarget.ofThrower(thrower));
 		return Optional.empty();
 	}
