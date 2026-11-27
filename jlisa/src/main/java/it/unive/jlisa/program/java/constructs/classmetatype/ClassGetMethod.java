@@ -143,7 +143,8 @@ public class ClassGetMethod extends TernaryExpression implements PluggableStatem
 				}
 			}
 			searchResult = analysis.moveExecutionToError(searchResult, npeState,
-					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), exact, context, this);
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), exact, context,
+					this);
 			result = result.lub(searchResult);
 		}
 

@@ -362,7 +362,8 @@ public final class JavaExceptions {
 					? normal.withExecution(normal.getExecution().bottom())
 					: normal;
 			for (Map.Entry<AnalysisState.Error, AnalysisState<A>> entry : raised.entrySet())
-				result = analysis.moveExecutionToError(result, entry.getValue(), entry.getKey(), true, context, thrower);
+				result = analysis.moveExecutionToError(result, entry.getValue(), entry.getKey(), true, context,
+						thrower);
 			// the executions that might raise an error are moved telling the
 			// analysis that they might not all raise it
 			for (Map.Entry<AnalysisState.Error, AnalysisState<A>> entry : uncertain.entrySet())

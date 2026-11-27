@@ -212,7 +212,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 		List<BinaryExpression> clazzNameConstraints = getClassNameConstraints(interprocedural, state, derefMethod);
 
 		if (clazzNameConstraints.isEmpty())
-			return withPendingExceptions(analysis, context, unknownResult(analysis, context, state), npeState, npeError, npeExact,
+			return withPendingExceptions(analysis, context, unknownResult(analysis, context, state), npeState, npeError,
+					npeExact,
 					iaeState, iaeUncertain, iaeError);
 
 		// check the types of the receiver against the type of the declaring
@@ -256,7 +257,7 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			// execution reaches the call
 			if (nArgsMatch != Satisfiability.UNKNOWN)
 				return withPendingExceptions(analysis, context, state.bottomExecution(), npeState, npeError, npeExact,
-					iaeState, iaeUncertain, iaeError);
+						iaeState, iaeUncertain, iaeError);
 		}
 
 		boolean outOfBoundsMethodArr = false;
@@ -358,7 +359,8 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 				// exception
 				if (sem.getExecutionExpressions().iterator().next().getStaticType() == Untyped.INSTANCE) {
 					// the executions raising it are not known
-					iaeUncertain = iaeUncertain.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
+					iaeUncertain = iaeUncertain
+							.lub(prepareIllegalArgumentException(interprocedural, state, expressions));
 					iaeError = new Error(JavaClassType.getIllegalArgumentExceptionType().getReference(),
 							originating);
 					continue;
@@ -394,8 +396,9 @@ public class MethodInvoke extends TernaryExpression implements PluggableStatemen
 			}
 		}
 
-		return withPendingExceptions(analysis, context, noExceptionState.lub(exceptionState), npeState, npeError, npeExact,
-					iaeState, iaeUncertain, iaeError);
+		return withPendingExceptions(analysis, context, noExceptionState.lub(exceptionState), npeState, npeError,
+				npeExact,
+				iaeState, iaeUncertain, iaeError);
 	}
 
 	// the state where the invocation yields an unknown object

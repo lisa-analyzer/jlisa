@@ -42,8 +42,8 @@ import it.unive.lisa.type.Untyped;
  * not to be defined (as it happens also when the name is empty), and the result
  * is the default value. Otherwise, the result is either the default value or an
  * unknown number (the verification of the warnings treats it as an imprecise
- * result of this call, not as an input of the program, since it is not a
- * user input).
+ * result of this call, not as an input of the program, since it is not a user
+ * input).
  */
 public abstract class PropertyLookup extends BinaryExpression implements PluggableStatement {
 

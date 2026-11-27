@@ -136,7 +136,8 @@ public class ClassGetField extends BinaryExpression implements PluggableStatemen
 				}
 			}
 			searchResult = analysis.moveExecutionToError(searchResult, npeState,
-					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), exact, context, this);
+					new Error(JavaClassType.getNullPointerExceptionType().getReference(), originating), exact, context,
+					this);
 			result = result.lub(searchResult);
 		}
 

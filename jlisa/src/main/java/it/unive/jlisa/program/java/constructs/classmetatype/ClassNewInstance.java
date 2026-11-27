@@ -200,7 +200,8 @@ public class ClassNewInstance extends it.unive.lisa.program.cfg.statement.UnaryE
 		if (noSuchMethodError != null)
 			result = analysis.moveExecutionToError(result, noSuchMethodState, noSuchMethodError, exact, context, this);
 		if (instantiationError != null)
-			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, exact, context, this);
+			result = analysis.moveExecutionToError(result, instantiationState, instantiationError, exact, context,
+					this);
 		return result;
 
 		// TODO: IllegalAccessException

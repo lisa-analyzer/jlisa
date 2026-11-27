@@ -48,7 +48,8 @@ public class JavaThrow extends Throw {
 		// move the state to the exception
 		sem = sem.forgetIdentifiers(getSubExpression().getMetaVariables(), this);
 		AnalysisState<
-				A> moved = analysis.moveExecutionToError(sem, new Error(expr.getStaticType(), this), true, context, this);
+				A> moved = analysis.moveExecutionToError(sem, new Error(expr.getStaticType(), this), true, context,
+						this);
 		return moved;
 	}
 }

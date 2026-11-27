@@ -525,8 +525,11 @@ public class TriageVerdictsTest {
 				.filter(TriageVerdictsTest::isConfirmed)
 				.findFirst()
 				.orElseThrow();
-		assertTrue(definite.getVerification().getReproducingInputs().stream().anyMatch(i -> i.getLocation().contains("Main.java':5:")));
-		assertTrue(definite.getVerification().getReproducingInputs().stream().noneMatch(i -> i.getLocation().contains("Main.java':6:")),
+		assertTrue(definite.getVerification().getReproducingInputs().stream()
+				.anyMatch(i -> i.getLocation().contains("Main.java':5:")));
+		assertTrue(
+				definite.getVerification().getReproducingInputs().stream()
+						.noneMatch(i -> i.getLocation().contains("Main.java':6:")),
 				"input of a call that is not evaluated");
 	}
 
