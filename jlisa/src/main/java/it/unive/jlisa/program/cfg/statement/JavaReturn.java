@@ -26,6 +26,9 @@ public class JavaReturn extends Return {
 		// NOTE: in this case, the lhs of the assignment is a dummy that is
 		// never actually used by the semantics
 		this.conversion = new JavaAssignment(cfg, location, expression, expression);
+		// the conversion is not a node of the cfg: its exceptions (e.g.,
+		// unboxing null) are raised by this return
+		this.conversion.raiseOnBehalfOf(this);
 	}
 
 	private Identifier getReturnMetaVariable() {

@@ -16,6 +16,7 @@ import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Assignment;
 import it.unive.lisa.program.cfg.statement.Expression;
+import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.evaluation.RightToLeftEvaluation;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
@@ -39,6 +40,14 @@ public class JavaAssignment extends Assignment {
 	 * in its declaration ({@code int x = e;}).
 	 */
 	private final boolean initializer;
+
+	/**
+	 * The statement raising the exceptions of this assignment, if this
+	 * assignment is evaluated on behalf of another statement and is not a node
+	 * of its cfg (e.g., the conversion of the value returned by a
+	 * {@link JavaReturn}), or {@code null}.
+	 */
+	private Statement source;
 
 	public JavaAssignment(
 			CFG cfg,
@@ -79,6 +88,20 @@ public class JavaAssignment extends Assignment {
 		return initializer;
 	}
 
+	/**
+	 * Lets this assignment raise its exceptions on behalf of the given
+	 * statement, when it is evaluated by that statement without being a node of
+	 * the cfg (e.g., the conversion of the value returned by a
+	 * {@link JavaReturn}): the exceptions are the ones of the given statement,
+	 * that is part of the cfg.
+	 *
+	 * @param source the statement
+	 */
+	void raiseOnBehalfOf(
+			Statement source) {
+		this.source = source;
+	}
+
 	@Override
 	public <A extends AbstractLattice<A>,
 			D extends AbstractDomain<A>> AnalysisState<A> fwdBinarySemantics(
@@ -96,8 +119,9 @@ public class JavaAssignment extends Assignment {
 		Set<Type> rightTypes = analysis.getRuntimeTypesOf(state, right, context, this);
 		// unboxing null (assigning it to a primitive) raises
 		// NullPointerException
-		JavaExceptions.Raising<A, D> raising = new JavaExceptions.Raising<>(interprocedural, this, getLeft(),
-				getRight());
+		JavaExceptions.Raising<A, D> raising = source == null
+				? new JavaExceptions.Raising<>(interprocedural, this, getLeft(), getRight())
+				: JavaExceptions.Raising.ofNative(interprocedural, this, source, getLeft(), getRight());
 		if (JavaTypeSystem.isPrimitive(targetType) && rightTypes.stream().anyMatch(JavaExceptions::isNull)) {
 			state = raising.raiseIfNull(right, state);
 			if (state.getExecutionState().isBottom())
