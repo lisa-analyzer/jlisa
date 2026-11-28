@@ -1,2 +1,10 @@
 class java.util.Iterator extends java.lang.Object:
+
+	instance method hasNext: it.unive.jlisa.program.java.constructs.lists.IteratorHasNext
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.Iterator*
+
+	instance method next: it.unive.jlisa.program.java.constructs.lists.IteratorNext
+		libtype java.lang.Object*
+		param this libtype java.util.Iterator*
 		

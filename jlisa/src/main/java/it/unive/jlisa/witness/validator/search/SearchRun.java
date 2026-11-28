@@ -35,6 +35,7 @@ import it.unive.jlisa.witness.validator.model.Property;
 import it.unive.jlisa.witness.validator.model.TargetPoint;
 import it.unive.jlisa.witness.validator.violation.ForceReturnSteerer;
 import it.unive.jlisa.witness.validator.violation.JdiLauncher;
+import it.unive.jlisa.witness.validator.violation.SourceFiles;
 import it.unive.jlisa.witness.validator.violation.WitnessCalls;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -381,7 +382,7 @@ final class SearchRun {
 			for (StackFrame f : thread.frames()) {
 				Location l = f.location();
 				for (TargetPoint t : targets) {
-					if (l.lineNumber() == t.line() && baseName(t.fileName()).equals(sourceName(l))) {
+					if (l.lineNumber() == t.line() && SourceFiles.contains(t.fileName(), l)) {
 						return true;
 					}
 				}
@@ -492,11 +493,5 @@ final class SearchRun {
 		} catch (AbsentInformationException e) {
 			return l.declaringType().name();
 		}
-	}
-
-	private static String baseName(
-			String path) {
-		int i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-		return i >= 0 ? path.substring(i + 1) : path;
 	}
 }

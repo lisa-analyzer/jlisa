@@ -6,6 +6,7 @@ import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.expression.ExpressionVisitor;
 import it.unive.jlisa.frontend.visitors.scope.MethodScope;
 import it.unive.jlisa.program.cfg.controlflow.loops.DoWhileLoop;
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.edge.FalseEdge;
@@ -51,8 +52,8 @@ class DoStatementASTVisitor extends ScopedVisitor<MethodScope> implements Result
 		block.mergeWith(loopBody.getBody());
 		entry = loopBody.getBegin();
 
-		Expression expression = getParserContext().evaluate(node.getExpression(),
-				new ExpressionVisitor(getEnvironment(), getScope()));
+		Expression expression = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
 		Statement noop = new NoOp(getScope().getCFG(), expression.getLocation());
 
 		boolean isConditionDeadcode = !loopBody.canBeContinued();

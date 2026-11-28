@@ -48,7 +48,9 @@ public class JavaOr extends Or {
 		for (SymbolicExpression left : leftState.getExecutionExpressions()) {
 			Satisfiability sat = analysis.satisfies(leftState, left, context, this);
 			if (sat == Satisfiability.SATISFIED)
-				result = result.lub(leftState);
+				// only this value of the left operand decides the result: the
+				// state may hold other values too
+				result = result.lub(leftState.withExecutionExpression(left));
 			else {
 				// the right operand is evaluated only where the left one
 				// is false. Where the left one is true, the result is
@@ -67,7 +69,17 @@ public class JavaOr extends Or {
 				expressions.put(getRight(), rightState);
 				AnalysisState<A> joined = shortCircuit == null ? rightState : rightState.lub(shortCircuit);
 				for (SymbolicExpression right : rightState.getExecutionExpressions())
-					result = result.lub(fwdBinarySemantics(interprocedural, joined, left, right, expressions));
+					if (sat == Satisfiability.NOT_SATISFIED && JavaAnd.comparesReferences(left))
+						// false || right is right: the value domains need not
+						// decide again a comparison of references inside the
+						// disjunction (e.g., the heap decides r == null, the
+						// values r.length == 0). Other conditions are kept,
+						// since right alone does not hold once the state is
+						// joined with states where left is true (e.g., at
+						// loop heads)
+						result = result.lub(rightOperand(interprocedural, joined, right));
+					else
+						result = result.lub(fwdBinarySemantics(interprocedural, joined, left, right, expressions));
 
 				// the right operand has no normal execution state
 				if (shortCircuit != null && rightState.getExecutionExpressions().isEmpty())
@@ -76,6 +88,20 @@ public class JavaOr extends Or {
 		}
 
 		return result;
+	}
+
+	// the result of the disjunction when the left operand is surely false: the
+	// value of the right operand, if it is a boolean
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> rightOperand(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression right)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(Type::isBooleanType))
+			return state.bottomExecution();
+		return analysis.smallStepSemantics(state, right, context, this);
 	}
 
 	@Override

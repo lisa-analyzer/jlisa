@@ -20,6 +20,7 @@ import it.unive.lisa.symbolic.heap.HeapReference;
 import it.unive.lisa.symbolic.heap.MemoryAllocation;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushFromConstraints;
 import it.unive.lisa.symbolic.value.Variable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonLe;
@@ -97,7 +98,13 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	/**
 	 * Yields a unique instance (either an existing one or a fresh one) of
 	 * {@link JavaArrayType} representing an array with the given {@code base}
-	 * type and the given {@code dimensions}.
+	 * type and the given {@code dimensions}. As in Java, an array with more
+	 * than one dimension is an array of references to arrays with one dimension
+	 * less (e.g., {@code int[][]} is an array of references to {@code int[]}):
+	 * the instance is always the one of an array with a single dimension, whose
+	 * elements are references to the arrays of the other dimensions, so that
+	 * the same array type has a single representation however it is built
+	 * (e.g., {@code int[][]}, {@code int[] a[]} or {@code int a[][]}).
 	 *
 	 * @param base       the base type of the array
 	 * @param dimensions the number of dimensions of this array
@@ -108,7 +115,11 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 	public static JavaArrayType lookup(
 			Type base,
 			int dimensions) {
-		return types.computeIfAbsent(Pair.of(base, dimensions), x -> new JavaArrayType(base, dimensions));
+		// arrays are always referenced, also as elements of other arrays
+		Type element = base instanceof JavaArrayType ? new JavaReferenceType(base) : base;
+		if (dimensions > 1)
+			return lookup(new JavaReferenceType(lookup(element, dimensions - 1)), 1);
+		return types.computeIfAbsent(Pair.of(element, dimensions), x -> new JavaArrayType(element, dimensions));
 	}
 
 	private final Type base;
@@ -153,7 +164,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 
 	@Override
 	public String toString() {
-		return base + "[]".repeat(dimensions);
+		return getBaseType() + "[]".repeat(getDimensions());
 	}
 
 	@Override
@@ -192,14 +203,39 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 		return lookup(base, dimensions - 1);
 	}
 
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * The base type of an array whose elements are references to arrays is the
+	 * one of the referenced arrays (e.g., {@code int} for {@code int[][]}).
+	 */
 	@Override
 	public Type getBaseType() {
-		return base;
+		JavaArrayType nested = nested();
+		return nested == null ? base : nested.getBaseType();
 	}
 
+	/**
+	 * {@inheritDoc}<br>
+	 * <br>
+	 * The dimensions of an array whose elements are references to arrays
+	 * include the ones of the referenced arrays (e.g., two for
+	 * {@code int[][]}).
+	 */
 	@Override
 	public int getDimensions() {
-		return dimensions;
+		JavaArrayType nested = nested();
+		return nested == null ? dimensions : dimensions + nested.getDimensions();
+	}
+
+	/**
+	 * Yields the type of the arrays referenced by the elements of this array,
+	 * or {@code null} if the elements are not references to arrays.
+	 */
+	private JavaArrayType nested() {
+		if (base instanceof JavaReferenceType ref && ref.getInnerType() instanceof JavaArrayType inner)
+			return inner;
+		return null;
 	}
 
 	@Override
@@ -239,7 +275,7 @@ public final class JavaArrayType implements it.unive.lisa.type.ArrayType {
 					AccessChild len = new AccessChild(
 							JavaIntType.INSTANCE,
 							allocExp,
-							new Variable(Untyped.INSTANCE, "length", getLocation()),
+							new GlobalVariable(Untyped.INSTANCE, "length", getLocation()),
 							getLocation());
 
 					// TODO fix when we'll support multidimensional arrays

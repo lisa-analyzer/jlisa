@@ -1,7 +1,5 @@
 package it.unive.jlisa.program.cfg.expression;
 
-import it.unive.jlisa.program.type.JavaClassType;
-import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.Analysis;
@@ -17,14 +15,9 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.comparison.Equal;
 import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.symbolic.SymbolicExpression;
-import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.heap.HeapDereference;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
-import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
-import it.unive.lisa.type.Type;
-import it.unive.lisa.type.Untyped;
 
 public class JavaComparisonEqual extends Equal {
 
@@ -81,12 +74,8 @@ public class JavaComparisonEqual extends Equal {
 			throws SemanticException {
 
 		AnalysisState<A> res = state.bottomExecution();
-		Type t = x.getStaticType();
-
-		if (t instanceof JavaReferenceType jrt && jrt.getInnerType() instanceof JavaClassType innerType) {
-
-			assert (JavaClassType.isWrapperType(innerType));
-			SymbolicExpression unboxed = unbox(analysis, state, x, innerType, expressions);
+		SymbolicExpression unboxed = JavaUnboxing.unbox(x, y, getLocation());
+		if (unboxed != x) {
 
 			AnalysisState<A> tmp = analysis.smallStepSemantics(state,
 					new BinaryExpression(getStaticType(), unboxed, y, ComparisonEq.INSTANCE, getLocation()), context,
@@ -97,21 +86,5 @@ public class JavaComparisonEqual extends Equal {
 			res = res.lub(analysis.smallStepSemantics(state, c, context, this));
 		}
 		return res;
-	}
-
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> SymbolicExpression unbox(
-			Analysis<A, D> analysis,
-			AnalysisState<A> state,
-			SymbolicExpression toUnbox,
-			JavaClassType t,
-			StatementStore<A> expressions)
-			throws SemanticException {
-		CodeLocation location = getLocation();
-		assert (toUnbox.getStaticType().isReferenceType());
-
-		GlobalVariable g = new GlobalVariable(Untyped.INSTANCE, "value", location);
-		HeapDereference deref = new HeapDereference(t, toUnbox, location);
-		AccessChild a = new AccessChild(JavaClassType.getUnwrappedType(t), deref, g, location);
-		return a;
 	}
 }

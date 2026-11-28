@@ -1,5 +1,23 @@
 class java.util.concurrent.atomic.AtomicBoolean extends java.lang.Object:
 
+	instance method AtomicBoolean: it.unive.jlisa.program.java.constructs.atomic.AtomicBooleanEmptyConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.concurrent.atomic.AtomicBoolean*
+
+	instance method AtomicBoolean: it.unive.jlisa.program.java.constructs.atomic.AtomicBooleanConstructor
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.concurrent.atomic.AtomicBoolean*
+		param initialValue type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
+	instance method get: it.unive.jlisa.program.java.constructs.atomic.AtomicBooleanGet
+		type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+		param this libtype java.util.concurrent.atomic.AtomicBoolean*
+
+	instance method set: it.unive.jlisa.program.java.constructs.atomic.AtomicBooleanSet
+		type it.unive.lisa.type.VoidType::INSTANCE
+		param this libtype java.util.concurrent.atomic.AtomicBoolean*
+		param newValue type it.unive.jlisa.program.type.JavaBooleanType::INSTANCE
+
 class java.util.concurrent.atomic.AtomicInteger extends java.lang.Number:
 
 	instance method AtomicInteger: it.unive.jlisa.program.java.constructs.atomic.AtomicIntegerConstructor

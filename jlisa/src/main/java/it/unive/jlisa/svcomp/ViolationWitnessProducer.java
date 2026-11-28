@@ -1,6 +1,7 @@
 package it.unive.jlisa.svcomp;
 
 import it.unive.jlisa.checkers.Violation;
+import it.unive.jlisa.program.JavaLocation;
 import it.unive.jlisa.witness.validator.violation.ViolationWitnessWriter;
 import it.unive.lisa.checks.verification.ReproducingInput;
 import it.unive.lisa.program.SourceCodeLocation;
@@ -154,7 +155,7 @@ public final class ViolationWitnessProducer
 	public Optional<ViolationWitness> build() {
 		if (violation == null)
 			return Optional.empty();
-		Location target = location(violation.getTarget().getLocation());
+		Location target = location(violation.getTarget().getLocation(), false);
 		if (target == null)
 			return Optional.empty();
 		try {
@@ -163,7 +164,7 @@ public final class ViolationWitnessProducer
 				String constraint = returnConstraint(input);
 				if (constraint == null)
 					continue;
-				Location call = location(input.getLocation());
+				Location call = location(input.getLocation(), true);
 				if (call != null)
 					builder.functionReturn(call, constraint);
 			}
@@ -340,19 +341,24 @@ public final class ViolationWitnessProducer
 	}
 
 	/**
-	 * Returns the location of the witness for the given code location, that is,
-	 * its start. The location is the one of the target of the violation, the
-	 * innermost statement or full expression where it happens, or of a call
-	 * returning a nondeterministic value. Its file is the input file of the
-	 * task with the same name as its source file, which must be unique. Columns
-	 * of LiSA start from 0, while those of witnesses start from 1.
+	 * Returns the location of the witness for the given code location. The
+	 * location is the one of the target of the violation, the innermost
+	 * statement or full expression where it happens, that is, its start, or of
+	 * a call returning a nondeterministic value, that is, the {@code )} of the
+	 * call at the call site, as the format requires for {@code function_return}
+	 * waypoints. A call whose {@code )} is on another line keeps its start,
+	 * where the call is executed. Its file is the input file of the task with
+	 * the same name as its source file, which must be unique. Columns of LiSA
+	 * start from 0, while those of witnesses start from 1.
 	 *
 	 * @param codeLocation the code location
+	 * @param call         whether the location is the one of a call
 	 *
 	 * @return the location, or {@code null} if it cannot be determined
 	 */
 	private Location location(
-			CodeLocation codeLocation) {
+			CodeLocation codeLocation,
+			boolean call) {
 		if (!(codeLocation instanceof SourceCodeLocation)) {
 			LOG.warn("No violation witness for {}: no source location", violation);
 			return null;
@@ -368,7 +374,10 @@ public final class ViolationWitnessProducer
 					location.getSourceFile());
 			return null;
 		}
-		Integer column = location.getCol() < 0 ? null : location.getCol() + 1;
+		int col = location.getCol();
+		if (call && location instanceof JavaLocation java && java.getEndLine() == location.getLine())
+			col = java.getEndCol();
+		Integer column = col < 0 ? null : col + 1;
 		return new Location(file, location.getLine(), column);
 	}
 }

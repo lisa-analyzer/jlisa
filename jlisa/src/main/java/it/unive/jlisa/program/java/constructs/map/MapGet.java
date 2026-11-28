@@ -81,6 +81,12 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			return analysis.smallStepSemantics(state, new NullConstant(getLocation()), context, this);
 		}
 
+		// a key that is not a constant is looked up in the entries of the map,
+		// if they are tracked (see MapModel)
+		if (!isConstantKey(interprocedural, state, right, keyTypes)
+				&& MapModel.isTracked(analysis, context, state, left, this))
+			return MapModel.get(interprocedural, state, left, right, this);
+
 		AnalysisState<A> res = state.bottomExecution();
 
 		if (keyTypes.size() == 1) {
@@ -101,6 +107,52 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			res = topReturnValue(interprocedural, state, expressions);
 		}
 		return res;
+	}
+
+	// whether the key is a constant (an int or a string with a single value),
+	// that is written in a field named after it
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> boolean isConstantKey(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression key,
+			Set<Type> keyTypes)
+			throws SemanticException {
+		if (keyTypes.size() != 1)
+			return false;
+		Type keyType = keyTypes.iterator().next();
+		if (keyType instanceof JavaReferenceType jrt)
+			keyType = jrt.getInnerType();
+		if (keyType != JavaIntType.INSTANCE && !keyType.isStringType())
+			return false;
+		SymbolicExpression accessKeyArg = key;
+		if (keyType.isStringType()) {
+			HeapDereference derefKeyArg = new HeapDereference(keyType, key, getLocation());
+			GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
+			accessKeyArg = new AccessChild(keyType, derefKeyArg, var, getLocation());
+		}
+		Stream<it.unive.lisa.symbolic.value.BinaryExpression> constraints = ConstraintUtils.extractConstraints(
+				interprocedural, state, accessKeyArg,
+				this);
+		if (constraints == null)
+			return true;
+		return constraints.toList().size() == 1;
+	}
+
+	/**
+	 * Returns the access to the field of the given map that tells whether the
+	 * map has entries that are not tracked (e.g., copied from another map).
+	 *
+	 * @param map      the map
+	 * @param location the location of the access
+	 *
+	 * @return the access to the field
+	 */
+	public static AccessChild unknownKeys(
+			SymbolicExpression map,
+			CodeLocation location) {
+		HeapDereference derefMap = new HeapDereference(JavaClassType.lookup("java.util.Map"), map, location);
+		return new AccessChild(JavaBooleanType.INSTANCE, derefMap,
+				new GlobalVariable(Untyped.INSTANCE, "$unknownKeys", location), location);
 	}
 
 	@Override
@@ -179,8 +231,21 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 			foundState = analysis.smallStepSemantics(state, accessMapKey, context, this);
 		}
 		if (anyUnknown) {
-			nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), context,
-					originating);
+			// a key that was never written is not in the map (null), unless the
+			// map has entries that are not tracked (e.g., copied from another
+			// map): then the value is unknown, and might be null
+			AccessChild unknownKeys = unknownKeys(left, location);
+			boolean untracked = false;
+			for (SymbolicExpression e : analysis.rewrite(state, unknownKeys, context, this))
+				if (e instanceof Identifier id && state.knowsIdentifier(id)
+						&& analysis.satisfies(state, unknownKeys, context, this) != Satisfiability.NOT_SATISFIED)
+					untracked = true;
+			if (untracked)
+				nullState = analysis.smallStepSemantics(state, new PushAny(Untyped.INSTANCE, location), context,
+						originating);
+			else
+				nullState = analysis.smallStepSemantics(state, new NullConstant(getLocation()), context,
+						originating);
 		}
 		return foundState.lub(nullState);
 	}
@@ -194,11 +259,7 @@ public class MapGet extends BinaryExpression implements PluggableStatement {
 
 		CodeLocation location = getLocation();
 		ScopeId<A> context = interprocedural.getCurrentContext();
-		Type mapType = JavaClassType.lookup("java.util.Map");
-
-		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "size", location);
-		HeapDereference derefMap = new HeapDereference(mapType, map, location);
-		AccessChild accessSize = new AccessChild(JavaIntType.INSTANCE, derefMap, var, location);
+		AccessChild accessSize = MapModel.size(map, location);
 
 		Constant zero = new Constant(JavaIntType.INSTANCE, 0, location);
 		SymbolicExpression eq = new it.unive.lisa.symbolic.value.BinaryExpression(JavaBooleanType.INSTANCE, accessSize,

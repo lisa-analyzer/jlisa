@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -46,6 +47,12 @@ public final class ViolationValidatorV2 {
 	 * 90 s; the rest is left for compiling, starting and stopping.
 	 */
 	private static final long TIME_BUDGET_MILLIS = 75_000;
+
+	/**
+	 * The number of times the program is run again when its JVM disconnects
+	 * before a verdict, without ending as programs do.
+	 */
+	private static final int MAX_DISCONNECTED_RETRIES = 2;
 
 	private ViolationValidatorV2() {
 	}
@@ -118,15 +125,29 @@ public final class ViolationValidatorV2 {
 					+ task.classesDir().getAbsolutePath());
 		}
 
-		// Launch the target JVM
-		VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
-
 		// The witness values (each run passes them again from the first)
 		List<Interception> witnessValues = plan.interceptions();
 
-		// Run the event loop
-		EventLoop loop = new EventLoop(vm, plan, property, new WitnessLocations(extraSources));
-		ValidationResult result = loop.run();
+		// Launch the target JVM and run the event loop: a target JVM that
+		// disconnects without ending as programs do (e.g., it could not
+		// start, or it was killed, as it might happen on loaded machines) says
+		// nothing about the witness, and the program is run again
+		Map<String, Integer> counts = RunSummary.counts();
+		EventLoop loop;
+		ValidationResult result;
+		int retries = 0;
+		while (true) {
+			VirtualMachine vm = JdiLauncher.launch(mainClass, classpath, java8Exec);
+			loop = new EventLoop(vm, plan, property, new WitnessLocations(extraSources));
+			result = loop.run();
+			if (!loop.disconnected() || retries >= MAX_DISCONNECTED_RETRIES
+					|| System.currentTimeMillis() >= start + TIME_BUDGET_MILLIS)
+				break;
+			retries++;
+			ValidatorLogger.warn("[VALIDATE] Target JVM disconnected before a verdict, running it again");
+			RunSummary.restoreCounts(counts);
+			RunSummary.set("jvm.retries", retries);
+		}
 
 		// No violation, but the run chose values of its own for calls the
 		// witness says nothing
@@ -168,6 +189,9 @@ public final class ViolationValidatorV2 {
 	 * steps, and a run without the violation then says nothing about the
 	 * witness unless the witness fixed every nondet call.</li>
 	 * </ul>
+	 * The files named by the locations of the witness are the input files of
+	 * the task with the hashes the metadata of the witness give for them (see
+	 * {@link WitnessFiles}), whatever their paths.
 	 *
 	 * @param model  the witness
 	 * @param inputs the input files and directories of the task, where the
@@ -181,19 +205,23 @@ public final class ViolationValidatorV2 {
 		List<AvoidPoint> avoidPoints = new ArrayList<>();
 		List<TargetPoint> targetPoints = new ArrayList<>();
 		int skipped = 0;
+		// the files of the witness are the input files with the same hashes
+		WitnessFiles files = WitnessFiles.of(model.getSequence().getMetadata().getTask().getInputFileHashes(),
+				inputs);
 
 		for (Segment segment : model.getSequence().getSegments()) {
 			for (Waypoint wpt : segment.getWaypoints()) {
 				it.unive.lisa.witness.v2.Location at = wpt.getLocation();
+				String file = files.resolve(at.getFileName());
 				if (wpt.getAction() != Action.FOLLOW) {
 					skipped++;
 					ValidatorLogger.plan("  Skipped ({} waypoint): {}", wpt.getAction(), wpt);
 					continue;
 				}
 				switch (wpt.getType()) {
-				case TARGET -> targetPoints.add(new TargetPoint(at.getFileName(), at.getLine()));
+				case TARGET -> targetPoints.add(new TargetPoint(file, at.getLine()));
 				case FUNCTION_RETURN -> {
-					if (WitnessLocations.nondetCallAt(inputs, at.getFileName(), at.getLine()) == Boolean.FALSE) {
+					if (WitnessLocations.nondetCallAt(inputs, file, at.getLine()) == Boolean.FALSE) {
 						skipped++;
 						ValidatorLogger.plan("  Skipped (not a nondet call): {}", wpt);
 						continue;
@@ -203,10 +231,10 @@ public final class ViolationValidatorV2 {
 					if (value == null) {
 						RunSummary.count("plan.values-not-single");
 					}
-					interceptions.add(new Interception(at.getFileName(), at.getLine(), at.getColumn(), value,
+					interceptions.add(new Interception(file, at.getLine(), at.getColumn(), value,
 							constraint));
 				}
-				case BRANCHING -> branchDecisions.add(new BranchDecision(at.getFileName(), at.getLine(),
+				case BRANCHING -> branchDecisions.add(new BranchDecision(file, at.getLine(),
 						Boolean.parseBoolean(wpt.getConstraint().getValue())));
 				case FUNCTION_ENTER -> {
 					// nothing to steer

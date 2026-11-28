@@ -41,7 +41,9 @@ public class JavaCharType implements JavaNumericType, CharacterType {
 
 	@Override
 	public boolean isIntegral() {
-		return false;
+		// char is an integral type in Java (JLS 4.2.1): the domains convert
+		// to char and compute on chars as they do for the other integral types
+		return true;
 	}
 
 	@Override

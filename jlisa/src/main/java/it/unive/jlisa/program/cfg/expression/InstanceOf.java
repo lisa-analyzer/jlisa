@@ -15,8 +15,11 @@ import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.program.cfg.statement.UnaryExpression;
 import it.unive.lisa.symbolic.SymbolicExpression;
+import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.Constant;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
+import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
 import it.unive.lisa.symbolic.value.operator.binary.TypeCheck;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
@@ -48,21 +51,31 @@ public class InstanceOf extends UnaryExpression {
 		Analysis<A, D> analysis = interprocedural.getAnalysis();
 		ScopeId<A> context = interprocedural.getCurrentContext();
 		Set<Type> types = analysis.getRuntimeTypesOf(state, expr, context, this);
-		AnalysisState<A> result = state.bottomExecution();
-
+		boolean mayBeNull = false, mayBeObject = false;
 		for (Type t : types)
 			if (t.isReferenceType() && t.asReferenceType().getInnerType().isNullType())
-				result = result.lub(analysis.smallStepSemantics(state,
-						new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), context, this));
-			else {
-				TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
-				BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
-						new Constant(typeToken, 0, getLocation()),
-						TypeCheck.INSTANCE, getLocation());
-				result = result.lub(analysis.smallStepSemantics(state, tc, context, this));
-			}
+				mayBeNull = true;
+			else
+				mayBeObject = true;
+		if (!mayBeObject)
+			// a null value is not an instance of any type
+			return mayBeNull
+					? analysis.smallStepSemantics(state,
+							new Constant(getProgram().getTypes().getBooleanType(), false, getLocation()), context, this)
+					: state.bottomExecution();
 
-		return result;
+		TypeTokenType typeToken = new TypeTokenType(Collections.singleton(type));
+		BinaryExpression tc = new BinaryExpression(Untyped.INSTANCE, expr,
+				new Constant(typeToken, 0, getLocation()),
+				TypeCheck.INSTANCE, getLocation());
+		if (!mayBeNull)
+			return analysis.smallStepSemantics(state, tc, context, this);
+		// a single expression, rather than a different one for null values:
+		// the alternatives would lose the condition telling which one holds
+		BinaryExpression notNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), expr,
+				new NullConstant(getLocation()), ComparisonNe.INSTANCE, getLocation());
+		return analysis.smallStepSemantics(state, new BinaryExpression(getProgram().getTypes().getBooleanType(),
+				notNull, tc, LogicalAnd.INSTANCE, getLocation()), context, this);
 	}
 
 	@Override

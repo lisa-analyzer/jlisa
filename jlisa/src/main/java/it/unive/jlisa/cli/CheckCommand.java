@@ -3,19 +3,26 @@ package it.unive.jlisa.cli;
 import it.unive.jlisa.Main;
 import it.unive.jlisa.analysis.heap.JavaFieldSensitivePointBasedHeap;
 import it.unive.jlisa.analysis.type.JavaInferredTypes;
+import it.unive.jlisa.analysis.value.ConstantPropagation;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithIntervals;
 import it.unive.jlisa.analysis.value.ConstantPropagationWithTarsis;
+import it.unive.jlisa.analysis.value.JavaNumericInterval;
+import it.unive.jlisa.analysis.value.JavaTarsis;
+import it.unive.jlisa.analysis.value.JavaUpperBounds;
+import it.unive.jlisa.analysis.value.JavaWholeValueAnalysis;
 import it.unive.jlisa.checkers.AssertChecker;
 import it.unive.jlisa.checkers.Violation;
 import it.unive.jlisa.checkers.ViolationKind;
 import it.unive.jlisa.frontend.JavaFrontend;
 import it.unive.jlisa.frontend.exceptions.CSVExceptionWriter;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
+import it.unive.jlisa.interprocedural.JavaEntryStateContextBasedAnalysis;
 import it.unive.jlisa.interprocedural.callgraph.JavaRTACallGraph;
 import it.unive.jlisa.interprocedural.callgraph.Recursion;
 import it.unive.jlisa.svcomp.SVCOMPProperty;
 import it.unive.jlisa.svcomp.SVCOMPVerifier;
 import it.unive.jlisa.svcomp.ViolationWitnessProducer;
+import it.unive.jlisa.svcomp.WitnessCertifier;
 import it.unive.lisa.LiSA;
 import it.unive.lisa.LiSAReport;
 import it.unive.lisa.analysis.SimpleAbstractDomain;
@@ -37,9 +44,12 @@ import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.triage.reachability.ReachabilityVerifier;
 import it.unive.lisa.triage.smt.SmtLibProcessSolver;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -56,6 +66,44 @@ import org.apache.logging.log4j.Logger;
 public final class CheckCommand {
 
 	private static final Logger LOG = org.apache.logging.log4j.LogManager.getLogger(CheckCommand.class);
+
+	/**
+	 * The time by which the verification of the warnings must end (as
+	 * {@link System#currentTimeMillis()} gives it), when a time limit is given
+	 * ({@code --time-limit}), or {@code 0}.
+	 */
+	private static long verificationDeadline = 0;
+
+	/**
+	 * Whether the candidate confirmations of the warnings that stay possible
+	 * are certified by validating their violation witnesses (enabled by
+	 * {@code --certification}).
+	 */
+	private static boolean certification = false;
+
+	/**
+	 * The time left, out of the time limit, for writing the results after the
+	 * verification of the warnings, in milliseconds: the fraction
+	 * {@value #RESULTS_FRACTION} of the limit, at most
+	 * {@value #MAX_RESULTS_MILLIS}.
+	 */
+	private static final long MAX_RESULTS_MILLIS = 30_000;
+
+	private static final double RESULTS_FRACTION = 0.1;
+
+	/**
+	 * The maximum number of recursive calls unrolled for each recursive method
+	 * (by both interprocedural analyses), after which its recursion is solved
+	 * instead of unrolled further.
+	 */
+	private static final int MAX_RECURSIVE_FIXPOINTS = 1000;
+
+	// the default bound of the unrollings of a recursive call (see
+	// JavaEntryStateContextBasedAnalysis)
+	private static final int ENTRY_STATE_BOUND = 200;
+
+	// the interprocedural analysis: Inlining, or EntryState[:bound]
+	private static String interprocedural = "EntryState";
 
 	private CheckCommand() {
 	}
@@ -99,7 +147,7 @@ public final class CheckCommand {
 				.longOpt("numericalDomain")
 				.hasArg()
 				.argName("DOMAIN")
-				.desc("Numerical domain: (ConstantPropagation [the same as ConstantPropagationWithTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals)")
+				.desc("Numerical domain: (ConstantPropagation [the same as JavaWholeValueTarsis], ConstantPropagationWithTarsis, ConstantPropagationWithIntervals, JavaWholeValueTarsis)")
 				.required(false)
 				.build();
 
@@ -109,6 +157,16 @@ public final class CheckCommand {
 				.argName("VERIFIER")
 				.desc("Verifier of the warnings: (Reachability [DEFAULT], verifying them through the results of "
 						+ "the analysis; Combined, the SV-COMP verifier, falling back to model checking with z3)")
+				.required(false)
+				.build();
+
+		Option interproceduralOption = Option.builder("i")
+				.longOpt("interprocedural")
+				.hasArg()
+				.argName("ANALYSIS")
+				.desc("Interprocedural analysis: (EntryState[:bound] [DEFAULT], unrolling recursive calls while their "
+						+ "entry state is new, up to bound times [DEFAULT " + ENTRY_STATE_BOUND + "], and solving them "
+						+ "with a fixpoint otherwise; Inlining, inlining calls up to a depth of 200)")
 				.required(false)
 				.build();
 
@@ -148,6 +206,7 @@ public final class CheckCommand {
 		options.addOption(checker);
 		options.addOption(numericalDomainOption);
 		options.addOption(verifierOption);
+		options.addOption(interproceduralOption);
 		options.addOption(mode);
 		options.addOption(htmlOutput);
 		options.addOption(graphOutput);
@@ -161,6 +220,22 @@ public final class CheckCommand {
 				.required(false)
 				.build();
 		options.addOption(z3Path);
+		Option timeLimit = Option.builder()
+				.longOpt("time-limit")
+				.hasArg()
+				.argName("SECONDS")
+				.desc("Time limit of the whole run, in seconds: the verification of the warnings ends in time to "
+						+ "write the results (warnings not verified by then stay possible). No limit by default")
+				.required(false)
+				.build();
+		options.addOption(timeLimit);
+		Option certificationOption = Option.builder()
+				.longOpt("certification")
+				.desc("Certify the counterexamples that the verification cannot confirm by validating their "
+						+ "violation witnesses, when a property file is given (disabled by default)")
+				.required(false)
+				.build();
+		options.addOption(certificationOption);
 		SharedOptions.markRequired(options, SharedOptions.SOURCE, "outdir", "numericalDomain");
 		CommandLineParser parser = new DefaultParser();
 		String[] sources = new String[0];
@@ -237,6 +312,27 @@ public final class CheckCommand {
 			if (cmd.hasOption("z3"))
 				SmtLibProcessSolver.setZ3Path(cmd.getOptionValue("z3"));
 
+			certification = cmd.hasOption("certification");
+
+			interprocedural = cmd.getOptionValue("i", "EntryState");
+			if (!interprocedural.equals("Inlining") && !interprocedural.matches("EntryState(:[1-9][0-9]*)?"))
+				throw new ParseException("Invalid interprocedural analysis: " + interprocedural);
+
+			if (cmd.hasOption("time-limit")) {
+				long limit;
+				try {
+					limit = Long.parseLong(cmd.getOptionValue("time-limit")) * 1000;
+				} catch (NumberFormatException e) {
+					throw new ParseException("Invalid time limit: " + cmd.getOptionValue("time-limit"));
+				}
+				if (limit <= 0)
+					throw new ParseException("Invalid time limit: " + cmd.getOptionValue("time-limit"));
+				// the limit counts from the start of the virtual machine
+				long start = ManagementFactory.getRuntimeMXBean().getStartTime();
+				verificationDeadline = start + limit
+						- Math.min(MAX_RESULTS_MILLIS, (long) (limit * RESULTS_FRACTION));
+			}
+
 		} catch (ParseException e) {
 			LOG.error("Error: " + e.getMessage());
 			SharedOptions.printHelp("check", options, System.err);
@@ -248,8 +344,8 @@ public final class CheckCommand {
 			runDebug(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, debug, propertyFiles);
 			break;
 		case "Statistics":
-			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions, debug,
-					propertyFiles);
+			runStatistics(sources, outdir, checkerName, numericalDomain, verifierName, html, graphs, dumpExceptions,
+					debug, propertyFiles);
 			break;
 		default:
 			LOG.error("Unknown execution mode: " + executionMode);
@@ -271,8 +367,8 @@ public final class CheckCommand {
 			ParseException,
 			ParsingException {
 		JavaFrontend frontend = runFrontend(sources);
-		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
-				propertyFiles);
+		runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
+				debug, propertyFiles);
 	}
 
 	private static void runStatistics(
@@ -301,8 +397,8 @@ public final class CheckCommand {
 			System.exit(1);
 		}
 		try {
-			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput, debug,
-					propertyFiles);
+			runAnalysis(sources, outdir, checkerName, numericalDomain, verifierName, frontend, htmlOutput, graphOutput,
+					debug, propertyFiles);
 		} catch (Throwable e) {
 			Throwable root = e;
 			while (root.getCause() != null)
@@ -352,7 +448,16 @@ public final class CheckCommand {
 		if (graphOutput)
 			conf.outputs.add(new JSONResults<>());
 		conf.outputs.add(new JSONReportDumper());
-		conf.interproceduralAnalysis = new InliningAnalysis<>(200, false);
+
+		// recursions are unrolled up to 200 frames, and solved when deeper or
+		// when their call trees grow too large (e.g., fib(n - 1) + fib(n - 2))
+		if (interprocedural.startsWith("EntryState"))
+			conf.interproceduralAnalysis = new JavaEntryStateContextBasedAnalysis<>(interprocedural.contains(":")
+					? Integer.parseInt(interprocedural.substring(interprocedural.indexOf(':') + 1))
+					: ENTRY_STATE_BOUND, MAX_RECURSIVE_FIXPOINTS);
+		else
+			conf.interproceduralAnalysis = new InliningAnalysis<>(200, false, MAX_RECURSIVE_FIXPOINTS);
+
 		conf.callGraph = new JavaRTACallGraph();
 		conf.openCallPolicy = ReturnTopPolicy.INSTANCE;
 		conf.wideningThreshold = 20;
@@ -362,14 +467,14 @@ public final class CheckCommand {
 		if (!Recursion.mayBeRecursive(p))
 			conf.forwardDescendingFixpoint = new ForwardDescendingNarrowingFixpoint<>();
 		// warnings are verified after the checks
+		SVCOMPVerifier<?, ?> svcomp = null;
 		switch (verifierName) {
 		case "Reachability":
 			conf.warningVerifier = new ReachabilityVerifier<>();
 			break;
 		case "Combined":
-			// stopping at the first warning that is confirmed for each
-			// property
-			conf.warningVerifier = new SVCOMPVerifier<>();
+			svcomp = new SVCOMPVerifier<>(SVCOMPVerifier.firstViolation().withDeadline(verificationDeadline));
+			conf.warningVerifier = svcomp;
 			break;
 		default:
 			throw new ParseException("Invalid verifier name: " + verifierName);
@@ -392,14 +497,49 @@ public final class CheckCommand {
 		default:
 			throw new ParseException("Invalid checker name: " + checkerName);
 		}
+		// the candidate confirmations of the warnings that stay possible are
+		// certified by validating their witnesses, as SV-COMP does
+		if (certification && svcomp != null && checker != null && !witnesses.isEmpty()) {
+			Map<SVCOMPProperty, String> files = new LinkedHashMap<>();
+			for (String propertyFile : propertyFiles) {
+				ViolationWitnessProducer witness = ViolationWitnessProducer.load(Arrays.asList(sources), propertyFile);
+				if (witness != null)
+					files.putIfAbsent(witness.getProperty(), propertyFile);
+			}
+			AssertChecker<?> warnings = checker;
+			svcomp.setCertifier(new WitnessCertifier(Arrays.asList(sources), files,
+					warning -> violationOf(warning, warnings), verificationDeadline));
+		}
 		ValueDomain<?> domain;
 		switch (numericalDomain) {
-		case "ConstantPropagation":
 		case "ConstantPropagationWithTarsis":
 			domain = new ConstantPropagationWithTarsis();
 			break;
 		case "ConstantPropagationWithIntervals":
 			domain = new ConstantPropagationWithIntervals();
+			break;
+		case "JavaWholeValueTarsis":
+			// the participants of ConstantPropagationWithTarsis, combined by
+			// the whole-value analysis
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaTarsis());
+			break;
+		case "JavaWholeValueUB":
+			// JavaWholeValueTarsis with the upper bounds of the Pentagons (x <
+			// y): with the intervals, the Pentagons of Logozzo and Fähndrich
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(), new JavaTarsis());
+			break;
+		case "JavaWholeValueUBLE":
+			// JavaWholeValueUB with the relations x <= y too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(true), new JavaTarsis());
+			break;
+		case "ConstantPropagation":
+		case "JavaWholeValueUBOFF":
+			// JavaWholeValueUBLE with the relations x <= y + c too
+			domain = new JavaWholeValueAnalysis(new ConstantPropagation(), new JavaNumericInterval(),
+					new JavaUpperBounds(true, true), new JavaTarsis());
 			break;
 		default:
 			throw new ParseException("Invalid numerical domain name: " + numericalDomain);
@@ -448,20 +588,41 @@ public final class CheckCommand {
 			AssertChecker<?> checker) {
 		List<Violation> violations = new ArrayList<>();
 		for (Message warning : report.getWarnings()) {
-			if (!warning.isDefinite() || warning.getViolation() == null || !(warning instanceof StatementMessage))
+			if (!warning.isDefinite())
 				continue;
-			Statement target;
-			ViolationKind kind;
-			if (warning.getViolation() instanceof ErrorViolation) {
-				kind = ViolationKind.RUNTIME_EXCEPTION;
-				target = checker.runtimeExceptionTarget(warning).orElse(null);
-			} else {
-				kind = ViolationKind.ASSERT;
-				target = ((StatementMessage) warning).getStatement();
-			}
-			if (target != null)
-				violations.add(new Violation(kind, target, warning.getReproducingInputs()));
+			Violation violation = violationOf(warning, checker);
+			if (violation != null)
+				violations.add(violation);
 		}
 		return violations;
+	}
+
+	/**
+	 * Yields the violation reported by the given warning of the given checker,
+	 * with the inputs reproducing it, if known. The target of an uncaught
+	 * runtime exception is the statement raising it, as recorded by the
+	 * checker; the target of a failing assertion is the assertion itself.
+	 *
+	 * @param warning the warning
+	 * @param checker the checker that issued the warning
+	 *
+	 * @return the violation, or {@code null} if the warning reports none, or if
+	 *             its target is unknown
+	 */
+	private static Violation violationOf(
+			Message warning,
+			AssertChecker<?> checker) {
+		if (warning.getViolation() == null || !(warning instanceof StatementMessage))
+			return null;
+		Statement target;
+		ViolationKind kind;
+		if (warning.getViolation() instanceof ErrorViolation) {
+			kind = ViolationKind.RUNTIME_EXCEPTION;
+			target = checker.runtimeExceptionTarget(warning).orElse(null);
+		} else {
+			kind = ViolationKind.ASSERT;
+			target = ((StatementMessage) warning).getStatement();
+		}
+		return target == null ? null : new Violation(kind, target, warning.getReproducingInputs());
 	}
 }

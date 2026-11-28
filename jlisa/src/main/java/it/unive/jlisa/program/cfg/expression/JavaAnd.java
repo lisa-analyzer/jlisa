@@ -18,6 +18,8 @@ import it.unive.lisa.program.type.BoolType;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.symbolic.value.operator.binary.LogicalAnd;
 import it.unive.lisa.symbolic.value.operator.unary.LogicalNegation;
 import it.unive.lisa.type.Type;
@@ -48,7 +50,10 @@ public class JavaAnd extends And {
 		for (SymbolicExpression left : leftState.getExecutionExpressions()) {
 			Satisfiability sat = analysis.satisfies(leftState, left, context, this);
 			if (sat == Satisfiability.NOT_SATISFIED)
-				result = result.lub(leftState);
+				// only this value of the left operand decides the result: the
+				// state may hold other values too (e.g., a/b == c/d and a/b ==
+				// NaN, when the division may be by zero)
+				result = result.lub(leftState.withExecutionExpression(left));
 			else {
 				// the right operand is evaluated only where the left one
 				// is true. Where the left one is false, the result is
@@ -68,7 +73,17 @@ public class JavaAnd extends And {
 
 				AnalysisState<A> joined = shortCircuit == null ? rightState : rightState.lub(shortCircuit);
 				for (SymbolicExpression right : rightState.getExecutionExpressions())
-					result = result.lub(fwdBinarySemantics(interprocedural, joined, left, right, expressions));
+					if (sat == Satisfiability.SATISFIED && comparesReferences(left))
+						// true && right is right: the value domains need not
+						// decide again a comparison of references inside the
+						// conjunction (e.g., the heap decides r != null, the
+						// values r.length > 0). Other conditions are kept,
+						// since right alone does not hold once the state is
+						// joined with states where left is false (e.g., at
+						// loop heads)
+						result = result.lub(rightOperand(interprocedural, joined, right));
+					else
+						result = result.lub(fwdBinarySemantics(interprocedural, joined, left, right, expressions));
 
 				// the right operand has no normal execution state
 				if (shortCircuit != null && rightState.getExecutionExpressions().isEmpty())
@@ -85,6 +100,43 @@ public class JavaAnd extends And {
 			result = result.lub(leftState);
 
 		return result;
+	}
+
+	/**
+	 * Returns whether the given condition compares references (e.g.,
+	 * {@code r != null}), which the heap decides but the value domains do not.
+	 *
+	 * @param condition the condition
+	 *
+	 * @return {@code true} if the condition is {@code ==} or {@code !=} between
+	 *             references or null
+	 */
+	static boolean comparesReferences(
+			SymbolicExpression condition) {
+		if (!(condition instanceof BinaryExpression b)
+				|| !(b.getOperator() == ComparisonEq.INSTANCE || b.getOperator() == ComparisonNe.INSTANCE))
+			return false;
+		return isReference(b.getLeft()) || isReference(b.getRight());
+	}
+
+	private static boolean isReference(
+			SymbolicExpression e) {
+		Type type = e.getStaticType();
+		return type.isReferenceType() || type.isNullType() || type.isPointerType();
+	}
+
+	// the result of the conjunction when the left operand is surely true: the
+	// value of the right operand, if it is a boolean
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> rightOperand(
+			InterproceduralAnalysis<A, D> interprocedural,
+			AnalysisState<A> state,
+			SymbolicExpression right)
+			throws SemanticException {
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (analysis.getRuntimeTypesOf(state, right, context, this).stream().noneMatch(Type::isBooleanType))
+			return state.bottomExecution();
+		return analysis.smallStepSemantics(state, right, context, this);
 	}
 
 	@Override

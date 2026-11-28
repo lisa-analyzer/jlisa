@@ -26,9 +26,14 @@ import it.unive.jlisa.program.cfg.expression.JavaBitwiseOr;
 import it.unive.jlisa.program.cfg.expression.JavaCastExpression;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonEqual;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonGE;
+import it.unive.jlisa.program.cfg.expression.JavaComparisonGT;
+import it.unive.jlisa.program.cfg.expression.JavaComparisonLE;
+import it.unive.jlisa.program.cfg.expression.JavaComparisonLT;
 import it.unive.jlisa.program.cfg.expression.JavaComparisonNotEqual;
 import it.unive.jlisa.program.cfg.expression.JavaConditionalExpression;
+import it.unive.jlisa.program.cfg.expression.JavaDecrement;
 import it.unive.jlisa.program.cfg.expression.JavaDivision;
+import it.unive.jlisa.program.cfg.expression.JavaIncrement;
 import it.unive.jlisa.program.cfg.expression.JavaMultiplication;
 import it.unive.jlisa.program.cfg.expression.JavaNewArray;
 import it.unive.jlisa.program.cfg.expression.JavaNewArrayWithInitializer;
@@ -37,12 +42,9 @@ import it.unive.jlisa.program.cfg.expression.JavaOr;
 import it.unive.jlisa.program.cfg.expression.JavaRemainder;
 import it.unive.jlisa.program.cfg.expression.JavaShiftLeft;
 import it.unive.jlisa.program.cfg.expression.JavaShiftRight;
+import it.unive.jlisa.program.cfg.expression.JavaUnboxBoolean;
 import it.unive.jlisa.program.cfg.expression.JavaUnsignedShiftRight;
-import it.unive.jlisa.program.cfg.expression.PostfixAddition;
-import it.unive.jlisa.program.cfg.expression.PostfixSubtraction;
-import it.unive.jlisa.program.cfg.expression.PrefixAddition;
 import it.unive.jlisa.program.cfg.expression.PrefixPlus;
-import it.unive.jlisa.program.cfg.expression.PrefixSubtraction;
 import it.unive.jlisa.program.cfg.statement.JavaAddition;
 import it.unive.jlisa.program.cfg.statement.JavaAssignment;
 import it.unive.jlisa.program.cfg.statement.JavaCompoundAssignment;
@@ -64,11 +66,9 @@ import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.SourceCodeLocation;
 import it.unive.lisa.program.cfg.CFG;
+import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
 import it.unive.lisa.program.cfg.statement.VariableRef;
-import it.unive.lisa.program.cfg.statement.comparison.GreaterThan;
-import it.unive.lisa.program.cfg.statement.comparison.LessOrEqual;
-import it.unive.lisa.program.cfg.statement.comparison.LessThan;
 import it.unive.lisa.program.cfg.statement.literal.FalseLiteral;
 import it.unive.lisa.program.cfg.statement.literal.TrueLiteral;
 import it.unive.lisa.program.cfg.statement.logic.Not;
@@ -144,9 +144,9 @@ public class ExpressionVisitor
 			Map.entry(InfixExpression.Operator.RIGHT_SHIFT_SIGNED, JavaShiftRight::new),
 			Map.entry(InfixExpression.Operator.LEFT_SHIFT, JavaShiftLeft::new),
 			Map.entry(InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED, JavaUnsignedShiftRight::new),
-			Map.entry(InfixExpression.Operator.LESS, LessThan::new),
-			Map.entry(InfixExpression.Operator.GREATER, GreaterThan::new),
-			Map.entry(InfixExpression.Operator.LESS_EQUALS, LessOrEqual::new),
+			Map.entry(InfixExpression.Operator.LESS, JavaComparisonLT::new),
+			Map.entry(InfixExpression.Operator.GREATER, JavaComparisonGT::new),
+			Map.entry(InfixExpression.Operator.LESS_EQUALS, JavaComparisonLE::new),
 			Map.entry(InfixExpression.Operator.GREATER_EQUALS, JavaComparisonGE::new),
 			Map.entry(InfixExpression.Operator.EQUALS, JavaComparisonEqual::new),
 			Map.entry(InfixExpression.Operator.NOT_EQUALS, JavaComparisonNotEqual::new),
@@ -199,7 +199,17 @@ public class ExpressionVisitor
 				// name: the type of the field is the one of the elements
 				contentType = expr.getStaticType();
 			} else {
-				contentType = contentType.asArrayType().getBaseType();
+				// the initializer of an element of an array of arrays (e.g.,
+				// {1, 2} in {{1, 2}, {3, 4}}) creates the array referenced by
+				// the element: its type is the one of the elements of the
+				// enclosing initializer
+				Type created = contentType;
+				for (ASTNode parent = node.getParent(); parent instanceof ArrayInitializer
+						&& created.isArrayType(); parent = parent.getParent()) {
+					Type element = created.asArrayType().getInnerType();
+					created = element.isReferenceType() ? element.asReferenceType().getInnerType() : element;
+				}
+				contentType = created.isArrayType() ? created.asArrayType().getInnerType() : expr.getStaticType();
 			}
 
 		}
@@ -217,39 +227,9 @@ public class ExpressionVisitor
 		Type type = getParserContext().evaluate(node.getType(),
 				new TypeASTVisitor(getEnvironment(), getScope().getParentScope().getUnitScope()));
 
-		// currently we handle just single-dim and bi-dim arrays
-		if (node.dimensions().size() > 2)
-			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-					"Multi-dimensional arrays are not supported are not supported.",
-					getSourceCodeLocation(node));
-
-		// single-dimension arrays
-		if (node.dimensions().size() == 1) {
-			Expression length = getParserContext().evaluate((ASTNode) node.dimensions().get(0),
-					new ExpressionVisitor(getEnvironment(), getScope()));
-			expression = new JavaNewArray(getScope().getCFG(), getSourceCodeLocation(node), length,
-					new JavaReferenceType(type));
-		}
-		// bi-dimension arrays
-		else if (node.dimensions().size() == 2) {
-			if (!(node.dimensions().get(0) instanceof NumberLiteral))
-				throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
-						"Bi-dimensional arrays with variable first dimension are not supported are not supported.",
-						getSourceCodeLocation(node));
-			int fstDim = Long.decode(((NumberLiteral) node.dimensions().get(0)).getToken()).intValue();
-			Expression sndDimExpr = getParserContext().evaluate((ASTNode) node.dimensions().get(1),
-					new ExpressionVisitor(getEnvironment(), getScope()));
-			List<Expression> parameters = new ArrayList<>();
-			for (int i = 0; i < fstDim; i++) {
-				Expression expr = new JavaNewArray(getScope().getCFG(),
-						getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation(),
-						sndDimExpr, (JavaReferenceType) type.asArrayType().getInnerType());
-				parameters.add(expr);
-			}
-
-			expression = new JavaNewArrayWithInitializer(getScope().getCFG(), getSourceCodeLocation(node),
-					parameters.toArray(new Expression[0]), new JavaReferenceType(type));
-		} else {
+		if (!node.dimensions().isEmpty())
+			expression = newArray(node, type, 0, getSourceCodeLocation(node));
+		else {
 			ArrayInitializer initializer = node.getInitializer();
 
 			List<Expression> parameters = new ArrayList<>();
@@ -265,6 +245,58 @@ public class ExpressionVisitor
 		}
 
 		return false;
+	}
+
+	/**
+	 * The maximum number of elements of an array of arrays created by the
+	 * frontend element by element (see
+	 * {@link #newArray(ArrayCreation, Type, int, CodeLocation)}), as the
+	 * accesses enumerate the cells of arrays up to this length.
+	 */
+	private static final int MAX_ELEMENT_ARRAYS = 64;
+
+	/**
+	 * Yields the creation of the array of the given type with the dimensions of
+	 * the given creation starting from the given one (e.g., the rows of a
+	 * matrix): an array whose elements are the arrays of the following
+	 * dimensions, if they are given (e.g., {@code new int[2][3]}), or the
+	 * default value of its elements (e.g., {@code new int[2][]}, whose elements
+	 * are null references). The arrays of the following dimensions are created
+	 * for each element, which needs a constant length.
+	 */
+	private Expression newArray(
+			ArrayCreation node,
+			Type type,
+			int dimension,
+			CodeLocation location) {
+		ASTNode length = (ASTNode) node.dimensions().get(dimension);
+		if (dimension == node.dimensions().size() - 1)
+			return new JavaNewArray(getScope().getCFG(), location,
+					getParserContext().evaluate(length, new ExpressionVisitor(getEnvironment(), getScope())),
+					new JavaReferenceType(type));
+		if (!(length instanceof NumberLiteral))
+			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Arrays of arrays whose length is not constant are not supported.",
+					getSourceCodeLocation(node));
+		int elements = Long.decode(((NumberLiteral) length).getToken()).intValue();
+		// the elements are read and written through the constant indexes of
+		// the cells (see JavaArrayAccess) only for arrays with few elements:
+		// the cells of larger arrays are denoted by the expressions of their
+		// indexes, so that the references of an element written and read
+		// through different expressions (e.g., a[i] and a[j]) would not be
+		// the same
+		if (elements > MAX_ELEMENT_ARRAYS)
+			throw new ParsingException("multi-dim array", ParsingException.Type.UNSUPPORTED_STATEMENT,
+					"Arrays of more than " + MAX_ELEMENT_ARRAYS + " arrays are not supported.",
+					getSourceCodeLocation(node));
+		// the elements are references to the arrays of the next dimension
+		Type nested = type.asArrayType().getInnerType().asReferenceType().getInnerType();
+		List<Expression> arrays = new ArrayList<>();
+		for (int i = 0; i < elements; i++)
+			arrays.add(newArray(node, nested, dimension + 1,
+					getParserContext().getCurrentSyntheticCodeLocationManager(getSource()).nextLocation()));
+		return new JavaNewArrayWithInitializer(getScope().getCFG(), location, arrays.toArray(new Expression[0]),
+				new JavaReferenceType(type));
 	}
 
 	public Type getArrayInitializerType(
@@ -488,8 +520,8 @@ public class ExpressionVisitor
 	public boolean visit(
 			ConditionalExpression node) {
 
-		Expression conditionExpr = getParserContext().evaluate(node.getExpression(),
-				new ExpressionVisitor(getEnvironment(), getScope()));
+		Expression conditionExpr = JavaUnboxBoolean.ifBoxed(getParserContext().evaluate(node.getExpression(),
+				new ExpressionVisitor(getEnvironment(), getScope())));
 		if (conditionExpr == null) {
 			throw new ParsingException("conditional-expression",
 					ParsingException.Type.MISSING_EXPECTED_EXPRESSION,
@@ -573,6 +605,9 @@ public class ExpressionVisitor
 			}
 		}
 
+		if (operator == InfixExpression.Operator.CONDITIONAL_AND || operator == InfixExpression.Operator.CONDITIONAL_OR)
+			// the operands of logical operators are conditions
+			operands.replaceAll(JavaUnboxBoolean::ifBoxed);
 		BinaryFactory factory = INFIX_OPS.get(operator);
 		if (factory == null)
 			throw new RuntimeException(new UnsupportedStatementException("Unknown infix operator: " + operator));
@@ -715,10 +750,10 @@ public class ExpressionVisitor
 			return false;
 		}
 		if (node.getOperator() == PostfixExpression.Operator.INCREMENT) {
-			expression = new PostfixAddition(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaIncrement(getScope().getCFG(), getSourceCodeLocation(node), false, expr);
 		}
 		if (node.getOperator() == PostfixExpression.Operator.DECREMENT) {
-			expression = new PostfixSubtraction(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaDecrement(getScope().getCFG(), getSourceCodeLocation(node), false, expr);
 		}
 		return false;
 	}
@@ -733,10 +768,10 @@ public class ExpressionVisitor
 		}
 
 		if (node.getOperator() == PrefixExpression.Operator.INCREMENT) {
-			expression = new PrefixAddition(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaIncrement(getScope().getCFG(), getSourceCodeLocation(node), true, expr);
 		}
 		if (node.getOperator() == PrefixExpression.Operator.DECREMENT) {
-			expression = new PrefixSubtraction(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new JavaDecrement(getScope().getCFG(), getSourceCodeLocation(node), true, expr);
 		}
 		if (node.getOperator() == PrefixExpression.Operator.MINUS) {
 			expression = new Negation(getScope().getCFG(), getSourceCodeLocation(node), expr);
@@ -746,7 +781,7 @@ public class ExpressionVisitor
 			expression = new PrefixPlus(getScope().getCFG(), getSourceCodeLocation(node), expr);
 		}
 		if (node.getOperator() == PrefixExpression.Operator.NOT) {
-			expression = new Not(getScope().getCFG(), getSourceCodeLocation(node), expr);
+			expression = new Not(getScope().getCFG(), getSourceCodeLocation(node), JavaUnboxBoolean.ifBoxed(expr));
 		}
 		if (node.getOperator() == PrefixExpression.Operator.COMPLEMENT) {
 			expression = new BitwiseNot(getScope().getCFG(), getSourceCodeLocation(node), expr);

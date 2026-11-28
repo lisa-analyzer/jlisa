@@ -15,7 +15,6 @@ import it.unive.lisa.program.cfg.statement.PluggableStatement;
 import it.unive.lisa.program.cfg.statement.Statement;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.AccessChild;
-import it.unive.lisa.symbolic.value.Constant;
 import it.unive.lisa.symbolic.value.GlobalVariable;
 import it.unive.lisa.symbolic.value.PushAny;
 import it.unive.lisa.type.Type;
@@ -63,13 +62,13 @@ public class StringCharArrayConstructor extends BinaryExpression implements Plug
 		GlobalVariable var = new GlobalVariable(Untyped.INSTANCE, "value", getLocation());
 		AccessChild leftAccess = new AccessChild(stringType, left, var, getLocation());
 
-		String constantValue;
+		SymbolicExpression constantValue;
 		try {
 			Integer length = CharArrayConstantSupport.extractArrayLength(interprocedural, state, right, getLocation(),
 					this);
 			constantValue = length == null
 					? null
-					: CharArrayConstantSupport.computeConstantSubstring(interprocedural, state, right, 0, length,
+					: CharArrayConstantSupport.computeSubstring(stringType, interprocedural, state, right, 0, length,
 							getLocation(), this);
 		} catch (SemanticException e) {
 			throw e;
@@ -81,7 +80,7 @@ public class StringCharArrayConstructor extends BinaryExpression implements Plug
 		}
 
 		SymbolicExpression value = constantValue != null
-				? new Constant(stringType, constantValue, getLocation())
+				? constantValue
 				: new PushAny(stringType, getLocation());
 		return interprocedural.getAnalysis().assign(state, leftAccess, value, interprocedural.getCurrentContext(),
 				originating);

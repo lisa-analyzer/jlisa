@@ -16,7 +16,9 @@ import it.unive.lisa.symbolic.CFGThrow;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.heap.NullConstant;
 import it.unive.lisa.symbolic.value.BinaryExpression;
+import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
 import it.unive.lisa.symbolic.value.operator.binary.ComparisonEq;
+import it.unive.lisa.symbolic.value.operator.binary.ComparisonNe;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.Untyped;
 import java.util.Set;
@@ -74,6 +76,13 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 
 		for (SymbolicExpression rec : receiver) {
 			Set<Type> types = analysis.getRuntimeTypesOf(state, rec, context, this);
+			// when the receiver might be null, the call happens only if it is
+			// not (otherwise, nothing is assumed, so that the call does not
+			// depend on how precisely the receiver is known)
+			boolean mayBeNull = types.stream()
+					.anyMatch(t -> t.isPointerType() && t.asPointerType().getInnerType().isNullType());
+			AnalysisState<A> notNull = mayBeNull ? when(analysis, state, rec, ComparisonNe.INSTANCE, context)
+					: state;
 			for (Type recType : types) {
 				if (recType.isPointerType()) {
 					Type inner = recType.asPointerType().getInnerType();
@@ -83,7 +92,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 						JavaNewObj call = new JavaNewObj(getCFG(), getLocation(),
 								npeType.getReference(), new Expression[0]);
 						AnalysisState<A> npeState = call.forwardSemanticsAux(interprocedural,
-								whenNull(analysis, state, rec, context),
+								when(analysis, state, rec, ComparisonEq.INSTANCE, context),
 								new ExpressionSet[0], expressions);
 
 						// assign exception to variable thrower
@@ -100,7 +109,7 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 					} else if (!inner.isUnitType())
 						continue;
 					else
-						result = result.lub(super.forwardSemanticsAux(interprocedural, state, params, expressions));
+						result = result.lub(super.forwardSemanticsAux(interprocedural, notNull, params, expressions));
 				}
 			}
 		}
@@ -111,19 +120,22 @@ public class JavaUnresolvedCall extends UnresolvedCall {
 	}
 
 	/**
-	 * Yields the given state, where the given receiver is null: the
-	 * {@link NullPointerException} is only raised in that case. If the domain
-	 * cannot represent the condition, the state is returned unchanged.
+	 * Yields the given state, where the given receiver is compared with null
+	 * through the given operator (equality or inequality): the
+	 * {@link NullPointerException} is only raised if the receiver is null, and
+	 * the call happens only if it is not. If the domain cannot represent the
+	 * condition, the state is returned unchanged.
 	 */
-	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> whenNull(
+	private <A extends AbstractLattice<A>, D extends AbstractDomain<A>> AnalysisState<A> when(
 			Analysis<A, D> analysis,
 			AnalysisState<A> state,
 			SymbolicExpression receiver,
+			BinaryOperator operator,
 			ScopeId<A> context)
 			throws SemanticException {
-		BinaryExpression isNull = new BinaryExpression(getProgram().getTypes().getBooleanType(), receiver,
-				new NullConstant(getLocation()), ComparisonEq.INSTANCE, getLocation());
-		AnalysisState<A> assumed = analysis.assume(state, isNull, context, this, this);
+		BinaryExpression comparison = new BinaryExpression(getProgram().getTypes().getBooleanType(), receiver,
+				new NullConstant(getLocation()), operator, getLocation());
+		AnalysisState<A> assumed = analysis.assume(state, comparison, context, this, this);
 		return assumed.getExecutionState().isBottom() ? state : assumed;
 	}
 }

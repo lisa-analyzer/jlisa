@@ -132,8 +132,13 @@ public class AssertChecker<V extends ValueLattice<V>>
 			return Optional.of(byThrower.get(context).get(thrower));
 		// the thrower might be a statement of a called method, when the
 		// verification followed the error inside it: unless it is a call
-		// (whose error might be raised by its callees), it raises the error
-		if (!(thrower instanceof Call))
+		// (whose error might be raised by its callees), it raises the error.
+		// Confirmations with reproducing inputs come from executions of models
+		// where the errors of the callees are raised by statements inside
+		// them, or are not precise (and thus never confirmed): a call
+		// raising a confirmed error raises it itself (e.g., on a null
+		// receiver)
+		if (!(thrower instanceof Call) || !warning.getReproducingInputs().isEmpty())
 			return Optional.of(RuntimeExceptionTarget.ofThrower(thrower));
 		return Optional.empty();
 	}
@@ -198,11 +203,14 @@ public class AssertChecker<V extends ValueLattice<V>>
 			// exceptions, and they can neither confirm nor prevent the
 			// refutation of the warning. Checked exceptions also match
 			// Exception, while thrown values whose static type is a supertype
-			// of Exception (e.g., Throwable) do not
+			// of Exception (e.g., Throwable) do not. Only runtime exceptions
+			// confirm the warning: values thrown as instances of Exception
+			// might be runtime exceptions, but might also be checked ones
 			if (hasExceptionState) {
 				tool.warnOn(node, result.getId(),
 						it.unive.lisa.checks.verification.Violation
-								.error(JavaClassType.getExceptionType().getReference()),
+								.error(JavaClassType.getExceptionType().getReference(),
+										JavaClassType.getRuntimeExceptionType().getReference()),
 						"uncaught runtime exception in main method");
 				Optional<Statement> target = RuntimeExceptionTarget.of(tool, state);
 				if (target.isPresent())

@@ -1,7 +1,11 @@
 package it.unive.jlisa.triage;
 
 import it.unive.jlisa.program.operator.JavaByteCompareOperator;
+import it.unive.jlisa.program.operator.JavaByteToUnsignedIntOperator;
+import it.unive.jlisa.program.operator.JavaByteToUnsignedLongOperator;
 import it.unive.jlisa.program.operator.JavaCharacterDigitOperator;
+import it.unive.jlisa.program.operator.JavaCharacterEqualsOperator;
+import it.unive.jlisa.program.operator.JavaCharacterForDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDefinedOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsDigitOperator;
 import it.unive.jlisa.program.operator.JavaCharacterIsJavaIdentifierPartOperator;
@@ -13,38 +17,134 @@ import it.unive.jlisa.program.operator.JavaCharacterIsUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToLowerCaseOperator;
 import it.unive.jlisa.program.operator.JavaCharacterToUpperCaseOperator;
 import it.unive.jlisa.program.operator.JavaDoubleCompareOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaDoubleIsNaNOperator;
+import it.unive.jlisa.program.operator.JavaDoubleLongBitsToDoubleOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToLongBitsOperator;
+import it.unive.jlisa.program.operator.JavaDoubleToRawLongBitsOperator;
 import it.unive.jlisa.program.operator.JavaFloatCompareOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsFiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsInfiniteOperator;
+import it.unive.jlisa.program.operator.JavaFloatIsNaNOperator;
+import it.unive.jlisa.program.operator.JavaFloatToIntBitsOperator;
+import it.unive.jlisa.program.operator.JavaFloatToRawIntBitsOperator;
 import it.unive.jlisa.program.operator.JavaIntegerCompareOperator;
 import it.unive.jlisa.program.operator.JavaLibraryFunction;
 import it.unive.jlisa.program.operator.JavaLongBitCountOperator;
 import it.unive.jlisa.program.operator.JavaLongCompareOperator;
 import it.unive.jlisa.program.operator.JavaLongRotateRightOperator;
+import it.unive.jlisa.program.operator.JavaMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaMathCosOperator;
+import it.unive.jlisa.program.operator.JavaMathExpOperator;
+import it.unive.jlisa.program.operator.JavaMathFloorOperator;
+import it.unive.jlisa.program.operator.JavaMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaMathLogOperator;
 import it.unive.jlisa.program.operator.JavaMathMax;
 import it.unive.jlisa.program.operator.JavaMathMin;
+import it.unive.jlisa.program.operator.JavaMathPowOperator;
+import it.unive.jlisa.program.operator.JavaMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaMathSinOperator;
+import it.unive.jlisa.program.operator.JavaMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaMathTanOperator;
+import it.unive.jlisa.program.operator.JavaMathToRadiansOperator;
 import it.unive.jlisa.program.operator.JavaShortCompareOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAbsOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAcosOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAsinOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathAtan2Operator;
+import it.unive.jlisa.program.operator.JavaStrictMathAtanOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathCosOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathExpOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathFloorOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathGetExponentOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathLog10Operator;
+import it.unive.jlisa.program.operator.JavaStrictMathLogOperator;
 import it.unive.jlisa.program.operator.JavaStrictMathMax;
 import it.unive.jlisa.program.operator.JavaStrictMathMin;
+import it.unive.jlisa.program.operator.JavaStrictMathPowOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathRoundOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathSinOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathSqrtOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathTanOperator;
+import it.unive.jlisa.program.operator.JavaStrictMathToRadiansOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendCharOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendIntOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendLongOperator;
+import it.unive.jlisa.program.operator.JavaStringAppendStringOperator;
+import it.unive.jlisa.program.operator.JavaStringCharAtOperator;
 import it.unive.jlisa.program.operator.JavaStringCompareToOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringDeleteOperator;
+import it.unive.jlisa.program.operator.JavaStringEndsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringEqualsIgnoreCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringIndexOfStringFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertCharOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertIntOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertLongOperator;
+import it.unive.jlisa.program.operator.JavaStringInsertStringOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringLastIndexOfStringOperator;
+import it.unive.jlisa.program.operator.JavaStringReplaceOperator;
+import it.unive.jlisa.program.operator.JavaStringSetCharAtOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithFromIndexOperator;
+import it.unive.jlisa.program.operator.JavaStringStartsWithOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringFromToOperator;
+import it.unive.jlisa.program.operator.JavaStringSubstringOperator;
+import it.unive.jlisa.program.operator.JavaStringToLowerCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringToUpperCaseOperator;
+import it.unive.jlisa.program.operator.JavaStringTrimOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfBooleanOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfCharOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfDoubleOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfFloatOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfIntOperator;
+import it.unive.jlisa.program.operator.JavaStringValueOfLongOperator;
+import it.unive.jlisa.program.type.JavaByteType;
+import it.unive.jlisa.program.type.JavaCharType;
+import it.unive.jlisa.program.type.JavaIntType;
+import it.unive.jlisa.program.type.JavaLongType;
+import it.unive.jlisa.program.type.JavaShortType;
 import it.unive.lisa.analysis.SemanticException;
+import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.BinaryExpression;
 import it.unive.lisa.symbolic.value.TernaryExpression;
 import it.unive.lisa.symbolic.value.UnaryExpression;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.symbolic.value.operator.binary.BinaryOperator;
+import it.unive.lisa.symbolic.value.operator.ternary.TernaryOperator;
 import it.unive.lisa.symbolic.value.operator.unary.UnaryOperator;
 import it.unive.lisa.triage.encoding.ExpressionEncoder;
 import it.unive.lisa.triage.encoding.SortPolicy;
 import it.unive.lisa.triage.encoding.SymbolTable;
+import it.unive.lisa.triage.encoding.ValueSort;
 import it.unive.lisa.triage.smt.FloatingPoints;
 import it.unive.lisa.triage.smt.Sort;
 import it.unive.lisa.triage.smt.Term;
+import it.unive.lisa.type.Type;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 /**
@@ -129,6 +229,18 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term prefix = substr(s, num(0), Term.ite(ge(from, len), len, add(from, num(1))));
 			return lastIndexOf(prefix, coerce(middle, Sort.INT, expression), expression);
 		}
+		if (expression.getOperator() instanceof JavaStringLastIndexOfStringFromIndexOperator) {
+			Term s = asString(left, expression);
+			Term t = asString(middle, expression);
+			Term from = coerce(right, Sort.INT, expression);
+			// the occurrences starting at most at the given index
+			Term end = add(from, len(t));
+			Term prefix = substr(s, num(0), Term.ite(Term.app(">", Sort.BOOL, end, len(s)), len(s), end));
+			return Term.ite(lt(from, num(0)), num(-1), lastIndexOfString(prefix, t, expression));
+		}
+		Term string = stringTernary(expression.getOperator(), left, middle, right, expression);
+		if (string != null)
+			return string;
 		return super.encodeTernary(expression, left, middle, right);
 	}
 
@@ -162,7 +274,18 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (op instanceof JavaStrictMathGetExponentOperator)
 			return exponent(arg, e);
 		if (op instanceof JavaLongBitCountOperator)
-			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64);
+			return bitCount(unsigned(coerce(arg, Sort.INT, e), 64), 64, e);
+		if (op instanceof JavaByteToUnsignedIntOperator || op instanceof JavaByteToUnsignedLongOperator)
+			return unsigned(coerce(arg, Sort.INT, e), 8);
+		Term floating = floatUnary(op, arg, e);
+		if (floating != null)
+			return floating;
+		Term string = stringUnary(op, arg, e);
+		if (string != null)
+			return string;
+		Term math = mathUnary(op, typed(arg, e), e);
+		if (math != null)
+			return math;
 		if (!(op instanceof JavaLibraryFunction))
 			return null;
 
@@ -196,7 +319,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.SHORT_TO_UNSIGNED_INT || f == JavaLibraryFunction.SHORT_TO_UNSIGNED_LONG)
 			return unsigned(x, 16);
 		if (f == JavaLibraryFunction.INTEGER_BIT_COUNT)
-			return bitCount(unsigned(x, 32), 32);
+			return bitCount(unsigned(x, 32), 32, e);
 		if (f == JavaLibraryFunction.INTEGER_HIGHEST_ONE_BIT)
 			return signed(highestOneBit(unsigned(x, 32), 32), 32);
 		if (f == JavaLibraryFunction.LONG_HIGHEST_ONE_BIT)
@@ -214,15 +337,15 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_NUMBER_OF_TRAILING_ZEROS)
 			return trailingZeros(unsigned(x, 64), 64);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE)
-			return signed(reverse(unsigned(x, 32), 32, 1), 32);
+			return signed(reverse(unsigned(x, 32), 32, 1, e), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE)
-			return signed(reverse(unsigned(x, 64), 64, 1), 64);
+			return signed(reverse(unsigned(x, 64), 64, 1, e), 64);
 		if (f == JavaLibraryFunction.INTEGER_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 32), 32, 8), 32);
+			return signed(reverse(unsigned(x, 32), 32, 8, e), 32);
 		if (f == JavaLibraryFunction.LONG_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 64), 64, 8), 64);
+			return signed(reverse(unsigned(x, 64), 64, 8, e), 64);
 		if (f == JavaLibraryFunction.SHORT_REVERSE_BYTES)
-			return signed(reverse(unsigned(x, 16), 16, 8), 16);
+			return signed(reverse(unsigned(x, 16), 16, 8, e), 16);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING || f == JavaLibraryFunction.LONG_TO_STRING
 				|| f == JavaLibraryFunction.SHORT_TO_STRING || f == JavaLibraryFunction.BYTE_TO_STRING)
 			return decimal(x);
@@ -231,17 +354,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_TO_UNSIGNED_STRING)
 			return Term.app("str.from_int", Sort.STRING, unsigned(x, 64));
 		if (f == JavaLibraryFunction.INTEGER_TO_HEX_STRING)
-			return digits(unsigned(x, 32), 16, 32);
+			return digits(unsigned(x, 32), 16, 32, e);
 		if (f == JavaLibraryFunction.INTEGER_TO_BINARY_STRING)
-			return digits(unsigned(x, 32), 2, 32);
+			return digits(unsigned(x, 32), 2, 32, e);
 		if (f == JavaLibraryFunction.INTEGER_TO_OCTAL_STRING)
-			return digits(unsigned(x, 32), 8, 32);
+			return digits(unsigned(x, 32), 8, 32, e);
 		if (f == JavaLibraryFunction.LONG_TO_HEX_STRING)
-			return digits(unsigned(x, 64), 16, 64);
+			return digits(unsigned(x, 64), 16, 64, e);
 		if (f == JavaLibraryFunction.LONG_TO_BINARY_STRING)
-			return digits(unsigned(x, 64), 2, 64);
+			return digits(unsigned(x, 64), 2, 64, e);
 		if (f == JavaLibraryFunction.LONG_TO_OCTAL_STRING)
-			return digits(unsigned(x, 64), 8, 64);
+			return digits(unsigned(x, 64), 8, 64, e);
 		return null;
 	}
 
@@ -278,6 +401,8 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			Term left,
 			Term right,
 			BinaryExpression e) {
+		if (op instanceof JavaCharacterForDigitOperator)
+			return forDigit(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
 		if (op instanceof JavaIntegerCompareOperator || op instanceof JavaLongCompareOperator)
 			return compare(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
 		if (op instanceof JavaShortCompareOperator || op instanceof JavaByteCompareOperator)
@@ -286,6 +411,17 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return floatCompare(toFloat(left, Sort.FLOAT64, e), toFloat(right, Sort.FLOAT64, e));
 		if (op instanceof JavaFloatCompareOperator)
 			return floatCompare(toFloat(left, Sort.FLOAT32, e), toFloat(right, Sort.FLOAT32, e));
+		DoubleBinaryOperator function = evaluatedBinary(op);
+		if (function != null) {
+			if (!getSorts().encodesFloats())
+				return null;
+			// computed on the values of the counterexamples, as the result is
+			// not specified exactly
+			Term x = toFloat(left, Sort.FLOAT64, e.getLeft(), e);
+			Term y = toFloat(right, Sort.FLOAT64, e.getRight(), e);
+			return getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x, y),
+					args -> function.applyAsDouble(args.get(0).doubleValue(), args.get(1).doubleValue()), e);
+		}
 		if (op instanceof JavaMathMax || op instanceof JavaStrictMathMax)
 			return maxMin(left, right, true, e);
 		if (op instanceof JavaMathMin || op instanceof JavaStrictMathMin)
@@ -296,6 +432,9 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 			return signed(rotate(unsigned(coerce(left, Sort.INT, e), 64), coerce(right, Sort.INT, e), 64, false), 64);
 		if (op instanceof JavaStringCompareToOperator)
 			return compareStrings(asString(left, e), asString(right, e), e);
+		Term string = stringBinary(op, left, right, e);
+		if (string != null)
+			return string;
 		if (!(op instanceof JavaLibraryFunction))
 			return null;
 
@@ -363,13 +502,21 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		if (f == JavaLibraryFunction.LONG_ROTATE_LEFT)
 			return signed(rotate(unsigned(a, 64), b, 64, true), 64);
 		if (f == JavaLibraryFunction.INTEGER_TO_STRING_RADIX)
-			return withRadix(b, r -> signedDigits(a, r, 32));
+			return withRadix(b, (
+					r,
+					when) -> signedDigits(a, r, 32, when, e));
 		if (f == JavaLibraryFunction.LONG_TO_STRING_RADIX)
-			return withRadix(b, r -> signedDigits(a, r, 64));
+			return withRadix(b, (
+					r,
+					when) -> signedDigits(a, r, 64, when, e));
 		if (f == JavaLibraryFunction.INTEGER_TO_UNSIGNED_STRING_RADIX)
-			return withRadix(b, r -> digits(unsigned(a, 32), r, 32));
+			return withRadix(b, (
+					r,
+					when) -> digits(unsigned(a, 32), r, 32, when, e));
 		if (f == JavaLibraryFunction.LONG_TO_UNSIGNED_STRING_RADIX)
-			return withRadix(b, r -> digits(unsigned(a, 64), r, 64));
+			return withRadix(b, (
+					r,
+					when) -> digits(unsigned(a, 64), r, 64, when, e));
 		return null;
 	}
 
@@ -451,7 +598,26 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	private static Term unsigned(
 			Term x,
 			int bits) {
+		BigInteger value = integerLiteral(x);
+		if (value != null)
+			return num(value.signum() < 0 ? value.add(pow2(bits)) : value);
 		return Term.ite(lt(x, num(0)), add(x, num(pow2(bits))), x);
+	}
+
+	/**
+	 * Yields the value of the given term, if it is an integer literal, or
+	 * {@code null}.
+	 */
+	private static BigInteger integerLiteral(
+			Term term) {
+		if (!term.getSort().equals(Sort.INT))
+			return null;
+		String text = term.toSmtLib();
+		if (text.matches("\\d+"))
+			return new BigInteger(text);
+		if (text.matches("\\(- \\d+\\)"))
+			return new BigInteger(text.substring(3, text.length() - 1)).negate();
+		return null;
 	}
 
 	/**
@@ -474,12 +640,40 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 		return mod(div(u, pow2(index)), pow2(width));
 	}
 
-	private static Term bitCount(
+	/**
+	 * Yields a bit-vector of the given width whose (unsigned) value is the
+	 * given unsigned integer: an auxiliary constant constrained to it, so that
+	 * the bits of the integer are extracted from the bit-vector rather than
+	 * computed through quotients and remainders, that solvers handle poorly.
+	 */
+	private Term bitVector(
 			Term u,
-			int bits) {
+			int bits,
+			SymbolicExpression e) {
+		Term b = auxiliary(Sort.bitVector(bits), e);
+		getSymbols().require(Term.eq(u, Term.app("bv2nat", Sort.INT, b)));
+		return b;
+	}
+
+	/**
+	 * The bits from {@code index} to {@code index + width - 1} of the given
+	 * bit-vector.
+	 */
+	private static Term extract(
+			Term b,
+			int index,
+			int width) {
+		return Term.app("(_ extract " + (index + width - 1) + " " + index + ")", Sort.bitVector(width), b);
+	}
+
+	private Term bitCount(
+			Term u,
+			int bits,
+			SymbolicExpression e) {
+		Term b = bitVector(u, bits, e);
 		Term[] sum = new Term[bits];
 		for (int i = 0; i < bits; i++)
-			sum[i] = bits(u, i, 1);
+			sum[i] = Term.app("bv2nat", Sort.INT, extract(b, i, 1));
 		return Term.app("+", Sort.INT, sum);
 	}
 
@@ -524,16 +718,20 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * integer {@code u} (single bits for {@code Integer.reverse}, bytes for
 	 * {@code Integer.reverseBytes}).
 	 */
-	private static Term reverse(
+	private Term reverse(
 			Term u,
 			int bits,
-			int group) {
+			int group,
+			SymbolicExpression e) {
 		int groups = bits / group;
-		Term[] sum = new Term[groups];
+		if (groups == 1)
+			return u;
+		Term b = bitVector(u, bits, e);
+		// the lowest group becomes the most significant one
+		Term[] parts = new Term[groups];
 		for (int i = 0; i < groups; i++)
-			sum[i] = Term.app("*", Sort.INT, bits(u, i * group, group),
-					num(pow2((groups - 1 - i) * group)));
-		return groups == 1 ? sum[0] : Term.app("+", Sort.INT, sum);
+			parts[i] = extract(b, i * group, group);
+		return Term.app("bv2nat", Sort.INT, Term.app("concat", Sort.bitVector(bits), parts));
 	}
 
 	/**
@@ -636,7 +834,7 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 */
 	private Term floatToString(
 			Term f,
-			UnaryExpression e) {
+			ValueExpression e) {
 		Sort fp = f.getSort();
 		Term rounded = Term.app("fp.roundToIntegral", fp, Term.value("RTZ", Sort.ROUNDING_MODE), f);
 		Term limit = fp.equals(Sort.FLOAT64) ? FloatingPoints.literal(1e7d) : FloatingPoints.literal(1e7f);
@@ -815,7 +1013,533 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 				lt(value, r)), value, num(-1));
 	}
 
+	/**
+	 * Yields the given operand, converted to the sort of its static type if it
+	 * is a value of unknown kind and its static type is numeric (e.g., the
+	 * value of a boxed number read from the heap): the conversion is precise
+	 * only if the value has that kind.
+	 */
+	private Term typed(
+			Term arg,
+			UnaryExpression e) {
+		Type type = e.getExpression().getStaticType();
+		if (!arg.getSort().equals(ValueSort.SORT) || !type.isNumericType())
+			return arg;
+		Sort sort = getSorts().sortOf(type);
+		return sort.equals(Sort.INT) || sort.isFloatingPoint() ? coerce(arg, sort, e) : arg;
+	}
+
+	/**
+	 * Encodes {@link Character#forDigit(int, int)}: the character representing
+	 * the given digit in the given radix, or the null character if the digit or
+	 * the radix are not valid.
+	 */
+	private static Term forDigit(
+			Term digit,
+			Term radix) {
+		Term valid = Term.and(between(radix, Character.MIN_RADIX, Character.MAX_RADIX), ge(digit, num(0)),
+				lt(digit, radix));
+		return Term.ite(valid, Term.ite(lt(digit, num(10)), add(digit, num('0')), add(digit, num('a' - 10))),
+				num(0));
+	}
+
+	// floating point numbers
+
+	/**
+	 * Encodes the predicates over floating point numbers of {@link Double} and
+	 * {@link Float}, and the conversions between them and their bit
+	 * representations, or yields {@code null} for the other operators (or if
+	 * floating point numbers are not encoded).
+	 */
+	private Term floatUnary(
+			UnaryOperator op,
+			Term arg,
+			UnaryExpression e) {
+		if (op instanceof JavaDoubleLongBitsToDoubleOperator) {
+			if (!getSorts().encodesFloats())
+				return null;
+			Term bits = Term.app("(_ int2bv 64)", Sort.bitVector(64), coerce(arg, Sort.INT, e));
+			return Term.app("(_ to_fp 11 53)", Sort.FLOAT64, bits);
+		}
+		Sort fp;
+		if (op instanceof JavaDoubleIsNaNOperator || op instanceof JavaDoubleIsInfiniteOperator
+				|| op instanceof JavaDoubleIsFiniteOperator || op instanceof JavaDoubleToLongBitsOperator
+				|| op instanceof JavaDoubleToRawLongBitsOperator)
+			fp = Sort.FLOAT64;
+		else if (op instanceof JavaFloatIsNaNOperator || op instanceof JavaFloatIsInfiniteOperator
+				|| op instanceof JavaFloatIsFiniteOperator || op instanceof JavaFloatToIntBitsOperator
+				|| op instanceof JavaFloatToRawIntBitsOperator)
+			fp = Sort.FLOAT32;
+		else
+			return null;
+		if (!getSorts().encodesFloats())
+			return null;
+		Term x = toFloat(arg, fp, e.getExpression(), e);
+		Term nan = Term.app("fp.isNaN", Sort.BOOL, x);
+		Term infinite = Term.app("fp.isInfinite", Sort.BOOL, x);
+		if (op instanceof JavaDoubleIsNaNOperator || op instanceof JavaFloatIsNaNOperator)
+			return nan;
+		if (op instanceof JavaDoubleIsInfiniteOperator || op instanceof JavaFloatIsInfiniteOperator)
+			return infinite;
+		if (op instanceof JavaDoubleIsFiniteOperator || op instanceof JavaFloatIsFiniteOperator)
+			return Term.not(Term.or(nan, infinite));
+		// the bit representation, where NaNs are represented by the canonical
+		// NaN (the raw representation of a NaN is not specified)
+		int width = fp.equals(Sort.FLOAT64) ? 64 : 32;
+		if (op instanceof JavaDoubleToRawLongBitsOperator || op instanceof JavaFloatToRawIntBitsOperator)
+			getSymbols().exactOnlyIf(Term.not(nan), e);
+		Term bits = Term.app("bv2int", Sort.INT, Term.app("fp.to_ieee_bv", Sort.bitVector(width), x));
+		long canonical = width == 64 ? Double.doubleToLongBits(Double.NaN) : Float.floatToIntBits(Float.NaN);
+		return Term.ite(nan, num(canonical), signed(bits, width));
+	}
+
+	// math
+
+	/**
+	 * Encodes the functions of {@link Math} and {@link StrictMath} that are
+	 * specified exactly (absolute value, floor, square root, rounding), or
+	 * yields {@code null} for the other operators, or if the kind of the
+	 * operand is not known (the functions are overloaded).
+	 */
+	private Term mathUnary(
+			UnaryOperator op,
+			Term arg,
+			UnaryExpression e) {
+		Sort sort = arg.getSort();
+		if (op instanceof JavaMathAbsOperator || op instanceof JavaStrictMathAbsOperator) {
+			if (sort.isFloatingPoint())
+				return Term.app("fp.abs", sort, arg);
+			Type type = e.getExpression().getStaticType();
+			int bits = type instanceof JavaLongType ? 64
+					: type instanceof JavaIntType || type instanceof JavaShortType || type instanceof JavaByteType
+							|| type instanceof JavaCharType ? 32 : 0;
+			if (bits == 0 || !sort.equals(Sort.INT))
+				return null;
+			// the absolute value of the minimum integer is the minimum integer
+			return wrap(Term.ite(lt(arg, num(0)), Term.app("-", Sort.INT, arg), arg), bits, false);
+		}
+		DoubleUnaryOperator function = evaluatedUnary(op);
+		if (function != null) {
+			if (!getSorts().encodesFloats())
+				return null;
+			// computed on the values of the counterexamples, as the result is
+			// not specified exactly
+			Term x = toFloat(arg, Sort.FLOAT64, e.getExpression(), e);
+			Function<List<Number>, Number> evaluator = args -> function.applyAsDouble(args.get(0).doubleValue());
+			Boolean increasing = monotonicity(op);
+			Term result = increasing != null
+					? getSymbols().monotone("$" + op, Sort.FLOAT64, x, evaluator, increasing, e)
+					: getSymbols().evaluable("$" + op, Sort.FLOAT64, List.of(x), evaluator, e);
+			Term range = range(op, x, result);
+			if (range != null)
+				getSymbols().require(range);
+			return result;
+		}
+		if (!sort.isFloatingPoint())
+			return null;
+		if (op instanceof JavaMathFloorOperator || op instanceof JavaStrictMathFloorOperator)
+			return Term.app("fp.roundToIntegral", sort, Term.value("RTN", Sort.ROUNDING_MODE), arg);
+		if (op instanceof JavaMathSqrtOperator || op instanceof JavaStrictMathSqrtOperator)
+			// correctly rounded, as specified
+			return Term.app("fp.sqrt", sort, Term.value("RNE", Sort.ROUNDING_MODE), arg);
+		if (op instanceof JavaMathRoundOperator || op instanceof JavaStrictMathRoundOperator)
+			return round(arg, sort.equals(Sort.FLOAT64) ? 64 : 32);
+		return null;
+	}
+
+	/**
+	 * Yields the function of {@link Math} or {@link StrictMath} over doubles
+	 * computed by the given operator, whose result is not specified exactly
+	 * (e.g., the sine), or {@code null} if it is not such an operator. The
+	 * functions of {@link Math} are the ones of the running virtual machine,
+	 * that the programs are run with.
+	 */
+	private static DoubleUnaryOperator evaluatedUnary(
+			UnaryOperator op) {
+		if (op instanceof JavaMathSinOperator)
+			return Math::sin;
+		if (op instanceof JavaMathCosOperator)
+			return Math::cos;
+		if (op instanceof JavaMathTanOperator)
+			return Math::tan;
+		if (op instanceof JavaMathAsinOperator)
+			return Math::asin;
+		if (op instanceof JavaMathAcosOperator)
+			return Math::acos;
+		if (op instanceof JavaMathAtanOperator)
+			return Math::atan;
+		if (op instanceof JavaMathExpOperator)
+			return Math::exp;
+		if (op instanceof JavaMathLogOperator)
+			return Math::log;
+		if (op instanceof JavaMathLog10Operator)
+			return Math::log10;
+		if (op instanceof JavaMathToRadiansOperator)
+			return Math::toRadians;
+		if (op instanceof JavaStrictMathSinOperator)
+			return StrictMath::sin;
+		if (op instanceof JavaStrictMathCosOperator)
+			return StrictMath::cos;
+		if (op instanceof JavaStrictMathTanOperator)
+			return StrictMath::tan;
+		if (op instanceof JavaStrictMathAsinOperator)
+			return StrictMath::asin;
+		if (op instanceof JavaStrictMathAcosOperator)
+			return StrictMath::acos;
+		if (op instanceof JavaStrictMathAtanOperator)
+			return StrictMath::atan;
+		if (op instanceof JavaStrictMathExpOperator)
+			return StrictMath::exp;
+		if (op instanceof JavaStrictMathLogOperator)
+			return StrictMath::log;
+		if (op instanceof JavaStrictMathLog10Operator)
+			return StrictMath::log10;
+		if (op instanceof JavaStrictMathToRadiansOperator)
+			return StrictMath::toRadians;
+		return null;
+	}
+
+	/**
+	 * Yields the values that the function of {@link Math} or {@link StrictMath}
+	 * computed by the given operator can yield on the given argument, as a
+	 * condition over the given result, or {@code null} if nothing is known: the
+	 * specification of {@link Math} tells when the functions yield NaN, and the
+	 * results are within one ulp of the exact ones, that the implementations
+	 * never round out of the ranges of the functions (e.g., the sine of a
+	 * finite number is between {@code -1} and {@code 1}).
+	 */
+	private static Term range(
+			UnaryOperator op,
+			Term x,
+			Term result) {
+		Term nanArg = Term.app("fp.isNaN", Sort.BOOL, x);
+		Term nan = Term.app("fp.isNaN", Sort.BOOL, result);
+		Term zero = FloatingPoints.literal(0.0);
+		if (op instanceof JavaMathSinOperator || op instanceof JavaStrictMathSinOperator
+				|| op instanceof JavaMathCosOperator || op instanceof JavaStrictMathCosOperator)
+			return Term.ite(Term.or(nanArg, Term.app("fp.isInfinite", Sort.BOOL, x)), nan,
+					Term.and(Term.app("fp.leq", Sort.BOOL, FloatingPoints.literal(-1.0), result),
+							Term.app("fp.leq", Sort.BOOL, result, FloatingPoints.literal(1.0))));
+		if (op instanceof JavaMathTanOperator || op instanceof JavaStrictMathTanOperator)
+			return Term.eq(nan, Term.or(nanArg, Term.app("fp.isInfinite", Sort.BOOL, x)));
+		if (op instanceof JavaMathExpOperator || op instanceof JavaStrictMathExpOperator)
+			return Term.ite(nanArg, nan, Term.app("fp.leq", Sort.BOOL, zero, result));
+		if (op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
+				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator)
+			// the logarithm of both zeros is the negative infinity
+			return Term.eq(nan, Term.or(nanArg, Term.app("fp.lt", Sort.BOOL, x, zero)));
+		if (op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator
+				|| op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator) {
+			Term outside = Term.or(nanArg,
+					Term.app("fp.lt", Sort.BOOL, x, FloatingPoints.literal(-1.0)),
+					Term.app("fp.gt", Sort.BOOL, x, FloatingPoints.literal(1.0)));
+			if (op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator)
+				return Term.eq(nan, outside);
+			return Term.ite(outside, nan, Term.app("fp.leq", Sort.BOOL, zero, result));
+		}
+		return null;
+	}
+
+	/**
+	 * Yields whether the function of {@link Math} or {@link StrictMath}
+	 * computed by the given operator is non-decreasing ({@code true}) or
+	 * non-increasing ({@code false}), as the specification of {@link Math}
+	 * requires the results of its functions to be semi-monotonic, or
+	 * {@code null} if the function is not monotone (e.g., the sine).
+	 */
+	private static Boolean monotonicity(
+			UnaryOperator op) {
+		if (op instanceof JavaMathExpOperator || op instanceof JavaStrictMathExpOperator
+				|| op instanceof JavaMathLogOperator || op instanceof JavaStrictMathLogOperator
+				|| op instanceof JavaMathLog10Operator || op instanceof JavaStrictMathLog10Operator
+				|| op instanceof JavaMathAtanOperator || op instanceof JavaStrictMathAtanOperator
+				|| op instanceof JavaMathAsinOperator || op instanceof JavaStrictMathAsinOperator
+				|| op instanceof JavaMathToRadiansOperator || op instanceof JavaStrictMathToRadiansOperator)
+			return true;
+		if (op instanceof JavaMathAcosOperator || op instanceof JavaStrictMathAcosOperator)
+			return false;
+		return null;
+	}
+
+	/**
+	 * Yields the binary function of {@link Math} or {@link StrictMath} over
+	 * doubles computed by the given operator, whose result is not specified
+	 * exactly (e.g., the power), or {@code null} if it is not such an operator
+	 * (see {@link #evaluatedUnary(UnaryOperator)}).
+	 */
+	private static DoubleBinaryOperator evaluatedBinary(
+			BinaryOperator op) {
+		if (op instanceof JavaMathPowOperator)
+			return Math::pow;
+		if (op instanceof JavaMathAtan2Operator)
+			return Math::atan2;
+		if (op instanceof JavaStrictMathPowOperator)
+			return StrictMath::pow;
+		if (op instanceof JavaStrictMathAtan2Operator)
+			return StrictMath::atan2;
+		return null;
+	}
+
+	/**
+	 * Rounds the given floating point number to the closest integer of the
+	 * given bit width, with ties rounding up, as {@link Math#round(double)}:
+	 * {@code 0} for NaN, and the minimum or maximum integer for the numbers
+	 * (and infinities) out of the range of the integers. The floor of the
+	 * number is incremented if the fractional part, which is computed exactly,
+	 * is at least one half (numbers so large that they have no fractional part
+	 * are their own floor).
+	 */
+	private Term round(
+			Term f,
+			int bits) {
+		Sort sort = f.getSort();
+		Term rne = Term.value("RNE", Sort.ROUNDING_MODE);
+		Term floor = Term.app("fp.roundToIntegral", sort, Term.value("RTN", Sort.ROUNDING_MODE), f);
+		Term half = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(0.5) : FloatingPoints.literal(0.5f);
+		Term one = sort.equals(Sort.FLOAT64) ? FloatingPoints.literal(1.0) : FloatingPoints.literal(1.0f);
+		Term fraction = Term.app("fp.sub", sort, rne, f, floor);
+		Term rounded = Term.ite(Term.app("fp.geq", Sort.BOOL, fraction, half),
+				Term.app("fp.add", sort, rne, floor, one),
+				floor);
+		return toIntegral(rounded, bits == 64 ? JavaLongType.INSTANCE : JavaIntType.INSTANCE);
+	}
+
 	// strings
+
+	/**
+	 * Encodes the operators over strings with one operand of the Java frontend,
+	 * or yields {@code null} for the other operators.
+	 */
+	private Term stringUnary(
+			UnaryOperator op,
+			Term arg,
+			UnaryExpression e) {
+		if (op instanceof JavaStringToLowerCaseOperator) {
+			Term s = asString(arg, e);
+			return guarded(ascii(s), lower(s), List.of(s), e);
+		}
+		if (op instanceof JavaStringToUpperCaseOperator) {
+			Term s = asString(arg, e);
+			return guarded(ascii(s), upper(s), List.of(s), e);
+		}
+		if (op instanceof JavaStringTrimOperator)
+			return trim(asString(arg, e), e);
+		if (op instanceof JavaStringValueOfIntOperator || op instanceof JavaStringValueOfLongOperator)
+			return decimal(coerce(arg, Sort.INT, e));
+		if (op instanceof JavaStringValueOfBooleanOperator)
+			return Term.ite(coerce(arg, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+		if (op instanceof JavaStringValueOfCharOperator)
+			return fromChar(coerce(arg, Sort.INT, e));
+		if (op instanceof JavaStringValueOfDoubleOperator)
+			return floatToString(toFloat(arg, Sort.FLOAT64, e), e);
+		if (op instanceof JavaStringValueOfFloatOperator)
+			return floatToString(toFloat(arg, Sort.FLOAT32, e), e);
+		return null;
+	}
+
+	/**
+	 * Encodes the operators over strings with two operands of the Java frontend
+	 * (including the ones appending to the contents of string builders), or
+	 * yields {@code null} for the other operators.
+	 */
+	private Term stringBinary(
+			BinaryOperator op,
+			Term left,
+			Term right,
+			BinaryExpression e) {
+		if (op instanceof JavaCharacterEqualsOperator)
+			return Term.eq(coerce(left, Sort.INT, e), coerce(right, Sort.INT, e));
+		Term appended = representation(op, right, e);
+		if (appended != null)
+			return concat(asString(left, e), appended);
+		if (op instanceof JavaStringCharAtOperator) {
+			Term c = code(at(asString(left, e), coerce(right, Sort.INT, e)));
+			// chars beyond the basic multilingual plane are two chars in Java
+			return guarded(le(c, num(Character.MAX_VALUE)), c, List.of(asString(left, e), coerce(right, Sort.INT, e)),
+					e);
+		}
+		if (op instanceof JavaStringStartsWithOperator)
+			return Term.app("str.prefixof", Sort.BOOL, asString(right, e), asString(left, e));
+		if (op instanceof JavaStringEndsWithOperator)
+			return Term.app("str.suffixof", Sort.BOOL, asString(right, e), asString(left, e));
+		if (op instanceof JavaStringIndexOfOperator)
+			return Term.app("str.indexof", Sort.INT, asString(left, e), asString(right, e), num(0));
+		if (op instanceof JavaStringIndexOfCharOperator)
+			return indexOf(asString(left, e), coerce(right, Sort.INT, e), num(0), e);
+		if (op instanceof JavaStringLastIndexOfOperator)
+			return lastIndexOf(asString(left, e), coerce(right, Sort.INT, e), e);
+		if (op instanceof JavaStringLastIndexOfStringOperator)
+			return lastIndexOfString(asString(left, e), asString(right, e), e);
+		if (op instanceof JavaStringSubstringOperator) {
+			Term s = asString(left, e);
+			Term from = coerce(right, Sort.INT, e);
+			return substr(s, from, sub(len(s), from));
+		}
+		if (op instanceof JavaStringDeleteCharAtOperator) {
+			Term s = asString(left, e);
+			Term i = coerce(right, Sort.INT, e);
+			return concat(substr(s, num(0), i), substr(s, add(i, num(1)), sub(sub(len(s), i), num(1))));
+		}
+		if (op instanceof JavaStringEqualsIgnoreCaseOperator)
+			return equalsIgnoreCase(asString(left, e), asString(right, e), e);
+		return null;
+	}
+
+	/**
+	 * Encodes the operators over strings with three operands of the Java
+	 * frontend (including the ones inserting in, deleting from and changing the
+	 * contents of string builders), or yields {@code null} for the other
+	 * operators.
+	 */
+	private Term stringTernary(
+			TernaryOperator op,
+			Term left,
+			Term middle,
+			Term right,
+			TernaryExpression e) {
+		Term inserted = representation(op, right, e);
+		if (inserted != null) {
+			Term s = asString(left, e);
+			Term offset = coerce(middle, Sort.INT, e);
+			return concat(concat(substr(s, num(0), offset), inserted), substr(s, offset, sub(len(s), offset)));
+		}
+		if (op instanceof JavaStringDeleteOperator) {
+			// the end is at most the length
+			Term s = asString(left, e);
+			Term start = coerce(middle, Sort.INT, e);
+			Term end = coerce(right, Sort.INT, e);
+			Term last = Term.ite(le(end, len(s)), end, len(s));
+			return concat(substr(s, num(0), start), substr(s, last, sub(len(s), last)));
+		}
+		if (op instanceof JavaStringSetCharAtOperator) {
+			Term s = asString(left, e);
+			Term i = coerce(middle, Sort.INT, e);
+			return concat(concat(substr(s, num(0), i), fromChar(coerce(right, Sort.INT, e))),
+					substr(s, add(i, num(1)), sub(sub(len(s), i), num(1))));
+		}
+		if (op instanceof JavaStringSubstringFromToOperator) {
+			Term from = coerce(middle, Sort.INT, e);
+			return substr(asString(left, e), from, sub(coerce(right, Sort.INT, e), from));
+		}
+		if (op instanceof JavaStringIndexOfStringFromIndexOperator) {
+			Term s = asString(left, e);
+			Term t = asString(middle, e);
+			Term from = coerce(right, Sort.INT, e);
+			// an empty string is found at any index up to the length
+			return Term.ite(Term.and(Term.eq(t, Term.string("")), Term.app(">", Sort.BOOL, from, len(s))), len(s),
+					Term.app("str.indexof", Sort.INT, s, t, Term.ite(lt(from, num(0)), num(0), from)));
+		}
+		if (op instanceof JavaStringStartsWithFromIndexOperator) {
+			Term s = asString(left, e);
+			Term p = asString(middle, e);
+			Term from = coerce(right, Sort.INT, e);
+			return Term.and(ge(from, num(0)), le(add(from, len(p)), len(s)),
+					Term.app("str.prefixof", Sort.BOOL, p, substr(s, from, len(p))));
+		}
+		if (op instanceof JavaStringReplaceOperator && e.getMiddle().getStaticType() instanceof JavaCharType
+				&& e.getRight().getStaticType() instanceof JavaCharType)
+			// replacing characters: the sequences of characters are passed as
+			// references to the strings (not their contents), that cannot be
+			// encoded
+			return Term.app("str.replace_all", Sort.STRING, asString(left, e), fromChar(coerce(middle, Sort.INT, e)),
+					fromChar(coerce(right, Sort.INT, e)));
+		return null;
+	}
+
+	/**
+	 * Yields the string representation of the value appended or inserted by the
+	 * given operator of string builders, as {@link String#valueOf}, or
+	 * {@code null} if the operator does not append nor insert a value whose
+	 * representation can be encoded.
+	 */
+	private Term representation(
+			Object op,
+			Term value,
+			ValueExpression e) {
+		if (op instanceof JavaStringAppendStringOperator || op instanceof JavaStringInsertStringOperator)
+			return asString(value, e);
+		if (op instanceof JavaStringAppendCharOperator || op instanceof JavaStringInsertCharOperator)
+			return fromChar(coerce(value, Sort.INT, e));
+		if (op instanceof JavaStringAppendIntOperator || op instanceof JavaStringInsertIntOperator
+				|| op instanceof JavaStringAppendLongOperator || op instanceof JavaStringInsertLongOperator)
+			return decimal(coerce(value, Sort.INT, e));
+		if (op instanceof JavaStringAppendBooleanOperator || op instanceof JavaStringInsertBooleanOperator)
+			return Term.ite(coerce(value, Sort.BOOL, e), Term.string("true"), Term.string("false"));
+		if (op instanceof JavaStringAppendDoubleOperator || op instanceof JavaStringInsertDoubleOperator)
+			return floatToString(toFloat(value, Sort.FLOAT64, e), e);
+		if (op instanceof JavaStringAppendFloatOperator || op instanceof JavaStringInsertFloatOperator)
+			return floatToString(toFloat(value, Sort.FLOAT32, e), e);
+		return null;
+	}
+
+	/**
+	 * The given string without its leading and trailing characters up to
+	 * {@code '\u0020'}, as {@link String#trim()}: an auxiliary string such that
+	 * the given one is made of a prefix of such characters, the auxiliary
+	 * string, and a suffix of such characters, where the auxiliary string is
+	 * empty or starts and ends with other characters.
+	 */
+	private Term trim(
+			Term s,
+			UnaryExpression e) {
+		Term blanks = Term.value("(re.* (re.range \"\\u{0}\" \"\\u{20}\"))", Sort.STRING);
+		Term prefix = auxiliary(Sort.STRING, e);
+		Term trimmed = auxiliary(Sort.STRING, e);
+		Term suffix = auxiliary(Sort.STRING, e);
+		Term last = sub(len(trimmed), num(1));
+		getSymbols().require(Term.and(
+				Term.eq(s, concat(concat(prefix, trimmed), suffix)),
+				Term.app("str.in_re", Sort.BOOL, prefix, blanks),
+				Term.app("str.in_re", Sort.BOOL, suffix, blanks),
+				Term.or(Term.eq(trimmed, Term.string("")),
+						Term.and(Term.app(">", Sort.BOOL, code(at(trimmed, num(0))), num(0x20)),
+								Term.app(">", Sort.BOOL, code(at(trimmed, last)), num(0x20))))));
+		return trimmed;
+	}
+
+	/**
+	 * The last index of the given string in the given one, as
+	 * {@link String#lastIndexOf(String)}: an auxiliary index where the string
+	 * is found, and after which it is not (or {@code -1} if it is not found, or
+	 * the length of the string if the searched one is empty).
+	 */
+	private Term lastIndexOfString(
+			Term s,
+			Term t,
+			SymbolicExpression e) {
+		Term i = auxiliary(Sort.INT, e);
+		Term len = len(s);
+		Term rest = substr(s, add(i, num(1)), sub(sub(len, i), num(1)));
+		getSymbols().require(Term.ite(Term.eq(t, Term.string("")), Term.eq(i, len),
+				Term.ite(Term.app("str.contains", Sort.BOOL, s, t),
+						Term.and(ge(i, num(0)), le(add(i, len(t)), len), Term.eq(substr(s, i, len(t)), t),
+								Term.not(Term.app("str.contains", Sort.BOOL, rest, t))),
+						Term.eq(i, num(-1)))));
+		return i;
+	}
+
+	/**
+	 * Whether the given string is made of ASCII characters only.
+	 */
+	private static Term ascii(
+			Term s) {
+		return Term.app("str.in_re", Sort.BOOL, s,
+				Term.value("(re.* (re.range \"\\u{0}\" \"\\u{7f}\"))", Sort.STRING));
+	}
+
+	private static Term concat(
+			Term a,
+			Term b) {
+		return Term.app("str.++", Sort.STRING, a, b);
+	}
+
+	/**
+	 * The string made of the given char.
+	 */
+	private static Term fromChar(
+			Term c) {
+		return Term.app("str.from_code", Sort.STRING, c);
+	}
 
 	private static Term len(
 			Term s) {
@@ -856,57 +1580,116 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	 * of bits in the given radix, with lowercase letters for the digits above
 	 * {@code 9}, as by {@link Long#toString(long, int)}.
 	 */
-	private static Term digits(
-			Term u,
+	private Term digits(
+			Term value,
 			int radix,
-			int bits) {
+			int bits,
+			SymbolicExpression e) {
+		return digits(value, radix, bits, Term.TRUE, e);
+	}
+
+	/**
+	 * The representation of a non-negative integer, as
+	 * {@link #digits(Term, int, int, SymbolicExpression)}, defined only when
+	 * the given condition holds (e.g., the radix of the conversion is the given
+	 * one): the representation is otherwise unconstrained, and it must not be
+	 * used.
+	 */
+	private Term digits(
+			Term value,
+			int radix,
+			int bits,
+			Term when,
+			SymbolicExpression e) {
+		BigInteger literal = integerLiteral(value);
+		if (literal != null && literal.signum() >= 0)
+			// computed directly, as solvers handle building long strings
+			// from their characters poorly
+			return Term.string(literal.toString(radix));
+		// the value is used by every digit: it is named once
+		Term u = auxiliary(Sort.INT, e);
+		getSymbols().require(Term.eq(u, value));
 		BigInteger r = BigInteger.valueOf(radix);
 		BigInteger limit = pow2(bits);
 		// the number of digits needed for the largest value
 		int max = 1;
 		while (r.pow(max).compareTo(limit) < 0)
 			max++;
-		// all the digits, from the most significant one
-		Term[] all = new Term[max];
-		for (int i = 0; i < max; i++) {
-			Term d = mod(div(u, r.pow(max - 1 - i)), r);
-			all[i] = Term.app("str.from_code", Sort.STRING,
-					Term.ite(lt(d, num(10)), add(d, num('0')), add(d, num('a' - 10))));
-		}
-		Term full = max == 1 ? all[0] : Term.app("str.++", Sort.STRING, all);
-		// the number of significant digits
-		Term count = num(max);
+		// the number of significant digits, named once as well
+		Term digits = num(max);
 		for (int k = max - 1; k >= 1; k--)
-			count = Term.ite(lt(u, num(r.pow(k))), num(k), count);
-		return substr(full, Term.app("-", Sort.INT, num(max), count), count);
+			digits = Term.ite(lt(u, num(r.pow(k))), num(k), digits);
+		Term count = auxiliary(Sort.INT, e);
+		getSymbols().require(Term.eq(count, digits));
+		// the representation is a string whose characters are constrained one
+		// by one, the j-th digit from the least significant one being at
+		// position count - 1 - j: solvers handle such constraints far better
+		// than a string built by concatenating the digits
+		Term s = auxiliary(Sort.STRING, e);
+		// for radixes that are powers of two, the digits are groups of bits of
+		// the value, extracted from a bit-vector rather than computed through
+		// quotients and remainders
+		int group = Integer.bitCount(radix) == 1 ? Integer.numberOfTrailingZeros(radix) : 0;
+		Term b = group > 0 ? bitVector(u, bits, e) : null;
+		Term[] defs = new Term[max + 1];
+		defs[0] = Term.eq(len(s), count);
+		for (int j = 0; j < max; j++) {
+			Term d = group > 0
+					? Term.app("bv2nat", Sort.INT, extract(b, j * group, Math.min(group, bits - j * group)))
+					: mod(div(u, r.pow(j)), r);
+			Term c;
+			if (radix <= 10)
+				c = add(d, num('0'));
+			else {
+				// the digit is used twice: it is named once
+				Term v = auxiliary(Sort.INT, e);
+				getSymbols().require(Term.eq(v, d));
+				c = Term.ite(lt(v, num(10)), add(v, num('0')), add(v, num('a' - 10)));
+			}
+			defs[j + 1] = Term.implies(lt(num(j), count), Term.eq(code(at(s, sub(count, num(j + 1)))), c));
+		}
+		getSymbols().require(Term.implies(when, Term.and(defs)));
+		return s;
 	}
 
 	/**
 	 * The representation of a signed integer of the given bit width in the
 	 * given radix, as by {@link Long#toString(long, int)}.
 	 */
-	private static Term signedDigits(
+	private Term signedDigits(
 			Term x,
 			int radix,
-			int bits) {
+			int bits,
+			Term when,
+			SymbolicExpression e) {
 		if (radix == 10)
 			return decimal(x);
+		BigInteger literal = integerLiteral(x);
+		if (literal != null)
+			return Term.string(literal.toString(radix));
 		Term magnitude = Term.ite(lt(x, num(0)), Term.app("-", Sort.INT, x), x);
-		Term digits = digits(magnitude, radix, bits);
+		Term digits = digits(magnitude, radix, bits, when, e);
 		return Term.ite(lt(x, num(0)), Term.app("str.++", Sort.STRING, Term.string("-"), digits), digits);
 	}
 
 	/**
 	 * Selects the representation for the given radix, using radix {@code 10}
-	 * for radixes that are not valid, as Java does.
+	 * for radixes that are not valid, as Java does. Each representation is
+	 * built given the condition under which it is selected.
 	 */
 	private static Term withRadix(
 			Term radix,
-			IntFunction<Term> representation) {
-		Term result = representation.apply(10);
-		for (int r = Character.MAX_RADIX; r >= Character.MIN_RADIX; r--)
+			BiFunction<Integer, Term, Term> representation) {
+		List<Term> others = new ArrayList<>();
+		for (int r = Character.MIN_RADIX; r <= Character.MAX_RADIX; r++)
 			if (r != 10)
-				result = Term.ite(Term.eq(radix, num(r)), representation.apply(r), result);
+				others.add(Term.eq(radix, num(r)));
+		Term result = representation.apply(10, Term.not(Term.or(others.toArray(Term[]::new))));
+		for (int r = Character.MAX_RADIX; r >= Character.MIN_RADIX; r--)
+			if (r != 10) {
+				Term selected = Term.eq(radix, num(r));
+				result = Term.ite(selected, representation.apply(r, selected), result);
+			}
 		return result;
 	}
 
@@ -946,6 +1729,32 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
+	 * The strings of the solver are sequences of Unicode code points, while the
+	 * ones of Java are sequences of UTF-16 code units, where a code point
+	 * outside of the Basic Multilingual Plane is a pair of surrogates: their
+	 * lengths, positions and characters coincide only if the strings are made
+	 * of code points of the Basic Multilingual Plane that are not surrogates.
+	 * The operands of string operations are thus encoded precisely only when
+	 * they are such strings.
+	 */
+	@Override
+	protected Term asString(
+			Term term,
+			SymbolicExpression origin) {
+		Term s = super.asString(term, origin);
+		getSymbols().exactOnlyIf(Term.app("str.in_re", Sort.BOOL, s, UTF16), origin);
+		return s;
+	}
+
+	/**
+	 * The strings made of code points of the Basic Multilingual Plane that are
+	 * not surrogates (see {@link #asString(Term, SymbolicExpression)}).
+	 */
+	private static final Term UTF16 = Term.value(
+			"(re.* (re.union (re.range \"\\u{0}\" \"\\u{d7ff}\") (re.range \"\\u{e000}\" \"\\u{ffff}\")))",
+			Sort.STRING);
+
+	/**
 	 * Compares two strings lexicographically, as
 	 * {@link String#compareTo(String)}: through an auxiliary index, the length
 	 * of their longest common prefix.
@@ -980,6 +1789,18 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 	}
 
 	/**
+	 * Converts the ASCII lowercase letters of the given string to uppercase.
+	 */
+	private static Term upper(
+			Term s) {
+		Term result = s;
+		for (char c = 'a'; c <= 'z'; c++)
+			result = Term.app("str.replace_all", Sort.STRING, result, Term.string(String.valueOf(c)),
+					Term.string(String.valueOf(Character.toUpperCase(c))));
+		return result;
+	}
+
+	/**
 	 * Converts the ASCII uppercase letters of the given string to lowercase.
 	 */
 	private static Term lower(
@@ -990,4 +1811,41 @@ public class JavaExpressionEncoder extends ExpressionEncoder {
 					Term.string(String.valueOf(Character.toLowerCase(c))));
 		return result;
 	}
+
+	/**
+	 * The code at position i of s, with the ASCII uppercase letters converted
+	 * to lowercase (-1 past the end of the string).
+	 */
+	private static Term foldedCode(
+			Term s,
+			int i) {
+		Term c = code(at(s, num(i)));
+		return Term.ite(between(c, 'A', 'Z'), add(c, num('a' - 'A')), c);
+	}
+
+	/**
+	 * String#equalsIgnoreCase: precise for strings of different length (false),
+	 * and for ASCII strings of at most CASE_BOUND chars.
+	 */
+	private Term equalsIgnoreCase(
+			Term a,
+			Term b,
+			ValueExpression e) {
+		int CASE_BOUND = 8;
+		Term sameLength = Term.eq(len(a), len(b));
+		Term[] same = new Term[CASE_BOUND + 1];
+		Term[] precise = new Term[2 * CASE_BOUND + 1];
+
+		for (int i = 0; i < CASE_BOUND; i++) {
+			same[i] = Term.eq(foldedCode(a, i), foldedCode(b, i));
+			precise[2 * i] = le(code(at(a, num(i))), num(0x7F));
+			precise[2 * i + 1] = le(code(at(b, num(i))), num(0x7F));
+		}
+		same[CASE_BOUND] = sameLength;
+		precise[2 * CASE_BOUND] = le(len(a), num(CASE_BOUND));
+		// different lengths: the result is false, whatever the chars are
+		Term guard = Term.or(Term.not(sameLength), Term.and(precise));
+		return guarded(guard, Term.and(same), List.of(a, b), e);
+	}
+
 }

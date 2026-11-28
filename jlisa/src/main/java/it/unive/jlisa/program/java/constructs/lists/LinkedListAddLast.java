@@ -2,10 +2,12 @@ package it.unive.jlisa.program.java.constructs.lists;
 
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
+import it.unive.lisa.analysis.Analysis;
 import it.unive.lisa.analysis.AnalysisState;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.StatementStore;
 import it.unive.lisa.interprocedural.InterproceduralAnalysis;
+import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.CodeLocation;
 import it.unive.lisa.program.cfg.statement.Expression;
@@ -49,7 +51,17 @@ public class LinkedListAddLast
 			SymbolicExpression right,
 			StatementStore<A> expressions)
 			throws SemanticException {
-		return state;
+		Analysis<A, D> analysis = interprocedural.getAnalysis();
+		ScopeId<A> context = interprocedural.getCurrentContext();
+		if (!ListModel.isModeled(analysis, context, state, left, this))
+			return state;
+		AnalysisState<A> modifiable = ListModel.allowed(analysis, context, state, left, ListModel.FIXED_SIZE, this);
+		AnalysisState<A> boxed = ListModel.box(interprocedural, modifiable, right, getRight(), this, expressions);
+		AnalysisState<A> added = boxed.bottomExecution();
+		for (SymbolicExpression value : boxed.getExecutionExpressions())
+			added = added.lub(ListModel.append(analysis, context, boxed, left, value, this));
+		return ListModel.unsupported(interprocedural, state, added, left, ListModel.FIXED_SIZE, this,
+				getSubExpressions(), expressions);
 	}
 
 	@Override

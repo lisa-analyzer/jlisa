@@ -145,7 +145,9 @@ public class JavaFrontend {
 	protected List<String> expandFilePaths(
 			List<String> paths)
 			throws IOException {
-		java.util.List<String> expandedPaths = new java.util.ArrayList<>();
+		// a set, since the same file can be reached from several inputs (e.g.,
+		// a directory and one of its sub-directories)
+		java.util.Set<String> expandedPaths = new java.util.LinkedHashSet<>();
 		for (String pathStr : paths) {
 			Path path = Paths.get(pathStr).normalize();
 			if (Files.isDirectory(path)) {
@@ -160,7 +162,7 @@ public class JavaFrontend {
 				throw new FileNotFoundException(pathStr);
 			}
 		}
-		return expandedPaths;
+		return new java.util.ArrayList<>(expandedPaths);
 	}
 
 	public Program parseFromListOfFile(

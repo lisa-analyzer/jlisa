@@ -53,8 +53,8 @@ public class StringToLowerCaseLocale extends BinaryExpression implements Pluggab
 			StatementStore<A> expressions)
 			throws SemanticException {
 
-		// TODO: implemet semantics, add signature in "string.txt"
-		// Problem: understand how to type "Locale".
-		return state.top();
+		// the locale is ignored: it changes the result only for the Turkish and
+		// Azerbaijani ones
+		return StringToLowerCase.lower(interprocedural, state, left, this, expressions);
 	}
 }

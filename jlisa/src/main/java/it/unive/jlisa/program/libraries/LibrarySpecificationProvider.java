@@ -21,7 +21,9 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +66,11 @@ public class LibrarySpecificationProvider {
 
 		for (String lib : LIBS_FOLDER) {
 			try (ScanResult scanResult = new ClassGraph().acceptPaths(lib).scan()) {
-				for (String path : scanResult.getAllResources().getPaths())
+				// the libraries are read in a deterministic order, as the
+				// order of the resources found by the scan is not specified
+				List<String> paths = new ArrayList<>(scanResult.getAllResources().getPaths());
+				Collections.sort(paths);
+				for (String path : paths)
 					readLibrary(path, program, parsedLibs);
 			}
 		}

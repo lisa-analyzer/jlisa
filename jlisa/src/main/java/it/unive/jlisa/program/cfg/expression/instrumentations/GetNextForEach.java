@@ -1,5 +1,7 @@
 package it.unive.jlisa.program.cfg.expression.instrumentations;
 
+import it.unive.jlisa.program.type.JavaClassType;
+import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.analysis.AbstractDomain;
 import it.unive.lisa.analysis.AbstractLattice;
 import it.unive.lisa.analysis.AnalysisState;
@@ -52,8 +54,12 @@ public class GetNextForEach extends it.unive.lisa.program.cfg.statement.UnaryExp
 					StatementStore<A> expressions)
 					throws SemanticException {
 		// TODO: to implement semantics
-		Type containerType = expr.getStaticType().asReferenceType().getInnerType();
-		Type contentType = containerType.asArrayType().getInnerType();
+		// the element of an array has the type of its cells, the one of any
+		// other container (e.g., a collection) is an object
+		Type contentType = new JavaReferenceType(JavaClassType.getObjectType());
+		if (expr.getStaticType().isReferenceType()
+				&& expr.getStaticType().asReferenceType().getInnerType().isArrayType())
+			contentType = expr.getStaticType().asReferenceType().getInnerType().asArrayType().getInnerType();
 
 		PushAny top = new PushAny(contentType, getLocation());
 		return interprocedural.getAnalysis().smallStepSemantics(state, top, interprocedural.getCurrentContext(), this);

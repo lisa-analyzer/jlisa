@@ -25,6 +25,7 @@ import it.unive.jlisa.program.java.constructs.verifier.VerifierNondet;
 import it.unive.jlisa.program.type.JavaClassType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.lisa.program.ClassUnit;
+import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
@@ -288,6 +289,11 @@ public class ClassASTVisitor extends ScopedVisitor<ClassScope> {
 				for (Object f : fd.fragments()) {
 					VariableDeclarationFragment fragment = (VariableDeclarationFragment) f;
 					type = typeVisitor.liftToArray(type, fragment);
+
+					if (unit.getGlobal(fragment.getName().getIdentifier()) instanceof ConstantGlobal)
+						// constants are not initialized: their accesses yield
+						// their values
+						continue;
 
 					it.unive.lisa.program.cfg.statement.Expression init;
 					if (fragment.getInitializer() != null) {

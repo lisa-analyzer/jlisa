@@ -75,6 +75,41 @@ public class JavaAccessGlobal extends Expression {
 	}
 
 	/**
+	 * Yields the unit declaring the accessed global: the container, or the
+	 * ancestor of the same kind (a superclass for a class, or a superinterface
+	 * for an interface) declaring it.
+	 *
+	 * @return the unit declaring the global
+	 */
+	public CompilationUnit definingUnit() {
+		CompilationUnit definingUnit = (CompilationUnit) container;
+		if (definingUnit.getGlobal(target.getName()) == null) {
+			Class<? extends CompilationUnit> containerKind = definingUnit.getClass();
+			Set<CompilationUnit> ancestors = definingUnit
+					.getImmediateAncestors().stream()
+					.filter(u -> u.getClass() == containerKind)
+					.collect(Collectors.toSet());
+
+			// we can safely suppose that there exist a single ancestor
+			// declaring the global
+			definingUnit = ancestors.stream().findFirst().get();
+		}
+		return definingUnit;
+	}
+
+	/**
+	 * Yields the name of the global variable holding the value of the accessed
+	 * global, as the semantics of this expression names it (e.g., {@code C::f},
+	 * where {@code C} is the unit declaring the global, see
+	 * {@link #definingUnit()}).
+	 *
+	 * @return the name
+	 */
+	public String getVariableName() {
+		return definingUnit().getName() + "::" + target.getName();
+	}
+
+	/**
 	 * Yields the {@link Global} targeted by this expression.
 	 * 
 	 * @return the global
@@ -149,18 +184,7 @@ public class JavaAccessGlobal extends Expression {
 		// we need to check whether to call the clinit of the container unit or
 		// to call the one of its ancestors (a superclass for a ClassUnit, or a
 		// superinterface for an InterfaceUnit)
-		CompilationUnit definingUnit = (CompilationUnit) container;
-		if (definingUnit.getGlobal(target.getName()) == null) {
-			Class<? extends CompilationUnit> containerKind = definingUnit.getClass();
-			Set<CompilationUnit> ancestors = definingUnit
-					.getImmediateAncestors().stream()
-					.filter(u -> u.getClass() == containerKind)
-					.collect(Collectors.toSet());
-
-			// we can safely suppose that there exist a single ancestor
-			// declaring the global
-			definingUnit = ancestors.stream().findFirst().get();
-		}
+		CompilationUnit definingUnit = definingUnit();
 
 		JavaReferenceType definingUnitType = definingUnit instanceof ClassUnit
 				? JavaClassType.lookup(definingUnit.getName()).getReference()

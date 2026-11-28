@@ -1,6 +1,7 @@
 package it.unive.jlisa.program.java.constructs.classmetatype;
 
 import it.unive.jlisa.frontend.InitializedClassSet;
+import it.unive.jlisa.program.ConstraintUtils;
 import it.unive.jlisa.program.cfg.expression.JavaNewObj;
 import it.unive.jlisa.program.cfg.statement.literal.ByteLiteral;
 import it.unive.jlisa.program.cfg.statement.literal.CharLiteral;
@@ -35,6 +36,7 @@ import it.unive.lisa.interprocedural.ScopeId;
 import it.unive.lisa.lattices.ExpressionSet;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.CompilationUnit;
+import it.unive.lisa.program.ConstantGlobal;
 import it.unive.lisa.program.Global;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Unit;
@@ -254,11 +256,14 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 						accessState = analysis.moveExecutionToError(accessState, npeState, npeError, context, this);
 					result = result.lub(accessState);
 				} else {
-					access = new GlobalVariable(
-							reflectedGlobal.getStaticType(),
-							reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
-							reflectedGlobal.getAnnotations(),
-							location);
+					// constants have no variable: they are their values
+					access = reflectedGlobal instanceof ConstantGlobal
+							? ((ConstantGlobal) reflectedGlobal).getConstant()
+							: new GlobalVariable(
+									reflectedGlobal.getStaticType(),
+									reflectedGlobal.getContainer().getName() + "::" + reflectedGlobal.getName(),
+									reflectedGlobal.getAnnotations(),
+									location);
 
 					if (reflectedFieldType.isReferenceType()) {
 						access = new HeapReference(reflectedFieldType, access, location);
@@ -360,7 +365,7 @@ public class FieldGetValue extends BinaryExpression implements PluggableStatemen
 		// how the domain of the analysis is built (e.g., it might be wrapped by
 		// another domain)
 		ValueDomain vdom = analysis.domain.getDomainInstance(ValueDomain.class);
-		ValueLattice env = state.getExecutionState().getLatticeInstance(ValueLattice.class);
+		ValueLattice env = ConstraintUtils.valueLattice(vdom, state.getExecutionState());
 		if (vdom == null || env == null)
 			return Stream.empty();
 
