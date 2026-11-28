@@ -2,13 +2,12 @@ package it.unive.jlisa.springed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.springed.exceptions.SpringCSVExceptionWriter;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
-import it.unive.jlisa.springed.frontend.SpringProjectVisitor;
-import it.unive.jlisa.springed.security.p1.P1securityImpl;
-import it.unive.jlisa.springed.security.p1.SecurityChains;
-import it.unive.jlisa.springed.webmvc.p1.P1webmvcImpl;
-import it.unive.jlisa.springed.webmvc.p1.Registry;
+import it.unive.jlisa.springed.frontend.visitors.SpringProjectVisitor;
+import it.unive.jlisa.springed.security.p1.P1SecurityImpl;
+import it.unive.jlisa.springed.security.p1.securitychains.SecurityChains;
 import it.unive.jlisa.springed.webmvc.p1.serialization.P1webmvcOutput;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
@@ -38,14 +37,15 @@ public class Main {
 		for (Path project : springProjects) {
 			String projectName = projectName(project);
 			SpringFrontend springFrontend = new SpringFrontend();
+			ParserContext parserContext = springFrontend.getParserContext();
 
 			Path sourceRoot = project.resolve("src/main/java");
 			Unit[] projectUnits = springFrontend.parse(sourceRoot.toString());
 
-			Registry registry = new P1webmvcImpl(springFrontend.getParserContext()).p1(projectUnits);
-			SecurityChains securityChains = new P1securityImpl(springFrontend.getParserContext()).p1(projectUnits);
+			// Registry registry = new P1webmvcImpl(parserContext).p1(projectUnits);
+			SecurityChains securityChains = new P1SecurityImpl(parserContext).p1(projectUnits);
 
-			p1Output.addRegistry(projectName, registry);
+			// p1Output.addRegistry(projectName, registry);
 			dumpCollectedErrors(springFrontend, projectName);
 		}
 
@@ -69,7 +69,7 @@ public class Main {
 	private static void writeOutput(
 			P1webmvcOutput output)
 			throws IOException {
-		Path out = Paths.get(OUTPUT_DIR, OUTPUT_FILE_NAME);
+		Path out = Paths.get(OUTPUT_DIR, "webmvc", OUTPUT_FILE_NAME);
 		Files.createDirectories(out.getParent());
 
 		MAPPER.writeValue(out.toFile(), output);

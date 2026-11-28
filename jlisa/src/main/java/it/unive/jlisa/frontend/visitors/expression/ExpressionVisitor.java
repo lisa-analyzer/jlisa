@@ -3,6 +3,7 @@ package it.unive.jlisa.frontend.visitors.expression;
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
+import it.unive.jlisa.frontend.handlers.LambdaFactory;
 import it.unive.jlisa.frontend.util.FQNUtils;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
@@ -618,10 +619,9 @@ public class ExpressionVisitor
 	@Override
 	public boolean visit(
 			LambdaExpression node) {
-		throw new ParsingException("lambda-expression",
-				ParsingException.Type.UNSUPPORTED_STATEMENT,
-				"Lambda expressions are not supported.",
-				getSourceCodeLocation(node));
+		LambdaFactory lambdaFactory = getParserContext().getLambdaFactory();
+		expression = lambdaFactory.create(node, getEnvironment(), getScope());
+		return false;
 	}
 
 	@Override

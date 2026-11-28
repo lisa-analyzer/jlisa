@@ -2,16 +2,18 @@ package it.unive.jlisa.springed.webmvc.p1;
 
 import it.unive.jlisa.frontend.ParserContext;
 import it.unive.jlisa.springed.exceptions.PathMergeException;
+import it.unive.jlisa.springed.webmvc.p1.registry.Registry;
+import it.unive.jlisa.springed.webmvc.p1.registry.RegistryRecord;
+import it.unive.jlisa.springed.webmvc.p1.registry.RequestMapping;
 import it.unive.jlisa.springed.webmvc.p1.util.RequestMappingBuilder;
 import it.unive.jlisa.springed.webmvc.p1.util.RequestMappingMerger;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.annotations.Annotation;
 import it.unive.lisa.program.cfg.CodeMember;
-
 import java.util.*;
 
-public final class P1webmvcImpl implements P1webmvc {
+public final class P1WebmvcImpl implements P1Webmvc {
 
 	private final List<String> controllerAnnotationNames = List.of(
 			"RestController",
@@ -27,7 +29,8 @@ public final class P1webmvcImpl implements P1webmvc {
 
 	private final ParserContext parserContext;
 
-	public P1webmvcImpl(ParserContext parserContext) {
+	public P1WebmvcImpl(
+			ParserContext parserContext) {
 		this.parserContext = parserContext;
 	}
 
@@ -56,7 +59,9 @@ public final class P1webmvcImpl implements P1webmvc {
 		return registry;
 	}
 
-	public RequestMapping getMappingForMethod(ClassUnit controller, CodeMember method) {
+	public RequestMapping getMappingForMethod(
+			ClassUnit controller,
+			CodeMember method) {
 
 		Collection<Annotation> methodAnnotations = method.getDescriptor().getAnnotationList();
 		RequestMapping methodMapping = doMetaResolution(methodAnnotations);
@@ -75,11 +80,14 @@ public final class P1webmvcImpl implements P1webmvc {
 		return methodMapping;
 	}
 
-	public RequestMapping mergeMappings(RequestMapping controllerMapping, RequestMapping methodMapping) {
+	public RequestMapping mergeMappings(
+			RequestMapping controllerMapping,
+			RequestMapping methodMapping) {
 		return new RequestMappingMerger().merge(controllerMapping, methodMapping);
 	}
 
-	public RequestMapping resolveEmptyMapping(RequestMapping mapping) {
+	public RequestMapping resolveEmptyMapping(
+			RequestMapping mapping) {
 		Set<String> paths = mapping.getPaths();
 		boolean mappingHasNoPaths = paths.isEmpty() || paths.equals(Set.of(""));
 
@@ -91,12 +99,12 @@ public final class P1webmvcImpl implements P1webmvc {
 				mapping.getHeaders(), mapping.getConsumes(), mapping.getProduces(), mapping.getVersion());
 	}
 
-
-	public RequestMapping doMetaResolution(Collection<Annotation> annotations) {
+	public RequestMapping doMetaResolution(
+			Collection<Annotation> annotations) {
 		for (Annotation annotation : annotations) {
 			String annotationName = annotation.getAnnotationName();
 			if (this.restAnnotationNames.contains(annotationName)) {
-                return RequestMappingBuilder.build(annotation);
+				return RequestMappingBuilder.build(annotation);
 			}
 		}
 

@@ -1,4 +1,4 @@
-package it.unive.jlisa.springed;
+package it.unive.jlisa.springed.webmvc.p1;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.unive.jlisa.springed.Main;
+import it.unive.jlisa.springed.SpringTestHelper;
 import java.io.IOException;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -17,9 +18,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class MainTest {
+public class MappingsPerProjectTest {
 
-	private static final Path OUTPUT = Path.of("spring-outputs", "registry.json");
+	private static final Path OUTPUT = SpringTestHelper.WEBMVC.output();
 
 	private static final Map<String, Integer> MAPPINGS = new TreeMap<>(Map.of(
 			"case-1", 1,
@@ -34,20 +35,14 @@ public class MainTest {
 	@BeforeAll
 	public static void runMain() throws IOException {
 		for (String name : MAPPINGS.keySet())
-			SpringTestHelper.extract(name, cases);
+			SpringTestHelper.WEBMVC.extract(name, cases);
 
 		Main.main(new String[] { cases.toString() });
 	}
 
 	@AfterAll
 	public static void cleanUp() throws IOException {
-		Files.deleteIfExists(OUTPUT);
-
-		try {
-			Files.deleteIfExists(OUTPUT.getParent());
-		} catch (DirectoryNotEmptyException keepOtherOutputs) {
-			// the output directory holds other files; leave it in place
-		}
+		SpringTestHelper.deleteOutputs();
 	}
 
 	@Test
@@ -75,13 +70,13 @@ public class MainTest {
 		assertNotNull(annotation, () -> "missing annotation in " + mapping);
 		assertEquals(new ObjectMapper().readTree("""
 				{
-				  "methods" : [ "GET" ],
-				  "paths" : [ "/hello-world" ],
-				  "params" : [ ],
-				  "headers" : [ ],
-				  "consumes" : [ ],
-				  "produces" : [ ],
-				  "version" : ""
+				"methods" : [ "GET" ],
+				"paths" : [ "/hello-world" ],
+				"params" : [ ],
+				"headers" : [ ],
+				"consumes" : [ ],
+				"produces" : [ ],
+				"version" : ""
 				}"""), annotation);
 	}
 

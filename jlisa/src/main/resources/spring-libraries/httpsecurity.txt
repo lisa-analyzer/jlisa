@@ -1,0 +1,1 @@
+class org.springframework.security.config.annotation.web.builders.HttpSecurity extends java.lang.Object:

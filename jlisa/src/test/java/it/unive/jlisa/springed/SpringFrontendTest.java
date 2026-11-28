@@ -49,7 +49,7 @@ public class SpringFrontendTest {
 			Set<String> expected)
 			throws IOException {
 		SpringFrontend frontend = new SpringFrontend();
-		Unit[] classes = frontend.parse(SpringTestHelper.sourceRoot(name, cases).toString());
+		Unit[] classes = frontend.parse(SpringTestHelper.WEBMVC.sourceRoot(name, cases).toString());
 
 		Set<String> classNames = Arrays.stream(classes)
 				.map(Unit::getName)

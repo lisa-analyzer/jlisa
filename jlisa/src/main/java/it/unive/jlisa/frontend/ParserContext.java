@@ -1,5 +1,7 @@
 package it.unive.jlisa.frontend;
 
+import it.unive.jlisa.frontend.handlers.LambdaFactory;
+import it.unive.jlisa.frontend.handlers.UnsupportedLambdaFactory;
 import it.unive.jlisa.frontend.util.VariableInfo;
 import it.unive.jlisa.frontend.visitors.ResultHolder;
 import it.unive.jlisa.program.SyntheticCodeLocationManager;
@@ -48,6 +50,8 @@ public class ParserContext {
 	Map<CFG, Map<VariableInfo, Type>> variableTypes = new HashMap<>();
 
 	private final List<Throwable> exceptions = new ArrayList<>();
+
+	private LambdaFactory lambdaFactory = new UnsupportedLambdaFactory();
 
 	/**
 	 * Constructs a new ParserContext with the specified program, API level, and
@@ -268,5 +272,14 @@ public class ParserContext {
 	public <R> R evaluate(
 			Supplier<R> computation) {
 		return computation.get();
+	}
+
+	public LambdaFactory getLambdaFactory() {
+		return lambdaFactory;
+	}
+
+	public void setLambdaFactory(
+			LambdaFactory factory) {
+		this.lambdaFactory = factory;
 	}
 }

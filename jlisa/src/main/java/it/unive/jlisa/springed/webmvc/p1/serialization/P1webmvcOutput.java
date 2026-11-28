@@ -1,7 +1,7 @@
 package it.unive.jlisa.springed.webmvc.p1.serialization;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import it.unive.jlisa.springed.webmvc.p1.Registry;
+import it.unive.jlisa.springed.webmvc.p1.registry.Registry;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

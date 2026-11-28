@@ -7,6 +7,8 @@ import it.unive.jlisa.frontend.visitors.pipeline.InitCodeMembersASTVisitor;
 import it.unive.jlisa.frontend.visitors.pipeline.PopulateUnitsASTVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
 import it.unive.jlisa.program.libraries.LibrarySpecificationProvider;
+import it.unive.jlisa.springed.frontend.handlers.SpringLambdaFactory;
+import it.unive.jlisa.springed.frontend.visitors.SpringCompilationASTVisitor;
 import it.unive.lisa.program.Unit;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,6 +27,10 @@ public class SpringFrontend extends JavaFrontend {
 
 	private static final Logger LOG = LogManager.getLogger(SpringFrontend.class);
 	private final List<Throwable> parseExceptions = new ArrayList<>();
+
+	public SpringFrontend() {
+		getParserContext().setLambdaFactory(new SpringLambdaFactory());
+	}
 
 	public Unit[] parse(
 			String sourcePath)
@@ -52,6 +58,7 @@ public class SpringFrontend extends JavaFrontend {
 
 		this.runPass(cus, fileNames, scopes, PopulateUnitsASTVisitor::new);
 		this.runPass(cus, fileNames, scopes, InitCodeMembersASTVisitor::new);
+		this.runPass(cus, fileNames, scopes, SpringCompilationASTVisitor::new);
 
 		return this.getUnits(cus, scopes);
 	}
@@ -76,7 +83,7 @@ public class SpringFrontend extends JavaFrontend {
 	}
 
 	public List<Throwable> getParseExceptions() {
-		List<Throwable> all = new ArrayList<>(parseExceptions);
+		List<Throwable> all = new ArrayList<>(this.parseExceptions);
 		all.addAll(getParserContext().getExceptions());
 		return all;
 	}
@@ -88,13 +95,13 @@ public class SpringFrontend extends JavaFrontend {
 			UnitScope[] scopes,
 			BiFunction<ParsingEnvironment, UnitScope, ASTVisitor> factory) {
 		for (int i = 0; i < cus.length; i++) {
-			ParsingEnvironment env = new ParsingEnvironment(parserContext, fileNames[i], cus[i], cus);
+			ParsingEnvironment env = new ParsingEnvironment(this.parserContext, fileNames[i], cus[i], cus);
 
 			try {
 				cus[i].accept(factory.apply(env, scopes[i]));
 			} catch (RuntimeException e) {
 				LOG.error("Error while parsing " + fileNames[i], e);
-				parseExceptions.add(e);
+				this.parseExceptions.add(e);
 			}
 		}
 	}

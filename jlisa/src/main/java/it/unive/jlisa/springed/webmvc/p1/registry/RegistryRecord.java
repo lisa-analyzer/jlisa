@@ -1,4 +1,4 @@
-package it.unive.jlisa.springed.webmvc.p1;
+package it.unive.jlisa.springed.webmvc.p1.registry;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

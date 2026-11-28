@@ -1,9 +1,10 @@
-package it.unive.jlisa.springed.p1;
+package it.unive.jlisa.springed.webmvc.p1;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import it.unive.jlisa.springed.exceptions.PathMergeException;
 import it.unive.jlisa.springed.frontend.SpringFrontend;
+import it.unive.jlisa.springed.webmvc.p1.registry.RequestMapping;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,10 +19,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Stream;
-
-import it.unive.jlisa.springed.webmvc.p1.P1webmvc;
-import it.unive.jlisa.springed.webmvc.p1.P1webmvcImpl;
-import it.unive.jlisa.springed.webmvc.p1.RequestMapping;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,11 +27,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class PathPatternCombineTest {
 
 	private static final Path TABLE = Paths
-			.get("src/test/java/it/unive/jlisa/springed/p1/combining-path-patterns-table.md");
+			.get("src/test/java/it/unive/jlisa/springed/webmvc/p1/combining-path-patterns-table.md");
 
 	private static final Map<Integer, String> TABLE_ROWS = new TreeMap<>();
 
-	private static final P1webmvc P1_IMPL = new P1webmvcImpl(new SpringFrontend().getParserContext());
+	private static final P1Webmvc P1_IMPL = new P1WebmvcImpl(new SpringFrontend().getParserContext());
 
 	private static Stream<Arguments> instances() {
 		return Stream.of(
@@ -167,7 +164,8 @@ public class PathPatternCombineTest {
 			String typeLevel,
 			String methodLevel) {
 		try {
-			Set<String> merged = P1_IMPL.mergeMappings(mappingWithPath(typeLevel), mappingWithPath(methodLevel)).getPaths();
+			Set<String> merged = P1_IMPL.mergeMappings(mappingWithPath(typeLevel), mappingWithPath(methodLevel))
+					.getPaths();
 			return merged.size() == 1 ? merged.iterator().next() : new TreeSet<>(merged).toString();
 		} catch (RuntimeException e) {
 			return "throws " + e.getClass().getSimpleName();

@@ -1,24 +1,51 @@
 package it.unive.jlisa.springed;
 
 import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public final class SpringTestHelper {
+public enum SpringTestHelper {
 
-	public static final Path ROOT = Path.of("spring-testcases", "webmvc");
+	WEBMVC("webmvc"),
+	SECURITY("security");
 
-	private SpringTestHelper() {
+	private final Path cases;
+
+	private final Path output;
+
+	SpringTestHelper(
+			String track) {
+		this.cases = Path.of("spring-testcases", track);
+		this.output = Path.of("spring-outputs", track, "registry.json");
 	}
 
-	public static Path extract(
+	public Path output() {
+		return output;
+	}
+
+	public Path extract(
 			String name,
 			Path into)
 			throws IOException {
-		Path zip = ROOT.resolve(name + ".zip");
+		unzip(cases.resolve(name + ".zip"), into);
+		return into.resolve(name);
+	}
+
+	public Path sourceRoot(
+			String name,
+			Path into)
+			throws IOException {
+		return extract(name, into).resolve("src/main/java");
+	}
+
+	public static void unzip(
+			Path zip,
+			Path into)
+			throws IOException {
 		if (!Files.isRegularFile(zip))
 			throw new IOException("missing test case archive: " + zip.toAbsolutePath());
 
@@ -40,13 +67,24 @@ public final class SpringTestHelper {
 				}
 			}
 		}
-		return into.resolve(name);
 	}
 
-	public static Path sourceRoot(
-			String name,
-			Path into)
+	public static void deleteOutputs()
 			throws IOException {
-		return extract(name, into).resolve("src/main/java");
+		for (SpringTestHelper track : values()) {
+			Files.deleteIfExists(track.output);
+			deleteIfEmpty(track.output.getParent());
+		}
+		deleteIfEmpty(Path.of("spring-outputs"));
+	}
+
+	private static void deleteIfEmpty(
+			Path dir)
+			throws IOException {
+		try {
+			Files.deleteIfExists(dir);
+		} catch (DirectoryNotEmptyException keepOtherOutputs) {
+			// the output directory holds other files; leave it in place
+		}
 	}
 }

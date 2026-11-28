@@ -2,7 +2,6 @@ package it.unive.jlisa.frontend.visitors.expression;
 
 import it.unive.jlisa.frontend.ParsingEnvironment;
 import it.unive.jlisa.frontend.exceptions.ParsingException;
-import it.unive.jlisa.springed.exceptions.UnresolvedTypeException;
 import it.unive.jlisa.frontend.exceptions.UnsupportedStatementException;
 import it.unive.jlisa.frontend.visitors.ScopedVisitor;
 import it.unive.jlisa.frontend.visitors.scope.UnitScope;
@@ -19,6 +18,7 @@ import it.unive.jlisa.program.type.JavaInterfaceType;
 import it.unive.jlisa.program.type.JavaLongType;
 import it.unive.jlisa.program.type.JavaReferenceType;
 import it.unive.jlisa.program.type.JavaShortType;
+import it.unive.jlisa.springed.exceptions.UnresolvedTypeException;
 import it.unive.lisa.program.ClassUnit;
 import it.unive.lisa.program.InterfaceUnit;
 import it.unive.lisa.program.Program;
